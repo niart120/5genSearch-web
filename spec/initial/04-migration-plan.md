@@ -151,7 +151,7 @@ pub fn search_initial_seed_gpu(request: InitialSeedRequest, gpu: GpuContext) -> 
 pub fn is_webgpu_available() -> bool;
 ```
 
-## Phase 0: 基盤整備
+## Phase 0: 基盤整備 ✅ 完了
 
 ### 目標
 
@@ -161,14 +161,14 @@ pub fn is_webgpu_available() -> bool;
 
 ### タスク
 
-| ID   | タスク                           | 詳細                          |
-| ---- | -------------------------------- | ----------------------------- |
-| P0-1 | Vite + React + TypeScript 初期化 | 完了済み                      |
-| P0-2 | wasm-pack環境構築                | Rust toolchain + wasm-pack    |
-| P0-3 | Rust formatter/linter設定        | rustfmt + clippy              |
-| P0-4 | Vitest設定                       | 単体テスト環境                |
-| P0-5 | ESLint/Prettier設定              | コード品質                    |
-| P0-6 | GitHub Actions設定               | CI/CD (TypeScript + Rust両方) |
+| ID   | タスク                           | 詳細                          | 状態 |
+| ---- | -------------------------------- | ----------------------------- | ---- |
+| P0-1 | Vite + React + TypeScript 初期化 | 完了済み                      | ✅   |
+| P0-2 | wasm-pack環境構築                | Rust toolchain + wasm-pack    | ✅   |
+| P0-3 | Rust formatter/linter設定        | rustfmt + clippy              | ✅   |
+| P0-4 | Vitest設定                       | 単体テスト環境                | ✅   |
+| P0-5 | ESLint/Prettier設定              | コード品質                    | ✅   |
+| P0-6 | GitHub Actions設定               | CI/CD (TypeScript + Rust両方) | ✅   |
 
 ### Rust開発環境
 
@@ -177,11 +177,13 @@ pub fn is_webgpu_available() -> bool;
 | rustfmt | コードフォーマット | `rustfmt.toml` でルール定義              |
 | clippy  | 静的解析           | `#![deny(clippy::all)]` で警告をエラー化 |
 
-### 成果物
+### 成果物 ✅
 
-- 動作するブランクプロジェクト
-- 開発・テスト環境
-- CI/CDパイプライン
+- ✅ 動作するブランクプロジェクト
+- ✅ 開発・テスト環境 (Vitest + @testing-library/react)
+- ✅ Prettier + ESLint 統合
+- ✅ Rust プロジェクト (wasm-pkg) + rustfmt/clippy
+- ✅ CI/CDパイプライン (.github/workflows/ci.yml)
 
 ---
 
