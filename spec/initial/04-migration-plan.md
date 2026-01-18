@@ -168,7 +168,6 @@ pub fn is_webgpu_available() -> bool;
 |--------|------|------|
 | rustfmt | コードフォーマット | `rustfmt.toml` でルール定義 |
 | clippy | 静的解析 | `#![deny(clippy::all)]` で警告をエラー化 |
-| cargo-watch | ホットリロード | オプション |
 
 ### 成果物
 - 動作するブランクプロジェクト
