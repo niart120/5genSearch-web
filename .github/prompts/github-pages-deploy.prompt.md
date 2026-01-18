@@ -1,6 +1,6 @@
 ---
-name: "github-pages-deploy"
-description: "Main でデプロイし docs/public 差分をコミット後プッシュする"
+name: 'github-pages-deploy'
+description: 'Main でデプロイし docs/public 差分をコミット後プッシュする'
 agent: agent
 ---
 
@@ -45,4 +45,3 @@ agent: agent
 ```
 あなたはリポジトリアシスタントです。現在の作業ブランチ（`git rev-parse --abbrev-ref HEAD` の出力）から `main` へマージし、`main` 上でデプロイと docs/public 差分コミットを実行してください。上記の手順に従い、各段階で状態を検査し問題があれば中止して詳細報告を行い、PowerShell 環境でのコマンド出力と実行ログを収集して最終的な成功/失敗の要約を返してください。
 ```
-

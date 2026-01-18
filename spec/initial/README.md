@@ -4,12 +4,12 @@
 
 ## ドキュメント構成
 
-| ファイル | 説明 | 状態 |
-|---------|------|------|
-| [01-current-analysis.md](01-current-analysis.md) | 現行アーキテクチャ分析 | Active |
+| ファイル                                               | 説明                   | 状態   |
+| ------------------------------------------------------ | ---------------------- | ------ |
+| [01-current-analysis.md](01-current-analysis.md)       | 現行アーキテクチャ分析 | Active |
 | [02-target-architecture.md](02-target-architecture.md) | 目標アーキテクチャ設計 | Active |
-| [03-wasm-api-design.md](03-wasm-api-design.md) | WASM API設計 | Active |
-| [04-migration-plan.md](04-migration-plan.md) | 移行計画 | Active |
+| [03-wasm-api-design.md](03-wasm-api-design.md)         | WASM API設計           | Active |
+| [04-migration-plan.md](04-migration-plan.md)           | 移行計画               | Active |
 
 ## 設計原則
 

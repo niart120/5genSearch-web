@@ -1,0 +1,24 @@
+[package]
+name = "wasm-pkg"
+version = "0.1.0"
+edition = "2024"
+authors = ["5genSearch Team"]
+description = "WASM calculation engine for Pokemon Gen5 RNG manipulation"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+tsify-next = { version = "0.5", features = ["js"] }
+
+# Error handling in WASM
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

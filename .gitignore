@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rust/WASM
+target/
+wasm-pkg/pkg/
+Cargo.lock
+*.wasm

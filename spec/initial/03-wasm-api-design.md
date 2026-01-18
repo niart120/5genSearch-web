@@ -32,6 +32,7 @@ pub struct BootTimingRequest {
 ```
 
 利点:
+
 - Rust側の型定義が単一の真実のソース
 - TypeScript側での型定義重複を排除
 - シリアライズ/デシリアライズの自動化
@@ -41,6 +42,7 @@ pub struct BootTimingRequest {
 ### 3.1 起動時刻探索 (Boot Timing Search)
 
 #### `search_boot_timing_cpu` / `search_boot_timing_gpu`
+
 起動時刻探索 (SHA-1ベース)
 
 ```rust
@@ -79,6 +81,7 @@ interface BootTimingResult {
 ### 3.2 初期Seed探索 (Initial Seed / MT Seed Search)
 
 #### `search_initial_seed_cpu` / `search_initial_seed_gpu`
+
 MT Seed探索 (個体値逆算)
 
 ```rust
@@ -112,6 +115,7 @@ interface MtSeedSearchResponse {
 ### 2.2 Generation API
 
 #### `generate_pokemon_list`
+
 乱数列からポケモンリスト生成
 
 ```rust
@@ -124,16 +128,16 @@ interface GenerationRequest {
   offset: number;
   maxAdvances: number;
   maxResults: number;
-  
+
   encounterType: EncounterType;
   gameVersion: 'black' | 'white' | 'black2' | 'white2';
-  
+
   trainerId: number;
   secretId: number;
-  
+
   syncEnabled: boolean;
   syncNatureId?: number;  // 0-24
-  
+
   // フィルタ (オプション)
   filter?: {
     onlyShiny?: boolean;
@@ -141,7 +145,7 @@ interface GenerationRequest {
     minLevel?: number;
     maxLevel?: number;
   };
-  
+
   // 制御
   stopAtFirstShiny?: boolean;
   batchSize?: number;
@@ -170,27 +174,27 @@ interface GenerationComplete {
 interface PokemonData {
   advance: number;
   seed: bigint;
-  
+
   // 基本属性
   pid: number;
   natureId: number;
   natureName: string;
   abilitySlot: number;
   abilityName: string;
-  
+
   // エンカウント
   encounterSlot: number;
   speciesId: number;
   speciesName: string;
   level: number;
-  
+
   // 色違い
   shinyType: 0 | 1 | 2;  // None, Square, Star
-  
+
   // 性別
   genderValue: number;
   gender: 'male' | 'female' | 'genderless';
-  
+
   // メタ
   syncApplied: boolean;
 }
@@ -199,6 +203,7 @@ interface PokemonData {
 ### 2.3 Data Query API
 
 #### `get_encounter_table`
+
 エンカウントテーブル取得
 
 ```rust
@@ -227,6 +232,7 @@ interface EncounterSlot {
 ```
 
 #### `get_species_data`
+
 種族データ取得
 
 ```rust
@@ -251,6 +257,7 @@ interface SpeciesData {
 ```
 
 #### `list_locations`
+
 場所一覧取得
 
 ```rust
@@ -288,7 +295,7 @@ type EncounterType =
 
 type GameVersion = 'black' | 'white' | 'black2' | 'white2';
 
-type ShinyType = 0 | 1 | 2;  // None, Square, Star
+type ShinyType = 0 | 1 | 2; // None, Square, Star
 ```
 
 ## 4. エラーハンドリング
@@ -317,7 +324,9 @@ wasm-bindgenのTypeScript出力を拡張:
 
 ```typescript
 // generated/wasm-types.d.ts (自動生成)
-export function search_initial_seed(request: InitialSeedSearchRequest): Promise<InitialSeedSearchResponse>;
+export function search_initial_seed(
+  request: InitialSeedSearchRequest
+): Promise<InitialSeedSearchResponse>;
 export function generate_pokemon_list(request: GenerationRequest): Promise<GenerationResult>;
 // ...
 
@@ -338,7 +347,9 @@ export async function searchInitialSeed(
 ## 6. パフォーマンス考慮
 
 ### 6.1 バッチ転送
+
 大量データは分割転送:
+
 ```rust
 // 1000件ごとにJavaScript側へコールバック
 pub fn generate_with_callback(
@@ -349,7 +360,9 @@ pub fn generate_with_callback(
 ```
 
 ### 6.2 SharedArrayBuffer対応 (将来)
+
 Worker間でのゼロコピー転送:
+
 ```rust
 pub fn generate_into_shared_buffer(
   request: JsValue,
@@ -358,7 +371,9 @@ pub fn generate_into_shared_buffer(
 ```
 
 ### 6.3 WebGPU連携
+
 GPU計算パスの統合:
+
 ```rust
 #[cfg(feature = "webgpu")]
 pub fn search_initial_seed_gpu(

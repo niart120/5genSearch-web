@@ -61,11 +61,13 @@
 ### 3.1 Presentation Layer (TypeScript/React)
 
 **責務**:
+
 - ユーザー入力の受付
 - 計算結果の表示
 - UI状態管理 (Zustand)
 
 **含まない**:
+
 - 乱数計算
 - Worker制御
 - 処理のキック
@@ -73,6 +75,7 @@
 ### 3.2 WorkerService Layer (TypeScript)
 
 **責務**:
+
 - Worker生成・破棄
 - 処理のキック
 - 進捗・結果のハンドリング
@@ -80,12 +83,14 @@
 - Storeへの結果書き込み
 
 **含まない**:
+
 - UI状態
 - ビジネスロジック
 
 ### 3.3 Core Layer (Rust/WASM)
 
 **責務**:
+
 - 全ての計算ロジック
 - 静的データ管理
 - 高速処理 (SIMD/WebGPU)
@@ -196,6 +201,7 @@ static ENCOUNTER_TABLES: &[EncounterTable] = include!("generated/encounters.rs")
 ```
 
 ### 5.2 利点
+
 - データ転送コスト削減
 - WASM内で完結した計算
 - TypeScript側の軽量化
@@ -204,13 +210,13 @@ static ENCOUNTER_TABLES: &[EncounterTable] = include!("generated/encounters.rs")
 
 ### 6.1 Worker種別
 
-| Worker | 用途 | 備考 |
-|--------|------|------|
-| BootTimingWorker | 起動時刻探索 (SHA-1) | CPU版 |
-| BootTimingWorkerGpu | 起動時刻探索 (SHA-1) | GPU版 |
-| InitialSeedWorker | 初期Seed (MT Seed) 探索 | CPU版 |
-| InitialSeedWorkerGpu | 初期Seed (MT Seed) 探索 | GPU版 |
-| GenerationWorker | 乱数列生成 | CPUのみ |
+| Worker               | 用途                    | 備考    |
+| -------------------- | ----------------------- | ------- |
+| BootTimingWorker     | 起動時刻探索 (SHA-1)    | CPU版   |
+| BootTimingWorkerGpu  | 起動時刻探索 (SHA-1)    | GPU版   |
+| InitialSeedWorker    | 初期Seed (MT Seed) 探索 | CPU版   |
+| InitialSeedWorkerGpu | 初期Seed (MT Seed) 探索 | GPU版   |
+| GenerationWorker     | 乱数列生成              | CPUのみ |
 
 ### 6.2 メッセージプロトコル
 
@@ -220,7 +226,7 @@ type WorkerRequest =
   | { type: 'init' }
   | { type: 'search'; id: string; params: SearchParams }
   | { type: 'generate'; id: string; params: GenerationParams }
-  | { type: 'cancel'; id: string }
+  | { type: 'cancel'; id: string };
 
 // Worker → Main
 type WorkerResponse =
@@ -229,7 +235,7 @@ type WorkerResponse =
   | { type: 'batch'; id: string; data: ResultBatch }
   | { type: 'complete'; id: string; reason: CompletionReason }
   | { type: 'error'; id: string; code: string; message: string }
-  | { type: 'cancelled'; id: string }
+  | { type: 'cancelled'; id: string };
 ```
 
 ## 7. 移行戦略
