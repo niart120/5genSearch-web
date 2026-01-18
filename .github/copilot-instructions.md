@@ -9,9 +9,27 @@
 **参照**: https://github.com/niart120/pokemon-gen5-initseed のリアーキテクチャを目的とする
 
 ## 技術スタック
-- **フロントエンド**: React 18 + TypeScript + Vite
-- **計算エンジン**: Web Workers + Rust(wgpu + simd) + WebAssembly (wasm-pack + wasm-bindgen)
-- **UI**: Radix UI components
+
+### フロントエンド
+- **フレームワーク**: React 19 + TypeScript + Vite
+- **状態管理**: Zustand
+- **UIコンポーネント**: Radix UI + Tailwind CSS
+- **テスト**: Vitest + Playwright
+- **Linter/Formatter**: ESLint + Prettier
+
+### 計算エンジン (Rust/WASM)
+- **ビルド**: wasm-pack + wasm-bindgen
+- **型共有**: tsify + serde + serde-wasm-bindgen
+- **CPU最適化**: SIMD128
+- **GPU計算**: wgpu (WebGPU)
+- **Formatter**: rustfmt
+- **静的解析**: clippy
+- **テスト**: cargo test + wasm-pack test
+
+### 並列化
+- **Worker構成**: Web Workers + 独立WASMインスタンス
+- **SharedArrayBuffer**: 不使用 (GitHub Pages + iOS制約)
+- **wasm threads**: 不使用 (上記と同様)
 
 ## アーキテクチャ原則
 - **本番・開発コードの分離**: 本番環境に不要なコードを含めない
@@ -20,7 +38,10 @@
 
 ## コーディング規約
 - TypeScript strict mode 使用
+  - class利用禁止 (関数型プログラミング推奨)
+  - 型定義を厳密に行う (any, unknown, 型アサーションの多用禁止)
 - React function-based components 使用
+  - React Hooks 使用
 - ESLint/Prettier設定に準拠
 - 技術文書は事実ベース・簡潔に記述
 - t_wada氏が推奨するテスト駆動開発(TDD)指針/コーディング指針を遵守
