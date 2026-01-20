@@ -103,7 +103,65 @@ export type EncounterSlotConfig = {
 - リクエスト時に必要な分だけ `EncounterResolutionConfig` として渡す
 - WASM バイナリの肥大化を防ぐ
 
-### 2.3 ResolvedPokemonData
+### 2.3 EncounterResult
+
+エンカウント処理の結果種別。砂煙・橋の影では Pokemon 以外の結果もありうる。
+
+```rust
+/// エンカウント結果
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum EncounterResult {
+    /// ポケモン生成に進む
+    Pokemon,
+    /// アイテム取得 (砂煙・橋の影)
+    Item(ItemContent),
+    /// 失敗 (釣り失敗等)
+    Failed,
+}
+
+/// アイテム内容
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum ItemContent {
+    /// 進化の石 (DustCloud)
+    EvolutionStone,
+    /// ジュエル (DustCloud)
+    Jewel,
+    /// かわらずの石 (DustCloud)
+    Everstone,
+    /// 羽根 (PokemonShadow)
+    Feather,
+}
+```
+
+```typescript
+export type EncounterResult =
+  | { type: 'Pokemon' }
+  | { type: 'Item'; content: ItemContent }
+  | { type: 'Failed' };
+
+export type ItemContent =
+  | 'EvolutionStone'
+  | 'Jewel'
+  | 'Everstone'
+  | 'Feather';
+```
+
+**エンカウント種別ごとの結果パターン**:
+
+| EncounterType | 結果パターン |
+|--------------|-------------|
+| Normal/ShakingGrass | 常に Pokemon |
+| Surfing/SurfingBubble | 常に Pokemon |
+| Fishing/FishingBubble | Pokemon or Failed |
+| DustCloud | Pokemon (70%) or Item (30%) |
+| PokemonShadow | Pokemon (30%) or Item (70%) |
+| Static* | 常に Pokemon |
+
+詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §5 を参照。
+
+### 2.4 ResolvedPokemonData
 
 解決済み Pokemon 個体データ。WASM 内で species_id/level/gender/ivs まで解決済み。
 
@@ -160,7 +218,7 @@ export type ResolvedPokemonData = {
 - `gender`: `gender_value` と `gender_threshold` を比較して決定
 - `ivs`: LCG Seed → MT Seed → MT19937 で計算 (version/encounter_type に応じた offset 適用)
 
-### 2.4 GenerationSource
+### 2.5 GenerationSource
 
 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 
@@ -198,7 +256,7 @@ export type GenerationSource =
   | { type: 'Datetime'; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
 ```
 
-### 2.5 EnumeratedPokemonData
+### 2.6 EnumeratedPokemonData
 
 Advance 情報付き Pokemon データ。
 

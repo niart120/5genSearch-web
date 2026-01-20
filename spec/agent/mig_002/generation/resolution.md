@@ -40,12 +40,17 @@ WASM/Worker/Main 間の責務分担と、UI 表示用データの階層設計。
 | 処理 | 担当 | 入力 | 出力 |
 |-----|------|------|------|
 | 乱数生成 | WASM | LCG Seed | PID, 性格値, etc. |
+| Encounter 結果判定 | WASM | `slot_value`, `EncounterType` | `EncounterResult` |
 | Slot → Species/Level | WASM | `EncounterSlotConfig[]` | `species_id`, `level` |
 | Gender 判定 | WASM | `gender_value`, `gender_threshold` | `Gender` |
 | IV 計算 | WASM | LCG Seed, Version, EncounterType | `IvSet` |
 | Stats 計算 | Main (TS) | `baseStats`, `IvSet`, `level`, `nature` | `CalculatedStats` |
 | i18n (名称) | Main (TS) | `species_id`, `nature`, `ability_slot`, `locale` | 表示用文字列 |
 | Hex フォーマット | Main (TS) | `seed`, `pid` | `seedHex`, `pidHex` |
+
+**注意**: DustCloud/PokemonShadow では `EncounterResult::Item` が返る可能性がある。  
+その場合、Pokemon 生成は行われず `species_id` 等は無効値となる。  
+詳細は [algorithm/encounter.md](algorithm/encounter.md) §5 を参照。
 
 ### 1.3 設計意図
 

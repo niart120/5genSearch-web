@@ -21,10 +21,22 @@
 pub enum EncounterResult {
     /// ポケモン生成に進む
     Pokemon,
-    /// アイテム取得 (砂煙のみ)
-    Item(DustCloudContent),
+    /// アイテム取得 (砂煙・橋の影)
+    Item(ItemContent),
     /// 失敗 (釣り失敗等)
     Failed,
+}
+
+/// アイテム内容
+pub enum ItemContent {
+    /// 進化の石 (DustCloud)
+    EvolutionStone,
+    /// ジュエル (DustCloud)
+    Jewel,
+    /// かわらずの石 (DustCloud)
+    Everstone,
+    /// 羽根 (PokemonShadow)
+    Feather,
 }
 ```
 
@@ -33,8 +45,8 @@ pub enum EncounterResult {
 | Normal/ShakingGrass | 常に Pokemon |
 | Surfing/SurfingBubble | 常に Pokemon |
 | Fishing/FishingBubble | Pokemon or Failed |
-| DustCloud | 常に Item |
-| PokemonShadow | 常に Pokemon |
+| DustCloud | Pokemon or Item (§5参照) |
+| PokemonShadow | Pokemon or Item (§5.5参照) |
 | Static* | 常に Pokemon |
 
 ## 2. スロット数とエンカウント種別
@@ -47,8 +59,8 @@ pub enum EncounterResult {
 | SurfingBubble (水泡なみのり) | 5 | 60/30/5/4/1 |
 | Fishing (釣り) | 5 | 40/40/15/4/1 |
 | FishingBubble (水泡釣り) | 5 | 40/40/15/4/1 |
-| DustCloud (砂煙) | - | ポケモン/アイテム判定 (§5参照) |
-| PokemonShadow (橋の影) | 4 | 50/30/15/5 |
+| DustCloud (砂煙) | 12 | Pokemon時: 20/20/10/10/10/10/5/5/4/4/1/1 (§5参照) |
+| PokemonShadow (橋の影) | 4 | Pokemon時: 50/30/15/5 (§5.5参照) |
 | StaticSymbol | 1 | 固定 |
 | StaticStarter | 1 | 固定 |
 | StaticFossil | 1 | 固定 |
@@ -168,32 +180,83 @@ fn fixed_encounter_slot() -> u8 {
 
 ## 5. 砂煙の内容判定
 
-砂煙ではポケモンまたはアイテムが出現する。スロット決定ではなく内容判定を行う。
+砂煙ではポケモンまたはアイテムが出現する。
 
-### 5.1 内容判定
+### 5.1 Pokemon/Item 判定
+
+最初に Pokemon か Item かを判定する。
 
 ```rust
-/// 砂煙の内容種別
-pub enum DustCloudContent {
-    EvolutionStone,  // 進化の石
-    Jewel,           // ジュエル
-    Everstone,       // かわらずの石
-}
-
-/// 砂煙の内容を判定
-/// 生スロット値から内容を決定
-pub fn dust_cloud_content(slot_value: u32) -> DustCloudContent {
+/// 砂煙の結果を判定
+/// 生スロット値から Pokemon/Item を決定
+pub fn dust_cloud_result(slot_value: u32) -> EncounterResult {
     match slot_value {
-        0 => DustCloudContent::EvolutionStone,      // 1%
-        1..=94 => DustCloudContent::Jewel,          // 94%
-        95..=99 => DustCloudContent::Everstone,     // 5%
-        _ => DustCloudContent::Jewel,
+        0..=69 => EncounterResult::Pokemon,  // 70%
+        _ => {                                // 30%
+            let item = dust_cloud_item_content(slot_value);
+            EncounterResult::Item(item)
+        }
     }
 }
 ```
 
-**注意**: 砂煙からはアイテムのみ出現し、ポケモンは出現しない。
-揺れる草むらや水泡とは異なる仕様。
+### 5.2 アイテム内容判定
+
+Item の場合、アイテム種別を決定する (取説.txt 準拠):
+
+```rust
+/// 砂煙のアイテム内容を判定
+/// 生スロット値 70-99 の範囲から内容を決定
+pub fn dust_cloud_item_content(slot_value: u32) -> ItemContent {
+    match slot_value {
+        70 => ItemContent::EvolutionStone,        // 1% (70のみ)
+        71..=94 => ItemContent::Jewel,            // 24% (71-94)
+        95..=99 => ItemContent::Everstone,        // 5% (95-99)
+        _ => ItemContent::Jewel,                  // フォールバック
+    }
+}
+```
+
+### 5.3 Pokemon 時のスロット決定
+
+Pokemon の場合、通常エンカウントと同じ12スロット分布を使用する。
+
+### 5.4 確率まとめ
+
+| 結果 | 確率 |
+|-----|------|
+| Pokemon | 70% |
+| Item(EvolutionStone) | 1% |
+| Item(Jewel) | 24% |
+| Item(Everstone) | 5% |
+
+## 5.5 橋の影の内容判定
+
+橋の影ではポケモンまたは羽根アイテムが出現する。
+
+### 5.5.1 Pokemon/Item 判定
+
+```rust
+/// 橋の影の結果を判定
+/// 生スロット値から Pokemon/Item を決定
+pub fn pokemon_shadow_result(slot_value: u32) -> EncounterResult {
+    match slot_value {
+        0..=29 => EncounterResult::Pokemon,              // 30%
+        _ => EncounterResult::Item(ItemContent::Feather), // 70%
+    }
+}
+```
+
+### 5.5.2 Pokemon 時のスロット決定
+
+Pokemon の場合、4スロット (50/30/15/5) 分布を使用する。
+
+### 5.5.3 確率まとめ
+
+| 結果 | 確率 |
+|-----|------|
+| Pokemon | 30% |
+| Item(Feather) | 70% |
 
 ## 6. 特殊エンカウント発生判定
 
