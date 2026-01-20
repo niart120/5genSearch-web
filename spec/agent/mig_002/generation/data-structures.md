@@ -54,6 +54,8 @@ pub struct PokemonGenerationConfig {
     pub shiny_locked: bool,
     /// ひかるおまもり所持
     pub shiny_charm: bool,
+    /// ふくがん有効 (先頭ポケモンがふくがん持ち)
+    pub has_compound_eyes: bool,
     /// エンカウント解決設定 (スロット→種族ID/レベル解決用)
     pub encounter_resolution: EncounterResolutionConfig,
 }
