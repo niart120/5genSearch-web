@@ -136,7 +136,9 @@ pub fn generate_wild_pokemon(
     let sync_success = perform_sync_check(&mut rng, enc_type, config.sync_enabled);
     
     // 2. スロット決定
-    let slot = calculate_encounter_slot(enc_type, rng.next());
+    let slot_rand = rng.next();
+    let slot = calculate_encounter_slot(enc_type, slot_rand);
+    let slot_config = &config.encounter_resolution.slots[slot as usize];
     
     // 3. レベル決定
     let level_rand = if consumes_level_rand(enc_type) {
@@ -151,8 +153,8 @@ pub fn generate_wild_pokemon(
     // 5. 性格決定
     let (nature, sync_applied) = determine_nature(&mut rng, sync_success, config.sync_nature);
     
-    // 6. 持ち物判定
-    let held_item_slot = if consumes_held_item_rand(enc_type) {
+    // 6. 持ち物判定 (エンカウント種別対応 かつ スロットが持ち物を持つ場合のみ)
+    let held_item_slot = if consumes_held_item_rand(enc_type, slot_config) {
         let item_rand = rng.next();
         determine_held_item_slot(
             config.version,
@@ -167,7 +169,12 @@ pub fn generate_wild_pokemon(
     build_pokemon_data(seed, pid, nature, sync_applied, slot, level_rand, held_item_slot, config)
 }
 
-fn consumes_held_item_rand(enc_type: EncounterType) -> bool {
+/// 持ち物判定で乱数を消費するか (スロット考慮)
+fn consumes_held_item_rand(enc_type: EncounterType, slot_config: &EncounterSlotConfig) -> bool {
+    encounter_type_supports_held_item(enc_type) && slot_config.has_held_item
+}
+
+fn encounter_type_supports_held_item(enc_type: EncounterType) -> bool {
     matches!(
         enc_type,
         EncounterType::Surfing
@@ -191,13 +198,16 @@ fn has_very_rare_item(enc_type: EncounterType) -> bool {
 | 種別 | シンクロ | スロット | レベル | PID | 性格 | 持ち物 | 合計 |
 |-----|---------|---------|-------|-----|-----|-------|-----|
 | Normal | 1 | 1 | 1 | 1-3 | 1 | 0 | 5-7 |
-| ShakingGrass | 1 | 1 | 1 | 1-3 | 1 | 1 | 6-8 |
-| Surfing | 1 | 1 | 1 | 1-3 | 1 | 1 | 6-8 |
-| SurfingBubble | 1 | 1 | 1 | 1-3 | 1 | 1 | 6-8 |
-| Fishing | 1 | 1 | 1 | 1-3 | 1 | 1 | 6-8 |
-| FishingBubble | 1 | 1 | 1 | 1-3 | 1 | 1 | 6-8 |
+| ShakingGrass | 1 | 1 | 1 | 1-3 | 1 | 0-1* | 5-8 |
+| Surfing | 1 | 1 | 1 | 1-3 | 1 | 0-1* | 5-8 |
+| SurfingBubble | 1 | 1 | 1 | 1-3 | 1 | 0-1* | 5-8 |
+| Fishing | 1 | 1 | 1 | 1-3 | 1 | 0-1* | 5-8 |
+| FishingBubble | 1 | 1 | 1 | 1-3 | 1 | 0-1* | 5-8 |
 | DustCloud | - | - | - | - | - | - | (別処理) |
 | PokemonShadow | - | - | - | - | - | - | (別処理) |
+
+**\* 持ち物消費**: スロットの種族が持ち物を持つ可能性がある場合のみ消費 (`has_held_item == true`)。  
+種族データの 50%/5%/1% いずれかにアイテムが設定されていれば対象。
 
 ## 5. 出力データの解決
 

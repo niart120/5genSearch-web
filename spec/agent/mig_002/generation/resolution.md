@@ -91,6 +91,8 @@ pub struct EncounterSlotConfig {
     pub level_min: u8,
     /// レベル上限
     pub level_max: u8,
+    /// 持ち物判定有無
+    pub has_held_item: bool,
 }
 ```
 
@@ -99,6 +101,7 @@ export type EncounterSlotConfig = {
   species_id: number;
   level_min: number;
   level_max: number;
+  has_held_item: boolean;
 };
 ```
 
@@ -124,19 +127,33 @@ pub struct EncounterResolutionConfig {
 // エンカウントテーブルから EncounterResolutionConfig を構築
 function buildResolutionConfig(
   encounterTable: EncounterTable,
-  targetSpeciesId: number
+  speciesData: Map<number, GeneratedSpecies>
 ): EncounterResolutionConfig {
-  const species = getGeneratedSpeciesById(targetSpeciesId);
-  const threshold = species?.gender.femaleThreshold ?? 127;
+  // 先頭スロットの種族で gender_threshold を決定 (フィルタ時に上書きされる想定)
+  const firstSpecies = speciesData.get(encounterTable.slots[0].speciesId);
+  const threshold = firstSpecies?.gender.femaleThreshold ?? 127;
   
   return {
-    slots: encounterTable.slots.map(s => ({
-      species_id: s.speciesId,
-      level_min: s.levelRange.min,
-      level_max: s.levelRange.max,
-    })),
+    slots: encounterTable.slots.map(s => {
+      const species = speciesData.get(s.speciesId);
+      return {
+        species_id: s.speciesId,
+        level_min: s.levelRange.min,
+        level_max: s.levelRange.max,
+        has_held_item: hasHeldItem(species),
+      };
+    }),
     gender_threshold: threshold,
   };
+}
+
+function hasHeldItem(species: GeneratedSpecies | undefined): boolean {
+  if (!species?.heldItems) return false;
+  return (
+    species.heldItems.common != null ||
+    species.heldItems.rare != null ||
+    species.heldItems.veryRare != null
+  );
 }
 ```
 

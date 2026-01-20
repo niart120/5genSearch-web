@@ -82,6 +82,8 @@ pub struct EncounterSlotConfig {
     pub level_min: u8,
     /// レベル上限
     pub level_max: u8,
+    /// 持ち物判定有無 (50%/5%/1% いずれかの持ち物を持つ可能性がある場合 true)
+    pub has_held_item: bool,
 }
 ```
 
@@ -95,13 +97,28 @@ export type EncounterSlotConfig = {
   species_id: number;
   level_min: number;
   level_max: number;
+  has_held_item: boolean;
 };
 ```
 
 **設計意図**:
 - エンカウントテーブルは TS 側で JSON として管理
 - リクエスト時に必要な分だけ `EncounterResolutionConfig` として渡す
+- `has_held_item` は種族データから導出 (50%/5%/1% いずれかが存在するか)
 - WASM バイナリの肥大化を防ぐ
+
+**has_held_item の判定ロジック (TS 側)**:
+
+```typescript
+function hasHeldItem(species: GeneratedSpecies): boolean {
+  // 50%, 5%, 1% いずれかの持ち物が設定されていれば true
+  return (
+    species.heldItems?.common != null ||
+    species.heldItems?.rare != null ||
+    species.heldItems?.veryRare != null
+  );
+}
+```
 
 ### 2.3 EncounterResult
 

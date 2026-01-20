@@ -528,11 +528,16 @@ pub fn determine_held_item_slot(
 
 **注意**: VeryRare は濃い草むら・泡でのみ発生。他のエンカウントでは閾値 55/80-84 に達しても None になる。
 
-### 9.4 持ち物判定が発生するエンカウント種別
+### 9.4 持ち物判定の発生条件
+
+持ち物判定の乱数消費は以下の**両方**を満たす場合のみ発生:
+
+1. **エンカウント種別が対応している**: Surfing, SurfingBubble, Fishing, FishingBubble, ShakingGrass
+2. **当該スロットの種族が持ち物を持つ可能性がある**: `EncounterSlotConfig.has_held_item == true`
 
 ```rust
-/// 持ち物判定で乱数を消費するか
-pub fn consumes_held_item_rand(encounter_type: EncounterType) -> bool {
+/// 持ち物判定で乱数を消費するか (エンカウント種別レベル)
+pub fn encounter_type_supports_held_item(encounter_type: EncounterType) -> bool {
     matches!(
         encounter_type,
         EncounterType::Surfing
@@ -541,6 +546,14 @@ pub fn consumes_held_item_rand(encounter_type: EncounterType) -> bool {
         | EncounterType::FishingBubble
         | EncounterType::ShakingGrass
     )
+}
+
+/// 持ち物判定で乱数を消費するか (スロット考慮)
+pub fn consumes_held_item_rand(
+    encounter_type: EncounterType,
+    slot_config: &EncounterSlotConfig,
+) -> bool {
+    encounter_type_supports_held_item(encounter_type) && slot_config.has_held_item
 }
 
 /// VeryRare スロットが存在するか
@@ -552,17 +565,21 @@ pub fn has_very_rare_item(encounter_type: EncounterType) -> bool {
 }
 ```
 
-| エンカウント種別 | 判定有無 | VeryRare |
-|----------------|---------|----------|
-| Normal | なし | - |
-| ShakingGrass | あり | あり |
-| Surfing | あり | なし |
-| SurfingBubble | あり | あり |
-| Fishing | あり | なし |
-| FishingBubble | あり | なし |
-| DustCloud | なし (別処理) | - |
-| PokemonShadow | なし (別処理) | - |
-| Static* | なし | - |
+| エンカウント種別 | 判定対応 | VeryRare | 備考 |
+|----------------|---------|----------|------|
+| Normal | なし | - | - |
+| ShakingGrass | あり | あり | `has_held_item` 依存 |
+| Surfing | あり | なし | `has_held_item` 依存 |
+| SurfingBubble | あり | あり | `has_held_item` 依存 |
+| Fishing | あり | なし | `has_held_item` 依存 |
+| FishingBubble | あり | なし | `has_held_item` 依存 |
+| DustCloud | なし (別処理) | - | - |
+| PokemonShadow | なし (別処理) | - | - |
+| Static* | なし | - | - |
+
+**重要**: `has_held_item` は `EncounterSlotConfig` から取得する。  
+種族データの持ち物テーブル (50%/5%/1%) のいずれかが設定されていれば `true`。  
+詳細は [data-structures.md](../data-structures.md#22-encounterslotconfig) を参照。
 
 ## 10. ダブルバトル / 大量発生 (TBD)
 
