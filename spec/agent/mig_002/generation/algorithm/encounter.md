@@ -69,15 +69,17 @@ pub enum ItemContent {
 
 **注意**: 揺れる草むらは通常エンカウントと同じ12スロット分布を使用する。
 
-## 3. 生スロット値の計算
+## 3. 百分率換算値の計算
 
 ### 3.1 BW/BW2 での違い
 
-BW と BW2 で乱数から生スロット値への変換式が異なる。
+BW と BW2 で乱数から百分率換算値 (0-99) への変換式が異なる。
+この値はエンカウントスロット決定・歩行エンカウント判定等で共通して使用する。
 
 ```rust
-/// 乱数値から生スロット値 (0-99) を計算
-pub fn calculate_raw_slot(version: RomVersion, rand_value: u32) -> u32 {
+/// 乱数値から百分率換算値 (0-99) を計算
+/// エンカウントスロット・歩行エンカウント判定等で共通使用
+pub fn rand_to_percent(version: RomVersion, rand_value: u32) -> u32 {
     match version {
         RomVersion::Black | RomVersion::White => {
             // BW: (rand * 0xFFFF / 0x290) >> 32
@@ -94,6 +96,8 @@ pub fn calculate_raw_slot(version: RomVersion, rand_value: u32) -> u32 {
 **注意**: BW は `0xFFFF / 0x290` (約 99.93) を使用し、BW2 は直接 `100` を使用する。
 
 ## 4. スロット決定アルゴリズム
+
+百分率換算値を使用してスロット番号を決定する。
 
 ### 4.1 通常エンカウント / 揺れる草むら (12スロット)
 
@@ -345,19 +349,18 @@ pub enum WalkingEncounterLikelihood {
 
 ### 8.3 BW のエンカウント判定
 
-BW では単一の閾値で判定。
+BW では単一の閾値で判定。`rand_to_percent` で得られる百分率換算値を使用する。
 
 ```rust
 /// BW エンカウント判定閾値
 const BW_ENCOUNTER_THRESHOLD: u32 = 9;
 
 /// BW エンカウント判定
-/// 参考式: (上位16bit / 656) >> 16 < 9
+/// 百分率換算値 < 9 でエンカウント
 pub fn check_bw_encounter(rand_value: u32) -> WalkingEncounterLikelihood {
-    let upper16 = rand_value >> 16;
-    let check = (upper16 / 656) >> 16;
+    let percent = rand_to_percent(RomVersion::Black, rand_value);
     
-    if check < BW_ENCOUNTER_THRESHOLD {
+    if percent < BW_ENCOUNTER_THRESHOLD {
         WalkingEncounterLikelihood::Guaranteed
     } else {
         WalkingEncounterLikelihood::NoEncounter
@@ -366,6 +369,10 @@ pub fn check_bw_encounter(rand_value: u32) -> WalkingEncounterLikelihood {
 ```
 
 **注意**: BW では Possible は発生しない (Guaranteed or NoEncounter の2択)。
+
+**補足**: 元の式 `(上位16bit / 656) >> 16 < 9` は `rand_to_percent` と等価。
+- 656 = 0x290
+- `(rand >> 16) / 656` ≈ `(rand * (0xFFFF / 0x290)) >> 32`
 
 ### 8.4 BW2 のエンカウント判定
 
@@ -382,10 +389,9 @@ const BW2_ENCOUNTER_MIN_RATE: u32 = 5;
 const BW2_ENCOUNTER_MAX_RATE: u32 = 14;
 
 /// BW2 エンカウント判定
-/// 乱数値の百分率換算値が閾値を下回ればエンカウント
+/// 百分率換算値が閾値を下回ればエンカウント
 pub fn check_bw2_encounter(rand_value: u32) -> WalkingEncounterLikelihood {
-    // 百分率換算: (rand_value >> 16) * 100 / 65536
-    let percent = ((rand_value >> 16) as u64 * 100 / 65536) as u32;
+    let percent = rand_to_percent(RomVersion::Black2, rand_value);
     
     if percent < BW2_ENCOUNTER_MIN_RATE {
         // 最低閾値も通過 → 歩数にかかわらず確定
@@ -402,15 +408,33 @@ pub fn check_bw2_encounter(rand_value: u32) -> WalkingEncounterLikelihood {
 
 ### 8.5 統合判定関数
 
+`rand_to_percent` を使用して統合:
+
 ```rust
 /// 歩行エンカウント判定
 pub fn check_walking_encounter(
     version: RomVersion,
     rand_value: u32,
 ) -> WalkingEncounterLikelihood {
+    let percent = rand_to_percent(version, rand_value);
+    
     match version {
-        RomVersion::Black | RomVersion::White => check_bw_encounter(rand_value),
-        RomVersion::Black2 | RomVersion::White2 => check_bw2_encounter(rand_value),
+        RomVersion::Black | RomVersion::White => {
+            if percent < BW_ENCOUNTER_THRESHOLD {
+                WalkingEncounterLikelihood::Guaranteed
+            } else {
+                WalkingEncounterLikelihood::NoEncounter
+            }
+        }
+        RomVersion::Black2 | RomVersion::White2 => {
+            if percent < BW2_ENCOUNTER_MIN_RATE {
+                WalkingEncounterLikelihood::Guaranteed
+            } else if percent < BW2_ENCOUNTER_MAX_RATE {
+                WalkingEncounterLikelihood::Possible
+            } else {
+                WalkingEncounterLikelihood::NoEncounter
+            }
+        }
     }
 }
 ```
