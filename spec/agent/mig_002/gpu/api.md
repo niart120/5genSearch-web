@@ -6,27 +6,18 @@ WebGPU による GPU 計算経路。`gpu` feature で有効化。
 
 GPU API は Phase 2 での実装を予定。本ドキュメントでは API 設計のみを定義する。
 
-### 1.1 有効化
+### 1.1 Feature Flags
 
-```toml
-# Cargo.toml
-[features]
-default = ["cpu"]
-cpu = []
-gpu = ["wgpu"]
+Feature Flags 設定は下記を参照:
 
-[dependencies]
-wgpu = { version = "24", optional = true }
-```
+→ [spec/architecture/rust-structure.md](../../../architecture/rust-structure.md)
+
+デフォルトで CPU/GPU 両経路が有効。
 
 ### 1.2 ビルドコマンド
 
 ```powershell
-# CPU のみ
 wasm-pack build --target web --release
-
-# GPU 込み
-wasm-pack build --target web --release --features gpu
 ```
 
 ## 2. WebGPU 可用性チェック

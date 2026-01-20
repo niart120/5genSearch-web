@@ -269,8 +269,8 @@ type WorkerResponse =
 
 - `src/workers/protocol.ts` - メッセージプロトコル型定義
 - `src/workers/base-worker.ts` - 共通Worker基盤
-- `wasm-pkg/src/api/` - WASM APIモジュール
-- `src/lib/wasm/` - TypeScriptバインディング
+- `wasm-pkg/src/` - WASM モジュール (構成は [spec/architecture/rust-structure.md](../architecture/rust-structure.md) 参照)
+- `src/lib/wasm/` - TypeScript バインディング
 
 ---
 
@@ -299,9 +299,7 @@ type WorkerResponse =
 
 ### 成果物
 
-- `wasm-pkg/src/core/` - 計算ロジック (CPU)
-- `wasm-pkg/src/gpu/` - GPU計算ロジック (wgpu)
-- `wasm-pkg/src/data/` - 静的データ
+- `wasm-pkg/src/` - 計算ロジック (構成は [spec/architecture/rust-structure.md](../architecture/rust-structure.md) 参照)
 - `src/workers/boot-timing-worker.ts` (CPU)
 - `src/workers/boot-timing-worker-gpu.ts` (GPU)
 - `src/workers/initial-seed-worker.ts` (CPU)

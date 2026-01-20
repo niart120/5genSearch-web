@@ -41,9 +41,11 @@ wasm-opt = ["-O3", "--enable-simd", "--enable-bulk-memory", "--enable-nontrappin
 crate-type = ["cdylib"]
 
 [features]
-default = ["cpu"]
+default = ["cpu", "gpu"]
 cpu = []
 gpu = ["wgpu"]
+
+# Feature Flags 詳細 → spec/architecture/rust-structure.md
 
 [dependencies]
 wasm-bindgen = "0.2"
@@ -88,27 +90,9 @@ strip = true
 
 ## 6. ファイル構成
 
-```
-wasm-pkg/
-├── Cargo.toml
-├── src/
-│   ├── lib.rs              # エントリポイント
-│   ├── types/              # 共通型定義 (tsify)
-│   ├── generation/         # 個体生成
-│   ├── datetime_search/    # 起動時刻検索
-│   ├── mtseed_search/      # MTSeed検索
-│   ├── gpu/                # GPU計算 (feature = "gpu")
-│   └── core/               # 計算コア (PRNG, Hash)
-└── pkg/                    # wasm-pack 出力
-    ├── wasm_pkg.js
-    ├── wasm_pkg.d.ts
-    └── wasm_pkg_bg.wasm
+Rust/WASM ディレクトリ構成の詳細は下記を参照:
 
-src/
-└── lib/
-    └── core/
-        └── wasm-interface.ts   # WASM ラッパー
-```
+→ [spec/architecture/rust-structure.md](../../architecture/rust-structure.md)
 
 ## 7. モジュール依存関係
 
