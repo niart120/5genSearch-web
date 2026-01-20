@@ -20,7 +20,12 @@ LCG Seed
          ├─ 5. 性格決定
          ├─ 6. 持ち物判定 (種別による)
          │
-         └─ RawPokemonData 出力
+         └─ Resolve (乱数消費なし)
+              ├─ 性別 (PID + slot.gender_threshold)
+              ├─ 特性スロット (PID % 2)
+              ├─ 色違い (PID + TID/SID)
+              │
+              └─ ResolvedPokemonData 出力
 ```
 
 ## 2. エンカウント種別ごとの消費パターン
@@ -166,7 +171,50 @@ pub fn generate_wild_pokemon(
         HeldItemSlot::None
     };
     
-    build_pokemon_data(seed, pid, nature, sync_applied, slot, level_rand, held_item_slot, config)
+    // === Resolve (乱数消費なし) ===
+    
+    // 性別判定: PID 下位 8bit と gender_threshold を比較
+    let gender = determine_gender(pid, slot_config.gender_threshold);
+    
+    // 特性スロット: PID の最下位 bit
+    let ability_slot = (pid & 1) as u8;
+    
+    // 色違い判定: (PID上位 ^ PID下位 ^ TID ^ SID) < 8 で色違い
+    let shiny_type = calculate_shiny_type(pid, config.tid, config.sid);
+    
+    // レベル解決
+    let level = resolve_level(level_rand, slot_config.level_min, slot_config.level_max, enc_type);
+    
+    ResolvedPokemonData {
+        seed,
+        pid,
+        species_id: slot_config.species_id,
+        level,
+        nature,
+        sync_applied,
+        ability_slot,
+        gender,
+        shiny_type,
+        held_item_slot,
+        ivs: calculate_ivs(seed, config.version, enc_type),
+    }
+}
+
+/// 性別判定
+fn determine_gender(pid: u32, threshold: u8) -> Gender {
+    match threshold {
+        0 => Gender::Male,      // 固定♂
+        254 => Gender::Female,  // 固定♀
+        255 => Gender::Unknown, // 性別不明
+        t => {
+            let gender_value = (pid & 0xFF) as u8;
+            if gender_value < t {
+                Gender::Female
+            } else {
+                Gender::Male
+            }
+        }
+    }
 }
 
 /// 持ち物判定で乱数を消費するか (スロット考慮)

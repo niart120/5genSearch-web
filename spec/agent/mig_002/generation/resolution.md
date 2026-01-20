@@ -91,6 +91,8 @@ pub struct EncounterSlotConfig {
     pub level_min: u8,
     /// レベル上限
     pub level_max: u8,
+    /// 性別判定閾値 (0: 固定♂, 254: 固定♀, 255: 性別不明)
+    pub gender_threshold: u8,
     /// 持ち物判定有無
     pub has_held_item: bool,
 }
@@ -101,6 +103,7 @@ export type EncounterSlotConfig = {
   species_id: number;
   level_min: number;
   level_max: number;
+  gender_threshold: number;
   has_held_item: boolean;
 };
 ```
@@ -115,9 +118,6 @@ export type EncounterSlotConfig = {
 pub struct EncounterResolutionConfig {
     /// エンカウントスロット設定 (最大12スロット)
     pub slots: Vec<EncounterSlotConfig>,
-    /// 性別判定閾値 (対象種族の femaleThreshold)
-    /// 0: 固定♂, 254: 固定♀, 255: 性別不明
-    pub gender_threshold: u8,
 }
 ```
 
@@ -129,10 +129,6 @@ function buildResolutionConfig(
   encounterTable: EncounterTable,
   speciesData: Map<number, GeneratedSpecies>
 ): EncounterResolutionConfig {
-  // 先頭スロットの種族で gender_threshold を決定 (フィルタ時に上書きされる想定)
-  const firstSpecies = speciesData.get(encounterTable.slots[0].speciesId);
-  const threshold = firstSpecies?.gender.femaleThreshold ?? 127;
-  
   return {
     slots: encounterTable.slots.map(s => {
       const species = speciesData.get(s.speciesId);
@@ -140,10 +136,10 @@ function buildResolutionConfig(
         species_id: s.speciesId,
         level_min: s.levelRange.min,
         level_max: s.levelRange.max,
+        gender_threshold: species?.gender.femaleThreshold ?? 127,
         has_held_item: hasHeldItem(species),
       };
     }),
-    gender_threshold: threshold,
   };
 }
 

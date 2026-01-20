@@ -69,8 +69,6 @@ pub struct PokemonGenerationConfig {
 pub struct EncounterResolutionConfig {
     /// エンカウントスロット設定 (最大12スロット)
     pub slots: Vec<EncounterSlotConfig>,
-    /// 性別判定閾値 (0: 固定♂, 254: 固定♀, 255: 性別不明)
-    pub gender_threshold: u8,
 }
 
 #[derive(Tsify, Serialize, Deserialize, Clone)]
@@ -82,6 +80,8 @@ pub struct EncounterSlotConfig {
     pub level_min: u8,
     /// レベル上限
     pub level_max: u8,
+    /// 性別判定閾値 (0: 固定♂, 254: 固定♀, 255: 性別不明)
+    pub gender_threshold: u8,
     /// 持ち物判定有無 (50%/5%/1% いずれかの持ち物を持つ可能性がある場合 true)
     pub has_held_item: bool,
 }
@@ -90,13 +90,13 @@ pub struct EncounterSlotConfig {
 ```typescript
 export type EncounterResolutionConfig = {
   slots: EncounterSlotConfig[];
-  gender_threshold: number;
 };
 
 export type EncounterSlotConfig = {
   species_id: number;
   level_min: number;
   level_max: number;
+  gender_threshold: number;
   has_held_item: boolean;
 };
 ```
@@ -104,12 +104,25 @@ export type EncounterSlotConfig = {
 **設計意図**:
 - エンカウントテーブルは TS 側で JSON として管理
 - リクエスト時に必要な分だけ `EncounterResolutionConfig` として渡す
-- `has_held_item` は種族データから導出 (50%/5%/1% いずれかが存在するか)
+- `gender_threshold` / `has_held_item` は種族データから導出
 - WASM バイナリの肥大化を防ぐ
 
-**has_held_item の判定ロジック (TS 側)**:
+**スロット設定の導出ロジック (TS 側)**:
 
 ```typescript
+function buildSlotConfig(
+  slot: EncounterSlot,
+  species: GeneratedSpecies
+): EncounterSlotConfig {
+  return {
+    species_id: slot.speciesId,
+    level_min: slot.levelRange.min,
+    level_max: slot.levelRange.max,
+    gender_threshold: species.gender.femaleThreshold,
+    has_held_item: hasHeldItem(species),
+  };
+}
+
 function hasHeldItem(species: GeneratedSpecies): boolean {
   // 50%, 5%, 1% いずれかの持ち物が設定されていれば true
   return (
