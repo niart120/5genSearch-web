@@ -60,8 +60,8 @@ pub struct EggSearchParams {
     pub segment: SearchSegment,
     
     // === 孵化個体生成 (egg-generation から) ===
-    /// ゲームモード
-    pub game_mode: GameMode,
+    /// ゲーム起動設定 (Game Offset 計算用)
+    pub game_start_config: GameStartConfig,
     /// ユーザー指定オフセット
     pub user_offset: u64,
     /// 検索する消費数範囲
@@ -188,7 +188,7 @@ pub struct EggSearcher {
     hash_enumerator: HashValuesEnumerator,
     
     // egg-generation パラメータ
-    game_mode: GameMode,
+    game_start_config: GameStartConfig,
     user_offset: u64,
     advance_range: AdvanceRange,
     conditions: EggConditions,
@@ -456,5 +456,5 @@ self.onmessage = async (ev: MessageEvent<{ type: string; params: EggSearchParams
 |-------------|------|
 | [base.md](./base.md) | 共通基盤 (HashValuesEnumerator) |
 | [egg.md](../generation/egg.md) | 孵化個体生成 (EggGenerator) |
-| [types.md](../common/types.md) | GameMode, Nature, Gender 等 |
+| [types.md](../common/types.md) | GameStartConfig, Nature, Gender 等 |
 | [sha1-message-format.md](../common/sha1-message-format.md) | SHA-1 計算詳細 |

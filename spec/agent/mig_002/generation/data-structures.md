@@ -8,7 +8,9 @@ Pokemon/Egg 生成で使用する入出力型定義。
 
 | 型 | 用途 |
 |----|------|
-| `GameMode` | ゲーム起動条件。Game Offset 計算に使用 |
+| `GameStartConfig` | ゲーム起動設定。Game Offset 計算に使用 |
+| `StartMode` | 起動方法 (NewGame / Continue) |
+| `SaveState` | セーブ状態 (NoSave / WithSave / WithMemoryLink) |
 | `EncounterType` | エンカウント種別。乱数消費パターンを決定 |
 | `Nature` | 性格 (0-24) |
 | `Gender` | 性別 |
@@ -23,7 +25,7 @@ Pokemon/Egg 生成で使用する入出力型定義。
 ```rust
 // common/types.rs からの re-export
 pub use crate::common::types::{
-    GameMode, EncounterType, Nature, Gender, GenderRatio,
+    GameStartConfig, StartMode, SaveState, EncounterType, Nature, Gender, GenderRatio,
     AbilitySlot, ShinyType, IvSet, NeedleDirection, RomVersion, DsConfig,
 };
 ```
@@ -624,8 +626,8 @@ pub struct DatetimeParams {
 pub struct GenerationRequest<C> {
     /// LCG Seed の導出元
     pub seed_source: SeedSource,
-    /// ゲームモード (Game Offset 計算用)
-    pub game_mode: GameMode,
+    /// ゲーム起動設定 (Game Offset 計算用)
+    pub game_start_config: GameStartConfig,
     /// ユーザー指定オフセット
     pub user_offset: u64,
     /// 消費数範囲
@@ -638,7 +640,7 @@ pub struct GenerationRequest<C> {
 ```typescript
 export type GenerationRequest<C> = {
   seed_source: SeedSource;
-  game_mode: GameMode;
+  game_start_config: GameStartConfig;
   user_offset: bigint;
   advance_range: AdvanceRange;
   config: C;

@@ -97,10 +97,10 @@ Rust/WASM ディレクトリ構成の詳細は下記を参照:
 ## 7. モジュール依存関係
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ common/types.md                                                  │
-│  共通型: Hardware, RomVersion, RomRegion, GameMode, Nature, etc │
-└─────────────────────────┬───────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ common/types.md                                                       │
+│  共通型: Hardware, RomVersion, GameStartConfig, Nature, etc            │
+└──────────────────────────────┬───────────────────────────────────────┘
                           │
         ┌─────────────────┼─────────────────┐
         ↓                 ↓                 ↓
@@ -139,7 +139,7 @@ Rust/WASM ディレクトリ構成の詳細は下記を参照:
 mig_002/
 ├── overview.md                 # 本ドキュメント
 ├── common/                     # 共通基盤
-│   ├── types.md                # 共通型定義 (GameMode, Nature 等)
+│   ├── types.md                # 共通型定義 (GameStartConfig, Nature 等)
 │   └── sha1-message-format.md  # SHA-1 メッセージ構造・SIMD
 ├── datetime-search/            # 起動時刻検索
 │   ├── base.md                 # 共通基盤 (HashValuesEnumerator)
@@ -152,6 +152,8 @@ mig_002/
 │   └── egg.md                  # 孵化個体生成 (LCG Seed → EggIndividual)
 ├── seed-search/                # Seed 逆算
 │   └── mtseed.md               # MTSeed 逆算 (観測値 → MTSeed候補)
+├── misc/                       # その他ユーティリティ
+│   └── needle-search.md        # レポート針検索 (針パターン → 消費位置)
 └── gpu/
     ├── api.md                  # GPU API (wgpu/WebGPU)
     └── device-context.md       # GPU 汎用基盤 (デバイスコンテキスト・制限値)
@@ -169,6 +171,7 @@ mig_002/
 | [generation/pokemon.md](./generation/pokemon.md) | 野生個体生成 |
 | [generation/egg.md](./generation/egg.md) | 孵化個体生成 |
 | [seed-search/mtseed.md](./seed-search/mtseed.md) | MTSeed 逆算検索 |
+| [misc/needle-search.md](./misc/needle-search.md) | レポート針検索 |
 | [gpu/api.md](./gpu/api.md) | GPU API |
 | [gpu/device-context.md](./gpu/device-context.md) | GPU 汎用基盤 |
 | [datetime-search/worker-interface.md](./datetime-search/worker-interface.md) | Worker ↔ WASM インタフェース |
