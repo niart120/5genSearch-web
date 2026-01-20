@@ -44,12 +44,13 @@ generation/
 
 ## ドキュメント構成
 
-### 型定義
+### 型定義・インタフェース
 
 | ドキュメント | 内容 |
 |-------------|------|
 | [data-structures.md](./data-structures.md) | 入出力型定義 (Pokemon/Egg 共通・差分) |
 | [resolution.md](./resolution.md) | 解決層設計 (WASM/Worker/Main 責務分担、UI表示データ階層) |
+| [worker-interface.md](./worker-interface.md) | Worker ↔ WASM インタフェース (個体列挙 API) |
 
 ### アルゴリズム
 

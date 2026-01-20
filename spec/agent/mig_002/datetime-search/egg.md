@@ -117,7 +117,7 @@ pub struct IvRange {
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ShinyFilter {
-    Any,       // 色違いのみ (Star or Square)
+    StarSquare,       // 色違いのみ (Star or Square)
     Star,      // 星型のみ
     Square,    // ひし形のみ
 }
@@ -330,7 +330,7 @@ impl EggSearcher {
         // 色違いチェック
         if let Some(shiny_filter) = filter.shiny {
             match shiny_filter {
-                ShinyFilter::Any => {
+                ShinyFilter::StarSquare => {
                     if egg.shiny == ShinyType::None { return false; }
                 }
                 ShinyFilter::Star => {

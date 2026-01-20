@@ -209,6 +209,40 @@ let pid = generate_pid_with_reroll(rng, tid, sid, 7, |rng| {
 });
 ```
 
+### 4.4 高レベルヘルパー関数
+
+flows ドキュメントから参照される、設定ベースの PID 生成関数。
+
+```rust
+/// 野生/固定シンボル用 PID 生成 (ひかるおまもり対応)
+pub fn generate_pokemon_pid_wild(
+    rng: &mut Lcg,
+    tid: u16,
+    sid: u16,
+    shiny_charm: bool,
+) -> u32 {
+    let reroll_count = if shiny_charm { 2 } else { 0 };
+    generate_pid_with_reroll(rng, tid, sid, reroll_count, |rng| {
+        generate_wild_pid(rng.next(), tid, sid)
+    })
+}
+
+/// イベント系 PID 生成 (ID補正なし、色違いロック対応)
+pub fn generate_pokemon_pid_event(
+    rng: &mut Lcg,
+    tid: u16,
+    sid: u16,
+    shiny_locked: bool,
+) -> u32 {
+    let pid = generate_event_pid(rng.next());
+    if shiny_locked {
+        apply_shiny_lock(pid, tid, sid)
+    } else {
+        pid
+    }
+}
+```
+
 ## 5. PID から導出される値
 
 ### 5.1 性格
@@ -237,4 +271,5 @@ pub fn gender_value_from_pid(pid: u32) -> u8 {
 
 - [性格・シンクロ](./nature-sync.md)
 - [生成フロー: 野生](../flows/pokemon-wild.md)
+- [生成フロー: 固定・イベント](../flows/pokemon-static.md)
 - [生成フロー: 孵化](../flows/egg.md)
