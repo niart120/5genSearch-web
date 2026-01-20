@@ -85,23 +85,28 @@ export type RomRegion = "Jpn" | "Kor" | "Usa" | "Ger" | "Fra" | "Spa" | "Ita";
 
 ### 2.4 EncounterType
 
+エンカウント種別。乱数消費パターンを決定する。
+
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum EncounterType {
-    Normal,
-    ShakingGrass,
-    DustCloud,
-    PokemonShadow,
-    Surfing,
-    SurfingBubble,
-    Fishing,
-    FishingBubble,
-    StaticSymbol,
-    StaticStarter,
-    StaticFossil,
-    StaticEvent,
-    Roamer,
+    // 野生エンカウント
+    Normal,         // 草むら・洞窟
+    ShakingGrass,   // 揺れる草むら
+    DustCloud,      // 砂煙
+    PokemonShadow,  // 橋の影
+    Surfing,        // なみのり
+    SurfingBubble,  // 水泡
+    Fishing,        // 釣り
+    FishingBubble,  // 釣り + 水泡
+    
+    // 固定エンカウント
+    StaticSymbol,   // 固定シンボル
+    StaticStarter,  // 御三家
+    StaticFossil,   // 化石
+    StaticEvent,    // イベント配布
+    Roamer,         // 徘徊
 }
 ```
 
@@ -122,33 +127,86 @@ export type EncounterType =
   | "Roamer";
 ```
 
-### 2.5 GameMode
+### 2.5 StartMode
 
-ゲーム起動モード。起動時刻からのオフセット計算に影響する。
+起動方法。
 
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum GameMode {
-    BwNew,
-    BwContinue,
-    Bw2New,
-    Bw2Continue,
+pub enum StartMode {
+    /// 最初から (New Game)
+    NewGame,
+    /// 続きから (Continue)
+    Continue,
 }
 ```
 
 ```typescript
-export type GameMode = "BwNew" | "BwContinue" | "Bw2New" | "Bw2Continue";
+export type StartMode = 'NewGame' | 'Continue';
 ```
 
-| 値 | ゲーム | 起動方法 |
-|----|-------|---------|
-| `BwNew` | BW | 最初から |
-| `BwContinue` | BW | 続きから |
-| `Bw2New` | BW2 | 最初から |
-| `Bw2Continue` | BW2 | 続きから |
+### 2.6 SaveState
 
-### 2.6 Nature
+セーブ状態。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum SaveState {
+    /// セーブデータなし
+    NoSave,
+    /// セーブデータあり
+    WithSave,
+    /// セーブデータあり + 思い出リンク済み (BW2 のみ)
+    WithMemoryLink,
+}
+```
+
+```typescript
+export type SaveState = 'NoSave' | 'WithSave' | 'WithMemoryLink';
+```
+
+### 2.7 GameStartConfig
+
+起動設定。`RomVersion` と組み合わせて Game Offset を計算する。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct GameStartConfig {
+    pub start_mode: StartMode,
+    pub save_state: SaveState,
+}
+```
+
+```typescript
+export type GameStartConfig = {
+  start_mode: StartMode;
+  save_state: SaveState;
+};
+```
+
+**有効な組み合わせ**:
+
+| RomVersion | StartMode | SaveState | 有効 |
+|------------|-----------|-----------|------|
+| BW | NewGame | NoSave | ✓ |
+| BW | NewGame | WithSave | ✓ |
+| BW | Continue | WithSave | ✓ |
+| BW2 | NewGame | NoSave | ✓ |
+| BW2 | NewGame | WithSave | ✓ |
+| BW2 | NewGame | WithMemoryLink | ✓ |
+| BW2 | Continue | WithSave | ✓ |
+| BW2 | Continue | WithMemoryLink | ✓ |
+
+無効な組み合わせ:
+- `Continue + NoSave`: セーブなしで続きからは不可
+- `BW + WithMemoryLink`: BW に思い出リンク機能なし
+
+詳細は [game-offset.md](../generation/algorithm/game-offset.md) を参照。
+
+### 2.8 Nature
 
 性格 (0-24)。
 
@@ -184,7 +242,7 @@ pub enum Nature {
 }
 ```
 
-### 2.7 Gender
+### 2.9 Gender
 
 性別。
 
@@ -198,7 +256,7 @@ pub enum Gender {
 }
 ```
 
-### 2.8 GenderRatio
+### 2.10 GenderRatio
 
 性別比。孵化時の性別決定に使用。
 
@@ -209,26 +267,131 @@ pub enum GenderRatio {
     Genderless,
     MaleOnly,
     FemaleOnly,
-    Male7Female1,
-    Male3Female1,
-    Male1Female1,
-    Male1Female3,
+    /// 性別値の閾値 (例: 127 = 1:1, 31 = 7:1, 63 = 3:1, 191 = 1:3)
+    Threshold(u8),
 }
 ```
 
-### 2.9 AbilitySlot
+```typescript
+export type GenderRatio =
+  | { type: "Genderless" }
+  | { type: "MaleOnly" }
+  | { type: "FemaleOnly" }
+  | { type: "Threshold"; value: number };
+```
+
+| 閾値 | 性別比 | 備考 |
+|------|--------|------|
+| 31 | ♂7:♀1 | 御三家など |
+| 63 | ♂3:♀1 | - |
+| 127 | ♂1:♀1 | 多くのポケモン |
+| 191 | ♂1:♀3 | - |
+
+### 2.11 AbilitySlot
 
 特性スロット。
 
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum AbilitySlot {
-    First,
-    Second,
-    Hidden,
+    First,   // 0
+    Second,  // 1
+    Hidden,  // 2 (夢特性)
 }
 ```
+
+### 2.12 ShinyType
+
+色違い種別。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum ShinyType {
+    None,    // 通常
+    Star,    // ☆
+    Square,  // ◇
+}
+```
+
+```typescript
+export type ShinyType = "None" | "Star" | "Square";
+```
+
+### 2.13 IvSet
+
+個体値セット (HP, Atk, Def, SpA, SpD, Spe)。
+
+```rust
+/// [HP, Atk, Def, SpA, SpD, Spe]
+pub type IvSet = [u8; 6];
+```
+
+```typescript
+export type IvSet = [number, number, number, number, number, number];
+```
+
+### 2.14 NeedleDirection
+
+レポート針方向。ゲーム内セーブ画面で観測できる八方向の針。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[repr(u8)]
+pub enum NeedleDirection {
+    N = 0,   // ↑ 上
+    NE = 1,  // ↗ 右上
+    E = 2,   // → 右
+    SE = 3,  // ↘ 右下
+    S = 4,   // ↓ 下
+    SW = 5,  // ↙ 左下
+    W = 6,   // ← 左
+    NW = 7,  // ↖ 左上
+}
+```
+
+```typescript
+export type NeedleDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+```
+
+**計算仕様**:
+
+```rust
+impl NeedleDirection {
+    /// LCG Seed から針方向を計算
+    /// 
+    /// # Arguments
+    /// * `seed` - 現在の LCG Seed (advance 到達時点)
+    /// 
+    /// # Returns
+    /// 0-7 の方向値
+    pub fn from_seed(seed: u64) -> Self {
+        let upper = seed >> 32;
+        let dir = (upper.wrapping_mul(8)) >> 32;
+        // Safety: dir は必ず 0-7 の範囲
+        unsafe { std::mem::transmute((dir & 7) as u8) }
+    }
+}
+```
+
+**計算式**: `((seed >> 32) * 8) >> 32`
+
+| 値 | 方向 | 矢印 | 角度 |
+|----|------|------|------|
+| 0 | N | ↑ | 0° |
+| 1 | NE | ↗ | 45° |
+| 2 | E | → | 90° |
+| 3 | SE | ↘ | 135° |
+| 4 | S | ↓ | 180° |
+| 5 | SW | ↙ | 225° |
+| 6 | W | ← | 270° |
+| 7 | NW | ↖ | 315° |
+
+**用途**:
+- 目押し: 狙った消費数に到達したかの確認
+- 針検索: 観測した針の並びから起動条件/消費数を逆算
 
 ## 3. 設定型
 
