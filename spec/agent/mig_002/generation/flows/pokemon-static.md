@@ -18,9 +18,12 @@ LCG Seed
          ├─ 1. シンクロ判定 (対応種別のみ)
          ├─ 2. PID 生成
          ├─ 3. 性格決定
+         ├─ 4. 持ち物判定 (条件による)
          │
-         └─ RawPokemonData 出力
+         └─ ResolvedPokemonData 出力
 ```
+
+> **注意**: 本セクションは BW 仕様を基準とする。BW2 での差異は [セクション 6](#6-bwbw2-の差異) を参照。
 
 ## 2. 種別ごとの消費パターン
 
@@ -28,38 +31,69 @@ LCG Seed
 
 伝説ポケモン等、マップ上に固定配置されたシンボル。
 
+#### 2.1.1 シンクロ / 先頭特性なし
+
 | 順序 | 処理 | 乱数消費 | 備考 |
 |-----|------|---------|------|
 | 1 | シンクロ判定 | 1 | 対応 |
 | 2 | PID 生成 | 1+ | ひかるおまもり対応 |
 | 3 | 性格決定 | 1 | シンクロ適用可 |
+| 4 | 持ち物判定 | 0-1* | 条件による |
+| 5 | (BW) 最後の消費 | 1 | BW2 では消費なし |
 
-**合計**: 3 (+ ひかるおまもり 0-2)
+**合計 (BW)**: 4-5 (+ ひかるおまもり 0-2)  
+**合計 (BW2)**: 3-4 (+ ひかるおまもり 0-2)
+
+#### 2.1.2 ふくがん先頭
+
+ふくがんが先頭の場合、シンクロ判定をスキップする。
+
+| 順序 | 処理 | 乱数消費 | 備考 |
+|-----|------|---------|------|
+| 1 | PID 生成 | 1+ | ひかるおまもり対応 |
+| 2 | 性格決定 | 1 | - |
+| 3 | 持ち物判定 | 0-1* | 条件による |
+| 4 | (BW) 最後の消費 | 1 | BW2 では消費なし |
+
+**合計 (BW)**: 3-4 (+ ひかるおまもり 0-2)  
+**合計 (BW2)**: 2-3 (+ ひかるおまもり 0-2)
 
 ```rust
-fn generate_static_symbol(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonData {
+fn generate_static_symbol(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
     let mut rng = Lcg::new(seed);
+    let is_compound_eyes = config.lead_ability == LeadAbility::CompoundEyes;
     
-    // 1. シンクロ判定
-    let sync_success = perform_sync_check(
-        &mut rng, 
-        EncounterType::StaticSymbol, 
-        &config.lead_ability
-    );
-    
-    // 2. PID 生成
-    let pid = if config.shiny_charm {
-        generate_pid_with_shiny_charm(&mut rng, config.tid, config.sid, |r| {
-            generate_static_pid(r, config.tid, config.sid)
-        })
+    // 1. シンクロ判定 (ふくがん先頭時はスキップ)
+    let sync_success = if is_compound_eyes {
+        false
     } else {
-        generate_static_pid(rng.next(), config.tid, config.sid)
+        perform_sync_check(&mut rng, EncounterType::StaticSymbol, &config.lead_ability)
+    };
+    
+    // 2. PID 生成 (pid-shiny.md の generate_pokemon_pid_wild を使用)
+    let pid = generate_pokemon_pid_wild(&mut rng, config.tid, config.sid, config.shiny_charm);
+    
+    // 2.1 色違いロック適用 (ゼクロム・レシラム・キュレム等)
+    let pid = if config.shiny_locked {
+        apply_shiny_lock(pid, config.tid, config.sid)
+    } else {
+        pid
     };
     
     // 3. 性格決定
     let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
-    build_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
+    // 4. 持ち物判定 (対象個体のみ)
+    if config.has_held_item {
+        rng.next();
+    }
+    
+    // 5. BW のみ: 最後の消費
+    if config.version.is_bw() {
+        rng.next();
+    }
+    
+    build_resolved_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
 }
 ```
 
@@ -67,17 +101,17 @@ fn generate_static_symbol(seed: u64, config: &PokemonGenerationConfig) -> RawPok
 
 | 順序 | 処理 | 乱数消費 | 備考 |
 |-----|------|---------|------|
-| 1 | シンクロ判定 | 0 | 非対応 |
+| 1 | シンクロ判定 | 0 | 非対応 (先頭特性無効) |
 | 2 | PID 生成 | 1 | ID 補正なし、色違いロック |
 | 3 | 性格決定 | 1 | - |
 
 **合計**: 2
 
 ```rust
-fn generate_starter(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonData {
+fn generate_starter(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
     let mut rng = Lcg::new(seed);
     
-    // シンクロなし
+    // シンクロなし (先頭特性無効)
     
     // PID 生成 (ID 補正なし)
     let pid_base = generate_event_pid(rng.next());
@@ -87,7 +121,7 @@ fn generate_starter(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDa
     // 性格決定
     let nature = Nature::from_u8(nature_roll(rng.next()));
     
-    build_pokemon_data(seed, pid, nature, false, 0, 0, config)
+    build_resolved_pokemon_data(seed, pid, nature, false, 0, 0, config)
 }
 ```
 
@@ -110,24 +144,18 @@ fn generate_starter(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDa
 **合計**: 2 (+ ひかるおまもり 0-2)
 
 ```rust
-fn generate_roamer(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonData {
+fn generate_roamer(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
     let mut rng = Lcg::new(seed);
     
     // シンクロなし
     
-    // PID 生成
-    let pid = if config.shiny_charm {
-        generate_pid_with_shiny_charm(&mut rng, config.tid, config.sid, |r| {
-            generate_roamer_pid(r, config.tid, config.sid)
-        })
-    } else {
-        generate_roamer_pid(rng.next(), config.tid, config.sid)
-    };
+    // PID 生成 (pid-shiny.md の generate_pokemon_pid_wild を使用)
+    let pid = generate_pokemon_pid_wild(&mut rng, config.tid, config.sid, config.shiny_charm);
     
     // 性格決定
     let nature = Nature::from_u8(nature_roll(rng.next()));
     
-    build_pokemon_data(seed, pid, nature, false, 0, 0, config)
+    build_resolved_pokemon_data(seed, pid, nature, false, 0, 0, config)
 }
 ```
 
@@ -135,22 +163,48 @@ fn generate_roamer(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDat
 
 ## 3. 乱数消費まとめ
 
-| 種別 | シンクロ | PID | 性格 | 合計 | 備考 |
-|-----|---------|-----|-----|-----|------|
-| StaticSymbol | 1 | 1-3 | 1 | 3-5 | シンクロ対応 |
-| StaticStarter | 0 | 1 | 1 | 2 | 色違いロック |
-| StaticFossil | 0 | 1 | 1 | 2 | 色違いロック |
-| StaticEvent | 0 | 1 | 1 | 2 | 個体による |
-| Roamer | 0 | 1-3 | 1 | 2-4 | IV順序特殊 |
+### 3.1 BW
+
+| 種別 | シンクロ | PID | 性格 | 持ち物 | 最後の消費 | 合計 | 備考 |
+|-----|---------|-----|-----|-------|----------|-----|------|
+| StaticSymbol | 0-1 | 1-3 | 1 | 0-1 | 1 | 4-7 | ふくがんでシンクロスキップ |
+| StaticStarter | 0 | 1 | 1 | - | - | 2 | 色違いロック、先頭特性無効 |
+| StaticFossil | 0 | 1 | 1 | - | - | 2 | 色違いロック、先頭特性無効 |
+| StaticEvent | 0 | 1 | 1 | - | - | 2 | 個体による、先頭特性無効 |
+| Roamer | 0 | 1-3 | 1 | - | - | 2-4 | IV順序特殊 |
+
+### 3.2 BW2
+
+| 種別 | シンクロ | PID | 性格 | 持ち物 | 合計 | 備考 |
+|-----|---------|-----|-----|-------|-----|------|
+| StaticSymbol | 0-1 | 1-3 | 1 | 0-1 | 3-6 | 最後の消費なし |
+| StaticStarter | 0 | 1 | 1 | - | 2 | - |
+| StaticFossil | 0 | 1 | 1 | - | 2 | - |
+| StaticEvent | 0 | 1 | 1 | - | 2 | - |
+| Roamer | 0 | 1-3 | 1 | - | 2-4 | - |
 
 ## 4. 色違いロック対象
 
 以下のポケモンは色違いにならない:
 
-- **BW**: 御三家、N のポケモン、一部配布
-- **BW2**: 御三家、一部配布
+### 4.1 BW
+
+| 種別 | ポケモン |
+|-----|----------|
+| StaticSymbol | レシラム、ゼクロム、ビクティニ |
+| StaticEvent | N のポケモン、季節研究所シキジカ、ショウロイーブイ |
+
+### 4.2 BW2
+
+| 種別 | ポケモン |
+|-----|----------|
+| StaticSymbol | レシラム、ゼクロム、キュレム |
+| StaticEvent | N のポケモン、一部配布 |
 
 色違いロックは `PokemonGenerationConfig.shiny_locked` で制御。
+
+> **Note:** StaticSymbol でも色違いロック対象のポケモンが存在する。
+> `generate_pokemon_pid_wild` で PID 生成後、`apply_shiny_lock` を適用する。
 
 ## 5. 擬似コード: 統合生成関数
 
@@ -158,12 +212,13 @@ fn generate_roamer(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDat
 pub fn generate_static_pokemon(
     seed: u64,
     config: &PokemonGenerationConfig,
-) -> RawPokemonData {
+) -> ResolvedPokemonData {
     let mut rng = Lcg::new(seed);
     let enc_type = config.encounter_type;
+    let is_compound_eyes = config.lead_ability == LeadAbility::CompoundEyes;
     
-    // シンクロ判定 (StaticSymbol のみ)
-    let sync_success = if enc_type == EncounterType::StaticSymbol {
+    // シンクロ判定 (StaticSymbol のみ、ふくがん時はスキップ)
+    let sync_success = if enc_type == EncounterType::StaticSymbol && !is_compound_eyes {
         perform_sync_check(&mut rng, enc_type, &config.lead_ability)
     } else {
         false
@@ -171,27 +226,21 @@ pub fn generate_static_pokemon(
     
     // PID 生成
     let pid = match enc_type {
-        EncounterType::StaticSymbol => {
-            generate_pokemon_pid(&mut rng, config)
+        EncounterType::StaticSymbol | EncounterType::Roamer => {
+            // pid-shiny.md の generate_pokemon_pid_wild を使用
+            let pid = generate_pokemon_pid_wild(&mut rng, config.tid, config.sid, config.shiny_charm);
+            // 色違いロック適用 (ゼクロム・レシラム・キュレム等)
+            if config.shiny_locked {
+                apply_shiny_lock(pid, config.tid, config.sid)
+            } else {
+                pid
+            }
         }
         EncounterType::StaticStarter
         | EncounterType::StaticFossil
         | EncounterType::StaticEvent => {
-            let base = generate_event_pid(rng.next());
-            if config.shiny_locked {
-                apply_shiny_lock(base, config.tid, config.sid)
-            } else {
-                base
-            }
-        }
-        EncounterType::Roamer => {
-            if config.shiny_charm {
-                generate_pid_with_shiny_charm(&mut rng, config.tid, config.sid, |r| {
-                    generate_roamer_pid(r, config.tid, config.sid)
-                })
-            } else {
-                generate_roamer_pid(rng.next(), config.tid, config.sid)
-            }
+            // pid-shiny.md の generate_pokemon_pid_event を使用
+            generate_pokemon_pid_event(&mut rng, config.tid, config.sid, config.shiny_locked)
         }
         _ => unreachable!(),
     };
@@ -199,9 +248,42 @@ pub fn generate_static_pokemon(
     // 性格決定
     let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
-    build_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
+    // 持ち物判定 (StaticSymbol で対象個体のみ)
+    if enc_type == EncounterType::StaticSymbol && config.has_held_item {
+        rng.next();
+    }
+    
+    // BW のみ: 最後の消費 (StaticSymbol のみ)
+    if enc_type == EncounterType::StaticSymbol && config.version.is_bw() {
+        rng.next();
+    }
+    
+    build_resolved_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
 }
 ```
+
+## 6. BW/BW2 の差異
+
+### 6.1 乱数計算式
+
+| バージョン | 計算式 |
+|-----------|--------|
+| BW | `(乱数 >> 32) * 0xFFFF / 0x290 >> 32` |
+| BW2 | `(乱数 >> 32) * 100 >> 32` |
+
+### 6.2 最後の謎の消費 (StaticSymbol)
+
+| バージョン | 消費 |
+|-----------|------|
+| BW | +1 消費あり |
+| BW2 | なし |
+
+### 6.3 固定ポケモン消費数 (持ち物なし、シンクロあり)
+
+| バージョン | 合計消費 |
+|-----------|----------|
+| BW | 4 |
+| BW2 | 3 |
 
 ## 関連ドキュメント
 

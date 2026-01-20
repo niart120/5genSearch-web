@@ -361,7 +361,66 @@ export type ResolvedPokemonData = {
 - `held_item_slot`: エンカウント種別とふくがん有無で判定 (§9 参照)
 - `ivs`: LCG Seed → MT Seed → MT19937 で計算 (version/encounter_type に応じた offset 適用)
 
-### 2.9 GenerationSource
+### 2.10 build_resolved_pokemon_data
+
+PID から派生値を算出し、`ResolvedPokemonData` を構築するヘルパー関数。
+
+各生成フロー (pokemon-wild.md, pokemon-static.md, egg.md) から共通で使用される。
+
+```rust
+fn build_resolved_pokemon_data(
+    seed: u64,
+    pid: u32,
+    nature: u8,
+    sync_applied: bool,
+    encounter_slot_value: u8,
+    level_rand_value: u32,
+    config: &PokemonGenerationConfig,
+) -> ResolvedPokemonData {
+    // PID から派生値を算出
+    let ability_slot = ((pid >> 16) & 1) as u8;  // 上位16bitの最下位bit
+    let gender_value = (pid & 0xFF) as u8;       // 下位8bit
+    
+    // 色違い判定
+    let shiny_type = ShinyChecker::check_shiny_type(config.tid, config.sid, pid);
+    
+    // スロットから種族・レベル・性別を解決
+    let slot_config = &config.encounter_resolution.slots[encounter_slot_value as usize];
+    let species_id = slot_config.species_id;
+    let level = resolve_level(level_rand_value, slot_config.level_min, slot_config.level_max);
+    let gender = determine_gender(gender_value, slot_config.gender_threshold);
+    
+    // IV は MT Seed から導出 (base_seed 必要)
+    // ※ 実際の実装では base_seed を別途受け取る
+    let ivs = calculate_ivs(seed, config.version, config.encounter_type);
+    
+    ResolvedPokemonData {
+        seed,
+        pid,
+        species_id,
+        level,
+        nature,
+        sync_applied,
+        ability_slot,
+        gender,
+        shiny_type,
+        held_item_slot: HeldItemSlot::None,  // 別途計算
+        ivs,
+    }
+}
+```
+
+**PID からの派生値算出ルール**:
+
+| 項目 | 算出方法 | 備考 |
+|-----|---------|------|
+| `ability_slot` | `(pid >> 16) & 1` | 特性スロット (0 or 1) |
+| `gender_value` | `pid & 0xFF` | 性別判定用の値 (0-255) |
+| `shiny_type` | `ShinyChecker::check_shiny_type()` | Normal / Square / Star |
+
+**注意**: この関数は乱数を消費しない。純粋に PID と設定から `ResolvedPokemonData` を構築するのみ。
+
+### 2.11 GenerationSource
 
 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 
