@@ -160,14 +160,17 @@ mig_002/
 ├── datetime-search/            # 起動時刻検索
 │   ├── base.md                 # 共通基盤 (HashValuesEnumerator)
 │   ├── mtseed.md               # MT Seed 起動時刻検索
-│   └── egg.md                  # 孵化起動時刻検索
+│   ├── egg.md                  # 孵化起動時刻検索
+│   ├── worker-interface.md     # Worker ↔ WASM インタフェース
+│   └── gpu-kernel.md           # GPU カーネル設計
 ├── generation/                 # 個体生成
 │   ├── pokemon.md              # 野生個体生成 (Seed → Pokemon列)
 │   └── egg.md                  # 孵化個体生成 (LCG Seed → EggIndividual)
 ├── seed-search/                # Seed 逆算
 │   └── mtseed.md               # MTSeed 逆算 (観測値 → MTSeed候補)
 └── gpu/
-    └── api.md                  # GPU API (wgpu/WebGPU)
+    ├── api.md                  # GPU API (wgpu/WebGPU)
+    └── device-context.md       # GPU 汎用基盤 (デバイスコンテキスト・制限値)
 ```
 
 ### ドキュメント一覧
@@ -183,6 +186,9 @@ mig_002/
 | [generation/egg.md](./generation/egg.md) | 孵化個体生成 |
 | [seed-search/mtseed.md](./seed-search/mtseed.md) | MTSeed 逆算検索 |
 | [gpu/api.md](./gpu/api.md) | GPU API |
+| [gpu/device-context.md](./gpu/device-context.md) | GPU 汎用基盤 |
+| [datetime-search/worker-interface.md](./datetime-search/worker-interface.md) | Worker ↔ WASM インタフェース |
+| [datetime-search/gpu-kernel.md](./datetime-search/gpu-kernel.md) | 起動時刻検索 GPU カーネル |
 
 ## 9. 関連ドキュメント
 

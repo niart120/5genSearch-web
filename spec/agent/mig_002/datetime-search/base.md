@@ -357,6 +357,7 @@ impl Sha1Hash {
 |-------------|------|
 | [mtseed.md](./mtseed.md) | MT Seed 照合検索 |
 | [egg.md](./egg.md) | 孵化起動時刻検索 |
+| [worker-interface.md](./worker-interface.md) | Worker ↔ WASM インタフェース設計 |
 
 関連ドキュメント:
 
@@ -365,4 +366,5 @@ impl Sha1Hash {
 | [overview.md](../overview.md) | 概要、設計原則 |
 | [types.md](../common/types.md) | DsConfig, Hardware 等の共通型 |
 | [sha1-message-format.md](../common/sha1-message-format.md) | SHA-1 メッセージ構造・BCD エンコーディング |
-| [api.md](../gpu/api.md) | GPU 最適化 |
+| [api.md](../gpu/api.md) | GPU API 設計 |
+| [../../mig_001/worker-architecture.md](../../mig_001/worker-architecture.md) | Worker アーキテクチャ全体設計 |

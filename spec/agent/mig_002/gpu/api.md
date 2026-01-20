@@ -63,72 +63,24 @@ if (is_webgpu_available()) {
 }
 ```
 
-## 3. GpuContext
+## 3. GpuDeviceContext
 
-### 3.1 定義
+GPU デバイスコンテキストの詳細定義は [device-context.md](./device-context.md) §3 を参照。
 
-```rust
-#[cfg(feature = "gpu")]
-mod gpu {
-    use wasm_bindgen::prelude::*;
-    use wasm_bindgen_futures::JsFuture;
-    
-    #[wasm_bindgen]
-    pub struct GpuContext {
-        device: wgpu::Device,
-        queue: wgpu::Queue,
-    }
-
-    #[wasm_bindgen]
-    impl GpuContext {
-        /// GPU コンテキスト初期化（非同期）
-        #[wasm_bindgen]
-        pub async fn new() -> Result<GpuContext, String> {
-            let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-                backends: wgpu::Backends::BROWSER_WEBGPU,
-                ..Default::default()
-            });
-            
-            let adapter = instance
-                .request_adapter(&wgpu::RequestAdapterOptions {
-                    power_preference: wgpu::PowerPreference::HighPerformance,
-                    ..Default::default()
-                })
-                .await
-                .ok_or("No adapter found")?;
-            
-            let (device, queue) = adapter
-                .request_device(&wgpu::DeviceDescriptor::default(), None)
-                .await
-                .map_err(|e| e.to_string())?;
-            
-            Ok(GpuContext { device, queue })
-        }
-
-        /// GPU情報取得
-        #[wasm_bindgen(getter)]
-        pub fn info(&self) -> String {
-            // デバイス情報を返す
-            "WebGPU Device".to_string()
-        }
-    }
-}
-```
-
-### 3.2 TypeScript 利用
+### 3.1 TypeScript 利用例
 
 ```typescript
-import { GpuContext, is_webgpu_available } from '@wasm/wasm_pkg';
+import { GpuDeviceContext, is_webgpu_available, GpuProfile } from '@wasm/wasm_pkg';
 
-async function initGpu(): Promise<GpuContext | null> {
+async function initGpu(): Promise<GpuDeviceContext | null> {
   if (!is_webgpu_available()) {
     console.warn('WebGPU is not available');
     return null;
   }
   
   try {
-    const context = await GpuContext.new();
-    console.log('GPU initialized:', context.info);
+    const profile = GpuProfile.fallback(); // または WebGL から検出
+    const context = await GpuDeviceContext.new(profile);
     return context;
   } catch (e) {
     console.error('Failed to initialize GPU:', e);
@@ -238,5 +190,9 @@ async function search(
 
 ## 7. 関連ドキュメント
 
-- [overview.md](../overview.md) - 概要、設計原則
-- [mtseed.md](../seed-search/mtseed.md) - MT Seed 検索 API
+| ドキュメント | 内容 |
+|-------------|------|
+| [device-context.md](./device-context.md) | GPU 詳細設計（デバイスコンテキスト・シェーダー・分割戦略） |
+| [overview.md](../overview.md) | 概要、設計原則 |
+| [worker-interface.md](../datetime-search/worker-interface.md) | Worker ↔ WASM インタフェース |
+| [mtseed.md](../seed-search/mtseed.md) | MT Seed 検索 API |
