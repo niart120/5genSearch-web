@@ -161,7 +161,57 @@ export type ItemContent =
 
 詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §5 を参照。
 
-### 2.4 ResolvedPokemonData
+### 2.4 EncounterMethod
+
+エンカウント発生方法。歩行時はエンカウント判定が入る。
+
+```rust
+/// エンカウント発生方法
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum EncounterMethod {
+    /// あまいかおり使用 (確定エンカウント、判定スキップ)
+    SweetScent,
+    /// 歩行移動 (エンカウント判定あり)
+    Walking,
+}
+```
+
+```typescript
+export type EncounterMethod = 'SweetScent' | 'Walking';
+```
+
+### 2.5 WalkingEncounterLikelihood
+
+歩行エンカウント判定結果。BW2 では歩数に応じた段階的な確率となる。
+
+```rust
+/// 歩行エンカウント判定結果
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum WalkingEncounterLikelihood {
+    /// 歩数にかかわらず確定エンカウント (最低閾値も通過)
+    Guaranteed,
+    /// エンカウントの可能性あり (最高閾値のみ通過、BW2のみ)
+    Possible,
+    /// エンカウント無し (最高閾値も不通過)
+    NoEncounter,
+}
+```
+
+```typescript
+export type WalkingEncounterLikelihood = 'Guaranteed' | 'Possible' | 'NoEncounter';
+```
+
+| 結果 | BW | BW2 | 意味 |
+|-----|-----|-----|------|
+| Guaranteed | ○ | ○ | 歩数にかかわらず確定 |
+| Possible | - | ○ | 歩数次第でエンカウント |
+| NoEncounter | ○ | ○ | エンカウント無し |
+
+詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §8 を参照。
+
+### 2.6 ResolvedPokemonData
 
 解決済み Pokemon 個体データ。WASM 内で species_id/level/gender/ivs まで解決済み。
 
@@ -218,7 +268,7 @@ export type ResolvedPokemonData = {
 - `gender`: `gender_value` と `gender_threshold` を比較して決定
 - `ivs`: LCG Seed → MT Seed → MT19937 で計算 (version/encounter_type に応じた offset 適用)
 
-### 2.5 GenerationSource
+### 2.7 GenerationSource
 
 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 
@@ -256,7 +306,7 @@ export type GenerationSource =
   | { type: 'Datetime'; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
 ```
 
-### 2.6 EnumeratedPokemonData
+### 2.8 EnumeratedPokemonData
 
 Advance 情報付き Pokemon データ。
 

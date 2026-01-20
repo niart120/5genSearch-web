@@ -313,14 +313,129 @@ pub fn fishing_success(rand_value: u32) -> bool {
 
 **注意**: 釣り失敗時は乱数消費のみで個体生成処理には進まない。
 
-## 8. 移動エンカウント発生判定 (TBD)
+## 8. 移動エンカウント発生判定
 
-歩行時のエンカウント発生率判定。詳細は未調査。
+歩行時のエンカウント発生率判定。あまいかおり使用時は確定エンカウントとなり判定をスキップする。
 
-- エンカウント率テーブル
-- 歩数による発生判定
+### 8.1 エンカウント方法
+
+```rust
+/// エンカウント発生方法
+pub enum EncounterMethod {
+    /// あまいかおり使用 (確定エンカウント、判定スキップ)
+    SweetScent,
+    /// 歩行移動 (エンカウント判定あり)
+    Walking,
+}
+```
+
+### 8.2 歩行エンカウント判定結果
+
+```rust
+/// 歩行エンカウント判定結果
+pub enum WalkingEncounterLikelihood {
+    /// 歩数にかかわらず確定エンカウント (最低閾値も通過)
+    Guaranteed,
+    /// エンカウントの可能性あり (最高閾値のみ通過)
+    Possible,
+    /// エンカウント無し (最高閾値も不通過)
+    NoEncounter,
+}
+```
+
+### 8.3 BW のエンカウント判定
+
+BW では単一の閾値で判定。
+
+```rust
+/// BW エンカウント判定閾値
+const BW_ENCOUNTER_THRESHOLD: u32 = 9;
+
+/// BW エンカウント判定
+/// 参考式: (上位16bit / 656) >> 16 < 9
+pub fn check_bw_encounter(rand_value: u32) -> WalkingEncounterLikelihood {
+    let upper16 = rand_value >> 16;
+    let check = (upper16 / 656) >> 16;
+    
+    if check < BW_ENCOUNTER_THRESHOLD {
+        WalkingEncounterLikelihood::Guaranteed
+    } else {
+        WalkingEncounterLikelihood::NoEncounter
+    }
+}
+```
+
+**注意**: BW では Possible は発生しない (Guaranteed or NoEncounter の2択)。
+
+### 8.4 BW2 のエンカウント判定
+
+BW2 では歩数に応じてエンカウント率が変化する:
+- 最初の1歩 + 次の行動: 判定なし
+- その後: 5% → 8% → 11% → 14%... と段階的に増加
+
+乱数調整では歩数を固定せず、最低 (5%) と最高 (14%) の2つの閾値で判定:
+
+```rust
+/// BW2 最低エンカウント率 (初期歩数後)
+const BW2_ENCOUNTER_MIN_RATE: u32 = 5;
+/// BW2 最高エンカウント率 (十分な歩数後)
+const BW2_ENCOUNTER_MAX_RATE: u32 = 14;
+
+/// BW2 エンカウント判定
+/// 乱数値の百分率換算値が閾値を下回ればエンカウント
+pub fn check_bw2_encounter(rand_value: u32) -> WalkingEncounterLikelihood {
+    // 百分率換算: (rand_value >> 16) * 100 / 65536
+    let percent = ((rand_value >> 16) as u64 * 100 / 65536) as u32;
+    
+    if percent < BW2_ENCOUNTER_MIN_RATE {
+        // 最低閾値も通過 → 歩数にかかわらず確定
+        WalkingEncounterLikelihood::Guaranteed
+    } else if percent < BW2_ENCOUNTER_MAX_RATE {
+        // 最高閾値のみ通過 → 歩数次第でエンカウント
+        WalkingEncounterLikelihood::Possible
+    } else {
+        // 最高閾値も不通過 → エンカウント無し
+        WalkingEncounterLikelihood::NoEncounter
+    }
+}
+```
+
+### 8.5 統合判定関数
+
+```rust
+/// 歩行エンカウント判定
+pub fn check_walking_encounter(
+    version: RomVersion,
+    rand_value: u32,
+) -> WalkingEncounterLikelihood {
+    match version {
+        RomVersion::Black | RomVersion::White => check_bw_encounter(rand_value),
+        RomVersion::Black2 | RomVersion::White2 => check_bw2_encounter(rand_value),
+    }
+}
+```
+
+### 8.6 判定結果の解釈
+
+| 結果 | 意味 | ツールでの用途 |
+|-----|------|--------------|
+| Guaranteed | 歩数にかかわらず確定 | フィルタ: 確実にエンカウント可能 |
+| Possible | 歩数次第 | フィルタ: エンカウント可能性あり |
+| NoEncounter | エンカウント無し | フィルタ: 除外 |
+
+### 8.7 あまいかおりとの関係
+
+あまいかおり使用時 (`EncounterMethod::SweetScent`) は:
+- エンカウント判定をスキップ (乱数消費なし)
+- 確定でエンカウント発生
+- 多くの乱数調整ではこちらを使用
+
+### 8.8 未対応事項
+
+以下は現時点で未対応:
 - スプレー効果
-- 先頭ポケモンの特性効果 (はっこう、あくしゅう等)
+- 先頭ポケモンの特性効果 (はっこう、あくしゅう、ありじごく等)
+- 場所ごとのエンカウント率差異 (14% は一例、場所により異なる可能性)
 
 ## 9. ダブルバトル / 大量発生 (TBD)
 
