@@ -492,10 +492,11 @@ pub enum HeldItemSlot {
 pub fn determine_held_item_slot(
     version: RomVersion,
     rand_value: u32,
-    has_compound_eyes: bool,
+    lead_ability: &LeadAbilityEffect,
     has_rare_item: bool,  // 濃い草むら・泡のみ true
 ) -> HeldItemSlot {
     let percent = rand_to_percent(version, rand_value);
+    let has_compound_eyes = matches!(lead_ability, LeadAbilityEffect::CompoundEyes);
     
     if has_compound_eyes {
         // ふくがん有り

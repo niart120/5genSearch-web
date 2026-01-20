@@ -44,7 +44,7 @@ fn generate_static_symbol(seed: u64, config: &PokemonGenerationConfig) -> RawPok
     let sync_success = perform_sync_check(
         &mut rng, 
         EncounterType::StaticSymbol, 
-        config.sync_enabled
+        &config.lead_ability
     );
     
     // 2. PID 生成
@@ -57,7 +57,7 @@ fn generate_static_symbol(seed: u64, config: &PokemonGenerationConfig) -> RawPok
     };
     
     // 3. 性格決定
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, config.sync_nature);
+    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
     build_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
 }
@@ -164,7 +164,7 @@ pub fn generate_static_pokemon(
     
     // シンクロ判定 (StaticSymbol のみ)
     let sync_success = if enc_type == EncounterType::StaticSymbol {
-        perform_sync_check(&mut rng, enc_type, config.sync_enabled)
+        perform_sync_check(&mut rng, enc_type, &config.lead_ability)
     } else {
         false
     };
@@ -197,11 +197,7 @@ pub fn generate_static_pokemon(
     };
     
     // 性格決定
-    let (nature, sync_applied) = if sync_success {
-        (config.sync_nature, true)
-    } else {
-        (Nature::from_u8(nature_roll(rng.next())), false)
-    };
+    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
     build_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
 }

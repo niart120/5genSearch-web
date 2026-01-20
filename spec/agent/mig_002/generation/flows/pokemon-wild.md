@@ -48,7 +48,7 @@ fn generate_normal(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDat
     let mut rng = Lcg::new(seed);
     
     // 1. シンクロ判定
-    let sync_success = perform_sync_check(&mut rng, EncounterType::Normal, config.sync_enabled);
+    let sync_success = perform_sync_check(&mut rng, EncounterType::Normal, &config.lead_ability);
     
     // 2. スロット決定
     let slot_rand = rng.next();
@@ -66,7 +66,7 @@ fn generate_normal(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDat
     };
     
     // 5. 性格決定
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, config.sync_nature);
+    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
     build_pokemon_data(seed, pid, nature, sync_applied, slot, 0, config)
 }
@@ -89,12 +89,12 @@ fn generate_normal(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonDat
 fn generate_surfing(seed: u64, config: &PokemonGenerationConfig) -> RawPokemonData {
     let mut rng = Lcg::new(seed);
     
-    let sync_success = perform_sync_check(&mut rng, EncounterType::Surfing, config.sync_enabled);
+    let sync_success = perform_sync_check(&mut rng, EncounterType::Surfing, &config.lead_ability);
     let slot = water_encounter_slot(rng.next());
     let level_rand = rng.next();
     
     let pid = generate_pid_maybe_shiny_charm(&mut rng, config);
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, config.sync_nature);
+    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
     let _item_rand = rng.next();  // 持ち物判定
     
@@ -138,7 +138,7 @@ pub fn generate_wild_pokemon(
     let enc_type = config.encounter_type;
     
     // 1. シンクロ判定
-    let sync_success = perform_sync_check(&mut rng, enc_type, config.sync_enabled);
+    let sync_success = perform_sync_check(&mut rng, enc_type, &config.lead_ability);
     
     // 2. スロット決定
     let slot_rand = rng.next();
@@ -156,7 +156,7 @@ pub fn generate_wild_pokemon(
     let pid = generate_pokemon_pid(&mut rng, config);
     
     // 5. 性格決定
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, config.sync_nature);
+    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
     
     // 6. 持ち物判定 (エンカウント種別対応 かつ スロットが持ち物を持つ場合のみ)
     let held_item_slot = if consumes_held_item_rand(enc_type, slot_config) {
@@ -164,7 +164,7 @@ pub fn generate_wild_pokemon(
         determine_held_item_slot(
             config.version,
             item_rand,
-            config.has_compound_eyes,
+            &config.lead_ability,
             has_very_rare_item(enc_type),
         )
     } else {

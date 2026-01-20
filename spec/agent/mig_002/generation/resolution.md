@@ -43,7 +43,7 @@ WASM/Worker/Main 間の責務分担と、UI 表示用データの階層設計。
 | Encounter 結果判定 | WASM | `slot_value`, `EncounterType` | `EncounterResult` |
 | Slot → Species/Level | WASM | `EncounterSlotConfig[]` | `species_id`, `level` |
 | Gender 判定 | WASM | `gender_value`, `gender_threshold` | `Gender` |
-| 持ち物スロット判定 | WASM | `rand_value`, `EncounterType`, `has_compound_eyes` | `HeldItemSlot` |
+| 持ち物スロット判定 | WASM | `rand_value`, `EncounterType`, `LeadAbilityEffect` | `HeldItemSlot` |
 | IV 計算 | WASM | LCG Seed, Version, EncounterType | `IvSet` |
 | 持ち物 → アイテム名 | Main (TS) | `HeldItemSlot`, `species_id`, `locale` | 表示用文字列 |
 | Stats 計算 | Main (TS) | `baseStats`, `IvSet`, `level`, `nature` | `CalculatedStats` |

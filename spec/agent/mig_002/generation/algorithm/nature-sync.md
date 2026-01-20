@@ -57,7 +57,7 @@ pub fn sync_check(r: u32) -> bool {
 pub fn perform_sync_check(
     rng: &mut Lcg,
     encounter_type: EncounterType,
-    sync_enabled: bool,
+    lead_ability: &LeadAbilityEffect,
 ) -> bool {
     if !supports_sync(encounter_type) {
         return false;  // 乱数消費なし
@@ -65,7 +65,7 @@ pub fn perform_sync_check(
     
     let r = rng.next();  // 対応エンカウントでは常に消費
     
-    sync_enabled && sync_check(r)
+    matches!(lead_ability, LeadAbilityEffect::Synchronize(_)) && sync_check(r)
 }
 ```
 
@@ -75,18 +75,19 @@ pub fn perform_sync_check(
 
 ```rust
 /// 性格決定 (シンクロ考慮)
-pub fn generate_nature_with_sync(
+pub fn determine_nature(
     rng: &mut Lcg,
     sync_success: bool,
-    sync_nature_id: u8,
-) -> (bool, u8) {
+    lead_ability: &LeadAbilityEffect,
+) -> (Nature, bool) {
     let rng_nature = nature_roll(rng.next());  // 常に消費
     
     if sync_success {
-        (true, sync_nature_id)
-    } else {
-        (false, rng_nature)
+        if let LeadAbilityEffect::Synchronize(nature) = lead_ability {
+            return (*nature, true);
+        }
     }
+    (Nature::from_u8(rng_nature), false)
 }
 ```
 

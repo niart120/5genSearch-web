@@ -30,7 +30,33 @@ pub use crate::common::types::{
 
 ## 2. Pokemon 生成
 
-### 2.1 PokemonGenerationConfig
+### 2.1 LeadAbilityEffect
+
+先頭ポケモンの特性効果。先頭ポケモンは1特性のみなので、各バリアントは排他的。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum LeadAbilityEffect {
+    /// 特性効果なし
+    None,
+    /// シンクロ: 50% で性格一致
+    Synchronize(Nature),
+    /// ふくがん: 持ち物確率上昇
+    CompoundEyes,
+    // 今後の拡張例:
+    // CuteCharm(Gender),  // メロメロボディ: 異性出現率上昇
+}
+```
+
+```typescript
+export type LeadAbilityEffect =
+  | { type: 'None' }
+  | { type: 'Synchronize'; nature: Nature }
+  | { type: 'CompoundEyes' };
+```
+
+### 2.2 PokemonGenerationConfig
 
 Pokemon 生成設定。
 
@@ -46,22 +72,18 @@ pub struct PokemonGenerationConfig {
     pub tid: u16,
     /// 裏ID
     pub sid: u16,
-    /// シンクロ有効
-    pub sync_enabled: bool,
-    /// シンクロ性格 (sync_enabled=true 時のみ有効)
-    pub sync_nature: Nature,
     /// 色違いロック
     pub shiny_locked: bool,
     /// ひかるおまもり所持
     pub shiny_charm: bool,
-    /// ふくがん有効 (先頭ポケモンがふくがん持ち)
-    pub has_compound_eyes: bool,
+    /// 先頭ポケモンの特性効果
+    pub lead_ability: LeadAbilityEffect,
     /// エンカウント解決設定 (スロット→種族ID/レベル解決用)
     pub encounter_resolution: EncounterResolutionConfig,
 }
 ```
 
-### 2.2 EncounterResolutionConfig
+### 2.3 EncounterResolutionConfig
 
 エンカウント解決設定。TS 側で構築し、WASM に渡す。
 
@@ -135,7 +157,7 @@ function hasHeldItem(species: GeneratedSpecies): boolean {
 }
 ```
 
-### 2.3 EncounterResult
+### 2.4 EncounterResult
 
 エンカウント処理の結果種別。砂煙・橋の影では Pokemon 以外の結果もありうる。
 
@@ -193,7 +215,7 @@ export type ItemContent =
 
 詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §5 を参照。
 
-### 2.4 EncounterMethod
+### 2.5 EncounterMethod
 
 エンカウント発生方法。歩行時はエンカウント判定が入る。
 
@@ -213,7 +235,7 @@ pub enum EncounterMethod {
 export type EncounterMethod = 'SweetScent' | 'Walking';
 ```
 
-### 2.5 WalkingEncounterLikelihood
+### 2.6 WalkingEncounterLikelihood
 
 歩行エンカウント判定結果。BW2 では歩数に応じた段階的な確率となる。
 
@@ -243,7 +265,7 @@ export type WalkingEncounterLikelihood = 'Guaranteed' | 'Possible' | 'NoEncounte
 
 詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §8 を参照。
 
-### 2.6 HeldItemSlot
+### 2.7 HeldItemSlot
 
 持ち物判定結果。実際のアイテムは TS 側で種族データから解決する。
 
@@ -276,7 +298,7 @@ export type HeldItemSlot = 'Common' | 'Rare' | 'VeryRare' | 'None';
 
 詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §9 を参照。
 
-### 2.7 ResolvedPokemonData
+### 2.8 ResolvedPokemonData
 
 解決済み Pokemon 個体データ。WASM 内で species_id/level/gender/ivs まで解決済み。
 
@@ -337,7 +359,7 @@ export type ResolvedPokemonData = {
 - `held_item_slot`: エンカウント種別とふくがん有無で判定 (§9 参照)
 - `ivs`: LCG Seed → MT Seed → MT19937 で計算 (version/encounter_type に応じた offset 適用)
 
-### 2.8 GenerationSource
+### 2.9 GenerationSource
 
 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 
@@ -375,7 +397,7 @@ export type GenerationSource =
   | { type: 'Datetime'; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
 ```
 
-### 2.9 EnumeratedPokemonData
+### 2.10 EnumeratedPokemonData
 
 Advance 情報付き Pokemon データ。
 
