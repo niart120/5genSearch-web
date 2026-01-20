@@ -211,7 +211,40 @@ export type WalkingEncounterLikelihood = 'Guaranteed' | 'Possible' | 'NoEncounte
 
 詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §8 を参照。
 
-### 2.6 ResolvedPokemonData
+### 2.6 HeldItemSlot
+
+持ち物判定結果。実際のアイテムは TS 側で種族データから解決する。
+
+```rust
+/// 持ち物スロット (確率カテゴリ)
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum HeldItemSlot {
+    /// 50% アイテム (タマゲタケのちいさなきのこ等)
+    Common,
+    /// 5% アイテム (タマゲタケのおおきなきのこ等)
+    Rare,
+    /// 1% アイテム (濃い草むら・泡のみ、タマゲタケのかおるきのこ等)
+    VeryRare,
+    /// 持ち物なし
+    None,
+}
+```
+
+```typescript
+export type HeldItemSlot = 'Common' | 'Rare' | 'VeryRare' | 'None';
+```
+
+| スロット | 確率 (通常) | 確率 (ふくがん) | 備考 |
+|---------|-----------|---------------|------|
+| Common | 50% | 60% | - |
+| Rare | 5% | 20% | - |
+| VeryRare | 1% | 5% | 濃い草むら・泡のみ |
+| None | 44%/45% | 15%/20% | - |
+
+詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §9 を参照。
+
+### 2.7 ResolvedPokemonData
 
 解決済み Pokemon 個体データ。WASM 内で species_id/level/gender/ivs まで解決済み。
 
@@ -240,6 +273,8 @@ pub struct ResolvedPokemonData {
     pub gender: Gender,
     /// 色違い種別
     pub shiny_type: ShinyType,
+    /// 持ち物スロット (確率カテゴリ)
+    pub held_item_slot: HeldItemSlot,
     
     // === IV ===
     /// 個体値 [HP, Atk, Def, SpA, SpD, Spe]
@@ -258,6 +293,7 @@ export type ResolvedPokemonData = {
   ability_slot: number;
   gender: Gender;
   shiny_type: ShinyType;
+  held_item_slot: HeldItemSlot;
   ivs: IvSet;
 };
 ```
@@ -266,9 +302,10 @@ export type ResolvedPokemonData = {
 - `species_id`: `encounter_slot_value` と `EncounterResolutionConfig.slots` から解決
 - `level`: slot の `level_min`/`level_max` と `level_rand_value` から計算
 - `gender`: `gender_value` と `gender_threshold` を比較して決定
+- `held_item_slot`: エンカウント種別とふくがん有無で判定 (§9 参照)
 - `ivs`: LCG Seed → MT Seed → MT19937 で計算 (version/encounter_type に応じた offset 適用)
 
-### 2.7 GenerationSource
+### 2.8 GenerationSource
 
 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 
@@ -306,7 +343,7 @@ export type GenerationSource =
   | { type: 'Datetime'; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
 ```
 
-### 2.8 EnumeratedPokemonData
+### 2.9 EnumeratedPokemonData
 
 Advance 情報付き Pokemon データ。
 

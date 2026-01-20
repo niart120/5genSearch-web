@@ -461,35 +461,138 @@ pub fn check_walking_encounter(
 - 先頭ポケモンの特性効果 (はっこう、あくしゅう、ありじごく等)
 - 場所ごとのエンカウント率差異 (14% は一例、場所により異なる可能性)
 
-## 9. ダブルバトル / 大量発生 (TBD)
+## 9. 持ち物判定
+
+野生ポケモンが持ち物を持っているかの判定。
+
+### 9.1 持ち物スロット
+
+持ち物は確率カテゴリ (スロット) で判定。実際のアイテムは種族データから TS 側で解決する。
+
+```rust
+/// 持ち物スロット
+pub enum HeldItemSlot {
+    /// 50% アイテム (通常) / 60% アイテム (ふくがん)
+    Common,
+    /// 5% アイテム (通常) / 20% アイテム (ふくがん)
+    Rare,
+    /// 1% アイテム (濃い草むら・泡のみ)
+    VeryRare,
+    /// 持ち物なし
+    None,
+}
+```
+
+### 9.2 判定アルゴリズム
+
+`rand_to_percent` を使用して百分率換算値を取得し、閾値で判定。
+
+```rust
+/// 持ち物判定
+pub fn determine_held_item_slot(
+    version: RomVersion,
+    rand_value: u32,
+    has_compound_eyes: bool,
+    has_rare_item: bool,  // 濃い草むら・泡のみ true
+) -> HeldItemSlot {
+    let percent = rand_to_percent(version, rand_value);
+    
+    if has_compound_eyes {
+        // ふくがん有り
+        match percent {
+            0..=59 => HeldItemSlot::Common,     // 60%
+            60..=79 => HeldItemSlot::Rare,      // 20%
+            80..=84 if has_rare_item => HeldItemSlot::VeryRare, // 5%
+            _ => HeldItemSlot::None,            // 15% or 20%
+        }
+    } else {
+        // ふくがん無し
+        match percent {
+            0..=49 => HeldItemSlot::Common,     // 50%
+            50..=54 => HeldItemSlot::Rare,      // 5%
+            55 if has_rare_item => HeldItemSlot::VeryRare, // 1%
+            _ => HeldItemSlot::None,            // 44% or 45%
+        }
+    }
+}
+```
+
+### 9.3 確率まとめ
+
+| スロット | 通常 | ふくがん | 備考 |
+|---------|------|---------|------|
+| Common | 50% (0-49) | 60% (0-59) | 50% アイテム |
+| Rare | 5% (50-54) | 20% (60-79) | 5% アイテム |
+| VeryRare | 1% (55) | 5% (80-84) | 濃い草むら・泡のみ |
+| None | 44% (56-99) | 15% (85-99) | - |
+
+**注意**: VeryRare は濃い草むら・泡でのみ発生。他のエンカウントでは閾値 55/80-84 に達しても None になる。
+
+### 9.4 持ち物判定が発生するエンカウント種別
+
+```rust
+/// 持ち物判定で乱数を消費するか
+pub fn consumes_held_item_rand(encounter_type: EncounterType) -> bool {
+    matches!(
+        encounter_type,
+        EncounterType::Surfing
+        | EncounterType::SurfingBubble
+        | EncounterType::Fishing
+        | EncounterType::FishingBubble
+        | EncounterType::ShakingGrass
+    )
+}
+
+/// VeryRare スロットが存在するか
+pub fn has_very_rare_item(encounter_type: EncounterType) -> bool {
+    matches!(
+        encounter_type,
+        EncounterType::ShakingGrass | EncounterType::SurfingBubble
+    )
+}
+```
+
+| エンカウント種別 | 判定有無 | VeryRare |
+|----------------|---------|----------|
+| Normal | なし | - |
+| ShakingGrass | あり | あり |
+| Surfing | あり | なし |
+| SurfingBubble | あり | あり |
+| Fishing | あり | なし |
+| FishingBubble | あり | なし |
+| DustCloud | なし (別処理) | - |
+| PokemonShadow | なし (別処理) | - |
+| Static* | なし | - |
+
+## 10. ダブルバトル / 大量発生 (TBD)
 
 現時点では対応スコープ外。必要に応じて追加。
 
-### 9.1 ダブル草むら判定
+### 10.1 ダブル草むら判定
 
 ```rust
 /// ダブルバトル草むら判定
 /// 40未満でダブルバトル
 pub fn is_double_grass(version: RomVersion, rand_value: u32) -> bool {
-    let slot = calculate_raw_slot(version, rand_value);
-    slot < 40
+    let percent = rand_to_percent(version, rand_value);
+    percent < 40
 }
 ```
 
-### 9.2 大量発生判定
+### 10.2 大量発生判定
 
 ```rust
 /// 大量発生ポケモン判定
 /// 40未満で大量発生ポケモンが出現
 pub fn is_mass_outbreak(version: RomVersion, rand_value: u32) -> bool {
-    let slot = calculate_raw_slot(version, rand_value);
-    slot < 40
+    let percent = rand_to_percent(version, rand_value);
+    percent < 40
 }
 ```
 
-## 10. レベル決定
+## 11. レベル決定
 
-### 10.1 レベル範囲からの決定
+### 11.1 レベル範囲からの決定
 
 なみのり・釣り等ではレベルが乱数で決定される。
 
@@ -511,7 +614,7 @@ pub fn calculate_level(
     // BW2: (rand * range) >> 32 + min
     let offset = match version {
         RomVersion::Black | RomVersion::White => {
-            (calculate_raw_slot(version, rand_value) as u64 % range) as u8
+            (rand_to_percent(version, rand_value) as u64 % range) as u8
         }
         RomVersion::Black2 | RomVersion::White2 => {
             ((rand_value as u64 * range) >> 32) as u8
@@ -522,7 +625,7 @@ pub fn calculate_level(
 }
 ```
 
-### 10.2 エンカウント種別によるレベル決定
+### 11.2 エンカウント種別によるレベル決定
 
 | エンカウント種別 | レベル決定方法 |
 |----------------|--------------|
@@ -566,7 +669,7 @@ pub fn consumes_level_rand(encounter_type: EncounterType) -> bool {
 }
 ```
 
-## 11. 統合関数
+## 12. 統合関数
 
 ```rust
 /// エンカウント種別と乱数値からスロット番号を決定
@@ -586,8 +689,8 @@ pub fn calculate_encounter_slot(
         _ => {}
     }
     
-    // 生スロット値を計算
-    let slot_value = calculate_raw_slot(version, rand_value);
+    // 百分率換算値を計算
+    let slot_value = rand_to_percent(version, rand_value);
     
     // エンカウント種別に応じてスロット番号に変換
     match encounter_type {
@@ -603,37 +706,6 @@ pub fn calculate_encounter_slot(
         EncounterType::PokemonShadow => pokemon_shadow_encounter_slot(slot_value),
         
         _ => 0,
-    }
-}
-```
-
-## 12. 持ち物判定
-
-野生ポケモンが持ち物を持っているかの判定。
-
-### 12.1 持ち物判定
-
-```rust
-/// 持ち物判定
-/// ふくがん無し: 50% なし, 50%/5%/1% で持ち物
-/// ふくがん有り: 60%/20%/5%/15% (分布が異なる)
-pub fn held_item_slot(rand_value: u32, has_compound_eyes: bool) -> Option<u8> {
-    let slot = ((rand_value as u64 * 0xFFFF / 0x290) >> 32) as u32;
-    
-    if has_compound_eyes {
-        match slot {
-            0..=59 => Some(0),    // 60% - 持ち物1
-            60..=79 => Some(1),   // 20% - 持ち物2
-            80..=84 => Some(2),   // 5% - レア持ち物
-            _ => None,            // 15% - なし (揺れる草むら/泡のみ)
-        }
-    } else {
-        match slot {
-            0..=49 => None,       // 50% - なし
-            50..=54 => Some(0),   // 5% - 持ち物1
-            55 => Some(1),        // 1% - 持ち物2 (揺れる草むら/泡のみ)
-            _ => None,            // 残り - なし
-        }
     }
 }
 ```

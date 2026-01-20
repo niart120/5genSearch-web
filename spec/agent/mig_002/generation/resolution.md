@@ -43,7 +43,9 @@ WASM/Worker/Main 間の責務分担と、UI 表示用データの階層設計。
 | Encounter 結果判定 | WASM | `slot_value`, `EncounterType` | `EncounterResult` |
 | Slot → Species/Level | WASM | `EncounterSlotConfig[]` | `species_id`, `level` |
 | Gender 判定 | WASM | `gender_value`, `gender_threshold` | `Gender` |
+| 持ち物スロット判定 | WASM | `rand_value`, `EncounterType`, `has_compound_eyes` | `HeldItemSlot` |
 | IV 計算 | WASM | LCG Seed, Version, EncounterType | `IvSet` |
+| 持ち物 → アイテム名 | Main (TS) | `HeldItemSlot`, `species_id`, `locale` | 表示用文字列 |
 | Stats 計算 | Main (TS) | `baseStats`, `IvSet`, `level`, `nature` | `CalculatedStats` |
 | i18n (名称) | Main (TS) | `species_id`, `nature`, `ability_slot`, `locale` | 表示用文字列 |
 | Hex フォーマット | Main (TS) | `seed`, `pid` | `seedHex`, `pidHex` |
@@ -51,6 +53,10 @@ WASM/Worker/Main 間の責務分担と、UI 表示用データの階層設計。
 **注意**: DustCloud/PokemonShadow では `EncounterResult::Item` が返る可能性がある。  
 その場合、Pokemon 生成は行われず `species_id` 等は無効値となる。  
 詳細は [algorithm/encounter.md](algorithm/encounter.md) §5 を参照。
+
+**持ち物について**: `HeldItemSlot` は確率カテゴリ (Common/Rare/VeryRare/None) のみ。
+実際のアイテムは種族データ (JSON) から TS 側で解決する。
+詳細は [algorithm/encounter.md](algorithm/encounter.md) §9 を参照。
 
 ### 1.3 設計意図
 
@@ -165,6 +171,8 @@ pub struct ResolvedPokemonData {
     pub gender: Gender,
     /// 色違い種別
     pub shiny_type: ShinyType,
+    /// 持ち物スロット (確率カテゴリ)
+    pub held_item_slot: HeldItemSlot,
     
     // === IV ===
     /// 個体値 [HP, Atk, Def, SpA, SpD, Spe]
@@ -183,6 +191,7 @@ export type ResolvedPokemonData = {
   ability_slot: number;
   gender: Gender;
   shiny_type: ShinyType;
+  held_item_slot: HeldItemSlot;
   ivs: IvSet;
 };
 ```
