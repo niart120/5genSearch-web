@@ -9,6 +9,9 @@ use wasm_bindgen::prelude::*;
 pub mod core;
 pub mod types;
 
+// Re-export SHA-1 wasm-bindgen functions
+pub use core::sha1::{hash_to_lcg_seed, hash_to_mt_seed, sha1_hash_batch, sha1_hash_single};
+
 #[wasm_bindgen(start)]
 pub fn init() {
     #[cfg(feature = "console_error_panic_hook")]
