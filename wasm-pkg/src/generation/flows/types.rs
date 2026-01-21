@@ -49,26 +49,83 @@ pub struct EggGenerationConfig {
 
 // ===== オフセット設定 =====
 
+/// 生成スキーム (MT オフセット自動決定用)
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GenerationScheme {
+    /// 孵化 (BW/BW2 共通: MT offset = 7)
+    Egg,
+    /// 野生/固定 BW (MT offset = 0)
+    WildOrStaticBw,
+    /// 野生/固定 BW2 (MT offset = 2)
+    WildOrStaticBw2,
+    /// 徘徊 BW (MT offset = 1)
+    RoamerBw,
+}
+
+impl GenerationScheme {
+    /// 生成スキームに応じた MT オフセットを返す
+    #[inline]
+    pub const fn mt_offset(self) -> u32 {
+        match self {
+            Self::Egg => 7,
+            Self::WildOrStaticBw => 0,
+            Self::WildOrStaticBw2 => 2,
+            Self::RoamerBw => 1,
+        }
+    }
+}
+
 /// オフセット設定
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct OffsetConfig {
     /// ユーザ指定オフセット (`GameOffset` に加算)
     pub user_offset: u32,
-    /// MT オフセット (IV 生成開始位置、通常 7)
+    /// MT オフセット (IV 生成開始位置)
     pub mt_offset: u32,
 }
 
-impl OffsetConfig {
-    pub const DEFAULT_MT_OFFSET: u32 = 7;
+impl Default for OffsetConfig {
+    fn default() -> Self {
+        // デフォルトは孵化向け (mt_offset = 7)
+        Self::for_scheme(GenerationScheme::Egg, 0)
+    }
+}
 
-    pub fn new(user_offset: u32) -> Self {
+impl OffsetConfig {
+    /// 生成スキームに基づいて作成
+    pub const fn for_scheme(scheme: GenerationScheme, user_offset: u32) -> Self {
         Self {
             user_offset,
-            mt_offset: Self::DEFAULT_MT_OFFSET,
+            mt_offset: scheme.mt_offset(),
         }
     }
 
-    pub fn with_mt_offset(user_offset: u32, mt_offset: u32) -> Self {
+    /// エンカウント種別とバージョンから適切なスキームを決定して作成
+    pub const fn for_encounter(
+        version: RomVersion,
+        encounter_type: EncounterType,
+        user_offset: u32,
+    ) -> Self {
+        let scheme = match encounter_type {
+            EncounterType::Roamer => GenerationScheme::RoamerBw,
+            _ => {
+                if version.is_bw2() {
+                    GenerationScheme::WildOrStaticBw2
+                } else {
+                    GenerationScheme::WildOrStaticBw
+                }
+            }
+        };
+        Self::for_scheme(scheme, user_offset)
+    }
+
+    /// 孵化用に作成
+    pub const fn for_egg(user_offset: u32) -> Self {
+        Self::for_scheme(GenerationScheme::Egg, user_offset)
+    }
+
+    /// カスタム MT オフセットで作成
+    pub const fn with_custom_mt_offset(user_offset: u32, mt_offset: u32) -> Self {
         Self {
             user_offset,
             mt_offset,

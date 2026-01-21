@@ -213,9 +213,8 @@ pub fn calculate_game_offset(
     config.validate(version)?;
 
     let mut lcg = Lcg64::new(seed);
-    let is_bw2 = matches!(version, RomVersion::Black2 | RomVersion::White2);
 
-    let advances = match (is_bw2, config.start_mode, config.save_state) {
+    let advances = match (version.is_bw2(), config.start_mode, config.save_state) {
         // BW
         (false, StartMode::NewGame, SaveState::WithSave) => bw_new_game_with_save(&mut lcg),
         (false, StartMode::NewGame, SaveState::NoSave) => bw_new_game_no_save(&mut lcg),

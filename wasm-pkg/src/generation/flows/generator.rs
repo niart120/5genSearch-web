@@ -303,7 +303,8 @@ mod tests {
     fn test_wild_pokemon_generator() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let game_start = make_game_start();
-        let offset_config = OffsetConfig::new(0);
+        let offset_config =
+            OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
         let config = make_pokemon_config();
         let slots = make_slots();
 
@@ -329,7 +330,8 @@ mod tests {
     fn test_static_pokemon_generator() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let game_start = make_game_start();
-        let offset_config = OffsetConfig::new(0);
+        let offset_config =
+            OffsetConfig::for_encounter(RomVersion::Black, EncounterType::StaticSymbol, 0);
         let config = PokemonGenerationConfig {
             encounter_type: EncounterType::StaticSymbol,
             ..make_pokemon_config()
@@ -357,7 +359,7 @@ mod tests {
     fn test_egg_generator() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let game_start = make_game_start();
-        let offset_config = OffsetConfig::new(0);
+        let offset_config = OffsetConfig::for_egg(0);
         let config = EggGenerationConfig {
             tid: 12345,
             sid: 54321,
@@ -393,12 +395,53 @@ mod tests {
 
     #[test]
     fn test_offset_config() {
-        let offset = OffsetConfig::new(100);
+        // 孵化用 (mt_offset = 7)
+        let offset = OffsetConfig::for_egg(100);
         assert_eq!(offset.user_offset, 100);
-        assert_eq!(offset.mt_offset, OffsetConfig::DEFAULT_MT_OFFSET);
+        assert_eq!(offset.mt_offset, 7);
 
-        let offset = OffsetConfig::with_mt_offset(50, 0);
+        // BW 野生用 (mt_offset = 0)
+        let offset = OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 50);
         assert_eq!(offset.user_offset, 50);
         assert_eq!(offset.mt_offset, 0);
+
+        // BW2 野生用 (mt_offset = 2)
+        let offset = OffsetConfig::for_encounter(RomVersion::Black2, EncounterType::Normal, 0);
+        assert_eq!(offset.user_offset, 0);
+        assert_eq!(offset.mt_offset, 2);
+
+        // 徘徊用 (mt_offset = 1)
+        let offset = OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Roamer, 0);
+        assert_eq!(offset.user_offset, 0);
+        assert_eq!(offset.mt_offset, 1);
+
+        // カスタム
+        let offset = OffsetConfig::with_custom_mt_offset(50, 0);
+        assert_eq!(offset.user_offset, 50);
+        assert_eq!(offset.mt_offset, 0);
+    }
+
+    /// 元実装テストパターン: PID生成の具体値検証
+    /// r = 0x12345678, tid = 12345, sid = 54321 のケース
+    #[test]
+    fn test_pid_generation_reference_values() {
+        use crate::generation::algorithm::{generate_base_pid, generate_wild_pid};
+
+        let r = 0x1234_5678_u32;
+        let tid = 12345_u16;
+        let sid = 54321_u16;
+
+        // 基本 PID: r ^ 0x10000
+        let base_pid = generate_base_pid(r);
+        assert_eq!(base_pid, 0x1234_5678 ^ 0x10000);
+        assert_eq!(base_pid, 0x1235_5678);
+
+        // ID補正後 PID
+        let wild_pid = generate_wild_pid(r, tid, sid);
+        // pid_low = 0x5678
+        // xor_result = 0x5678 ^ 12345 ^ 54321 = 0x5678 ^ 0x3039 ^ 0xD431 = 0xB270 (偶数)
+        // → 最上位ビットは 0
+        assert_eq!(wild_pid, 0x1235_5678 & 0x7FFF_FFFF);
+        assert_eq!(wild_pid, 0x1235_5678);
     }
 }

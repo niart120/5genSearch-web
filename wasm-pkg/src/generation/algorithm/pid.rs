@@ -23,27 +23,43 @@ pub fn calculate_shiny_type(pid: u32, tid: u16, sid: u16) -> ShinyType {
     }
 }
 
-/// 野生 PID 生成 (1回消費)
+/// 基本 PID 生成 (XOR 0x10000)
+/// BW/BW2 統一仕様: 固定・野生共通
+#[inline]
+pub fn generate_base_pid(r: u32) -> u32 {
+    r ^ 0x10000
+}
+
+/// ID 補正処理
+/// 性格値下位 ^ トレーナーID ^ 裏ID の奇偶性で最上位ビットを調整
+#[inline]
+pub fn apply_id_correction(pid: u32, tid: u16, sid: u16) -> u32 {
+    let pid_low = (pid & 0xFFFF) as u16;
+    let xor_value = pid_low ^ tid ^ sid;
+
+    if xor_value & 1 == 1 {
+        pid | 0x8000_0000 // 最上位ビットを 1 に
+    } else {
+        pid & 0x7FFF_FFFF // 最上位ビットを 0 に
+    }
+}
+
+/// 野生/固定/徘徊 PID 生成 (ID補正あり)
 #[inline]
 pub fn generate_wild_pid(r: u32, tid: u16, sid: u16) -> u32 {
-    let base = r ^ u32::from(tid) ^ u32::from(sid);
-    let high = base & 0xFFFF_0000;
-    let low = r & 0xFFFF;
-    high | low
+    apply_id_correction(generate_base_pid(r), tid, sid)
 }
 
-/// イベント/御三家 PID 生成 (1回消費、ID 補正なし)
+/// イベント/御三家 PID 生成 (ID補正なし)
 #[inline]
 pub fn generate_event_pid(r: u32) -> u32 {
-    r
+    generate_base_pid(r)
 }
 
-/// 孵化 PID 生成 (2回消費)
+/// 孵化/ギフト PID 生成 (2乱数合成)
 #[inline]
 pub fn generate_egg_pid(r1: u32, r2: u32) -> u32 {
-    let low = r1 >> 16;
-    let high = r2 & 0xFFFF_0000;
-    high | low
+    ((r1 & 0xFFFF_0000) >> 16) | (r2 & 0xFFFF_0000)
 }
 
 /// 色違いロック適用
@@ -138,5 +154,92 @@ mod tests {
         let tid = 0x0000u16;
         let sid = 0x0000u16;
         assert_eq!(calculate_shiny_type(pid, tid, sid), ShinyType::None);
+    }
+
+    #[test]
+    fn test_generate_base_pid() {
+        // r ^ 0x10000
+        assert_eq!(generate_base_pid(0x1234_5678), 0x1234_5678 ^ 0x10000);
+        assert_eq!(generate_base_pid(0x0000_0000), 0x0001_0000);
+        assert_eq!(generate_base_pid(0xFFFF_FFFF), 0xFFFE_FFFF);
+    }
+
+    #[test]
+    fn test_apply_id_correction() {
+        // pid_low ^ tid ^ sid が奇数なら最上位ビット 1、偶数なら 0
+        // 0x5678 ^ 12345 ^ 54321 = 0x5678 ^ 0x3039 ^ 0xD431
+        // = 0x5678 ^ 0xE408 = 0xB270 (偶数) → 最上位ビット 0
+        let pid = 0x1234_5678_u32;
+        let tid = 12345_u16;
+        let sid = 54321_u16;
+        let corrected = apply_id_correction(pid, tid, sid);
+
+        let pid_low = (pid & 0xFFFF) as u16;
+        let xor_result = pid_low ^ tid ^ sid;
+        if (xor_result & 1) == 1 {
+            assert_eq!(corrected, pid | 0x8000_0000);
+        } else {
+            assert_eq!(corrected, pid & 0x7FFF_FFFF);
+        }
+    }
+
+    #[test]
+    fn test_generate_wild_pid() {
+        // 元実装テストパターン: r1 = 0x12345678, tid = 12345, sid = 54321
+        let r = 0x1234_5678_u32;
+        let tid = 12345_u16;
+        let sid = 54321_u16;
+        let pid = generate_wild_pid(r, tid, sid);
+
+        // 基本PID生成 (r ^ 0x10000)
+        let expected_base = r ^ 0x10000;
+
+        // ID補正の確認
+        let pid_low = (expected_base & 0xFFFF) as u16;
+        let xor_result = pid_low ^ tid ^ sid;
+
+        if (xor_result & 1) == 1 {
+            assert_eq!(pid, expected_base | 0x8000_0000);
+        } else {
+            assert_eq!(pid, expected_base & 0x7FFF_FFFF);
+        }
+    }
+
+    #[test]
+    fn test_generate_event_pid() {
+        // イベント PID = r ^ 0x10000 (ID補正なし)
+        let r = 0x1234_5678_u32;
+        let expected = r ^ 0x10000;
+        assert_eq!(generate_event_pid(r), expected);
+    }
+
+    #[test]
+    fn test_generate_egg_pid() {
+        // 元実装テストパターン: r1 = 0x12345678, r2 = 0x9ABCDEF0
+        let r1 = 0x1234_5678_u32;
+        let r2 = 0x9ABC_DEF0_u32;
+        let pid = generate_egg_pid(r1, r2);
+
+        // high = r1 >> 16 = 0x1234 (→ low 16bit に配置)
+        // r2_high = r2 & 0xFFFF_0000 = 0x9ABC_0000
+        // result = 0x9ABC_0000 | 0x1234 = 0x9ABC_1234
+        let expected = ((r1 & 0xFFFF_0000) >> 16) | (r2 & 0xFFFF_0000);
+        assert_eq!(pid, expected);
+        assert_eq!(pid, 0x9ABC_1234);
+    }
+
+    #[test]
+    fn test_apply_shiny_lock() {
+        // 非色違いの PID はそのまま
+        let pid = 0x1234_5678_u32;
+        let tid = 0u16;
+        let sid = 0u16;
+        assert_eq!(apply_shiny_lock(pid, tid, sid), pid);
+
+        // 色違いの PID は変更される
+        let shiny_pid = 0xABCD_ABCD_u32;
+        let locked = apply_shiny_lock(shiny_pid, tid, sid);
+        assert_ne!(locked, shiny_pid);
+        assert_eq!(calculate_shiny_type(locked, tid, sid), ShinyType::None);
     }
 }
