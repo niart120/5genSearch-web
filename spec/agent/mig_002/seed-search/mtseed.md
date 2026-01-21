@@ -36,7 +36,7 @@ Gen5ではMersenne Twister (MT19937) が使用される。MTの出力列から�
 
 ```rust
 use serde::{Deserialize, Serialize};
-use tsify_next::Tsify;
+use tsify::Tsify;
 
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

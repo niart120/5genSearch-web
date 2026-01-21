@@ -17,7 +17,7 @@ Phase 1 タスク P1-4, P1-5 に対応する WASM API 設計仕様の概要。
 |-----|---------|
 | Rust Edition | 2024 |
 | Rust → WASM | wasm-bindgen |
-| 型共有 | tsify-next + serde + serde-wasm-bindgen |
+| 型共有 | tsify + serde + serde-wasm-bindgen |
 | SIMD | wasm-pack --enable-simd |
 | GPU | wgpu (WebGPU) |
 
@@ -52,7 +52,7 @@ gpu = ["wgpu"]
 wasm-bindgen = "0.2"
 js-sys = "0.3"
 web-sys = { version = "0.3", features = ["console"] }
-tsify-next = "0.5"
+tsify = { version = "0.5.6", default-features = false, features = ["js"] }
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 wgpu = { version = "24", optional = true }

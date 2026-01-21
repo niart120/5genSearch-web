@@ -12,10 +12,11 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-wasm-bindgen = "0.2"
+wasm-bindgen = "0.2.108"
 serde = { version = "1.0", features = ["derive"] }
-serde-wasm-bindgen = "0.6"
-tsify-next = { version = "0.5", features = ["js"] }
+serde-wasm-bindgen = "0.6.5"
+# tsify-next is deprecated; use tsify (features merged upstream)
+tsify = { version = "0.5.6", default-features = false, features = ["js"] }
 
 # Error handling in WASM
 console_error_panic_hook = { version = "0.1", optional = true }

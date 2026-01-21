@@ -58,7 +58,7 @@ Gen5の初期seedは以下の要素から決定論的に計算される:
 
 ```rust
 use serde::{Deserialize, Serialize};
-use tsify_next::Tsify;
+use tsify::Tsify;
 
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

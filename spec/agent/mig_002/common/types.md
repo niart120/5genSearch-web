@@ -8,7 +8,7 @@ Rust 側の型定義から TypeScript 型を自動生成する。
 
 ```rust
 use serde::{Deserialize, Serialize};
-use tsify_next::Tsify;
+use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 ```
 
@@ -341,7 +341,13 @@ LCG 乱数生成器のシード値 (64bit)。SHA-1 ハッシュから導出さ�
 /// 
 /// SHA-1 ハッシュ H[0] || H[1] から導出される。
 /// NewType パターンにより MtSeed との混同を防止。
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// 
+/// # WASM エクスポート
+/// `#[serde(transparent)]` により inner の u64 として扱われる。
+/// `large_number_types_as_bigints` オプションにより TypeScript では bigint になる。
+#[derive(Tsify, Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
+#[serde(transparent)]
 #[repr(transparent)]
 pub struct LcgSeed(pub u64);
 
@@ -384,7 +390,8 @@ impl From<LcgSeed> for u64 {
 ```
 
 ```typescript
-// TypeScript 側: bigint として扱う (tsify の u64 デフォルト)
+// TypeScript 側: bigint として扱う
+// large_number_types_as_bigints オプションにより u64 → bigint 変換が有効化される
 export type LcgSeed = bigint;
 ```
 
@@ -397,7 +404,13 @@ MT19937 乱数生成器のシード値 (32bit)。LCG から導出される。
 /// 
 /// LCG の上位 32bit から導出される。
 /// NewType パターンにより LcgSeed との混同を防止。
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// 
+/// # WASM エクスポート
+/// `#[serde(transparent)]` により inner の u32 として扱われる。
+/// u32 は JavaScript の safe integer 範囲内のため number として安全に表現可能。
+#[derive(Tsify, Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(transparent)]
 #[repr(transparent)]
 pub struct MtSeed(pub u32);
 
@@ -522,8 +535,9 @@ export type DsConfig = {
 
 | Rust 型 | TypeScript 型 | 備考 |
 |--------|--------------|------|
-| `u8`, `u16`, `u32` | `number` | |
-| `u64` | `bigint` | tsify + serde-wasm-bindgen |
+| `u8`, `u16`, `u32` | `number` | safe integer 範囲 |
+| `u64`, `i64` | `number` (デフォルト) | safe integer 範囲外でエラー |
+| `u64`, `i64` | `bigint` | `large_number_types_as_bigints` 有効時 |
 | `i8`, `i16`, `i32` | `number` | |
 | `f32`, `f64` | `number` | |
 | `String` | `string` | |
@@ -533,8 +547,56 @@ export type DsConfig = {
 | `[T; N]` | タプル型 | `[T, T, ...]` |
 | enum (C-like) | 文字列リテラル型 | `"Variant1" \| "Variant2"` |
 | struct | オブジェクト型 | `{ field: T }` |
+| NewType (transparent) | inner の型 | `#[serde(transparent)]` 必須 |
 
 ### 4.1 BigInt 取り扱い
+
+`u64`/`i64` の TypeScript 型は、使用する経路によって異なる。
+
+#### wasm-bindgen 直接 vs serde-wasm-bindgen
+
+| 経路 | u64/i64 の TypeScript 型 | 備考 |
+|------|-------------------------|------|
+| `#[wasm_bindgen]` 直接 | `bigint` (自動) | wasm-bindgen 0.2.88+ |
+| serde-wasm-bindgen + tsify | `number` (デフォルト) | safe integer 範囲外でエラー |
+| serde-wasm-bindgen + tsify | `bigint` | `large_number_types_as_bigints` 有効時 |
+
+```rust
+// wasm-bindgen 直接 → 自動で bigint
+#[wasm_bindgen]
+pub fn lcg_compute_next(seed: u64) -> u64 { ... }
+// → TypeScript: (seed: bigint) => bigint
+
+// tsify + serde-wasm-bindgen → デフォルトは number
+#[derive(Tsify, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct SearchResult {
+    pub seed: u64,  // デフォルト: number (範囲外でエラー)
+}
+```
+
+> **Note**: serde-wasm-bindgen は wasm-bindgen と異なり、デフォルトで `bigint` を使用しない。
+> これは serde-wasm-bindgen 側の設計方針であり、明示的なオプション指定が必要。
+> (2026/01 時点)
+
+#### tsify での bigint 設定
+
+```rust
+// 構造体レベルで設定
+#[derive(Tsify, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
+pub struct SearchResult {
+    pub seed: u64,  // → bigint
+}
+
+// NewType の場合は #[serde(transparent)] と組み合わせる
+#[derive(Tsify, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
+#[serde(transparent)]
+pub struct LcgSeed(pub u64);  // → bigint
+```
+
+#### TypeScript での利用
 
 ```typescript
 // TypeScript → WASM
@@ -542,7 +604,14 @@ const seeds: bigint[] = [0x1234567890ABCDEFn];
 
 // WASM → TypeScript
 const result = batch.results[0];
-const seed: bigint = result.seed; // tsify により bigint として型付け
+const seed: bigint = result.seed; // large_number_types_as_bigints により bigint
+
+// bigint リテラルは n サフィックスが必要
+const lcgSeed: bigint = 0x123456789ABCDEFn;
+
+// number との演算は不可 (型エラー)
+// const invalid = lcgSeed + 1; // Error
+const valid = lcgSeed + 1n;     // OK
 ```
 
 ## 5. エラーハンドリング
