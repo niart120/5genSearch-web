@@ -1,8 +1,8 @@
 //! 起動時刻検索 共通基盤
 
+use crate::core::datetime_codes::{get_date_code, get_time_code_for_hardware};
 use crate::core::sha1::{
-    BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1_simd, get_frame,
-    get_nazo_values,
+    BaseMessageBuilder, calculate_pokemon_sha1_simd, get_frame, get_nazo_values,
 };
 use crate::types::{DsConfig, Hardware, SearchSegment};
 
@@ -18,7 +18,7 @@ fn build_ranged_time_code_table(
     hardware: Hardware,
 ) -> RangedTimeCodeTable {
     let mut table: RangedTimeCodeTable = Box::new([None; 86400]);
-    let frame = get_frame(hardware);
+    let is_ds_or_lite = matches!(hardware, Hardware::DsLite | Hardware::Ds);
 
     for hour in range.hour_start..=range.hour_end {
         let min_start = if hour == range.hour_start {
@@ -45,8 +45,10 @@ fn build_ranged_time_code_table(
             };
 
             for second in sec_start..=sec_end {
-                let idx = usize::from(hour) * 3600 + usize::from(minute) * 60 + usize::from(second);
-                table[idx] = Some(build_time_code(hour, minute, second, frame));
+                let seconds_of_day =
+                    u32::from(hour) * 3600 + u32::from(minute) * 60 + u32::from(second);
+                let idx = seconds_of_day as usize;
+                table[idx] = Some(get_time_code_for_hardware(seconds_of_day, is_ds_or_lite));
             }
         }
     }
@@ -79,17 +81,20 @@ impl DateTimeCodeEnumerator {
     }
 
     /// 次の有効な日時エントリを取得
+    #[allow(clippy::cast_possible_truncation)]
     fn advance(&mut self) -> Option<DateTimeEntry> {
         while self.current_seconds < self.end_seconds {
-            let (year, month, day, hour, minute, second) =
-                seconds_to_datetime(self.current_seconds);
-            let second_of_day =
-                usize::from(hour) * 3600 + usize::from(minute) * 60 + usize::from(second);
+            // DS の探索範囲 (2000-2099) では u32 への truncation は発生しない
+            let days = (self.current_seconds / 86400) as u32;
+            let secs = (self.current_seconds % 86400) as u32;
+            let second_of_day = secs as usize;
 
             self.current_seconds += 1;
 
             if let Some(time_code) = self.time_code_table[second_of_day] {
-                let date_code = build_date_code(year, month, day);
+                let (year, month, day, hour, minute, second) =
+                    seconds_to_datetime_parts(days, secs);
+                let date_code = get_date_code(days);
                 return Some((year, month, day, hour, minute, second, date_code, time_code));
             }
         }
@@ -122,13 +127,9 @@ impl DateTimeCodeEnumerator {
     }
 }
 
-/// 2000年1月1日からの経過秒数を日時に変換
+/// 日数と秒数から日時パーツに変換
 #[allow(clippy::cast_possible_truncation)]
-fn seconds_to_datetime(total_seconds: u64) -> (u16, u8, u8, u8, u8, u8) {
-    // 探索範囲は DS の設定可能範囲 (2000-2099) なので truncation は発生しない
-    let days = (total_seconds / 86400) as u32;
-    let secs = (total_seconds % 86400) as u32;
-
+fn seconds_to_datetime_parts(days: u32, secs: u32) -> (u16, u8, u8, u8, u8, u8) {
     let hour = (secs / 3600) as u8;
     let minute = ((secs % 3600) / 60) as u8;
     let second = (secs % 60) as u8;
@@ -311,6 +312,14 @@ impl HashValuesEnumerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// テスト用: 経過秒数から日時に変換
+    #[allow(clippy::cast_possible_truncation)]
+    fn seconds_to_datetime(total_seconds: u64) -> (u16, u8, u8, u8, u8, u8) {
+        let days = (total_seconds / 86400) as u32;
+        let secs = (total_seconds % 86400) as u32;
+        seconds_to_datetime_parts(days, secs)
+    }
 
     #[test]
     fn test_seconds_to_datetime() {
