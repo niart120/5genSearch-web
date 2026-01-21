@@ -872,17 +872,9 @@ pub fn fishing_encounter_slot(slot_value: u32) -> u8 {
     }
 }
 
-/// 橋の影: スロット決定 (4スロット)
-pub fn pokemon_shadow_encounter_slot(slot_value: u32) -> u8 {
-    match slot_value {
-        0..=49 => 0,
-        50..=79 => 1,
-        80..=94 => 2,
-        _ => 3,
-    }
-}
-
 /// エンカウント種別に応じたスロット決定
+///
+/// 揺れる草むら / 土煙 / 橋の影 は通常エンカウントと同じ12スロット分布を使用
 pub fn calculate_encounter_slot(
     encounter_type: EncounterType,
     rand_value: u32,
@@ -891,12 +883,12 @@ pub fn calculate_encounter_slot(
     let percent = rand_to_percent(version, rand_value);
 
     match encounter_type {
-        EncounterType::Normal | EncounterType::ShakingGrass | EncounterType::DustCloud => {
-            normal_encounter_slot(percent)
-        }
+        EncounterType::Normal
+        | EncounterType::ShakingGrass
+        | EncounterType::DustCloud
+        | EncounterType::PokemonShadow => normal_encounter_slot(percent),
         EncounterType::Surfing | EncounterType::SurfingBubble => surfing_encounter_slot(percent),
         EncounterType::Fishing | EncounterType::FishingBubble => fishing_encounter_slot(percent),
-        EncounterType::PokemonShadow => pokemon_shadow_encounter_slot(percent),
         _ => 0, // 固定エンカウント
     }
 }
@@ -1197,6 +1189,20 @@ pub fn apply_game_offset(
     let mut lcg = Lcg64::new(seed.value());
     lcg.jump(offset as u64);
     Ok(LcgSeed::new(lcg.seed()))
+}
+
+/// 初期 Seed に Game Offset を適用し、オフセット適用済みの Lcg64 を返す
+///
+/// 呼び出し側はそのまま乱数生成を続けられる。
+pub fn create_offset_lcg(
+    seed: LcgSeed,
+    version: RomVersion,
+    config: &GameStartConfig,
+) -> Result<Lcg64, String> {
+    let offset = calculate_game_offset(seed, version, config)?;
+    let mut lcg = Lcg64::new(seed.value());
+    lcg.jump(offset as u64);
+    Ok(lcg)
 }
 
 #[cfg(test)]

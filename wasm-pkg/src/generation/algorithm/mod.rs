@@ -10,10 +10,9 @@ pub mod pid;
 pub use encounter::{
     EncounterResult, HeldItemSlot, ItemContent, calculate_encounter_slot, determine_held_item_slot,
     dust_cloud_result, encounter_type_supports_held_item, fishing_encounter_slot, fishing_success,
-    normal_encounter_slot, pokemon_shadow_encounter_slot, pokemon_shadow_result, rand_to_percent,
-    surfing_encounter_slot,
+    normal_encounter_slot, pokemon_shadow_result, rand_to_percent, surfing_encounter_slot,
 };
-pub use game_offset::{apply_game_offset, calculate_game_offset};
+pub use game_offset::{apply_game_offset, calculate_game_offset, create_offset_lcg};
 pub use iv::{
     InheritanceSlot, ParentRole, apply_inheritance, extract_iv, generate_rng_ivs,
     generate_rng_ivs_with_offset, generate_roamer_ivs,

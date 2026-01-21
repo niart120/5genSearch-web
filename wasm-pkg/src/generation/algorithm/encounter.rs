@@ -53,16 +53,6 @@ pub fn fishing_encounter_slot(slot_value: u32) -> u8 {
     }
 }
 
-/// 橋の影: スロット決定 (4スロット)
-pub fn pokemon_shadow_encounter_slot(slot_value: u32) -> u8 {
-    match slot_value {
-        0..=49 => 0,
-        50..=79 => 1,
-        80..=94 => 2,
-        _ => 3,
-    }
-}
-
 /// エンカウント種別に応じたスロット決定
 pub fn calculate_encounter_slot(
     encounter_type: EncounterType,
@@ -72,12 +62,13 @@ pub fn calculate_encounter_slot(
     let percent = rand_to_percent(version, rand_value);
 
     match encounter_type {
-        EncounterType::Normal | EncounterType::ShakingGrass | EncounterType::DustCloud => {
-            normal_encounter_slot(percent)
-        }
+        // 揺れる草むら / 土煙 / 橋の影 は通常エンカウントと同じ12スロット分布
+        EncounterType::Normal
+        | EncounterType::ShakingGrass
+        | EncounterType::DustCloud
+        | EncounterType::PokemonShadow => normal_encounter_slot(percent),
         EncounterType::Surfing | EncounterType::SurfingBubble => surfing_encounter_slot(percent),
         EncounterType::Fishing | EncounterType::FishingBubble => fishing_encounter_slot(percent),
-        EncounterType::PokemonShadow => pokemon_shadow_encounter_slot(percent),
         _ => 0, // 固定エンカウント
     }
 }
