@@ -26,59 +26,40 @@ Game Offset は以下の要素により変動する:
 
 ## 2. 起動設定型
 
+起動設定に関する型は [common/types.md](../../common/types.md) で定義済み。本セクションでは参照先のみ示す。
+
 ### 2.1 StartMode
 
-起動方法。
+起動方法。定義は [common/types.md §2.5](../../common/types.md#25-startmode) を参照。
 
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StartMode {
-    /// 最初から (New Game)
-    NewGame,
-    /// 続きから (Continue)
-    Continue,
+    NewGame,   // 最初から
+    Continue,  // 続きから
 }
 ```
 
 ### 2.2 SaveState
 
-セーブ状態。
+セーブ状態。定義は [common/types.md §2.6](../../common/types.md#26-savestate) を参照。
 
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum SaveState {
-    /// セーブデータなし
-    NoSave,
-    /// セーブデータあり
-    WithSave,
-    /// セーブデータあり + 思い出リンク済み (BW2 のみ)
-    WithMemoryLink,
+    NoSave,         // セーブデータなし
+    WithSave,       // セーブデータあり
+    WithMemoryLink, // セーブ + 思い出リンク済み (BW2 のみ)
 }
 ```
 
 ### 2.3 GameStartConfig
 
-起動設定。`RomVersion` と組み合わせて Game Offset を計算する。
+起動設定。定義は [common/types.md §2.7](../../common/types.md#27-gamestartconfig) を参照。
 
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GameStartConfig {
     pub start_mode: StartMode,
     pub save_state: SaveState,
 }
-```
-
-```typescript
-export type StartMode = 'NewGame' | 'Continue';
-export type SaveState = 'NoSave' | 'WithSave' | 'WithMemoryLink';
-
-export type GameStartConfig = {
-  start_mode: StartMode;
-  save_state: SaveState;
-};
 ```
 
 ### 2.4 有効な組み合わせ

@@ -154,11 +154,15 @@ impl PokemonGenerator {
     
     /// 次の個体を生成
     /// 
-    /// 戻り値: 生成された個体データ (完了時は None)
-    pub fn next(&mut self) -> Option<ResolvedPokemonData> {
+    /// 戻り値: 列挙済み個体データ (完了時は None)
+    /// EnumeratedPokemonData には advance, needle_direction, source, data が含まれる
+    pub fn next(&mut self) -> Option<EnumeratedPokemonData> {
         if self.is_done() {
             return None;
         }
+        
+        // 現在の Seed を保存 (needle_direction 計算用)
+        let current_seed = self.lcg.current_seed();
         
         // flows/ の生成ロジックを呼び出し (IV なしの RawPokemonData を取得)
         let raw = match self.config.encounter_type {
@@ -183,13 +187,25 @@ impl PokemonGenerator {
         // IV 計算: BaseSeed から MT Seed を導出
         let ivs = resolve_ivs(self.base_seed, &self.config);
         
+        // needle_direction: 個体生成前の Seed から計算
+        let needle_direction = NeedleDirection::from_seed(current_seed).value();
+        
+        let advance = self.current_advance;
         self.current_advance += 1;
         self.generated_count += 1;
         
-        Some(ResolvedPokemonData {
-            advance: self.current_advance - 1,
+        // ResolvedPokemonData を構築
+        let data = ResolvedPokemonData {
+            seed: current_seed.value(),
             ivs,
             ..raw.into()
+        };
+        
+        Some(EnumeratedPokemonData {
+            advance,
+            needle_direction,
+            data,
+            source: self.source.clone(),
         })
     }
     
@@ -225,14 +241,56 @@ impl PokemonGenerator {
 #[derive(Tsify, Serialize, Deserialize)]
 #[tsify(into_wasm_abi)]
 pub struct PokemonBatch {
-    /// 生成された個体
-    pub results: Vec<ResolvedPokemonData>,
+    /// 生成された個体 (advance, needle_direction, source 付き)
+    pub results: Vec<EnumeratedPokemonData>,
     /// 現在の消費数
     pub current_advance: u64,
     /// 完了したか
     pub is_done: bool,
 }
 ```
+
+### 2.4 needle_direction の計算
+
+`EnumeratedPokemonData.needle_direction` は、個体生成開始時点の LCG Seed から計算する。
+
+**計算タイミング**:
+
+```
+LCG Seed (個体生成開始時点)
+    │
+    ├─ needle_direction = NeedleDirection::from_seed(seed)
+    │
+    └─ 個体生成処理 (LCG を消費)
+         └─ RawPokemonData
+```
+
+**実装ポイント**:
+1. `next()` 関数内で、個体生成を開始する**前に** `current_seed` を保存
+2. 保存した `current_seed` から `NeedleDirection::from_seed()` を呼び出し
+3. その後、個体生成処理 (`generate_wild_pokemon` 等) を実行
+
+```rust
+pub fn next(&mut self) -> Option<EnumeratedPokemonData> {
+    // ...
+    
+    // 1. 個体生成開始前の Seed を保存
+    let current_seed = self.lcg.current_seed();
+    
+    // 2. needle_direction を計算
+    let needle_direction = NeedleDirection::from_seed(current_seed).value();
+    
+    // 3. 個体生成 (LCG を消費)
+    let raw = generate_wild_pokemon(&mut self.lcg, &self.config);
+    
+    // ...
+}
+```
+
+**注意**: 個体生成処理後の Seed ではなく、処理**前**の Seed から計算すること。
+これにより、ユーザーはレポート針を見て「次に生成される個体」を特定できる。
+
+詳細なアルゴリズムは [algorithm/needle.md](./algorithm/needle.md) を参照。
 
 ### 2.3 EggGenerator
 
@@ -307,11 +365,18 @@ impl EggGenerator {
     #[wasm_bindgen(getter)]
     pub fn current_advance(&self) -> u64;
     
-    pub fn next(&mut self) -> Option<RawEggData>;
+    /// 次の個体を生成
+    /// 
+    /// PokemonGenerator と同様に EnumeratedEggData を返す。
+    /// needle_direction は個体生成開始前の Seed から計算。
+    pub fn next(&mut self) -> Option<EnumeratedEggData>;
     
     pub fn next_batch(&mut self, count: u32) -> EggBatch;
 }
 ```
+
+**注意**: EggGenerator でも `needle_direction` の計算タイミングは [§2.4](#24-needle_direction-の計算) と同様。
+個体生成開始前の LCG Seed から計算する。
 
 ## 3. Worker → Main Thread インタフェース
 
@@ -325,15 +390,32 @@ export type GenerationWorkerRequest =
   | { type: 'STOP' };
 
 export type GenerationStartPayload = {
-  baseSeed: bigint;
-  config: PokemonGenerationConfig;
-  gameOffset: number;
+  /** Seed の導出元 (Fixed / Multiple / FromDatetime) */
+  seedSource: SeedSource;
+  /** ゲーム起動設定 (Game Offset 計算用) */
+  gameStartConfig: GameStartConfig;
+  /** ユーザー指定のオフセット */
   userOffset: number;
+  /** 生成設定 */
+  config: PokemonGenerationConfig;
+  /** 探索する最大消費数 */
   maxAdvances: number;
+  /** 返却する最大結果数 */
   maxResults: number;
+  /** 最初の色違いで停止するか */
   stopAtFirstShiny: boolean;
 };
 ```
+
+**SeedSource の種別と Worker の動作**:
+
+| SeedSource 種別 | Worker の動作 |
+|----------------|--------------|
+| `Fixed` | 単一の BaseSeed から個体列挙を開始 |
+| `Multiple` | 各 BaseSeed について個体列挙を実行 (結果に `seed_index` 付与) |
+| `FromDatetime` | WASM 内で SHA-1 計算し、各候補 Seed について列挙 |
+
+**SeedSource 型定義**: [data-structures.md §4.1](./data-structures.md#41-seedsource) を参照。
 
 ### 3.2 WorkerResponse
 
@@ -348,7 +430,8 @@ export type GenerationWorkerResponse =
   | { type: 'ERROR'; message: string; fatal: boolean };
 
 export type GenerationResultsPayload = {
-  results: ResolvedPokemonData[];
+  /** 生成された個体 (advance, needle_direction, source 付き) */
+  results: EnumeratedPokemonData[];
   batchIndex: number;
 };
 
@@ -373,7 +456,12 @@ export type GenerationCompletePayload = {
 
 ```typescript
 // generation-worker.ts
-import { PokemonGenerator, type PokemonGenerationConfig } from '@wasm/wasm_pkg';
+import { 
+  PokemonGenerator, 
+  calculate_game_offset,
+  type PokemonGenerationConfig,
+  type SeedSource,
+} from '@wasm/wasm_pkg';
 
 let generator: PokemonGenerator | null = null;
 let stopRequested = false;
@@ -385,63 +473,96 @@ self.onmessage = async (ev: MessageEvent<GenerationWorkerRequest>) => {
   
   switch (msg.type) {
     case 'START': {
-      const { baseSeed, config, gameOffset, userOffset, maxAdvances, maxResults, stopAtFirstShiny } = msg.payload;
+      const { 
+        seedSource, 
+        gameStartConfig,
+        userOffset,
+        config, 
+        maxAdvances, 
+        maxResults, 
+        stopAtFirstShiny,
+      } = msg.payload;
       
-      generator = new PokemonGenerator(
-        baseSeed,
-        config,
-        BigInt(gameOffset),
-        BigInt(userOffset),
-        BigInt(maxAdvances),
-      );
+      // SeedSource の種別に応じて処理を分岐
+      const seeds = resolveSeedSource(seedSource);
+      
       stopRequested = false;
-      
       const startTime = performance.now();
       let totalResults = 0;
       let shinyFound = false;
       let batchIndex = 0;
       
-      while (!generator.is_done && !stopRequested) {
-        const batch = generator.next_batch(BATCH_SIZE);
+      for (let seedIndex = 0; seedIndex < seeds.length; seedIndex++) {
+        if (stopRequested) break;
         
-        if (batch.results.length > 0) {
-          // 色違いチェック
-          for (const pokemon of batch.results) {
-            if (pokemon.shiny_type !== ShinyType.None) {
-              shinyFound = true;
+        const baseSeed = seeds[seedIndex];
+        
+        // Game Offset を計算
+        const gameOffset = calculate_game_offset(
+          baseSeed,
+          config.version,
+          gameStartConfig,
+        );
+        
+        // Generator を作成
+        generator = new PokemonGenerator(
+          baseSeed,
+          config,
+          BigInt(gameOffset),
+          BigInt(userOffset),
+          BigInt(maxAdvances),
+          buildSource(seedSource, seedIndex),  // GenerationSource を渡す
+        );
+      
+        while (!generator.is_done && !stopRequested) {
+          const batch = generator.next_batch(BATCH_SIZE);
+        
+          if (batch.results.length > 0) {
+            // 色違いチェック
+            for (const entry of batch.results) {
+              if (entry.data.shiny_type !== 'None') {
+                shinyFound = true;
+              }
+            }
+          
+            self.postMessage({
+              type: 'RESULTS',
+              payload: { results: batch.results, batchIndex },
+            });
+          
+            totalResults += batch.results.length;
+            batchIndex++;
+          
+            // 停止条件チェック
+            if (totalResults >= maxResults) {
+              break;
+            }
+            if (stopAtFirstShiny && shinyFound) {
+              break;
             }
           }
-          
+        
+          // 進捗通知
           self.postMessage({
-            type: 'RESULTS',
-            payload: { results: batch.results, batchIndex },
+            type: 'PROGRESS',
+            payload: {
+              currentAdvance: Number(generator.current_advance),
+              maxAdvance: maxAdvances,
+              generatedCount: totalResults,
+              elapsedMs: performance.now() - startTime,
+            },
           });
-          
-          totalResults += batch.results.length;
-          batchIndex++;
-          
-          // 停止条件チェック
-          if (totalResults >= maxResults) {
-            break;
-          }
-          if (stopAtFirstShiny && shinyFound) {
-            break;
-          }
+        
+          // イベントループに制御を返す
+          await yieldToEventLoop();
         }
         
-        // 進捗通知
-        self.postMessage({
-          type: 'PROGRESS',
-          payload: {
-            currentAdvance: Number(generator.current_advance),
-            maxAdvance: maxAdvances,
-            generatedCount: totalResults,
-            elapsedMs: performance.now() - startTime,
-          },
-        });
+        generator = null;
         
-        // イベントループに制御を返す
-        await yieldToEventLoop();
+        // 全体の停止条件チェック
+        if (totalResults >= maxResults || (stopAtFirstShiny && shinyFound)) {
+          break;
+        }
       }
       
       // 完了通知
@@ -462,8 +583,6 @@ self.onmessage = async (ev: MessageEvent<GenerationWorkerRequest>) => {
           shinyFound,
         },
       });
-      
-      generator = null;
       break;
     }
     
@@ -475,6 +594,38 @@ self.onmessage = async (ev: MessageEvent<GenerationWorkerRequest>) => {
 
 function yieldToEventLoop(): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+// SeedSource から BaseSeed 配列を取得
+function resolveSeedSource(source: SeedSource): bigint[] {
+  switch (source.type) {
+    case 'Fixed':
+      return [source.value];
+    case 'Multiple':
+      return source.values;
+    case 'FromDatetime':
+      // WASM 側で SHA-1 計算して候補 Seed を取得
+      return calculateSeedsFromDatetime(source);
+  }
+}
+
+// SeedSource から GenerationSource を構築
+function buildSource(seedSource: SeedSource, seedIndex: number): GenerationSource {
+  switch (seedSource.type) {
+    case 'Fixed':
+      return { type: 'Fixed' };
+    case 'Multiple':
+      return { type: 'Multiple', seed_index: seedIndex };
+    case 'FromDatetime':
+      // datetime 情報は別途保持している前提
+      return { 
+        type: 'Datetime', 
+        datetime: seedSource.datetime,
+        timer0: seedSource.segments[seedIndex].timer0,
+        vcount: seedSource.segments[seedIndex].vcount,
+        key_code: seedSource.segments[seedIndex].key_code,
+      };
+  }
 }
 ```
 
@@ -563,26 +714,27 @@ function filterResults(
 │  - HashValuesEnumerator で LCG Seed (= BaseSeed) を列挙                 │
 │  - フィルタ条件にマッチする Seed を返却                                  │
 └─────────────────────────────┬───────────────────────────────────────────┘
-                              │ DatetimeSearchResult (含: lcg_seed, game_offset)
+                              │ DatetimeSearchResult[]
                               ↓
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Main Thread (UI)                                                        │
-│  - 検索結果から BaseSeed を取得                                          │
+│  - 検索結果から SeedSource を構築                                        │
 │  - generation Worker へ個体生成リクエスト送信                            │
 └─────────────────────────────┬───────────────────────────────────────────┘
-                              │ GenerationStartPayload (含: baseSeed, gameOffset)
+                              │ GenerationStartPayload (含: SeedSource)
                               ↓
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ generation Worker                                                       │
-│  - baseSeed から Generator を生成                                        │
+│  - SeedSource から BaseSeed を取得                                       │
+│  - GameStartConfig から Game Offset を計算                              │
 │  - gameOffset + userOffset 分進めて列挙開始                             │
 │  - (EggGenerator の場合) baseSeed から MT Seed も導出済み               │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.2 BaseSeed の受け渡し
+### 6.2 SeedSource の構築
 
-datetime-search の結果には以下が含まれる:
+datetime-search の結果から `SeedSource` を構築する。
 
 ```typescript
 type DatetimeSearchResult = {
@@ -601,29 +753,45 @@ type DatetimeSearchResult = {
   
   // 計算結果
   lcgSeed: bigint;      // ← これが BaseSeed
-  gameOffset: number;   // ← ゲーム起動条件による固定消費数
 };
+
+// datetime-search 結果から SeedSource を構築
+function buildSeedSourceFromResults(
+  results: DatetimeSearchResult[],
+): SeedSource {
+  if (results.length === 1) {
+    // 単一結果の場合は Fixed
+    return { type: 'Fixed', value: results[0].lcgSeed };
+  }
+  
+  // 複数結果の場合は Multiple
+  // (結果にはすでに SHA-1 計算済みの lcgSeed が含まれている)
+  return {
+    type: 'Multiple',
+    values: results.map(r => r.lcgSeed),
+  };
+}
 ```
 
 ### 6.3 generation への受け渡し
 
 ```typescript
 // datetime-search の結果から generation へ
-function generateFromSearchResult(
-  searchResult: DatetimeSearchResult,
+function generateFromSearchResults(
+  results: DatetimeSearchResult[],
+  gameStartConfig: GameStartConfig,
   generationConfig: PokemonGenerationConfig,
   maxAdvances: number,
 ): void {
-  const baseSeed = searchResult.lcgSeed;
-  const gameOffset = searchResult.gameOffset;
+  const seedSource = buildSeedSourceFromResults(results);
   
   generationWorker.postMessage({
     type: 'START',
     payload: {
-      baseSeed,
-      config: generationConfig,
-      gameOffset,
+      seedSource,
+      gameStartConfig,
       userOffset: 0,
+      config: generationConfig,
       maxAdvances,
       maxResults: 1000,
       stopAtFirstShiny: false,
@@ -637,14 +805,14 @@ function generateFromSearchResult(
 孵化個体生成の場合、**datetime-search の結果から取得した `baseSeed` をそのまま渡す**ことで、正しい MT Seed が導出される。
 
 ```typescript
-function generateEggsFromSearchResult(
-  searchResult: DatetimeSearchResult,
+function generateEggsFromSearchResults(
+  results: DatetimeSearchResult[],
+  gameStartConfig: GameStartConfig,
   eggConfig: EggGenerationConfig,
   parents: ParentsIVs,
   maxAdvances: number,
 ): void {
-  const baseSeed = searchResult.lcgSeed;
-  const gameOffset = searchResult.gameOffset;
+  const seedSource = buildSeedSourceFromResults(results);
   
   // EggGenerator は baseSeed から MT Seed を内部で導出
   // gameOffset 分進めた位置から列挙を開始するが、
@@ -652,11 +820,11 @@ function generateEggsFromSearchResult(
   eggGenerationWorker.postMessage({
     type: 'START',
     payload: {
-      baseSeed,
+      seedSource,
+      gameStartConfig,
+      userOffset: 0,
       config: eggConfig,
       parents,
-      gameOffset,
-      userOffset: 0,
       maxAdvances,
       maxResults: 1000,
     },
@@ -665,7 +833,6 @@ function generateEggsFromSearchResult(
 ```
 
 **重要**: `baseSeed` を変更すると MT Seed も変わるため、datetime-search で得られた seed をそのまま使用する必要がある。
-```
 
 ## 関連ドキュメント
 

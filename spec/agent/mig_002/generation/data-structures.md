@@ -300,7 +300,46 @@ export type HeldItemSlot = 'Common' | 'Rare' | 'VeryRare' | 'None';
 
 詳細なアルゴリズムは [algorithm/encounter.md](algorithm/encounter.md) §9 を参照。
 
-### 2.8 ResolvedPokemonData
+### 2.8 RawPokemonData
+
+生成フローから返される中間データ。IV を含まない。
+
+`flows/` の生成関数 (`generate_wild_pokemon`, `generate_static_pokemon`) が返す型。
+`PokemonGenerator` がこれに IV を付与して `ResolvedPokemonData` を構築する。
+
+```rust
+#[derive(Clone)]
+pub struct RawPokemonData {
+    /// PID
+    pub pid: u32,
+    /// 種族ID (EncounterSlotConfig から解決)
+    pub species_id: u16,
+    /// レベル
+    pub level: u8,
+    /// 性格 (0-24)
+    pub nature: u8,
+    /// シンクロ適用
+    pub sync_applied: bool,
+    /// 特性スロット (0-1)
+    pub ability_slot: u8,
+    /// 性別
+    pub gender: Gender,
+    /// 色違い種別
+    pub shiny_type: ShinyType,
+    /// 持ち物スロット (確率カテゴリ)
+    pub held_item_slot: HeldItemSlot,
+}
+```
+
+**注意**: `RawPokemonData` は WASM API としてはエクスポートしない (内部型)。
+TypeScript への公開は `ResolvedPokemonData` (IV 含む) または `EnumeratedPokemonData` (advance 等含む) を使用する。
+
+**設計意図**:
+- 生成関数は LCG のみを消費し、IV 計算 (MT19937) は行わない
+- IV は `BaseSeed` から導出するため、`PokemonGenerator` が責務を持つ
+- 責務分離により、テストや再利用が容易になる
+
+### 2.9 ResolvedPokemonData
 
 解決済み Pokemon 個体データ。WASM 内で species_id/level/gender/ivs まで解決済み。
 
@@ -361,7 +400,7 @@ export type ResolvedPokemonData = {
 - `held_item_slot`: エンカウント種別とふくがん有無で判定 (§9 参照)
 - `ivs`: LCG Seed → MT Seed → MT19937 で計算 (version/encounter_type に応じた offset 適用)
 
-### 2.10 build_resolved_pokemon_data
+### 2.11 build_resolved_pokemon_data
 
 PID から派生値を算出し、`ResolvedPokemonData` を構築するヘルパー関数。
 
@@ -420,7 +459,7 @@ fn build_resolved_pokemon_data(
 
 **注意**: この関数は乱数を消費しない。純粋に PID と設定から `ResolvedPokemonData` を構築するのみ。
 
-### 2.11 GenerationSource
+### 2.12 GenerationSource
 
 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 
@@ -458,7 +497,7 @@ export type GenerationSource =
   | { type: 'Datetime'; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
 ```
 
-### 2.10 EnumeratedPokemonData
+### 2.13 EnumeratedPokemonData
 
 Advance 情報付き Pokemon データ。
 
@@ -538,23 +577,19 @@ pub struct ParentsIvs {
 
 ### 3.4 RawEggData
 
-生成された Egg 個体 (未解決データ)。
+生成フローから返される Egg 個体 (IV なし)。
+
+`flows/egg.md` の `generate_egg()` が返す型。IV は含まない。
+`EggGenerator` がこれに IV を付与して `ResolvedEggData` を構築する。
 
 ```rust
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone)]
 pub struct RawEggData {
-    /// LCG Seed
-    pub lcg_seed: LcgSeed,
-    /// MT Seed (IV 生成用)
-    pub mt_seed: MtSeed,
-    /// 個体値 (遺伝適用後)
-    pub ivs: IvSet,
     /// 性格
     pub nature: Nature,
     /// 性別
     pub gender: Gender,
-    /// 特性スロット
+    /// 特性スロット (0, 1, 2)
     pub ability: AbilitySlot,
     /// 色違い種別
     pub shiny: ShinyType,
@@ -565,7 +600,52 @@ pub struct RawEggData {
 }
 ```
 
-### 3.5 EnumeratedEggData
+**注意**: `RawEggData` は WASM API としてはエクスポートしない (内部型)。
+TypeScript への公開は `ResolvedEggData` (IV 含む) または `EnumeratedEggData` (advance 等含む) を使用する。
+
+**設計意図**:
+- 生成関数は LCG のみを消費し、IV 計算 (MT19937 + 遺伝) は行わない
+- IV は `BaseSeed` から導出した MT Seed + 親 IV で計算するため、`EggGenerator` が責務を持つ
+- 責務分離により、テストや再利用が容易になる
+
+### 3.5 ResolvedEggData
+
+解決済み Egg 個体データ。IV (遺伝適用後) を含む。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct ResolvedEggData {
+    /// 性格
+    pub nature: Nature,
+    /// 性別
+    pub gender: Gender,
+    /// 特性スロット (0, 1, 2)
+    pub ability: AbilitySlot,
+    /// 色違い種別
+    pub shiny: ShinyType,
+    /// PID
+    pub pid: u32,
+    /// 遺伝情報
+    pub inheritance: InheritanceSlots,
+    /// 個体値 (遺伝適用後)
+    pub ivs: IvSet,
+}
+```
+
+```typescript
+export type ResolvedEggData = {
+  nature: Nature;
+  gender: Gender;
+  ability: AbilitySlot;
+  shiny: ShinyType;
+  pid: number;
+  inheritance: InheritanceSlots;
+  ivs: IvSet;
+};
+```
+
+### 3.6 EnumeratedEggData
 
 Advance 情報付き Egg データ。
 
@@ -577,16 +657,19 @@ pub struct EnumeratedEggData {
     pub advance: u64,
     /// レポート針方向 (0-7)
     pub needle_direction: u8,
-    /// 個体データ
-    pub data: RawEggData,
+    /// 解決済み個体データ (IV 含む)
+    pub data: ResolvedEggData,
+    /// 生成ソース情報
+    pub source: GenerationSource,
 }
 ```
 
 **needle_direction の計算タイミング**:
-- 入力: 当該 advance 到達時点の LCG Seed (`data.lcg_seed` と同一)
-- 計算: `NeedleDirection::from_seed(lcg_seed)` ([common/types.md](../common/types.md#212-needledirection) 参照)
+- 入力: 当該 advance における個体生成開始時点の LCG Seed
+- 計算: `NeedleDirection::from_seed(seed)` ([common/types.md](../common/types.md#216-needledirection) 参照)
+- 詳細は [worker-interface.md §2.4](./worker-interface.md#24-needle_direction-の計算) を参照
 
-### 3.6 InheritanceSlots
+### 3.7 InheritanceSlots
 
 遺伝スロット情報。
 
