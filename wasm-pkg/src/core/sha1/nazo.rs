@@ -1,7 +1,7 @@
 //! Nazo 値テーブル
 //!
 //! ROM バージョン・リージョン毎の固定値。
-//! 参照: https://blog.bzl-web.com/entry/2020/09/18/235128
+//! 参照: <https://blog.bzl-web.com/entry/2020/09/18/235128>
 
 use crate::types::{RomRegion, RomVersion};
 
@@ -20,6 +20,7 @@ impl NazoValues {
 /// Nazo 値を取得
 ///
 /// ROM バージョンとリージョンに対応する Nazo 値を返す。
+#[allow(clippy::too_many_lines, clippy::match_same_arms)]
 pub const fn get_nazo_values(version: RomVersion, region: RomRegion) -> NazoValues {
     match (version, region) {
         // ===== Black =====

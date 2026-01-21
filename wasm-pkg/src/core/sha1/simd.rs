@@ -2,7 +2,7 @@
 
 use std::simd::u32x4;
 
-use super::{HashValues, H0, H1, H2, H3, H4, K};
+use super::{H0, H1, H2, H3, H4, HashValues, K};
 
 /// SIMD 版 SHA-1 計算 (4並列)
 ///
@@ -14,7 +14,8 @@ use super::{HashValues, H0, H1, H2, H3, H4, K};
 /// * `base_message` - 基本メッセージ (日時以外の部分)
 ///
 /// # Returns
-/// 4つの HashValues
+/// 4つの `HashValues`
+#[allow(clippy::many_single_char_names, clippy::needless_range_loop)]
 pub fn calculate_pokemon_sha1_simd(
     date_codes: [u32; 4],
     time_codes: [u32; 4],

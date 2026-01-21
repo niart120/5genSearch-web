@@ -7,8 +7,8 @@ mod nazo;
 mod scalar;
 mod simd;
 
-pub use message::{build_date_code, build_time_code, get_frame, BaseMessageBuilder, DateTime};
-pub use nazo::{get_nazo_values, NazoValues};
+pub use message::{BaseMessageBuilder, DateTime, build_date_code, build_time_code, get_frame};
+pub use nazo::{NazoValues, get_nazo_values};
 pub use scalar::calculate_pokemon_sha1;
 pub use simd::calculate_pokemon_sha1_simd;
 
@@ -53,13 +53,13 @@ impl HashValues {
     pub fn to_lcg_seed(&self) -> LcgSeed {
         let h0_swapped = self.h0.swap_bytes();
         let h1_swapped = self.h1.swap_bytes();
-        let raw = ((h1_swapped as u64) << 32) | (h0_swapped as u64);
+        let raw = (u64::from(h1_swapped) << 32) | u64::from(h0_swapped);
         LcgSeed::new(raw)
     }
 
     /// 32bit MT Seed を計算
     ///
-    /// to_lcg_seed() + LcgSeed::derive_mt_seed() の合成。
+    /// `to_lcg_seed()` + `LcgSeed::derive_mt_seed()` の合成。
     #[inline]
     pub fn to_mt_seed(&self) -> MtSeed {
         self.to_lcg_seed().derive_mt_seed()
@@ -98,12 +98,16 @@ pub const fn majority(x: u32, y: u32, z: u32) -> u32 {
 /// 左回転
 #[inline]
 pub const fn left_rotate(value: u32, amount: u32) -> u32 {
-    (value << amount) | (value >> (32 - amount))
+    value.rotate_left(amount)
 }
 
 // ===== wasm-bindgen エクスポート =====
 
 /// 単一 SHA-1 計算
+///
+/// # Panics
+/// `message` の長さが 16 の場合は panic しない。
+/// 16 以外の場合はゼロベクトルを返す。
 #[wasm_bindgen]
 pub fn sha1_hash_single(message: &[u32]) -> Vec<u32> {
     if message.len() != 16 {
@@ -115,6 +119,9 @@ pub fn sha1_hash_single(message: &[u32]) -> Vec<u32> {
 }
 
 /// バッチ SHA-1 計算
+///
+/// # Panics
+/// 各 16 ワードチャンクが正しく存在する場合は panic しない。
 #[wasm_bindgen]
 pub fn sha1_hash_batch(messages: &[u32]) -> Vec<u32> {
     let count = messages.len() / 16;
@@ -177,14 +184,8 @@ mod tests {
 
     #[test]
     fn test_majority() {
-        assert_eq!(
-            majority(0xFFFF_FFFF, 0xFFFF_FFFF, 0x0000_0000),
-            0xFFFF_FFFF
-        );
-        assert_eq!(
-            majority(0xFFFF_FFFF, 0x0000_0000, 0x0000_0000),
-            0x0000_0000
-        );
+        assert_eq!(majority(0xFFFF_FFFF, 0xFFFF_FFFF, 0x0000_0000), 0xFFFF_FFFF);
+        assert_eq!(majority(0xFFFF_FFFF, 0x0000_0000, 0x0000_0000), 0x0000_0000);
     }
 
     #[test]

@@ -5,7 +5,7 @@ use crate::types::Hardware;
 
 use super::nazo::NazoValues;
 
-/// GX_STAT 固定値
+/// `GX_STAT` 固定値
 const GX_STAT: u32 = 0x0600_0000;
 
 /// 日時パラメータ
@@ -39,13 +39,14 @@ impl DateTime {
 /// - MM: 月 (BCD)
 /// - DD: 日 (BCD)
 /// - WW: 曜日 (0=日曜)
+#[allow(clippy::cast_possible_truncation)]
 pub fn build_date_code(year: u16, month: u8, day: u8) -> u32 {
     let weekday = calc_weekday(year, month, day);
 
-    ((to_bcd((year - 2000) as u8) as u32) << 24)
-        | ((to_bcd(month) as u32) << 16)
-        | ((to_bcd(day) as u32) << 8)
-        | (weekday as u32)
+    (u32::from(to_bcd((year - 2000) as u8)) << 24)
+        | (u32::from(to_bcd(month)) << 16)
+        | (u32::from(to_bcd(day)) << 8)
+        | u32::from(weekday)
 }
 
 /// 時刻コードを生成
@@ -62,38 +63,44 @@ pub fn build_time_code(hour: u8, minute: u8, second: u8, frame: u8) -> u32 {
         to_bcd(hour)
     };
 
-    ((hour_bcd as u32) << 24)
-        | ((to_bcd(minute) as u32) << 16)
-        | ((to_bcd(second) as u32) << 8)
-        | (frame as u32)
+    (u32::from(hour_bcd) << 24)
+        | (u32::from(to_bcd(minute)) << 16)
+        | (u32::from(to_bcd(second)) << 8)
+        | u32::from(frame)
 }
 
 /// 曜日計算 (Zeller の公式)
+#[allow(clippy::many_single_char_names, clippy::cast_sign_loss)]
 fn calc_weekday(year: u16, month: u8, day: u8) -> u8 {
-    let mut y = year as i32;
-    let mut m = month as i32;
+    let mut year_adj = i32::from(year);
+    let mut month_adj = i32::from(month);
 
-    if m < 3 {
-        m += 12;
-        y -= 1;
+    if month_adj < 3 {
+        month_adj += 12;
+        year_adj -= 1;
     }
 
-    let q = day as i32;
-    let k = y % 100;
-    let j = y / 100;
+    let day_i32 = i32::from(day);
+    let century_remainder = year_adj % 100;
+    let century = year_adj / 100;
 
-    let h = (q + (13 * (m + 1)) / 5 + k + k / 4 + j / 4 - 2 * j) % 7;
-    let weekday = ((h + 6) % 7) as u8; // 0=日曜 に調整
+    let h = (day_i32
+        + (13 * (month_adj + 1)) / 5
+        + century_remainder
+        + century_remainder / 4
+        + century / 4
+        - 2 * century)
+        % 7;
 
-    weekday
+    // 0=日曜 に調整
+    ((h + 6) % 7) as u8
 }
 
 /// Hardware から frame 値を取得
 pub const fn get_frame(hardware: Hardware) -> u8 {
     match hardware {
         Hardware::Ds => 8,
-        Hardware::DsLite => 6,
-        Hardware::Dsi => 6,
+        Hardware::DsLite | Hardware::Dsi => 6,
         Hardware::Dsi3ds => 9,
     }
 }
@@ -104,9 +111,9 @@ fn build_mac_words(mac: [u8; 6], frame: u8) -> (u32, u32) {
     let mac_lower = u32::from_le_bytes([mac[0], mac[1], mac[2], mac[3]]);
 
     // MAC 上位 2 バイト
-    let mac_upper = ((mac[5] as u32) << 8) | (mac[4] as u32);
+    let mac_upper = (u32::from(mac[5]) << 8) | u32::from(mac[4]);
 
-    let word7 = mac_upper ^ GX_STAT ^ (frame as u32);
+    let word7 = mac_upper ^ GX_STAT ^ u32::from(frame);
 
     (mac_lower, word7)
 }
@@ -132,7 +139,7 @@ impl BaseMessageBuilder {
         buffer[0..5].copy_from_slice(&nazo.values);
 
         // VCount | Timer0
-        buffer[5] = ((vcount as u32) << 16) | (timer0 as u32);
+        buffer[5] = (u32::from(vcount) << 16) | u32::from(timer0);
 
         // MAC アドレス
         let (mac_lower, mac_word7) = build_mac_words(mac, frame);

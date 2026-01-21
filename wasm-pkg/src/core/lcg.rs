@@ -11,7 +11,9 @@ pub const LCG_MULTIPLIER: u64 = 0x5D58_8B65_6C07_8965;
 pub const LCG_INCREMENT: u64 = 0x0026_9EC3;
 
 /// 64bit LCG 乱数生成器
-#[derive(Debug, Clone, Copy)]
+///
+/// Iterator trait を実装しており、`next()` で 32bit 乱数を取得可能。
+#[derive(Debug, Clone)]
 pub struct Lcg64 {
     seed: LcgSeed,
 }
@@ -31,9 +33,9 @@ impl Lcg64 {
         }
     }
 
-    /// 次の 32bit 乱数値を取得 (上位 32bit)
+    /// 次の 32bit 乱数値を取得 (上位 32bit) - 内部実装
     #[inline]
-    pub fn next(&mut self) -> u32 {
+    fn gen_next_value(&mut self) -> u32 {
         let raw = self
             .seed
             .value()
@@ -70,12 +72,12 @@ impl Lcg64 {
     /// 指定回数だけ乱数を進める
     pub fn advance(&mut self, advances: u32) {
         for _ in 0..advances {
-            self.next();
+            self.gen_next_value();
         }
     }
 
     /// 高速スキップ O(log n)
-    pub fn skip(&mut self, steps: u64) {
+    pub fn jump(&mut self, steps: u64) {
         let (mul, add) = Self::affine_for_steps(steps);
         let raw = Self::apply_raw(self.seed.value(), mul, add);
         self.seed = LcgSeed::new(raw);
@@ -85,6 +87,18 @@ impl Lcg64 {
     #[inline]
     pub fn reset(&mut self, seed: LcgSeed) {
         self.seed = seed;
+    }
+}
+
+// ===== Iterator trait 実装 =====
+
+impl Iterator for Lcg64 {
+    type Item = u32;
+
+    /// 次の 32bit 乱数値を取得
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.gen_next_value())
     }
 }
 
@@ -171,7 +185,7 @@ mod tests {
     #[test]
     fn test_lcg_basic() {
         let mut lcg = Lcg64::new(LcgSeed::new(0));
-        assert_eq!(lcg.next(), 0);
+        assert_eq!(lcg.next().unwrap(), 0);
         assert_eq!(lcg.current_seed().value(), LCG_INCREMENT);
     }
 
@@ -183,7 +197,7 @@ mod tests {
             .wrapping_add(LCG_INCREMENT);
         let expected_value = (expected_seed >> 32) as u32;
 
-        assert_eq!(lcg.next(), expected_value);
+        assert_eq!(lcg.next().unwrap(), expected_value);
         assert_eq!(lcg.current_seed().value(), expected_seed);
     }
 
@@ -198,7 +212,7 @@ mod tests {
         for _ in 0..steps {
             lcg1.next();
         }
-        lcg2.skip(steps);
+        lcg2.jump(steps);
 
         assert_eq!(lcg1.current_seed(), lcg2.current_seed());
     }

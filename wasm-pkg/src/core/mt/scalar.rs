@@ -12,6 +12,7 @@ pub struct Mt19937 {
 
 impl Mt19937 {
     /// 新しい MT19937 インスタンスを作成
+    #[allow(clippy::cast_possible_truncation)]
     pub fn new(seed: MtSeed) -> Self {
         let seed_val = seed.value();
         let mut state = [0u32; N];

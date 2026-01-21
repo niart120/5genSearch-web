@@ -13,6 +13,7 @@ pub struct Mt19937x4 {
 
 impl Mt19937x4 {
     /// 4つの異なるシードから初期化
+    #[allow(clippy::cast_possible_truncation)]
     pub fn new(seeds: [MtSeed; 4]) -> Self {
         let mut state = [u32x4::splat(0); N];
 

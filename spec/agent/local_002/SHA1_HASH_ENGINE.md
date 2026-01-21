@@ -16,7 +16,7 @@ Gen5 初期 Seed 計算に使用される SHA-1 ハッシュ実装を行う。mi
 | BCD | Binary-Coded Decimal (10進各桁を4bitで表現) |
 | date_code | 日付を表す32bit値 (0xYYMMDDWW形式) |
 | time_code | 時刻を表す32bit値 (0xHHMMSSFF形式) |
-| frame | Hardware 依存のフレーム値 (DS=8, DS Lite/DSi=6) |
+| frame | Hardware 依存のフレーム値 (DS=8, DS Lite=6, DSi/3DS=9) |
 | BaseMessageBuilder | SHA-1 メッセージの共通部分を構築するビルダー |
 
 ### 1.3 背景・問題
@@ -756,168 +756,53 @@ mod tests {
         assert_eq!(get_frame(Hardware::Ds), 8);
         assert_eq!(get_frame(Hardware::DsLite), 6);
         assert_eq!(get_frame(Hardware::Dsi), 6);
-        assert_eq!(get_frame(Hardware::Dsi3ds), 6);
+        assert_eq!(get_frame(Hardware::Dsi3ds), 9);
     }
 }
 ```
 
 ### 4.5 core/sha1/nazo.rs
 
+Nazo 値は ROM バージョン (Black/White/Black2/White2) とリージョン (Jpn/Usa/Kor/Ger/Fra/Spa/Ita) の組み合わせごとに定義された 5 つの 32bit 定数である。
+
+#### 設計
+
 ```rust
-//! Nazo 値テーブル
-//!
-//! ROM バージョン・リージョン毎の固定値。
-
-use crate::types::{RomRegion, RomVersion};
-
 /// Nazo 値 (5つの32bit定数)
 #[derive(Debug, Clone, Copy)]
 pub struct NazoValues {
     pub values: [u32; 5],
 }
 
-impl NazoValues {
-    pub const fn new(values: [u32; 5]) -> Self {
-        Self { values }
-    }
+/// ROM バージョンとリージョンに対応する Nazo 値を返す
+pub const fn get_nazo_values(version: RomVersion, region: RomRegion) -> NazoValues;
+```
+
+#### Nazo 値の参照元
+
+正確な Nazo 値は以下を参照:
+- 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/src/data/rom-parameters.ts>
+- 技術解説: <https://blog.bzl-web.com/entry/2020/09/18/235128>
+
+**注意**: 仕様書の値より実装を正とする。4 バージョン × 7 リージョン = 28 パターン全てを実装すること。
+
+#### テスト例
+
+```rust
+#[test]
+fn test_nazo_black_jpn() {
+    let nazo = get_nazo_values(RomVersion::Black, RomRegion::Jpn);
+    assert_eq!(nazo.values[0], 0x0221_5F10);
 }
 
-/// Nazo 値を取得
-///
-/// ROM バージョンとリージョンに対応する Nazo 値を返す。
-pub const fn get_nazo_values(version: RomVersion, region: RomRegion) -> NazoValues {
-    match (version, region) {
-        // ===== Black (日本語) =====
-        (RomVersion::Black, RomRegion::Jpn) => NazoValues::new([
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-        ]),
-        // ===== White (日本語) =====
-        (RomVersion::White, RomRegion::Jpn) => NazoValues::new([
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-        ]),
-        // ===== Black2 (日本語) =====
-        (RomVersion::Black2, RomRegion::Jpn) => NazoValues::new([
-            0x0209_A8DC,
-            0x0209_A8FC,
-            0x0209_A8FC,
-            0x0209_A960,
-            0x0209_A960,
-        ]),
-        // ===== White2 (日本語) =====
-        (RomVersion::White2, RomRegion::Jpn) => NazoValues::new([
-            0x0209_A8DC,
-            0x0209_A8FC,
-            0x0209_A8FC,
-            0x0209_A960,
-            0x0209_A960,
-        ]),
-        // ===== Black (英語) =====
-        (RomVersion::Black, RomRegion::Usa) => NazoValues::new([
-            0x0220_5F10,
-            0x0220_600C,
-            0x0220_600C,
-            0x0220_6058,
-            0x0220_6058,
-        ]),
-        // ===== White (英語) =====
-        (RomVersion::White, RomRegion::Usa) => NazoValues::new([
-            0x0220_5F10,
-            0x0220_600C,
-            0x0220_600C,
-            0x0220_6058,
-            0x0220_6058,
-        ]),
-        // ===== Black2 (英語) =====
-        (RomVersion::Black2, RomRegion::Usa) => NazoValues::new([
-            0x0209_AEE4,
-            0x0209_AF04,
-            0x0209_AF04,
-            0x0209_AF68,
-            0x0209_AF68,
-        ]),
-        // ===== White2 (英語) =====
-        (RomVersion::White2, RomRegion::Usa) => NazoValues::new([
-            0x0209_AEE4,
-            0x0209_AF04,
-            0x0209_AF04,
-            0x0209_AF68,
-            0x0209_AF68,
-        ]),
-        // ===== 韓国語版 =====
-        (RomVersion::Black, RomRegion::Kor) => NazoValues::new([
-            0x0221_4C08,
-            0x0221_4D04,
-            0x0221_4D04,
-            0x0221_4D50,
-            0x0221_4D50,
-        ]),
-        (RomVersion::White, RomRegion::Kor) => NazoValues::new([
-            0x0221_4C08,
-            0x0221_4D04,
-            0x0221_4D04,
-            0x0221_4D50,
-            0x0221_4D50,
-        ]),
-        (RomVersion::Black2, RomRegion::Kor) => NazoValues::new([
-            0x0209_9DE4,
-            0x0209_9E04,
-            0x0209_9E04,
-            0x0209_9E68,
-            0x0209_9E68,
-        ]),
-        (RomVersion::White2, RomRegion::Kor) => NazoValues::new([
-            0x0209_9DE4,
-            0x0209_9E04,
-            0x0209_9E04,
-            0x0209_9E68,
-            0x0209_9E68,
-        ]),
-        // ===== その他のリージョン (BW) =====
-        // ドイツ語・フランス語・スペイン語・イタリア語は英語版と同じ
-        (RomVersion::Black, _) | (RomVersion::White, _) => NazoValues::new([
-            0x0220_5F10,
-            0x0220_600C,
-            0x0220_600C,
-            0x0220_6058,
-            0x0220_6058,
-        ]),
-        // ===== その他のリージョン (BW2) =====
-        (RomVersion::Black2, _) | (RomVersion::White2, _) => NazoValues::new([
-            0x0209_AEE4,
-            0x0209_AF04,
-            0x0209_AF04,
-            0x0209_AF68,
-            0x0209_AF68,
-        ]),
-    }
+#[test]
+fn test_nazo_black2_jpn() {
+    let nazo = get_nazo_values(RomVersion::Black2, RomRegion::Jpn);
+    assert_eq!(nazo.values[0], 0x0209_A8DC);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_nazo_black_jpn() {
-        let nazo = get_nazo_values(RomVersion::Black, RomRegion::Jpn);
-        assert_eq!(nazo.values[0], 0x0221_5F10);
-    }
-
-    #[test]
-    fn test_nazo_black2_jpn() {
-        let nazo = get_nazo_values(RomVersion::Black2, RomRegion::Jpn);
-        assert_eq!(nazo.values[0], 0x0209_A8DC);
-    }
-
-    #[test]
-    fn test_nazo_different_regions() {
+#[test]
+fn test_nazo_different_regions() {
         let jpn = get_nazo_values(RomVersion::Black, RomRegion::Jpn);
         let usa = get_nazo_values(RomVersion::Black, RomRegion::Usa);
         // 日本語版とUSA版は異なる
