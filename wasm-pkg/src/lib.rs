@@ -6,6 +6,9 @@
 
 use wasm_bindgen::prelude::*;
 
+pub mod core;
+pub mod types;
+
 #[wasm_bindgen(start)]
 pub fn init() {
     #[cfg(feature = "console_error_panic_hook")]

@@ -89,8 +89,7 @@ core/mt/    ← types/ (MtSeed)
 ### 3.4 wasm-bindgen エクスポート方針
 
 - `types/` は `tsify` による型定義のみ (関数エクスポートなし)
-- `core/lcg.rs` は `Lcg64Wasm` ラッパー + スタティック関数をエクスポート
-- `core/mt/` は最小限のエクスポート (`Mt19937Wasm`)
+- `core/` は内部使用のみ (WASM エクスポートなし)
 
 ## 4. 実装仕様
 
@@ -462,7 +461,7 @@ impl Lcg64 {
     }
 }
 
-// ===== スタティック関数 =====
+// ===== 純関数 =====
 
 impl Lcg64 {
     /// 1 ステップ進めた Seed を計算 (純関数)
@@ -536,67 +535,6 @@ impl LcgSeed {
             .wrapping_add(LCG_INCREMENT);
         MtSeed::new((next >> 32) as u32)
     }
-}
-
-// ===== wasm-bindgen エクスポート =====
-
-/// WASM 用 LCG ラッパー
-#[wasm_bindgen]
-pub struct Lcg64Wasm {
-    inner: Lcg64,
-}
-
-#[wasm_bindgen]
-impl Lcg64Wasm {
-    #[wasm_bindgen(constructor)]
-    pub fn new(seed: u64) -> Self {
-        Self {
-            inner: Lcg64::new(LcgSeed::new(seed)),
-        }
-    }
-
-    pub fn next(&mut self) -> u32 {
-        self.inner.next()
-    }
-
-    pub fn next_seed(&mut self) -> u64 {
-        self.inner.next_seed().value()
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn current_seed(&self) -> u64 {
-        self.inner.current_seed().value()
-    }
-
-    pub fn advance(&mut self, advances: u32) {
-        self.inner.advance(advances);
-    }
-
-    pub fn skip(&mut self, steps: u64) {
-        self.inner.skip(steps);
-    }
-
-    pub fn reset(&mut self, seed: u64) {
-        self.inner.reset(LcgSeed::new(seed));
-    }
-}
-
-/// LCG: 1ステップ進める (スタティック関数)
-#[wasm_bindgen]
-pub fn lcg_compute_next(seed: u64) -> u64 {
-    Lcg64::compute_next(LcgSeed::new(seed)).value()
-}
-
-/// LCG: nステップ進める (スタティック関数)
-#[wasm_bindgen]
-pub fn lcg_compute_advance(seed: u64, steps: u64) -> u64 {
-    Lcg64::compute_advance(LcgSeed::new(seed), steps).value()
-}
-
-/// LCG: 針方向を計算
-#[wasm_bindgen]
-pub fn lcg_calc_needle_direction(seed: u64) -> u8 {
-    Lcg64::calc_needle_direction(LcgSeed::new(seed)).value()
 }
 
 #[cfg(test)]
@@ -695,32 +633,6 @@ pub const LOWER_MASK: u32 = 0x7FFF_FFFF;
 
 /// 初期化乗数
 pub const INIT_MULTIPLIER: u32 = 1_812_433_253;
-
-// ===== wasm-bindgen エクスポート =====
-
-/// WASM 用 MT19937 ラッパー
-#[wasm_bindgen]
-pub struct Mt19937Wasm {
-    inner: Mt19937,
-}
-
-#[wasm_bindgen]
-impl Mt19937Wasm {
-    #[wasm_bindgen(constructor)]
-    pub fn new(seed: u32) -> Self {
-        Self {
-            inner: Mt19937::new(MtSeed::new(seed)),
-        }
-    }
-
-    pub fn next_u32(&mut self) -> u32 {
-        self.inner.next_u32()
-    }
-
-    pub fn discard(&mut self, count: u32) {
-        self.inner.discard(count);
-    }
-}
 ```
 
 ### 4.5 core/mt/scalar.rs
@@ -997,10 +909,6 @@ use wasm_bindgen::prelude::*;
 pub mod core;
 pub mod types;
 
-// Re-export for wasm-bindgen
-pub use core::lcg::{lcg_calc_needle_direction, lcg_compute_advance, lcg_compute_next, Lcg64Wasm};
-pub use core::mt::Mt19937Wasm;
-
 #[wasm_bindgen(start)]
 pub fn init() {
     #[cfg(feature = "console_error_panic_hook")]
@@ -1066,13 +974,11 @@ wasm-pack build --target web
   - [ ] ユニットテスト
 - [ ] `wasm-pkg/src/core/lcg.rs` 作成
   - [ ] Lcg64 構造体
-  - [ ] スタティック関数 (compute_next, compute_advance, calc_needle_direction)
+  - [ ] 純関数 (compute_next, compute_advance, calc_needle_direction)
   - [ ] LcgSeed::derive_mt_seed() 実装
-  - [ ] wasm-bindgen エクスポート (Lcg64Wasm)
   - [ ] ユニットテスト
 - [ ] `wasm-pkg/src/core/mt/mod.rs` 作成
   - [ ] 共通定数
-  - [ ] Mt19937Wasm エクスポート
 - [ ] `wasm-pkg/src/core/mt/scalar.rs` 作成
   - [ ] Mt19937 構造体
   - [ ] 標準テストベクタによるテスト
@@ -1081,6 +987,5 @@ wasm-pack build --target web
   - [ ] スカラー版との一致テスト
 - [ ] `wasm-pkg/src/lib.rs` 更新
   - [ ] モジュール宣言追加
-  - [ ] re-export 追加
 - [ ] `cargo test` パス確認
 - [ ] `wasm-pack build --target web` 成功確認
