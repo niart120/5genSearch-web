@@ -92,7 +92,7 @@ pub struct NeedleSearchSeedRequest {
     /// 針パターン
     pub pattern: NeedlePattern,
     /// 初期 LCG Seed
-    pub initial_seed: u64,
+    pub initial_seed: LcgSeed,
     /// Timer0 範囲 (結果表示用、Seed モードでは単一値)
     pub timer0_range: RangeU16,
     /// VCount 範囲 (結果表示用、Seed モードでは単一値)

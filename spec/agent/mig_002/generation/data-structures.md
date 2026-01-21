@@ -365,7 +365,7 @@ export type ResolvedPokemonData = {
 
 PID から派生値を算出し、`ResolvedPokemonData` を構築するヘルパー関数。
 
-各生成フロー (pokemon-wild.md, pokemon-static.md, egg.md) から共通で使用される。
+各生成フロー (pokemon-wild.md, pokemon-static.md) から共通で使用される。
 
 ```rust
 fn build_resolved_pokemon_data(
@@ -545,9 +545,9 @@ pub struct ParentsIvs {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct RawEggData {
     /// LCG Seed
-    pub lcg_seed: u64,
+    pub lcg_seed: LcgSeed,
     /// MT Seed (IV 生成用)
-    pub mt_seed: u32,
+    pub mt_seed: MtSeed,
     /// 個体値 (遺伝適用後)
     pub ivs: IvSet,
     /// 性格

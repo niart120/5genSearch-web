@@ -148,11 +148,11 @@ pub struct EggSearchResult {
     
     // === Seed 情報 ===
     /// LCG Seed (64-bit)
-    pub lcg_seed: u64,
+    pub lcg_seed: LcgSeed,
     
     // === 個体情報 (EggIndividual から) ===
     pub advance: u64,
-    pub ivs: [u8; 6],
+    pub ivs: IvSet,
     pub nature: Nature,
     pub gender: Gender,
     pub ability: AbilitySlot,

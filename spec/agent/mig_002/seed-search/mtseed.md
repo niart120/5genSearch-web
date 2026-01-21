@@ -103,8 +103,8 @@ pub struct IvObservation {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedResult {
-    /// MTSeed (初期seed)
-    pub seed: u64,
+    /// MT Seed (初期seed)
+    pub seed: MtSeed,
     /// 最初の観測に対応する消費数
     pub initial_advances: u32,
     /// 一致度スコア (観測値との整合性)
