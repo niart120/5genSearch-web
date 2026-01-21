@@ -1325,40 +1325,40 @@ wasm-pack build --target web
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/types/mod.rs` 更新
-  - [ ] Ivs 構造体追加
-  - [ ] IV_VALUE_UNKNOWN 定数追加
-  - [ ] EncounterType enum 追加
-  - [ ] StartMode enum 追加
-  - [ ] SaveState enum 追加
-  - [ ] GameStartConfig 構造体追加
-  - [ ] LeadAbilityEffect enum 追加
-  - [ ] GenderRatio enum 追加
-  - [ ] Nature::from_u8() メソッド追加
-- [ ] `wasm-pkg/src/generation/mod.rs` 作成
-- [ ] `wasm-pkg/src/generation/algorithm/mod.rs` 作成
-- [ ] `wasm-pkg/src/generation/algorithm/iv.rs` 作成
-  - [ ] extract_iv
-  - [ ] generate_rng_ivs, generate_rng_ivs_with_offset, generate_roamer_ivs
-  - [ ] ParentRole, InheritanceSlot, apply_inheritance
-- [ ] `wasm-pkg/src/generation/algorithm/pid.rs` 作成
-  - [ ] calculate_shiny_type (xor==0→Square, 1<=xor<8→Star)
-  - [ ] generate_wild_pid, generate_event_pid, generate_egg_pid
-  - [ ] リロール関数
-- [ ] `wasm-pkg/src/generation/algorithm/nature.rs` 作成
-  - [ ] nature_roll, sync_check
-  - [ ] perform_sync_check, determine_nature
-  - [ ] EverstonePlan, determine_egg_nature
-- [ ] `wasm-pkg/src/generation/algorithm/needle.rs` 作成
-  - [ ] calculate_needle_direction (既存 NeedleDirection を使用)
-- [ ] `wasm-pkg/src/generation/algorithm/encounter.rs` 作成
-  - [ ] rand_to_percent
-  - [ ] スロット決定関数群
-  - [ ] EncounterResult, ItemContent, HeldItemSlot
-  - [ ] determine_held_item_slot
-- [ ] `wasm-pkg/src/generation/algorithm/game_offset.rs` 作成
-  - [ ] 関数ベースのオフセット計算
-  - [ ] calculate_game_offset, apply_game_offset
-- [ ] `wasm-pkg/src/lib.rs` 更新
-- [ ] `cargo test` パス確認
-- [ ] `wasm-pack build --target web` 成功確認
+- [x] `wasm-pkg/src/types/mod.rs` 更新
+  - [x] Ivs 構造体追加
+  - [x] IV_VALUE_UNKNOWN 定数追加
+  - [x] EncounterType enum 追加
+  - [x] StartMode enum 追加
+  - [x] SaveState enum 追加
+  - [x] GameStartConfig 構造体追加
+  - [x] LeadAbilityEffect enum 追加
+  - [x] GenderRatio enum 追加
+  - [x] Nature::from_u8() メソッド追加
+- [x] `wasm-pkg/src/generation/mod.rs` 作成
+- [x] `wasm-pkg/src/generation/algorithm/mod.rs` 作成
+- [x] `wasm-pkg/src/generation/algorithm/iv.rs` 作成
+  - [x] extract_iv
+  - [x] generate_rng_ivs, generate_rng_ivs_with_offset, generate_roamer_ivs
+  - [x] ParentRole, InheritanceSlot, apply_inheritance
+- [x] `wasm-pkg/src/generation/algorithm/pid.rs` 作成
+  - [x] calculate_shiny_type (xor==0→Square, 1<=xor<8→Star)
+  - [x] generate_wild_pid, generate_event_pid, generate_egg_pid
+  - [x] リロール関数
+- [x] `wasm-pkg/src/generation/algorithm/nature.rs` 作成
+  - [x] nature_roll, sync_check
+  - [x] perform_sync_check, determine_nature
+  - [x] EverstonePlan, determine_egg_nature
+- [x] `wasm-pkg/src/generation/algorithm/needle.rs` 作成
+  - [x] calculate_needle_direction (既存 NeedleDirection を使用)
+- [x] `wasm-pkg/src/generation/algorithm/encounter.rs` 作成
+  - [x] rand_to_percent
+  - [x] スロット決定関数群
+  - [x] EncounterResult, ItemContent, HeldItemSlot
+  - [x] determine_held_item_slot
+- [x] `wasm-pkg/src/generation/algorithm/game_offset.rs` 作成
+  - [x] 関数ベースのオフセット計算
+  - [x] calculate_game_offset, apply_game_offset
+- [x] `wasm-pkg/src/lib.rs` 更新
+- [x] `cargo test` パス確認
+- [x] `wasm-pack build --target web` 成功確認
