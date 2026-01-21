@@ -103,9 +103,39 @@ mod tests {
     }
 
     #[test]
+    fn test_nature_roll_hardcoded() {
+        // 計算式: ((r as u64) * 25) >> 32
+        // 各性格は 2^32 / 25 ≈ 0x0A3D70A4 ずつの範囲を持つ
+        assert_eq!(nature_roll(0x0000_0000), 0); // がんばりや
+        assert_eq!(nature_roll(0x0A3D_70A3), 0); // 閾値直前 (まだ性格 0)
+        assert_eq!(nature_roll(0x0A3D_70A4), 1); // さみしがり (閾値)
+        assert_eq!(nature_roll(0xFFFF_FFFF), 24); // きまぐれ
+
+        // 性格 id 3 (いじっぱり) の検証
+        // 閾値: 3 * 0x0A3D70A4 = 0x1EB851EC
+        assert_eq!(nature_roll(0x1EB8_51EB), 2); // ゆうかん (まだ 2)
+        assert_eq!(nature_roll(0x1EB8_51EC), 3); // いじっぱり
+        assert_eq!(nature_roll(0x2800_0000), 3);
+    }
+
+    #[test]
     fn test_sync_check() {
+        // ((r as u64) * 2) >> 32 == 1 で成功
         // 最上位ビット 1 で成功
         assert!(sync_check(0x8000_0000));
+        assert!(sync_check(0xFFFF_FFFF));
         assert!(!sync_check(0x7FFF_FFFF));
+        assert!(!sync_check(0x0000_0000));
+    }
+
+    #[test]
+    fn test_supports_sync() {
+        // シンクロ対応
+        assert!(supports_sync(EncounterType::Normal));
+        assert!(supports_sync(EncounterType::Surfing));
+        assert!(supports_sync(EncounterType::StaticSymbol));
+
+        // シンクロ非対応
+        assert!(!supports_sync(EncounterType::Roamer));
     }
 }

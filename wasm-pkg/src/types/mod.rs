@@ -27,6 +27,20 @@ pub enum RomVersion {
     White2,
 }
 
+impl RomVersion {
+    /// BW (Black/White) かどうか
+    #[inline]
+    pub const fn is_bw(self) -> bool {
+        matches!(self, Self::Black | Self::White)
+    }
+
+    /// BW2 (Black2/White2) かどうか
+    #[inline]
+    pub const fn is_bw2(self) -> bool {
+        matches!(self, Self::Black2 | Self::White2)
+    }
+}
+
 /// ROM リージョン
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -415,6 +429,8 @@ pub enum EncounterType {
     StaticFossil,
     StaticEvent,
     Roamer,
+    // 孵化
+    Egg,
 }
 
 /// 起動方法

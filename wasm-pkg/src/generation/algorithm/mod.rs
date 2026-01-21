@@ -23,6 +23,7 @@ pub use nature::{
 };
 pub use needle::calculate_needle_direction;
 pub use pid::{
-    apply_shiny_lock, calculate_shiny_type, generate_egg_pid, generate_egg_pid_with_reroll,
-    generate_event_pid, generate_wild_pid, generate_wild_pid_with_reroll,
+    apply_id_correction, apply_shiny_lock, calculate_shiny_type, generate_base_pid,
+    generate_egg_pid, generate_egg_pid_with_reroll, generate_event_pid, generate_wild_pid,
+    generate_wild_pid_with_reroll,
 };

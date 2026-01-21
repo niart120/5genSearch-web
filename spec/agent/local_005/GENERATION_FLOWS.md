@@ -12,14 +12,18 @@
 |------|------|
 | RawPokemonData | IV を含まない個体データ |
 | GeneratedPokemonData | 完全な個体データ (IV + コンテキスト含む) |
-| BaseSeed | SHA-1 から導出される初期 Seed (IV 計算用) |
-| CurrentSeed | n 消費後の LCG 状態 (個体生成用) |
+| BaseSeed | SHA-1 から導出される初期 Seed |
+| GameOffset | ゲーム起動条件により自動計算されるオフセット (`algorithm/game_offset.rs`) |
+| UserOffset | ユーザが検索利便性のために追加指定するオフセット |
+| TotalOffset | GameOffset + UserOffset |
+| MtOffset | MT19937 初期化後、IV 生成を開始する位置 (通常 7) |
 | PokemonGenerator | 個体生成を管理する構造体 |
 
 ### 1.3 背景・問題
 
 - local_004 で generation/algorithm/ が実装済み
 - algorithm を組み合わせて完全な生成フローを実装
+- オフセット計算は `algorithm/game_offset.rs` に既存実装あり
 
 ### 1.4 期待効果
 
@@ -40,8 +44,8 @@
 | `wasm-pkg/src/generation/mod.rs` | 変更 | flows モジュール追加 |
 | `wasm-pkg/src/generation/flows/mod.rs` | 新規 | サブモジュール宣言 |
 | `wasm-pkg/src/generation/flows/types.rs` | 新規 | フロー用型定義 |
-| `wasm-pkg/src/generation/flows/wild.rs` | 新規 | 野生ポケモン生成 |
-| `wasm-pkg/src/generation/flows/static_pokemon.rs` | 新規 | 固定シンボル生成 |
+| `wasm-pkg/src/generation/flows/pokemon_wild.rs` | 新規 | 野生ポケモン生成 |
+| `wasm-pkg/src/generation/flows/pokemon_static.rs` | 新規 | 固定シンボル生成 |
 | `wasm-pkg/src/generation/flows/egg.rs` | 新規 | 孵化個体生成 |
 | `wasm-pkg/src/generation/flows/generator.rs` | 新規 | PokemonGenerator |
 
@@ -56,23 +60,49 @@ wasm-pkg/src/generation/
 └── flows/
     ├── mod.rs          # re-export
     ├── types.rs        # フロー用型定義
-    ├── wild.rs         # 野生ポケモン生成
-    ├── static_pokemon.rs # 固定シンボル生成
+    ├── pokemon_wild.rs # 野生ポケモン生成
+    ├── pokemon_static.rs # 固定シンボル生成
     ├── egg.rs          # 孵化個体生成
     └── generator.rs    # PokemonGenerator
 ```
 
-### 3.2 BaseSeed / CurrentSeed の分離
+### 3.2 既存型の再利用
+
+以下の型は既存定義を使用し、重複定義を避ける:
+
+| 型 | 既存定義場所 |
+|---|---|
+| `Ivs` | `types/mod.rs` |
+| `ShinyType` | `types/mod.rs` |
+| `GenderRatio` | `types/mod.rs` |
+| `EverstonePlan` | `algorithm/nature.rs` |
+| `InheritanceSlot`, `ParentRole` | `algorithm/iv.rs` |
+| `HeldItemSlot` | `algorithm/encounter.rs` |
+
+### 3.3 オフセット設計
 
 ```
-SHA-1(日時+DS設定) → LcgSeed (BaseSeed)
-                         │
-                         ├─ derive_mt_seed() → MtSeed → IV生成 (全消費位置で共通)
-                         │
-                         └─ advance(n) → n消費後の Lcg64 → PID/性格等生成
+BaseSeed (SHA-1 → LcgSeed)
+    │
+    ├─ derive_mt_seed() → MtSeed
+    │       │
+    │       └─ advance(mt_offset) → IV 生成開始位置 (通常 7)
+    │
+    └─ calculate_game_offset() → GameOffset (起動条件依存)
+            │
+            └─ + UserOffset → TotalOffset
+                    │
+                    └─ advance(total_offset + n) → n 消費後の LCG → PID/性格等生成
 ```
 
-**重要**: IV は BaseSeed から導出した MT Seed で計算するため、個体生成関数には渡さない。
+**オフセットの種類**:
+
+| オフセット | 説明 | 計算方法 |
+|---|---|---|
+| MtOffset | MT19937 で IV 生成を開始する位置 | 固定値 (通常 7、BW2 一部 0) |
+| GameOffset | ゲーム起動条件による自動消費 | `calculate_game_offset()` |
+| UserOffset | ユーザ指定の追加オフセット | ユーザ入力 |
+| TotalOffset | 実際の LCG 開始位置 | GameOffset + UserOffset |
 
 ## 4. 実装仕様
 
@@ -84,8 +114,13 @@ SHA-1(日時+DS設定) → LcgSeed (BaseSeed)
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::generation::algorithm::{HeldItemSlot, Ivs, ShinyType};
-use crate::types::{EncounterType, Gender, LeadAbilityEffect, Nature, RomVersion};
+use crate::types::{
+    EncounterType, GameStartConfig, Gender, GenderRatio, Ivs, LeadAbilityEffect, Nature,
+    NeedleDirection, RomVersion, ShinyType,
+};
+use crate::generation::algorithm::{HeldItemSlot, InheritanceSlot, EverstonePlan};
+
+// ===== 生成設定 =====
 
 /// 生成設定 (野生・固定共通)
 #[derive(Clone)]
@@ -110,12 +145,58 @@ pub struct EncounterSlotConfig {
     pub has_held_item: bool,
 }
 
+/// 孵化設定
+#[derive(Clone)]
+pub struct EggGenerationConfig {
+    pub tid: u16,
+    pub sid: u16,
+    pub everstone: EverstonePlan,
+    pub female_has_hidden: bool,
+    pub uses_ditto: bool,
+    pub gender_ratio: GenderRatio,
+    pub nidoran_flag: bool,
+    pub pid_reroll_count: u8,
+}
+
+// ===== オフセット設定 =====
+
+/// オフセット設定
+#[derive(Clone, Debug, Default)]
+pub struct OffsetConfig {
+    /// ユーザ指定オフセット (GameOffset に加算)
+    pub user_offset: u32,
+    /// MT オフセット (IV 生成開始位置、通常 7)
+    pub mt_offset: u32,
+}
+
+impl OffsetConfig {
+    pub const DEFAULT_MT_OFFSET: u32 = 7;
+
+    pub fn new(user_offset: u32) -> Self {
+        Self {
+            user_offset,
+            mt_offset: Self::DEFAULT_MT_OFFSET,
+        }
+    }
+
+    pub fn with_mt_offset(user_offset: u32, mt_offset: u32) -> Self {
+        Self {
+            user_offset,
+            mt_offset,
+        }
+    }
+}
+
+// ===== 生成エラー =====
+
 /// 生成エラー
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GenerationError {
     FishingFailed,
     InvalidConfig(String),
 }
+
+// ===== 生成結果 =====
 
 /// 生の個体データ (IV なし)
 #[derive(Clone, Debug)]
@@ -136,8 +217,8 @@ pub struct RawPokemonData {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratedPokemonData {
     // 列挙コンテキスト
-    pub advance: u64,
-    pub needle_direction: u8,
+    pub advance: u32,
+    pub needle_direction: NeedleDirection,
     // Seed 情報
     pub lcg_seed: u64,
     // 基本情報
@@ -145,27 +226,22 @@ pub struct GeneratedPokemonData {
     pub species_id: u16,
     pub level: u8,
     // 個体情報
-    pub nature: u8,
+    pub nature: Nature,
     pub sync_applied: bool,
     pub ability_slot: u8,
-    pub gender: u8,
-    pub shiny_type: u8,
-    pub held_item_slot: u8,
-    // IV
-    pub iv_hp: u8,
-    pub iv_atk: u8,
-    pub iv_def: u8,
-    pub iv_spa: u8,
-    pub iv_spd: u8,
-    pub iv_spe: u8,
+    pub gender: Gender,
+    pub shiny_type: ShinyType,
+    pub held_item_slot: HeldItemSlot,
+    // IV (既存 Ivs 型を使用)
+    pub ivs: Ivs,
 }
 
 impl GeneratedPokemonData {
-    pub fn from_raw(
+    pub fn new(
         raw: RawPokemonData,
         ivs: Ivs,
-        advance: u64,
-        needle_direction: u8,
+        advance: u32,
+        needle_direction: NeedleDirection,
         lcg_seed: u64,
     ) -> Self {
         Self {
@@ -175,50 +251,15 @@ impl GeneratedPokemonData {
             pid: raw.pid,
             species_id: raw.species_id,
             level: raw.level,
-            nature: raw.nature as u8,
+            nature: raw.nature,
             sync_applied: raw.sync_applied,
             ability_slot: raw.ability_slot,
-            gender: raw.gender as u8,
-            shiny_type: raw.shiny_type as u8,
-            held_item_slot: raw.held_item_slot as u8,
-            iv_hp: ivs.hp,
-            iv_atk: ivs.atk,
-            iv_def: ivs.def,
-            iv_spa: ivs.spa,
-            iv_spd: ivs.spd,
-            iv_spe: ivs.spe,
+            gender: raw.gender,
+            shiny_type: raw.shiny_type,
+            held_item_slot: raw.held_item_slot,
+            ivs,
         }
     }
-}
-
-/// 孵化設定
-#[derive(Clone)]
-pub struct EggGenerationConfig {
-    pub tid: u16,
-    pub sid: u16,
-    pub everstone: EverstonePlan,
-    pub female_has_hidden: bool,
-    pub uses_ditto: bool,
-    pub gender_ratio: GenderRatio,
-    pub nidoran_flag: bool,
-    pub pid_reroll_count: u8,
-}
-
-/// かわらずのいし設定
-#[derive(Clone, Copy, Debug, Default)]
-pub enum EverstonePlan {
-    #[default]
-    None,
-    Fixed(Nature),
-}
-
-/// 性別比率
-#[derive(Clone, Copy, Debug)]
-pub enum GenderRatio {
-    Genderless,
-    MaleOnly,
-    FemaleOnly,
-    Threshold(u8),
 }
 
 /// 生の卵データ (IV なし)
@@ -232,47 +273,53 @@ pub struct RawEggData {
     pub inheritance: [InheritanceSlot; 3],
 }
 
-/// 遺伝スロット
-#[derive(Clone, Copy, Debug, Default)]
-pub struct InheritanceSlot {
-    pub stat: u8,
-    pub parent: u8,
-}
-
 /// 完全な卵データ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratedEggData {
     // 列挙コンテキスト
-    pub advance: u64,
-    pub needle_direction: u8,
+    pub advance: u32,
+    pub needle_direction: NeedleDirection,
     // Seed 情報
     pub lcg_seed: u64,
     // 基本情報
     pub pid: u32,
     // 個体情報
-    pub nature: u8,
-    pub gender: u8,
+    pub nature: Nature,
+    pub gender: Gender,
     pub ability_slot: u8,
-    pub shiny_type: u8,
+    pub shiny_type: ShinyType,
     // 遺伝情報
-    pub inheritance_stat_0: u8,
-    pub inheritance_parent_0: u8,
-    pub inheritance_stat_1: u8,
-    pub inheritance_parent_1: u8,
-    pub inheritance_stat_2: u8,
-    pub inheritance_parent_2: u8,
-    // IV
-    pub iv_hp: u8,
-    pub iv_atk: u8,
-    pub iv_def: u8,
-    pub iv_spa: u8,
-    pub iv_spd: u8,
-    pub iv_spe: u8,
+    pub inheritance: [InheritanceSlot; 3],
+    // IV (遺伝適用後)
+    pub ivs: Ivs,
+}
+
+impl GeneratedEggData {
+    pub fn new(
+        raw: RawEggData,
+        ivs: Ivs,
+        advance: u32,
+        needle_direction: NeedleDirection,
+        lcg_seed: u64,
+    ) -> Self {
+        Self {
+            advance,
+            needle_direction,
+            lcg_seed,
+            pid: raw.pid,
+            nature: raw.nature,
+            gender: raw.gender,
+            ability_slot: raw.ability_slot,
+            shiny_type: raw.shiny_type,
+            inheritance: raw.inheritance,
+            ivs,
+        }
+    }
 }
 ```
 
-### 4.2 generation/flows/wild.rs
+### 4.2 generation/flows/pokemon_wild.rs
 
 参照: [mig_002/generation/flows/pokemon-wild.md](../mig_002/generation/flows/pokemon-wild.md)
 
@@ -283,9 +330,9 @@ use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     calculate_encounter_slot, determine_held_item_slot, determine_nature,
     encounter_type_supports_held_item, fishing_success, generate_wild_pid_with_reroll,
-    perform_sync_check, HeldItemSlot, ShinyType,
+    perform_sync_check, HeldItemSlot,
 };
-use crate::types::{EncounterType, Gender, LeadAbilityEffect};
+use crate::types::{EncounterType, Gender, LeadAbilityEffect, ShinyType};
 
 use super::types::{
     EncounterSlotConfig, GenerationError, PokemonGenerationConfig, RawPokemonData,
@@ -309,14 +356,14 @@ pub fn generate_wild_pokemon(
 
     // 2. 釣り成功判定 (Fishing のみ)
     if enc_type == EncounterType::Fishing {
-        let fishing_result = lcg.next();
+        let fishing_result = lcg.next().unwrap_or(0);
         if !fishing_success(fishing_result) {
             return Err(GenerationError::FishingFailed);
         }
     }
 
     // 3. スロット決定
-    let slot_rand = lcg.next();
+    let slot_rand = lcg.next().unwrap_or(0);
     let slot_idx = calculate_encounter_slot(enc_type, slot_rand, config.version) as usize;
     let slot_config = &slots[slot_idx.min(slots.len() - 1)];
 
@@ -334,7 +381,7 @@ pub fn generate_wild_pokemon(
     // 7. 持ち物判定
     let held_item_slot = if encounter_type_supports_held_item(enc_type) && slot_config.has_held_item
     {
-        let item_rand = lcg.next();
+        let item_rand = lcg.next().unwrap_or(0);
         let has_very_rare = matches!(
             enc_type,
             EncounterType::ShakingGrass | EncounterType::SurfingBubble
@@ -371,7 +418,7 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
     match threshold {
         0 => Gender::Male,
         254 => Gender::Female,
-        255 => Gender::Unknown,
+        255 => Gender::Genderless,
         t => {
             let gender_value = (pid & 0xFF) as u8;
             if gender_value < t {
@@ -384,7 +431,7 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 }
 ```
 
-### 4.3 generation/flows/static_pokemon.rs
+### 4.3 generation/flows/pokemon_static.rs
 
 参照: [mig_002/generation/flows/pokemon-static.md](../mig_002/generation/flows/pokemon-static.md)
 
@@ -394,9 +441,9 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     apply_shiny_lock, calculate_shiny_type, determine_nature, generate_event_pid,
-    generate_wild_pid_with_reroll, nature_roll, perform_sync_check, HeldItemSlot, ShinyType,
+    generate_wild_pid_with_reroll, nature_roll, perform_sync_check, HeldItemSlot,
 };
-use crate::types::{EncounterType, Gender, LeadAbilityEffect, Nature};
+use crate::types::{EncounterType, Gender, LeadAbilityEffect, Nature, ShinyType};
 
 use super::types::{PokemonGenerationConfig, RawPokemonData};
 
@@ -433,7 +480,7 @@ pub fn generate_static_pokemon(
         EncounterType::StaticStarter
         | EncounterType::StaticFossil
         | EncounterType::StaticEvent => {
-            let pid = generate_event_pid(lcg.next());
+            let pid = generate_event_pid(lcg.next().unwrap_or(0));
             let pid = if config.shiny_locked {
                 apply_shiny_lock(pid, config.tid, config.sid)
             } else {
@@ -443,10 +490,9 @@ pub fn generate_static_pokemon(
             (pid, shiny)
         }
         _ => {
-            let r = lcg.next();
-            let pid = r;
-            let shiny = calculate_shiny_type(pid, config.tid, config.sid);
-            (pid, shiny)
+            let r = lcg.next().unwrap_or(0);
+            let shiny = calculate_shiny_type(r, config.tid, config.sid);
+            (r, shiny)
         }
     };
 
@@ -456,10 +502,10 @@ pub fn generate_static_pokemon(
             let _r = lcg.next(); // 消費
             (n, true)
         } else {
-            (Nature::from_u8(nature_roll(lcg.next())), false)
+            (Nature::from_u8(nature_roll(lcg.next().unwrap_or(0))), false)
         }
     } else {
-        (Nature::from_u8(nature_roll(lcg.next())), false)
+        (Nature::from_u8(nature_roll(lcg.next().unwrap_or(0))), false)
     };
 
     // 持ち物判定 (StaticSymbol で対象個体のみ)
@@ -477,7 +523,7 @@ pub fn generate_static_pokemon(
     let gender = match gender_threshold {
         0 => Gender::Male,
         254 => Gender::Female,
-        255 => Gender::Unknown,
+        255 => Gender::Genderless,
         t => {
             if (pid & 0xFF) as u8 < t {
                 Gender::Female
@@ -510,15 +556,15 @@ pub fn generate_static_pokemon(
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    generate_egg_pid_with_reroll, nature_roll, ShinyType,
+    determine_egg_nature, generate_egg_pid_with_reroll, EverstonePlan, InheritanceSlot, ParentRole,
 };
-use crate::types::{Gender, Nature};
+use crate::types::{Gender, GenderRatio, Nature, ShinyType};
 
-use super::types::{EggGenerationConfig, EverstonePlan, GenderRatio, InheritanceSlot, RawEggData};
+use super::types::{EggGenerationConfig, RawEggData};
 
 /// 卵の個体生成 (IV なし)
 pub fn generate_egg(lcg: &mut Lcg64, config: &EggGenerationConfig) -> RawEggData {
-    // 1. 性格決定
+    // 1. 性格決定 (既存関数を使用)
     let nature = determine_egg_nature(lcg, config.everstone);
 
     // 2. 遺伝スロット決定
@@ -559,23 +605,6 @@ pub fn generate_egg(lcg: &mut Lcg64, config: &EggGenerationConfig) -> RawEggData
     }
 }
 
-/// 卵の性格決定
-fn determine_egg_nature(lcg: &mut Lcg64, everstone: EverstonePlan) -> Nature {
-    let nature_idx = nature_roll(lcg.next());
-
-    match everstone {
-        EverstonePlan::None => Nature::from_u8(nature_idx),
-        EverstonePlan::Fixed(parent_nature) => {
-            let inherit = (lcg.next() >> 31) == 0;
-            if inherit {
-                parent_nature
-            } else {
-                Nature::from_u8(nature_idx)
-            }
-        }
-    }
-}
-
 /// 遺伝スロット決定
 fn determine_inheritance(lcg: &mut Lcg64) -> [InheritanceSlot; 3] {
     let mut slots = [InheritanceSlot::default(); 3];
@@ -584,16 +613,20 @@ fn determine_inheritance(lcg: &mut Lcg64) -> [InheritanceSlot; 3] {
     for slot in &mut slots {
         // 遺伝先ステータス決定 (重複不可)
         let stat = loop {
-            let r = lcg.next();
-            let candidate = ((r as u64 * 6) >> 32) as usize;
+            let r = lcg.next().unwrap_or(0);
+            let candidate = ((u64::from(r) * 6) >> 32) as usize;
             if !used[candidate] {
                 used[candidate] = true;
-                break candidate as u8;
+                break candidate;
             }
         };
 
         // 遺伝元親決定 (50%)
-        let parent = if lcg.next() >> 31 == 1 { 0 } else { 1 };
+        let parent = if lcg.next().unwrap_or(0) >> 31 == 1 {
+            ParentRole::Male
+        } else {
+            ParentRole::Female
+        };
 
         *slot = InheritanceSlot { stat, parent };
     }
@@ -603,14 +636,14 @@ fn determine_inheritance(lcg: &mut Lcg64) -> [InheritanceSlot; 3] {
 
 /// 夢特性判定
 fn determine_hidden_ability(lcg: &mut Lcg64, female_has_hidden: bool, uses_ditto: bool) -> bool {
-    let r = lcg.next();
+    let r = lcg.next().unwrap_or(0);
 
     // 夢特性条件:
     // - メタモンを使用していない
     // - ♀親が夢特性
     // - 乱数判定成功 (60%)
     if !uses_ditto && female_has_hidden {
-        ((r as u64 * 5) >> 32) >= 2
+        ((u64::from(r) * 5) >> 32) >= 2
     } else {
         false
     }
@@ -619,12 +652,12 @@ fn determine_hidden_ability(lcg: &mut Lcg64, female_has_hidden: bool, uses_ditto
 /// 卵の性別判定
 fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
     match gender_ratio {
-        GenderRatio::Genderless => Gender::Unknown,
+        GenderRatio::Genderless => Gender::Genderless,
         GenderRatio::MaleOnly => Gender::Male,
         GenderRatio::FemaleOnly => Gender::Female,
         GenderRatio::Threshold(threshold) => {
-            let r = lcg.next();
-            let value = ((r as u64 * 252) >> 32) as u8;
+            let r = lcg.next().unwrap_or(0);
+            let value = ((u64::from(r) * 252) >> 32) as u8;
             if value < threshold {
                 Gender::Female
             } else {
@@ -639,74 +672,106 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 
 ```rust
 //! PokemonGenerator - 完全な個体生成
-
-use wasm_bindgen::prelude::*;
+//!
+//! オフセット対応:
+//! - GameOffset: ゲーム起動条件により自動計算 (`calculate_game_offset`)
+//! - UserOffset: ユーザ指定の追加オフセット
+//! - MtOffset: MT19937 で IV 生成を開始する位置
 
 use crate::core::lcg::Lcg64;
-use crate::generation::algorithm::{generate_rng_ivs, Ivs, NeedleDirection};
-use crate::types::{LcgSeed, MtSeed};
+use crate::generation::algorithm::{
+    apply_inheritance, calculate_game_offset, calculate_needle_direction,
+    generate_rng_ivs_with_offset, InheritanceSlot,
+};
+use crate::types::{GameStartConfig, Ivs, LcgSeed, NeedleDirection, RomVersion};
 
 use super::egg::generate_egg;
-use super::static_pokemon::generate_static_pokemon;
+use super::pokemon_static::generate_static_pokemon;
+use super::pokemon_wild::generate_wild_pokemon;
 use super::types::{
-    EggGenerationConfig, GeneratedEggData, GeneratedPokemonData, PokemonGenerationConfig,
+    EggGenerationConfig, EncounterSlotConfig, GeneratedEggData, GeneratedPokemonData,
+    OffsetConfig, PokemonGenerationConfig, RawEggData,
 };
-use super::wild::generate_wild_pokemon;
 
 /// 野生ポケモン Generator
-#[wasm_bindgen]
 pub struct WildPokemonGenerator {
     base_seed: LcgSeed,
-    mt_seed: MtSeed,
+    game_offset: u32,
+    offset_config: OffsetConfig,
     rng_ivs: Ivs,
     config: PokemonGenerationConfig,
     slots: Vec<EncounterSlotConfig>,
 }
 
-use super::types::EncounterSlotConfig;
-
 impl WildPokemonGenerator {
+    /// Generator を作成
+    ///
+    /// # Errors
+    /// 無効な起動設定の場合にエラーを返す。
     pub fn new(
         base_seed: LcgSeed,
+        version: RomVersion,
+        game_start: &GameStartConfig,
+        offset_config: OffsetConfig,
         config: PokemonGenerationConfig,
         slots: Vec<EncounterSlotConfig>,
-    ) -> Self {
+    ) -> Result<Self, String> {
+        let game_offset = calculate_game_offset(base_seed, version, game_start)?;
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs(mt_seed);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
 
-        Self {
+        Ok(Self {
             base_seed,
-            mt_seed,
+            game_offset,
+            offset_config,
             rng_ivs,
             config,
             slots,
-        }
+        })
+    }
+
+    /// 総オフセット (GameOffset + UserOffset)
+    pub fn total_offset(&self) -> u32 {
+        self.game_offset + self.offset_config.user_offset
     }
 
     /// 指定消費位置での個体生成
+    ///
+    /// `advance` は total_offset からの相対位置。
     pub fn generate_at(&self, advance: u32) -> Option<GeneratedPokemonData> {
-        let mut lcg = Lcg64::new(self.base_seed.value());
-        lcg.advance(advance as u64 + 1);
+        let mut lcg = Lcg64::new(self.base_seed);
+        let absolute_advance = self.total_offset() + advance;
+        lcg.jump(u64::from(absolute_advance));
 
-        let current_seed = lcg.seed();
-        let needle = NeedleDirection::from_seed(LcgSeed::new(current_seed));
+        let current_seed = lcg.current_seed();
+        let needle = calculate_needle_direction(current_seed);
+
+        // 1回進めてから生成開始
+        lcg.next();
 
         match generate_wild_pokemon(&mut lcg, &self.config, &self.slots) {
-            Ok(raw) => Some(GeneratedPokemonData::from_raw(
+            Ok(raw) => Some(GeneratedPokemonData::new(
                 raw,
                 self.rng_ivs,
-                advance as u64,
-                needle.value(),
-                current_seed,
+                advance,
+                needle,
+                current_seed.value(),
             )),
             Err(_) => None,
         }
+    }
+
+    /// 範囲内の個体を生成
+    pub fn generate_range(&self, start: u32, end: u32) -> Vec<GeneratedPokemonData> {
+        (start..end).filter_map(|adv| self.generate_at(adv)).collect()
     }
 }
 
 /// 固定ポケモン Generator
 pub struct StaticPokemonGenerator {
     base_seed: LcgSeed,
+    game_offset: u32,
+    offset_config: OffsetConfig,
     rng_ivs: Ivs,
     config: PokemonGenerationConfig,
     species_id: u16,
@@ -717,30 +782,43 @@ pub struct StaticPokemonGenerator {
 impl StaticPokemonGenerator {
     pub fn new(
         base_seed: LcgSeed,
+        version: RomVersion,
+        game_start: &GameStartConfig,
+        offset_config: OffsetConfig,
         config: PokemonGenerationConfig,
         species_id: u16,
         level: u8,
         gender_threshold: u8,
-    ) -> Self {
+    ) -> Result<Self, String> {
+        let game_offset = calculate_game_offset(base_seed, version, game_start)?;
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs(mt_seed);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
 
-        Self {
+        Ok(Self {
             base_seed,
+            game_offset,
+            offset_config,
             rng_ivs,
             config,
             species_id,
             level,
             gender_threshold,
-        }
+        })
+    }
+
+    pub fn total_offset(&self) -> u32 {
+        self.game_offset + self.offset_config.user_offset
     }
 
     pub fn generate_at(&self, advance: u32) -> GeneratedPokemonData {
-        let mut lcg = Lcg64::new(self.base_seed.value());
-        lcg.advance(advance as u64 + 1);
+        let mut lcg = Lcg64::new(self.base_seed);
+        let absolute_advance = self.total_offset() + advance;
+        lcg.jump(u64::from(absolute_advance));
 
-        let current_seed = lcg.seed();
-        let needle = NeedleDirection::from_seed(LcgSeed::new(current_seed));
+        let current_seed = lcg.current_seed();
+        let needle = calculate_needle_direction(current_seed);
+
+        lcg.next();
 
         let raw = generate_static_pokemon(
             &mut lcg,
@@ -750,19 +828,15 @@ impl StaticPokemonGenerator {
             self.gender_threshold,
         );
 
-        GeneratedPokemonData::from_raw(
-            raw,
-            self.rng_ivs,
-            advance as u64,
-            needle.value(),
-            current_seed,
-        )
+        GeneratedPokemonData::new(raw, self.rng_ivs, advance, needle, current_seed.value())
     }
 }
 
 /// 卵 Generator
 pub struct EggGenerator {
     base_seed: LcgSeed,
+    game_offset: u32,
+    offset_config: OffsetConfig,
     rng_ivs: Ivs,
     config: EggGenerationConfig,
     parent_male: Ivs,
@@ -772,64 +846,53 @@ pub struct EggGenerator {
 impl EggGenerator {
     pub fn new(
         base_seed: LcgSeed,
+        version: RomVersion,
+        game_start: &GameStartConfig,
+        offset_config: OffsetConfig,
         config: EggGenerationConfig,
         parent_male: Ivs,
         parent_female: Ivs,
-    ) -> Self {
+    ) -> Result<Self, String> {
+        let game_offset = calculate_game_offset(base_seed, version, game_start)?;
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs(mt_seed);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
 
-        Self {
+        Ok(Self {
             base_seed,
+            game_offset,
+            offset_config,
             rng_ivs,
             config,
             parent_male,
             parent_female,
-        }
+        })
+    }
+
+    pub fn total_offset(&self) -> u32 {
+        self.game_offset + self.offset_config.user_offset
     }
 
     pub fn generate_at(&self, advance: u32) -> GeneratedEggData {
-        let mut lcg = Lcg64::new(self.base_seed.value());
-        lcg.advance(advance as u64 + 1);
+        let mut lcg = Lcg64::new(self.base_seed);
+        let absolute_advance = self.total_offset() + advance;
+        lcg.jump(u64::from(absolute_advance));
 
-        let current_seed = lcg.seed();
-        let needle = NeedleDirection::from_seed(LcgSeed::new(current_seed));
+        let current_seed = lcg.current_seed();
+        let needle = calculate_needle_direction(current_seed);
+
+        lcg.next();
 
         let raw = generate_egg(&mut lcg, &self.config);
 
         // 遺伝適用
-        let mut final_ivs = self.rng_ivs;
-        for slot in &raw.inheritance {
-            let parent_iv = if slot.parent == 0 {
-                self.parent_male.get(slot.stat)
-            } else {
-                self.parent_female.get(slot.stat)
-            };
-            final_ivs.set(slot.stat, parent_iv);
-        }
+        let final_ivs = apply_inheritance(
+            &self.rng_ivs,
+            &self.parent_male,
+            &self.parent_female,
+            &raw.inheritance,
+        );
 
-        GeneratedEggData {
-            advance: advance as u64,
-            needle_direction: needle.value(),
-            lcg_seed: current_seed,
-            pid: raw.pid,
-            nature: raw.nature as u8,
-            gender: raw.gender as u8,
-            ability_slot: raw.ability_slot,
-            shiny_type: raw.shiny_type as u8,
-            inheritance_stat_0: raw.inheritance[0].stat,
-            inheritance_parent_0: raw.inheritance[0].parent,
-            inheritance_stat_1: raw.inheritance[1].stat,
-            inheritance_parent_1: raw.inheritance[1].parent,
-            inheritance_stat_2: raw.inheritance[2].stat,
-            inheritance_parent_2: raw.inheritance[2].parent,
-            iv_hp: final_ivs.hp,
-            iv_atk: final_ivs.atk,
-            iv_def: final_ivs.def,
-            iv_spa: final_ivs.spa,
-            iv_spd: final_ivs.spd,
-            iv_spe: final_ivs.spe,
-        }
+        GeneratedEggData::new(raw, final_ivs, advance, needle, current_seed.value())
     }
 }
 ```
@@ -841,19 +904,18 @@ impl EggGenerator {
 
 pub mod egg;
 pub mod generator;
-pub mod static_pokemon;
+pub mod pokemon_static;
+pub mod pokemon_wild;
 pub mod types;
-pub mod wild;
 
 pub use egg::generate_egg;
 pub use generator::{EggGenerator, StaticPokemonGenerator, WildPokemonGenerator};
-pub use static_pokemon::generate_static_pokemon;
+pub use pokemon_static::generate_static_pokemon;
+pub use pokemon_wild::generate_wild_pokemon;
 pub use types::{
-    EggGenerationConfig, EncounterSlotConfig, EverstonePlan, GenderRatio, GeneratedEggData,
-    GeneratedPokemonData, GenerationError, InheritanceSlot, PokemonGenerationConfig, RawEggData,
-    RawPokemonData,
+    EggGenerationConfig, EncounterSlotConfig, GeneratedEggData, GeneratedPokemonData,
+    GenerationError, OffsetConfig, PokemonGenerationConfig, RawEggData, RawPokemonData,
 };
-pub use wild::generate_wild_pokemon;
 ```
 
 ### 4.7 generation/mod.rs の更新
@@ -874,10 +936,10 @@ pub use flows::*;
 
 | テスト対象 | テスト内容 |
 |-----------|-----------|
-| `wild.rs` | 野生個体生成の消費パターン |
-| `static_pokemon.rs` | 固定個体生成の消費パターン |
+| `pokemon_wild.rs` | 野生個体生成の消費パターン |
+| `pokemon_static.rs` | 固定個体生成の消費パターン |
 | `egg.rs` | 卵生成・遺伝処理 |
-| `generator.rs` | Generator の advance 処理 |
+| `generator.rs` | Generator の offset + advance 処理 |
 
 ### 5.2 コマンド
 
@@ -889,28 +951,28 @@ wasm-pack build --target web
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/generation/flows/mod.rs` 作成
-- [ ] `wasm-pkg/src/generation/flows/types.rs` 作成
-  - [ ] PokemonGenerationConfig
-  - [ ] EncounterSlotConfig
-  - [ ] RawPokemonData, GeneratedPokemonData
-  - [ ] EggGenerationConfig
-  - [ ] RawEggData, GeneratedEggData
-- [ ] `wasm-pkg/src/generation/flows/wild.rs` 作成
-  - [ ] generate_wild_pokemon
-  - [ ] determine_gender
-- [ ] `wasm-pkg/src/generation/flows/static_pokemon.rs` 作成
-  - [ ] generate_static_pokemon
-- [ ] `wasm-pkg/src/generation/flows/egg.rs` 作成
-  - [ ] generate_egg
-  - [ ] determine_egg_nature
-  - [ ] determine_inheritance
-  - [ ] determine_hidden_ability
-  - [ ] determine_egg_gender
-- [ ] `wasm-pkg/src/generation/flows/generator.rs` 作成
-  - [ ] WildPokemonGenerator
-  - [ ] StaticPokemonGenerator
-  - [ ] EggGenerator
-- [ ] `wasm-pkg/src/generation/mod.rs` 更新
-- [ ] `cargo test` パス確認
-- [ ] `wasm-pack build --target web` 成功確認
+- [x] `wasm-pkg/src/generation/flows/mod.rs` 作成
+- [x] `wasm-pkg/src/generation/flows/types.rs` 作成
+  - [x] PokemonGenerationConfig
+  - [x] EncounterSlotConfig
+  - [x] EggGenerationConfig
+  - [x] OffsetConfig
+  - [x] RawPokemonData, GeneratedPokemonData
+  - [x] RawEggData, GeneratedEggData
+- [x] `wasm-pkg/src/generation/flows/pokemon_wild.rs` 作成
+  - [x] generate_wild_pokemon
+  - [x] determine_gender
+- [x] `wasm-pkg/src/generation/flows/pokemon_static.rs` 作成
+  - [x] generate_static_pokemon
+- [x] `wasm-pkg/src/generation/flows/egg.rs` 作成
+  - [x] generate_egg
+  - [x] determine_inheritance
+  - [x] determine_hidden_ability
+  - [x] determine_egg_gender
+- [x] `wasm-pkg/src/generation/flows/generator.rs` 作成
+  - [x] WildPokemonGenerator (オフセット対応)
+  - [x] StaticPokemonGenerator (オフセット対応)
+  - [x] EggGenerator (オフセット対応)
+- [x] `wasm-pkg/src/generation/mod.rs` 更新
+- [x] `cargo test` パス確認
+- [x] `wasm-pack build --target web` 成功確認
