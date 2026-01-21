@@ -332,7 +332,106 @@ pub type IvSet = [u8; 6];
 export type IvSet = [number, number, number, number, number, number];
 ```
 
-### 2.14 NeedleDirection
+### 2.14 LcgSeed
+
+LCG 乱数生成器のシード値 (64bit)。SHA-1 ハッシュから導出される初期シード。
+
+```rust
+/// LCG Seed (64bit)
+/// 
+/// SHA-1 ハッシュ H[0] || H[1] から導出される。
+/// NewType パターンにより MtSeed との混同を防止。
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[repr(transparent)]
+pub struct LcgSeed(pub u64);
+
+impl LcgSeed {
+    #[inline]
+    pub const fn new(value: u64) -> Self {
+        Self(value)
+    }
+
+    #[inline]
+    pub const fn value(self) -> u64 {
+        self.0
+    }
+
+    /// MT Seed を導出 (純関数)
+    /// 
+    /// LCG を 1 回進めた結果の上位 32bit を MT Seed として返す。
+    /// self は変更されない。
+    #[inline]
+    pub fn derive_mt_seed(&self) -> MtSeed {
+        use crate::core::lcg::{LCG_MULTIPLIER, LCG_INCREMENT};
+        let next = self.0
+            .wrapping_mul(LCG_MULTIPLIER)
+            .wrapping_add(LCG_INCREMENT);
+        MtSeed::new((next >> 32) as u32)
+    }
+}
+
+impl From<u64> for LcgSeed {
+    fn from(value: u64) -> Self {
+        Self(value)
+    }
+}
+
+impl From<LcgSeed> for u64 {
+    fn from(seed: LcgSeed) -> Self {
+        seed.0
+    }
+}
+```
+
+```typescript
+// TypeScript 側: bigint として扱う (tsify の u64 デフォルト)
+export type LcgSeed = bigint;
+```
+
+### 2.15 MtSeed
+
+MT19937 乱数生成器のシード値 (32bit)。LCG から導出される。
+
+```rust
+/// MT Seed (32bit)
+/// 
+/// LCG の上位 32bit から導出される。
+/// NewType パターンにより LcgSeed との混同を防止。
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[repr(transparent)]
+pub struct MtSeed(pub u32);
+
+impl MtSeed {
+    #[inline]
+    pub const fn new(value: u32) -> Self {
+        Self(value)
+    }
+
+    #[inline]
+    pub const fn value(self) -> u32 {
+        self.0
+    }
+}
+
+impl From<u32> for MtSeed {
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
+}
+
+impl From<MtSeed> for u32 {
+    fn from(seed: MtSeed) -> Self {
+        seed.0
+    }
+}
+```
+
+```typescript
+// TypeScript 側: number として扱う (32bit は安全に表現可能)
+export type MtSeed = number;
+```
+
+### 2.16 NeedleDirection
 
 レポート針方向。ゲーム内セーブ画面で観測できる八方向の針。
 
@@ -358,25 +457,25 @@ export type NeedleDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 **計算仕様**:
 
+針計算ロジックは [generation/algorithm/needle.md](../generation/algorithm/needle.md) に定義。enueration に含まれない。
+
 ```rust
 impl NeedleDirection {
-    /// LCG Seed から針方向を計算
-    /// 
-    /// # Arguments
-    /// * `seed` - 現在の LCG Seed (advance 到達時点)
-    /// 
-    /// # Returns
-    /// 0-7 の方向値
-    pub fn from_seed(seed: u64) -> Self {
-        let upper = seed >> 32;
-        let dir = (upper.wrapping_mul(8)) >> 32;
-        // Safety: dir は必ず 0-7 の範囲
-        unsafe { std::mem::transmute((dir & 7) as u8) }
+    /// 値からの変換
+    #[inline]
+    pub fn from_value(v: u8) -> Self {
+        debug_assert!(v < 8);
+        // Safety: v は 0-7 の範囲
+        unsafe { std::mem::transmute(v & 7) }
+    }
+
+    /// 値への変換
+    #[inline]
+    pub fn value(&self) -> u8 {
+        *self as u8
     }
 }
 ```
-
-**計算式**: `((seed >> 32) * 8) >> 32`
 
 | 値 | 方向 | 矢印 | 角度 |
 |----|------|------|------|
