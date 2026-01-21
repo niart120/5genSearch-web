@@ -119,11 +119,18 @@ pub struct DsConfig {
 }
 
 /// 探索セグメント (Timer0 × VCount × KeyCode)
+///
+/// key_code フォーマット:
+/// - `key_mask XOR 0x2FFF` で計算
+/// - key_mask: 押下キーのビットマスク (bit0=A, bit1=B, ... bit11=Y)
+/// - キー入力なし時は 0x2FFF
+/// - 詳細は mig_002/core/sha1.md 2.5 参照
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SearchSegment {
     pub timer0: u16,
     pub vcount: u8,
+    /// キー入力値: `key_mask XOR 0x2FFF` (入力なし = 0x2FFF)
     pub key_code: u32,
 }
 
