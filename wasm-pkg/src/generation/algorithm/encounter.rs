@@ -115,7 +115,7 @@ pub fn fishing_success(rand_value: u32) -> bool {
 }
 
 /// 持ち物スロット
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub enum HeldItemSlot {
     Common,
     Rare,

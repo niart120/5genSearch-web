@@ -74,6 +74,23 @@ pub enum ParentRole {
     Female,
 }
 
+impl ParentRole {
+    /// u8 値から変換
+    #[inline]
+    pub const fn from_u8(value: u8) -> Self {
+        if value == 0 { Self::Male } else { Self::Female }
+    }
+
+    /// u8 値へ変換
+    #[inline]
+    pub const fn as_u8(self) -> u8 {
+        match self {
+            Self::Male => 0,
+            Self::Female => 1,
+        }
+    }
+}
+
 /// 遺伝スロット
 #[derive(Clone, Copy, Debug, Default)]
 pub struct InheritanceSlot {
@@ -81,6 +98,14 @@ pub struct InheritanceSlot {
     pub stat: usize,
     /// 遺伝元親
     pub parent: ParentRole,
+}
+
+impl InheritanceSlot {
+    /// 親を u8 として取得
+    #[inline]
+    pub const fn parent_as_u8(&self) -> u8 {
+        self.parent.as_u8()
+    }
 }
 
 /// 遺伝適用
