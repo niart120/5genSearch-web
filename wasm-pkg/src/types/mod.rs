@@ -429,6 +429,8 @@ pub enum EncounterType {
     StaticFossil,
     StaticEvent,
     Roamer,
+    // 孵化
+    Egg,
 }
 
 /// 起動方法

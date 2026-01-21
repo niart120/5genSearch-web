@@ -76,7 +76,7 @@ impl GenerationScheme {
 }
 
 /// オフセット設定
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct OffsetConfig {
     /// ユーザ指定オフセット (`GameOffset` に加算)
     pub user_offset: u32,
@@ -101,12 +101,15 @@ impl OffsetConfig {
     }
 
     /// エンカウント種別とバージョンから適切なスキームを決定して作成
+    ///
+    /// `Egg` も受け付けるため、`for_egg()` の代わりに本メソッドを使用可能。
     pub const fn for_encounter(
         version: RomVersion,
         encounter_type: EncounterType,
         user_offset: u32,
     ) -> Self {
         let scheme = match encounter_type {
+            EncounterType::Egg => GenerationScheme::Egg,
             EncounterType::Roamer => GenerationScheme::RoamerBw,
             _ => {
                 if version.is_bw2() {
