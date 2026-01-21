@@ -7,10 +7,20 @@
 use wasm_bindgen::prelude::*;
 
 pub mod core;
+pub mod datetime_search;
 pub mod types;
 
 // Re-export SHA-1 wasm-bindgen functions
 pub use core::sha1::{hash_to_lcg_seed, hash_to_mt_seed, sha1_hash_batch, sha1_hash_single};
+
+// Re-export datetime_search types
+pub use datetime_search::{
+    MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
+    MtseedDatetimeSearcher, SearchRangeParams, TimeRangeParams,
+};
+
+// Re-export common types
+pub use types::{DsConfig, SearchSegment, VCountTimer0Range};
 
 #[wasm_bindgen(start)]
 pub fn init() {

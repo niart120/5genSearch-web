@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(hash2.h4, 0x1C39_F86B, "h4 mismatch (vec2)");
     }
 
-    /// HashValues から LcgSeed / MtSeed への変換テスト
+    /// `HashValues` から `LcgSeed` / `MtSeed` への変換テスト
     #[test]
     fn test_hash_to_seed_conversion() {
         let message: [u32; 16] = [
@@ -204,6 +204,7 @@ mod tests {
         let mt_seed = hash.to_mt_seed();
 
         assert_ne!(lcg_seed.value(), 0);
-        assert!(mt_seed.value() <= u32::MAX);
+        // mt_seed は u32 なので常に有効
+        assert_ne!(mt_seed.value(), 0);
     }
 }
