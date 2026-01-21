@@ -1,10 +1,20 @@
 //! Game Offset 計算アルゴリズム
+//!
+//! 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/wasm-pkg/src/offset_calculator.rs>
 
 use crate::core::lcg::Lcg64;
 use crate::types::{GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
 
-/// Probability Table 閾値
-const PT_THRESHOLD: u32 = 0x8000_0000;
+/// PT操作の6段階テーブル定義（元実装準拠）
+/// 各レベルで最大5つの閾値をチェックする
+const PT_TABLES: [[u32; 5]; 6] = [
+    [50, 100, 100, 100, 100],  // L1
+    [50, 50, 100, 100, 100],   // L2
+    [30, 50, 100, 100, 100],   // L3
+    [25, 30, 50, 100, 100],    // L4
+    [20, 25, 33, 50, 100],     // L5
+    [100, 100, 100, 100, 100], // L6
+];
 
 /// 固定回数の乱数を消費
 #[inline]
@@ -15,17 +25,34 @@ fn consume_random(lcg: &mut Lcg64, count: u32) -> u32 {
     count
 }
 
-/// Probability Table 処理 (条件を満たすまで消費)
+/// Probability Table 処理（元実装準拠の6段階テーブル処理）
+///
+/// L1〜L6の各レベルで最大5つの閾値をチェックし、
+/// 乱数から算出した確率がテーブルの値以下なら次のレベルへ進む。
 #[inline]
 fn probability_table_process(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    loop {
-        let r = lcg.next().unwrap_or(0);
-        advances += 1;
-        if r < PT_THRESHOLD {
-            break;
+
+    for thresholds in &PT_TABLES {
+        for &threshold in thresholds.iter().take(5) {
+            // 確率が100なら、次のレベルへ
+            if threshold == 100 {
+                break;
+            }
+
+            let rand_value = lcg.next().unwrap_or(0);
+            advances += 1;
+
+            // 元実装の計算式: r = ((rand_value as u64 * 101) >> 32) as u32
+            let r = ((u64::from(rand_value) * 101) >> 32) as u32;
+
+            if r <= threshold {
+                // 取得した確率がテーブルの値以下なら次のレベルへ
+                break;
+            }
         }
     }
+
     advances
 }
 
@@ -39,85 +66,136 @@ fn probability_table_multiple(lcg: &mut Lcg64, count: u32) -> u32 {
     total
 }
 
-// ===== BW パターン =====
+/// Extra処理（BW2専用：重複値回避ループ）
+/// 3つの値（0-14範囲）がすべて異なるまでループ
+#[inline]
+fn extra_process(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+
+    loop {
+        // 3つの値を生成（元実装の計算式）
+        let r1 = lcg.next().unwrap_or(0);
+        let value1 = ((u64::from(r1) * 15) >> 32) as u32;
+        advances += 1;
+
+        let r2 = lcg.next().unwrap_or(0);
+        let value2 = ((u64::from(r2) * 15) >> 32) as u32;
+        advances += 1;
+
+        let r3 = lcg.next().unwrap_or(0);
+        let value3 = ((u64::from(r3) * 15) >> 32) as u32;
+        advances += 1;
+
+        // 3つとも異なるかチェック
+        if value1 != value2 && value2 != value3 && value3 != value1 {
+            break;
+        }
+        // 同じ値が含まれている場合は継続
+    }
+
+    advances
+}
+
+// ===== BW パターン (元実装準拠) =====
 
 fn bw_new_game_with_save(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += probability_table_multiple(lcg, 2);
-    advances += consume_random(lcg, 3); // チラーミィ PID + ID
-    advances += consume_random(lcg, 2); // TID/SID
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 4);
+    // BW 始めから（セーブ有り）- リファレンス実装準拠
+    advances += probability_table_multiple(lcg, 2); // PT×2
+    advances += consume_random(lcg, 1); // チラーミィPID決定
+    advances += consume_random(lcg, 1); // チラーミィID決定
+    advances += consume_random(lcg, 1); // TID/SID決定
+    advances += probability_table_multiple(lcg, 4); // PT×4
+    // 住人決定は別途計算されるためoffsetには含めない
     advances
 }
 
 fn bw_new_game_no_save(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 4);
+    // BW 始めから（セーブ無し）- リファレンス実装準拠
+    advances += probability_table_multiple(lcg, 3); // PT×3
+    advances += consume_random(lcg, 1); // チラーミィPID決定
+    advances += consume_random(lcg, 1); // チラーミィID決定
+    advances += consume_random(lcg, 1); // TID/SID決定
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 4); // PT×4
+    // 住人決定は別途計算されるためoffsetには含めない
     advances
 }
 
 fn bw_continue(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 5);
+    // BW 続きから - リファレンス実装準拠
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 5); // PT×5
     advances
 }
 
-// ===== BW2 パターン =====
+// ===== BW2 パターン (元実装準拠) =====
 
 fn bw2_new_game_with_memory_link(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 2);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 2);
-    advances += consume_random(lcg, 3); // チラチーノ PID + ID
-    advances += consume_random(lcg, 2); // TID/SID
+    // BW2 始めから（思い出リンク済みセーブ有り）
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 2); // Rand×2
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 2); // Rand×2
+    advances += consume_random(lcg, 1); // チラチーノPID決定
+    advances += consume_random(lcg, 1); // チラチーノID決定
+    advances += consume_random(lcg, 1); // TID/SID決定
     advances
 }
 
 fn bw2_new_game_with_save(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 3);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 2);
-    advances += consume_random(lcg, 3); // チラチーノ PID + ID
-    advances += consume_random(lcg, 2); // TID/SID
+    // BW2 始めから（思い出リンク無しセーブ有り）
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 3); // Rand×3
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 2); // Rand×2
+    advances += consume_random(lcg, 1); // チラチーノPID決定
+    advances += consume_random(lcg, 1); // チラチーノID決定
+    advances += consume_random(lcg, 1); // TID/SID決定
     advances
 }
 
 fn bw2_new_game_no_save(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 4);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 2);
-    advances += consume_random(lcg, 3); // チラチーノ PID + ID
-    advances += consume_random(lcg, 2); // TID/SID
+    // BW2 始めから（セーブ無し）
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 2); // Rand×2
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 4); // Rand×4
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 2); // Rand×2
+    advances += consume_random(lcg, 1); // チラチーノPID決定
+    advances += consume_random(lcg, 1); // チラチーノID決定
+    advances += consume_random(lcg, 1); // TID/SID決定
     advances
 }
 
 fn bw2_continue_with_memory_link(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 2);
-    advances += probability_table_multiple(lcg, 4);
+    // BW2 続きから（思い出リンク済み）
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 2); // Rand×2
+    advances += probability_table_multiple(lcg, 4); // PT×4
+    advances += extra_process(lcg); // Extra処理
     advances
 }
 
 fn bw2_continue_no_memory_link(lcg: &mut Lcg64) -> u32 {
     let mut advances = 0;
-    advances += consume_random(lcg, 1);
-    advances += probability_table_multiple(lcg, 1);
-    advances += consume_random(lcg, 3);
-    advances += probability_table_multiple(lcg, 4);
+    // BW2 続きから（思い出リンク無し）
+    advances += consume_random(lcg, 1); // Rand×1
+    advances += probability_table_multiple(lcg, 1); // PT×1
+    advances += consume_random(lcg, 3); // Rand×3
+    advances += probability_table_multiple(lcg, 4); // PT×4
+    advances += extra_process(lcg); // Extra処理
     advances
 }
 
@@ -198,9 +276,9 @@ pub fn create_offset_lcg(
 mod tests {
     use super::*;
 
-    // ===== 元実装との互換性テスト (seed=0x12345678) =====
-    // 注: 元実装は 32-bit seed をそのまま使用するが、
-    // 本実装は LcgSeed (64-bit) を使用するため、期待値が異なる場合がある
+    // ===== 元実装との互換性テスト =====
+    // 元実装: https://github.com/niart120/pokemon-gen5-initseed
+    // offset_calculator.rs のテストケースに基づく厳密な検証
 
     #[test]
     fn test_bw_new_game_no_save_seed_0x12345678() {
@@ -211,9 +289,7 @@ mod tests {
             save_state: SaveState::NoSave,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
-        // PT 処理は seed 依存のため、期待値との一致を確認
-        // 注: 元実装との差異がある場合は調整が必要
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 71, "BW1 最初から（セーブなし）のオフセット");
     }
 
     #[test]
@@ -225,7 +301,7 @@ mod tests {
             save_state: SaveState::WithSave,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 59, "BW1 最初から（セーブあり）のオフセット");
     }
 
     #[test]
@@ -237,7 +313,7 @@ mod tests {
             save_state: SaveState::WithSave,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 49, "BW1 続きからのオフセット");
     }
 
     // ===== BW2 テスト (seed=0x90ABCDEF) =====
@@ -251,7 +327,7 @@ mod tests {
             save_state: SaveState::NoSave,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 44, "BW2 最初から（セーブなし）のオフセット");
     }
 
     #[test]
@@ -263,7 +339,10 @@ mod tests {
             save_state: SaveState::WithSave,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(
+            offset, 29,
+            "BW2 最初から（セーブあり、思い出リンクなし）のオフセット"
+        );
     }
 
     #[test]
@@ -275,7 +354,7 @@ mod tests {
             save_state: SaveState::WithMemoryLink,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 29, "BW2 最初から（思い出リンクあり）のオフセット");
     }
 
     #[test]
@@ -287,7 +366,7 @@ mod tests {
             save_state: SaveState::WithSave,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 55, "BW2 続きから（思い出リンクなし）のオフセット");
     }
 
     #[test]
@@ -299,7 +378,7 @@ mod tests {
             save_state: SaveState::WithMemoryLink,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
-        assert!(offset > 0, "offset should be positive");
+        assert_eq!(offset, 55, "BW2 続きから（思い出リンクあり）のオフセット");
     }
 
     // ===== バリデーションテスト =====
