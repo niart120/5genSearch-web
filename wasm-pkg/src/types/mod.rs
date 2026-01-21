@@ -104,7 +104,7 @@ pub enum ShinyType {
 /// LCG Seed (64bit)
 ///
 /// SHA-1 ハッシュから導出される初期シード。
-/// large_number_types_as_bigints により TypeScript では bigint として扱われる。
+/// `large_number_types_as_bigints` により TypeScript では bigint として扱われる。
 #[derive(Tsify, Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 #[serde(transparent)]
@@ -209,5 +209,5 @@ impl NeedleDirection {
 
 // ===== 個体値 =====
 
-/// 個体値セット [HP, Atk, Def, SpA, SpD, Spe]
+/// 個体値セット \[HP, Atk, Def, `SpA`, `SpD`, Spe\]
 pub type IvSet = [u8; 6];
