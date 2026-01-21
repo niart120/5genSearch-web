@@ -220,15 +220,18 @@ mod tests {
     /// - Timer0: `0x0C79`
     /// - `VCount`: `0x60`
     /// - `keyCode`: `0x2FFF` (入力なし)
-    ///
-    /// 注: 現在の実装で計算される LCG Seed を検証
-    /// 元実装との整合性は別途 SHA-1 メッセージフォーマットの検証で確認する
+    /// - 期待 LCG Seed: `0x768360781D1CE6DD`
     #[test]
     fn test_searcher_finds_known_seed() {
-        // 検索パラメータ
+        use crate::types::LcgSeed;
+
+        // 期待される LCG Seed から MT Seed を計算
+        let expected_lcg_seed = LcgSeed::new(0x7683_6078_1D1C_E6DD);
+        let expected_mt_seed: u32 = expected_lcg_seed.derive_mt_seed().value();
+
+        // 検索パラメータ: 2010/09/18 00:00:00 から 1日分 (86400秒)
         let params = MtseedDatetimeSearchParams {
-            // 実際に計算される MT Seed を target にする
-            target_seeds: vec![0x6D35_EF86],
+            target_seeds: vec![expected_mt_seed],
             ds: DsConfig {
                 // MAC: 8C:56:C5:86:15:28
                 mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
@@ -237,19 +240,19 @@ mod tests {
                 region: RomRegion::Jpn,
             },
             time_range: TimeRangeParams {
-                hour_start: 18,
-                hour_end: 18,
-                minute_start: 13,
-                minute_end: 13,
-                second_start: 11,
-                second_end: 11,
+                hour_start: 0,
+                hour_end: 23,
+                minute_start: 0,
+                minute_end: 59,
+                second_start: 0,
+                second_end: 59,
             },
             search_range: SearchRangeParams {
                 start_year: 2010,
                 start_month: 9,
                 start_day: 18,
-                start_second_offset: 18 * 3600 + 13 * 60 + 11, // 18:13:11
-                range_seconds: 1,
+                start_second_offset: 0, // 00:00:00
+                range_seconds: 86400,   // 1日分
             },
             segment: SearchSegment {
                 timer0: 0x0C79,
@@ -263,31 +266,39 @@ mod tests {
         // 検索実行
         let mut all_results = Vec::new();
         while !searcher.is_done() {
-            let batch = searcher.next_batch(100);
+            let batch = searcher.next_batch(10000);
             all_results.extend(batch.results);
         }
 
-        // 検証: 結果が見つかること
-        assert!(
-            !all_results.is_empty(),
-            "Expected to find MT Seed 0x6D35EF86, but no results found"
-        );
-
-        // 検証: 正しい MT Seed が見つかること
-        let found = all_results.iter().find(|r| r.seed == 0x6D35_EF86);
+        // 検証: 期待する MT Seed が見つかること
+        let found = all_results.iter().find(|r| r.seed == expected_mt_seed);
         assert!(
             found.is_some(),
-            "Expected MT Seed 0x6D35EF86 not found in results: {:?}",
-            all_results.iter().map(|r| r.seed).collect::<Vec<_>>()
+            "Expected MT Seed {:08X} (derived from LCG Seed 0x768360781D1CE6DD) not found. \
+             Found {} results.",
+            expected_mt_seed,
+            all_results.len()
         );
 
-        // 検証: 日時が正しいこと
+        // 検証: 日時が 18:13:11 であること
         let result = found.unwrap();
         assert_eq!(result.year, 2010, "Year mismatch");
         assert_eq!(result.month, 9, "Month mismatch");
         assert_eq!(result.day, 18, "Day mismatch");
-        assert_eq!(result.hour, 18, "Hour mismatch");
-        assert_eq!(result.minute, 13, "Minute mismatch");
-        assert_eq!(result.second, 11, "Second mismatch");
+        assert_eq!(
+            result.hour, 18,
+            "Hour mismatch: expected 18, got {}",
+            result.hour
+        );
+        assert_eq!(
+            result.minute, 13,
+            "Minute mismatch: expected 13, got {}",
+            result.minute
+        );
+        assert_eq!(
+            result.second, 11,
+            "Second mismatch: expected 11, got {}",
+            result.second
+        );
     }
 }

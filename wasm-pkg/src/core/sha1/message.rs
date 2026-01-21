@@ -8,6 +8,12 @@ use super::nazo::NazoValues;
 /// `GX_STAT` 固定値
 const GX_STAT: u32 = 0x0600_0000;
 
+/// 32bit 値のバイトスワップ (エンディアン変換)
+#[inline]
+const fn swap_bytes_32(value: u32) -> u32 {
+    value.swap_bytes()
+}
+
 /// 日時パラメータ
 #[derive(Clone, Copy, Debug)]
 pub struct DateTime {
@@ -106,14 +112,21 @@ pub const fn get_frame(hardware: Hardware) -> u8 {
 }
 
 /// MAC アドレスから message[6], message[7] を構築
+///
+/// - message[6]: MAC 下位 16bit (エンディアン変換なし)
+/// - message[7]: MAC 上位 32bit XOR `GX_STAT` XOR frame (エンディアン変換あり)
 fn build_mac_words(mac: [u8; 6], frame: u8) -> (u32, u32) {
-    // MAC 下位 4 バイト (リトルエンディアン)
-    let mac_lower = u32::from_le_bytes([mac[0], mac[1], mac[2], mac[3]]);
+    // message[6]: MAC 下位 16bit (mac[4], mac[5]) - エンディアン変換なし
+    let mac_lower = (u32::from(mac[4]) << 8) | u32::from(mac[5]);
 
-    // MAC 上位 2 バイト
-    let mac_upper = (u32::from(mac[5]) << 8) | u32::from(mac[4]);
+    // message[7]: MAC 上位 32bit (mac[0-3] as little-endian) XOR GX_STAT XOR frame
+    let mac_upper = u32::from(mac[0])
+        | (u32::from(mac[1]) << 8)
+        | (u32::from(mac[2]) << 16)
+        | (u32::from(mac[3]) << 24);
 
-    let word7 = mac_upper ^ GX_STAT ^ u32::from(frame);
+    // エンディアン変換を適用
+    let word7 = swap_bytes_32(mac_upper ^ GX_STAT ^ u32::from(frame));
 
     (mac_lower, word7)
 }
@@ -125,6 +138,8 @@ pub struct BaseMessageBuilder {
 
 impl BaseMessageBuilder {
     /// 新しいビルダーを作成
+    ///
+    /// エンディアン変換は内部で自動適用される。
     pub fn new(
         nazo: &NazoValues,
         mac: [u8; 6],
@@ -135,11 +150,13 @@ impl BaseMessageBuilder {
     ) -> Self {
         let mut buffer = [0u32; 16];
 
-        // Nazo 値
-        buffer[0..5].copy_from_slice(&nazo.values);
+        // Nazo 値 (エンディアン変換)
+        for (i, &nazo_val) in nazo.values.iter().enumerate() {
+            buffer[i] = swap_bytes_32(nazo_val);
+        }
 
-        // VCount | Timer0
-        buffer[5] = (u32::from(vcount) << 16) | u32::from(timer0);
+        // VCount | Timer0 (エンディアン変換)
+        buffer[5] = swap_bytes_32((u32::from(vcount) << 16) | u32::from(timer0));
 
         // MAC アドレス
         let (mac_lower, mac_word7) = build_mac_words(mac, frame);
@@ -154,8 +171,8 @@ impl BaseMessageBuilder {
         buffer[10] = 0;
         buffer[11] = 0;
 
-        // KeyCode
-        buffer[12] = key_code;
+        // KeyCode (エンディアン変換)
+        buffer[12] = swap_bytes_32(key_code);
 
         // SHA-1 パディング
         buffer[13] = 0x8000_0000;
