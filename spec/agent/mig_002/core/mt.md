@@ -76,21 +76,25 @@ pub struct Mt19937 {
 
 ### 3.2 Mt19937x4 (SIMD 版)
 
-4 系統の MT19937 を SIMD で並列処理。
+4 系統の MT19937 を Portable SIMD (`std::simd`) で並列処理。
 
 ```rust
-#[cfg(target_arch = "wasm32")]
-use core::arch::wasm32::*;
+#![feature(portable_simd)]
+use std::simd::{u32x4, num::SimdUint};
 
 /// SIMD 版 MT19937 (4 系統並列)
-#[cfg(target_arch = "wasm32")]
 pub struct Mt19937x4 {
     /// 内部状態配列 (624 × 4 系統、インターリーブ配置)
-    state: [v128; N],
+    state: [u32x4; N],
     /// 現在のインデックス
     index: usize,
 }
 ```
+
+Portable SIMD はアーキテクチャ非依存のため、`cfg` 分岐なしで以下の環境で動作:
+- WASM (SIMD128 にコンパイル)
+- x86_64 (SSE/AVX にコンパイル)
+- aarch64 (NEON にコンパイル)
 
 ## 4. スカラー版 API
 
@@ -200,37 +204,41 @@ impl Mt19937 {
 
 ### 5.1 概要
 
-WASM SIMD128 の `v128` 型 (128bit) を使用し、4 つの MT19937 を並列処理。
+Portable SIMD (`std::simd`) の `u32x4` 型を使用し、4 つの MT19937 を並列処理。
 
 **利点**:
 - 4 系統同時に乱数生成可能
 - SHA-1 SIMD との親和性
+- アーキテクチャ非依存 (WASM/x86_64/aarch64 で同一コード)
+- ネイティブ環境でもテスト可能
 
 ### 5.2 コンストラクタ
 
 ```rust
-#[cfg(target_arch = "wasm32")]
+#![feature(portable_simd)]
+use std::simd::{u32x4, num::SimdUint};
+
 impl Mt19937x4 {
     /// 4 つの異なるシードから初期化
     /// 
     /// # Arguments
     /// * `seeds` - 4 つの MtSeed
     pub fn new(seeds: [MtSeed; 4]) -> Self {
-        let mut state = [u32x4_splat(0); N];
+        let mut state = [u32x4::splat(0); N];
         
         // 初期状態設定
-        state[0] = u32x4(
+        state[0] = u32x4::from_array([
             seeds[0].value(), seeds[1].value(), 
             seeds[2].value(), seeds[3].value()
-        );
+        ]);
         
         for i in 1..N {
             let prev = state[i - 1];
             // state[i] = 1812433253 * (prev ^ (prev >> 30)) + i
-            let shifted = u32x4_shr(prev, 30);
-            let xored = v128_xor(prev, shifted);
-            let multiplied = Self::mul_u32x4(xored, u32x4_splat(INIT_MULTIPLIER));
-            state[i] = u32x4_add(multiplied, u32x4_splat(i as u32));
+            let shifted = prev >> 30;
+            let xored = prev ^ shifted;
+            let multiplied = xored * u32x4::splat(INIT_MULTIPLIER);
+            state[i] = multiplied + u32x4::splat(i as u32);
         }
         
         Mt19937x4 { state, index: N }
@@ -240,33 +248,12 @@ impl Mt19937x4 {
     pub fn from_raw(seeds: [u32; 4]) -> Self {
         Self::new(seeds.map(MtSeed::new))
     }
-
-    /// u32x4 乗算ヘルパー (SIMD には直接乗算がないため)
-    #[inline]
-    fn mul_u32x4(a: v128, b: v128) -> v128 {
-        // 各レーンを個別に乗算
-        let a0 = u32x4_extract_lane::<0>(a);
-        let a1 = u32x4_extract_lane::<1>(a);
-        let a2 = u32x4_extract_lane::<2>(a);
-        let a3 = u32x4_extract_lane::<3>(a);
-        let b0 = u32x4_extract_lane::<0>(b);
-        let b1 = u32x4_extract_lane::<1>(b);
-        let b2 = u32x4_extract_lane::<2>(b);
-        let b3 = u32x4_extract_lane::<3>(b);
-        u32x4(
-            a0.wrapping_mul(b0),
-            a1.wrapping_mul(b1),
-            a2.wrapping_mul(b2),
-            a3.wrapping_mul(b3),
-        )
-    }
 }
 ```
 
 ### 5.3 乱数生成
 
 ```rust
-#[cfg(target_arch = "wasm32")]
 impl Mt19937x4 {
     /// 4 系統同時に次の乱数を取得
     /// 
@@ -280,50 +267,13 @@ impl Mt19937x4 {
         let mut y = self.state[self.index];
         self.index += 1;
 
-        // Tempering (SIMD)
-        y = v128_xor(y, u32x4_shr(y, 11));
-        y = v128_xor(y, v128_and(u32x4_shl(y, 7), u32x4_splat(0x9D2C_5680)));
-        y = v128_xor(y, v128_and(u32x4_shl(y, 15), u32x4_splat(0xEFC6_0000)));
-        y = v128_xor(y, u32x4_shr(y, 18));
+        // Tempering (Portable SIMD)
+        y ^= y >> 11;
+        y ^= (y << 7) & u32x4::splat(0x9D2C_5680);
+        y ^= (y << 15) & u32x4::splat(0xEFC6_0000);
+        y ^= y >> 18;
 
-        [
-            u32x4_extract_lane::<0>(y),
-            u32x4_extract_lane::<1>(y),
-            u32x4_extract_lane::<2>(y),
-            u32x4_extract_lane::<3>(y),
-        ]
-    }
-}
-```
-
-### 5.4 非 WASM 環境フォールバック
-
-```rust
-/// 非 WASM 環境用のフォールバック実装
-#[cfg(not(target_arch = "wasm32"))]
-pub struct Mt19937x4 {
-    engines: [Mt19937; 4],
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl Mt19937x4 {
-    pub fn new(seeds: [MtSeed; 4]) -> Self {
-        Self {
-            engines: seeds.map(Mt19937::new),
-        }
-    }
-
-    pub fn from_raw(seeds: [u32; 4]) -> Self {
-        Self::new(seeds.map(MtSeed::new))
-    }
-
-    pub fn next_u32x4(&mut self) -> [u32; 4] {
-        [
-            self.engines[0].next_u32(),
-            self.engines[1].next_u32(),
-            self.engines[2].next_u32(),
-            self.engines[3].next_u32(),
-        ]
+        y.to_array()
     }
 }
 ```
@@ -439,7 +389,6 @@ mod tests {
         }
     }
 
-    #[cfg(target_arch = "wasm32")]
     #[test]
     fn test_mt19937x4_consistency() {
         let seeds = [100u32, 200, 300, 400].map(MtSeed::new);

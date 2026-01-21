@@ -431,20 +431,21 @@ pub fn calculate_pokemon_sha1(message: &[u32; 16]) -> HashValues {
 
 ### 5.4 SIMD 版計算
 
-4 つのメッセージを同時に SHA-1 計算。
+4 つのメッセージを同時に SHA-1 計算。Portable SIMD を使用しアーキテクチャ非依存。
 
 ```rust
-#[cfg(target_arch = "wasm32")]
-use core::arch::wasm32::*;
+#![feature(portable_simd)]
+use std::simd::{u32x4, num::SimdUint};
 
 /// SIMD 版 SHA-1 計算 (4 並列)
 /// 
 /// # Arguments
-/// * `messages` - 4 つの 16 ワードメッセージ (インターリーブ配置)
+/// * `date_codes` - 4 つの日付コード
+/// * `time_codes` - 4 つの時刻コード
+/// * `base_message` - 基本メッセージ (日時以外の部分)
 /// 
 /// # Returns
 /// 4 つの HashValues
-#[cfg(target_arch = "wasm32")]
 pub fn calculate_pokemon_sha1_simd(
     date_codes: [u32; 4],
     time_codes: [u32; 4],
@@ -459,44 +460,33 @@ pub fn calculate_pokemon_sha1_simd(
     }
 
     // SIMD でメッセージ拡張
-    let mut w_simd = [u32x4_splat(0); 80];
+    let mut w_simd = [u32x4::splat(0); 80];
     for i in 0..16 {
-        w_simd[i] = u32x4(w[0][i], w[1][i], w[2][i], w[3][i]);
+        w_simd[i] = u32x4::from_array([w[0][i], w[1][i], w[2][i], w[3][i]]);
     }
     for i in 16..80 {
-        let xor1 = v128_xor(w_simd[i - 3], w_simd[i - 8]);
-        let xor2 = v128_xor(w_simd[i - 14], w_simd[i - 16]);
-        let xored = v128_xor(xor1, xor2);
+        let xored = w_simd[i - 3] ^ w_simd[i - 8] ^ w_simd[i - 14] ^ w_simd[i - 16];
         // 左回転 1
-        w_simd[i] = v128_or(
-            u32x4_shl(xored, 1),
-            u32x4_shr(xored, 31),
-        );
+        w_simd[i] = (xored << 1) | (xored >> 31);
     }
 
     // 初期ハッシュ値 (SIMD)
-    let mut a = u32x4_splat(H0);
-    let mut b = u32x4_splat(H1);
-    let mut c = u32x4_splat(H2);
-    let mut d = u32x4_splat(H3);
-    let mut e = u32x4_splat(H4);
+    let mut a = u32x4::splat(H0);
+    let mut b = u32x4::splat(H1);
+    let mut c = u32x4::splat(H2);
+    let mut d = u32x4::splat(H3);
+    let mut e = u32x4::splat(H4);
 
     // 80 ラウンド処理 (SIMD)
     for i in 0..80 {
         let (f, k) = match i {
-            0..=19 => (simd_choice(b, c, d), u32x4_splat(K[0])),
-            20..=39 => (simd_parity(b, c, d), u32x4_splat(K[1])),
-            40..=59 => (simd_majority(b, c, d), u32x4_splat(K[2])),
-            _ => (simd_parity(b, c, d), u32x4_splat(K[3])),
+            0..=19 => (simd_choice(b, c, d), u32x4::splat(K[0])),
+            20..=39 => (simd_parity(b, c, d), u32x4::splat(K[1])),
+            40..=59 => (simd_majority(b, c, d), u32x4::splat(K[2])),
+            _ => (simd_parity(b, c, d), u32x4::splat(K[3])),
         };
 
-        let temp = u32x4_add(
-            u32x4_add(
-                u32x4_add(simd_left_rotate(a, 5), f),
-                u32x4_add(e, k),
-            ),
-            w_simd[i],
-        );
+        let temp = simd_left_rotate(a, 5) + f + e + k + w_simd[i];
 
         e = d;
         d = c;
@@ -506,71 +496,46 @@ pub fn calculate_pokemon_sha1_simd(
     }
 
     // 最終ハッシュ値
-    let h0 = u32x4_add(u32x4_splat(H0), a);
-    let h1 = u32x4_add(u32x4_splat(H1), b);
-    let h2 = u32x4_add(u32x4_splat(H2), c);
-    let h3 = u32x4_add(u32x4_splat(H3), d);
-    let h4 = u32x4_add(u32x4_splat(H4), e);
+    let h0 = u32x4::splat(H0) + a;
+    let h1 = u32x4::splat(H1) + b;
+    let h2 = u32x4::splat(H2) + c;
+    let h3 = u32x4::splat(H3) + d;
+    let h4 = u32x4::splat(H4) + e;
 
     // 結果を抽出
+    let h0_arr = h0.to_array();
+    let h1_arr = h1.to_array();
+    let h2_arr = h2.to_array();
+    let h3_arr = h3.to_array();
+    let h4_arr = h4.to_array();
+
     [
-        HashValues::new(
-            u32x4_extract_lane::<0>(h0),
-            u32x4_extract_lane::<0>(h1),
-            u32x4_extract_lane::<0>(h2),
-            u32x4_extract_lane::<0>(h3),
-            u32x4_extract_lane::<0>(h4),
-        ),
-        HashValues::new(
-            u32x4_extract_lane::<1>(h0),
-            u32x4_extract_lane::<1>(h1),
-            u32x4_extract_lane::<1>(h2),
-            u32x4_extract_lane::<1>(h3),
-            u32x4_extract_lane::<1>(h4),
-        ),
-        HashValues::new(
-            u32x4_extract_lane::<2>(h0),
-            u32x4_extract_lane::<2>(h1),
-            u32x4_extract_lane::<2>(h2),
-            u32x4_extract_lane::<2>(h3),
-            u32x4_extract_lane::<2>(h4),
-        ),
-        HashValues::new(
-            u32x4_extract_lane::<3>(h0),
-            u32x4_extract_lane::<3>(h1),
-            u32x4_extract_lane::<3>(h2),
-            u32x4_extract_lane::<3>(h3),
-            u32x4_extract_lane::<3>(h4),
-        ),
+        HashValues::new(h0_arr[0], h1_arr[0], h2_arr[0], h3_arr[0], h4_arr[0]),
+        HashValues::new(h0_arr[1], h1_arr[1], h2_arr[1], h3_arr[1], h4_arr[1]),
+        HashValues::new(h0_arr[2], h1_arr[2], h2_arr[2], h3_arr[2], h4_arr[2]),
+        HashValues::new(h0_arr[3], h1_arr[3], h2_arr[3], h3_arr[3], h4_arr[3]),
     ]
 }
 
 // SIMD ヘルパー関数
-#[cfg(target_arch = "wasm32")]
 #[inline]
-fn simd_choice(x: v128, y: v128, z: v128) -> v128 {
-    v128_or(v128_and(x, y), v128_and(v128_not(x), z))
+fn simd_choice(x: u32x4, y: u32x4, z: u32x4) -> u32x4 {
+    (x & y) | (!x & z)
 }
 
-#[cfg(target_arch = "wasm32")]
 #[inline]
-fn simd_parity(x: v128, y: v128, z: v128) -> v128 {
-    v128_xor(v128_xor(x, y), z)
+fn simd_parity(x: u32x4, y: u32x4, z: u32x4) -> u32x4 {
+    x ^ y ^ z
 }
 
-#[cfg(target_arch = "wasm32")]
 #[inline]
-fn simd_majority(x: v128, y: v128, z: v128) -> v128 {
-    v128_or(v128_or(v128_and(x, y), v128_and(x, z)), v128_and(y, z))
+fn simd_majority(x: u32x4, y: u32x4, z: u32x4) -> u32x4 {
+    (x & y) | (x & z) | (y & z)
 }
 
-#[cfg(target_arch = "wasm32")]
 #[inline]
-fn simd_left_rotate(value: v128, amount: u32) -> v128 {
-    v128_or(
-        u32x4_shl(value, amount),
-        u32x4_shr(value, 32 - amount),
-    )
+fn simd_left_rotate(value: u32x4, amount: u32) -> u32x4 {
+    (value << amount) | (value >> (32 - amount))
 }
 ```
 
@@ -866,7 +831,6 @@ mod tests {
         assert_eq!(swap_bytes_32(0xAABBCCDD), 0xDDCCBBAA);
     }
 
-    #[cfg(target_arch = "wasm32")]
     #[test]
     fn test_simd_matches_scalar() {
         let base_message: [u32; 16] = [

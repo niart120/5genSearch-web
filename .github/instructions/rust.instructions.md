@@ -10,6 +10,12 @@ applyTo: '**/wasm-pkg/**/*.rs'
 
 → [spec/architecture/rust-structure.md](../../spec/architecture/rust-structure.md)
 
+## ツールチェイン
+
+- **Rust nightly** を使用 (`rust-toolchain.toml` で指定)
+- Portable SIMD (`#![feature(portable_simd)]`) を使用するため nightly 必須
+- SIMD 実装はアーキテクチャ非依存 (`std::simd`) で統一
+
 ## 基本規約
 
 - Rust Edition 2024

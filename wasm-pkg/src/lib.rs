@@ -1,3 +1,4 @@
+#![feature(portable_simd)]
 #![deny(clippy::all)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
