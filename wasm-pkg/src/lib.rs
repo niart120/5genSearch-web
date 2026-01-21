@@ -8,6 +8,7 @@ use wasm_bindgen::prelude::*;
 
 pub mod core;
 pub mod datetime_search;
+pub mod generation;
 pub mod types;
 
 // Re-export SHA-1 wasm-bindgen functions
@@ -21,6 +22,18 @@ pub use datetime_search::{
 
 // Re-export common types
 pub use types::{DsConfig, SearchSegment, VCountTimer0Range};
+
+// Re-export generation algorithm types
+pub use types::{
+    EncounterType, GameStartConfig, GenderRatio, IV_VALUE_UNKNOWN, Ivs, LeadAbilityEffect,
+    SaveState, StartMode,
+};
+
+// Re-export generation algorithm functions
+pub use generation::algorithm::{
+    EncounterResult, EverstonePlan, HeldItemSlot, InheritanceSlot, ItemContent, ParentRole,
+    apply_game_offset, calculate_game_offset, calculate_needle_direction,
+};
 
 #[wasm_bindgen(start)]
 pub fn init() {
