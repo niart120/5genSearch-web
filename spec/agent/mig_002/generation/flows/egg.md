@@ -55,19 +55,19 @@ let rng_ivs = generate_rng_ivs(mt_seed);
 ### 3.2 性格決定
 
 ```rust
-fn determine_egg_nature(rng: &mut Lcg, everstone: EverstoneEffect) -> Nature {
+fn determine_egg_nature(lcg: &mut Lcg64, everstone: EverstoneEffect) -> Nature {
     match everstone {
         EverstoneEffect::None => {
             // かわらずのいしなし: 乱数性格
-            Nature::from_u8(nature_roll(rng.next()))
+            Nature::from_u8(nature_roll(lcg.next()))
         }
         EverstoneEffect::Fixed(nature) => {
             // かわらずのいしあり: 50% で固定
-            if rng.next() >> 31 == 1 {
+            if lcg.next() >> 31 == 1 {
                 nature
             } else {
                 // 失敗時は乱数性格
-                Nature::from_u8(nature_roll(rng.next()))
+                Nature::from_u8(nature_roll(lcg.next()))
             }
         }
     }
@@ -77,14 +77,14 @@ fn determine_egg_nature(rng: &mut Lcg, everstone: EverstoneEffect) -> Nature {
 ### 3.3 遺伝スロット決定
 
 ```rust
-fn determine_inheritance(rng: &mut Lcg) -> InheritanceSlots {
+fn determine_inheritance(lcg: &mut Lcg64) -> InheritanceSlots {
     let mut slots = [InheritanceSlot::default(); 3];
     let mut used = [false; 6];  // 使用済みステータス
     
     for i in 0..3 {
         // 遺伝先ステータス決定 (重複不可)
         let stat = loop {
-            let r = rng.next();
+            let r = lcg.next();
             let candidate = ((r as u64 * 6) >> 32) as usize;
             if !used[candidate] {
                 used[candidate] = true;
@@ -94,7 +94,7 @@ fn determine_inheritance(rng: &mut Lcg) -> InheritanceSlots {
         };
         
         // 遺伝元親決定 (50%)
-        let parent = if rng.next() >> 31 == 1 {
+        let parent = if lcg.next() >> 31 == 1 {
             ParentRole::Male
         } else {
             ParentRole::Female
@@ -111,12 +111,12 @@ fn determine_inheritance(rng: &mut Lcg) -> InheritanceSlots {
 
 ```rust
 fn determine_hidden_ability(
-    rng: &mut Lcg,
+    lcg: &mut Lcg64,
     female_has_hidden: bool,
     uses_ditto: bool,
     allow_hidden: bool,
 ) -> bool {
-    let r = rng.next();
+    let r = lcg.next();
     
     // 夢特性条件:
     // - 夢特性が許可されている
@@ -135,7 +135,7 @@ fn determine_hidden_ability(
 
 ```rust
 fn determine_egg_gender(
-    rng: &mut Lcg,
+    lcg: &mut Lcg64,
     gender_ratio: GenderRatio,
     nidoran_flag: bool,
 ) -> Gender {
@@ -144,7 +144,7 @@ fn determine_egg_gender(
         GenderRatio::MaleOnly => Gender::Male,
         GenderRatio::FemaleOnly => Gender::Female,
         GenderRatio::Threshold(threshold) => {
-            let r = rng.next();
+            let r = lcg.next();
             let value = (r & 0xFF) as u8;
             
             // ニドラン♀フラグ時の特殊処理
@@ -166,14 +166,14 @@ fn determine_egg_gender(
 
 ```rust
 fn generate_egg_pid_with_reroll(
-    rng: &mut Lcg,
+    lcg: &mut Lcg64,
     tid: u16,
     sid: u16,
     reroll_count: u8,
 ) -> (u32, ShinyType) {
     for _ in 0..=reroll_count {
-        let r1 = rng.next();
-        let r2 = rng.next();
+        let r1 = lcg.next();
+        let r2 = lcg.next();
         let pid = generate_egg_pid(r1, r2);
         
         let shiny = check_shiny_type(tid, sid, pid);
@@ -194,40 +194,58 @@ fn generate_egg_pid_with_reroll(
 
 ## 4. 完全フロー擬似コード
 
+### 4.1 設計上の注意: BaseSeed と CurrentSeed の分離
+
+卵生成でも野生/固定シンボルと同様に、2種類の seed 概念を区別する必要がある:
+
+```
+SHA-1(日時+DS設定) → LcgSeed (BaseSeed)
+                         │
+                         ├─ derive_mt_seed() → MtSeed → 乱数IV生成 (全消費位置で共通)
+                         │
+                         └─ advance(n) → n消費後の Lcg64 → 性格/遺伝/PID生成
+```
+
+- **BaseSeed**: SHA-1 から導出される初期 seed。MT Seed の導出元として固定
+- **CurrentSeed**: n 消費後の LCG 状態。個体生成 (性格/遺伝/PID) に使用
+
+**問題**: `generate_egg(seed: LcgSeed)` 形式だと、探索時に n 消費後の seed を渡すと
+IV 計算用の MT Seed が CurrentSeed から導出されてしまい、正しい IV が得られない。
+
+**解決策**: 
+1. `generate_egg` は `&mut Lcg64` を受け取り、IV を含まない `RawEggData` を返す
+2. IV 計算は `EggGenerator` が保持する `base_seed` から行う
+
+### 4.2 個体生成関数 (IV なし)
+
 ```rust
+/// 卵の個体生成 (IV を含まない)
+/// 
+/// 注意: IV は返さない。呼び出し側 (EggGenerator) で BaseSeed から計算すること。
 pub fn generate_egg(
-    lcg_seed: LcgSeed,
+    lcg: &mut Lcg64,
     config: &EggGenerationConfig,
-    parents: &ParentsIvs,
 ) -> RawEggData {
-    // MT Seed 導出と乱数 IV
-    let mt_seed = lcg_seed.derive_mt_seed();
-    let rng_ivs = generate_rng_ivs(mt_seed);
-    
-    // LCG 状態を進める (MT Seed 導出で1消費済み)
-    let mut lcg = Lcg64::new(lcg_seed);
-    lcg.advance(1);  // MT Seed 導出分
-    
     // 1. 性格決定
-    let nature = determine_egg_nature(&mut lcg, config.everstone);
+    let nature = determine_egg_nature(lcg, config.everstone);
     
     // 2. 遺伝スロット決定
-    let inheritance = determine_inheritance(&mut lcg);
+    let inheritance = determine_inheritance(lcg);
     
     // 3. 夢特性判定
     let has_hidden = determine_hidden_ability(
-        &mut lcg,
+        lcg,
         config.female_has_hidden,
         config.uses_ditto,
         true,
     );
     
     // 4. 性別判定
-    let gender = determine_egg_gender(&mut lcg, config.gender_ratio, config.nidoran_flag);
+    let gender = determine_egg_gender(lcg, config.gender_ratio, config.nidoran_flag);
     
     // 5. PID 生成
     let (pid, shiny) = generate_egg_pid_with_reroll(
-        &mut lcg,
+        lcg,
         config.tid,
         config.sid,
         config.pid_reroll_count,
@@ -240,20 +258,53 @@ pub fn generate_egg(
         AbilitySlot::from_pid_bit(pid)
     };
     
-    // 遺伝適用
-    let final_ivs = apply_inheritance(&rng_ivs, parents, &inheritance);
-    
     RawEggData {
-        advance: 0,  // 呼び出し側で設定
-        lcg_seed,
-        mt_seed,
-        ivs: final_ivs,
         nature,
         gender,
         ability,
         shiny,
         pid,
         inheritance,
+    }
+}
+```
+
+### 4.3 EggGenerator での完全な卵生成
+
+```rust
+impl EggGenerator {
+    /// base_seed: SHA-1 から導出された初期 seed (IV 計算用に保持)
+    pub fn new(base_seed: LcgSeed, config: EggGenerationConfig, parents: ParentsIvs) -> Self {
+        // MT Seed と乱数 IV は base_seed から一度だけ計算
+        let mt_seed = base_seed.derive_mt_seed();
+        let rng_ivs = generate_rng_ivs(mt_seed);
+        
+        Self {
+            base_seed,
+            mt_seed,
+            rng_ivs,
+            config,
+            parents,
+        }
+    }
+    
+    /// 指定消費位置での卵生成
+    pub fn generate_at(&self, advance: u32) -> ResolvedEggData {
+        // CurrentSeed: n 消費後の LCG 状態
+        let mut lcg = Lcg64::new(self.base_seed);
+        lcg.advance(advance + 1);  // +1 は MT Seed 導出分
+        
+        // 個体生成 (IV なし)
+        let raw = generate_egg(&mut lcg, &self.config);
+        
+        // 遺伝適用 (BaseSeed 由来の rng_ivs を使用)
+        let final_ivs = apply_inheritance(&self.rng_ivs, &self.parents, &raw.inheritance);
+        
+        ResolvedEggData {
+            advance,
+            ivs: final_ivs,
+            ..raw.into()
+        }
     }
 }
 ```

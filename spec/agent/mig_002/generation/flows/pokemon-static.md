@@ -59,19 +59,19 @@ LCG Seed
 **合計 (BW2)**: 2-3 (+ ひかるおまもり 0-2)
 
 ```rust
-fn generate_static_symbol(seed: LcgSeed, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
-    let mut lcg = Lcg64::new(seed);
+/// 固定シンボル生成 (消費パターン説明用)
+fn generate_static_symbol(lcg: &mut Lcg64, config: &PokemonGenerationConfig) -> RawPokemonData {
     let is_compound_eyes = config.lead_ability == LeadAbility::CompoundEyes;
     
     // 1. シンクロ判定 (ふくがん先頭時はスキップ)
     let sync_success = if is_compound_eyes {
         false
     } else {
-        perform_sync_check(&mut lcg, EncounterType::StaticSymbol, &config.lead_ability)
+        perform_sync_check(lcg, EncounterType::StaticSymbol, &config.lead_ability)
     };
     
     // 2. PID 生成 (pid-shiny.md の generate_pokemon_pid_wild を使用)
-    let pid = generate_pokemon_pid_wild(&mut lcg, config.tid, config.sid, config.shiny_charm);
+    let pid = generate_pokemon_pid_wild(lcg, config.tid, config.sid, config.shiny_charm);
     
     // 2.1 色違いロック適用 (ゼクロム・レシラム・キュレム等)
     let pid = if config.shiny_locked {
@@ -81,7 +81,7 @@ fn generate_static_symbol(seed: LcgSeed, config: &PokemonGenerationConfig) -> Re
     };
     
     // 3. 性格決定
-    let (nature, sync_applied) = determine_nature(&mut lcg, sync_success, &config.lead_ability);
+    let (nature, sync_applied) = determine_nature(lcg, sync_success, &config.lead_ability);
     
     // 4. 持ち物判定 (対象個体のみ)
     if config.has_held_item {
@@ -93,7 +93,7 @@ fn generate_static_symbol(seed: LcgSeed, config: &PokemonGenerationConfig) -> Re
         lcg.next();
     }
     
-    build_resolved_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
+    build_raw_pokemon_data(pid, nature, sync_applied, config)
 }
 ```
 
@@ -108,9 +108,8 @@ fn generate_static_symbol(seed: LcgSeed, config: &PokemonGenerationConfig) -> Re
 **合計**: 2
 
 ```rust
-fn generate_starter(seed: LcgSeed, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
-    let mut lcg = Lcg64::new(seed);
-    
+/// 御三家生成 (消費パターン説明用)
+fn generate_starter(lcg: &mut Lcg64, config: &PokemonGenerationConfig) -> RawPokemonData {
     // シンクロなし (先頭特性無効)
     
     // PID 生成 (ID 補正なし)
@@ -121,7 +120,7 @@ fn generate_starter(seed: LcgSeed, config: &PokemonGenerationConfig) -> Resolved
     // 性格決定
     let nature = Nature::from_u8(nature_roll(lcg.next()));
     
-    build_resolved_pokemon_data(seed, pid, nature, false, 0, 0, config)
+    build_raw_pokemon_data(pid, nature, false, config)
 }
 ```
 
@@ -144,18 +143,17 @@ fn generate_starter(seed: LcgSeed, config: &PokemonGenerationConfig) -> Resolved
 **合計**: 2 (+ ひかるおまもり 0-2)
 
 ```rust
-fn generate_roamer(seed: LcgSeed, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
-    let mut lcg = Lcg64::new(seed);
-    
+/// 徘徊ポケモン生成 (消費パターン説明用)
+fn generate_roamer(lcg: &mut Lcg64, config: &PokemonGenerationConfig) -> RawPokemonData {
     // シンクロなし
     
     // PID 生成 (pid-shiny.md の generate_pokemon_pid_wild を使用)
-    let pid = generate_pokemon_pid_wild(&mut lcg, config.tid, config.sid, config.shiny_charm);
+    let pid = generate_pokemon_pid_wild(lcg, config.tid, config.sid, config.shiny_charm);
     
     // 性格決定
     let nature = Nature::from_u8(nature_roll(lcg.next()));
     
-    build_resolved_pokemon_data(seed, pid, nature, false, 0, 0, config)
+    build_raw_pokemon_data(pid, nature, false, config)
 }
 ```
 
@@ -208,18 +206,43 @@ fn generate_roamer(seed: LcgSeed, config: &PokemonGenerationConfig) -> ResolvedP
 
 ## 5. 擬似コード: 統合生成関数
 
+### 5.1 設計上の注意: BaseSeed と CurrentSeed の分離
+
+```
+SHA-1(日時+DS設定) → LcgSeed (BaseSeed)
+                         │
+                         ├─ derive_mt_seed() → MtSeed → IV生成 (全消費位置で共通)
+                         │
+                         └─ advance(n) → n消費後の Lcg64 → PID/性格等生成
+```
+
+**重要**: IV は BaseSeed から導出した MT Seed で計算するため、個体生成関数には渡さない。
+`PokemonGenerator` が BaseSeed を保持し、IV 計算と個体生成を組み合わせる。
+
+### 5.2 個体生成関数
+
+個体生成関数は `&mut Lcg64` を受け取り、LCG を消費しながら PID/性格等を生成。
+IV は含まない (`RawPokemonData` を返す)。
+
 ```rust
+/// 固定シンボル・イベント・徘徊ポケモン生成 (IV なし)
+/// 
+/// # Arguments
+/// * `lcg` - 現在の LCG 状態 (消費される)
+/// * `config` - 生成設定
+/// 
+/// # Returns
+/// RawPokemonData (IV なし)
 pub fn generate_static_pokemon(
-    seed: LcgSeed,
+    lcg: &mut Lcg64,
     config: &PokemonGenerationConfig,
-) -> ResolvedPokemonData {
-    let mut lcg = Lcg64::new(seed);
+) -> RawPokemonData {
     let enc_type = config.encounter_type;
     let is_compound_eyes = config.lead_ability == LeadAbility::CompoundEyes;
     
     // シンクロ判定 (StaticSymbol のみ、ふくがん時はスキップ)
     let sync_success = if enc_type == EncounterType::StaticSymbol && !is_compound_eyes {
-        perform_sync_check(&mut lcg, enc_type, &config.lead_ability)
+        perform_sync_check(lcg, enc_type, &config.lead_ability)
     } else {
         false
     };
@@ -228,7 +251,7 @@ pub fn generate_static_pokemon(
     let pid = match enc_type {
         EncounterType::StaticSymbol | EncounterType::Roamer => {
             // pid-shiny.md の generate_pokemon_pid_wild を使用
-            let pid = generate_pokemon_pid_wild(&mut lcg, config.tid, config.sid, config.shiny_charm);
+            let pid = generate_pokemon_pid_wild(lcg, config.tid, config.sid, config.shiny_charm);
             // 色違いロック適用 (ゼクロム・レシラム・キュレム等)
             if config.shiny_locked {
                 apply_shiny_lock(pid, config.tid, config.sid)
@@ -240,13 +263,13 @@ pub fn generate_static_pokemon(
         | EncounterType::StaticFossil
         | EncounterType::StaticEvent => {
             // pid-shiny.md の generate_pokemon_pid_event を使用
-            generate_pokemon_pid_event(&mut lcg, config.tid, config.sid, config.shiny_locked)
+            generate_pokemon_pid_event(lcg, config.tid, config.sid, config.shiny_locked)
         }
         _ => unreachable!(),
     };
     
     // 性格決定
-    let (nature, sync_applied) = determine_nature(&mut lcg, sync_success, &config.lead_ability);
+    let (nature, sync_applied) = determine_nature(lcg, sync_success, &config.lead_ability);
     
     // 持ち物判定 (StaticSymbol で対象個体のみ)
     if enc_type == EncounterType::StaticSymbol && config.has_held_item {
@@ -258,7 +281,29 @@ pub fn generate_static_pokemon(
         lcg.next();
     }
     
-    build_resolved_pokemon_data(seed, pid, nature, sync_applied, 0, 0, config)
+    // === Resolve (乱数消費なし) ===
+    
+    // 特性スロット: PID 上位 16bit の最下位 bit
+    let ability_slot = ((pid >> 16) & 1) as u8;
+    
+    // 色違い判定
+    let shiny_type = calculate_shiny_type(pid, config.tid, config.sid);
+    
+    // 性別判定 (固定種族の場合は species_data から threshold 取得)
+    let gender = determine_gender(pid, config.species_data.gender_threshold);
+    
+    // IV は含まない (PokemonGenerator が BaseSeed から別途計算)
+    RawPokemonData {
+        pid,
+        species_id: config.species_data.species_id,
+        level: config.fixed_level,
+        nature,
+        sync_applied,
+        ability_slot,
+        gender,
+        shiny_type,
+        held_item_slot: HeldItemSlot::None,
+    }
 }
 ```
 

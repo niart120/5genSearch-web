@@ -160,34 +160,37 @@ impl PokemonGenerator {
             return None;
         }
         
-        let seed = self.lcg.state();
-        
-        // flows/ の生成ロジックを呼び出し
-        let pokemon = match self.config.encounter_type {
+        // flows/ の生成ロジックを呼び出し (IV なしの RawPokemonData を取得)
+        let raw = match self.config.encounter_type {
             EncounterType::Normal
             | EncounterType::Surfing
             | EncounterType::Fishing
             | EncounterType::ShakingGrass
             | EncounterType::SurfingBubble
             | EncounterType::FishingBubble => {
-                generate_wild_pokemon(seed, &self.config)
+                generate_wild_pokemon(&mut self.lcg, &self.config)
             }
             EncounterType::StaticSymbol
             | EncounterType::StaticStarter
             | EncounterType::StaticFossil
             | EncounterType::StaticEvent
             | EncounterType::Roamer => {
-                generate_static_pokemon(seed, &self.config)
+                generate_static_pokemon(&mut self.lcg, &self.config)
             }
             _ => unreachable!(),
         };
         
-        // LCG を1消費進める (個体境界)
-        self.lcg.next();
+        // IV 計算: BaseSeed から MT Seed を導出
+        let ivs = resolve_ivs(self.base_seed, &self.config);
+        
         self.current_advance += 1;
         self.generated_count += 1;
         
-        Some(pokemon)
+        Some(ResolvedPokemonData {
+            advance: self.current_advance - 1,
+            ivs,
+            ..raw.into()
+        })
     }
     
     /// バッチ生成 (最大 count 個)
