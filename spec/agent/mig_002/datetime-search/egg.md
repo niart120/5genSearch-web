@@ -92,9 +92,9 @@ pub struct IndividualFilter {
     /// 性別フィルター
     pub gender: Option<Gender>,
     /// 特性フィルター
-    pub ability: Option<AbilitySlot>,
+    pub ability_slot: Option<AbilitySlot>,
     /// 色違いフィルター
-    pub shiny: Option<ShinyFilter>,
+    pub shiny_type: Option<ShinyFilter>,
     /// めざパタイプ
     pub hidden_power_type: Option<u8>,
 }
@@ -155,8 +155,8 @@ pub struct EggSearchResult {
     pub ivs: IvSet,
     pub nature: Nature,
     pub gender: Gender,
-    pub ability: AbilitySlot,
-    pub shiny: ShinyType,
+    pub ability_slot: AbilitySlot,
+    pub shiny_type: ShinyType,
     pub pid: u32,
     pub hidden_power_type: u8,
     pub hidden_power_power: u8,
@@ -323,21 +323,21 @@ impl EggSearcher {
         }
         
         // 特性チェック
-        if let Some(ability) = filter.ability {
-            if egg.ability != ability { return false; }
+        if let Some(ability_slot) = filter.ability_slot {
+            if egg.ability_slot != ability_slot { return false; }
         }
         
         // 色違いチェック
-        if let Some(shiny_filter) = filter.shiny {
+        if let Some(shiny_filter) = filter.shiny_type {
             match shiny_filter {
                 ShinyFilter::StarSquare => {
-                    if egg.shiny == ShinyType::None { return false; }
+                    if egg.shiny_type == ShinyType::None { return false; }
                 }
                 ShinyFilter::Star => {
-                    if egg.shiny != ShinyType::Star { return false; }
+                    if egg.shiny_type != ShinyType::Star { return false; }
                 }
                 ShinyFilter::Square => {
-                    if egg.shiny != ShinyType::Square { return false; }
+                    if egg.shiny_type != ShinyType::Square { return false; }
                 }
             }
         }
@@ -371,8 +371,8 @@ impl EggSearcher {
             ivs: egg.ivs,
             nature: egg.nature,
             gender: egg.gender,
-            ability: egg.ability,
-            shiny: egg.shiny,
+            ability_slot: egg.ability_slot,
+            shiny_type: egg.shiny_type,
             pid: egg.pid,
             hidden_power_type: egg.hidden_power_type,
             hidden_power_power: egg.hidden_power_power,

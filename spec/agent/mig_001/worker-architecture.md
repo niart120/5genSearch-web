@@ -474,7 +474,64 @@ src/
 - `base-worker-manager.ts` + `multi-worker-manager.ts` → `worker-manager.ts`
 - GPU Worker は Phase 2 で追加
 
-## 8. 参照元実装との対応
+## 8. テスト戦略
+
+### 8.1 テストレベル
+
+| レベル | 対象 | テストフレームワーク | 備考 |
+|-------|------|---------------------|------|
+| Unit | 型定義・バリデーション | Vitest | Worker 不要 |
+| Unit | Worker Manager | Vitest + Mock Worker | Worker をモック |
+| Integration | Worker + WASM | Vitest Browser Mode | 実際の Worker |
+| E2E | 全体フロー | Playwright | ブラウザ実行 |
+
+### 8.2 テスト方針
+
+**Unit テスト**:
+- 型定義のバリデーション関数
+- Worker Manager のコールバック登録・状態管理
+- Mock Worker を使用して postMessage/onmessage をシミュレート
+
+**Integration テスト**:
+- 実際の Worker インスタンスを生成
+- WASM 初期化から READY までのフロー確認
+- START → PROGRESS → COMPLETE のメッセージフロー検証
+- STOP リクエストによる中断動作確認
+
+**E2E テスト**:
+- UI からの検索開始・停止操作
+- 結果表示・フィルタリング
+- 複数 Worker の並列実行
+
+### 8.3 テストユーティリティ
+
+```typescript
+// Worker の READY 待機
+function waitForReady(worker: Worker, timeoutMs = 5000): Promise<void>;
+
+// 指定条件を満たすメッセージを収集
+function collectMessages(
+  worker: Worker,
+  types: WorkerResponse['type'][],
+  endPredicate: (msg: WorkerResponse) => boolean,
+  timeoutMs?: number
+): Promise<WorkerResponse[]>;
+```
+
+### 8.4 ファイル構成
+
+```
+src/test/
+├── helpers/
+│   └── worker-test-helpers.ts    # テストユーティリティ
+├── types/
+│   └── *.test.ts                 # 型定義・バリデーションテスト
+└── workers/
+    ├── *.test.ts                 # Mock Worker テスト
+    └── *.integration.test.ts     # 統合テスト
+```
+
+## 9. 参照元実装との対応
 
 | 参照元 | 本設計 |
 |-------|-------|
@@ -485,7 +542,7 @@ src/
 | `workers/generation-worker.ts` | `workers/generation-worker.ts` |
 | `lib/mt-seed/...-multi-worker-manager.ts`, `lib/generation/...-worker-manager.ts` | `lib/workers/worker-manager.ts` |
 
-## 9. 関連ドキュメント
+## 10. 関連ドキュメント
 
 | ドキュメント | 内容 |
 |-------------|------|
@@ -493,4 +550,3 @@ src/
 | [mig_002/datetime-search/worker-interface.md](../mig_002/datetime-search/worker-interface.md) | Worker ↔ WASM インタフェース詳細 |
 | [mig_002/datetime-search/base.md](../mig_002/datetime-search/base.md) | 起動時刻検索 共通基盤 |
 | [mig_002/gpu/api.md](../mig_002/gpu/api.md) | GPU API 設計 |
-| [mig_003/worker-implementation-guide.md](../mig_003/worker-implementation-guide.md) | Worker 実装ガイド |

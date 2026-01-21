@@ -216,4 +216,3 @@ mig_002/
 ## 9. 関連ドキュメント
 
 - [mig_001: Worker アーキテクチャ設計](../mig_001/worker-architecture.md)
-- [mig_003: Worker 実装ガイド](../mig_003/worker-implementation-guide.md)
