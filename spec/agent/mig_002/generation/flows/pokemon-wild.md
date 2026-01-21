@@ -25,7 +25,7 @@ LCG Seed
               ├─ 特性スロット ((PID >> 16) & 1)
               ├─ 色違い (PID + TID/SID)
               │
-              └─ ResolvedPokemonData 出力
+              └─ RawPokemonData 出力
 ```
 
 ## 2. エンカウント種別ごとの消費パターン
@@ -408,15 +408,17 @@ fn has_very_rare_item(enc_type: EncounterType) -> bool {
 
 ## 5. ヘルパー関数
 
-### 5.1 build_resolved_pokemon_data
+### 5.1 build_pokemon_data
 
-PID から派生値を算出し、`ResolvedPokemonData` を構築するヘルパー関数。
+PID から派生値を算出し、`RawPokemonData` を構築するヘルパー関数。
 
-詳細は [data-structures.md §2.10](../data-structures.md#210-build_resolved_pokemon_data) を参照。
+詳細は [data-structures.md §2.10](../data-structures.md#210-build_pokemon_data-内部ヘルパー) を参照。
 
 ## 6. 出力データの解決
 
-`ResolvedPokemonData` は WASM 内で解決済み。TypeScript 側では以下のみ追加:
+`RawPokemonData` は WASM 内部で生成され、`PokemonGenerator` が IV・列挙コンテキストを付与して `GeneratedPokemonData` を構築する。
+
+TypeScript 側では以下のみ追加:
 
 - `held_item_slot` → アイテム名 (種族データ + ロケールから解決)
 - `species_id` → 種族名 (i18n)

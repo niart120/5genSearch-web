@@ -46,10 +46,10 @@
 
 ```
 flows/ (アルゴリズム)
-  └─ generate_wild_pokemon(seed, config) → ResolvedPokemonData
+  └─ generate_wild_pokemon(seed, config) → RawPokemonData
 
 worker-interface.md (本ドキュメント)
-  └─ PokemonGenerator.next() → 内部で flows 相当の処理を実行
+  └─ PokemonGenerator.next() → 内部で flows 相当の処理を実行 → GeneratedPokemonData
 ```
 
 ## 2. WASM API
@@ -100,6 +100,8 @@ pub struct PokemonGenerator {
     max_advance: u64,
     /// 生成済み個体数
     generated_count: u64,
+    /// 生成ソース情報 (base_seed を含む)
+    source: GenerationSource,
 }
 
 #[wasm_bindgen]
@@ -109,6 +111,7 @@ impl PokemonGenerator {
     /// # Arguments
     /// * `base_seed` - 起点となる LCG Seed (64-bit)。MT Seed 導出にも使用
     /// * `config` - 生成設定
+    /// * `source` - 生成ソース情報 (base_seed を含む)
     /// * `game_offset` - ゲーム起動条件による固定消費数
     /// * `user_offset` - ユーザー指定の追加消費数
     /// * `max_advances` - 生成する最大消費数
@@ -116,6 +119,7 @@ impl PokemonGenerator {
     pub fn new(
         base_seed: LcgSeed,
         config: PokemonGenerationConfig,
+        source: GenerationSource,
         game_offset: u64,
         user_offset: u64,
         max_advances: u64,
@@ -131,6 +135,7 @@ impl PokemonGenerator {
             current_advance: 0,
             max_advance: max_advances,
             generated_count: 0,
+            source,
         }
     }
     
@@ -154,14 +159,13 @@ impl PokemonGenerator {
     
     /// 次の個体を生成
     /// 
-    /// 戻り値: 列挙済み個体データ (完了時は None)
-    /// EnumeratedPokemonData には advance, needle_direction, source, data が含まれる
-    pub fn next(&mut self) -> Option<EnumeratedPokemonData> {
+    /// 戻り値: GeneratedPokemonData (完了時は None)
+    pub fn next(&mut self) -> Option<GeneratedPokemonData> {
         if self.is_done() {
             return None;
         }
         
-        // 現在の Seed を保存 (needle_direction 計算用)
+        // 現在の Seed を保存 (lcg_seed, needle_direction 計算用)
         let current_seed = self.lcg.current_seed();
         
         // flows/ の生成ロジックを呼び出し (IV なしの RawPokemonData を取得)
@@ -194,18 +198,25 @@ impl PokemonGenerator {
         self.current_advance += 1;
         self.generated_count += 1;
         
-        // ResolvedPokemonData を構築
-        let data = ResolvedPokemonData {
-            seed: current_seed.value(),
-            ivs,
-            ..raw.into()
-        };
-        
-        Some(EnumeratedPokemonData {
+        // GeneratedPokemonData を構築 (フラット構造)
+        Some(GeneratedPokemonData {
+            // 列挙コンテキスト
             advance,
             needle_direction,
-            data,
             source: self.source.clone(),
+            // 基本情報
+            lcg_seed: current_seed.value(),
+            pid: raw.pid,
+            // 解決済み情報
+            species_id: raw.species_id,
+            level: raw.level,
+            nature: raw.nature,
+            sync_applied: raw.sync_applied,
+            ability_slot: raw.ability_slot,
+            gender: raw.gender,
+            shiny_type: raw.shiny_type,
+            held_item_slot: raw.held_item_slot,
+            ivs,
         })
     }
     
@@ -241,8 +252,8 @@ impl PokemonGenerator {
 #[derive(Tsify, Serialize, Deserialize)]
 #[tsify(into_wasm_abi)]
 pub struct PokemonBatch {
-    /// 生成された個体 (advance, needle_direction, source 付き)
-    pub results: Vec<EnumeratedPokemonData>,
+    /// 生成された個体
+    pub results: Vec<GeneratedPokemonData>,
     /// 現在の消費数
     pub current_advance: u64,
     /// 完了したか
@@ -250,9 +261,9 @@ pub struct PokemonBatch {
 }
 ```
 
-### 2.4 needle_direction の計算
+### 2.3 needle_direction の計算
 
-`EnumeratedPokemonData.needle_direction` は、個体生成開始時点の LCG Seed から計算する。
+`GeneratedPokemonData.needle_direction` は、個体生成開始時点の LCG Seed から計算する。
 
 **計算タイミング**:
 
@@ -271,7 +282,7 @@ LCG Seed (個体生成開始時点)
 3. その後、個体生成処理 (`generate_wild_pokemon` 等) を実行
 
 ```rust
-pub fn next(&mut self) -> Option<EnumeratedPokemonData> {
+pub fn next(&mut self) -> Option<GeneratedPokemonData> {
     // ...
     
     // 1. 個体生成開始前の Seed を保存
@@ -292,7 +303,7 @@ pub fn next(&mut self) -> Option<EnumeratedPokemonData> {
 
 詳細なアルゴリズムは [algorithm/needle.md](./algorithm/needle.md) を参照。
 
-### 2.3 EggGenerator
+### 2.4 EggGenerator
 
 孵化個体用のイテレータ。基本構造は PokemonGenerator と同様。
 
@@ -329,20 +340,25 @@ pub struct EggGenerator {
     max_advance: u64,
     /// 生成済み個体数
     generated_count: u64,
+    /// 生成ソース情報
+    source: GenerationSource,
 }
 
 #[wasm_bindgen]
 impl EggGenerator {
     #[wasm_bindgen(constructor)]
     pub fn new(
-        base_seed: LcgSeed,
+        source: GenerationSource,
         config: EggGenerationConfig,
         parents: ParentsIVs,
         game_offset: u64,
         user_offset: u64,
         max_advances: u64,
     ) -> EggGenerator {
-        // MT Seed は BaseSeed から導出 (オフセット適用前)
+        // GenerationSource から base_seed を取得
+        let base_seed = source.base_seed();
+        
+        // MT Seed は base_seed から導出 (オフセット適用前)
         let iv_sources = build_iv_sources(base_seed, parents);
         
         // LCG は game_offset + user_offset 進めてから列挙開始
@@ -356,6 +372,7 @@ impl EggGenerator {
             current_advance: 0,
             max_advance: max_advances,
             generated_count: 0,
+            source,
         }
     }
     
@@ -367,16 +384,33 @@ impl EggGenerator {
     
     /// 次の個体を生成
     /// 
-    /// PokemonGenerator と同様に EnumeratedEggData を返す。
+    /// GeneratedEggData を返す (フラット構造)。
     /// needle_direction は個体生成開始前の Seed から計算。
-    pub fn next(&mut self) -> Option<EnumeratedEggData>;
+    pub fn next(&mut self) -> Option<GeneratedEggData>;
     
     pub fn next_batch(&mut self, count: u32) -> EggBatch;
 }
 ```
 
-**注意**: EggGenerator でも `needle_direction` の計算タイミングは [§2.4](#24-needle_direction-の計算) と同様。
+**注意**: EggGenerator でも `needle_direction` の計算タイミングは [§2.3](#23-needle_direction-の計算) と同様。
 個体生成開始前の LCG Seed から計算する。
+
+### 2.5 EggBatch
+
+バッチ生成の結果。
+
+```rust
+#[derive(Tsify, Serialize, Deserialize)]
+#[tsify(into_wasm_abi)]
+pub struct EggBatch {
+    /// 生成された個体
+    pub results: Vec<GeneratedEggData>,
+    /// 現在の消費数
+    pub current_advance: u64,
+    /// 完了したか
+    pub is_done: bool,
+}
+```
 
 ## 3. Worker → Main Thread インタフェース
 
@@ -430,8 +464,8 @@ export type GenerationWorkerResponse =
   | { type: 'ERROR'; message: string; fatal: boolean };
 
 export type GenerationResultsPayload = {
-  /** 生成された個体 (advance, needle_direction, source 付き) */
-  results: EnumeratedPokemonData[];
+  /** 生成された個体 */
+  results: GeneratedPokemonData[];
   batchIndex: number;
 };
 
@@ -685,9 +719,9 @@ impl PokemonGenerator {
 
 ```typescript
 function filterResults(
-  results: ResolvedPokemonData[],
+  results: GeneratedPokemonData[],
   filter: PokemonFilter,
-): ResolvedPokemonData[] {
+): GeneratedPokemonData[] {
   return results.filter(pokemon => {
     if (filter.shinyOnly && pokemon.shiny_type === ShinyType.None) {
       return false;

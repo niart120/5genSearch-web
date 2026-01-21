@@ -20,7 +20,7 @@ LCG Seed
          ├─ 3. 性格決定
          ├─ 4. 持ち物判定 (条件による)
          │
-         └─ ResolvedPokemonData 出力
+         └─ RawPokemonData 出力
 ```
 
 > **注意**: 本セクションは BW 仕様を基準とする。BW2 での差異は [セクション 6](#6-bwbw2-の差異) を参照。

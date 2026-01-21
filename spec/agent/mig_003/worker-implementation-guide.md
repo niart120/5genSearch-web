@@ -381,8 +381,7 @@ async function handleStart(
 }
 
 function executeEnumeration(params: GenerationParams) {
-  const results: GenerationResult[] = [];
-  const resolved: ResolvedPokemonData[] = [];
+  const results: GeneratedPokemonData[] = [];
   let processedAdvances = 0;
   let shinyFound = false;
   let reason: GenerationCompletion['reason'] | null = null;
@@ -396,17 +395,12 @@ function executeEnumeration(params: GenerationParams) {
       break;
     }
 
-    const raw = state.enumerator!.next_pokemon();
-    if (!raw) {
+    // PokemonGenerator.next() は直接 GeneratedPokemonData を返す
+    const result = state.generator!.next();
+    if (!result) {
       reason = 'max-advances';
       break;
     }
-
-    const unresolved = parseFromWasmRaw(raw);
-    const result: GenerationResult = {
-      ...unresolved,
-      advance: readAdvanceOrFallback(raw, Number(params.offset) + i),
-    };
 
     const isShiny = (result.shiny_type ?? 0) !== 0;
     if (isShiny) shinyFound = true;
@@ -415,7 +409,6 @@ function executeEnumeration(params: GenerationParams) {
 
     if (results.length < params.maxResults) {
       results.push(result);
-      resolved.push(resolvePokemon(result, state.resolutionContext));
     }
 
     if (params.stopAtFirstShiny && isShiny) {

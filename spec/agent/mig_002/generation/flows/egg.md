@@ -244,26 +244,26 @@ pub fn generate_egg(
     let gender = determine_egg_gender(lcg, config.gender_ratio, config.nidoran_flag);
     
     // 5. PID 生成
-    let (pid, shiny) = generate_egg_pid_with_reroll(
+    let (pid, shiny_type) = generate_egg_pid_with_reroll(
         lcg,
         config.tid,
         config.sid,
         config.pid_reroll_count,
     );
     
-    // 特性スロット決定
-    let ability = if has_hidden {
-        AbilitySlot::Hidden
+    // 特性スロット決定 (0: 特性1, 1: 特性2, 2: 夢特性)
+    let ability_slot = if has_hidden {
+        2  // Hidden
     } else {
-        AbilitySlot::from_pid_bit(pid)
+        ((pid >> 16) & 1) as u8  // from PID bit
     };
     
     RawEggData {
+        pid,
         nature,
         gender,
-        ability,
-        shiny,
-        pid,
+        ability_slot,
+        shiny_type,
         inheritance,
     }
 }
@@ -285,14 +285,19 @@ impl EggGenerator {
             rng_ivs,
             config,
             parents,
+            source: GenerationSource::Fixed,  // 呼び出し側で設定
         }
     }
     
     /// 指定消費位置での卵生成
-    pub fn generate_at(&self, advance: u32) -> ResolvedEggData {
+    pub fn generate_at(&self, advance: u32) -> GeneratedEggData {
         // CurrentSeed: n 消費後の LCG 状態
         let mut lcg = Lcg64::new(self.base_seed);
         lcg.advance(advance + 1);  // +1 は MT Seed 導出分
+        
+        // 個体生成前の Seed を保存 (lcg_seed, needle_direction 計算用)
+        let current_seed = lcg.current_seed();
+        let needle_direction = NeedleDirection::from_seed(current_seed).value();
         
         // 個体生成 (IV なし)
         let raw = generate_egg(&mut lcg, &self.config);
@@ -300,10 +305,21 @@ impl EggGenerator {
         // 遺伝適用 (BaseSeed 由来の rng_ivs を使用)
         let final_ivs = apply_inheritance(&self.rng_ivs, &self.parents, &raw.inheritance);
         
-        ResolvedEggData {
-            advance,
+        GeneratedEggData {
+            // 列挙コンテキスト
+            advance: advance as u64,
+            needle_direction,
+            source: self.source.clone(),
+            // 基本情報
+            lcg_seed: current_seed.value(),
+            pid: raw.pid,
+            // 個体情報
+            nature: raw.nature,
+            gender: raw.gender,
+            ability_slot: raw.ability_slot,
+            shiny_type: raw.shiny_type,
+            inheritance: raw.inheritance,
             ivs: final_ivs,
-            ..raw.into()
         }
     }
 }

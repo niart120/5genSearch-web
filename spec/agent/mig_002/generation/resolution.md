@@ -14,8 +14,9 @@ WASM/Worker/Main 間の責務分担と、UI 表示用データの階層設計。
 │  - Slot → SpeciesId/Level 解決 (Config ベース)                          │
 │  - Gender 判定 (threshold ベース)                                        │
 │  - IV 計算 (MT19937)                                                    │
+│  - 列挙コンテキスト (advance, needle_direction, source) 付与             │
 └──────────────────────────────────┬──────────────────────────────────────┘
-                                   │ ResolvedPokemonData
+                                   │ GeneratedPokemonData / GeneratedEggData
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           Worker                                        │
@@ -23,7 +24,7 @@ WASM/Worker/Main 間の責務分担と、UI 表示用データの階層設計。
 │  - リクエスト/レスポンス中継                                              │
 │  - バッチ処理・ストリーミング制御                                         │
 └──────────────────────────────────┬──────────────────────────────────────┘
-                                   │ ResolvedPokemonData[]
+                                   │ GeneratedPokemonData[] / GeneratedEggData[]
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           Main (TypeScript)                             │
@@ -153,50 +154,24 @@ function hasHeldItem(species: GeneratedSpecies | undefined): boolean {
 }
 ```
 
-## 3. 解決済みデータ型
+## 3. 生成済みデータ型
 
-### 3.1 ResolvedPokemonData
+### 3.1 GeneratedPokemonData
 
-WASM から返される解決済み Pokemon データ。
-
-```rust
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ResolvedPokemonData {
-    // === 基本情報 ===
-    /// 生成時の LCG Seed
-    pub seed: u64,
-    /// PID
-    pub pid: u32,
-    
-    // === 解決済み情報 ===
-    /// 種族ID (EncounterSlotConfig から解決)
-    pub species_id: u16,
-    /// レベル (slot の level_min/max と乱数から解決)
-    pub level: u8,
-    /// 性格 (0-24)
-    pub nature: u8,
-    /// シンクロ適用
-    pub sync_applied: bool,
-    /// 特性スロット (0-1)
-    pub ability_slot: u8,
-    /// 性別 (gender_threshold から解決)
-    pub gender: Gender,
-    /// 色違い種別
-    pub shiny_type: ShinyType,
-    /// 持ち物スロット (確率カテゴリ)
-    pub held_item_slot: HeldItemSlot,
-    
-    // === IV ===
-    /// 個体値 [HP, Atk, Def, SpA, SpD, Spe]
-    pub ivs: IvSet,
-}
-```
+WASM から返される Pokemon データ。詳細は [data-structures.md §2.9](./data-structures.md#29-generatedpokemondata) を参照。
 
 ```typescript
-export type ResolvedPokemonData = {
-  seed: bigint;
+export type GeneratedPokemonData = {
+  // 列挙コンテキスト
+  advance: bigint;
+  needle_direction: number;
+  source: GenerationSource;
+  
+  // 基本情報
+  lcg_seed: bigint;
   pid: number;
+  
+  // 解決済み情報
   species_id: number;
   level: number;
   nature: number;
@@ -209,26 +184,32 @@ export type ResolvedPokemonData = {
 };
 ```
 
-### 3.2 EnumeratedPokemonData
+### 3.2 GeneratedEggData
 
-Advance 情報 + ソース情報付き解決済みデータ。
+WASM から返される Egg データ。詳細は [data-structures.md §3.5](./data-structures.md#35-generatedeggdata) を参照。
 
-```rust
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct EnumeratedPokemonData {
-    /// 消費数
-    pub advance: u64,
-    /// レポート針方向 (0-7)
-    pub needle_direction: u8,
-    /// 解決済み個体データ
-    pub data: ResolvedPokemonData,
-    /// 生成ソース情報
-    pub source: GenerationSource,
-}
+```typescript
+export type GeneratedEggData = {
+  // 列挙コンテキスト
+  advance: bigint;
+  needle_direction: number;
+  source: GenerationSource;
+  
+  // 基本情報
+  lcg_seed: bigint;
+  pid: number;
+  
+  // 個体情報
+  nature: number;
+  gender: Gender;
+  ability_slot: number;
+  shiny_type: ShinyType;
+  inheritance: InheritanceSlots;
+  ivs: IvSet;
+};
 ```
 
-`GenerationSource` の詳細は [data-structures.md](./data-structures.md#24-generationsource) を参照。
+`GenerationSource` の詳細は [data-structures.md §2.11](./data-structures.md#211-generationsource) を参照。
 
 ## 4. UI 表示用データ
 
@@ -287,7 +268,52 @@ function getSourceLabel(source: GenerationSource): string {
 }
 ```
 
-### 4.3 現行 UiReadyPokemonData との比較
+### 4.3 UiEggData
+
+UI 表示用 Egg データ。
+
+```typescript
+export type UiEggData = {
+  // === 識別・位置 ===
+  advance: number;
+  needleDirection: number;       // 0-7
+  
+  // === 生成ソース ===
+  source: GenerationSource;      // Fixed / Multiple / Datetime
+  
+  // === 性格・特性・性別 ===
+  nature: number;                // 0-24
+  natureName: string;            // i18n
+  abilitySlot: 0 | 1 | 2;        // 夢特性 = 2
+  abilityName: string;           // i18n (特性1 / 特性2 / 隠れ特性)
+  gender: 'M' | 'F' | 'N';
+  
+  // === 色違い ===
+  shinyType: 0 | 1 | 2;          // 0=通常, 1=◇, 2=☆
+  
+  // === 遺伝情報 ===
+  inheritance: UiInheritanceSlots;
+  
+  // === 個体値 ===
+  ivs: IvSet;                    // [HP, Atk, Def, SpA, SpD, Spe]
+};
+
+export type UiInheritanceSlot = {
+  stat: 0 | 1 | 2 | 3 | 4 | 5;   // HP/Atk/Def/SpA/SpD/Spe
+  statName: string;              // i18n
+  parent: 'M' | 'F';
+  parentLabel: string;           // i18n (♂親 / ♀親)
+};
+
+export type UiInheritanceSlots = [UiInheritanceSlot, UiInheritanceSlot, UiInheritanceSlot];
+```
+
+**Egg 固有の考慮点**:
+- `speciesId` / `level` は不要 (孵化なので UI 側で既知)
+- `abilitySlot` は 0-2 の範囲 (夢特性 = 2)
+- `inheritance` は遺伝元の表示に必要
+
+### 4.4 現行 UiReadyPokemonData との比較
 
 | フィールド | 新設計 | 現行 | 判断理由 |
 |-----------|-------|------|---------|
@@ -314,11 +340,11 @@ function getSourceLabel(source: GenerationSource): string {
 | `bootTimestampIso` | **×** | ○ | `source.seed` から逆算可能 |
 | `keyInputDisplay` / `keyInputNames` | **×** | ○ | `source.key_code` から導出可能 |
 
-### 4.4 除外フィールドへのアクセス
+### 4.5 除外フィールドへのアクセス
 
 除外したフィールドが必要な場合:
 
-1. **Seed/PID**: `ResolvedPokemonData` を保持しておき、必要時に参照
+1. **Seed/PID**: `GeneratedPokemonData` / `GeneratedEggData` を保持しておき、必要時に参照
 2. **Boot-Timing 情報**: `source` フィールド (Datetime) から取得
 
 ```typescript
@@ -328,15 +354,15 @@ interface GenerationState {
   displayData: UiPokemonData[];
   
   // 元データ (必要時参照用)
-  rawData: EnumeratedPokemonData[];
+  rawData: GeneratedPokemonData[];
 }
 ```
 
-### 4.5 変換関数
+### 4.6 変換関数
 
 ```typescript
 function toUiPokemonData(
-  data: EnumeratedPokemonData,
+  data: GeneratedPokemonData,
   species: GeneratedSpecies,
   locale: SupportedLocale
 ): UiPokemonData {
@@ -344,39 +370,72 @@ function toUiPokemonData(
     advance: Number(data.advance),
     needleDirection: data.needle_direction,
     source: data.source,
-    speciesId: data.data.species_id,
+    speciesId: data.species_id,
     speciesName: species.names[locale],
-    level: data.data.level,
-    nature: data.data.nature,
-    natureName: NATURE_NAMES[locale][data.data.nature],
-    abilitySlot: data.data.ability_slot,
-    abilityName: getAbilityName(species, data.data.ability_slot, locale),
-    gender: data.data.gender,
-    shinyType: data.data.shiny_type,
-    ivs: data.data.ivs,
+    level: data.level,
+    nature: data.nature,
+    natureName: NATURE_NAMES[locale][data.nature],
+    abilitySlot: data.ability_slot,
+    abilityName: getAbilityName(species, data.ability_slot, locale),
+    gender: data.gender,
+    shinyType: data.shiny_type,
+    ivs: data.ivs,
     stats: calculatePokemonStats({
       species,
-      ivs: data.data.ivs,
-      level: data.data.level,
-      natureId: data.data.nature,
+      ivs: data.ivs,
+      level: data.level,
+      natureId: data.nature,
     }),
   };
 }
+
+function toUiEggData(
+  data: GeneratedEggData,
+  locale: SupportedLocale
+): UiEggData {
+  return {
+    advance: Number(data.advance),
+    needleDirection: data.needle_direction,
+    source: data.source,
+    nature: data.nature,
+    natureName: NATURE_NAMES[locale][data.nature],
+    abilitySlot: data.ability_slot,
+    abilityName: getEggAbilityLabel(data.ability_slot, locale),
+    gender: data.gender,
+    shinyType: data.shiny_type,
+    inheritance: data.inheritance.map(slot => ({
+      stat: slot.stat,
+      statName: STAT_NAMES[locale][slot.stat],
+      parent: slot.parent === 'Male' ? 'M' : 'F',
+      parentLabel: slot.parent === 'Male' ? PARENT_LABELS[locale].male : PARENT_LABELS[locale].female,
+    })) as UiInheritanceSlots,
+    ivs: data.ivs,
+  };
+}
+
+// Egg 用特性スロットラベル (種族非依存)
+function getEggAbilityLabel(abilitySlot: number, locale: SupportedLocale): string {
+  return ABILITY_SLOT_LABELS[locale][abilitySlot];
+}
+
+// 特性スロットラベル定義
+const ABILITY_SLOT_LABELS: Record<SupportedLocale, Record<number, string>> = {
+  ja: { 0: '特性1', 1: '特性2', 2: '隠れ特性' },
+  en: { 0: 'Ability 1', 1: 'Ability 2', 2: 'Hidden Ability' },
+  // 他のロケールも同様に追加
+};
 ```
 
 ## 5. Boot-Timing 拡張
 
-`GenerationSource::Datetime` に必要な情報 (seed, timer0, vcount, key_code) は含まれている。
-
-追加のメタデータが必要な場合 (例: 起動日時) は実装時に検討する。
+`GenerationSource::Datetime` に必要な情報 (datetime, timer0, vcount, key_code) は含まれている。
 
 ```typescript
-// 起動日時の計算は seed から逆算可能
-// 必要に応じて UI 側で導出
+// source から起動日時を取得
 function getBootTimestamp(source: GenerationSource): Date | null {
   if (source.type !== 'Datetime') return null;
-  // seed から起動日時を逆算 (実装時に詳細設計)
-  return calculateBootTimestampFromSeed(source.seed, source.timer0, source.vcount);
+  const { year, month, day, hour, minute, second } = source.datetime;
+  return new Date(year, month - 1, day, hour, minute, second);
 }
 ```
 
