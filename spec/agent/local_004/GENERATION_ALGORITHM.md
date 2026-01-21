@@ -43,6 +43,7 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
+| `wasm-pkg/src/types/mod.rs` | 変更 | 共通型追加 (EncounterType, StartMode, SaveState, GameStartConfig, LeadAbilityEffect, GenderRatio, Ivs), Nature::from_u8() 追加 |
 | `wasm-pkg/src/lib.rs` | 変更 | generation モジュール追加 |
 | `wasm-pkg/src/generation/mod.rs` | 新規 | モジュール宣言 |
 | `wasm-pkg/src/generation/algorithm/mod.rs` | 新規 | サブモジュール宣言 |
@@ -80,20 +81,43 @@ types/ + core/lcg + core/mt
 generation/algorithm/*.rs
 ```
 
+### 3.3 types モジュールへの型追加
+
+本仕様で使用する共通型を `types/mod.rs` に追加する。
+
+| 型名 | 用途 |
+|------|------|
+| `Ivs` | 個体値セット (構造体版、0-31 + Unknown対応) |
+| `EncounterType` | エンカウント種別 |
+| `StartMode` | 起動方法 (NewGame / Continue) |
+| `SaveState` | セーブ状態 (NoSave / WithSave / WithMemoryLink) |
+| `GameStartConfig` | 起動設定 |
+| `LeadAbilityEffect` | 先頭ポケモン特性効果 |
+| `GenderRatio` | 性別比 |
+
+また、既存の `Nature` enum に `from_u8()` メソッドを追加する（性格決定アルゴリズムで使用）。
+
 ## 4. 実装仕様
 
-### 4.1 generation/algorithm/iv.rs
+### 4.1 types/mod.rs への追加
 
-参照: [mig_002/generation/algorithm/iv-inheritance.md](../mig_002/generation/algorithm/iv-inheritance.md)
+#### 4.1.1 Ivs 構造体
+
+既存の `IvSet = [u8; 6]` を構造体版に置き換える。tsify による TypeScript 型生成に対応。
 
 ```rust
-//! IV 生成・遺伝アルゴリズム
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
 
-use crate::core::mt::Mt19937;
-use crate::types::MtSeed;
+/// Unknown IV sentinel value (親個体の不明IV等で使用)
+pub const IV_VALUE_UNKNOWN: u8 = 32;
 
 /// 個体値セット
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+///
+/// 各フィールドは 0-31 の通常値、または 32 (Unknown) を取る。
+/// TypeScript 側では `{ hp: number, atk: number, ... }` として扱われる。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Ivs {
     pub hp: u8,
     pub atk: u8,
@@ -104,12 +128,17 @@ pub struct Ivs {
 }
 
 impl Ivs {
-    pub fn new(hp: u8, atk: u8, def: u8, spa: u8, spd: u8, spe: u8) -> Self {
+    pub const fn new(hp: u8, atk: u8, def: u8, spa: u8, spd: u8, spe: u8) -> Self {
         Self { hp, atk, def, spa, spd, spe }
     }
 
+    /// 全て同じ値で初期化
+    pub const fn uniform(value: u8) -> Self {
+        Self { hp: value, atk: value, def: value, spa: value, spd: value, spe: value }
+    }
+
     /// インデックスで取得 (0=HP, 1=Atk, 2=Def, 3=SpA, 4=SpD, 5=Spe)
-    pub fn get(&self, idx: u8) -> u8 {
+    pub const fn get(&self, idx: usize) -> u8 {
         match idx {
             0 => self.hp,
             1 => self.atk,
@@ -121,7 +150,7 @@ impl Ivs {
     }
 
     /// インデックスで設定
-    pub fn set(&mut self, idx: u8, value: u8) {
+    pub fn set(&mut self, idx: usize, value: u8) {
         match idx {
             0 => self.hp = value,
             1 => self.atk = value,
@@ -131,7 +160,213 @@ impl Ivs {
             _ => self.spe = value,
         }
     }
+
+    /// Unknown を含むかどうか
+    pub const fn contains_unknown(&self) -> bool {
+        self.hp == IV_VALUE_UNKNOWN
+            || self.atk == IV_VALUE_UNKNOWN
+            || self.def == IV_VALUE_UNKNOWN
+            || self.spa == IV_VALUE_UNKNOWN
+            || self.spd == IV_VALUE_UNKNOWN
+            || self.spe == IV_VALUE_UNKNOWN
+    }
+
+    /// 配列から変換
+    pub const fn from_array(arr: [u8; 6]) -> Self {
+        Self {
+            hp: arr[0],
+            atk: arr[1],
+            def: arr[2],
+            spa: arr[3],
+            spd: arr[4],
+            spe: arr[5],
+        }
+    }
+
+    /// 配列へ変換
+    pub const fn to_array(&self) -> [u8; 6] {
+        [self.hp, self.atk, self.def, self.spa, self.spd, self.spe]
+    }
 }
+
+impl From<[u8; 6]> for Ivs {
+    fn from(arr: [u8; 6]) -> Self {
+        Self::from_array(arr)
+    }
+}
+
+impl From<Ivs> for [u8; 6] {
+    fn from(ivs: Ivs) -> Self {
+        ivs.to_array()
+    }
+}
+```
+
+#### 4.1.2 EncounterType
+
+```rust
+/// エンカウント種別
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum EncounterType {
+    // 野生エンカウント
+    Normal,         // 草むら・洞窟
+    ShakingGrass,   // 揺れる草むら
+    DustCloud,      // 砂煙
+    PokemonShadow,  // 橋の影
+    Surfing,        // なみのり
+    SurfingBubble,  // 水泡
+    Fishing,        // 釣り
+    FishingBubble,  // 釣り + 水泡
+    // 固定エンカウント
+    StaticSymbol,   // 固定シンボル
+    StaticStarter,  // 御三家
+    StaticFossil,   // 化石
+    StaticEvent,    // イベント配布
+    Roamer,         // 徘徊
+}
+```
+
+#### 4.1.3 StartMode / SaveState / GameStartConfig
+
+```rust
+/// 起動方法
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum StartMode {
+    /// 最初から
+    NewGame,
+    /// 続きから
+    Continue,
+}
+
+/// セーブ状態
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum SaveState {
+    /// セーブデータなし
+    NoSave,
+    /// セーブデータあり
+    WithSave,
+    /// セーブ + 思い出リンク済み (BW2 のみ)
+    WithMemoryLink,
+}
+
+/// 起動設定
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct GameStartConfig {
+    pub start_mode: StartMode,
+    pub save_state: SaveState,
+}
+
+impl GameStartConfig {
+    /// 組み合わせの妥当性を検証
+    pub fn validate(&self, version: RomVersion) -> Result<(), String> {
+        let is_bw2 = matches!(version, RomVersion::Black2 | RomVersion::White2);
+
+        // 思い出リンクは BW2 のみ
+        if self.save_state == SaveState::WithMemoryLink && !is_bw2 {
+            return Err("MemoryLink is only available in BW2".to_string());
+        }
+
+        // 続きからはセーブ必須
+        if self.start_mode == StartMode::Continue && self.save_state == SaveState::NoSave {
+            return Err("Continue requires a save file".to_string());
+        }
+
+        Ok(())
+    }
+}
+```
+
+#### 4.1.4 LeadAbilityEffect
+
+```rust
+/// 先頭ポケモンの特性効果
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum LeadAbilityEffect {
+    /// 特性効果なし
+    None,
+    /// シンクロ: 50% で性格一致
+    Synchronize(Nature),
+    /// ふくがん: 持ち物確率上昇
+    CompoundEyes,
+}
+
+impl Default for LeadAbilityEffect {
+    fn default() -> Self {
+        Self::None
+    }
+}
+```
+
+#### 4.1.5 GenderRatio
+
+```rust
+/// 性別比
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum GenderRatio {
+    Genderless,
+    MaleOnly,
+    FemaleOnly,
+    /// 性別値の閾値 (例: 127 = 1:1, 31 = 7:1, 63 = 3:1, 191 = 1:3)
+    Threshold(u8),
+}
+```
+
+#### 4.1.6 Nature への from_u8 メソッド追加
+
+`nature.rs` の `nature_roll()` で得た `u8` 値 (0-24) を `Nature` に変換するために必要。
+
+```rust
+impl Nature {
+    /// u8 値から Nature に変換 (0-24)
+    ///
+    /// 25 以上の値は modulo 25 で正規化される。
+    pub const fn from_u8(value: u8) -> Self {
+        match value % 25 {
+            0 => Self::Hardy,
+            1 => Self::Lonely,
+            2 => Self::Brave,
+            3 => Self::Adamant,
+            4 => Self::Naughty,
+            5 => Self::Bold,
+            6 => Self::Docile,
+            7 => Self::Relaxed,
+            8 => Self::Impish,
+            9 => Self::Lax,
+            10 => Self::Timid,
+            11 => Self::Hasty,
+            12 => Self::Serious,
+            13 => Self::Jolly,
+            14 => Self::Naive,
+            15 => Self::Modest,
+            16 => Self::Mild,
+            17 => Self::Quiet,
+            18 => Self::Bashful,
+            19 => Self::Rash,
+            20 => Self::Calm,
+            21 => Self::Gentle,
+            22 => Self::Sassy,
+            23 => Self::Careful,
+            _ => Self::Quirky, // 24
+        }
+    }
+}
+```
+
+### 4.2 generation/algorithm/iv.rs
+
+参照: [mig_002/generation/algorithm/iv-inheritance.md](../mig_002/generation/algorithm/iv-inheritance.md)
+
+```rust
+//! IV 生成・遺伝アルゴリズム
+
+use crate::core::mt::Mt19937;
+use crate::types::{Ivs, MtSeed};
 
 /// MT19937 出力から IV を抽出 (0-31)
 #[inline]
@@ -140,7 +375,8 @@ pub fn extract_iv(mt_output: u32) -> u8 {
 }
 
 /// 乱数 IV を生成 (野生・固定シンボル用)
-/// 7回破棄後、6回取得
+///
+/// MT19937 の最初の 7 回を破棄後、6 回取得。
 pub fn generate_rng_ivs(seed: MtSeed) -> Ivs {
     let mut mt = Mt19937::new(seed.value());
 
@@ -159,8 +395,29 @@ pub fn generate_rng_ivs(seed: MtSeed) -> Ivs {
     )
 }
 
+/// 指定オフセットで IV 生成
+///
+/// BW2 固定シンボル等、オフセットが異なるケースで使用。
+pub fn generate_rng_ivs_with_offset(seed: MtSeed, offset: u32) -> Ivs {
+    let mut mt = Mt19937::new(seed.value());
+
+    for _ in 0..offset {
+        mt.next();
+    }
+
+    Ivs::new(
+        extract_iv(mt.next()),
+        extract_iv(mt.next()),
+        extract_iv(mt.next()),
+        extract_iv(mt.next()),
+        extract_iv(mt.next()),
+        extract_iv(mt.next()),
+    )
+}
+
 /// 徘徊ポケモン用 IV 生成 (特殊順序)
-/// HP/Atk のみ取得、他は固定
+///
+/// HP/Atk のみ乱数、他は 0 固定。
 pub fn generate_roamer_ivs(seed: MtSeed) -> Ivs {
     let mut mt = Mt19937::new(seed.value());
 
@@ -171,16 +428,24 @@ pub fn generate_roamer_ivs(seed: MtSeed) -> Ivs {
     let hp = extract_iv(mt.next());
     let atk = extract_iv(mt.next());
 
-    Ivs::new(hp, atk, 0, 0, 0, 0) // Def,SpA,SpD,Spe は 0 固定
+    Ivs::new(hp, atk, 0, 0, 0, 0)
+}
+
+/// 親の役割
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ParentRole {
+    #[default]
+    Male,
+    Female,
 }
 
 /// 遺伝スロット
 #[derive(Clone, Copy, Debug, Default)]
 pub struct InheritanceSlot {
-    /// 遺伝先ステータス (0-5)
-    pub stat: u8,
-    /// 遺伝元親 (0=♂, 1=♀)
-    pub parent: u8,
+    /// 遺伝先ステータス (0=HP, 1=Atk, 2=Def, 3=SpA, 4=SpD, 5=Spe)
+    pub stat: usize,
+    /// 遺伝元親
+    pub parent: ParentRole,
 }
 
 /// 遺伝適用
@@ -193,10 +458,9 @@ pub fn apply_inheritance(
     let mut result = *rng_ivs;
 
     for slot in slots {
-        let parent_iv = if slot.parent == 0 {
-            parent_male.get(slot.stat)
-        } else {
-            parent_female.get(slot.stat)
+        let parent_iv = match slot.parent {
+            ParentRole::Male => parent_male.get(slot.stat),
+            ParentRole::Female => parent_female.get(slot.stat),
         };
         result.set(slot.stat, parent_iv);
     }
@@ -227,9 +491,9 @@ mod tests {
         let male = Ivs::new(31, 0, 0, 0, 0, 0);
         let female = Ivs::new(0, 31, 0, 0, 0, 0);
         let slots = [
-            InheritanceSlot { stat: 0, parent: 0 }, // HP from male
-            InheritanceSlot { stat: 1, parent: 1 }, // Atk from female
-            InheritanceSlot { stat: 2, parent: 0 }, // Def from male
+            InheritanceSlot { stat: 0, parent: ParentRole::Male },   // HP from male
+            InheritanceSlot { stat: 1, parent: ParentRole::Female }, // Atk from female
+            InheritanceSlot { stat: 2, parent: ParentRole::Male },   // Def from male
         ];
         let result = apply_inheritance(&rng_ivs, &male, &female, &slots);
         assert_eq!(result.hp, 31);
@@ -239,36 +503,32 @@ mod tests {
 }
 ```
 
-### 4.2 generation/algorithm/pid.rs
+### 4.3 generation/algorithm/pid.rs
 
 参照: [mig_002/generation/algorithm/pid-shiny.md](../mig_002/generation/algorithm/pid-shiny.md)
+
+`ShinyType` は `types/mod.rs` に既存のため、そちらを使用する。
 
 ```rust
 //! PID 生成・色違い判定アルゴリズム
 
 use crate::core::lcg::Lcg64;
-
-/// 色違い種別
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum ShinyType {
-    #[default]
-    None,
-    /// 星型 (8 <= xor < 16)
-    Star,
-    /// ひし形 (xor < 8)
-    Square,
-}
+use crate::types::ShinyType;
 
 /// 色違い判定
+///
+/// - `xor == 0`: Square (ひし形)
+/// - `1 <= xor < 8`: Star (星型)
+/// - `8 <= xor`: None (通常)
 #[inline]
 pub fn calculate_shiny_type(pid: u32, tid: u16, sid: u16) -> ShinyType {
     let pid_high = (pid >> 16) as u16;
     let pid_low = (pid & 0xFFFF) as u16;
     let xor = pid_high ^ pid_low ^ tid ^ sid;
 
-    if xor < 8 {
+    if xor == 0 {
         ShinyType::Square
-    } else if xor < 16 {
+    } else if xor < 8 {
         ShinyType::Star
     } else {
         ShinyType::None
@@ -363,7 +623,7 @@ mod tests {
 
     #[test]
     fn test_shiny_type_square() {
-        // xor = 0 の場合
+        // xor = 0 の場合 → Square
         let pid = 0x12341234u32;
         let tid = 0x1234u16;
         let sid = 0x0000u16;
@@ -371,7 +631,17 @@ mod tests {
     }
 
     #[test]
+    fn test_shiny_type_star() {
+        // xor = 1 の場合 → Star
+        let pid = 0x12341235u32;
+        let tid = 0x1234u16;
+        let sid = 0x0000u16;
+        assert_eq!(calculate_shiny_type(pid, tid, sid), ShinyType::Star);
+    }
+
+    #[test]
     fn test_shiny_type_none() {
+        // xor >= 8 の場合 → None
         let pid = 0x12345678u32;
         let tid = 0x0000u16;
         let sid = 0x0000u16;
@@ -380,7 +650,7 @@ mod tests {
 }
 ```
 
-### 4.3 generation/algorithm/nature.rs
+### 4.4 generation/algorithm/nature.rs
 
 参照: [mig_002/generation/algorithm/nature-sync.md](../mig_002/generation/algorithm/nature-sync.md)
 
@@ -499,32 +769,26 @@ mod tests {
 }
 ```
 
-### 4.4 generation/algorithm/needle.rs
+### 4.5 generation/algorithm/needle.rs
 
 参照: [mig_002/generation/algorithm/needle.md](../mig_002/generation/algorithm/needle.md)
+
+`NeedleDirection` は `types/mod.rs` に既存の enum を使用する。  
+ここでは LCG Seed から針方向を計算する関数を提供する。
 
 ```rust
 //! 針方向計算アルゴリズム
 
-use crate::types::LcgSeed;
+use crate::types::{LcgSeed, NeedleDirection};
 
-/// 針方向 (0-7, 8分割)
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub struct NeedleDirection(u8);
-
-impl NeedleDirection {
-    /// LCG Seed から針方向を計算
-    pub fn from_seed(seed: LcgSeed) -> Self {
-        // 上位32ビットの上位3ビットを取得
-        let value = seed.value();
-        let upper32 = (value >> 32) as u32;
-        let direction = (upper32 >> 29) as u8;
-        Self(direction)
-    }
-
-    pub fn value(&self) -> u8 {
-        self.0
-    }
+/// LCG Seed から針方向を計算
+///
+/// Seed の上位 32bit のうち、さらに上位 3bit (bit 61-63) を取得して 0-7 に変換。
+pub fn calculate_needle_direction(seed: LcgSeed) -> NeedleDirection {
+    let value = seed.value();
+    let upper32 = (value >> 32) as u32;
+    let direction = (upper32 >> 29) as u8;
+    NeedleDirection::from_value(direction)
 }
 
 #[cfg(test)]
@@ -532,19 +796,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_needle_direction() {
-        // 上位3ビットが 0b000 → 0
+    fn test_calculate_needle_direction() {
+        // 上位3ビットが 0b000 → N (0)
         let seed = LcgSeed::new(0x0000000000000000);
-        assert_eq!(NeedleDirection::from_seed(seed).value(), 0);
+        assert_eq!(calculate_needle_direction(seed), NeedleDirection::N);
 
-        // 上位3ビットが 0b111 → 7
+        // 上位3ビットが 0b111 → NW (7)
         let seed = LcgSeed::new(0xE000000000000000);
-        assert_eq!(NeedleDirection::from_seed(seed).value(), 7);
+        assert_eq!(calculate_needle_direction(seed), NeedleDirection::NW);
+
+        // 上位3ビットが 0b100 → S (4)
+        let seed = LcgSeed::new(0x8000000000000000);
+        assert_eq!(calculate_needle_direction(seed), NeedleDirection::S);
     }
 }
 ```
 
-### 4.5 generation/algorithm/encounter.rs
+### 4.6 generation/algorithm/encounter.rs
 
 参照: [mig_002/generation/algorithm/encounter.md](../mig_002/generation/algorithm/encounter.md)
 
@@ -604,17 +872,9 @@ pub fn fishing_encounter_slot(slot_value: u32) -> u8 {
     }
 }
 
-/// 橋の影: スロット決定 (4スロット)
-pub fn pokemon_shadow_encounter_slot(slot_value: u32) -> u8 {
-    match slot_value {
-        0..=49 => 0,
-        50..=79 => 1,
-        80..=94 => 2,
-        _ => 3,
-    }
-}
-
 /// エンカウント種別に応じたスロット決定
+///
+/// 揺れる草むら / 土煙 / 橋の影 は通常エンカウントと同じ12スロット分布を使用
 pub fn calculate_encounter_slot(
     encounter_type: EncounterType,
     rand_value: u32,
@@ -623,12 +883,12 @@ pub fn calculate_encounter_slot(
     let percent = rand_to_percent(version, rand_value);
 
     match encounter_type {
-        EncounterType::Normal | EncounterType::ShakingGrass | EncounterType::DustCloud => {
-            normal_encounter_slot(percent)
-        }
+        EncounterType::Normal
+        | EncounterType::ShakingGrass
+        | EncounterType::DustCloud
+        | EncounterType::PokemonShadow => normal_encounter_slot(percent),
         EncounterType::Surfing | EncounterType::SurfingBubble => surfing_encounter_slot(percent),
         EncounterType::Fishing | EncounterType::FishingBubble => fishing_encounter_slot(percent),
-        EncounterType::PokemonShadow => pokemon_shadow_encounter_slot(percent),
         _ => 0, // 固定エンカウント
     }
 }
@@ -751,173 +1011,198 @@ mod tests {
 }
 ```
 
-### 4.6 generation/algorithm/game_offset.rs
+### 4.7 generation/algorithm/game_offset.rs
 
 参照: [mig_002/generation/algorithm/game-offset.md](../mig_002/generation/algorithm/game-offset.md)
+
+関数ベースの実装。`LcgSeed` を受け取り、起動設定に応じたオフセットを計算する。
 
 ```rust
 //! Game Offset 計算アルゴリズム
 
 use crate::core::lcg::Lcg64;
-use crate::types::{GameStartConfig, RomVersion, SaveState, StartMode};
+use crate::types::{GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
 
 /// Probability Table 閾値
 const PT_THRESHOLD: u64 = 0x80000000;
 
-/// オフセット計算器
-struct OffsetCalculator {
-    lcg: Lcg64,
-    advances: u32,
+/// 固定回数の乱数を消費
+#[inline]
+fn consume_random(lcg: &mut Lcg64, count: u32) -> u32 {
+    for _ in 0..count {
+        lcg.next();
+    }
+    count
 }
 
-impl OffsetCalculator {
-    fn new(initial_seed: u64) -> Self {
-        Self {
-            lcg: Lcg64::new(initial_seed),
-            advances: 0,
+/// Probability Table 処理 (条件を満たすまで消費)
+#[inline]
+fn probability_table_process(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    loop {
+        let r = lcg.next();
+        advances += 1;
+        if (r as u64) < PT_THRESHOLD {
+            break;
         }
     }
+    advances
+}
 
-    fn consume_random(&mut self, count: u32) {
-        for _ in 0..count {
-            self.lcg.next();
-            self.advances += 1;
-        }
+/// Probability Table 処理を複数回実行
+#[inline]
+fn probability_table_multiple(lcg: &mut Lcg64, count: u32) -> u32 {
+    let mut total = 0;
+    for _ in 0..count {
+        total += probability_table_process(lcg);
     }
+    total
+}
 
-    fn probability_table_process(&mut self) {
-        loop {
-            let r = self.lcg.next();
-            self.advances += 1;
-            if (r as u64) < PT_THRESHOLD {
-                break;
-            }
-        }
-    }
+// ===== BW パターン =====
 
-    fn probability_table_multiple(&mut self, count: u32) {
-        for _ in 0..count {
-            self.probability_table_process();
-        }
-    }
+fn bw_new_game_with_save(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += probability_table_multiple(lcg, 2);
+    advances += consume_random(lcg, 3); // チラーミィ PID + ID
+    advances += consume_random(lcg, 2); // TID/SID
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 4);
+    advances
+}
 
-    // BW: 最初から (セーブあり)
-    fn bw_new_game_with_save(&mut self) {
-        self.probability_table_multiple(2);
-        self.consume_random(3); // チラーミィ PID + ID
-        self.consume_random(2); // TID/SID
-        self.consume_random(1);
-        self.probability_table_multiple(4);
-    }
+fn bw_new_game_no_save(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 4);
+    advances
+}
 
-    // BW: 最初から (セーブなし)
-    fn bw_new_game_no_save(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(4);
-    }
+fn bw_continue(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 5);
+    advances
+}
 
-    // BW: 続きから
-    fn bw_continue(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(5);
-    }
+// ===== BW2 パターン =====
 
-    // BW2: 最初から (思い出リンク + セーブあり)
-    fn bw2_new_game_with_memory_link(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(1);
-        self.consume_random(2);
-        self.probability_table_multiple(1);
-        self.consume_random(2);
-        self.consume_random(3); // チラチーノ PID + ID
-        self.consume_random(2); // TID/SID
-    }
+fn bw2_new_game_with_memory_link(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 2);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 2);
+    advances += consume_random(lcg, 3); // チラチーノ PID + ID
+    advances += consume_random(lcg, 2); // TID/SID
+    advances
+}
 
-    // BW2: 最初から (セーブあり、思い出リンクなし)
-    fn bw2_new_game_with_save(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(1);
-        self.consume_random(3);
-        self.probability_table_multiple(1);
-        self.consume_random(2);
-        self.consume_random(3); // チラチーノ PID + ID
-        self.consume_random(2); // TID/SID
-    }
+fn bw2_new_game_with_save(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 3);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 2);
+    advances += consume_random(lcg, 3); // チラチーノ PID + ID
+    advances += consume_random(lcg, 2); // TID/SID
+    advances
+}
 
-    // BW2: 最初から (セーブなし)
-    fn bw2_new_game_no_save(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(1);
-        self.consume_random(4);
-        self.probability_table_multiple(1);
-        self.consume_random(2);
-        self.consume_random(3); // チラチーノ PID + ID
-        self.consume_random(2); // TID/SID
-    }
+fn bw2_new_game_no_save(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 4);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 2);
+    advances += consume_random(lcg, 3); // チラチーノ PID + ID
+    advances += consume_random(lcg, 2); // TID/SID
+    advances
+}
 
-    // BW2: 続きから (思い出リンクあり)
-    fn bw2_continue_with_memory_link(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(1);
-        self.consume_random(2);
-        self.probability_table_multiple(4);
-        // Extra 処理 (簡略化)
-    }
+fn bw2_continue_with_memory_link(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 2);
+    advances += probability_table_multiple(lcg, 4);
+    advances
+}
 
-    // BW2: 続きから (思い出リンクなし)
-    fn bw2_continue_no_memory_link(&mut self) {
-        self.consume_random(1);
-        self.probability_table_multiple(1);
-        self.consume_random(3);
-        self.probability_table_multiple(4);
-        // Extra 処理 (簡略化)
-    }
+fn bw2_continue_no_memory_link(lcg: &mut Lcg64) -> u32 {
+    let mut advances = 0;
+    advances += consume_random(lcg, 1);
+    advances += probability_table_multiple(lcg, 1);
+    advances += consume_random(lcg, 3);
+    advances += probability_table_multiple(lcg, 4);
+    advances
 }
 
 /// Game Offset を計算
+///
+/// 初期シード、ゲームバージョン、起動設定から固定乱数消費数を算出する。
 pub fn calculate_game_offset(
-    initial_seed: u64,
+    seed: LcgSeed,
     version: RomVersion,
     config: &GameStartConfig,
 ) -> Result<u32, String> {
     config.validate(version)?;
 
-    let mut calc = OffsetCalculator::new(initial_seed);
+    let mut lcg = Lcg64::new(seed.value());
     let is_bw2 = matches!(version, RomVersion::Black2 | RomVersion::White2);
 
-    match (is_bw2, config.start_mode, config.save_state) {
+    let advances = match (is_bw2, config.start_mode, config.save_state) {
         // BW
-        (false, StartMode::NewGame, SaveState::WithSave) => calc.bw_new_game_with_save(),
-        (false, StartMode::NewGame, SaveState::NoSave) => calc.bw_new_game_no_save(),
-        (false, StartMode::Continue, _) => calc.bw_continue(),
+        (false, StartMode::NewGame, SaveState::WithSave) => bw_new_game_with_save(&mut lcg),
+        (false, StartMode::NewGame, SaveState::NoSave) => bw_new_game_no_save(&mut lcg),
+        (false, StartMode::Continue, _) => bw_continue(&mut lcg),
 
         // BW2
         (true, StartMode::NewGame, SaveState::WithMemoryLink) => {
-            calc.bw2_new_game_with_memory_link()
+            bw2_new_game_with_memory_link(&mut lcg)
         }
-        (true, StartMode::NewGame, SaveState::WithSave) => calc.bw2_new_game_with_save(),
-        (true, StartMode::NewGame, SaveState::NoSave) => calc.bw2_new_game_no_save(),
+        (true, StartMode::NewGame, SaveState::WithSave) => bw2_new_game_with_save(&mut lcg),
+        (true, StartMode::NewGame, SaveState::NoSave) => bw2_new_game_no_save(&mut lcg),
         (true, StartMode::Continue, SaveState::WithMemoryLink) => {
-            calc.bw2_continue_with_memory_link()
+            bw2_continue_with_memory_link(&mut lcg)
         }
-        (true, StartMode::Continue, SaveState::WithSave) => calc.bw2_continue_no_memory_link(),
+        (true, StartMode::Continue, SaveState::WithSave | SaveState::NoSave) => {
+            bw2_continue_no_memory_link(&mut lcg)
+        }
 
         _ => return Err("Invalid combination".into()),
-    }
+    };
 
-    Ok(calc.advances)
+    Ok(advances)
 }
 
-/// 初期 Seed に Game Offset を適用
+/// 初期 Seed に Game Offset を適用し、オフセット適用後の Seed を返す
 pub fn apply_game_offset(
-    initial_seed: u64,
+    seed: LcgSeed,
     version: RomVersion,
     config: &GameStartConfig,
-) -> Result<u64, String> {
-    let offset = calculate_game_offset(initial_seed, version, config)?;
-    let mut lcg = Lcg64::new(initial_seed);
+) -> Result<LcgSeed, String> {
+    let offset = calculate_game_offset(seed, version, config)?;
+    let mut lcg = Lcg64::new(seed.value());
     lcg.jump(offset as u64);
-    Ok(lcg.seed())
+    Ok(LcgSeed::new(lcg.seed()))
+}
+
+/// 初期 Seed に Game Offset を適用し、オフセット適用済みの Lcg64 を返す
+///
+/// 呼び出し側はそのまま乱数生成を続けられる。
+pub fn create_offset_lcg(
+    seed: LcgSeed,
+    version: RomVersion,
+    config: &GameStartConfig,
+) -> Result<Lcg64, String> {
+    let offset = calculate_game_offset(seed, version, config)?;
+    let mut lcg = Lcg64::new(seed.value());
+    lcg.jump(offset as u64);
+    Ok(lcg)
 }
 
 #[cfg(test)]
@@ -926,18 +1211,42 @@ mod tests {
 
     #[test]
     fn test_bw_continue() {
+        let seed = LcgSeed::new(0x12345678_00000000);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(0x12345678, RomVersion::Black, &config);
+        let offset = calculate_game_offset(seed, RomVersion::Black, &config);
         assert!(offset.is_ok());
         assert!(offset.unwrap() > 0);
+    }
+
+    #[test]
+    fn test_bw2_new_game_no_save() {
+        let seed = LcgSeed::new(0xABCDEF01_23456789);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save_state: SaveState::NoSave,
+        };
+        let offset = calculate_game_offset(seed, RomVersion::Black2, &config);
+        assert!(offset.is_ok());
+        assert!(offset.unwrap() > 0);
+    }
+
+    #[test]
+    fn test_invalid_combination() {
+        let seed = LcgSeed::new(0x12345678_00000000);
+        let config = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::NoSave,
+        };
+        let result = calculate_game_offset(seed, RomVersion::Black, &config);
+        assert!(result.is_err());
     }
 }
 ```
 
-### 4.7 generation/algorithm/mod.rs
+### 4.8 generation/algorithm/mod.rs
 
 ```rust
 //! 生成アルゴリズム
@@ -956,19 +1265,22 @@ pub use encounter::{
     EncounterResult, HeldItemSlot, ItemContent,
 };
 pub use game_offset::{apply_game_offset, calculate_game_offset};
-pub use iv::{apply_inheritance, extract_iv, generate_rng_ivs, generate_roamer_ivs, InheritanceSlot, Ivs};
+pub use iv::{
+    apply_inheritance, extract_iv, generate_rng_ivs, generate_rng_ivs_with_offset,
+    generate_roamer_ivs, InheritanceSlot, ParentRole,
+};
 pub use nature::{
     determine_egg_nature, determine_nature, nature_roll, perform_sync_check, supports_sync,
     sync_check, EverstonePlan,
 };
-pub use needle::NeedleDirection;
+pub use needle::calculate_needle_direction;
 pub use pid::{
     apply_shiny_lock, calculate_shiny_type, generate_egg_pid, generate_egg_pid_with_reroll,
-    generate_event_pid, generate_wild_pid, generate_wild_pid_with_reroll, ShinyType,
+    generate_event_pid, generate_wild_pid, generate_wild_pid_with_reroll,
 };
 ```
 
-### 4.8 generation/mod.rs
+### 4.9 generation/mod.rs
 
 ```rust
 //! ポケモン生成機能
@@ -978,16 +1290,22 @@ pub mod algorithm;
 pub use algorithm::*;
 ```
 
-### 4.9 lib.rs の更新
+### 4.10 lib.rs の更新
 
 ```rust
 // 既存のモジュール宣言に追加
 pub mod generation;
 
-// re-export
+// types から re-export (追加分)
+pub use types::{
+    EncounterType, GameStartConfig, GenderRatio, Ivs, LeadAbilityEffect,
+    SaveState, StartMode, IV_VALUE_UNKNOWN,
+};
+
+// generation から re-export
 pub use generation::algorithm::{
-    Ivs, ShinyType, NeedleDirection, HeldItemSlot, EncounterResult,
-    calculate_game_offset, apply_game_offset,
+    apply_game_offset, calculate_game_offset, calculate_needle_direction,
+    EncounterResult, EverstonePlan, HeldItemSlot, InheritanceSlot, ItemContent, ParentRole,
 };
 ```
 
@@ -1013,31 +1331,40 @@ wasm-pack build --target web
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/generation/mod.rs` 作成
-- [ ] `wasm-pkg/src/generation/algorithm/mod.rs` 作成
-- [ ] `wasm-pkg/src/generation/algorithm/iv.rs` 作成
-  - [ ] Ivs 構造体
-  - [ ] generate_rng_ivs, generate_roamer_ivs
-  - [ ] apply_inheritance
-- [ ] `wasm-pkg/src/generation/algorithm/pid.rs` 作成
-  - [ ] ShinyType enum
-  - [ ] calculate_shiny_type
-  - [ ] generate_wild_pid, generate_event_pid, generate_egg_pid
-  - [ ] リロール関数
-- [ ] `wasm-pkg/src/generation/algorithm/nature.rs` 作成
-  - [ ] nature_roll, sync_check
-  - [ ] perform_sync_check, determine_nature
-  - [ ] determine_egg_nature
-- [ ] `wasm-pkg/src/generation/algorithm/needle.rs` 作成
-  - [ ] NeedleDirection
-- [ ] `wasm-pkg/src/generation/algorithm/encounter.rs` 作成
-  - [ ] rand_to_percent
-  - [ ] スロット決定関数群
-  - [ ] determine_held_item_slot
-- [ ] `wasm-pkg/src/generation/algorithm/game_offset.rs` 作成
-  - [ ] OffsetCalculator
-  - [ ] calculate_game_offset
-  - [ ] apply_game_offset
-- [ ] `wasm-pkg/src/lib.rs` 更新
-- [ ] `cargo test` パス確認
-- [ ] `wasm-pack build --target web` 成功確認
+- [x] `wasm-pkg/src/types/mod.rs` 更新
+  - [x] Ivs 構造体追加
+  - [x] IV_VALUE_UNKNOWN 定数追加
+  - [x] EncounterType enum 追加
+  - [x] StartMode enum 追加
+  - [x] SaveState enum 追加
+  - [x] GameStartConfig 構造体追加
+  - [x] LeadAbilityEffect enum 追加
+  - [x] GenderRatio enum 追加
+  - [x] Nature::from_u8() メソッド追加
+- [x] `wasm-pkg/src/generation/mod.rs` 作成
+- [x] `wasm-pkg/src/generation/algorithm/mod.rs` 作成
+- [x] `wasm-pkg/src/generation/algorithm/iv.rs` 作成
+  - [x] extract_iv
+  - [x] generate_rng_ivs, generate_rng_ivs_with_offset, generate_roamer_ivs
+  - [x] ParentRole, InheritanceSlot, apply_inheritance
+- [x] `wasm-pkg/src/generation/algorithm/pid.rs` 作成
+  - [x] calculate_shiny_type (xor==0→Square, 1<=xor<8→Star)
+  - [x] generate_wild_pid, generate_event_pid, generate_egg_pid
+  - [x] リロール関数
+- [x] `wasm-pkg/src/generation/algorithm/nature.rs` 作成
+  - [x] nature_roll, sync_check
+  - [x] perform_sync_check, determine_nature
+  - [x] EverstonePlan, determine_egg_nature
+- [x] `wasm-pkg/src/generation/algorithm/needle.rs` 作成
+  - [x] calculate_needle_direction (既存 NeedleDirection を使用)
+- [x] `wasm-pkg/src/generation/algorithm/encounter.rs` 作成
+  - [x] rand_to_percent
+  - [x] スロット決定関数群
+  - [x] EncounterResult, ItemContent, HeldItemSlot
+  - [x] determine_held_item_slot
+- [x] `wasm-pkg/src/generation/algorithm/game_offset.rs` 作成
+  - [x] 関数ベースのオフセット計算
+  - [x] calculate_game_offset, apply_game_offset
+- [x] `wasm-pkg/src/lib.rs` 更新
+- [x] `cargo test` パス確認
+- [x] `wasm-pack build --target web` 成功確認
