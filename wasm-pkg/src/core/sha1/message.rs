@@ -8,6 +8,12 @@ use super::nazo::NazoValues;
 /// `GX_STAT` 固定値
 const GX_STAT: u32 = 0x0600_0000;
 
+/// 32bit 値のバイトスワップ (エンディアン変換)
+#[inline]
+const fn swap_bytes_32(value: u32) -> u32 {
+    value.swap_bytes()
+}
+
 /// 日時パラメータ
 #[derive(Clone, Copy, Debug)]
 pub struct DateTime {
@@ -51,22 +57,26 @@ pub fn build_date_code(year: u16, month: u8, day: u8) -> u32 {
 
 /// 時刻コードを生成
 ///
-/// フォーマット: 0xHHMMSSFF
-/// - HH: 時 (BCD、12時以降は +0x40 の PM フラグ)
+/// フォーマット: 0xPHMMSS00
+/// - P: PM フラグ (DS/DS Lite のみ、12時以降は bit30 = 1)
+/// - H: 時 (BCD)
 /// - MM: 分 (BCD)
 /// - SS: 秒 (BCD)
-/// - FF: frame 値
-pub fn build_time_code(hour: u8, minute: u8, second: u8, frame: u8) -> u32 {
-    let hour_bcd = if hour >= 12 {
-        to_bcd(hour) | 0x40 // PM フラグ
-    } else {
-        to_bcd(hour)
-    };
+/// - 00: 固定値 0x00 (frame は message[7] で使用)
+///
+/// # Arguments
+/// * `hour` - 時 (0-23)
+/// * `minute` - 分 (0-59)
+/// * `second` - 秒 (0-59)
+/// * `is_ds_or_lite` - DS または DS Lite の場合 true (PM フラグを適用)
+pub fn build_time_code(hour: u8, minute: u8, second: u8, is_ds_or_lite: bool) -> u32 {
+    let hour_bcd = to_bcd(hour);
+    let pm_flag: u32 = u32::from(is_ds_or_lite && hour >= 12);
 
-    (u32::from(hour_bcd) << 24)
+    (pm_flag << 30)
+        | (u32::from(hour_bcd) << 24)
         | (u32::from(to_bcd(minute)) << 16)
         | (u32::from(to_bcd(second)) << 8)
-        | u32::from(frame)
 }
 
 /// 曜日計算 (Zeller の公式)
@@ -106,14 +116,21 @@ pub const fn get_frame(hardware: Hardware) -> u8 {
 }
 
 /// MAC アドレスから message[6], message[7] を構築
+///
+/// - message[6]: MAC 下位 16bit (エンディアン変換なし)
+/// - message[7]: MAC 上位 32bit XOR `GX_STAT` XOR frame (エンディアン変換あり)
 fn build_mac_words(mac: [u8; 6], frame: u8) -> (u32, u32) {
-    // MAC 下位 4 バイト (リトルエンディアン)
-    let mac_lower = u32::from_le_bytes([mac[0], mac[1], mac[2], mac[3]]);
+    // message[6]: MAC 下位 16bit (mac[4], mac[5]) - エンディアン変換なし
+    let mac_lower = (u32::from(mac[4]) << 8) | u32::from(mac[5]);
 
-    // MAC 上位 2 バイト
-    let mac_upper = (u32::from(mac[5]) << 8) | u32::from(mac[4]);
+    // message[7]: MAC 上位 32bit (mac[0-3] as little-endian) XOR GX_STAT XOR frame
+    let mac_upper = u32::from(mac[0])
+        | (u32::from(mac[1]) << 8)
+        | (u32::from(mac[2]) << 16)
+        | (u32::from(mac[3]) << 24);
 
-    let word7 = mac_upper ^ GX_STAT ^ u32::from(frame);
+    // エンディアン変換を適用
+    let word7 = swap_bytes_32(mac_upper ^ GX_STAT ^ u32::from(frame));
 
     (mac_lower, word7)
 }
@@ -125,6 +142,8 @@ pub struct BaseMessageBuilder {
 
 impl BaseMessageBuilder {
     /// 新しいビルダーを作成
+    ///
+    /// エンディアン変換は内部で自動適用される。
     pub fn new(
         nazo: &NazoValues,
         mac: [u8; 6],
@@ -135,11 +154,13 @@ impl BaseMessageBuilder {
     ) -> Self {
         let mut buffer = [0u32; 16];
 
-        // Nazo 値
-        buffer[0..5].copy_from_slice(&nazo.values);
+        // Nazo 値 (エンディアン変換)
+        for (i, &nazo_val) in nazo.values.iter().enumerate() {
+            buffer[i] = swap_bytes_32(nazo_val);
+        }
 
-        // VCount | Timer0
-        buffer[5] = (u32::from(vcount) << 16) | u32::from(timer0);
+        // VCount | Timer0 (エンディアン変換)
+        buffer[5] = swap_bytes_32((u32::from(vcount) << 16) | u32::from(timer0));
 
         // MAC アドレス
         let (mac_lower, mac_word7) = build_mac_words(mac, frame);
@@ -154,8 +175,8 @@ impl BaseMessageBuilder {
         buffer[10] = 0;
         buffer[11] = 0;
 
-        // KeyCode
-        buffer[12] = key_code;
+        // KeyCode (エンディアン変換)
+        buffer[12] = swap_bytes_32(key_code);
 
         // SHA-1 パディング
         buffer[13] = 0x8000_0000;
@@ -194,17 +215,29 @@ mod tests {
     }
 
     #[test]
-    fn test_time_code_pm() {
-        // 15:30:45, frame=6
-        let code = build_time_code(15, 30, 45, 6);
-        assert_eq!(code, 0x5530_4506);
+    fn test_time_code_pm_ds() {
+        // 15:30:45, DS/DS Lite (PM flag enabled)
+        // PM flag at bit30 = 0x40000000
+        // hour_bcd = 0x15, min_bcd = 0x30, sec_bcd = 0x45
+        // Result: (1 << 30) | (0x15 << 24) | (0x30 << 16) | (0x45 << 8) = 0x5530_4500
+        let code = build_time_code(15, 30, 45, true);
+        assert_eq!(code, 0x5530_4500);
     }
 
     #[test]
-    fn test_time_code_am() {
-        // 09:15:30, frame=8
-        let code = build_time_code(9, 15, 30, 8);
-        assert_eq!(code, 0x0915_3008);
+    fn test_time_code_am_ds() {
+        // 09:15:30, DS/DS Lite (AM, no PM flag)
+        // Result: (0 << 30) | (0x09 << 24) | (0x15 << 16) | (0x30 << 8) = 0x0915_3000
+        let code = build_time_code(9, 15, 30, true);
+        assert_eq!(code, 0x0915_3000);
+    }
+
+    #[test]
+    fn test_time_code_pm_dsi() {
+        // 15:30:45, DSi (PM flag disabled, no PM flag even for afternoon)
+        // Result: (0 << 30) | (0x15 << 24) | (0x30 << 16) | (0x45 << 8) = 0x1530_4500
+        let code = build_time_code(15, 30, 45, false);
+        assert_eq!(code, 0x1530_4500);
     }
 
     #[test]

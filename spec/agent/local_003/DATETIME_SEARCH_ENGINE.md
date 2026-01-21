@@ -40,9 +40,10 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
+| `wasm-pkg/src/types/mod.rs` | 変更 | DsConfig, SearchSegment, VCountTimer0Range 追加 |
 | `wasm-pkg/src/lib.rs` | 変更 | datetime_search モジュール追加 |
 | `wasm-pkg/src/datetime_search/mod.rs` | 新規 | モジュール宣言 + エクスポート |
-| `wasm-pkg/src/datetime_search/types.rs` | 新規 | 検索用型定義 |
+| `wasm-pkg/src/datetime_search/types.rs` | 新規 | 検索固有の型定義 (TimeRangeParams, SearchRangeParams, HashEntry) |
 | `wasm-pkg/src/datetime_search/base.rs` | 新規 | HashValuesEnumerator, 共通基盤 |
 | `wasm-pkg/src/datetime_search/mtseed.rs` | 新規 | MT Seed 起動時刻検索 |
 
@@ -52,10 +53,12 @@
 
 ```
 wasm-pkg/src/
+├── types/
+│   └── mod.rs              # DsConfig, SearchSegment, VCountTimer0Range 追加
 ├── lib.rs                  # datetime_search モジュール追加
 └── datetime_search/
     ├── mod.rs              # モジュール宣言 + re-export
-    ├── types.rs            # 検索用型定義
+    ├── types.rs            # 検索固有の型定義 (TimeRangeParams 等)
     ├── base.rs             # 共通基盤
     └── mtseed.rs           # MT Seed 検索
 ```
@@ -63,16 +66,29 @@ wasm-pkg/src/
 ### 3.2 依存関係
 
 ```
-types/ + core/sha1/ + core/lcg/
+types/ (DsConfig, SearchSegment, VCountTimer0Range)
+  +
+core/sha1/ + core/lcg/
            ↓
-datetime_search/types.rs (DsConfig, TimeRangeParams 等)
+datetime_search/types.rs (TimeRangeParams, SearchRangeParams, HashEntry)
            ↓
 datetime_search/base.rs (HashValuesEnumerator)
            ↓
 datetime_search/mtseed.rs (MtseedDatetimeSearcher)
 ```
 
-### 3.3 検索フロー
+### 3.3 型の配置方針
+
+| 型 | 配置先 | 理由 |
+|----|--------|------|
+| DsConfig | types/mod.rs | generation, seed-search 等でも使用 |
+| SearchSegment | types/mod.rs | generation, seed-search 等でも使用 |
+| VCountTimer0Range | types/mod.rs | フロント側でも使用 |
+| TimeRangeParams | datetime_search/types.rs | 起動時刻検索固有 |
+| SearchRangeParams | datetime_search/types.rs | 起動時刻検索固有 |
+| HashEntry | datetime_search/types.rs | 内部実装用 (pub(crate)) |
+
+### 3.4 検索フロー
 
 ```
 1. MtseedDatetimeSearcher.new(params) でイテレータ初期化
@@ -85,20 +101,15 @@ datetime_search/mtseed.rs (MtseedDatetimeSearcher)
 
 ## 4. 実装仕様
 
-### 4.1 datetime_search/types.rs
+### 4.0 types/mod.rs への追加
 
-参照: [mig_002/datetime-search/base.md](../mig_002/datetime-search/base.md)
+参照: [mig_002/common/types.md](../mig_002/common/types.md), [mig_002/datetime-search/base.md](../mig_002/datetime-search/base.md)
 
 ```rust
-//! 起動時刻検索用型定義
-
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
-
-use crate::types::{Hardware, RomRegion, RomVersion};
+// ===== 共通型 (datetime_search, generation, seed_search 等で使用) =====
 
 /// DS 本体設定
-#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct DsConfig {
     pub mac: [u8; 6],
@@ -106,6 +117,42 @@ pub struct DsConfig {
     pub version: RomVersion,
     pub region: RomRegion,
 }
+
+/// 探索セグメント (Timer0 × VCount × KeyCode)
+///
+/// key_code フォーマット:
+/// - `key_mask XOR 0x2FFF` で計算
+/// - key_mask: 押下キーのビットマスク (bit0=A, bit1=B, ... bit11=Y)
+/// - キー入力なし時は 0x2FFF
+/// - 詳細は mig_002/core/sha1.md 2.5 参照
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct SearchSegment {
+    pub timer0: u16,
+    pub vcount: u8,
+    /// キー入力値: `key_mask XOR 0x2FFF` (入力なし = 0x2FFF)
+    pub key_code: u32,
+}
+
+/// VCount/Timer0 範囲
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct VCountTimer0Range {
+    pub vcount: u8,
+    pub timer0_min: u16,
+    pub timer0_max: u16,
+}
+```
+
+### 4.1 datetime_search/types.rs
+
+起動時刻検索固有の型定義。
+
+```rust
+//! 起動時刻検索用型定義
+
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
 
 /// 1日内の時刻範囲
 #[derive(Tsify, Serialize, Deserialize, Clone)]
@@ -148,27 +195,9 @@ pub struct SearchRangeParams {
     pub range_seconds: u32,
 }
 
-/// 探索セグメント (Timer0 × VCount × KeyCode)
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct SearchSegment {
-    pub timer0: u16,
-    pub vcount: u8,
-    pub key_code: u32,
-}
-
-/// VCount/Timer0 範囲
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct VCountTimer0Range {
-    pub vcount: u8,
-    pub timer0_min: u16,
-    pub timer0_max: u16,
-}
-
-/// ハッシュエントリ (日時 + ハッシュ結果)
+/// ハッシュエントリ (日時 + ハッシュ結果) - 内部実装用
 #[derive(Clone, Default)]
-pub struct HashEntry {
+pub(crate) struct HashEntry {
     pub year: u16,
     pub month: u8,
     pub day: u8,
@@ -191,9 +220,9 @@ use crate::core::sha1::{
     build_date_code, build_time_code, calculate_pokemon_sha1_simd, get_frame, get_nazo_values,
     BaseMessageBuilder,
 };
-use crate::types::Hardware;
+use crate::types::{DsConfig, Hardware, SearchSegment};
 
-use super::types::{DsConfig, HashEntry, SearchRangeParams, SearchSegment, TimeRangeParams};
+use super::types::{HashEntry, SearchRangeParams, TimeRangeParams};
 
 /// 86,400 秒分の time_code テーブル
 type RangedTimeCodeTable = Box<[Option<u32>; 86400]>;
@@ -657,7 +686,7 @@ pub use mtseed::{
     MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
     MtseedDatetimeSearcher,
 };
-pub use types::{DsConfig, SearchRangeParams, SearchSegment, TimeRangeParams, VCountTimer0Range};
+pub use types::{SearchRangeParams, TimeRangeParams};
 ```
 
 ### 4.5 lib.rs の更新
@@ -666,11 +695,13 @@ pub use types::{DsConfig, SearchRangeParams, SearchSegment, TimeRangeParams, VCo
 // 既存のモジュール宣言に追加
 pub mod datetime_search;
 
-// re-export
+// re-export (datetime_search 固有の型)
 pub use datetime_search::{
-    DsConfig, MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
-    MtseedDatetimeSearcher, SearchRangeParams, SearchSegment, TimeRangeParams,
+    MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
+    MtseedDatetimeSearcher, SearchRangeParams, TimeRangeParams,
 };
+
+// 注: DsConfig, SearchSegment, VCountTimer0Range は types/ で定義済み
 ```
 
 ## 5. テスト方針
@@ -700,11 +731,15 @@ wasm-pack build --target web
 
 ## 6. 実装チェックリスト
 
+- [ ] `wasm-pkg/src/types/mod.rs` 更新
+  - [ ] DsConfig
+  - [ ] SearchSegment
+  - [ ] VCountTimer0Range
 - [ ] `wasm-pkg/src/datetime_search/mod.rs` 作成
 - [ ] `wasm-pkg/src/datetime_search/types.rs` 作成
-  - [ ] DsConfig, TimeRangeParams, SearchRangeParams
-  - [ ] SearchSegment, VCountTimer0Range
-  - [ ] HashEntry
+  - [ ] TimeRangeParams
+  - [ ] SearchRangeParams
+  - [ ] HashEntry (pub(crate))
 - [ ] `wasm-pkg/src/datetime_search/base.rs` 作成
   - [ ] RangedTimeCodeTable 構築
   - [ ] DateTimeCodeEnumerator

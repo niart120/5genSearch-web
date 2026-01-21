@@ -205,7 +205,7 @@ mod tests {
         let h0_swapped = 0x1234_5678u32.swap_bytes(); // 0x7856_3412
         let h1_swapped = 0xABCD_EF01u32.swap_bytes(); // 0x01EF_CDAB
 
-        let expected = ((h1_swapped as u64) << 32) | (h0_swapped as u64);
+        let expected = (u64::from(h1_swapped) << 32) | u64::from(h0_swapped);
         assert_eq!(lcg.value(), expected);
     }
 

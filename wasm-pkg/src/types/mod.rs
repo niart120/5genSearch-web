@@ -211,3 +211,42 @@ impl NeedleDirection {
 
 /// 個体値セット \[HP, Atk, Def, `SpA`, `SpD`, Spe\]
 pub type IvSet = [u8; 6];
+
+// ===== 共通型 (datetime_search, generation, seed_search 等で使用) =====
+
+/// DS 本体設定
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct DsConfig {
+    pub mac: [u8; 6],
+    pub hardware: Hardware,
+    pub version: RomVersion,
+    pub region: RomRegion,
+}
+
+/// 探索セグメント (`Timer0` × `VCount` × `KeyCode`)
+///
+/// # `key_code` フォーマット
+///
+/// `key_code = key_mask XOR 0x2FFF`
+///
+/// - `key_mask`: 押下キーのビットマスク (押下時 = 1)
+/// - ビット割り当て: bit0=A, bit1=B, bit2=Select, bit3=Start, bit4=→, bit5=←, bit6=↑, bit7=↓, bit8=R, bit9=L, bit10=X, bit11=Y
+/// - キー入力なし時は `0x2FFF`
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct SearchSegment {
+    pub timer0: u16,
+    pub vcount: u8,
+    /// キー入力値: `key_mask XOR 0x2FFF` (入力なし = `0x2FFF`)
+    pub key_code: u32,
+}
+
+/// VCount/Timer0 範囲
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct VCountTimer0Range {
+    pub vcount: u8,
+    pub timer0_min: u16,
+    pub timer0_max: u16,
+}
