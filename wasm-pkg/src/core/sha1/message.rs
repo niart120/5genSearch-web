@@ -57,22 +57,26 @@ pub fn build_date_code(year: u16, month: u8, day: u8) -> u32 {
 
 /// 時刻コードを生成
 ///
-/// フォーマット: 0xHHMMSSFF
-/// - HH: 時 (BCD、12時以降は +0x40 の PM フラグ)
+/// フォーマット: 0xPHMMSS00
+/// - P: PM フラグ (DS/DS Lite のみ、12時以降は bit30 = 1)
+/// - H: 時 (BCD)
 /// - MM: 分 (BCD)
 /// - SS: 秒 (BCD)
-/// - FF: frame 値
-pub fn build_time_code(hour: u8, minute: u8, second: u8, frame: u8) -> u32 {
-    let hour_bcd = if hour >= 12 {
-        to_bcd(hour) | 0x40 // PM フラグ
-    } else {
-        to_bcd(hour)
-    };
+/// - 00: 固定値 0x00 (frame は message[7] で使用)
+///
+/// # Arguments
+/// * `hour` - 時 (0-23)
+/// * `minute` - 分 (0-59)
+/// * `second` - 秒 (0-59)
+/// * `is_ds_or_lite` - DS または DS Lite の場合 true (PM フラグを適用)
+pub fn build_time_code(hour: u8, minute: u8, second: u8, is_ds_or_lite: bool) -> u32 {
+    let hour_bcd = to_bcd(hour);
+    let pm_flag: u32 = u32::from(is_ds_or_lite && hour >= 12);
 
-    (u32::from(hour_bcd) << 24)
+    (pm_flag << 30)
+        | (u32::from(hour_bcd) << 24)
         | (u32::from(to_bcd(minute)) << 16)
         | (u32::from(to_bcd(second)) << 8)
-        | u32::from(frame)
 }
 
 /// 曜日計算 (Zeller の公式)
@@ -211,17 +215,29 @@ mod tests {
     }
 
     #[test]
-    fn test_time_code_pm() {
-        // 15:30:45, frame=6
-        let code = build_time_code(15, 30, 45, 6);
-        assert_eq!(code, 0x5530_4506);
+    fn test_time_code_pm_ds() {
+        // 15:30:45, DS/DS Lite (PM flag enabled)
+        // PM flag at bit30 = 0x40000000
+        // hour_bcd = 0x15, min_bcd = 0x30, sec_bcd = 0x45
+        // Result: (1 << 30) | (0x15 << 24) | (0x30 << 16) | (0x45 << 8) = 0x5530_4500
+        let code = build_time_code(15, 30, 45, true);
+        assert_eq!(code, 0x5530_4500);
     }
 
     #[test]
-    fn test_time_code_am() {
-        // 09:15:30, frame=8
-        let code = build_time_code(9, 15, 30, 8);
-        assert_eq!(code, 0x0915_3008);
+    fn test_time_code_am_ds() {
+        // 09:15:30, DS/DS Lite (AM, no PM flag)
+        // Result: (0 << 30) | (0x09 << 24) | (0x15 << 16) | (0x30 << 8) = 0x0915_3000
+        let code = build_time_code(9, 15, 30, true);
+        assert_eq!(code, 0x0915_3000);
+    }
+
+    #[test]
+    fn test_time_code_pm_dsi() {
+        // 15:30:45, DSi (PM flag disabled, no PM flag even for afternoon)
+        // Result: (0 << 30) | (0x15 << 24) | (0x30 << 16) | (0x45 << 8) = 0x1530_4500
+        let code = build_time_code(15, 30, 45, false);
+        assert_eq!(code, 0x1530_4500);
     }
 
     #[test]

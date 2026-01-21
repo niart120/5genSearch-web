@@ -56,155 +56,135 @@ pub fn calculate_pokemon_sha1(message: &[u32; 16]) -> HashValues {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::sha1::message::{
+        BaseMessageBuilder, build_date_code, build_time_code, get_frame,
+    };
+    use crate::core::sha1::nazo::get_nazo_values;
+    use crate::types::{Hardware, RomRegion, RomVersion};
 
-    /// 特定の入力に対する既知の期待値をテスト
+    /// 実計算値に基づくテストケース
+    ///
+    /// 検証条件:
+    /// - ROM: White2 (JPN)
+    /// - Hardware: DS
+    /// - MAC: `00:1B:2C:3D:4E:5F`
+    /// - Date/Time: 2006/03/11 18:53:27
+    /// - Timer0: `0x10F8`
+    /// - `VCount`: `0x82`
+    /// - `keyCode`: `0x2FFF` (入力なし)
+    ///
+    /// 期待値:
+    /// - SHA-1 Hash: `7ecdeb6e5c0cd020a31beaea01e4ade7b4f385eb`
+    /// - LCG Seed: `0x20D00C5C6EEBCD7E`
+    /// - MT Seed: `0xD2F057AD`
     #[test]
-    fn test_sha1_known_values() {
-        // Test vector 1: 元実装のテストで使用されているメッセージ
-        let message1: [u32; 16] = [
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-            0x1234_5678,
-            0x9ABC_DEF0,
-            0x0000_0000,
-            0x2312_2501,
-            0x5530_4506,
-            0x0000_0000,
-            0x0000_0000,
-            0x0000_0000,
-            0x8000_0000,
-            0x0000_0000,
-            0x0000_01A0,
-        ];
+    fn test_sha1_with_real_case() {
+        // パラメータ
+        let nazo = get_nazo_values(RomVersion::White2, RomRegion::Jpn);
+        let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
+        let hardware = Hardware::Ds;
+        let frame = get_frame(hardware);
+        let timer0: u16 = 0x10F8;
+        let vcount: u8 = 0x82;
+        let key_code: u32 = 0x2FFF;
 
-        let hash1 = calculate_pokemon_sha1(&message1);
+        // メッセージ構築
+        let mut builder = BaseMessageBuilder::new(&nazo, mac, vcount, timer0, key_code, frame);
 
-        assert_eq!(hash1.h0, 0x1C24_AB5C, "h0 mismatch");
-        assert_eq!(hash1.h1, 0xBC6A_93C0, "h1 mismatch");
-        assert_eq!(hash1.h2, 0x98F2_BD30, "h2 mismatch");
-        assert_eq!(hash1.h3, 0xF89A_6D3D, "h3 mismatch");
-        assert_eq!(hash1.h4, 0x7D86_10BC, "h4 mismatch");
+        // 日時コード: 2006/03/11 18:53:27
+        let date_code = build_date_code(2006, 3, 11);
+        // DS/DS Lite は is_ds_or_lite = true (PM フラグが bit30 に設定される)
+        let time_code = build_time_code(18, 53, 27, true);
+        builder.set_datetime(date_code, time_code);
 
-        // Test vector 2: 別のメッセージ
-        let message2: [u32; 16] = [
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-            0x0098_0054,
-            0x7856_3412,
-            0x0600_0000,
-            0x2301_0100,
-            0x0000_0006,
-            0x0000_0000,
-            0x0000_0000,
-            0x0000_0000,
-            0x8000_0000,
-            0x0000_0000,
-            0x0000_01A0,
-        ];
+        // デバッグ: メッセージを出力
+        let msg = builder.message();
+        println!("Message:");
+        for (i, &word) in msg.iter().enumerate() {
+            println!("  [{i:2}]: 0x{word:08X}");
+        }
 
-        let hash2 = calculate_pokemon_sha1(&message2);
+        // SHA-1 計算
+        let hash = calculate_pokemon_sha1(builder.message());
 
-        assert_eq!(hash2.h0, 0xC0EF_CC9A, "h0 mismatch (vec2)");
-        assert_eq!(hash2.h1, 0xAFF4_5113, "h1 mismatch (vec2)");
-        assert_eq!(hash2.h2, 0x2357_63BA, "h2 mismatch (vec2)");
-        assert_eq!(hash2.h3, 0xC309_9568, "h3 mismatch (vec2)");
-        assert_eq!(hash2.h4, 0x1C39_F86B, "h4 mismatch (vec2)");
-    }
+        println!(
+            "Hash: {:08X} {:08X} {:08X} {:08X} {:08X}",
+            hash.h0, hash.h1, hash.h2, hash.h3, hash.h4
+        );
 
-    /// `HashValues` から `LcgSeed` / `MtSeed` への変換テスト
-    #[test]
-    fn test_hash_to_seed_conversion() {
-        let message: [u32; 16] = [
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-            0x0098_0054,
-            0x7856_3412,
-            0x0600_0000,
-            0x2301_0100,
-            0x0000_0006,
-            0x0000_0000,
-            0x0000_0000,
-            0x0000_0000,
-            0x8000_0000,
-            0x0000_0000,
-            0x0000_01A0,
-        ];
-
-        let hash = calculate_pokemon_sha1(&message);
-
-        // LCG Seed と MT Seed の期待値
+        // LCG Seed
         let lcg_seed = hash.to_lcg_seed();
-        let mt_seed = hash.to_mt_seed();
+        println!("LCG Seed: 0x{:016X}", lcg_seed.value());
 
-        assert_eq!(lcg_seed.value(), 0x1351_F4AF_9ACC_EFC0, "LCG Seed mismatch");
-        assert_eq!(mt_seed.value(), 0xC46B_0A9F, "MT Seed mismatch");
+        // MT Seed
+        let mt_seed = hash.to_mt_seed();
+        println!("MT Seed: 0x{:08X}", mt_seed.value());
+
+        // SHA-1 ハッシュ検証: 7ecdeb6e5c0cd020a31beaea01e4ade7b4f385eb
+        assert_eq!(hash.h0, 0x7ECD_EB6E, "h0 mismatch");
+        assert_eq!(hash.h1, 0x5C0C_D020, "h1 mismatch");
+        assert_eq!(hash.h2, 0xA31B_EAEA, "h2 mismatch");
+        assert_eq!(hash.h3, 0x01E4_ADE7, "h3 mismatch");
+        assert_eq!(hash.h4, 0xB4F3_85EB, "h4 mismatch");
+
+        // LCG Seed 検証
+        assert_eq!(
+            lcg_seed.value(),
+            0x20D0_0C5C_6EEB_CD7E,
+            "LCG Seed mismatch: expected 0x20D00C5C6EEBCD7E, got 0x{:016X}",
+            lcg_seed.value()
+        );
+
+        // MT Seed 検証
+        assert_eq!(
+            mt_seed.value(),
+            0xD2F0_57AD,
+            "MT Seed mismatch: expected 0xD2F057AD, got 0x{:08X}",
+            mt_seed.value()
+        );
     }
 
+    /// SHA-1 計算の決定性テスト
     #[test]
     fn test_sha1_deterministic() {
-        let message: [u32; 16] = [
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-            0x1234_5678,
-            0x9ABC_DEF0,
-            0x0000_0000,
-            0x2312_2501,
-            0x5530_4506,
-            0x0000_0000,
-            0x0000_0000,
-            0x0000_0000,
-            0x8000_0000,
-            0x0000_0000,
-            0x0000_01A0,
-        ];
+        let nazo = get_nazo_values(RomVersion::White2, RomRegion::Jpn);
+        let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
+        let frame = get_frame(Hardware::Ds);
 
-        let hash1 = calculate_pokemon_sha1(&message);
-        let hash2 = calculate_pokemon_sha1(&message);
+        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, 0x2FFF, frame);
+        builder.set_datetime(
+            build_date_code(2006, 3, 11),
+            build_time_code(18, 53, 27, true),
+        );
 
-        assert_eq!(hash1, hash2);
+        let hash1 = calculate_pokemon_sha1(builder.message());
+        let hash2 = calculate_pokemon_sha1(builder.message());
+
+        assert_eq!(hash1, hash2, "SHA-1 should be deterministic");
     }
 
+    /// `HashValues` の整合性テスト
     #[test]
     fn test_hash_values_consistency() {
-        let message: [u32; 16] = [
-            0x0221_5F10,
-            0x0221_600C,
-            0x0221_600C,
-            0x0221_6058,
-            0x0221_6058,
-            0x0098_0054,
-            0x7856_3412,
-            0x0600_0000,
-            0x2301_0100,
-            0x0000_0006,
-            0x0000_0000,
-            0x0000_0000,
-            0x0000_0000,
-            0x8000_0000,
-            0x0000_0000,
-            0x0000_01A0,
-        ];
+        let nazo = get_nazo_values(RomVersion::White2, RomRegion::Jpn);
+        let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
+        let frame = get_frame(Hardware::Ds);
 
-        let hash = calculate_pokemon_sha1(&message);
+        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, 0x2FFF, frame);
+        builder.set_datetime(
+            build_date_code(2006, 3, 11),
+            build_time_code(18, 53, 27, true),
+        );
 
-        // LCG Seed と MT Seed が有効な値であること
-        let lcg_seed = hash.to_lcg_seed();
-        let mt_seed = hash.to_mt_seed();
+        let hash = calculate_pokemon_sha1(builder.message());
 
-        assert_ne!(lcg_seed.value(), 0);
-        // mt_seed は u32 なので常に有効
-        assert_ne!(mt_seed.value(), 0);
+        // to_mt_seed() は to_lcg_seed().derive_mt_seed() と同じ結果を返すこと
+        let mt_via_lcg = hash.to_lcg_seed().derive_mt_seed();
+        let mt_direct = hash.to_mt_seed();
+
+        assert_eq!(
+            mt_via_lcg, mt_direct,
+            "MT Seed derivation should be consistent"
+        );
     }
 }
