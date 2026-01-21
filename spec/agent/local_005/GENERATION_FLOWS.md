@@ -951,28 +951,28 @@ wasm-pack build --target web
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/generation/flows/mod.rs` 作成
-- [ ] `wasm-pkg/src/generation/flows/types.rs` 作成
-  - [ ] PokemonGenerationConfig
-  - [ ] EncounterSlotConfig
-  - [ ] EggGenerationConfig
-  - [ ] OffsetConfig
-  - [ ] RawPokemonData, GeneratedPokemonData
-  - [ ] RawEggData, GeneratedEggData
-- [ ] `wasm-pkg/src/generation/flows/pokemon_wild.rs` 作成
-  - [ ] generate_wild_pokemon
-  - [ ] determine_gender
-- [ ] `wasm-pkg/src/generation/flows/pokemon_static.rs` 作成
-  - [ ] generate_static_pokemon
-- [ ] `wasm-pkg/src/generation/flows/egg.rs` 作成
-  - [ ] generate_egg
-  - [ ] determine_inheritance
-  - [ ] determine_hidden_ability
-  - [ ] determine_egg_gender
-- [ ] `wasm-pkg/src/generation/flows/generator.rs` 作成
-  - [ ] WildPokemonGenerator (オフセット対応)
-  - [ ] StaticPokemonGenerator (オフセット対応)
-  - [ ] EggGenerator (オフセット対応)
-- [ ] `wasm-pkg/src/generation/mod.rs` 更新
-- [ ] `cargo test` パス確認
-- [ ] `wasm-pack build --target web` 成功確認
+- [x] `wasm-pkg/src/generation/flows/mod.rs` 作成
+- [x] `wasm-pkg/src/generation/flows/types.rs` 作成
+  - [x] PokemonGenerationConfig
+  - [x] EncounterSlotConfig
+  - [x] EggGenerationConfig
+  - [x] OffsetConfig
+  - [x] RawPokemonData, GeneratedPokemonData
+  - [x] RawEggData, GeneratedEggData
+- [x] `wasm-pkg/src/generation/flows/pokemon_wild.rs` 作成
+  - [x] generate_wild_pokemon
+  - [x] determine_gender
+- [x] `wasm-pkg/src/generation/flows/pokemon_static.rs` 作成
+  - [x] generate_static_pokemon
+- [x] `wasm-pkg/src/generation/flows/egg.rs` 作成
+  - [x] generate_egg
+  - [x] determine_inheritance
+  - [x] determine_hidden_ability
+  - [x] determine_egg_gender
+- [x] `wasm-pkg/src/generation/flows/generator.rs` 作成
+  - [x] WildPokemonGenerator (オフセット対応)
+  - [x] StaticPokemonGenerator (オフセット対応)
+  - [x] EggGenerator (オフセット対応)
+- [x] `wasm-pkg/src/generation/mod.rs` 更新
+- [x] `cargo test` パス確認
+- [x] `wasm-pack build --target web` 成功確認
