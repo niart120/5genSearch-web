@@ -62,31 +62,31 @@ LCG Seed
 **合計**: 4-5 (+ ひかるおまもり 0-2)
 
 ```rust
-fn generate_normal(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
-    let mut rng = Lcg::new(seed);
+fn generate_normal(seed: LcgSeed, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
+    let mut lcg = Lcg64::new(seed);
     
     // 1. シンクロ判定
-    let sync_success = perform_sync_check(&mut rng, EncounterType::Normal, &config.lead_ability);
+    let sync_success = perform_sync_check(&mut lcg, EncounterType::Normal, &config.lead_ability);
     
     // 2. スロット決定
-    let slot_rand = rng.next();
+    let slot_rand = lcg.next();
     let slot = normal_encounter_slot(slot_rand);
     
     // 3. レベル決定 (空消費)
-    let _level_rand = rng.next();
+    let _level_rand = lcg.next();
     
     // 4. PID 生成
     let pid = if config.shiny_charm {
-        generate_pid_with_reroll(&mut rng, config.tid, config.sid, 2, |rng| {
-            generate_wild_pid(rng.next(), config.tid, config.sid)
+        generate_pid_with_reroll(&mut lcg, config.tid, config.sid, 2, |lcg| {
+            generate_wild_pid(lcg.next(), config.tid, config.sid)
         })
     } else {
-        let r = rng.next();
+        let r = lcg.next();
         generate_wild_pid(r, config.tid, config.sid)
     };
     
     // 5. 性格決定
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
+    let (nature, sync_applied) = determine_nature(&mut lcg, sync_success, &config.lead_ability);
     
     build_resolved_pokemon_data(seed, pid, nature, sync_applied, slot, 0, config)
 }
@@ -120,17 +120,17 @@ fn generate_normal(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPokem
 **合計**: 4-5 (+ ひかるおまもり 0-2)
 
 ```rust
-fn generate_surfing(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
-    let mut rng = Lcg::new(seed);
+fn generate_surfing(seed: LcgSeed, config: &PokemonGenerationConfig) -> ResolvedPokemonData {
+    let mut lcg = Lcg64::new(seed);
     
-    let sync_success = perform_sync_check(&mut rng, EncounterType::Surfing, &config.lead_ability);
-    let slot = water_encounter_slot(rng.next());
-    let level_rand = rng.next();
+    let sync_success = perform_sync_check(&mut lcg, EncounterType::Surfing, &config.lead_ability);
+    let slot = water_encounter_slot(lcg.next());
+    let level_rand = lcg.next();
     
-    let pid = generate_pokemon_pid(&mut rng, config);
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
+    let pid = generate_pokemon_pid(&mut lcg, config);
+    let (nature, sync_applied) = determine_nature(&mut lcg, sync_success, &config.lead_ability);
     
-    let _item_rand = rng.next();  // 持ち物判定
+    let _item_rand = lcg.next();  // 持ち物判定
     
     build_resolved_pokemon_data(seed, pid, nature, sync_applied, slot, level_rand, config)
 }
@@ -226,10 +226,10 @@ fn generate_surfing(seed: u64, config: &PokemonGenerationConfig) -> ResolvedPoke
 
 ```rust
 pub fn generate_wild_pokemon(
-    seed: u64,
+    seed: LcgSeed,
     config: &PokemonGenerationConfig,
 ) -> ResolvedPokemonData {
-    let mut rng = Lcg::new(seed);
+    let mut lcg = Lcg64::new(seed);
     let enc_type = config.encounter_type;
     let is_compound_eyes = config.lead_ability == LeadAbility::CompoundEyes;
     
@@ -237,34 +237,34 @@ pub fn generate_wild_pokemon(
     let sync_success = if is_compound_eyes {
         false
     } else {
-        perform_sync_check(&mut rng, enc_type, &config.lead_ability)
+        perform_sync_check(&mut lcg, enc_type, &config.lead_ability)
     };
     
     // 2. 釣り成功判定 (Fishing のみ、FishingBubble は不要)
     if enc_type == EncounterType::Fishing {
-        let fishing_result = rng.next();
+        let fishing_result = lcg.next();
         if !fishing_success(fishing_result) {
             return FishingFailed;  // 釣り失敗
         }
     }
     
     // 3. スロット決定
-    let slot_rand = rng.next();
+    let slot_rand = lcg.next();
     let slot = calculate_encounter_slot(enc_type, slot_rand, config.version);
     let slot_config = &config.encounter_resolution.slots[slot as usize];
     
     // 4. レベル決定 (Normal/ShakingGrass は空消費)
-    let level_rand = rng.next();
+    let level_rand = lcg.next();
     
     // 5. PID 生成 (pid-shiny.md の generate_pokemon_pid_wild を使用)
-    let pid = generate_pokemon_pid_wild(&mut rng, config.tid, config.sid, config.shiny_charm);
+    let pid = generate_pokemon_pid_wild(&mut lcg, config.tid, config.sid, config.shiny_charm);
     
     // 6. 性格決定
-    let (nature, sync_applied) = determine_nature(&mut rng, sync_success, &config.lead_ability);
+    let (nature, sync_applied) = determine_nature(&mut lcg, sync_success, &config.lead_ability);
     
     // 7. 持ち物判定 (エンカウント種別対応 かつ スロットが持ち物を持つ場合のみ)
     let held_item_slot = if consumes_held_item_rand(enc_type, slot_config) {
-        let item_rand = rng.next();
+        let item_rand = lcg.next();
         determine_held_item_slot(
             config.version,
             item_rand,
@@ -277,7 +277,7 @@ pub fn generate_wild_pokemon(
     
     // 8. BW のみ: 最後の謎の消費 (ダブル以外)
     if config.version.is_bw() && !is_double_encounter(enc_type) {
-        rng.next();
+        lcg.next();
     }
     
     // === Resolve (乱数消費なし) ===

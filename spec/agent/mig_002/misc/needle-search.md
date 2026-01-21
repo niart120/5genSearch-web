@@ -156,13 +156,14 @@ pub struct NeedleSearchResults {
 ### 4.2 針方向計算
 
 ```rust
-fn calculate_needle_sequence(seed: u64, count: usize) -> Vec<u8> {
+fn calculate_needle_sequence(seed: LcgSeed, count: usize) -> Vec<u8> {
     let mut result = Vec::with_capacity(count);
-    let mut current = seed;
+    let mut lcg = Lcg64::new(seed);
     
     for _ in 0..count {
-        result.push(NeedleDirection::from_seed(current) as u8);
-        current = lcg_next(current);
+        let rand = lcg.next();
+        let dir = ((rand as u64).wrapping_mul(8)) >> 32;
+        result.push((dir & 7) as u8);
     }
     
     result
@@ -172,15 +173,16 @@ fn calculate_needle_sequence(seed: u64, count: usize) -> Vec<u8> {
 ### 4.3 パターンマッチング
 
 ```rust
-fn matches_pattern(seed: u64, pattern: &[u8]) -> bool {
-    let mut current = seed;
+fn matches_pattern(seed: LcgSeed, pattern: &[u8]) -> bool {
+    let mut lcg = Lcg64::new(seed);
     
     for &expected in pattern {
-        let actual = NeedleDirection::from_seed(current) as u8;
+        let rand = lcg.next();
+        let dir = ((rand as u64).wrapping_mul(8)) >> 32;
+        let actual = (dir & 7) as u8;
         if actual != expected {
             return false;
         }
-        current = lcg_next(current);
     }
     
     true

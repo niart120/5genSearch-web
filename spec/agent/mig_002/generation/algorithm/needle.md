@@ -29,13 +29,11 @@ use crate::core::lcg::{Lcg64, LCG_MULTIPLIER, LCG_INCREMENT};
 /// 針の方向の配列
 pub fn calc_needle_sequence(seed: LcgSeed, count: usize) -> Vec<NeedleDirection> {
     let mut result = Vec::with_capacity(count);
-    let mut current = seed.value();
+    let mut lcg = Lcg64::new(seed);
     
     for _ in 0..count {
-        current = current
-            .wrapping_mul(LCG_MULTIPLIER)
-            .wrapping_add(LCG_INCREMENT);
-        let dir = ((current >> 32).wrapping_mul(8)) >> 32;
+        let rand = lcg.next();
+        let dir = ((rand as u64).wrapping_mul(8)) >> 32;
         result.push(NeedleDirection::from_value((dir & 7) as u8));
     }
     
@@ -77,14 +75,12 @@ pub fn find_needle_pattern(
         return Some((start_seed, 0));
     }
 
-    let mut current = start_seed.value();
+    let mut lcg = Lcg64::new(start_seed);
     let mut ring_buffer: Vec<NeedleDirection> = Vec::with_capacity(pattern_len);
 
     for advance in 0..max_advance {
-        current = current
-            .wrapping_mul(LCG_MULTIPLIER)
-            .wrapping_add(LCG_INCREMENT);
-        let dir = ((current >> 32).wrapping_mul(8)) >> 32;
+        let rand = lcg.next();
+        let dir = ((rand as u64).wrapping_mul(8)) >> 32;
         let needle = NeedleDirection::from_value((dir & 7) as u8);
 
         if ring_buffer.len() < pattern_len {
@@ -97,9 +93,9 @@ pub fn find_needle_pattern(
         if ring_buffer.len() == pattern_len && ring_buffer == pattern {
             // パターン開始位置の seed を計算
             let pattern_start_advance = advance.saturating_sub((pattern_len - 1) as u32);
-            let pattern_start_seed = advance_seed_backward(
-                LcgSeed::new(current),
-                (pattern_len - 1) as u32
+            let pattern_start_seed = Lcg64::compute_advance(
+                start_seed,
+                (pattern_start_advance + 1) as u64
             );
             return Some((pattern_start_seed, pattern_start_advance));
         }

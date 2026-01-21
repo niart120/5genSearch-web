@@ -196,38 +196,38 @@ fn generate_egg_pid_with_reroll(
 
 ```rust
 pub fn generate_egg(
-    lcg_seed: u64,
+    lcg_seed: LcgSeed,
     config: &EggGenerationConfig,
     parents: &ParentsIvs,
 ) -> RawEggData {
     // MT Seed 導出と乱数 IV
-    let mt_seed = derive_mt_seed(lcg_seed);
+    let mt_seed = lcg_seed.derive_mt_seed();
     let rng_ivs = generate_rng_ivs(mt_seed);
     
     // LCG 状態を進める (MT Seed 導出で1消費済み)
-    let mut rng = Lcg::new(lcg_seed);
-    rng.advance(1);  // MT Seed 導出分
+    let mut lcg = Lcg64::new(lcg_seed);
+    lcg.advance(1);  // MT Seed 導出分
     
     // 1. 性格決定
-    let nature = determine_egg_nature(&mut rng, config.everstone);
+    let nature = determine_egg_nature(&mut lcg, config.everstone);
     
     // 2. 遺伝スロット決定
-    let inheritance = determine_inheritance(&mut rng);
+    let inheritance = determine_inheritance(&mut lcg);
     
     // 3. 夢特性判定
     let has_hidden = determine_hidden_ability(
-        &mut rng,
+        &mut lcg,
         config.female_has_hidden,
         config.uses_ditto,
         true,
     );
     
     // 4. 性別判定
-    let gender = determine_egg_gender(&mut rng, config.gender_ratio, config.nidoran_flag);
+    let gender = determine_egg_gender(&mut lcg, config.gender_ratio, config.nidoran_flag);
     
     // 5. PID 生成
     let (pid, shiny) = generate_egg_pid_with_reroll(
-        &mut rng,
+        &mut lcg,
         config.tid,
         config.sid,
         config.pid_reroll_count,

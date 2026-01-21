@@ -67,10 +67,8 @@ worker-interface.md (本ドキュメント)
 > **MT Seed は BaseSeed (オフセット適用前) から導出される**:
 >
 > ```rust
-> fn derive_mt_seed(base_seed: u64) -> u32 {
->     let mut rng = PersonalityRNG::new(base_seed);
->     rng.next()  // BaseSeed から 1 消費した値
-> }
+> // LcgSeed::derive_mt_seed() を使用 (types.md 参照)
+> let mt_seed = base_seed.derive_mt_seed();
 > ```
 >
 > IV 解決時は `base_seed` から MT Seed を計算し、バージョン・エンカウント種別に応じた消費数を適用:
@@ -91,9 +89,9 @@ worker-interface.md (本ドキュメント)
 #[wasm_bindgen]
 pub struct PokemonGenerator {
     /// 起点 BaseSeed (MT Seed 導出用に保持)
-    base_seed: u64,
+    base_seed: LcgSeed,
     /// 現在の LCG 状態
-    lcg: Lcg,
+    lcg: Lcg64,
     /// 生成設定
     config: PokemonGenerationConfig,
     /// 現在の消費数
@@ -116,14 +114,14 @@ impl PokemonGenerator {
     /// * `max_advances` - 生成する最大消費数
     #[wasm_bindgen(constructor)]
     pub fn new(
-        base_seed: u64,
+        base_seed: LcgSeed,
         config: PokemonGenerationConfig,
         game_offset: u64,
         user_offset: u64,
         max_advances: u64,
     ) -> PokemonGenerator {
         // LCG はオフセット分進める
-        let mut lcg = Lcg::new(base_seed);
+        let mut lcg = Lcg64::new(base_seed);
         lcg.advance(game_offset + user_offset);
         
         PokemonGenerator {
@@ -243,10 +241,8 @@ pub struct PokemonBatch {
 > **MT Seed は BaseSeed (オフセット適用前) から導出される**:
 >
 > ```rust
-> fn derive_mt_seed(base_seed: u64) -> u32 {
->     let mut rng = PersonalityRNG::new(base_seed);
->     rng.next()  // BaseSeed から 1 消費した値
-> }
+> // LcgSeed::derive_mt_seed() を使用 (types.md 参照)
+> let mt_seed = base_seed.derive_mt_seed();
 > ```
 >
 > つまり、いくら LCG を進めても MT Seed は変わらない。
@@ -261,7 +257,7 @@ pub struct PokemonBatch {
 #[wasm_bindgen]
 pub struct EggGenerator {
     /// 現在の LCG 状態
-    lcg: Lcg,
+    lcg: Lcg64,
     /// 生成設定
     config: EggGenerationConfig,
     /// IV ソース (BaseSeed から導出、固定)
@@ -278,7 +274,7 @@ pub struct EggGenerator {
 impl EggGenerator {
     #[wasm_bindgen(constructor)]
     pub fn new(
-        base_seed: u64,
+        base_seed: LcgSeed,
         config: EggGenerationConfig,
         parents: ParentsIVs,
         game_offset: u64,
@@ -289,7 +285,7 @@ impl EggGenerator {
         let iv_sources = build_iv_sources(base_seed, parents);
         
         // LCG は game_offset + user_offset 進めてから列挙開始
-        let mut lcg = Lcg::new(base_seed);
+        let mut lcg = Lcg64::new(base_seed);
         lcg.advance(game_offset + user_offset);
         
         EggGenerator {
