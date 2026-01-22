@@ -111,6 +111,7 @@ pub fn generate_static_pokemon(
 
 #[cfg(test)]
 mod tests {
+    use super::super::types::EncounterMethod;
     use super::*;
     use crate::types::RomVersion;
 
@@ -128,6 +129,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         }
     }
 

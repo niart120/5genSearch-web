@@ -2,6 +2,108 @@
 
 use crate::types::{EncounterType, LeadAbilityEffect, RomVersion};
 
+use super::super::flows::types::{
+    MovingEncounterInfo, MovingEncounterLikelihood, SpecialEncounterDirection, SpecialEncounterInfo,
+};
+
+// ===== 移動エンカウント判定 =====
+
+/// BW エンカウント判定閾値
+const BW_ENCOUNTER_THRESHOLD: u32 = 9;
+/// BW2 最低エンカウント率 (初期歩数後)
+const BW2_ENCOUNTER_MIN_RATE: u32 = 5;
+/// BW2 最高エンカウント率 (十分な歩数後)
+const BW2_ENCOUNTER_MAX_RATE: u32 = 14;
+
+/// 移動エンカウント判定
+pub fn check_moving_encounter(version: RomVersion, rand_value: u32) -> MovingEncounterLikelihood {
+    let percent = rand_to_percent(version, rand_value);
+
+    match version {
+        RomVersion::Black | RomVersion::White => {
+            if percent < BW_ENCOUNTER_THRESHOLD {
+                MovingEncounterLikelihood::Guaranteed
+            } else {
+                MovingEncounterLikelihood::NoEncounter
+            }
+        }
+        RomVersion::Black2 | RomVersion::White2 => {
+            if percent < BW2_ENCOUNTER_MIN_RATE {
+                MovingEncounterLikelihood::Guaranteed
+            } else if percent < BW2_ENCOUNTER_MAX_RATE {
+                MovingEncounterLikelihood::Possible
+            } else {
+                MovingEncounterLikelihood::NoEncounter
+            }
+        }
+    }
+}
+
+/// 移動エンカウント情報を生成
+pub fn generate_moving_encounter_info(version: RomVersion, rand_value: u32) -> MovingEncounterInfo {
+    MovingEncounterInfo {
+        likelihood: check_moving_encounter(version, rand_value),
+        rand_value,
+    }
+}
+
+// ===== 特殊エンカウント判定 =====
+
+/// 特殊エンカウント発生判定 (10%)
+#[inline]
+pub fn special_encounter_trigger(rand_value: u32) -> bool {
+    ((u64::from(rand_value) * 10) >> 32) == 0
+}
+
+/// 特殊エンカウント発生方向決定
+#[inline]
+#[allow(clippy::cast_possible_truncation)]
+pub fn special_encounter_direction(rand_value: u32) -> SpecialEncounterDirection {
+    // 0..4 の範囲なので u8 への truncation は安全
+    let v = ((u64::from(rand_value) * 4) >> 32) as u8;
+    match v {
+        0 => SpecialEncounterDirection::Right,
+        1 => SpecialEncounterDirection::Up,
+        2 => SpecialEncounterDirection::Left,
+        _ => SpecialEncounterDirection::Down,
+    }
+}
+
+/// 特殊エンカウント情報を生成
+pub fn generate_special_encounter_info(
+    trigger_rand: u32,
+    direction_rand: u32,
+) -> SpecialEncounterInfo {
+    SpecialEncounterInfo {
+        triggered: special_encounter_trigger(trigger_rand),
+        direction: special_encounter_direction(direction_rand),
+        trigger_rand,
+        direction_rand,
+    }
+}
+
+/// 特殊エンカウント情報が付加されるエンカウント種別か
+pub fn is_special_encounter_type(encounter_type: EncounterType) -> bool {
+    matches!(
+        encounter_type,
+        EncounterType::ShakingGrass
+            | EncounterType::DustCloud
+            | EncounterType::SurfingBubble
+            | EncounterType::FishingBubble
+            | EncounterType::PokemonShadow
+    )
+}
+
+/// 移動エンカウント判定が適用されるエンカウント種別か
+pub fn is_moving_encounter_type(encounter_type: EncounterType) -> bool {
+    matches!(
+        encounter_type,
+        EncounterType::Normal | EncounterType::Surfing
+    )
+}
+
+// ===== 百分率換算 =====
+
 /// 百分率換算値を計算 (0-99)
 #[inline]
 pub fn rand_to_percent(version: RomVersion, rand_value: u32) -> u32 {

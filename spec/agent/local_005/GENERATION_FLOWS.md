@@ -18,6 +18,9 @@
 | TotalOffset | GameOffset + UserOffset |
 | MtOffset | MT19937 初期化後、IV 生成を開始する位置 (通常 7) |
 | PokemonGenerator | 個体生成を管理する構造体 |
+| EncounterMethod | エンカウント方法 (`SweetScent` / `Moving`) |
+| MovingEncounterInfo | 移動エンカウント時の判定情報 |
+| SpecialEncounterInfo | 特殊エンカウント (揺れる草むら等) の発生情報 |
 
 ### 1.3 背景・問題
 
@@ -104,6 +107,224 @@ BaseSeed (SHA-1 → LcgSeed)
 | UserOffset | ユーザ指定の追加オフセット | ユーザ入力 |
 | TotalOffset | 実際の LCG 開始位置 | GameOffset + UserOffset |
 
+### 3.4 エンカウント付加情報
+
+個体生成の前段階で発生するエンカウント判定情報を `GeneratedPokemonData` に付加する。
+
+#### 3.4.1 エンカウント種別による分類
+
+| 分類 | エンカウント種別 | 付加情報 |
+|------|-----------------|---------|
+| 通常移動エンカウント | `Normal`, `Surfing` | 移動エンカウント情報 |
+| 特殊エンカウント | `ShakingGrass`, `DustCloud`, `SurfingBubble`, `FishingBubble`, `PokemonShadow` | 特殊エンカウント情報 |
+| 確定エンカウント | `Fishing`, `StaticSymbol`, `StaticStarter`, `StaticFossil`, `StaticEvent`, `Roamer`, `Egg` | なし |
+
+**排反性**: 通常移動エンカウント情報と特殊エンカウント情報は排反。同時に付加されることはない。
+
+#### 3.4.2 移動エンカウント情報 (`MovingEncounterInfo`)
+
+草むら・洞窟・水上を**移動中**にエンカウントする場合の判定情報。
+
+**適用条件**:
+- エンカウント種別が `Normal` または `Surfing`
+- エンカウント方法が `Moving` (あまいかおり使用時は `SweetScent` で判定スキップ)
+
+**乱数消費**: 2 (空消費 1 + エンカウント判定 1)
+
+**重要**: Moving 時は個体生成処理の前段で 2 消費が発生し、その直後からシンクロ判定が始まる。
+
+```rust
+/// エンカウント方法
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum EncounterMethod {
+    /// あまいかおり使用 (確定エンカウント、判定スキップ)
+    #[default]
+    SweetScent,
+    /// 移動中 (エンカウント判定あり)
+    Moving,
+}
+
+/// 移動エンカウント判定結果
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum MovingEncounterLikelihood {
+    /// 歩数にかかわらず確定エンカウント (最低閾値通過)
+    #[default]
+    Guaranteed,
+    /// 歩数次第でエンカウント (BW2 のみ、最高閾値のみ通過)
+    Possible,
+    /// エンカウント無し (最高閾値も不通過)
+    NoEncounter,
+}
+
+/// 移動エンカウント情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct MovingEncounterInfo {
+    /// 判定結果
+    pub likelihood: MovingEncounterLikelihood,
+    /// 判定に使用した乱数値
+    pub rand_value: u32,
+}
+```
+
+**判定ロジック** (mig_002/generation/algorithm/encounter.md §8 準拠):
+
+| バージョン | 閾値 | 結果 |
+|-----------|------|------|
+| BW | 百分率 < 9 | `Guaranteed`, それ以外 `NoEncounter` |
+| BW2 | 百分率 < 5 | `Guaranteed` |
+| BW2 | 5 ≤ 百分率 < 14 | `Possible` |
+| BW2 | 百分率 ≥ 14 | `NoEncounter` |
+
+#### 3.4.3 特殊エンカウント情報 (`SpecialEncounterInfo`)
+
+揺れる草むら・砂煙・水泡等の**特殊エンカウント**が発生するかの情報。
+
+**適用条件**:
+- エンカウント種別が `ShakingGrass`, `DustCloud`, `SurfingBubble`, `FishingBubble`, `PokemonShadow`
+- 常に付加
+
+**建付け**: `needle_direction` と同様
+- 個体生成の消費カウントには含まない
+- advance 前の LCG 状態から参考情報として算出
+- 特殊エンカウントの発生判定は個体生成とは別のタイミング (歩行時) で行われるため、「この Seed ならどの方向に発生するか」を事前情報として提供
+
+```rust
+/// 特殊エンカウント発生方向
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum SpecialEncounterDirection {
+    Right,
+    Up,
+    Left,
+    Down,
+}
+
+/// 特殊エンカウント情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct SpecialEncounterInfo {
+    /// 発生するか (10% 判定結果)
+    pub triggered: bool,
+    /// 発生方向 (triggered = true の場合のみ有効)
+    pub direction: SpecialEncounterDirection,
+    /// 発生判定に使用した乱数値
+    pub trigger_rand: u32,
+    /// 方向決定に使用した乱数値
+    pub direction_rand: u32,
+}
+```
+
+**判定ロジック** (mig_002/generation/algorithm/encounter.md §6 準拠):
+
+```rust
+/// 特殊エンカウント発生判定 (10%)
+pub fn special_encounter_trigger(rand_value: u32) -> bool {
+    ((rand_value as u64 * 10) >> 32) == 0
+}
+
+/// 発生方向決定
+pub fn special_encounter_direction(rand_value: u32) -> SpecialEncounterDirection {
+    let v = ((rand_value as u64 * 4) >> 32) as u8;
+    match v {
+        0 => SpecialEncounterDirection::Right,
+        1 => SpecialEncounterDirection::Up,
+        2 => SpecialEncounterDirection::Left,
+        _ => SpecialEncounterDirection::Down,
+    }
+}
+```
+
+#### 3.4.4 GeneratedPokemonData への統合
+
+```rust
+/// 完全な個体データ
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct GeneratedPokemonData {
+    // 列挙コンテキスト
+    pub advance: u32,
+    pub needle_direction: NeedleDirection,
+    // Seed 情報
+    pub lcg_seed: u64,
+    // 基本情報・個体情報 (既存フィールド省略)
+    // ...
+
+    // === エンカウント付加情報 (排反) ===
+    /// 移動エンカウント情報 (Normal/Surfing + Moving 時のみ Some)
+    pub moving_encounter: Option<MovingEncounterInfo>,
+    /// 特殊エンカウント情報 (ShakingGrass/DustCloud/SurfingBubble/FishingBubble/PokemonShadow 時のみ Some)
+    pub special_encounter: Option<SpecialEncounterInfo>,
+}
+```
+
+#### 3.4.5 Generator 設定への追加
+
+```rust
+/// 生成設定 (野生・固定共通)
+#[derive(Clone)]
+pub struct PokemonGenerationConfig {
+    // 既存フィールド
+    pub version: RomVersion,
+    pub encounter_type: EncounterType,
+    pub tid: u16,
+    pub sid: u16,
+    pub lead_ability: LeadAbilityEffect,
+    pub shiny_charm: bool,
+    pub shiny_locked: bool,
+    pub has_held_item: bool,
+    // 追加
+    /// エンカウント方法 (Normal/Surfing 時のみ使用)
+    pub encounter_method: EncounterMethod,
+}
+```
+
+#### 3.4.6 乱数消費順序
+
+**Normal/Surfing + Moving (移動エンカウント) の場合**:
+
+```
+LCG Seed (TotalOffset + advance 適用後)
+    │
+    ├─ needle_direction 算出 (消費カウント外)
+    │
+    ├─ 空消費 (消費 1)
+    │
+    ├─ エンカウント判定 (消費 1)
+    │       └─ MovingEncounterInfo を決定
+    │
+    └─ 個体生成処理開始 (シンクロ判定～)
+```
+
+**Normal/Surfing + SweetScent (あまいかおり) の場合**:
+
+```
+LCG Seed (TotalOffset + advance 適用後)
+    │
+    ├─ needle_direction 算出 (消費カウント外)
+    │
+    └─ 個体生成処理開始 (シンクロ判定～) ※前段消費なし
+```
+
+**特殊エンカウント種別 (ShakingGrass 等) の場合**:
+
+```
+LCG Seed (TotalOffset + advance 適用後)
+    │
+    ├─ needle_direction 算出 (消費カウント外)
+    │
+    ├─ SpecialEncounterInfo 算出 (消費カウント外)
+    │       ├─ 発生判定 (参考情報)
+    │       └─ 方向決定 (参考情報)
+    │
+    └─ 個体生成処理開始 (シンクロ判定～)
+```
+
+**補足**: 
+- `SpecialEncounterInfo` は `needle_direction` と同様、消費カウント外で算出される参考情報
+- `MovingEncounterInfo` は消費に影響するため、前段で 2 消費が発生する
+
 ## 4. 実装仕様
 
 ### 4.1 generation/flows/types.rs
@@ -133,6 +354,8 @@ pub struct PokemonGenerationConfig {
     pub shiny_charm: bool,
     pub shiny_locked: bool,
     pub has_held_item: bool,
+    /// エンカウント方法 (Normal/Surfing 時のみ使用)
+    pub encounter_method: EncounterMethod,
 }
 
 /// エンカウントスロット設定
@@ -227,6 +450,19 @@ pub struct GeneratedPokemonData {
     pub level: u8,
     // 個体情報
     pub nature: Nature,
+    pub sync_applied: bool,
+    pub ability_slot: u8,
+    pub gender: Gender,
+    pub shiny_type: ShinyType,
+    pub held_item_slot: HeldItemSlot,
+    // IV (既存 Ivs 型を使用)
+    pub ivs: Ivs,
+    // === エンカウント付加情報 (排反) ===
+    /// 移動エンカウント情報 (Normal/Surfing + Moving 時のみ Some)
+    pub moving_encounter: Option<MovingEncounterInfo>,
+    /// 特殊エンカウント情報 (ShakingGrass/DustCloud/SurfingBubble/FishingBubble/PokemonShadow 時のみ Some)
+    pub special_encounter: Option<SpecialEncounterInfo>,
+}
     pub sync_applied: bool,
     pub ability_slot: u8,
     pub gender: Gender,
@@ -913,8 +1149,10 @@ pub use generator::{EggGenerator, StaticPokemonGenerator, WildPokemonGenerator};
 pub use pokemon_static::generate_static_pokemon;
 pub use pokemon_wild::generate_wild_pokemon;
 pub use types::{
-    EggGenerationConfig, EncounterSlotConfig, GeneratedEggData, GeneratedPokemonData,
-    GenerationError, OffsetConfig, PokemonGenerationConfig, RawEggData, RawPokemonData,
+    EggGenerationConfig, EncounterMethod, EncounterSlotConfig, GeneratedEggData,
+    GeneratedPokemonData, GenerationError, MovingEncounterInfo, MovingEncounterLikelihood,
+    OffsetConfig, PokemonGenerationConfig, RawEggData, RawPokemonData, SpecialEncounterDirection,
+    SpecialEncounterInfo,
 };
 ```
 
@@ -953,6 +1191,9 @@ wasm-pack build --target web
 
 - [x] `wasm-pkg/src/generation/flows/mod.rs` 作成
 - [x] `wasm-pkg/src/generation/flows/types.rs` 作成
+  - [x] EncounterMethod
+  - [x] MovingEncounterLikelihood, MovingEncounterInfo
+  - [x] SpecialEncounterDirection, SpecialEncounterInfo
   - [x] PokemonGenerationConfig
   - [x] EncounterSlotConfig
   - [x] EggGenerationConfig

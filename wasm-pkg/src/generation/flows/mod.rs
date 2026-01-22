@@ -11,6 +11,8 @@ pub use generator::{EggGenerator, StaticPokemonGenerator, WildPokemonGenerator};
 pub use pokemon_static::generate_static_pokemon;
 pub use pokemon_wild::generate_wild_pokemon;
 pub use types::{
-    EggGenerationConfig, EncounterSlotConfig, GeneratedEggData, GeneratedPokemonData,
-    GenerationError, OffsetConfig, PokemonGenerationConfig, RawEggData, RawPokemonData,
+    EggGenerationConfig, EncounterMethod, EncounterSlotConfig, GeneratedEggData,
+    GeneratedPokemonData, GenerationError, MovingEncounterInfo, MovingEncounterLikelihood,
+    OffsetConfig, PokemonGenerationConfig, RawEggData, RawPokemonData, SpecialEncounterDirection,
+    SpecialEncounterInfo,
 };

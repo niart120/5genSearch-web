@@ -114,6 +114,7 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 
 #[cfg(test)]
 mod tests {
+    use super::super::types::EncounterMethod;
     use super::*;
     use crate::types::RomVersion;
 
@@ -127,6 +128,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         }
     }
 

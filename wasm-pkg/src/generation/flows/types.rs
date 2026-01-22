@@ -9,6 +9,71 @@ use crate::types::{
     RomVersion, ShinyType,
 };
 
+// ===== エンカウント方法 =====
+
+/// エンカウント方法
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum EncounterMethod {
+    /// あまいかおり使用 (確定エンカウント、判定スキップ)
+    #[default]
+    SweetScent,
+    /// 移動中 (エンカウント判定あり)
+    Moving,
+}
+
+// ===== 移動エンカウント情報 =====
+
+/// 移動エンカウント判定結果
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum MovingEncounterLikelihood {
+    /// 歩数にかかわらず確定エンカウント (最低閾値通過)
+    #[default]
+    Guaranteed,
+    /// 歩数次第でエンカウント (BW2 のみ、最高閾値のみ通過)
+    Possible,
+    /// エンカウント無し (最高閾値も不通過)
+    NoEncounter,
+}
+
+/// 移動エンカウント情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct MovingEncounterInfo {
+    /// 判定結果
+    pub likelihood: MovingEncounterLikelihood,
+    /// 判定に使用した乱数値
+    pub rand_value: u32,
+}
+
+// ===== 特殊エンカウント情報 =====
+
+/// 特殊エンカウント発生方向
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum SpecialEncounterDirection {
+    #[default]
+    Right,
+    Up,
+    Left,
+    Down,
+}
+
+/// 特殊エンカウント情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct SpecialEncounterInfo {
+    /// 発生するか (10% 判定結果)
+    pub triggered: bool,
+    /// 発生方向 (triggered = true の場合のみ有効)
+    pub direction: SpecialEncounterDirection,
+    /// 発生判定に使用した乱数値
+    pub trigger_rand: u32,
+    /// 方向決定に使用した乱数値
+    pub direction_rand: u32,
+}
+
 // ===== 生成設定 =====
 
 /// 生成設定 (野生・固定共通)
@@ -22,6 +87,8 @@ pub struct PokemonGenerationConfig {
     pub shiny_charm: bool,
     pub shiny_locked: bool,
     pub has_held_item: bool,
+    /// エンカウント方法 (Normal/Surfing 時のみ使用)
+    pub encounter_method: EncounterMethod,
 }
 
 /// エンカウントスロット設定
@@ -184,6 +251,11 @@ pub struct GeneratedPokemonData {
     pub held_item_slot: HeldItemSlot,
     // IV (既存 Ivs 型を使用)
     pub ivs: Ivs,
+    // === エンカウント付加情報 (排反) ===
+    /// 移動エンカウント情報 (Normal/Surfing + Moving 時のみ Some)
+    pub moving_encounter: Option<MovingEncounterInfo>,
+    /// 特殊エンカウント情報 (ShakingGrass/DustCloud/SurfingBubble/FishingBubble/PokemonShadow 時のみ Some)
+    pub special_encounter: Option<SpecialEncounterInfo>,
 }
 
 impl GeneratedPokemonData {
@@ -193,6 +265,8 @@ impl GeneratedPokemonData {
         advance: u32,
         needle_direction: NeedleDirection,
         lcg_seed: u64,
+        moving_encounter: Option<MovingEncounterInfo>,
+        special_encounter: Option<SpecialEncounterInfo>,
     ) -> Self {
         Self {
             advance,
@@ -208,6 +282,8 @@ impl GeneratedPokemonData {
             shiny_type: raw.shiny_type,
             held_item_slot: raw.held_item_slot,
             ivs,
+            moving_encounter,
+            special_encounter,
         }
     }
 }
