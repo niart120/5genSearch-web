@@ -10,7 +10,8 @@
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     apply_inheritance, calculate_game_offset, calculate_needle_direction,
-    generate_rng_ivs_with_offset,
+    generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
+    is_moving_encounter_type, is_special_encounter_type,
 };
 use crate::types::{GameStartConfig, Ivs, LcgSeed, RomVersion};
 
@@ -18,8 +19,9 @@ use super::egg::generate_egg;
 use super::pokemon_static::generate_static_pokemon;
 use super::pokemon_wild::generate_wild_pokemon;
 use super::types::{
-    EggGenerationConfig, EncounterSlotConfig, GeneratedEggData, GeneratedPokemonData, OffsetConfig,
-    PokemonGenerationConfig,
+    EggGenerationConfig, EncounterMethod, EncounterSlotConfig, GeneratedEggData,
+    GeneratedPokemonData, MovingEncounterInfo, OffsetConfig, PokemonGenerationConfig,
+    SpecialEncounterInfo,
 };
 
 /// 野生ポケモン Generator (Iterator パターン)
@@ -90,6 +92,14 @@ impl WildPokemonGenerator {
         // 生成用の LCG をクローン（生成処理で消費される分を分離）
         let mut gen_lcg = self.lcg.clone();
 
+        // エンカウント付加情報を算出
+        let (moving_encounter, special_encounter) =
+            self.calculate_encounter_info(current_seed, &mut gen_lcg);
+
+        // Moving の場合は前段消費 (空消費 1 + 判定 1 = 2消費)
+        // ただし、この消費は generate_wild_pokemon の前に既に gen_lcg で消費済み
+        // (calculate_encounter_info 内で処理)
+
         if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.config, &self.slots) {
             // 次の消費位置へ移動（1消費）
             self.lcg.next();
@@ -101,6 +111,8 @@ impl WildPokemonGenerator {
                 advance,
                 needle,
                 current_seed.value(),
+                moving_encounter,
+                special_encounter,
             ))
         } else {
             // エラー時も進める
@@ -108,6 +120,43 @@ impl WildPokemonGenerator {
             self.current_advance += 1;
             None
         }
+    }
+
+    /// エンカウント付加情報を計算
+    ///
+    /// - Normal/Surfing + Moving: 移動エンカウント情報 (消費 2)
+    /// - 特殊エンカウント種別: 特殊エンカウント情報 (消費なし、参考情報)
+    fn calculate_encounter_info(
+        &self,
+        seed: LcgSeed,
+        gen_lcg: &mut Lcg64,
+    ) -> (Option<MovingEncounterInfo>, Option<SpecialEncounterInfo>) {
+        let enc_type = self.config.encounter_type;
+
+        // 移動エンカウント情報 (消費あり)
+        if is_moving_encounter_type(enc_type)
+            && self.config.encounter_method == EncounterMethod::Moving
+        {
+            // 空消費 1
+            gen_lcg.next();
+            // エンカウント判定 1
+            let rand_value = gen_lcg.next().unwrap_or(0);
+            let moving_info = generate_moving_encounter_info(self.config.version, rand_value);
+            return (Some(moving_info), None);
+        }
+
+        // 特殊エンカウント情報 (消費なし、参考情報として算出)
+        if is_special_encounter_type(enc_type) {
+            // needle_direction と同様、現在の seed から参考情報として算出
+            // 実際の消費には影響しない
+            let mut info_lcg = Lcg64::new(seed);
+            let trigger_rand = info_lcg.next().unwrap_or(0);
+            let direction_rand = info_lcg.next().unwrap_or(0);
+            let special_info = generate_special_encounter_info(trigger_rand, direction_rand);
+            return (None, Some(special_info));
+        }
+
+        (None, None)
     }
 
     /// 指定数の個体を生成
@@ -217,7 +266,16 @@ impl StaticPokemonGenerator {
         self.lcg.next();
         self.current_advance += 1;
 
-        GeneratedPokemonData::new(&raw, self.rng_ivs, advance, needle, current_seed.value())
+        // 固定エンカウントはエンカウント付加情報なし
+        GeneratedPokemonData::new(
+            &raw,
+            self.rng_ivs,
+            advance,
+            needle,
+            current_seed.value(),
+            None,
+            None,
+        )
     }
 
     /// 指定数の個体を生成
@@ -370,6 +428,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         }
     }
 
@@ -614,6 +673,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         };
 
         let slots = vec![EncounterSlotConfig {
@@ -690,6 +750,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         };
 
         let slots = vec![EncounterSlotConfig {
@@ -756,6 +817,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         };
 
         let slots = vec![EncounterSlotConfig {
@@ -823,6 +885,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         };
 
         // 固定シンボルは StaticPokemonGenerator を使う
@@ -883,6 +946,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
+            encounter_method: EncounterMethod::SweetScent,
         };
 
         // 御三家は StaticPokemonGenerator を使う

@@ -8,9 +8,12 @@ pub mod needle;
 pub mod pid;
 
 pub use encounter::{
-    EncounterResult, HeldItemSlot, ItemContent, calculate_encounter_slot, determine_held_item_slot,
-    dust_cloud_result, encounter_type_supports_held_item, fishing_encounter_slot, fishing_success,
-    normal_encounter_slot, pokemon_shadow_result, rand_to_percent, surfing_encounter_slot,
+    EncounterResult, HeldItemSlot, ItemContent, calculate_encounter_slot, check_moving_encounter,
+    determine_held_item_slot, dust_cloud_result, encounter_type_supports_held_item,
+    fishing_encounter_slot, fishing_success, generate_moving_encounter_info,
+    generate_special_encounter_info, is_moving_encounter_type, is_special_encounter_type,
+    normal_encounter_slot, pokemon_shadow_result, rand_to_percent, special_encounter_direction,
+    special_encounter_trigger, surfing_encounter_slot,
 };
 pub use game_offset::{apply_game_offset, calculate_game_offset, create_offset_lcg};
 pub use iv::{
