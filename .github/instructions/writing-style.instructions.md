@@ -66,9 +66,4 @@ Markdown 表記ルール
 - ファイル参照: `src/components/Button.tsx`
 - コマンド: ```bash
   npm run build:wasm
-
-```
-- インライン式: $O(n \log n)$
-
-このファイルの管理者: ドキュメント作成担当チーム。修正提案は PR で受け付ける。
-```
+  ```
