@@ -10,6 +10,6 @@ pub use mtseed_search::{
     decode_iv_code, encode_iv_code, reorder_iv_code_for_roamer,
 };
 pub use needle_search::{
-    NeedlePattern, NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher,
-    get_needle_pattern, needle_direction_arrow,
+    NeedlePattern, NeedleSearchBatch, NeedleSearchInput, NeedleSearchParams, NeedleSearchResult,
+    NeedleSearcher, get_needle_pattern, needle_direction_arrow,
 };

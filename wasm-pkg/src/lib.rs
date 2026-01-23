@@ -40,8 +40,8 @@ pub use generation::algorithm::{
 // Re-export misc module
 pub use misc::{
     IvCode, IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher,
-    NeedlePattern, NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher,
-    decode_iv_code, encode_iv_code, get_needle_pattern, needle_direction_arrow,
+    NeedlePattern, NeedleSearchBatch, NeedleSearchInput, NeedleSearchParams, NeedleSearchResult,
+    NeedleSearcher, decode_iv_code, encode_iv_code, get_needle_pattern, needle_direction_arrow,
     reorder_iv_code_for_roamer,
 };
 

@@ -67,30 +67,49 @@ misc/mtseed_search.rs   ← generation/algorithm/iv.rs を活用
 
 ### 3.3 レポート針検索の設計
 
-#### 3.3.1 検索モード
+#### 3.3.1 統合設計
 
-| モード | 入力 | 用途 |
-|--------|------|------|
-| `InitialSeed` | LcgSeed + 消費範囲 | 既知 Seed からの消費位置特定 |
-| `Startup` | 起動条件 + Timer0/VCount 範囲 | 起動条件の検証・特定 |
+入力ソースを enum で表現し、1 つの `NeedleSearcher` で両パターンを処理する。
 
-両モードを本仕様で実装する。
+```rust
+/// 検索入力ソース
+pub enum NeedleSearchInput {
+    /// 既知 Seed から検索 (消費位置特定)
+    Seed { initial_seed: LcgSeed },
+    /// 起動条件から検索 (Timer0/VCount 範囲探索)
+    Startup {
+        ds: DsConfig,
+        datetime: DatetimeParams,
+        timer0_range: (u16, u16),
+        vcount_range: (u8, u8),
+        key_code: u32,
+    },
+}
+```
 
-#### 3.3.2 Startup モードの設計
+| 入力 | 検索空間 | 用途 |
+|------|----------|------|
+| `Seed` | 消費位置 (advance_min..advance_max) | 既知 Seed からの消費位置特定 |
+| `Startup` | Timer0 × VCount × 消費位置 | 起動条件の検証・特定 |
+
+#### 3.3.2 Startup 入力時の処理フロー
 
 既存の `datetime_search` 基盤を活用し、SHA-1 計算 → LCG Seed 導出 → 針パターン照合 の流れで実装する。
 
 ```
 起動条件 (DateTime + Timer0 + VCount + KeyCode)
     │
-    └─ SHA-1 計算 → LCG Seed
+    └─ Timer0 × VCount 範囲を列挙
            │
-           └─ 消費範囲内で針パターン照合
+           └─ 各組み合わせで SHA-1 計算 → LCG Seed
+                  │
+                  └─ 消費範囲内で針パターン照合
 ```
 
-**結果情報**: 検索結果には `GenerationSource::Datetime` 相当の情報 (datetime, timer0, vcount, key_code, base_seed) を保持し、後続の個体生成に活用できるようにする。
+**結果情報**: 検索結果には `GenerationSource` を保持し、後続の個体生成に活用できるようにする。
 
-**注意**: 時間範囲指定は今のところ想定しない。単一の起動条件を指定し、Timer0/VCount 範囲を探索する形式。
+- `Seed` 入力時: `GenerationSource::Fixed { base_seed }`
+- `Startup` 入力時: `GenerationSource::Datetime { base_seed, datetime, timer0, vcount, key_code }`
 
 #### 3.3.3 針方向計算の修正
 
@@ -311,24 +330,51 @@ mod tests {
 //! レポート針検索
 //!
 //! 観測したレポート針パターンから消費位置を特定する機能。
+//! 入力ソースとして LcgSeed 直接指定と起動条件指定の両方に対応。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::core::lcg::Lcg64;
+use crate::core::sha1::{hash_to_lcg_seed, Sha1Message};
 use crate::generation::algorithm::calc_report_needle_direction;
-use crate::types::{LcgSeed, NeedleDirection};
+use crate::types::{DatetimeParams, DsConfig, GenerationSource, LcgSeed};
 
 /// レポート針パターン (0-7 の方向値列)
 pub type NeedlePattern = Vec<u8>;
+
+// ===== 検索入力ソース =====
+
+/// 検索入力ソース
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
+pub enum NeedleSearchInput {
+    /// 既知 Seed から検索 (消費位置特定)
+    Seed {
+        initial_seed: LcgSeed,
+    },
+    /// 起動条件から検索 (Timer0/VCount 範囲探索)
+    Startup {
+        ds: DsConfig,
+        datetime: DatetimeParams,
+        timer0_min: u16,
+        timer0_max: u16,
+        vcount_min: u8,
+        vcount_max: u8,
+        key_code: u32,
+    },
+}
+
+// ===== 検索パラメータ =====
 
 /// レポート針検索パラメータ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct NeedleSearchParams {
-    /// 初期 LCG Seed
-    pub initial_seed: LcgSeed,
+    /// 入力ソース (Seed または Startup)
+    pub input: NeedleSearchInput,
     /// 観測したレポート針パターン (0-7)
     pub pattern: NeedlePattern,
     /// 検索開始消費位置
@@ -337,14 +383,16 @@ pub struct NeedleSearchParams {
     pub advance_max: u32,
 }
 
+// ===== 検索結果 =====
+
 /// レポート針検索結果
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct NeedleSearchResult {
     /// パターン開始消費位置
     pub advance: u32,
-    /// パターン開始時点の LCG Seed
-    pub seed: LcgSeed,
+    /// 生成元情報
+    pub source: GenerationSource,
 }
 
 /// レポート針検索バッチ結果
@@ -356,135 +404,61 @@ pub struct NeedleSearchBatch {
     pub total: u64,
 }
 
+// ===== 検索器 =====
+
 /// レポート針検索器
 #[wasm_bindgen]
 pub struct NeedleSearcher {
+    // 共通フィールド
     pattern: NeedlePattern,
+    advance_min: u32,
     advance_max: u32,
-    current_advance: u32,
-    lcg: Lcg64,
-    total: u64,
+    // 状態
+    state: SearcherState,
 }
 
-#[wasm_bindgen]
+/// 内部検索状態
+enum SearcherState {
+    /// Seed 入力モード
+    Seed {
+        lcg: Lcg64,
+        current_advance: u32,
+        base_seed: u64,
+    },
+    /// Startup 入力モード
+    Startup {
+        ds: DsConfig,
+        datetime: DatetimeParams,
+        timer0_min: u16,
+        timer0_max: u16,
+        vcount_min: u8,
+        vcount_max: u8,
+        key_code: u32,
+        // 現在の探索位置
+        current_timer0: u16,
+        current_vcount: u8,
+        current_advance: u32,
+        // キャッシュ: 現在の (timer0, vcount) に対応する LCG
+        current_lcg: Option<Lcg64>,
+        current_base_seed: u64,
+    },
+}
+```
+
+**Seed 入力時の処理**:
+
+```rust
 impl NeedleSearcher {
-    #[wasm_bindgen(constructor)]
-    pub fn new(params: NeedleSearchParams) -> Result<NeedleSearcher, String> {
-        if params.pattern.is_empty() {
-            return Err("pattern is empty".into());
-        }
-        if params.pattern.iter().any(|&d| d > 7) {
-            return Err("Invalid needle direction (must be 0-7)".into());
-        }
-        if params.advance_min > params.advance_max {
-            return Err("advance_min > advance_max".into());
-        }
-
-        // 初期位置まで LCG を進める
-        let lcg = Lcg64::new_at(params.initial_seed, params.advance_min as u64);
-        let total = (params.advance_max - params.advance_min) as u64;
-
-        Ok(Self {
-            pattern: params.pattern,
-            advance_max: params.advance_max,
-            current_advance: params.advance_min,
-            lcg,
-            total,
-        })
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn is_done(&self) -> bool {
-        self.current_advance >= self.advance_max
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn progress(&self) -> f64 {
-        if self.total == 0 {
-            return 1.0;
-        }
-        (self.current_advance as u64 - (self.advance_max as u64 - self.total)) as f64
-            / self.total as f64
-    }
-
-    /// 次のバッチを検索
-    pub fn next_batch(&mut self, chunk_size: u32) -> NeedleSearchBatch {
-        let mut results = Vec::new();
-        let pattern_len = self.pattern.len();
-        let end_advance = (self.current_advance + chunk_size).min(self.advance_max);
-
-        while self.current_advance < end_advance {
-            // 現在位置でパターン一致判定
-            if self.matches_pattern() {
-                results.push(NeedleSearchResult {
-                    advance: self.current_advance,
-                    seed: self.lcg.current_seed(),
-                });
-            }
-
-            self.lcg.advance(1);
-            self.current_advance += 1;
-        }
-
-        NeedleSearchBatch {
-            results,
-            processed: self.current_advance as u64,
-            total: self.advance_max as u64,
-        }
-    }
-
-    /// 現在位置からパターンが一致するか判定
-    fn matches_pattern(&self) -> bool {
-        let mut test_seed = self.lcg.current_seed();
-
-        for &expected in &self.pattern {
-            let direction = calc_report_needle_direction(test_seed);
-            if direction.value() != expected {
-                return false;
-            }
-            test_seed = Lcg64::compute_next(test_seed);
-        }
-
-        true
+    fn next_batch_seed(&mut self, chunk_size: u32) -> NeedleSearchBatch {
+        // 既存実装と同様: lcg を進めながらパターン照合
+        // 結果には GenerationSource::Fixed { base_seed } を設定
     }
 }
+```
 
-// ===== Startup モード =====
+**Startup 入力時の処理**:
 
-/// Startup モード検索パラメータ
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleStartupSearchParams {
-    /// 観測したレポート針パターン (0-7)
-    pub pattern: NeedlePattern,
-    /// DS 設定
-    pub ds: crate::types::DsConfig,
-    /// 起動日時 (固定)
-    pub datetime: crate::datetime_search::DatetimeParams,
-    /// Timer0 検索範囲
-    pub timer0_range: (u16, u16),
-    /// VCount 検索範囲
-    pub vcount_range: (u8, u8),
-    /// KeyCode (固定)
-    pub key_code: u32,
-    /// 消費数検索範囲
-    pub advance_min: u32,
-    pub advance_max: u32,
-}
-
-/// Startup モード検索結果
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleStartupSearchResult {
-    /// パターン開始消費位置
-    pub advance: u32,
-    /// 生成元情報 (GenerationSource::Datetime)
-    /// local_005 で定義された GenerationSource を使用
-    pub source: crate::generation::flows::GenerationSource,
-}
-
-// Startup モードの実装は datetime_search 基盤を活用
-// 詳細は local_003 の HashValuesEnumerator を参照
+```
 
 // ===== ユーティリティ関数 =====
 
@@ -531,12 +505,12 @@ mod tests {
     }
 
     #[test]
-    fn test_needle_searcher() {
+    fn test_needle_searcher_seed_input() {
         let seed = LcgSeed::new(0x0123456789ABCDEF);
         let pattern = get_needle_pattern(seed, 3);
 
         let params = NeedleSearchParams {
-            initial_seed: seed,
+            input: NeedleSearchInput::Seed { initial_seed: seed },
             pattern,
             advance_min: 0,
             advance_max: 10,
@@ -548,6 +522,8 @@ mod tests {
         // 先頭位置で一致するはず
         assert!(!batch.results.is_empty());
         assert_eq!(batch.results[0].advance, 0);
+        // GenerationSource::Fixed であること
+        assert!(matches!(batch.results[0].source, GenerationSource::Fixed { .. }));
     }
 }
 ```
@@ -561,12 +537,12 @@ pub mod mtseed_search;
 pub mod needle_search;
 
 pub use mtseed_search::{
-    decode_iv_code, decode_iv_code_wasm, encode_iv_code, encode_iv_code_wasm, IvCode, IvFilter,
-    MtseedResult, MtseedSearchBatch, MtseedSearcher, MtseedSearchParams,
+    decode_iv_code, encode_iv_code, IvCode, IvFilter, MtseedResult, MtseedSearchBatch,
+    MtseedSearcher, MtseedSearchParams, reorder_iv_code_for_roamer,
 };
 pub use needle_search::{
-    get_needle_pattern, needle_direction_arrow, NeedlePattern, NeedleSearchBatch, NeedleSearcher,
-    NeedleSearchParams, NeedleSearchResult, NeedleStartupSearchParams, NeedleStartupSearchResult,
+    get_needle_pattern, needle_direction_arrow, NeedlePattern, NeedleSearchBatch,
+    NeedleSearcher, NeedleSearchInput, NeedleSearchParams, NeedleSearchResult,
 };
 ```
 
