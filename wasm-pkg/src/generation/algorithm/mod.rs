@@ -24,7 +24,7 @@ pub use nature::{
     EverstonePlan, determine_egg_nature, determine_nature, nature_roll, perform_sync_check,
     supports_sync, sync_check,
 };
-pub use needle::calculate_needle_direction;
+pub use needle::{calc_report_needle_direction, calculate_needle_direction};
 pub use pid::{
     apply_id_correction, apply_shiny_lock, calculate_shiny_type, generate_base_pid,
     generate_egg_pid, generate_egg_pid_with_reroll, generate_event_pid, generate_wild_pid,

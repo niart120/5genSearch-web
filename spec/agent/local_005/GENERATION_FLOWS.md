@@ -325,6 +325,56 @@ LCG Seed (TotalOffset + advance 適用後)
 - `SpecialEncounterInfo` は `needle_direction` と同様、消費カウント外で算出される参考情報
 - `MovingEncounterInfo` は消費に影響するため、前段で 2 消費が発生する
 
+### 3.5 GenerationSource (生成元情報)
+
+生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
+後続の個体生成 (タマゴ含む) で共通的に使用する。
+
+```rust
+/// 生成元情報
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum GenerationSource {
+    /// 固定 Seed から生成
+    Fixed {
+        /// BaseSeed (SHA-1 から導出)
+        base_seed: u64,
+    },
+    /// 複数 Seed 指定から生成
+    Multiple {
+        /// BaseSeed (SHA-1 から導出)
+        base_seed: u64,
+        /// 入力 seeds 配列のインデックス
+        seed_index: u32,
+    },
+    /// 日時検索から生成
+    Datetime {
+        /// BaseSeed (SHA-1 から導出)
+        base_seed: u64,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// Timer0 値
+        timer0: u16,
+        /// VCount 値
+        vcount: u8,
+        /// キー入力コード
+        key_code: u32,
+    },
+}
+```
+
+```typescript
+export type GenerationSource =
+  | { type: 'Fixed'; base_seed: bigint }
+  | { type: 'Multiple'; base_seed: bigint; seed_index: number }
+  | { type: 'Datetime'; base_seed: bigint; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
+```
+
+**設計意図**:
+- 検索結果から個体生成へ繋げる際、どの起動条件から生成されたかを追跡可能にする
+- レポート針検索 (local_006) やタマゴ起動時刻検索 (local_008) でも同じ構造を使用
+- UI 側で起動条件の表示や再計算に利用
+
 ## 4. 実装仕様
 
 ### 4.1 generation/flows/types.rs
@@ -335,6 +385,7 @@ LCG Seed (TotalOffset + advance 適用後)
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
+use crate::datetime_search::DatetimeParams;
 use crate::types::{
     EncounterType, GameStartConfig, Gender, GenderRatio, Ivs, LeadAbilityEffect, Nature,
     NeedleDirection, RomVersion, ShinyType,
@@ -439,6 +490,8 @@ pub struct RawPokemonData {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratedPokemonData {
+    // 生成元情報
+    pub source: GenerationSource,
     // 列挙コンテキスト
     pub advance: u32,
     pub needle_direction: NeedleDirection,
@@ -463,17 +516,10 @@ pub struct GeneratedPokemonData {
     /// 特殊エンカウント情報 (ShakingGrass/DustCloud/SurfingBubble/FishingBubble/PokemonShadow 時のみ Some)
     pub special_encounter: Option<SpecialEncounterInfo>,
 }
-    pub sync_applied: bool,
-    pub ability_slot: u8,
-    pub gender: Gender,
-    pub shiny_type: ShinyType,
-    pub held_item_slot: HeldItemSlot,
-    // IV (既存 Ivs 型を使用)
-    pub ivs: Ivs,
-}
 
 impl GeneratedPokemonData {
     pub fn new(
+        source: GenerationSource,
         raw: RawPokemonData,
         ivs: Ivs,
         advance: u32,
@@ -481,6 +527,7 @@ impl GeneratedPokemonData {
         lcg_seed: u64,
     ) -> Self {
         Self {
+            source,
             advance,
             needle_direction,
             lcg_seed,
@@ -494,6 +541,8 @@ impl GeneratedPokemonData {
             shiny_type: raw.shiny_type,
             held_item_slot: raw.held_item_slot,
             ivs,
+            moving_encounter: None,
+            special_encounter: None,
         }
     }
 }
@@ -513,6 +562,8 @@ pub struct RawEggData {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratedEggData {
+    // 生成元情報
+    pub source: GenerationSource,
     // 列挙コンテキスト
     pub advance: u32,
     pub needle_direction: NeedleDirection,
@@ -533,6 +584,7 @@ pub struct GeneratedEggData {
 
 impl GeneratedEggData {
     pub fn new(
+        source: GenerationSource,
         raw: RawEggData,
         ivs: Ivs,
         advance: u32,
@@ -540,6 +592,7 @@ impl GeneratedEggData {
         lcg_seed: u64,
     ) -> Self {
         Self {
+            source,
             advance,
             needle_direction,
             lcg_seed,
@@ -909,6 +962,12 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 ```rust
 //! PokemonGenerator - 完全な個体生成
 //!
+//! Iterator パターンで連続的に個体を生成。
+//!
+//! 設計方針:
+//! - Generator は GenerationSource を外部から受け取り、結果に付与する
+//! - Worker 側で SeedSource から GenerationSource を構築し、Generator に渡す
+//!
 //! オフセット対応:
 //! - GameOffset: ゲーム起動条件により自動計算 (`calculate_game_offset`)
 //! - UserOffset: ユーザ指定の追加オフセット
@@ -917,34 +976,45 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     apply_inheritance, calculate_game_offset, calculate_needle_direction,
-    generate_rng_ivs_with_offset, InheritanceSlot,
+    generate_moving_encounter_info, generate_rng_ivs_with_offset,
+    generate_special_encounter_info, is_moving_encounter_type, is_special_encounter_type,
 };
-use crate::types::{GameStartConfig, Ivs, LcgSeed, NeedleDirection, RomVersion};
+use crate::types::{GameStartConfig, Ivs, LcgSeed, RomVersion};
 
 use super::egg::generate_egg;
 use super::pokemon_static::generate_static_pokemon;
 use super::pokemon_wild::generate_wild_pokemon;
 use super::types::{
-    EggGenerationConfig, EncounterSlotConfig, GeneratedEggData, GeneratedPokemonData,
-    OffsetConfig, PokemonGenerationConfig, RawEggData,
+    EggGenerationConfig, EncounterMethod, EncounterSlotConfig, GeneratedEggData,
+    GeneratedPokemonData, GenerationSource, MovingEncounterInfo, OffsetConfig,
+    PokemonGenerationConfig, SpecialEncounterInfo,
 };
 
-/// 野生ポケモン Generator
+/// 野生ポケモン Generator (Iterator パターン)
 pub struct WildPokemonGenerator {
-    base_seed: LcgSeed,
+    lcg: Lcg64,
     game_offset: u32,
-    offset_config: OffsetConfig,
+    user_offset: u32,
+    current_advance: u32,
     rng_ivs: Ivs,
     config: PokemonGenerationConfig,
     slots: Vec<EncounterSlotConfig>,
+    /// 生成元情報 (外部から注入)
+    source: GenerationSource,
 }
 
 impl WildPokemonGenerator {
     /// Generator を作成
     ///
+    /// # Arguments
+    /// * `source` - 生成元情報 (Worker 側で構築)
+    /// * `base_seed` - 起点 LCG Seed (source.base_seed() と一致)
+    /// * その他 - 生成設定
+    ///
     /// # Errors
     /// 無効な起動設定の場合にエラーを返す。
     pub fn new(
+        source: GenerationSource,
         base_seed: LcgSeed,
         version: RomVersion,
         game_start: &GameStartConfig,
@@ -956,67 +1026,138 @@ impl WildPokemonGenerator {
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
 
+        // 初期位置へジャンプ
+        let mut lcg = Lcg64::new(base_seed);
+        let total_offset = game_offset + offset_config.user_offset;
+        lcg.jump(u64::from(total_offset));
+
         Ok(Self {
-            base_seed,
+            lcg,
             game_offset,
-            offset_config,
+            user_offset: offset_config.user_offset,
+            current_advance: 0,
             rng_ivs,
             config,
             slots,
+            source,
         })
     }
 
     /// 総オフセット (GameOffset + UserOffset)
     pub fn total_offset(&self) -> u32 {
-        self.game_offset + self.offset_config.user_offset
+        self.game_offset + self.user_offset
     }
 
-    /// 指定消費位置での個体生成
-    ///
-    /// `advance` は total_offset からの相対位置。
-    pub fn generate_at(&self, advance: u32) -> Option<GeneratedPokemonData> {
-        let mut lcg = Lcg64::new(self.base_seed);
-        let absolute_advance = self.total_offset() + advance;
-        lcg.jump(u64::from(absolute_advance));
+    /// 現在の消費位置 (total_offset からの相対)
+    pub fn current_advance(&self) -> u32 {
+        self.current_advance
+    }
 
-        let current_seed = lcg.current_seed();
+    /// 次の個体を生成
+    pub fn generate_next(&mut self) -> Option<GeneratedPokemonData> {
+        let current_seed = self.lcg.current_seed();
         let needle = calculate_needle_direction(current_seed);
+        let advance = self.current_advance;
 
-        // 1回進めてから生成開始
-        lcg.next();
+        // 生成用の LCG をクローン
+        let mut gen_lcg = self.lcg.clone();
 
-        match generate_wild_pokemon(&mut lcg, &self.config, &self.slots) {
-            Ok(raw) => Some(GeneratedPokemonData::new(
-                raw,
+        // エンカウント付加情報を算出
+        let (moving_encounter, special_encounter) =
+            self.calculate_encounter_info(current_seed, &mut gen_lcg);
+
+        if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.config, &self.slots) {
+            // 次の消費位置へ移動
+            self.lcg.next();
+            self.current_advance += 1;
+
+            Some(GeneratedPokemonData::new(
+                self.source.clone(),
+                &raw,
                 self.rng_ivs,
                 advance,
                 needle,
                 current_seed.value(),
-            )),
-            Err(_) => None,
+                moving_encounter,
+                special_encounter,
+            ))
+        } else {
+            self.lcg.next();
+            self.current_advance += 1;
+            None
         }
     }
 
-    /// 範囲内の個体を生成
-    pub fn generate_range(&self, start: u32, end: u32) -> Vec<GeneratedPokemonData> {
-        (start..end).filter_map(|adv| self.generate_at(adv)).collect()
+    /// エンカウント付加情報を計算
+    fn calculate_encounter_info(
+        &self,
+        seed: LcgSeed,
+        gen_lcg: &mut Lcg64,
+    ) -> (Option<MovingEncounterInfo>, Option<SpecialEncounterInfo>) {
+        let enc_type = self.config.encounter_type;
+
+        // 移動エンカウント情報 (消費あり)
+        if is_moving_encounter_type(enc_type)
+            && self.config.encounter_method == EncounterMethod::Moving
+        {
+            gen_lcg.next(); // 空消費
+            let rand_value = gen_lcg.next().unwrap_or(0);
+            let moving_info = generate_moving_encounter_info(self.config.version, rand_value);
+            return (Some(moving_info), None);
+        }
+
+        // 特殊エンカウント情報 (消費なし、参考情報)
+        if is_special_encounter_type(enc_type) {
+            let mut info_lcg = Lcg64::new(seed);
+            let trigger_rand = info_lcg.next().unwrap_or(0);
+            let direction_rand = info_lcg.next().unwrap_or(0);
+            let special_info = generate_special_encounter_info(trigger_rand, direction_rand);
+            return (None, Some(special_info));
+        }
+
+        (None, None)
+    }
+
+    /// 指定数の個体を生成
+    pub fn take(&mut self, count: u32) -> Vec<GeneratedPokemonData> {
+        (0..count).filter_map(|_| self.generate_next()).collect()
+    }
+
+    /// 条件を満たす最初の個体を探す
+    pub fn find<F>(&mut self, max_advances: u32, predicate: F) -> Option<GeneratedPokemonData>
+    where
+        F: Fn(&GeneratedPokemonData) -> bool,
+    {
+        for _ in 0..max_advances {
+            if let Some(pokemon) = self.generate_next() {
+                if predicate(&pokemon) {
+                    return Some(pokemon);
+                }
+            }
+        }
+        None
     }
 }
 
-/// 固定ポケモン Generator
+/// 固定ポケモン Generator (Iterator パターン)
 pub struct StaticPokemonGenerator {
-    base_seed: LcgSeed,
+    lcg: Lcg64,
     game_offset: u32,
-    offset_config: OffsetConfig,
+    user_offset: u32,
+    current_advance: u32,
     rng_ivs: Ivs,
     config: PokemonGenerationConfig,
     species_id: u16,
     level: u8,
     gender_threshold: u8,
+    /// 生成元情報 (外部から注入)
+    source: GenerationSource,
 }
 
 impl StaticPokemonGenerator {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
+        source: GenerationSource,
         base_seed: LcgSeed,
         version: RomVersion,
         game_start: &GameStartConfig,
@@ -1030,57 +1171,85 @@ impl StaticPokemonGenerator {
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
 
+        // 初期位置へジャンプ
+        let mut lcg = Lcg64::new(base_seed);
+        let total_offset = game_offset + offset_config.user_offset;
+        lcg.jump(u64::from(total_offset));
+
         Ok(Self {
-            base_seed,
+            lcg,
             game_offset,
-            offset_config,
+            user_offset: offset_config.user_offset,
+            current_advance: 0,
             rng_ivs,
             config,
             species_id,
             level,
             gender_threshold,
+            source,
         })
     }
 
     pub fn total_offset(&self) -> u32 {
-        self.game_offset + self.offset_config.user_offset
+        self.game_offset + self.user_offset
     }
 
-    pub fn generate_at(&self, advance: u32) -> GeneratedPokemonData {
-        let mut lcg = Lcg64::new(self.base_seed);
-        let absolute_advance = self.total_offset() + advance;
-        lcg.jump(u64::from(absolute_advance));
+    pub fn current_advance(&self) -> u32 {
+        self.current_advance
+    }
 
-        let current_seed = lcg.current_seed();
+    pub fn generate_next(&mut self) -> GeneratedPokemonData {
+        let current_seed = self.lcg.current_seed();
         let needle = calculate_needle_direction(current_seed);
+        let advance = self.current_advance;
 
-        lcg.next();
+        let mut gen_lcg = self.lcg.clone();
 
         let raw = generate_static_pokemon(
-            &mut lcg,
+            &mut gen_lcg,
             &self.config,
             self.species_id,
             self.level,
             self.gender_threshold,
         );
 
-        GeneratedPokemonData::new(raw, self.rng_ivs, advance, needle, current_seed.value())
+        self.lcg.next();
+        self.current_advance += 1;
+
+        GeneratedPokemonData::new(
+            self.source.clone(),
+            &raw,
+            self.rng_ivs,
+            advance,
+            needle,
+            current_seed.value(),
+            None,
+            None,
+        )
+    }
+
+    pub fn take(&mut self, count: u32) -> Vec<GeneratedPokemonData> {
+        (0..count).map(|_| self.generate_next()).collect()
     }
 }
 
-/// 卵 Generator
+/// 卵 Generator (Iterator パターン)
 pub struct EggGenerator {
-    base_seed: LcgSeed,
+    lcg: Lcg64,
     game_offset: u32,
-    offset_config: OffsetConfig,
+    user_offset: u32,
+    current_advance: u32,
     rng_ivs: Ivs,
     config: EggGenerationConfig,
     parent_male: Ivs,
     parent_female: Ivs,
+    /// 生成元情報 (外部から注入)
+    source: GenerationSource,
 }
 
 impl EggGenerator {
     pub fn new(
+        source: GenerationSource,
         base_seed: LcgSeed,
         version: RomVersion,
         game_start: &GameStartConfig,
@@ -1093,32 +1262,40 @@ impl EggGenerator {
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
 
+        // 初期位置へジャンプ
+        let mut lcg = Lcg64::new(base_seed);
+        let total_offset = game_offset + offset_config.user_offset;
+        lcg.jump(u64::from(total_offset));
+
         Ok(Self {
-            base_seed,
+            lcg,
             game_offset,
-            offset_config,
+            user_offset: offset_config.user_offset,
+            current_advance: 0,
             rng_ivs,
             config,
             parent_male,
             parent_female,
+            source,
         })
     }
 
     pub fn total_offset(&self) -> u32 {
-        self.game_offset + self.offset_config.user_offset
+        self.game_offset + self.user_offset
     }
 
-    pub fn generate_at(&self, advance: u32) -> GeneratedEggData {
-        let mut lcg = Lcg64::new(self.base_seed);
-        let absolute_advance = self.total_offset() + advance;
-        lcg.jump(u64::from(absolute_advance));
+    pub fn current_advance(&self) -> u32 {
+        self.current_advance
+    }
 
-        let current_seed = lcg.current_seed();
+    pub fn generate_next(&mut self) -> GeneratedEggData {
+        let current_seed = self.lcg.current_seed();
         let needle = calculate_needle_direction(current_seed);
+        let advance = self.current_advance;
 
-        lcg.next();
+        let mut gen_lcg = self.lcg.clone();
 
-        let raw = generate_egg(&mut lcg, &self.config);
+        let raw = generate_egg(&mut gen_lcg, &self.config);
 
         // 遺伝適用
         let final_ivs = apply_inheritance(
@@ -1128,12 +1305,145 @@ impl EggGenerator {
             &raw.inheritance,
         );
 
-        GeneratedEggData::new(raw, final_ivs, advance, needle, current_seed.value())
+        self.lcg.next();
+        self.current_advance += 1;
+
+        GeneratedEggData::new(
+            self.source.clone(),
+            &raw,
+            final_ivs,
+            advance,
+            needle,
+            current_seed.value(),
+        )
+    }
+
+    pub fn take(&mut self, count: u32) -> Vec<GeneratedEggData> {
+        (0..count).map(|_| self.generate_next()).collect()
     }
 }
 ```
 
-### 4.6 generation/flows/mod.rs
+### 4.6 Worker からの呼び出しフロー
+
+Generator に GenerationSource を渡す設計における Worker 側の責務を整理する。
+
+#### 4.6.1 SeedSource と GenerationSource
+
+| 型 | 責務 | 定義場所 |
+|---|------|---------|
+| `SeedSource` | Worker への入力形式。検索条件を表す | Worker 側 |
+| `GenerationSource` | 生成結果に付与する情報。どの条件から生成されたかを表す | `flows/types.rs` |
+
+```typescript
+// Worker 側の入力型
+export type SeedSource =
+  | { type: 'Fixed'; value: bigint }
+  | { type: 'Multiple'; values: bigint[] }
+  | { type: 'FromDatetime'; datetime: DatetimeParams; segments: SegmentParams[] };
+
+// 生成結果に付与する型 (WASM から export)
+export type GenerationSource =
+  | { type: 'Fixed'; base_seed: bigint }
+  | { type: 'Multiple'; base_seed: bigint; seed_index: number }
+  | { type: 'Datetime'; base_seed: bigint; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
+```
+
+#### 4.6.2 Worker の処理フロー
+
+```
+Worker
+  │
+  ├─ 1. SeedSource を受け取る
+  │
+  ├─ 2. SeedSource から BaseSeed 配列を解決
+  │     └─ FromDatetime: WASM で SHA-1 計算
+  │
+  ├─ 3. 各 BaseSeed に対して:
+  │     │
+  │     ├─ 3a. GenerationSource を構築 (buildSource)
+  │     │
+  │     ├─ 3b. Generator を作成 (source, base_seed, config...)
+  │     │
+  │     └─ 3c. generate_next() をバッチ呼び出し
+  │           │
+  │           └─ GeneratedPokemonData に source が付与される
+  │
+  └─ 4. 結果を Main Thread に postMessage
+```
+
+#### 4.6.3 buildSource 関数
+
+```typescript
+function buildSource(
+  seedSource: SeedSource,
+  baseSeed: bigint,
+  seedIndex: number
+): GenerationSource {
+  switch (seedSource.type) {
+    case 'Fixed':
+      return { type: 'Fixed', base_seed: baseSeed };
+
+    case 'Multiple':
+      return { type: 'Multiple', base_seed: baseSeed, seed_index: seedIndex };
+
+    case 'FromDatetime':
+      const segment = seedSource.segments[seedIndex];
+      return {
+        type: 'Datetime',
+        base_seed: baseSeed,
+        datetime: seedSource.datetime,
+        timer0: segment.timer0,
+        vcount: segment.vcount,
+        key_code: segment.key_code,
+      };
+  }
+}
+```
+
+#### 4.6.4 Worker 実装例
+
+```typescript
+// Worker の START ハンドラ
+async function handleStart(params: GenerationParams) {
+  const { seedSource, config, offsetConfig, maxAdvances, batchSize } = params;
+
+  // 1. SeedSource から BaseSeed 配列を解決
+  const baseSeeds = resolveSeedSource(seedSource);
+
+  for (let i = 0; i < baseSeeds.length; i++) {
+    const baseSeed = baseSeeds[i];
+
+    // 2. GenerationSource を構築
+    const source = buildSource(seedSource, baseSeed, i);
+
+    // 3. Generator を作成 (source を渡す)
+    const generator = new WildPokemonGenerator(
+      source,
+      baseSeed,
+      config.version,
+      gameStartConfig,
+      offsetConfig,
+      config,
+      slots,
+    );
+
+    // 4. バッチ生成
+    while (generator.current_advance() < maxAdvances) {
+      const results = generator.take(batchSize);
+
+      // 結果には source が付与されている
+      self.postMessage({ type: 'RESULTS', payload: { results } });
+
+      await yieldToEventLoop();
+    }
+  }
+
+  self.postMessage({ type: 'COMPLETE' });
+}
+```
+
+### 4.7 generation/flows/mod.rs
 
 ```rust
 //! 生成フロー
@@ -1150,13 +1460,13 @@ pub use pokemon_static::generate_static_pokemon;
 pub use pokemon_wild::generate_wild_pokemon;
 pub use types::{
     EggGenerationConfig, EncounterMethod, EncounterSlotConfig, GeneratedEggData,
-    GeneratedPokemonData, GenerationError, MovingEncounterInfo, MovingEncounterLikelihood,
-    OffsetConfig, PokemonGenerationConfig, RawEggData, RawPokemonData, SpecialEncounterDirection,
-    SpecialEncounterInfo,
+    GeneratedPokemonData, GenerationError, GenerationSource, MovingEncounterInfo,
+    MovingEncounterLikelihood, OffsetConfig, PokemonGenerationConfig, RawEggData,
+    RawPokemonData, SpecialEncounterDirection, SpecialEncounterInfo,
 };
 ```
 
-### 4.7 generation/mod.rs の更新
+### 4.8 generation/mod.rs の更新
 
 ```rust
 //! ポケモン生成機能
