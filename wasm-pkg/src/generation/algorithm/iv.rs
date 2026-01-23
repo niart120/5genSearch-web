@@ -50,20 +50,28 @@ pub fn generate_rng_ivs_with_offset(seed: MtSeed, offset: u32) -> Ivs {
     )
 }
 
-/// 徘徊ポケモン用 IV 生成 (特殊順序)
+/// 徘徊ポケモン用 IV 生成 (HABDSC 順序)
 ///
-/// HP/Atk のみ乱数、他は 0 固定。
+/// MT19937 の最初の 7 回を破棄後、HABDSC 順で 6 回取得し、標準順 (HABCDS) に並び替え。
+/// pokemon-gen5-initseed の `reorder_for_roamer` に準拠。
 pub fn generate_roamer_ivs(seed: MtSeed) -> Ivs {
     let mut mt = Mt19937::new(seed);
 
+    // 最初の 7 回を破棄
     for _ in 0..7 {
         mt.next_u32();
     }
 
-    let hp = extract_iv(mt.next_u32());
-    let atk = extract_iv(mt.next_u32());
+    // HABDSC 順で取得
+    let hp = extract_iv(mt.next_u32()); // H
+    let atk = extract_iv(mt.next_u32()); // A
+    let def = extract_iv(mt.next_u32()); // B
+    let spd = extract_iv(mt.next_u32()); // D (SpD)
+    let spe = extract_iv(mt.next_u32()); // S (Spe)
+    let spa = extract_iv(mt.next_u32()); // C (SpA)
 
-    Ivs::new(hp, atk, 0, 0, 0, 0)
+    // 標準順 (HABCDS) で返却
+    Ivs::new(hp, atk, def, spa, spd, spe)
 }
 
 /// 親の役割

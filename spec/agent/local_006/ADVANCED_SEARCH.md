@@ -14,12 +14,13 @@
 | NeedleSearch | レポート針パターンからの消費位置・起動条件検索 |
 | MtseedSearch | 指定オフセットで条件を満たす IV が生成される MT Seed を全探索 |
 | IvFilter | IV フィルタ条件 (最小値・最大値による範囲指定) |
+| IvCode | IV の 30bit 圧縮表現 (各 IV 5bit × 6) |
 
 ### 1.3 背景・問題
 
 - local_003-005 で基盤機能が実装済み
-- レポート針検索と MT Seed 検索を misc/, seed_search/ に実装
-- 既存の `generation/algorithm/needle.rs` で針方向計算は実装済み
+- レポート針検索と MT Seed 検索を misc/ に実装
+- pokemon-gen5-initseed の既存実装を参照し、互換性を確保
 
 ### 1.4 期待効果
 
@@ -36,11 +37,11 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/lib.rs` | 変更 | misc, seed_search モジュール追加 |
+| `wasm-pkg/src/lib.rs` | 変更 | misc モジュール追加 |
 | `wasm-pkg/src/misc/mod.rs` | 新規 | モジュール宣言 |
-| `wasm-pkg/src/misc/needle_search.rs` | 新規 | レポート針検索 (既存 algorithm を活用) |
-| `wasm-pkg/src/seed_search/mod.rs` | 新規 | モジュール宣言 |
-| `wasm-pkg/src/seed_search/mtseed.rs` | 新規 | MT Seed 全探索 |
+| `wasm-pkg/src/misc/needle_search.rs` | 新規 | レポート針検索 |
+| `wasm-pkg/src/misc/mtseed_search.rs` | 新規 | MT Seed 全探索 |
+| `wasm-pkg/src/generation/algorithm/needle.rs` | 変更 | 計算方法の修正 (pokemon-gen5-initseed 準拠) |
 
 ## 3. 設計方針
 
@@ -48,13 +49,11 @@
 
 ```
 wasm-pkg/src/
-├── lib.rs              # misc, seed_search モジュール追加
-├── misc/
-│   ├── mod.rs          # re-export
-│   └── needle_search.rs # レポート針検索
-└── seed_search/
+├── lib.rs              # misc モジュール追加
+└── misc/
     ├── mod.rs          # re-export
-    └── mtseed.rs       # MT Seed 全探索
+    ├── needle_search.rs # レポート針検索
+    └── mtseed_search.rs # MT Seed 全探索
 ```
 
 ### 3.2 依存関係
@@ -63,7 +62,7 @@ wasm-pkg/src/
 types/ + core/ + generation/algorithm/
            ↓
 misc/needle_search.rs   ← generation/algorithm/needle.rs を活用
-seed_search/mtseed.rs   ← generation/algorithm/iv.rs を活用
+misc/mtseed_search.rs   ← generation/algorithm/iv.rs を活用
 ```
 
 ### 3.3 レポート針検索の設計
@@ -73,13 +72,52 @@ seed_search/mtseed.rs   ← generation/algorithm/iv.rs を活用
 | モード | 入力 | 用途 |
 |--------|------|------|
 | `InitialSeed` | LcgSeed + 消費範囲 | 既知 Seed からの消費位置特定 |
-| `Startup` | 起動条件 + Timer0/VCount 範囲 | 起動条件の検証・特定 (将来拡張) |
+| `Startup` | 起動条件 + Timer0/VCount 範囲 | 起動条件の検証・特定 |
 
-**Phase 1 (本仕様)**: `InitialSeed` モードのみ実装。`Startup` モードは将来拡張。
+両モードを本仕様で実装する。
 
-#### 3.3.2 既存実装の活用
+#### 3.3.2 Startup モードの設計
 
-- 針方向計算: `generation/algorithm/needle::calculate_needle_direction(LcgSeed)`
+既存の `datetime_search` 基盤を活用し、SHA-1 計算 → LCG Seed 導出 → 針パターン照合 の流れで実装する。
+
+```
+起動条件 (DateTime + Timer0 + VCount + KeyCode)
+    │
+    └─ SHA-1 計算 → LCG Seed
+           │
+           └─ 消費範囲内で針パターン照合
+```
+
+**結果情報**: 検索結果には `GenerationSource::Datetime` 相当の情報 (datetime, timer0, vcount, key_code, base_seed) を保持し、後続の個体生成に活用できるようにする。
+
+**注意**: 時間範囲指定は今のところ想定しない。単一の起動条件を指定し、Timer0/VCount 範囲を探索する形式。
+
+#### 3.3.3 針方向計算の修正
+
+**重要**: 現行の `generation/algorithm/needle.rs` の計算方法は pokemon-gen5-initseed と異なる。
+
+| 実装 | 計算方法 |
+|------|----------|
+| 現行 | `(seed >> 32) >> 29` (上位3bit) |
+| pokemon-gen5-initseed | `((next_seed >> 32) * 8) >> 32` (1回進めた後の上位32bit × 8 >> 32) |
+
+pokemon-gen5-initseed の方式に統一する必要がある。
+
+```rust
+/// レポート針方向を計算 (0-7)
+///
+/// pokemon-gen5-initseed 準拠: Seed を 1 回進めた後の上位 32bit を使用
+pub fn calc_report_needle_direction(seed: LcgSeed) -> NeedleDirection {
+    let next = Lcg64::compute_next(seed);
+    let upper = next.value() >> 32;
+    let dir = (upper.wrapping_mul(8)) >> 32;
+    NeedleDirection::from_value((dir & 7) as u8)
+}
+```
+
+#### 3.3.4 既存実装の活用
+
+- 針方向計算: `generation/algorithm/needle::calc_report_needle_direction(LcgSeed)` (修正後)
 - LCG 操作: `core/lcg::Lcg64`
 - 型定義: `types::LcgSeed`, `types::NeedleDirection`
 
@@ -100,7 +138,39 @@ MT Seed 空間 (0x00000000 - 0xFFFFFFFF)
         5. 一致すれば候補として記録
 ```
 
-#### 3.4.2 IV フィルタ条件
+#### 3.4.2 IvCode 圧縮表現
+
+pokemon-gen5-initseed では IV を 30bit に圧縮した `IvCode` を使用している。フィルタ条件の高速照合に有効。
+
+```rust
+/// IvCode: IV の 30bit 圧縮表現
+/// 配置: [HP:5bit][Atk:5bit][Def:5bit][SpA:5bit][SpD:5bit][Spe:5bit]
+pub type IvCode = u32;
+
+/// IV セットを IvCode にエンコード
+pub fn encode_iv_code(ivs: &[u8; 6]) -> IvCode {
+    (u32::from(ivs[0]) << 25)
+        | (u32::from(ivs[1]) << 20)
+        | (u32::from(ivs[2]) << 15)
+        | (u32::from(ivs[3]) << 10)
+        | (u32::from(ivs[4]) << 5)
+        | u32::from(ivs[5])
+}
+
+/// IvCode を IV セットにデコード
+pub fn decode_iv_code(code: IvCode) -> [u8; 6] {
+    [
+        ((code >> 25) & 0x1F) as u8,
+        ((code >> 20) & 0x1F) as u8,
+        ((code >> 15) & 0x1F) as u8,
+        ((code >> 10) & 0x1F) as u8,
+        ((code >> 5) & 0x1F) as u8,
+        (code & 0x1F) as u8,
+    ]
+}
+```
+
+#### 3.4.3 IV フィルタ条件
 
 ```rust
 /// IV フィルタ条件
@@ -114,7 +184,70 @@ pub struct IvFilter {
 }
 ```
 
-#### 3.4.3 既存実装の活用
+#### 3.4.4 徘徊ポケモン対応
+
+徘徊ポケモンの IV は取得順序が通常と異なる。
+
+| ステータス | 通常順序 | 徘徊順序 |
+|-----------|---------|---------|
+| HP | 1 | 1 |
+| Atk | 2 | 2 |
+| Def | 3 | 3 |
+| SpA | 4 | **6** |
+| SpD | 5 | **4** |
+| Spe | 6 | **5** |
+
+**HABCDS → HABDSC への順序変換**が必要。pokemon-gen5-initseed の `reorder_for_roamer` に準拠。
+
+```rust
+/// 徘徊ポケモン用 IV 生成 (HABDSC 順序)
+///
+/// MT19937 の最初の 7 回を破棄後、HABDSC 順で 6 回取得し、標準順 (HABCDS) に並び替え。
+pub fn generate_roamer_ivs(seed: MtSeed) -> Ivs {
+    let mut mt = Mt19937::new(seed);
+
+    // 最初の 7 回を破棄
+    for _ in 0..7 {
+        mt.next_u32();
+    }
+
+    // HABDSC 順で取得
+    let hp = extract_iv(mt.next_u32());   // H
+    let atk = extract_iv(mt.next_u32());  // A
+    let def = extract_iv(mt.next_u32());  // B
+    let spd = extract_iv(mt.next_u32());  // D (SpD)
+    let spe = extract_iv(mt.next_u32());  // S (Spe)
+    let spa = extract_iv(mt.next_u32());  // C (SpA)
+
+    // 標準順 (HABCDS) で返却
+    Ivs::new(hp, atk, def, spa, spd, spe)
+}
+```
+
+**IvCode の順序変換** (検索用):
+
+```rust
+/// 徘徊ポケモン用 IvCode 順序変換
+///
+/// 検索対象の IvCode を徘徊順序に変換する。
+/// 通常: HABCDS (HP, Atk, Def, SpA, SpD, Spe)
+/// 徘徊: HABDSC (HP, Atk, Def, SpD, Spe, SpA)
+pub fn reorder_iv_code_for_roamer(iv_code: IvCode) -> IvCode {
+    let hp  = (iv_code >> 25) & 0x1F;
+    let atk = (iv_code >> 20) & 0x1F;
+    let def = (iv_code >> 15) & 0x1F;
+    let spa = (iv_code >> 10) & 0x1F;
+    let spd = (iv_code >> 5) & 0x1F;
+    let spe = iv_code & 0x1F;
+
+    // HABDSC 順で再配置
+    (hp << 25) | (atk << 20) | (def << 15) | (spe << 10) | (spa << 5) | spd
+}
+```
+
+**注意**: MT Seed 全探索では徘徊モードをフラグで指定し、IvCode 変換または IV 生成関数を切り替える。
+
+#### 3.4.5 既存実装の活用
 
 - IV 生成: `generation/algorithm/iv::generate_rng_ivs_with_offset(MtSeed, offset)`
 - MT 操作: `core/mt::Mt19937`
@@ -122,7 +255,55 @@ pub struct IvFilter {
 
 ## 4. 実装仕様
 
-### 4.1 misc/needle_search.rs
+### 4.1 generation/algorithm/needle.rs の修正
+
+```rust
+//! 針方向計算アルゴリズム
+
+use crate::core::lcg::Lcg64;
+use crate::types::{LcgSeed, NeedleDirection};
+
+/// レポート針方向を計算 (0-7)
+///
+/// pokemon-gen5-initseed 準拠:
+/// - Seed を 1 回進めた後の上位 32bit を使用
+/// - `((upper >> 32) * 8) >> 32` で 0-7 に変換
+pub fn calc_report_needle_direction(seed: LcgSeed) -> NeedleDirection {
+    let next = Lcg64::compute_next(seed);
+    let upper = (next.value() >> 32) as u64;
+    let dir = (upper.wrapping_mul(8)) >> 32;
+    NeedleDirection::from_value((dir & 7) as u8)
+}
+
+/// 旧実装 (互換性のため残す、非推奨)
+#[deprecated(note = "Use calc_report_needle_direction instead")]
+pub fn calculate_needle_direction(seed: LcgSeed) -> NeedleDirection {
+    let value = seed.value();
+    let upper32 = (value >> 32) as u32;
+    let direction = (upper32 >> 29) as u8;
+    NeedleDirection::from_value(direction)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calc_report_needle_direction() {
+        // pokemon-gen5-initseed のテストケースを移植
+        let seed = LcgSeed::new(0xE295B27C208D2A98);
+        assert_eq!(calc_report_needle_direction(seed).value(), 7);
+
+        let seed = LcgSeed::new(0x1AC6A030ADCBC4BB);
+        assert_eq!(calc_report_needle_direction(seed).value(), 0);
+
+        let seed = LcgSeed::new(0x8B3C1E8EE2F04F8A);
+        assert_eq!(calc_report_needle_direction(seed).value(), 4);
+    }
+}
+```
+
+### 4.2 misc/needle_search.rs
 
 参照: [mig_002/misc/needle-search.md](../mig_002/misc/needle-search.md)
 
@@ -130,14 +311,13 @@ pub struct IvFilter {
 //! レポート針検索
 //!
 //! 観測したレポート針パターンから消費位置を特定する機能。
-//! 既存の `generation/algorithm/needle.rs` を活用。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::core::lcg::Lcg64;
-use crate::generation::algorithm::calculate_needle_direction;
+use crate::generation::algorithm::calc_report_needle_direction;
 use crate::types::{LcgSeed, NeedleDirection};
 
 /// レポート針パターン (0-7 の方向値列)
@@ -258,7 +438,7 @@ impl NeedleSearcher {
         let mut test_seed = self.lcg.current_seed();
 
         for &expected in &self.pattern {
-            let direction = calculate_needle_direction(test_seed);
+            let direction = calc_report_needle_direction(test_seed);
             if direction.value() != expected {
                 return false;
             }
@@ -269,6 +449,45 @@ impl NeedleSearcher {
     }
 }
 
+// ===== Startup モード =====
+
+/// Startup モード検索パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedleStartupSearchParams {
+    /// 観測したレポート針パターン (0-7)
+    pub pattern: NeedlePattern,
+    /// DS 設定
+    pub ds: crate::types::DsConfig,
+    /// 起動日時 (固定)
+    pub datetime: crate::datetime_search::DatetimeParams,
+    /// Timer0 検索範囲
+    pub timer0_range: (u16, u16),
+    /// VCount 検索範囲
+    pub vcount_range: (u8, u8),
+    /// KeyCode (固定)
+    pub key_code: u32,
+    /// 消費数検索範囲
+    pub advance_min: u32,
+    pub advance_max: u32,
+}
+
+/// Startup モード検索結果
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedleStartupSearchResult {
+    /// パターン開始消費位置
+    pub advance: u32,
+    /// 生成元情報 (GenerationSource::Datetime)
+    /// local_005 で定義された GenerationSource を使用
+    pub source: crate::generation::flows::GenerationSource,
+}
+
+// Startup モードの実装は datetime_search 基盤を活用
+// 詳細は local_003 の HashValuesEnumerator を参照
+
+// ===== ユーティリティ関数 =====
+
 /// 指定 Seed から針パターンを取得
 #[wasm_bindgen]
 pub fn get_needle_pattern(seed: LcgSeed, length: u32) -> Vec<u8> {
@@ -276,12 +495,27 @@ pub fn get_needle_pattern(seed: LcgSeed, length: u32) -> Vec<u8> {
     let mut current_seed = seed;
 
     for _ in 0..length {
-        let direction = calculate_needle_direction(current_seed);
+        let direction = calc_report_needle_direction(current_seed);
         pattern.push(direction.value());
         current_seed = Lcg64::compute_next(current_seed);
     }
 
     pattern
+}
+
+/// 針方向を矢印文字に変換
+pub fn needle_direction_arrow(direction: u8) -> &'static str {
+    match direction & 7 {
+        0 => "↑",
+        1 => "↗",
+        2 => "→",
+        3 => "↘",
+        4 => "↓",
+        5 => "↙",
+        6 => "←",
+        7 => "↖",
+        _ => "?",
+    }
 }
 
 #[cfg(test)]
@@ -318,20 +552,25 @@ mod tests {
 }
 ```
 
-### 4.2 misc/mod.rs
+### 4.3 misc/mod.rs
 
 ```rust
 //! 雑多なユーティリティ
 
+pub mod mtseed_search;
 pub mod needle_search;
 
+pub use mtseed_search::{
+    decode_iv_code, decode_iv_code_wasm, encode_iv_code, encode_iv_code_wasm, IvCode, IvFilter,
+    MtseedResult, MtseedSearchBatch, MtseedSearcher, MtseedSearchParams,
+};
 pub use needle_search::{
-    get_needle_pattern, NeedlePattern, NeedleSearchBatch, NeedleSearcher, NeedleSearchParams,
-    NeedleSearchResult,
+    get_needle_pattern, needle_direction_arrow, NeedlePattern, NeedleSearchBatch, NeedleSearcher,
+    NeedleSearchParams, NeedleSearchResult, NeedleStartupSearchParams, NeedleStartupSearchResult,
 };
 ```
 
-### 4.3 seed_search/mtseed.rs
+### 4.4 misc/mtseed_search.rs
 
 参照: [mig_002/seed-search/mtseed.md](../mig_002/seed-search/mtseed.md)
 
@@ -341,6 +580,7 @@ pub use needle_search::{
 //! MT Seed 全探索
 //!
 //! 指定オフセットから検索条件を満たす IV が生成される MT Seed を全探索する機能。
+//! pokemon-gen5-initseed の実装を参照。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -348,6 +588,43 @@ use wasm_bindgen::prelude::*;
 
 use crate::generation::algorithm::generate_rng_ivs_with_offset;
 use crate::types::{Ivs, MtSeed};
+
+// ===== IvCode (30bit 圧縮表現) =====
+
+/// IvCode: IV の 30bit 圧縮表現
+/// 配置: [HP:5bit][Atk:5bit][Def:5bit][SpA:5bit][SpD:5bit][Spe:5bit]
+pub type IvCode = u32;
+
+/// IV セットを IvCode にエンコード
+#[inline]
+pub fn encode_iv_code(ivs: &[u8; 6]) -> IvCode {
+    (u32::from(ivs[0]) << 25)
+        | (u32::from(ivs[1]) << 20)
+        | (u32::from(ivs[2]) << 15)
+        | (u32::from(ivs[3]) << 10)
+        | (u32::from(ivs[4]) << 5)
+        | u32::from(ivs[5])
+}
+
+/// IvCode を IV セットにデコード
+#[inline]
+pub fn decode_iv_code(code: IvCode) -> [u8; 6] {
+    [
+        ((code >> 25) & 0x1F) as u8,
+        ((code >> 20) & 0x1F) as u8,
+        ((code >> 15) & 0x1F) as u8,
+        ((code >> 10) & 0x1F) as u8,
+        ((code >> 5) & 0x1F) as u8,
+        (code & 0x1F) as u8,
+    ]
+}
+
+/// Ivs を配列に変換
+fn ivs_to_array(ivs: &Ivs) -> [u8; 6] {
+    [ivs.hp, ivs.atk, ivs.def, ivs.spa, ivs.spd, ivs.spe]
+}
+
+// ===== IV フィルタ =====
 
 /// IV フィルタ条件
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, Default)]
@@ -406,6 +683,8 @@ pub struct MtseedSearchParams {
     pub iv_filter: IvFilter,
     /// MT オフセット (IV 生成開始位置、通常 7)
     pub mt_offset: u32,
+    /// 徘徊ポケモンモード
+    pub is_roamer: bool,
 }
 
 /// MT Seed 検索結果
@@ -416,6 +695,8 @@ pub struct MtseedResult {
     pub seed: MtSeed,
     /// 生成された IV
     pub ivs: Ivs,
+    /// IvCode
+    pub iv_code: IvCode,
 }
 
 /// MT Seed 検索バッチ結果
@@ -435,6 +716,7 @@ pub struct MtseedSearchBatch {
 pub struct MtseedSearcher {
     iv_filter: IvFilter,
     mt_offset: u32,
+    is_roamer: bool,
     current_seed: u64,
 }
 
@@ -447,6 +729,7 @@ impl MtseedSearcher {
         Self {
             iv_filter: params.iv_filter,
             mt_offset: params.mt_offset,
+            is_roamer: params.is_roamer,
             current_seed: 0,
         }
     }
@@ -468,10 +751,21 @@ impl MtseedSearcher {
 
         while self.current_seed < end_seed {
             let seed = MtSeed::new(self.current_seed as u32);
-            let ivs = generate_rng_ivs_with_offset(seed, self.mt_offset);
+            
+            // 徘徊ポケモンモード時は専用関数、通常は汎用関数
+            let ivs = if self.is_roamer {
+                generate_roamer_ivs(seed)
+            } else {
+                generate_rng_ivs_with_offset(seed, self.mt_offset)
+            };
 
             if self.iv_filter.matches(&ivs) {
-                candidates.push(MtseedResult { seed, ivs });
+                let iv_code = encode_iv_code(&ivs_to_array(&ivs));
+                candidates.push(MtseedResult {
+                    seed,
+                    ivs,
+                    iv_code,
+                });
             }
 
             self.current_seed += 1;
@@ -485,9 +779,35 @@ impl MtseedSearcher {
     }
 }
 
+// ===== WASM エクスポート関数 =====
+
+/// IvCode エンコード (WASM 公開)
+#[wasm_bindgen]
+pub fn encode_iv_code_wasm(ivs: &[u8]) -> Result<IvCode, String> {
+    if ivs.len() != 6 {
+        return Err("ivs must have exactly 6 elements".into());
+    }
+    let arr: [u8; 6] = ivs.try_into().unwrap();
+    Ok(encode_iv_code(&arr))
+}
+
+/// IvCode デコード (WASM 公開)
+#[wasm_bindgen]
+pub fn decode_iv_code_wasm(code: IvCode) -> Vec<u8> {
+    decode_iv_code(code).to_vec()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_encode_decode_iv_code() {
+        let ivs = [31, 30, 29, 28, 27, 26];
+        let code = encode_iv_code(&ivs);
+        let decoded = decode_iv_code(code);
+        assert_eq!(ivs, decoded);
+    }
 
     #[test]
     fn test_iv_filter_matches() {
@@ -512,6 +832,7 @@ mod tests {
         let params = MtseedSearchParams {
             iv_filter: IvFilter::any(),
             mt_offset: 7,
+            is_roamer: false,
         };
 
         let mut searcher = MtseedSearcher::new(params);
@@ -521,17 +842,37 @@ mod tests {
         assert_eq!(batch.candidates.len(), 100);
         assert_eq!(batch.processed, 100);
     }
+
+    #[test]
+    fn test_roamer_iv_filter() {
+        // 徘徊ポケモンは HABDSC 順で IV を取得
+        // 6V 検索: 通常と同じ 6 個の IV が決定される (順序のみ異なる)
+        let filter = IvFilter {
+            hp: (31, 31),
+            atk: (31, 31),
+            def: (31, 31),
+            spa: (31, 31),
+            spd: (31, 31),
+            spe: (31, 31),
+        };
+
+        let params = MtseedSearchParams {
+            iv_filter: filter,
+            mt_offset: 7,  // 無視される
+            is_roamer: true,
+        };
+
+        let mut searcher = MtseedSearcher::new(params);
+        let batch = searcher.next_batch(100000);
+
+        // 6V の候補が見つかるはず (HABDSC 順序で取得されるが、標準順 HABCDS に並び替えて返却)
+        assert!(batch.candidates.iter().all(|c| {
+            c.ivs.hp == 31 && c.ivs.atk == 31 &&
+            c.ivs.def == 31 && c.ivs.spa == 31 &&
+            c.ivs.spd == 31 && c.ivs.spe == 31
+        }));
+    }
 }
-```
-
-### 4.4 seed_search/mod.rs
-
-```rust
-//! Seed 検索機能
-
-pub mod mtseed;
-
-pub use mtseed::{IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearcher, MtseedSearchParams};
 ```
 
 ### 4.5 lib.rs の更新
@@ -539,15 +880,15 @@ pub use mtseed::{IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearcher, Mtse
 ```rust
 // 既存のモジュール宣言に追加
 pub mod misc;
-pub mod seed_search;
 
 // re-export
 pub use misc::{
+    // MT Seed 検索
+    decode_iv_code_wasm, encode_iv_code_wasm, IvCode, IvFilter, MtseedResult, MtseedSearchBatch,
+    MtseedSearcher, MtseedSearchParams,
+    // レポート針検索
     get_needle_pattern, NeedlePattern, NeedleSearchBatch, NeedleSearcher, NeedleSearchParams,
     NeedleSearchResult,
-};
-pub use seed_search::{
-    IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearcher, MtseedSearchParams,
 };
 ```
 
@@ -557,15 +898,16 @@ pub use seed_search::{
 
 | テスト対象 | テスト内容 |
 |-----------|-----------|
+| `needle.rs` | 針方向計算 (pokemon-gen5-initseed 互換性確認) |
 | `needle_search.rs` | パターン一致検出、既知 Seed での針パターン取得 |
-| `mtseed.rs` | IvFilter の判定ロジック、全範囲フィルタでの候補生成 |
+| `mtseed_search.rs` | IvCode エンコード/デコード、IvFilter 判定、徘徊ポケモン IV 生成 |
 
 ### 5.2 統合テスト
 
 | テスト対象 | テスト内容 |
 |-----------|-----------|
 | NeedleSearcher | 既知パターンでの検索一致確認 |
-| MtseedSearcher | 特定 IV 条件での候補絞り込み確認 |
+| MtseedSearcher | 特定 IV 条件での候補絞り込み確認、徘徊モードでの HP/Atk のみ検索確認 |
 
 ### 5.3 コマンド
 
@@ -577,18 +919,43 @@ wasm-pack build --target web
 
 ## 6. 実装チェックリスト
 
+- [ ] `wasm-pkg/src/generation/algorithm/needle.rs` 修正
+  - [ ] `calc_report_needle_direction` 追加 (pokemon-gen5-initseed 準拠)
+  - [ ] 旧実装を deprecated 化
+  - [ ] ユニットテスト
 - [ ] `wasm-pkg/src/misc/mod.rs` 作成
 - [ ] `wasm-pkg/src/misc/needle_search.rs` 作成
-  - [ ] NeedleSearchParams (LcgSeed 起点)
-  - [ ] NeedleSearcher (既存 algorithm 活用)
+  - [ ] NeedleSearchParams (InitialSeed モード)
+  - [ ] NeedleSearcher
+  - [ ] NeedleStartupSearchParams/Result (Startup モード型定義、GenerationSource 相当の情報保持)
   - [ ] get_needle_pattern
+  - [ ] needle_direction_arrow
   - [ ] ユニットテスト
-- [ ] `wasm-pkg/src/seed_search/mod.rs` 作成
-- [ ] `wasm-pkg/src/seed_search/mtseed.rs` 作成
+- [ ] `wasm-pkg/src/misc/mtseed_search.rs` 作成
+  - [ ] IvCode エンコード/デコード
   - [ ] IvFilter
-  - [ ] MtseedSearchParams
-  - [ ] MtseedSearcher
+  - [ ] MtseedSearchParams (is_roamer フラグ)
+  - [ ] MtseedSearcher (徘徊モード時は generate_roamer_ivs 使用)
+  - [ ] WASM エクスポート関数
   - [ ] ユニットテスト
 - [ ] `wasm-pkg/src/lib.rs` 更新
 - [ ] `cargo test` パス確認
 - [ ] `wasm-pack build --target web` 成功確認
+
+## 7. pokemon-gen5-initseed との差異・互換性
+
+### 7.1 針方向計算
+
+| 項目 | pokemon-gen5-initseed | 本実装 |
+|------|----------------------|--------|
+| 計算方法 | `((next_seed >> 32) * 8) >> 32` | 同左に修正 |
+| 関数名 | `calc_report_needle_direction` | `calc_report_needle_direction` |
+
+### 7.2 MT Seed 検索
+
+| 項目 | pokemon-gen5-initseed | 本実装 |
+|------|----------------------|--------|
+| IvCode 形式 | 30bit 圧縮 | 同左 |
+| 徘徊モード | HP/Atk のみ乱数、他は 0 固定 | 同左 (既存 `generate_roamer_ivs` を使用) |
+| SIMD 最適化 | あり (Mt19937x4) | 将来対応 (local_007 以降) |
+| GPU 対応 | あり (WebGPU) | 将来対応 (local_007) |

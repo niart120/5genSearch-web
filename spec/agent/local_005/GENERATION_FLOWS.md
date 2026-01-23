@@ -325,6 +325,56 @@ LCG Seed (TotalOffset + advance 適用後)
 - `SpecialEncounterInfo` は `needle_direction` と同様、消費カウント外で算出される参考情報
 - `MovingEncounterInfo` は消費に影響するため、前段で 2 消費が発生する
 
+### 3.5 GenerationSource (生成元情報)
+
+生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
+後続の個体生成 (タマゴ含む) で共通的に使用する。
+
+```rust
+/// 生成元情報
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum GenerationSource {
+    /// 固定 Seed から生成
+    Fixed {
+        /// BaseSeed (SHA-1 から導出)
+        base_seed: u64,
+    },
+    /// 複数 Seed 指定から生成
+    Multiple {
+        /// BaseSeed (SHA-1 から導出)
+        base_seed: u64,
+        /// 入力 seeds 配列のインデックス
+        seed_index: u32,
+    },
+    /// 日時検索から生成
+    Datetime {
+        /// BaseSeed (SHA-1 から導出)
+        base_seed: u64,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// Timer0 値
+        timer0: u16,
+        /// VCount 値
+        vcount: u8,
+        /// キー入力コード
+        key_code: u32,
+    },
+}
+```
+
+```typescript
+export type GenerationSource =
+  | { type: 'Fixed'; base_seed: bigint }
+  | { type: 'Multiple'; base_seed: bigint; seed_index: number }
+  | { type: 'Datetime'; base_seed: bigint; datetime: DatetimeParams; timer0: number; vcount: number; key_code: number };
+```
+
+**設計意図**:
+- 検索結果から個体生成へ繋げる際、どの起動条件から生成されたかを追跡可能にする
+- レポート針検索 (local_006) やタマゴ起動時刻検索 (local_008) でも同じ構造を使用
+- UI 側で起動条件の表示や再計算に利用
+
 ## 4. 実装仕様
 
 ### 4.1 generation/flows/types.rs
@@ -335,6 +385,7 @@ LCG Seed (TotalOffset + advance 適用後)
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
+use crate::datetime_search::DatetimeParams;
 use crate::types::{
     EncounterType, GameStartConfig, Gender, GenderRatio, Ivs, LeadAbilityEffect, Nature,
     NeedleDirection, RomVersion, ShinyType,
@@ -439,6 +490,8 @@ pub struct RawPokemonData {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratedPokemonData {
+    // 生成元情報
+    pub source: GenerationSource,
     // 列挙コンテキスト
     pub advance: u32,
     pub needle_direction: NeedleDirection,
@@ -463,17 +516,10 @@ pub struct GeneratedPokemonData {
     /// 特殊エンカウント情報 (ShakingGrass/DustCloud/SurfingBubble/FishingBubble/PokemonShadow 時のみ Some)
     pub special_encounter: Option<SpecialEncounterInfo>,
 }
-    pub sync_applied: bool,
-    pub ability_slot: u8,
-    pub gender: Gender,
-    pub shiny_type: ShinyType,
-    pub held_item_slot: HeldItemSlot,
-    // IV (既存 Ivs 型を使用)
-    pub ivs: Ivs,
-}
 
 impl GeneratedPokemonData {
     pub fn new(
+        source: GenerationSource,
         raw: RawPokemonData,
         ivs: Ivs,
         advance: u32,
@@ -481,6 +527,7 @@ impl GeneratedPokemonData {
         lcg_seed: u64,
     ) -> Self {
         Self {
+            source,
             advance,
             needle_direction,
             lcg_seed,
@@ -494,6 +541,8 @@ impl GeneratedPokemonData {
             shiny_type: raw.shiny_type,
             held_item_slot: raw.held_item_slot,
             ivs,
+            moving_encounter: None,
+            special_encounter: None,
         }
     }
 }
@@ -513,6 +562,8 @@ pub struct RawEggData {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratedEggData {
+    // 生成元情報
+    pub source: GenerationSource,
     // 列挙コンテキスト
     pub advance: u32,
     pub needle_direction: NeedleDirection,
@@ -533,6 +584,7 @@ pub struct GeneratedEggData {
 
 impl GeneratedEggData {
     pub fn new(
+        source: GenerationSource,
         raw: RawEggData,
         ivs: Ivs,
         advance: u32,
@@ -540,6 +592,7 @@ impl GeneratedEggData {
         lcg_seed: u64,
     ) -> Self {
         Self {
+            source,
             advance,
             needle_direction,
             lcg_seed,
