@@ -5,8 +5,8 @@ use tsify::Tsify;
 
 use crate::generation::algorithm::{EverstonePlan, HeldItemSlot, InheritanceSlot};
 use crate::types::{
-    EncounterType, Gender, GenderRatio, Ivs, LeadAbilityEffect, Nature, NeedleDirection,
-    RomVersion, ShinyType,
+    EncounterType, Gender, GenderRatio, GenerationSource, Ivs, LeadAbilityEffect, Nature,
+    NeedleDirection, RomVersion, ShinyType,
 };
 
 // ===== エンカウント方法 =====
@@ -235,6 +235,8 @@ pub struct GeneratedPokemonData {
     // 列挙コンテキスト
     pub advance: u32,
     pub needle_direction: NeedleDirection,
+    /// 生成元情報
+    pub source: GenerationSource,
     // Seed 情報
     #[tsify(type = "bigint")]
     pub lcg_seed: u64,
@@ -259,11 +261,13 @@ pub struct GeneratedPokemonData {
 }
 
 impl GeneratedPokemonData {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         raw: &RawPokemonData,
         ivs: Ivs,
         advance: u32,
         needle_direction: NeedleDirection,
+        source: GenerationSource,
         lcg_seed: u64,
         moving_encounter: Option<MovingEncounterInfo>,
         special_encounter: Option<SpecialEncounterInfo>,
@@ -271,6 +275,7 @@ impl GeneratedPokemonData {
         Self {
             advance,
             needle_direction,
+            source,
             lcg_seed,
             pid: raw.pid,
             species_id: raw.species_id,
@@ -306,6 +311,8 @@ pub struct GeneratedEggData {
     // 列挙コンテキスト
     pub advance: u32,
     pub needle_direction: NeedleDirection,
+    /// 生成元情報
+    pub source: GenerationSource,
     // Seed 情報
     #[tsify(type = "bigint")]
     pub lcg_seed: u64,
@@ -333,11 +340,13 @@ impl GeneratedEggData {
         ivs: Ivs,
         advance: u32,
         needle_direction: NeedleDirection,
+        source: GenerationSource,
         lcg_seed: u64,
     ) -> Self {
         Self {
             advance,
             needle_direction,
+            source,
             lcg_seed,
             pid: raw.pid,
             nature: raw.nature,

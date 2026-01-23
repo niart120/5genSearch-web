@@ -508,3 +508,109 @@ pub enum GenderRatio {
     /// 性別値の閾値 (例: 127 = 1:1, 31 = 7:1, 63 = 3:1, 191 = 1:3)
     Threshold(u8),
 }
+
+// ===== 起動日時パラメータ =====
+
+/// 起動日時パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct DatetimeParams {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+}
+
+impl DatetimeParams {
+    pub const fn new(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> Self {
+        Self {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+        }
+    }
+}
+
+// ===== 生成元情報 =====
+
+/// 生成元情報
+///
+/// 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum GenerationSource {
+    /// 固定 Seed から生成
+    Fixed {
+        /// `BaseSeed` (SHA-1 から導出)
+        #[tsify(type = "bigint")]
+        base_seed: u64,
+    },
+    /// 複数 Seed 指定から生成
+    Multiple {
+        /// `BaseSeed` (SHA-1 から導出)
+        #[tsify(type = "bigint")]
+        base_seed: u64,
+        /// 入力 seeds 配列のインデックス
+        seed_index: u32,
+    },
+    /// 日時検索から生成
+    Datetime {
+        /// `BaseSeed` (SHA-1 から導出)
+        #[tsify(type = "bigint")]
+        base_seed: u64,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// `Timer0` 値
+        timer0: u16,
+        /// `VCount` 値
+        vcount: u8,
+        /// キー入力コード
+        key_code: u32,
+    },
+}
+
+impl GenerationSource {
+    /// Fixed ソースを作成
+    pub const fn fixed(base_seed: u64) -> Self {
+        Self::Fixed { base_seed }
+    }
+
+    /// Multiple ソースを作成
+    pub const fn multiple(base_seed: u64, seed_index: u32) -> Self {
+        Self::Multiple {
+            base_seed,
+            seed_index,
+        }
+    }
+
+    /// Datetime ソースを作成
+    pub const fn datetime(
+        base_seed: u64,
+        datetime: DatetimeParams,
+        timer0: u16,
+        vcount: u8,
+        key_code: u32,
+    ) -> Self {
+        Self::Datetime {
+            base_seed,
+            datetime,
+            timer0,
+            vcount,
+            key_code,
+        }
+    }
+
+    /// `BaseSeed` を取得
+    pub const fn base_seed(&self) -> u64 {
+        match self {
+            Self::Fixed { base_seed }
+            | Self::Multiple { base_seed, .. }
+            | Self::Datetime { base_seed, .. } => *base_seed,
+        }
+    }
+}

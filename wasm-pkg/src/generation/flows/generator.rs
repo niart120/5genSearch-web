@@ -13,7 +13,7 @@ use crate::generation::algorithm::{
     generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
     is_moving_encounter_type, is_special_encounter_type,
 };
-use crate::types::{GameStartConfig, Ivs, LcgSeed, RomVersion};
+use crate::types::{GameStartConfig, GenerationSource, Ivs, LcgSeed, RomVersion};
 
 use super::egg::generate_egg;
 use super::pokemon_static::generate_static_pokemon;
@@ -31,6 +31,7 @@ pub struct WildPokemonGenerator {
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
+    source: GenerationSource,
     config: PokemonGenerationConfig,
     slots: Vec<EncounterSlotConfig>,
 }
@@ -45,6 +46,7 @@ impl WildPokemonGenerator {
         version: RomVersion,
         game_start: &GameStartConfig,
         offset_config: OffsetConfig,
+        source: GenerationSource,
         config: PokemonGenerationConfig,
         slots: Vec<EncounterSlotConfig>,
     ) -> Result<Self, String> {
@@ -63,6 +65,7 @@ impl WildPokemonGenerator {
             user_offset: offset_config.user_offset,
             current_advance: 0,
             rng_ivs,
+            source,
             config,
             slots,
         })
@@ -110,6 +113,7 @@ impl WildPokemonGenerator {
                 self.rng_ivs,
                 advance,
                 needle,
+                self.source.clone(),
                 current_seed.value(),
                 moving_encounter,
                 special_encounter,
@@ -187,6 +191,7 @@ pub struct StaticPokemonGenerator {
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
+    source: GenerationSource,
     config: PokemonGenerationConfig,
     species_id: u16,
     level: u8,
@@ -204,6 +209,7 @@ impl StaticPokemonGenerator {
         version: RomVersion,
         game_start: &GameStartConfig,
         offset_config: OffsetConfig,
+        source: GenerationSource,
         config: PokemonGenerationConfig,
         species_id: u16,
         level: u8,
@@ -224,6 +230,7 @@ impl StaticPokemonGenerator {
             user_offset: offset_config.user_offset,
             current_advance: 0,
             rng_ivs,
+            source,
             config,
             species_id,
             level,
@@ -272,6 +279,7 @@ impl StaticPokemonGenerator {
             self.rng_ivs,
             advance,
             needle,
+            self.source.clone(),
             current_seed.value(),
             None,
             None,
@@ -305,6 +313,7 @@ pub struct EggGenerator {
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
+    source: GenerationSource,
     config: EggGenerationConfig,
     parent_male: Ivs,
     parent_female: Ivs,
@@ -315,11 +324,13 @@ impl EggGenerator {
     ///
     /// # Errors
     /// 無効な起動設定の場合にエラーを返す。
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         base_seed: LcgSeed,
         version: RomVersion,
         game_start: &GameStartConfig,
         offset_config: OffsetConfig,
+        source: GenerationSource,
         config: EggGenerationConfig,
         parent_male: Ivs,
         parent_female: Ivs,
@@ -339,6 +350,7 @@ impl EggGenerator {
             user_offset: offset_config.user_offset,
             current_advance: 0,
             rng_ivs,
+            source,
             config,
             parent_male,
             parent_female,
@@ -382,7 +394,14 @@ impl EggGenerator {
         self.lcg.next();
         self.current_advance += 1;
 
-        GeneratedEggData::new(&raw, final_ivs, advance, needle, current_seed.value())
+        GeneratedEggData::new(
+            &raw,
+            final_ivs,
+            advance,
+            needle,
+            self.source.clone(),
+            current_seed.value(),
+        )
     }
 
     /// 指定数の個体を生成
@@ -442,12 +461,17 @@ mod tests {
         }]
     }
 
+    fn make_source(seed: u64) -> GenerationSource {
+        GenerationSource::fixed(seed)
+    }
+
     #[test]
     fn test_wild_pokemon_generator() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let game_start = make_game_start();
         let offset_config =
             OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
+        let source = make_source(base_seed.value());
         let config = make_pokemon_config();
         let slots = make_slots();
 
@@ -456,6 +480,7 @@ mod tests {
             RomVersion::Black,
             &game_start,
             offset_config,
+            source,
             config,
             slots,
         );
@@ -482,6 +507,7 @@ mod tests {
         let game_start = make_game_start();
         let offset_config =
             OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
+        let source = make_source(base_seed.value());
         let config = make_pokemon_config();
         let slots = make_slots();
 
@@ -490,6 +516,7 @@ mod tests {
             RomVersion::Black,
             &game_start,
             offset_config,
+            source,
             config,
             slots,
         )
@@ -514,6 +541,7 @@ mod tests {
         let game_start = make_game_start();
         let offset_config =
             OffsetConfig::for_encounter(RomVersion::Black, EncounterType::StaticSymbol, 0);
+        let source = make_source(base_seed.value());
         let config = PokemonGenerationConfig {
             encounter_type: EncounterType::StaticSymbol,
             ..make_pokemon_config()
@@ -524,6 +552,7 @@ mod tests {
             RomVersion::Black,
             &game_start,
             offset_config,
+            source,
             config,
             150, // Mewtwo
             70,
@@ -543,6 +572,7 @@ mod tests {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let game_start = make_game_start();
         let offset_config = OffsetConfig::for_egg(0);
+        let source = make_source(base_seed.value());
         let config = EggGenerationConfig {
             tid: 12345,
             sid: 54321,
@@ -562,6 +592,7 @@ mod tests {
             RomVersion::Black,
             &game_start,
             offset_config,
+            source,
             config,
             parent_male,
             parent_female,
@@ -685,11 +716,13 @@ mod tests {
         }];
 
         // Generator を使って生成
+        let source = make_source(initial_seed.value());
         let mut generator = WildPokemonGenerator::new(
             initial_seed,
             RomVersion::Black,
             &game_start,
             OffsetConfig::default(),
+            source,
             config,
             slots,
         )
@@ -762,11 +795,13 @@ mod tests {
         }];
 
         // Generator を使って生成
+        let source = make_source(initial_seed.value());
         let mut generator = WildPokemonGenerator::new(
             initial_seed,
             RomVersion::Black2,
             &game_start,
             OffsetConfig::default(),
+            source,
             config,
             slots,
         )
@@ -829,11 +864,13 @@ mod tests {
         }];
 
         // Generator を使って生成
+        let source = make_source(initial_seed.value());
         let mut generator = WildPokemonGenerator::new(
             initial_seed,
             RomVersion::Black,
             &game_start,
             OffsetConfig::default(),
+            source,
             config,
             slots,
         )
@@ -889,11 +926,13 @@ mod tests {
         };
 
         // 固定シンボルは StaticPokemonGenerator を使う
+        let source = make_source(initial_seed.value());
         let mut generator = StaticPokemonGenerator::new(
             initial_seed,
             RomVersion::Black2,
             &game_start,
             OffsetConfig::default(),
+            source,
             config,
             150, // species_id (placeholder)
             50,  // level
@@ -950,11 +989,13 @@ mod tests {
         };
 
         // 御三家は StaticPokemonGenerator を使う
+        let source = make_source(initial_seed.value());
         let mut generator = StaticPokemonGenerator::new(
             initial_seed,
             RomVersion::Black2,
             &game_start,
             OffsetConfig::default(),
+            source,
             config,
             495, // Snivy
             5,   // level

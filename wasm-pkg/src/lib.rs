@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
 pub mod core;
 pub mod datetime_search;
 pub mod generation;
+pub mod misc;
 pub mod types;
 
 // Re-export SHA-1 wasm-bindgen functions
@@ -21,7 +22,7 @@ pub use datetime_search::{
 };
 
 // Re-export common types
-pub use types::{DsConfig, SearchSegment, VCountTimer0Range};
+pub use types::{DatetimeParams, DsConfig, GenerationSource, SearchSegment, VCountTimer0Range};
 
 // Re-export generation algorithm types
 pub use types::{
@@ -32,7 +33,16 @@ pub use types::{
 // Re-export generation algorithm functions
 pub use generation::algorithm::{
     EncounterResult, EverstonePlan, HeldItemSlot, InheritanceSlot, ItemContent, ParentRole,
-    apply_game_offset, calculate_game_offset, calculate_needle_direction,
+    apply_game_offset, calc_report_needle_direction, calculate_game_offset,
+    calculate_needle_direction,
+};
+
+// Re-export misc module
+pub use misc::{
+    IvCode, IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher,
+    NeedlePattern, NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher,
+    decode_iv_code, encode_iv_code, get_needle_pattern, needle_direction_arrow,
+    reorder_iv_code_for_roamer,
 };
 
 #[wasm_bindgen(start)]
