@@ -306,4 +306,185 @@ pub(crate) fn sha1_hash_single(message: &[u32; 16]) -> HashValues { ... }
 ### Phase 5: 追加改修
 - [x] `SeedSource::MtSeed` バリアント削除（使用箇所なし）
 - [x] `MtseedDatetimeSearchParams.target_seeds` を `Vec<MtSeed>` に厳格化
-- [ ] `IvCode` / `NeedlePattern` の TS 型としての明示的 export（type alias は tsify 非対応のため検討中）
+
+### Phase 6: Newtype Struct 導入
+- [ ] `IvCode` newtype struct 化（`misc/mtseed_search.rs`）
+- [ ] `NeedlePattern` newtype struct 化（`misc/needle_search.rs`）
+- [ ] `KeyCode` newtype struct 新規追加（`types/config.rs`）
+- [ ] `KeyMask` newtype struct 新規追加（`types/config.rs`）
+- [ ] 各使用箇所の修正
+- [ ] テスト修正・追加
+
+## 7. Phase 6: Newtype Struct 詳細設計
+
+### 7.1 概要
+
+type alias は tsify で TypeScript 型として export されないため、newtype struct パターンで明示的な型を定義する。
+
+### 7.2 `IvCode`
+
+**配置**: `types/config.rs`（共通型として移動）
+
+```rust
+/// IV の 30bit 圧縮表現
+///
+/// 配置: [HP:5bit][Atk:5bit][Def:5bit][SpA:5bit][SpD:5bit][Spe:5bit]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct IvCode(pub u32);
+
+impl IvCode {
+    pub const fn new(value: u32) -> Self {
+        Self(value)
+    }
+
+    pub const fn value(self) -> u32 {
+        self.0
+    }
+
+    /// IV セットからエンコード
+    pub fn encode(ivs: &[u8; 6]) -> Self {
+        Self(
+            (u32::from(ivs[0]) << 25)
+                | (u32::from(ivs[1]) << 20)
+                | (u32::from(ivs[2]) << 15)
+                | (u32::from(ivs[3]) << 10)
+                | (u32::from(ivs[4]) << 5)
+                | u32::from(ivs[5]),
+        )
+    }
+
+    /// IV セットにデコード
+    pub fn decode(self) -> [u8; 6] {
+        [
+            ((self.0 >> 25) & 0x1F) as u8,
+            ((self.0 >> 20) & 0x1F) as u8,
+            ((self.0 >> 15) & 0x1F) as u8,
+            ((self.0 >> 10) & 0x1F) as u8,
+            ((self.0 >> 5) & 0x1F) as u8,
+            (self.0 & 0x1F) as u8,
+        ]
+    }
+
+    /// 徘徊ポケモン用順序変換 (HABCDS → HABDSC)
+    pub fn reorder_for_roamer(self) -> Self {
+        let hp = (self.0 >> 25) & 0x1F;
+        let atk = (self.0 >> 20) & 0x1F;
+        let def = (self.0 >> 15) & 0x1F;
+        let spa = (self.0 >> 10) & 0x1F;
+        let spd = (self.0 >> 5) & 0x1F;
+        let spe = self.0 & 0x1F;
+        Self((hp << 25) | (atk << 20) | (def << 15) | (spd << 10) | (spe << 5) | spa)
+    }
+}
+```
+
+### 7.3 `NeedlePattern`
+
+**配置**: `types/config.rs`
+
+```rust
+/// レポート針パターン (0-7 の方向値列)
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedlePattern(pub Vec<u8>);
+
+impl NeedlePattern {
+    pub fn new(values: Vec<u8>) -> Self {
+        Self(values)
+    }
+
+    pub fn values(&self) -> &[u8] {
+        &self.0
+    }
+
+    pub fn into_inner(self) -> Vec<u8> {
+        self.0
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+```
+
+### 7.4 `KeyCode` / `KeyMask`
+
+**配置**: `types/config.rs`
+
+```rust
+/// キー入力コード (SHA-1 計算用)
+///
+/// `KeyMask` を XOR 0x2FFF で変換した値。
+/// ゲーム内部の SHA-1 メッセージ生成で使用される。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct KeyCode(pub u32);
+
+impl KeyCode {
+    /// キー入力なしの値
+    pub const NONE: Self = Self(0x2FFF);
+
+    pub const fn new(value: u32) -> Self {
+        Self(value)
+    }
+
+    pub const fn value(self) -> u32 {
+        self.0
+    }
+
+    /// `KeyMask` から変換
+    pub const fn from_mask(mask: KeyMask) -> Self {
+        Self(mask.0 ^ 0x2FFF)
+    }
+
+    /// `KeyMask` に変換
+    pub const fn to_mask(self) -> KeyMask {
+        KeyMask(self.0 ^ 0x2FFF)
+    }
+}
+
+/// キー入力マスク (UI 入力用)
+///
+/// ユーザーが押したキーのビットマスク。
+/// `KeyCode` との関係: `key_code = key_mask XOR 0x2FFF`
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct KeyMask(pub u32);
+
+impl KeyMask {
+    /// キー入力なしの値
+    pub const NONE: Self = Self(0x0000);
+
+    pub const fn new(value: u32) -> Self {
+        Self(value)
+    }
+
+    pub const fn value(self) -> u32 {
+        self.0
+    }
+
+    /// `KeyCode` から変換
+    pub const fn from_code(code: KeyCode) -> Self {
+        Self(code.0 ^ 0x2FFF)
+    }
+
+    /// `KeyCode` に変換
+    pub const fn to_code(self) -> KeyCode {
+        KeyCode(self.0 ^ 0x2FFF)
+    }
+}
+```
+
+### 7.5 影響範囲
+
+| 型 | 影響ファイル数 | 主な変更内容 |
+|---|---|---|
+| `IvCode` | 2 | `mtseed_search.rs` 関数削除・メソッド化、re-export 更新 |
+| `NeedlePattern` | 2 | `needle_search.rs` フィールド型変更、re-export 更新 |
+| `KeyCode` | 7 | 全 `key_code: u32` を `key_code: KeyCode` に変更 |
+| `KeyMask` | 1 | 新規追加のみ |

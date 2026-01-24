@@ -8,36 +8,20 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::generation::algorithm::{generate_rng_ivs_with_offset, generate_roamer_ivs};
-use crate::types::{Ivs, MtSeed};
+use crate::types::{IvCode, Ivs, MtSeed};
 
-// ===== `IvCode` (30bit 圧縮表現) =====
-
-/// `IvCode`: IV の 30bit 圧縮表現
-/// 配置: [HP:5bit][Atk:5bit][Def:5bit][SpA:5bit][SpD:5bit][Spe:5bit]
-pub type IvCode = u32;
+// ===== ヘルパー関数 =====
 
 /// IV セットを `IvCode` にエンコード
 #[inline]
 pub fn encode_iv_code(ivs: &[u8; 6]) -> IvCode {
-    (u32::from(ivs[0]) << 25)
-        | (u32::from(ivs[1]) << 20)
-        | (u32::from(ivs[2]) << 15)
-        | (u32::from(ivs[3]) << 10)
-        | (u32::from(ivs[4]) << 5)
-        | u32::from(ivs[5])
+    IvCode::encode(ivs)
 }
 
 /// `IvCode` を IV セットにデコード
 #[inline]
 pub fn decode_iv_code(code: IvCode) -> [u8; 6] {
-    [
-        ((code >> 25) & 0x1F) as u8,
-        ((code >> 20) & 0x1F) as u8,
-        ((code >> 15) & 0x1F) as u8,
-        ((code >> 10) & 0x1F) as u8,
-        ((code >> 5) & 0x1F) as u8,
-        (code & 0x1F) as u8,
-    ]
+    code.decode()
 }
 
 /// 徘徊ポケモン用 `IvCode` 順序変換
@@ -47,15 +31,7 @@ pub fn decode_iv_code(code: IvCode) -> [u8; 6] {
 /// 徘徊: HABDSC (HP, Atk, Def, `SpD`, Spe, `SpA`)
 #[inline]
 pub fn reorder_iv_code_for_roamer(iv_code: IvCode) -> IvCode {
-    let hp = (iv_code >> 25) & 0x1F;
-    let atk = (iv_code >> 20) & 0x1F;
-    let def = (iv_code >> 15) & 0x1F;
-    let spa = (iv_code >> 10) & 0x1F;
-    let spd = (iv_code >> 5) & 0x1F;
-    let spe = iv_code & 0x1F;
-
-    // HABDSC 順で再配置
-    (hp << 25) | (atk << 20) | (def << 15) | (spd << 10) | (spe << 5) | spa
+    iv_code.reorder_for_roamer()
 }
 
 /// Ivs を配列に変換
@@ -270,7 +246,7 @@ mod tests {
     fn test_encode_decode_6v() {
         let ivs = [31, 31, 31, 31, 31, 31];
         let code = encode_iv_code(&ivs);
-        assert_eq!(code, 0x3FFF_FFFF); // 全ビット 1 (30bit)
+        assert_eq!(code.value(), 0x3FFF_FFFF); // 全ビット 1 (30bit)
         let decoded = decode_iv_code(code);
         assert_eq!(ivs, decoded);
     }

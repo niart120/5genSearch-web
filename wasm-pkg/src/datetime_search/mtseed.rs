@@ -149,7 +149,7 @@ impl MtseedDatetimeSearcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{Hardware, RomRegion, RomVersion};
+    use crate::types::{Hardware, KeyCode, RomRegion, RomVersion};
 
     use super::*;
 
@@ -180,7 +180,7 @@ mod tests {
             segment: SearchSegment {
                 timer0: 0x0C79,
                 vcount: 0x5A,
-                key_code: 0x0000_0000,
+                key_code: KeyCode::new(0x0000_0000),
             },
         }
     }
@@ -263,7 +263,7 @@ mod tests {
             segment: SearchSegment {
                 timer0: 0x0C79,
                 vcount: 0x60,
-                key_code: 0x2FFF, // キー入力なし
+                key_code: KeyCode::NONE, // キー入力なし
             },
         };
 

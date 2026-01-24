@@ -12,10 +12,10 @@ use crate::core::lcg::Lcg64;
 use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, get_nazo_values};
 use crate::datetime_search::base::datetime_to_seconds;
 use crate::generation::algorithm::calc_report_needle_direction;
-use crate::types::{DatetimeParams, DsConfig, GenerationSource, Hardware, LcgSeed, SeedSource};
-
-/// レポート針パターン (0-7 の方向値列)
-pub type NeedlePattern = Vec<u8>;
+use crate::types::{
+    DatetimeParams, DsConfig, GenerationSource, Hardware, KeyCode, LcgSeed, NeedlePattern,
+    SeedSource,
+};
 
 // ===== 検索パラメータ =====
 
@@ -86,7 +86,7 @@ struct StartupState {
     timer0_max: u16,
     vcount_min: u8,
     vcount_max: u8,
-    key_code: u32,
+    key_code: KeyCode,
     // SHA-1 計算用のベースメッセージ (Timer0/VCount 以外が固定)
     base_message: [u32; 16],
     // hardware フラグ
@@ -222,7 +222,7 @@ impl NeedleSearcher {
         timer0_max: u16,
         vcount_min: u8,
         vcount_max: u8,
-        key_code: u32,
+        key_code: KeyCode,
         advance_min: u32,
         advance_max: u32,
     ) -> Result<SearcherState, String> {
@@ -344,7 +344,7 @@ impl NeedleSearcher {
         let end_advance = (*current_advance + chunk_size).min(advance_max);
 
         while *current_advance < end_advance {
-            if matches_pattern_at_seed(lcg.current_seed(), &pattern) {
+            if matches_pattern_at_seed(lcg.current_seed(), pattern.values()) {
                 results.push(NeedleSearchResult {
                     advance: *current_advance,
                     source: GenerationSource::fixed(*base_seed),
@@ -403,7 +403,7 @@ impl NeedleSearcher {
             // Advance 範囲をスキャン
             let lcg = s.current_lcg.as_mut().unwrap();
             while s.current_advance < advance_max && processed < chunk_size {
-                if matches_pattern_at_seed(lcg.current_seed(), &pattern) {
+                if matches_pattern_at_seed(lcg.current_seed(), pattern.values()) {
                     results.push(NeedleSearchResult {
                         advance: s.current_advance,
                         source: GenerationSource::datetime(
@@ -526,7 +526,7 @@ mod tests {
 
         let params = NeedleSearchParams {
             input: SeedSource::Seed { initial_seed: seed },
-            pattern,
+            pattern: NeedlePattern::new(pattern),
             advance_min: 0,
             advance_max: 10,
         };
@@ -558,7 +558,7 @@ mod tests {
             input: SeedSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
-            pattern: vec![],
+            pattern: NeedlePattern::new(vec![]),
             advance_min: 0,
             advance_max: 10,
         };
@@ -569,7 +569,7 @@ mod tests {
             input: SeedSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
-            pattern: vec![8], // invalid
+            pattern: NeedlePattern::new(vec![8]), // invalid
             advance_min: 0,
             advance_max: 10,
         };
@@ -580,7 +580,7 @@ mod tests {
             input: SeedSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
-            pattern: vec![0],
+            pattern: NeedlePattern::new(vec![0]),
             advance_min: 10,
             advance_max: 5,
         };

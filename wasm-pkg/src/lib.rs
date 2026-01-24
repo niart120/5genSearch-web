@@ -22,9 +22,10 @@ pub use datetime_search::{
 pub use types::{
     DatetimeParams, DsConfig, EncounterMethod, EncounterResult, EncounterType, GameStartConfig,
     GenderRatio, GeneratedEggData, GeneratedPokemonData, GenerationSource, HeldItemSlot,
-    IV_VALUE_UNKNOWN, ItemContent, Ivs, LcgSeed, LeadAbilityEffect, MovingEncounterInfo,
-    MovingEncounterLikelihood, MtSeed, NeedleDirection, SaveState, SearchSegment, SeedSource,
-    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, VCountTimer0Range,
+    IV_VALUE_UNKNOWN, ItemContent, IvCode, Ivs, KeyCode, KeyMask, LcgSeed, LeadAbilityEffect,
+    MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection, NeedlePattern,
+    SaveState, SearchSegment, SeedSource, SpecialEncounterDirection, SpecialEncounterInfo,
+    StartMode, VCountTimer0Range,
 };
 
 // Re-export generation needle functions (外部公開必要)
@@ -32,10 +33,9 @@ pub use generation::algorithm::{calc_report_needle_direction, calculate_needle_d
 
 // Re-export misc module
 pub use misc::{
-    IvCode, IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher,
-    NeedlePattern, NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher,
-    decode_iv_code, encode_iv_code, get_needle_pattern, needle_direction_arrow,
-    reorder_iv_code_for_roamer,
+    IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher,
+    NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher, decode_iv_code,
+    encode_iv_code, get_needle_pattern, needle_direction_arrow, reorder_iv_code_for_roamer,
 };
 
 #[wasm_bindgen(start)]
