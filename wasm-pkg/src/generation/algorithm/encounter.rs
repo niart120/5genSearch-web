@@ -1,9 +1,9 @@
 //! エンカウント処理アルゴリズム
+#![allow(clippy::trivially_copy_pass_by_ref)]
 
-use crate::types::{EncounterType, LeadAbilityEffect, RomVersion};
-
-use super::super::flows::types::{
-    MovingEncounterInfo, MovingEncounterLikelihood, SpecialEncounterDirection, SpecialEncounterInfo,
+use crate::types::{
+    EncounterType, HeldItemSlot, LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood,
+    RomVersion, SpecialEncounterDirection, SpecialEncounterInfo,
 };
 
 // ===== 移動エンカウント判定 =====
@@ -176,6 +176,7 @@ pub fn calculate_encounter_slot(
 }
 
 /// エンカウント結果
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EncounterResult {
     Pokemon,
@@ -184,6 +185,7 @@ pub enum EncounterResult {
 }
 
 /// アイテム内容
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ItemContent {
     EvolutionStone,
@@ -193,6 +195,7 @@ pub enum ItemContent {
 }
 
 /// 砂煙の結果を判定
+#[allow(dead_code)]
 pub fn dust_cloud_result(slot_value: u32) -> EncounterResult {
     match slot_value {
         0..=69 => EncounterResult::Pokemon,
@@ -203,6 +206,7 @@ pub fn dust_cloud_result(slot_value: u32) -> EncounterResult {
 }
 
 /// 橋の影の結果を判定
+#[allow(dead_code)]
 pub fn pokemon_shadow_result(slot_value: u32) -> EncounterResult {
     match slot_value {
         0..=29 => EncounterResult::Pokemon,
@@ -214,16 +218,6 @@ pub fn pokemon_shadow_result(slot_value: u32) -> EncounterResult {
 #[inline]
 pub fn fishing_success(rand_value: u32) -> bool {
     ((u64::from(rand_value) * 2) >> 32) == 0
-}
-
-/// 持ち物スロット
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
-pub enum HeldItemSlot {
-    Common,
-    Rare,
-    VeryRare,
-    #[default]
-    None,
 }
 
 /// 持ち物判定

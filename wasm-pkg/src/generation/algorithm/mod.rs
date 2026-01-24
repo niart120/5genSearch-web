@@ -1,32 +1,30 @@
 //! 生成アルゴリズム
 
-pub mod encounter;
-pub mod game_offset;
-pub mod iv;
-pub mod nature;
-pub mod needle;
-pub mod pid;
+mod encounter;
+mod game_offset;
+mod iv;
+mod nature;
+mod pid;
 
-pub use encounter::{
-    EncounterResult, HeldItemSlot, ItemContent, calculate_encounter_slot, check_moving_encounter,
-    determine_held_item_slot, dust_cloud_result, encounter_type_supports_held_item,
-    fishing_encounter_slot, fishing_success, generate_moving_encounter_info,
-    generate_special_encounter_info, is_moving_encounter_type, is_special_encounter_type,
-    normal_encounter_slot, pokemon_shadow_result, rand_to_percent, special_encounter_direction,
-    special_encounter_trigger, surfing_encounter_slot,
-};
-pub use game_offset::{apply_game_offset, calculate_game_offset, create_offset_lcg};
-pub use iv::{
-    InheritanceSlot, ParentRole, apply_inheritance, extract_iv, generate_rng_ivs,
-    generate_rng_ivs_with_offset, generate_roamer_ivs,
-};
-pub use nature::{
-    EverstonePlan, determine_egg_nature, determine_nature, nature_roll, perform_sync_check,
-    supports_sync, sync_check,
-};
+// needle 関連は外部公開 (WASM API で使用)
+pub mod needle;
 pub use needle::{calc_report_needle_direction, calculate_needle_direction};
-pub use pid::{
-    apply_id_correction, apply_shiny_lock, calculate_shiny_type, generate_base_pid,
-    generate_egg_pid, generate_egg_pid_with_reroll, generate_event_pid, generate_wild_pid,
+
+// その他のアルゴリズムは crate 内部のみ (使用されている関数のみ re-export)
+pub(crate) use encounter::{
+    calculate_encounter_slot, determine_held_item_slot, encounter_type_supports_held_item,
+    fishing_success, generate_moving_encounter_info, generate_special_encounter_info,
+    is_moving_encounter_type, is_special_encounter_type,
+};
+pub(crate) use game_offset::calculate_game_offset;
+pub(crate) use iv::{InheritanceSlot, ParentRole};
+pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset, generate_roamer_ivs};
+pub(crate) use nature::EverstonePlan;
+pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, perform_sync_check};
+pub(crate) use pid::{
+    apply_shiny_lock, calculate_shiny_type, generate_egg_pid_with_reroll, generate_event_pid,
     generate_wild_pid_with_reroll,
 };
+// テスト用 (generator.rs のテストで使用)
+#[cfg(test)]
+pub(crate) use pid::{generate_base_pid, generate_wild_pid};

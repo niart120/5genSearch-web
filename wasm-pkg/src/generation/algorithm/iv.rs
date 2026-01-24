@@ -1,4 +1,5 @@
 //! IV 生成・遺伝アルゴリズム
+#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::mt::Mt19937;
 use crate::types::{Ivs, MtSeed};
@@ -12,6 +13,7 @@ pub fn extract_iv(mt_output: u32) -> u8 {
 /// 乱数 IV を生成 (野生・固定シンボル用)
 ///
 /// MT19937 の最初の 7 回を破棄後、6 回取得。
+#[allow(dead_code)]
 pub fn generate_rng_ivs(seed: MtSeed) -> Ivs {
     let mut mt = Mt19937::new(seed);
 

@@ -22,20 +22,15 @@ pub use datetime_search::{
 };
 
 // Re-export common types
-pub use types::{DatetimeParams, DsConfig, GenerationSource, SearchSegment, VCountTimer0Range};
-
-// Re-export generation algorithm types
 pub use types::{
-    EncounterType, GameStartConfig, GenderRatio, IV_VALUE_UNKNOWN, Ivs, LeadAbilityEffect,
-    SaveState, StartMode,
+    DatetimeParams, DsConfig, EncounterMethod, EncounterType, GameStartConfig, GenderRatio,
+    GeneratedEggData, GeneratedPokemonData, GenerationSource, HeldItemSlot, IV_VALUE_UNKNOWN, Ivs,
+    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, NeedleDirection, SaveState,
+    SearchSegment, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, VCountTimer0Range,
 };
 
-// Re-export generation algorithm functions
-pub use generation::algorithm::{
-    EncounterResult, EverstonePlan, HeldItemSlot, InheritanceSlot, ItemContent, ParentRole,
-    apply_game_offset, calc_report_needle_direction, calculate_game_offset,
-    calculate_needle_direction,
-};
+// Re-export generation needle functions (外部公開必要)
+pub use generation::algorithm::{calc_report_needle_direction, calculate_needle_direction};
 
 // Re-export misc module
 pub use misc::{
