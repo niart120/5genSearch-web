@@ -1,9 +1,11 @@
 //! エンカウント処理アルゴリズム
 #![allow(clippy::trivially_copy_pass_by_ref)]
 
+use crate::core::lcg::Lcg64;
 use crate::types::{
-    EncounterType, HeldItemSlot, LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood,
-    RomVersion, SpecialEncounterDirection, SpecialEncounterInfo,
+    EncounterResult, EncounterType, HeldItemSlot, ItemContent, LeadAbilityEffect,
+    MovingEncounterInfo, MovingEncounterLikelihood, RomVersion, SpecialEncounterDirection,
+    SpecialEncounterInfo,
 };
 
 // ===== 移動エンカウント判定 =====
@@ -175,43 +177,48 @@ pub fn calculate_encounter_slot(
     }
 }
 
-/// エンカウント結果
-#[allow(dead_code)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EncounterResult {
-    Pokemon,
-    Item(ItemContent),
-    Failed,
-}
-
-/// アイテム内容
-#[allow(dead_code)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ItemContent {
-    EvolutionStone,
-    Jewel,
-    Everstone,
-    Feather,
-}
-
 /// 砂煙の結果を判定
-#[allow(dead_code)]
-pub fn dust_cloud_result(slot_value: u32) -> EncounterResult {
+pub(crate) fn dust_cloud_result(slot_value: u32) -> EncounterResult {
+    if slot_value <= 69 {
+        EncounterResult::Pokemon
+    } else {
+        let item = dust_cloud_item_content(slot_value);
+        EncounterResult::Item(item)
+    }
+}
+
+/// 砂煙のアイテム内容を判定
+pub(crate) fn dust_cloud_item_content(slot_value: u32) -> ItemContent {
     match slot_value {
-        0..=69 => EncounterResult::Pokemon,
-        70 => EncounterResult::Item(ItemContent::EvolutionStone),
-        71..=94 => EncounterResult::Item(ItemContent::Jewel),
-        _ => EncounterResult::Item(ItemContent::Everstone),
+        70 => ItemContent::EvolutionStone,
+        95..=99 => ItemContent::Everstone,
+        _ => ItemContent::Jewel,
     }
 }
 
 /// 橋の影の結果を判定
-#[allow(dead_code)]
-pub fn pokemon_shadow_result(slot_value: u32) -> EncounterResult {
-    match slot_value {
-        0..=29 => EncounterResult::Pokemon,
-        _ => EncounterResult::Item(ItemContent::Feather),
+pub(crate) fn pokemon_shadow_result(slot_value: u32) -> EncounterResult {
+    if slot_value <= 29 {
+        EncounterResult::Pokemon
+    } else {
+        EncounterResult::Item(ItemContent::Feather)
     }
+}
+
+/// `DustCloud` アイテム取得時の追加消費 (TBD: 仮実装)
+pub(crate) fn dust_cloud_item_table_consume(lcg: &mut Lcg64, _item: ItemContent) {
+    // アイテム種別決定: 1 回
+    let _ = lcg.next();
+    // テーブル決定: 1 回
+    let _ = lcg.next();
+}
+
+/// `PokemonShadow` アイテム取得時の追加消費 (TBD: 仮実装)
+pub(crate) fn pokemon_shadow_item_table_consume(lcg: &mut Lcg64) {
+    // アイテム種別決定: 1 回
+    let _ = lcg.next();
+    // テーブル決定: 1 回
+    let _ = lcg.next();
 }
 
 /// 釣り成功判定 (50%)
@@ -278,19 +285,67 @@ mod tests {
     }
 
     #[test]
-    fn test_dust_cloud_result() {
+    fn test_dust_cloud_result_pokemon() {
+        // 0-69: Pokemon
         assert_eq!(dust_cloud_result(0), EncounterResult::Pokemon);
+        assert_eq!(dust_cloud_result(50), EncounterResult::Pokemon);
+        assert_eq!(dust_cloud_result(69), EncounterResult::Pokemon);
+    }
+
+    #[test]
+    fn test_dust_cloud_result_item() {
+        // 70: EvolutionStone
         assert_eq!(
             dust_cloud_result(70),
             EncounterResult::Item(ItemContent::EvolutionStone)
         );
+        // 71-94: Jewel
         assert_eq!(
             dust_cloud_result(71),
             EncounterResult::Item(ItemContent::Jewel)
         );
         assert_eq!(
+            dust_cloud_result(94),
+            EncounterResult::Item(ItemContent::Jewel)
+        );
+        // 95-99: Everstone
+        assert_eq!(
             dust_cloud_result(95),
             EncounterResult::Item(ItemContent::Everstone)
+        );
+        assert_eq!(
+            dust_cloud_result(99),
+            EncounterResult::Item(ItemContent::Everstone)
+        );
+    }
+
+    #[test]
+    fn test_dust_cloud_item_content() {
+        assert_eq!(dust_cloud_item_content(70), ItemContent::EvolutionStone);
+        assert_eq!(dust_cloud_item_content(71), ItemContent::Jewel);
+        assert_eq!(dust_cloud_item_content(94), ItemContent::Jewel);
+        assert_eq!(dust_cloud_item_content(95), ItemContent::Everstone);
+        assert_eq!(dust_cloud_item_content(99), ItemContent::Everstone);
+    }
+
+    #[test]
+    fn test_pokemon_shadow_result_pokemon() {
+        // 0-29: Pokemon
+        assert_eq!(pokemon_shadow_result(0), EncounterResult::Pokemon);
+        assert_eq!(pokemon_shadow_result(15), EncounterResult::Pokemon);
+        assert_eq!(pokemon_shadow_result(29), EncounterResult::Pokemon);
+    }
+
+    #[test]
+    fn test_pokemon_shadow_result_item() {
+        // 30-99: Feather
+        assert_eq!(
+            pokemon_shadow_result(30),
+            EncounterResult::Item(ItemContent::Feather)
+        );
+        assert_eq!(
+            pokemon_shadow_result(99),
+            EncounterResult::Item(ItemContent::Feather)
         );
     }
 }

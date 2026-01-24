@@ -23,10 +23,11 @@ pub use datetime_search::{
 
 // Re-export common types
 pub use types::{
-    DatetimeParams, DsConfig, EncounterMethod, EncounterType, GameStartConfig, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, GenerationSource, HeldItemSlot, IV_VALUE_UNKNOWN, Ivs,
-    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, NeedleDirection, SaveState,
-    SearchSegment, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, VCountTimer0Range,
+    DatetimeParams, DsConfig, EncounterMethod, EncounterResult, EncounterType, GameStartConfig,
+    GenderRatio, GeneratedEggData, GeneratedPokemonData, GenerationSource, HeldItemSlot,
+    IV_VALUE_UNKNOWN, ItemContent, Ivs, LeadAbilityEffect, MovingEncounterInfo,
+    MovingEncounterLikelihood, NeedleDirection, SaveState, SearchSegment,
+    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, VCountTimer0Range,
 };
 
 // Re-export generation needle functions (外部公開必要)

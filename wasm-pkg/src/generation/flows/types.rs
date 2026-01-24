@@ -5,9 +5,9 @@
 
 use crate::generation::algorithm::{EverstonePlan, InheritanceSlot};
 use crate::types::{
-    EncounterMethod, EncounterType, Gender, GenderRatio, GeneratedEggData, GeneratedPokemonData,
-    GenerationSource, HeldItemSlot, Ivs, LeadAbilityEffect, MovingEncounterInfo, Nature,
-    NeedleDirection, RomVersion, ShinyType, SpecialEncounterInfo,
+    EncounterMethod, EncounterResult, EncounterType, Gender, GenderRatio, GeneratedEggData,
+    GeneratedPokemonData, GenerationSource, HeldItemSlot, Ivs, LeadAbilityEffect,
+    MovingEncounterInfo, Nature, NeedleDirection, RomVersion, ShinyType, SpecialEncounterInfo,
 };
 
 // ===== 生成設定 =====
@@ -162,6 +162,26 @@ pub struct RawPokemonData {
     pub gender: Gender,
     pub shiny_type: ShinyType,
     pub held_item_slot: HeldItemSlot,
+    /// エンカウント結果 (DustCloud/PokemonShadow 時に使用。通常は Pokemon)
+    pub encounter_result: EncounterResult,
+}
+
+impl RawPokemonData {
+    /// Item 取得時のデータ生成
+    pub fn item_only(encounter_result: EncounterResult) -> Self {
+        Self {
+            pid: 0,
+            species_id: 0,
+            level: 0,
+            nature: Nature::Hardy, // デフォルト
+            sync_applied: false,
+            ability_slot: 0,
+            gender: Gender::Genderless,
+            shiny_type: ShinyType::None,
+            held_item_slot: HeldItemSlot::None,
+            encounter_result,
+        }
+    }
 }
 
 /// 生の卵データ (IV なし)
@@ -206,6 +226,7 @@ impl GeneratedPokemonData {
             ivs,
             moving_encounter,
             special_encounter,
+            encounter_result: raw.encounter_result,
         }
     }
 }
