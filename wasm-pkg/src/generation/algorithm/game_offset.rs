@@ -1,6 +1,7 @@
 //! Game Offset 計算アルゴリズム
 //!
 //! 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/wasm-pkg/src/offset_calculator.rs>
+#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
 use crate::types::{GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
@@ -243,6 +244,7 @@ pub fn calculate_game_offset(
 ///
 /// # Errors
 /// 無効な起動設定の組み合わせの場合にエラーを返す。
+#[allow(dead_code)]
 pub fn apply_game_offset(
     seed: LcgSeed,
     version: RomVersion,
@@ -260,6 +262,7 @@ pub fn apply_game_offset(
 ///
 /// # Errors
 /// 無効な起動設定の組み合わせの場合にエラーを返す。
+#[allow(dead_code)]
 pub fn create_offset_lcg(
     seed: LcgSeed,
     version: RomVersion,

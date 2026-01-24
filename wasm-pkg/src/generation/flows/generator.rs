@@ -13,15 +13,16 @@ use crate::generation::algorithm::{
     generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
     is_moving_encounter_type, is_special_encounter_type,
 };
-use crate::types::{GameStartConfig, GenerationSource, Ivs, LcgSeed, RomVersion};
+use crate::types::{
+    EncounterMethod, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GenerationSource,
+    Ivs, LcgSeed, MovingEncounterInfo, RomVersion, SpecialEncounterInfo,
+};
 
 use super::egg::generate_egg;
 use super::pokemon_static::generate_static_pokemon;
 use super::pokemon_wild::generate_wild_pokemon;
 use super::types::{
-    EggGenerationConfig, EncounterMethod, EncounterSlotConfig, GeneratedEggData,
-    GeneratedPokemonData, MovingEncounterInfo, OffsetConfig, PokemonGenerationConfig,
-    SpecialEncounterInfo,
+    EggGenerationConfig, EncounterSlotConfig, OffsetConfig, PokemonGenerationConfig,
 };
 
 /// 野生ポケモン Generator (Iterator パターン)
@@ -108,7 +109,7 @@ impl WildPokemonGenerator {
             self.lcg.next();
             self.current_advance += 1;
 
-            Some(GeneratedPokemonData::new(
+            Some(GeneratedPokemonData::from_raw(
                 &raw,
                 self.rng_ivs,
                 advance,
@@ -274,7 +275,7 @@ impl StaticPokemonGenerator {
         self.current_advance += 1;
 
         // 固定エンカウントはエンカウント付加情報なし
-        GeneratedPokemonData::new(
+        GeneratedPokemonData::from_raw(
             &raw,
             self.rng_ivs,
             advance,
@@ -394,7 +395,7 @@ impl EggGenerator {
         self.lcg.next();
         self.current_advance += 1;
 
-        GeneratedEggData::new(
+        GeneratedEggData::from_raw(
             &raw,
             final_ivs,
             advance,

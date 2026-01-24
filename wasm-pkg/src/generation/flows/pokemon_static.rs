@@ -2,10 +2,10 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    HeldItemSlot, apply_shiny_lock, calculate_shiny_type, generate_event_pid,
-    generate_wild_pid_with_reroll, nature_roll, perform_sync_check,
+    apply_shiny_lock, calculate_shiny_type, generate_event_pid, generate_wild_pid_with_reroll,
+    nature_roll, perform_sync_check,
 };
-use crate::types::{EncounterType, Gender, LeadAbilityEffect, Nature, ShinyType};
+use crate::types::{EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, Nature, ShinyType};
 
 use super::types::{PokemonGenerationConfig, RawPokemonData};
 
@@ -111,9 +111,8 @@ pub fn generate_static_pokemon(
 
 #[cfg(test)]
 mod tests {
-    use super::super::types::EncounterMethod;
     use super::*;
-    use crate::types::RomVersion;
+    use crate::types::{EncounterMethod, RomVersion};
 
     fn make_config(
         version: RomVersion,

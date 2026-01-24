@@ -2,11 +2,11 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    HeldItemSlot, calculate_encounter_slot, determine_held_item_slot, determine_nature,
+    calculate_encounter_slot, determine_held_item_slot, determine_nature,
     encounter_type_supports_held_item, fishing_success, generate_wild_pid_with_reroll,
     perform_sync_check,
 };
-use crate::types::{EncounterType, Gender, LeadAbilityEffect};
+use crate::types::{EncounterType, Gender, HeldItemSlot, LeadAbilityEffect};
 
 use super::types::{EncounterSlotConfig, GenerationError, PokemonGenerationConfig, RawPokemonData};
 
@@ -114,9 +114,8 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 
 #[cfg(test)]
 mod tests {
-    use super::super::types::EncounterMethod;
     use super::*;
-    use crate::types::RomVersion;
+    use crate::types::{EncounterMethod, RomVersion};
 
     fn make_config(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationConfig {
         PokemonGenerationConfig {

@@ -1,4 +1,5 @@
 //! 性格決定・シンクロアルゴリズム
+#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
 use crate::types::{EncounterType, LeadAbilityEffect, Nature};
