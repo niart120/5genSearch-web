@@ -1,0 +1,414 @@
+@startuml wasm-api-dependencies
+' =========================================
+' wasm-pkg WASM API / 型定義 依存関係図
+' =========================================
+' local_010: API 公開戦略・型正規化 仕様書
+' 目的: TypeScript 側から呼び出される WASM API と型の依存関係を可視化
+' =========================================
+
+' レイアウト調整
+scale 0.7
+left to right direction
+
+skinparam packageStyle rectangle
+skinparam linetype polyline
+skinparam nodesep 10
+skinparam ranksep 20
+
+' ===== カラー定義 =====
+skinparam package {
+    BackgroundColor<<wasm_api>> #E3F2FD
+    BackgroundColor<<types>> #FFF3E0
+    BackgroundColor<<internal>> #F3E5F5
+    BackgroundColor<<ts_public>> #E8F5E9
+}
+
+' =========================================
+' TypeScript 側 (公開 API)
+' =========================================
+package "TypeScript wasm_pkg.d.ts" <<ts_public>> {
+    class MtseedDatetimeSearcher {
+        +constructor(params)
+        +next_batch(chunk_seconds): MtseedDatetimeSearchBatch
+        +is_done: boolean
+        +progress: number
+    }
+
+    class MtseedSearcher {
+        +constructor(params)
+        +next_batch(chunk_size): MtseedSearchBatch
+        +is_done: boolean
+        +progress: number
+    }
+
+    class NeedleSearcher {
+        +constructor(params)
+        +next_batch(chunk_size): NeedleSearchBatch
+        +is_done: boolean
+        +progress: number
+    }
+
+    together {
+        class health_check <<function>>
+        class init <<function>>
+        class sha1_hash_single <<function>>
+        class sha1_hash_batch <<function>>
+        class hash_to_lcg_seed <<function>>
+        class hash_to_mt_seed <<function>>
+        class get_needle_pattern <<function>>
+        class encode_iv_code_wasm <<function>>
+        class decode_iv_code_wasm <<function>>
+    }
+}
+
+' =========================================
+' lib.rs Re-exports
+' =========================================
+package "lib.rs" <<wasm_api>> {
+    object "re_exports" as re_exports {
+        SHA1 functions
+        Datetime search types
+        Common types
+        Needle functions
+        Misc utilities
+    }
+}
+
+' =========================================
+' types モジュール
+' =========================================
+package "types" <<types>> {
+    package "config.rs" {
+        class DsConfig {
+            mac: u8 array
+            hardware: Hardware
+            version: RomVersion
+            region: RomRegion
+        }
+        enum Hardware {
+            Ds
+            DsLite
+            Dsi
+            Dsi3ds
+        }
+        enum RomVersion {
+            Black
+            White
+            Black2
+            White2
+        }
+        enum RomRegion {
+            Jpn
+            Kor
+            Usa
+            Ger
+            Fra
+            Spa
+            Ita
+        }
+        class SearchSegment {
+            timer0: u16
+            vcount: u8
+            key_code: u32
+        }
+        class VCountTimer0Range
+        class DatetimeParams {
+            year: u16
+            month: u8
+            day: u8
+            hour: u8
+            minute: u8
+            second: u8
+        }
+    }
+
+    package "pokemon.rs" {
+        enum Nature
+        enum Gender
+        enum GenderRatio
+        enum AbilitySlot
+        enum ShinyType
+        enum HeldItemSlot
+        enum LeadAbilityEffect
+        class Ivs {
+            hp: u8
+            atk: u8
+            def: u8
+            spa: u8
+            spd: u8
+            spe: u8
+        }
+    }
+
+    package "generation.rs" {
+        enum EncounterType
+        enum EncounterMethod
+        enum EncounterResult
+        enum ItemContent
+        enum StartMode
+        enum SaveState
+        class GameStartConfig
+        enum MovingEncounterLikelihood
+        class MovingEncounterInfo
+        enum SpecialEncounterDirection
+        class SpecialEncounterInfo
+        enum GenerationSource
+        class GeneratedPokemonData
+        class GeneratedEggData
+    }
+
+    package "seeds.rs" {
+        class LcgSeed {
+            value: u64
+            +derive_mt_seed(): MtSeed
+        }
+        class MtSeed {
+            value: u32
+        }
+        enum NeedleDirection {
+            N
+            NE
+            E
+            SE
+            S
+            SW
+            W
+            NW
+        }
+    }
+}
+
+' =========================================
+' datetime_search モジュール
+' =========================================
+package "datetime_search" <<wasm_api>> {
+    package "types.rs" {
+        class SearchRangeParams {
+            start_year: u16
+            start_month: u8
+            start_day: u8
+            start_second_offset: u32
+            range_seconds: u32
+        }
+        class TimeRangeParams {
+            hour_start: u8
+            hour_end: u8
+            minute_start: u8
+            minute_end: u8
+            second_start: u8
+            second_end: u8
+        }
+    }
+
+    package "mtseed.rs" {
+        class MtseedDatetimeSearchParams {
+            target_seeds: Vec
+            ds: DsConfig
+            time_range: TimeRangeParams
+            search_range: SearchRangeParams
+            segment: SearchSegment
+        }
+        class MtseedDatetimeResult {
+            seed: u32
+            year: u16
+            month: u8
+            day: u8
+            hour: u8
+            minute: u8
+            second: u8
+            timer0: u16
+            vcount: u8
+            key_code: u32
+        }
+        class MtseedDatetimeSearchBatch {
+            results: Vec
+            processed_seconds: u64
+            total_seconds: u64
+        }
+    }
+
+    package "base.rs" <<internal>> {
+        class HashValuesEnumerator
+    }
+}
+
+' =========================================
+' misc モジュール
+' =========================================
+package "misc" <<wasm_api>> {
+    package "mtseed_search.rs" {
+        class MtseedSearchParams {
+            iv_filter: IvFilter
+            mt_offset: u32
+            is_roamer: bool
+        }
+        class IvFilter {
+            hp: tuple
+            atk: tuple
+            def: tuple
+            spa: tuple
+            spd: tuple
+            spe: tuple
+        }
+        class MtseedResult {
+            seed: MtSeed
+            ivs: Ivs
+            iv_code: IvCode
+        }
+        class MtseedSearchBatch {
+            candidates: Vec
+            processed: u64
+            total: u64
+        }
+    }
+
+    package "needle_search.rs" {
+        enum NeedleSearchInput {
+            Seed
+            Startup
+        }
+        class NeedleSearchParams {
+            input: NeedleSearchInput
+            pattern: NeedlePattern
+            advance_min: u32
+            advance_max: u32
+        }
+        class NeedleSearchResult {
+            advance: u32
+            source: GenerationSource
+        }
+        class NeedleSearchBatch {
+            results: Vec
+            processed: u64
+            total: u64
+        }
+    }
+}
+
+' =========================================
+' core モジュール
+' =========================================
+package "core" <<internal>> {
+    package "sha1" {
+        class HashValues {
+            h0: u32
+            h1: u32
+            h2: u32
+            h3: u32
+            h4: u32
+            +to_lcg_seed(): LcgSeed
+            +to_mt_seed(): MtSeed
+        }
+    }
+
+    package "lcg.rs" {
+        class Lcg64 {
+            seed: LcgSeed
+            +next(): u32
+            +advance(n: u32)
+            +jump(steps: u64)
+        }
+    }
+
+    package "mt" {
+        class Mt19937 {
+            state: array
+            +next(): u32
+        }
+        class Mt19937x4 <<SIMD>>
+    }
+}
+
+' =========================================
+' generation モジュール
+' =========================================
+package "generation" <<internal>> {
+    package "algorithm" {
+        class calc_report_needle_direction <<function>>
+        class calculate_needle_direction <<function>>
+    }
+
+    package "flows" {
+        class WildPokemonGenerator
+        class StaticPokemonGenerator
+        class EggGenerator
+    }
+}
+
+' =========================================
+' 依存関係
+' =========================================
+
+' === TS Searcher -> Params/Batch ===
+MtseedDatetimeSearcher ..> MtseedDatetimeSearchParams
+MtseedDatetimeSearcher ..> MtseedDatetimeSearchBatch
+MtseedSearcher ..> MtseedSearchParams
+MtseedSearcher ..> MtseedSearchBatch
+NeedleSearcher ..> NeedleSearchParams
+NeedleSearcher ..> NeedleSearchBatch
+
+' === Params dependencies ===
+MtseedDatetimeSearchParams --> DsConfig
+MtseedDatetimeSearchParams --> TimeRangeParams
+MtseedDatetimeSearchParams --> SearchRangeParams
+MtseedDatetimeSearchParams --> SearchSegment
+
+MtseedSearchParams --> IvFilter
+MtseedResult --> MtSeed
+MtseedResult --> Ivs
+
+NeedleSearchInput --> LcgSeed
+NeedleSearchInput --> DsConfig
+NeedleSearchInput --> DatetimeParams
+NeedleSearchResult --> GenerationSource
+
+' === Generated data dependencies ===
+GeneratedPokemonData --> NeedleDirection
+GeneratedPokemonData --> GenerationSource
+GeneratedPokemonData --> Nature
+GeneratedPokemonData --> Gender
+GeneratedPokemonData --> ShinyType
+GeneratedPokemonData --> HeldItemSlot
+GeneratedPokemonData --> Ivs
+GeneratedPokemonData --> MovingEncounterInfo
+GeneratedPokemonData --> SpecialEncounterInfo
+GeneratedPokemonData --> EncounterResult
+
+GeneratedEggData --> NeedleDirection
+GeneratedEggData --> GenerationSource
+GeneratedEggData --> Nature
+GeneratedEggData --> Gender
+GeneratedEggData --> ShinyType
+GeneratedEggData --> Ivs
+
+' === Config dependencies ===
+DsConfig --> Hardware
+DsConfig --> RomVersion
+DsConfig --> RomRegion
+
+GameStartConfig --> StartMode
+GameStartConfig --> SaveState
+
+' === Core dependencies ===
+HashValues --> LcgSeed
+HashValues --> MtSeed
+LcgSeed --> MtSeed : derive
+
+Lcg64 --> LcgSeed
+Mt19937 --> MtSeed
+
+HashValuesEnumerator --> HashValues
+HashValuesEnumerator --> DsConfig
+
+' =========================================
+' 凡例
+' =========================================
+legend right
+  |= 色 |= 意味 |
+  | <#E8F5E9> | TS側から直接利用 |
+  | <#E3F2FD> | WASM API 公開 |
+  | <#FFF3E0> | 共通型定義 |
+  | <#F3E5F5> | 内部実装 |
+endlegend
+
+@enduml

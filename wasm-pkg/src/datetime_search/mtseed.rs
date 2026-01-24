@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::types::SearchSegment;
+use crate::types::{DatetimeParams, GenerationSource, MtSeed, SearchSegment};
 
 use super::base::HashValuesEnumerator;
 use super::types::{SearchRangeParams, TimeRangeParams};
@@ -29,16 +29,22 @@ pub struct MtseedDatetimeSearchParams {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeResult {
-    pub seed: u32,
-    pub year: u16,
-    pub month: u8,
-    pub day: u8,
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-    pub timer0: u16,
-    pub vcount: u8,
-    pub key_code: u32,
+    pub seed: MtSeed,
+    pub datetime: DatetimeParams,
+    pub segment: SearchSegment,
+}
+
+impl MtseedDatetimeResult {
+    /// `GenerationSource::Datetime` に変換
+    pub fn to_generation_source(&self, base_seed: u64) -> GenerationSource {
+        GenerationSource::datetime(
+            base_seed,
+            self.datetime,
+            self.segment.timer0,
+            self.segment.vcount,
+            self.segment.key_code,
+        )
+    }
 }
 
 /// バッチ結果
@@ -118,16 +124,16 @@ impl MtseedDatetimeSearcher {
             for entry in entries.iter().take(len as usize) {
                 if self.target_seeds.contains(&entry.mt_seed) {
                     results.push(MtseedDatetimeResult {
-                        seed: entry.mt_seed,
-                        year: entry.year,
-                        month: entry.month,
-                        day: entry.day,
-                        hour: entry.hour,
-                        minute: entry.minute,
-                        second: entry.second,
-                        timer0: self.segment.timer0,
-                        vcount: self.segment.vcount,
-                        key_code: self.segment.key_code,
+                        seed: MtSeed::new(entry.mt_seed),
+                        datetime: DatetimeParams::new(
+                            entry.year,
+                            entry.month,
+                            entry.day,
+                            entry.hour,
+                            entry.minute,
+                            entry.second,
+                        ),
+                        segment: self.segment,
                     });
                 }
             }
@@ -271,7 +277,9 @@ mod tests {
         }
 
         // 検証: 期待する MT Seed が見つかること
-        let found = all_results.iter().find(|r| r.seed == expected_mt_seed);
+        let found = all_results
+            .iter()
+            .find(|r| r.seed.value() == expected_mt_seed);
         assert!(
             found.is_some(),
             "Expected MT Seed {:08X} (derived from LCG Seed 0x768360781D1CE6DD) not found. \
@@ -282,23 +290,23 @@ mod tests {
 
         // 検証: 日時が 18:13:11 であること
         let result = found.unwrap();
-        assert_eq!(result.year, 2010, "Year mismatch");
-        assert_eq!(result.month, 9, "Month mismatch");
-        assert_eq!(result.day, 18, "Day mismatch");
+        assert_eq!(result.datetime.year, 2010, "Year mismatch");
+        assert_eq!(result.datetime.month, 9, "Month mismatch");
+        assert_eq!(result.datetime.day, 18, "Day mismatch");
         assert_eq!(
-            result.hour, 18,
+            result.datetime.hour, 18,
             "Hour mismatch: expected 18, got {}",
-            result.hour
+            result.datetime.hour
         );
         assert_eq!(
-            result.minute, 13,
+            result.datetime.minute, 13,
             "Minute mismatch: expected 13, got {}",
-            result.minute
+            result.datetime.minute
         );
         assert_eq!(
-            result.second, 11,
+            result.datetime.second, 11,
             "Second mismatch: expected 11, got {}",
-            result.second
+            result.datetime.second
         );
     }
 }

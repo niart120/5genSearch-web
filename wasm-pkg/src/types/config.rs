@@ -5,6 +5,8 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
+use super::seeds::{LcgSeed, MtSeed};
+
 // ===== ハードウェア列挙型 =====
 
 /// DS ハードウェア種別
@@ -116,4 +118,55 @@ impl DatetimeParams {
             second,
         }
     }
+}
+
+// ===== 計算入力ソース =====
+
+/// 計算入力のソース指定
+///
+/// Searcher / Generator 共通で使用可能な入力ソース型。
+/// Seed 直接指定、起動条件指定、範囲探索など複数のモードをサポート。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
+pub enum SeedSource {
+    /// 既知の LCG Seed を直接指定
+    Seed {
+        /// 初期 LCG Seed
+        initial_seed: LcgSeed,
+    },
+
+    /// 既知の MT Seed を直接指定
+    MtSeed {
+        /// MT Seed
+        seed: MtSeed,
+    },
+
+    /// 複数の LCG Seed を指定
+    MultipleSeeds {
+        /// LCG Seed のリスト
+        seeds: Vec<LcgSeed>,
+    },
+
+    /// 起動条件 + 固定 Segment から Seed を導出
+    Startup {
+        /// DS 設定
+        ds: DsConfig,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// 探索対象の Segment（Timer0/VCount/KeyCode の組み合わせ）
+        segments: Vec<SearchSegment>,
+    },
+
+    /// 起動条件 + Timer0/VCount 範囲から探索
+    StartupRange {
+        /// DS 設定
+        ds: DsConfig,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// Timer0/VCount の範囲指定（複数指定可能）
+        ranges: Vec<VCountTimer0Range>,
+        /// キー入力コード
+        key_code: u32,
+    },
 }
