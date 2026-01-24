@@ -655,3 +655,180 @@ pub fn calc_report_needle_direction(seed: LcgSeed) -> NeedleDirection {
 | `generation/algorithm/mod.rs` 更新 | 修正 |
 | `misc/needle_search.rs` 更新 | 修正 |
 | `lib.rs` re-export 更新 | 修正 |
+
+## 9. Phase 8: IV 関連リファクタリング
+
+### 9.1 概要
+
+IV (個体値) 関連の型を整理し、不要な型・関数を削除、めざめるパワー計算・フィルタ機能を追加する。
+
+### 9.2 背景・問題
+
+| 問題 | 詳細 |
+|------|------|
+| `IvCode` 不要 | `Ivs` 構造体があれば圧縮表現は不要。TS 型定義も欠落している |
+| `IvSet` 未使用 | type alias で TS 型生成されない。crate 内で使用箇所なし |
+| `ivs_to_array` 重複 | `Ivs::to_array()` と同一機能 |
+| WASM 公開関数過多 | `encode_iv_code_wasm` 等、外部から不要な関数が公開されている |
+| めざパ計算なし | Hidden Power のタイプ・威力計算が未実装 |
+| `IvFilter` 配置 | `misc/mtseed_search.rs` に埋もれている |
+
+### 9.3 ユースケース整理
+
+| # | ユースケース | 入力 | 出力 | 対応状況 |
+|---|-------------|------|------|----------|
+| 1 | ポケモン生成結果に IV を含める | `MtSeed`, offset | `Ivs` | 対応済 |
+| 2 | タマゴ生成に親 IV を渡す | `Ivs` (0-31, Unknown=32) | - | 対応済 |
+| 3 | IV 条件から MTSeed 検索 | `IvFilter` + offset + 順序 | `Vec<MtSeed>` | 対応済 |
+| 4 | めざパタイプ・威力計算 | `Ivs` | `HiddenPowerType`, `u8` | **未実装** |
+| 5 | めざパ条件で MTSeed 検索 | `IvFilter` + めざパ条件 | `Vec<MtSeed>` | **未実装** |
+
+### 9.4 実装チェックリスト
+
+#### Phase 8-1: 不要な型・関数の削除
+- [x] `IvCode` 型削除 (`types/config.rs`)
+- [x] `IvSet` type alias 削除 (`types/pokemon.rs`)
+- [x] `MtseedResult.iv_code` フィールド削除
+- [x] `encode_iv_code`, `decode_iv_code`, `reorder_iv_code_for_roamer` 削除
+- [x] `encode_iv_code_wasm`, `decode_iv_code_wasm`, `reorder_iv_code_for_roamer_wasm` 削除
+- [x] `ivs_to_array` ヘルパー削除
+- [x] re-export 更新 (`lib.rs`, `types/mod.rs`, `misc/mod.rs`)
+- [x] テスト修正
+
+#### Phase 8-2: めざパ計算実装
+- [x] `HiddenPowerType` enum 追加 (`types/pokemon.rs`)
+- [x] `Ivs::hidden_power_type()` メソッド追加
+- [x] `Ivs::hidden_power_power()` メソッド追加
+- [x] テスト追加
+
+#### Phase 8-3: `IvFilter` 拡張・移動
+- [x] `IvFilter` を `misc/mtseed_search.rs` → `types/pokemon.rs` に移動
+- [x] `hidden_power_types: Option<Vec<HiddenPowerType>>` フィールド追加
+- [x] `hidden_power_min_power: Option<u8>` フィールド追加
+- [x] `IvFilter::matches()` にめざパ条件追加
+- [x] re-export 更新
+- [x] テスト修正・追加
+
+#### Phase 8-4: `Ivs` 利便性向上
+- [x] `contains_unknown()` → `has_unknown()` リネーム
+- [x] `Ivs::is_valid()` メソッド追加 (全値 0-31 検証)
+- [x] テスト追加
+
+### 9.5 削除対象一覧
+
+| 対象 | 場所 | 理由 |
+|------|------|------|
+| `IvCode` 型 | `types/config.rs` | `Ivs` があれば不要 |
+| `IvSet` type alias | `types/pokemon.rs` | 未使用、TS 型生成されない |
+| `MtseedResult.iv_code` | `misc/mtseed_search.rs` | `ivs` と重複 |
+| `encode_iv_code` | `misc/mtseed_search.rs` | 不要 |
+| `decode_iv_code` | `misc/mtseed_search.rs` | 不要 |
+| `reorder_iv_code_for_roamer` | `misc/mtseed_search.rs` | 内部処理済み |
+| `encode_iv_code_wasm` | `misc/mtseed_search.rs` | WASM 公開不要 |
+| `decode_iv_code_wasm` | `misc/mtseed_search.rs` | WASM 公開不要 |
+| `reorder_iv_code_for_roamer_wasm` | `misc/mtseed_search.rs` | WASM 公開不要 |
+| `ivs_to_array` | `misc/mtseed_search.rs` | `Ivs::to_array()` と重複 |
+
+### 9.6 追加型・メソッド
+
+#### `HiddenPowerType` enum
+
+```rust
+/// めざめるパワーのタイプ
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[repr(u8)]
+pub enum HiddenPowerType {
+    Fighting = 0,
+    Flying = 1,
+    Poison = 2,
+    Ground = 3,
+    Rock = 4,
+    Bug = 5,
+    Ghost = 6,
+    Steel = 7,
+    Fire = 8,
+    Water = 9,
+    Grass = 10,
+    Electric = 11,
+    Psychic = 12,
+    Ice = 13,
+    Dragon = 14,
+    Dark = 15,
+}
+```
+
+#### `Ivs` 追加メソッド
+
+```rust
+impl Ivs {
+    /// めざめるパワーのタイプを計算
+    pub fn hidden_power_type(&self) -> HiddenPowerType {
+        let type_value = ((self.hp & 1)
+            | ((self.atk & 1) << 1)
+            | ((self.def & 1) << 2)
+            | ((self.spe & 1) << 3)
+            | ((self.spa & 1) << 4)
+            | ((self.spd & 1) << 5)) as u32;
+        let type_index = (type_value * 15 / 63) as u8;
+        HiddenPowerType::from_u8(type_index)
+    }
+
+    /// めざめるパワーの威力を計算 (30-70)
+    pub fn hidden_power_power(&self) -> u8 {
+        let power_value = (((self.hp >> 1) & 1)
+            | (((self.atk >> 1) & 1) << 1)
+            | (((self.def >> 1) & 1) << 2)
+            | (((self.spe >> 1) & 1) << 3)
+            | (((self.spa >> 1) & 1) << 4)
+            | (((self.spd >> 1) & 1) << 5)) as u32;
+        ((power_value * 40 / 63) + 30) as u8
+    }
+
+    /// Unknown を含むかどうか
+    pub const fn has_unknown(&self) -> bool {
+        self.hp == IV_VALUE_UNKNOWN
+            || self.atk == IV_VALUE_UNKNOWN
+            || self.def == IV_VALUE_UNKNOWN
+            || self.spa == IV_VALUE_UNKNOWN
+            || self.spd == IV_VALUE_UNKNOWN
+            || self.spe == IV_VALUE_UNKNOWN
+    }
+
+    /// 全 IV が有効範囲 (0-31) かどうか
+    pub const fn is_valid(&self) -> bool {
+        self.hp <= 31
+            && self.atk <= 31
+            && self.def <= 31
+            && self.spa <= 31
+            && self.spd <= 31
+            && self.spe <= 31
+    }
+}
+```
+
+#### `IvFilter` 拡張
+
+```rust
+/// IV フィルタ条件
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct IvFilter {
+    /// HP (min, max)
+    pub hp: (u8, u8),
+    /// 攻撃 (min, max)
+    pub atk: (u8, u8),
+    /// 防御 (min, max)
+    pub def: (u8, u8),
+    /// 特攻 (min, max)
+    pub spa: (u8, u8),
+    /// 特防 (min, max)
+    pub spd: (u8, u8),
+    /// 素早さ (min, max)
+    pub spe: (u8, u8),
+    /// めざパタイプ条件 (指定タイプのいずれかに一致)
+    pub hidden_power_types: Option<Vec<HiddenPowerType>>,
+    /// めざパ威力下限
+    pub hidden_power_min_power: Option<u8>,
+}
+```

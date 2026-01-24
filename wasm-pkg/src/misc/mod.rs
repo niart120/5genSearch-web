@@ -5,10 +5,7 @@
 pub mod mtseed_search;
 pub mod needle_search;
 
-pub use mtseed_search::{
-    IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, decode_iv_code,
-    encode_iv_code, reorder_iv_code_for_roamer,
-};
+pub use mtseed_search::{MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher};
 pub use needle_search::{
     NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher, get_needle_pattern,
 };
