@@ -6,9 +6,8 @@ mod iv;
 mod nature;
 mod pid;
 
-// needle 関連は外部公開 (WASM API で使用)
-pub mod needle;
-pub use needle::{calc_report_needle_direction, calculate_needle_direction};
+// needle は core/needle.rs に移動済み
+pub use crate::core::needle::{calc_report_needle_direction, calculate_needle_direction};
 
 // その他のアルゴリズムは crate 内部のみ (使用されている関数のみ re-export)
 pub(crate) use encounter::{

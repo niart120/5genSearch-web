@@ -64,43 +64,6 @@ impl IvCode {
     }
 }
 
-/// レポート針パターン (0-7 の方向値列)
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedlePattern(pub Vec<u8>);
-
-impl NeedlePattern {
-    /// 新しい `NeedlePattern` を作成
-    pub fn new(values: Vec<u8>) -> Self {
-        Self(values)
-    }
-
-    /// 内部値への参照を取得
-    pub fn values(&self) -> &[u8] {
-        &self.0
-    }
-
-    /// 内部 Vec を取得
-    pub fn into_inner(self) -> Vec<u8> {
-        self.0
-    }
-
-    /// パターン長を取得
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    /// パターンが空かどうか
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    /// イテレータを取得
-    pub fn iter(&self) -> impl Iterator<Item = &u8> {
-        self.0.iter()
-    }
-}
-
 /// キー入力コード (SHA-1 計算用)
 ///
 /// `KeyMask` を XOR `0x2FFF` で変換した値。

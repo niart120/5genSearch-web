@@ -315,6 +315,17 @@ pub(crate) fn sha1_hash_single(message: &[u32; 16]) -> HashValues { ... }
 - [x] 各使用箇所の修正
 - [x] テスト修正・追加
 
+### Phase 7: Needle 関連型の集約・型安全化
+- [x] `types/needle.rs` 新設
+- [x] `NeedleDirection` を `seeds.rs` から移動
+- [x] `NeedlePattern` を `config.rs` から移動し `Vec<NeedleDirection>` に変更
+- [x] `NeedleDirection::arrow()` メソッド追加
+- [x] `core/needle.rs` 新設 (計算関数を移動)
+- [x] `generation/algorithm/needle.rs` 削除
+- [x] `misc/needle_search.rs` から `needle_direction_arrow` 削除
+- [x] re-export 更新
+- [x] テスト修正
+
 ## 7. Phase 6: Newtype Struct 詳細設計
 
 ### 7.1 概要
@@ -488,3 +499,159 @@ impl KeyMask {
 | `NeedlePattern` | 2 | `needle_search.rs` フィールド型変更、re-export 更新 |
 | `KeyCode` | 7 | 全 `key_code: u32` を `key_code: KeyCode` に変更 |
 | `KeyMask` | 1 | 新規追加のみ |
+
+## 8. Phase 7: Needle 関連型の集約・型安全化
+
+### 8.1 概要
+
+Needle 関連の型と関数が複数ファイルに散逸している問題を解決し、`NeedlePattern` の型安全性を向上させる。
+
+**現状の問題:**
+| ファイル | 内容 | 問題点 |
+|---------|------|--------|
+| `types/seeds.rs` | `NeedleDirection` | seeds と無関係 |
+| `types/config.rs` | `NeedlePattern(Vec<u8>)` | config と無関係、型安全でない |
+| `generation/algorithm/needle.rs` | 計算関数 | generation 内に埋もれている |
+| `misc/needle_search.rs` | `needle_direction_arrow(u8)` | 型変換関数が分散 |
+
+### 8.2 `types/needle.rs` (新設)
+
+```rust
+//! レポート針関連型
+
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+
+/// レポート針方向 (0-7)
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[repr(u8)]
+pub enum NeedleDirection {
+    N = 0,
+    NE = 1,
+    E = 2,
+    SE = 3,
+    S = 4,
+    SW = 5,
+    W = 6,
+    NW = 7,
+}
+
+impl NeedleDirection {
+    /// 数値から変換
+    pub const fn from_value(v: u8) -> Self {
+        match v & 7 {
+            0 => Self::N,
+            1 => Self::NE,
+            2 => Self::E,
+            3 => Self::SE,
+            4 => Self::S,
+            5 => Self::SW,
+            6 => Self::W,
+            _ => Self::NW,
+        }
+    }
+
+    /// 数値へ変換
+    pub const fn value(self) -> u8 {
+        self as u8
+    }
+
+    /// 矢印文字に変換
+    pub const fn arrow(self) -> &'static str {
+        match self {
+            Self::N => "↑",
+            Self::NE => "↗",
+            Self::E => "→",
+            Self::SE => "↘",
+            Self::S => "↓",
+            Self::SW => "↙",
+            Self::W => "←",
+            Self::NW => "↖",
+        }
+    }
+}
+
+/// レポート針パターン
+///
+/// `Vec<NeedleDirection>` のラッパー。型レベルで 0-7 範囲を保証。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedlePattern(pub Vec<NeedleDirection>);
+
+impl NeedlePattern {
+    pub fn new(directions: Vec<NeedleDirection>) -> Self {
+        Self(directions)
+    }
+
+    /// u8 スライスから変換 (各値は & 7 でマスク)
+    pub fn from_values(values: &[u8]) -> Self {
+        Self(values.iter().map(|&v| NeedleDirection::from_value(v)).collect())
+    }
+
+    pub fn directions(&self) -> &[NeedleDirection] {
+        &self.0
+    }
+
+    pub fn into_inner(self) -> Vec<NeedleDirection> {
+        self.0
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &NeedleDirection> {
+        self.0.iter()
+    }
+
+    /// 矢印文字列に変換
+    pub fn to_arrows(&self) -> String {
+        self.0.iter().map(|d| d.arrow()).collect()
+    }
+}
+```
+
+### 8.3 `core/needle.rs` (新設)
+
+```rust
+//! 針方向計算
+
+use crate::core::lcg::Lcg64;
+use crate::types::{LcgSeed, NeedleDirection};
+
+/// LCG Seed から針方向を計算
+pub fn calculate_needle_direction(seed: LcgSeed) -> NeedleDirection {
+    let value = seed.value();
+    let upper32 = (value >> 32) as u32;
+    let direction = (upper32 >> 29) as u8;
+    NeedleDirection::from_value(direction)
+}
+
+/// レポート針方向を計算 (pokemon-gen5-initseed 準拠)
+pub fn calc_report_needle_direction(seed: LcgSeed) -> NeedleDirection {
+    let next = Lcg64::compute_next(seed);
+    let upper = next.value() >> 32;
+    let dir = upper.wrapping_mul(8) >> 32;
+    NeedleDirection::from_value((dir & 7) as u8)
+}
+```
+
+### 8.4 影響範囲
+
+| 変更内容 | ファイル |
+|---------|---------|
+| `types/needle.rs` 新設 | 新規 |
+| `types/seeds.rs` から `NeedleDirection` 削除 | 修正 |
+| `types/config.rs` から `NeedlePattern` 削除 | 修正 |
+| `types/mod.rs` re-export 更新 | 修正 |
+| `core/needle.rs` 新設 | 新規 |
+| `core/mod.rs` re-export 追加 | 修正 |
+| `generation/algorithm/needle.rs` 削除 | 削除 |
+| `generation/algorithm/mod.rs` 更新 | 修正 |
+| `misc/needle_search.rs` 更新 | 修正 |
+| `lib.rs` re-export 更新 | 修正 |

@@ -9,12 +9,12 @@ use wasm_bindgen::prelude::*;
 
 use crate::core::datetime_codes::{get_date_code, get_time_code_for_hardware};
 use crate::core::lcg::Lcg64;
+use crate::core::needle::calc_report_needle_direction;
 use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, get_nazo_values};
 use crate::datetime_search::base::datetime_to_seconds;
-use crate::generation::algorithm::calc_report_needle_direction;
 use crate::types::{
-    DatetimeParams, DsConfig, GenerationSource, Hardware, KeyCode, LcgSeed, NeedlePattern,
-    SeedSource,
+    DatetimeParams, DsConfig, GenerationSource, Hardware, KeyCode, LcgSeed, NeedleDirection,
+    NeedlePattern, SeedSource,
 };
 
 // ===== 検索パラメータ =====
@@ -120,9 +120,7 @@ impl NeedleSearcher {
         if params.pattern.is_empty() {
             return Err("pattern is empty".into());
         }
-        if params.pattern.iter().any(|&d| d > 7) {
-            return Err("Invalid needle direction (must be 0-7)".into());
-        }
+        // NeedleDirection は型レベルで 0-7 保証のため範囲チェック不要
         if params.advance_min > params.advance_max {
             return Err("advance_min > advance_max".into());
         }
@@ -344,7 +342,7 @@ impl NeedleSearcher {
         let end_advance = (*current_advance + chunk_size).min(advance_max);
 
         while *current_advance < end_advance {
-            if matches_pattern_at_seed(lcg.current_seed(), pattern.values()) {
+            if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                 results.push(NeedleSearchResult {
                     advance: *current_advance,
                     source: GenerationSource::fixed(*base_seed),
@@ -403,7 +401,7 @@ impl NeedleSearcher {
             // Advance 範囲をスキャン
             let lcg = s.current_lcg.as_mut().unwrap();
             while s.current_advance < advance_max && processed < chunk_size {
-                if matches_pattern_at_seed(lcg.current_seed(), pattern.values()) {
+                if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                     results.push(NeedleSearchResult {
                         advance: s.current_advance,
                         source: GenerationSource::datetime(
@@ -443,11 +441,11 @@ impl NeedleSearcher {
 // ===== 共通ヘルパー =====
 
 /// 指定 Seed からパターンが一致するか判定 (スタンドアロン関数)
-fn matches_pattern_at_seed(seed: LcgSeed, pattern: &[u8]) -> bool {
+fn matches_pattern_at_seed(seed: LcgSeed, pattern: &[NeedleDirection]) -> bool {
     let mut test_seed = seed;
     for &expected in pattern {
         let direction = calc_report_needle_direction(test_seed);
-        if direction.value() != expected {
+        if direction != expected {
             return false;
         }
         test_seed = Lcg64::compute_next(test_seed);
@@ -479,32 +477,17 @@ fn compute_lcg_seed_for_startup(
 
 /// 指定 Seed から針パターンを取得
 #[wasm_bindgen]
-pub fn get_needle_pattern(seed: LcgSeed, length: u32) -> Vec<u8> {
-    let mut pattern = Vec::with_capacity(length as usize);
+pub fn get_needle_pattern(seed: LcgSeed, length: u32) -> NeedlePattern {
+    let mut directions = Vec::with_capacity(length as usize);
     let mut current_seed = seed;
 
     for _ in 0..length {
         let direction = calc_report_needle_direction(current_seed);
-        pattern.push(direction.value());
+        directions.push(direction);
         current_seed = Lcg64::compute_next(current_seed);
     }
 
-    pattern
-}
-
-/// 針方向を矢印文字に変換
-pub fn needle_direction_arrow(direction: u8) -> &'static str {
-    match direction & 7 {
-        0 => "↑",
-        1 => "↗",
-        2 => "→",
-        3 => "↘",
-        4 => "↓",
-        5 => "↙",
-        6 => "←",
-        7 => "↖",
-        _ => "?",
-    }
+    NeedlePattern::new(directions)
 }
 
 #[cfg(test)]
@@ -516,7 +499,7 @@ mod tests {
         let seed = LcgSeed::new(0x0123_4567_89AB_CDEF);
         let pattern = get_needle_pattern(seed, 5);
         assert_eq!(pattern.len(), 5);
-        assert!(pattern.iter().all(|&d| d <= 7));
+        assert!(pattern.iter().all(|d| d.value() <= 7));
     }
 
     #[test]
@@ -526,7 +509,7 @@ mod tests {
 
         let params = NeedleSearchParams {
             input: SeedSource::Seed { initial_seed: seed },
-            pattern: NeedlePattern::new(pattern),
+            pattern,
             advance_min: 0,
             advance_max: 10,
         };
@@ -546,9 +529,9 @@ mod tests {
 
     #[test]
     fn test_needle_direction_arrow() {
-        assert_eq!(needle_direction_arrow(0), "↑");
-        assert_eq!(needle_direction_arrow(4), "↓");
-        assert_eq!(needle_direction_arrow(7), "↖");
+        assert_eq!(NeedleDirection::N.arrow(), "↑");
+        assert_eq!(NeedleDirection::S.arrow(), "↓");
+        assert_eq!(NeedleDirection::NW.arrow(), "↖");
     }
 
     #[test]
@@ -564,23 +547,12 @@ mod tests {
         };
         assert!(NeedleSearcher::new(params).is_err());
 
-        // Invalid direction
-        let params = NeedleSearchParams {
-            input: SeedSource::Seed {
-                initial_seed: LcgSeed::new(0),
-            },
-            pattern: NeedlePattern::new(vec![8]), // invalid
-            advance_min: 0,
-            advance_max: 10,
-        };
-        assert!(NeedleSearcher::new(params).is_err());
-
         // min > max
         let params = NeedleSearchParams {
             input: SeedSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
-            pattern: NeedlePattern::new(vec![0]),
+            pattern: NeedlePattern::new(vec![NeedleDirection::N]),
             advance_min: 10,
             advance_max: 5,
         };

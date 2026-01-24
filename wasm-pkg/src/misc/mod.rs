@@ -11,5 +11,4 @@ pub use mtseed_search::{
 };
 pub use needle_search::{
     NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher, get_needle_pattern,
-    needle_direction_arrow,
 };

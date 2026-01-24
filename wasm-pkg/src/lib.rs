@@ -28,14 +28,14 @@ pub use types::{
     StartMode, VCountTimer0Range,
 };
 
-// Re-export generation needle functions (外部公開必要)
-pub use generation::algorithm::{calc_report_needle_direction, calculate_needle_direction};
+// Re-export core needle functions (外部公開必要)
+pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
 
 // Re-export misc module
 pub use misc::{
     IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher,
     NeedleSearchBatch, NeedleSearchParams, NeedleSearchResult, NeedleSearcher, decode_iv_code,
-    encode_iv_code, get_needle_pattern, needle_direction_arrow, reorder_iv_code_for_roamer,
+    encode_iv_code, get_needle_pattern, reorder_iv_code_for_roamer,
 };
 
 #[wasm_bindgen(start)]

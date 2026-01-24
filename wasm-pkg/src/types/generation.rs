@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use super::config::{DatetimeParams, KeyCode, RomVersion};
+use super::needle::NeedleDirection;
 use super::pokemon::{Gender, HeldItemSlot, Ivs, Nature, ShinyType};
-use super::seeds::NeedleDirection;
 
 // ===== エンカウント結果 =====
 
