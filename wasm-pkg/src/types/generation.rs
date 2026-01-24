@@ -9,6 +9,34 @@ use super::config::{DatetimeParams, RomVersion};
 use super::pokemon::{Gender, HeldItemSlot, Ivs, Nature, ShinyType};
 use super::seeds::NeedleDirection;
 
+// ===== エンカウント結果 =====
+
+/// エンカウント結果 (`DustCloud` / `PokemonShadow` 用)
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type", content = "item")]
+pub enum EncounterResult {
+    /// ポケモン出現
+    #[default]
+    Pokemon,
+    /// アイテム取得
+    Item(ItemContent),
+}
+
+/// アイテム内容 (`DustCloud` / `PokemonShadow` 用)
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum ItemContent {
+    /// 進化の石 (`DustCloud`)
+    EvolutionStone,
+    /// ジュエル (`DustCloud`)
+    Jewel,
+    /// かわらずのいし (`DustCloud`)
+    Everstone,
+    /// 羽根 (`PokemonShadow`)
+    Feather,
+}
+
 // ===== エンカウント種別 =====
 
 /// エンカウント種別
@@ -262,6 +290,8 @@ pub struct GeneratedPokemonData {
     pub moving_encounter: Option<MovingEncounterInfo>,
     /// 特殊エンカウント情報 (ShakingGrass/DustCloud/SurfingBubble/FishingBubble/PokemonShadow 時のみ Some)
     pub special_encounter: Option<SpecialEncounterInfo>,
+    /// エンカウント結果 (DustCloud/PokemonShadow 時に使用。通常は Pokemon)
+    pub encounter_result: EncounterResult,
 }
 
 /// 完全な卵データ
