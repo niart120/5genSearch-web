@@ -18,7 +18,7 @@ pub use crate::types::DsConfig;
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeSearchParams {
-    pub target_seeds: Vec<u32>,
+    pub target_seeds: Vec<MtSeed>,
     pub ds: DsConfig,
     pub time_range: TimeRangeParams,
     pub search_range: SearchRangeParams,
@@ -87,7 +87,7 @@ impl MtseedDatetimeSearcher {
         )?;
 
         Ok(Self {
-            target_seeds: params.target_seeds.into_iter().collect(),
+            target_seeds: params.target_seeds.into_iter().map(MtSeed::value).collect(),
             hash_enumerator,
             total_seconds: u64::from(params.search_range.range_seconds),
             segment: params.segment,
@@ -153,7 +153,7 @@ mod tests {
 
     use super::*;
 
-    fn create_test_params(target_seeds: Vec<u32>) -> MtseedDatetimeSearchParams {
+    fn create_test_params(target_seeds: Vec<MtSeed>) -> MtseedDatetimeSearchParams {
         MtseedDatetimeSearchParams {
             target_seeds,
             ds: DsConfig {
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_searcher_creation() {
-        let params = create_test_params(vec![0x1234_5678]);
+        let params = create_test_params(vec![MtSeed::new(0x1234_5678)]);
         let searcher = MtseedDatetimeSearcher::new(params);
         assert!(searcher.is_ok());
     }
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_searcher_progress() {
-        let params = create_test_params(vec![0x1234_5678]);
+        let params = create_test_params(vec![MtSeed::new(0x1234_5678)]);
         let mut searcher = MtseedDatetimeSearcher::new(params).unwrap();
 
         assert!(!searcher.is_done());
@@ -233,7 +233,7 @@ mod tests {
 
         // 期待される LCG Seed から MT Seed を計算
         let expected_lcg_seed = LcgSeed::new(0x7683_6078_1D1C_E6DD);
-        let expected_mt_seed: u32 = expected_lcg_seed.derive_mt_seed().value();
+        let expected_mt_seed = expected_lcg_seed.derive_mt_seed();
 
         // 検索パラメータ: 2010/09/18 00:00:00 から 1日分 (86400秒)
         let params = MtseedDatetimeSearchParams {
@@ -279,12 +279,12 @@ mod tests {
         // 検証: 期待する MT Seed が見つかること
         let found = all_results
             .iter()
-            .find(|r| r.seed.value() == expected_mt_seed);
+            .find(|r| r.seed.value() == expected_mt_seed.value());
         assert!(
             found.is_some(),
             "Expected MT Seed {:08X} (derived from LCG Seed 0x768360781D1CE6DD) not found. \
              Found {} results.",
-            expected_mt_seed,
+            expected_mt_seed.value(),
             all_results.len()
         );
 

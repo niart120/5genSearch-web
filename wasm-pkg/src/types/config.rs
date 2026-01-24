@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::seeds::{LcgSeed, MtSeed};
+use super::seeds::LcgSeed;
 
 // ===== ハードウェア列挙型 =====
 
@@ -134,12 +134,6 @@ pub enum SeedSource {
     Seed {
         /// 初期 LCG Seed
         initial_seed: LcgSeed,
-    },
-
-    /// 既知の MT Seed を直接指定
-    MtSeed {
-        /// MT Seed
-        seed: MtSeed,
     },
 
     /// 複数の LCG Seed を指定

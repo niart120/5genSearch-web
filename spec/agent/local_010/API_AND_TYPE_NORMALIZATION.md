@@ -302,3 +302,8 @@ pub(crate) fn sha1_hash_single(message: &[u32; 16]) -> HashValues { ... }
 ### Phase 4: 動作確認
 - [x] `pnpm build:wasm` 成功
 - [x] `cargo test` 成功 (127 tests passed)
+
+### Phase 5: 追加改修
+- [x] `SeedSource::MtSeed` バリアント削除（使用箇所なし）
+- [x] `MtseedDatetimeSearchParams.target_seeds` を `Vec<MtSeed>` に厳格化
+- [ ] `IvCode` / `NeedlePattern` の TS 型としての明示的 export（type alias は tsify 非対応のため検討中）

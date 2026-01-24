@@ -189,9 +189,6 @@ impl NeedleSearcher {
                     params.advance_max,
                 )?
             }
-            SeedSource::MtSeed { .. } => {
-                return Err("MtSeed is not supported for NeedleSearcher".into());
-            }
             SeedSource::MultipleSeeds { seeds } => {
                 // 最初の Seed を使用（複数 Seed 対応は今後）
                 if seeds.is_empty() {
