@@ -5,6 +5,81 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
+use super::seeds::LcgSeed;
+
+// ===== Newtype Structs =====
+
+/// キー入力コード (SHA-1 計算用)
+///
+/// `KeyMask` を XOR `0x2FFF` で変換した値。
+/// ゲーム内部の SHA-1 メッセージ生成で使用される。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct KeyCode(pub u32);
+
+impl KeyCode {
+    /// キー入力なしの値
+    pub const NONE: Self = Self(0x2FFF);
+
+    /// 新しい `KeyCode` を作成
+    pub const fn new(value: u32) -> Self {
+        Self(value)
+    }
+
+    /// 内部値を取得
+    pub const fn value(self) -> u32 {
+        self.0
+    }
+
+    /// `KeyMask` から変換
+    pub const fn from_mask(mask: KeyMask) -> Self {
+        Self(mask.0 ^ 0x2FFF)
+    }
+
+    /// `KeyMask` に変換
+    pub const fn to_mask(self) -> KeyMask {
+        KeyMask(self.0 ^ 0x2FFF)
+    }
+}
+
+/// キー入力マスク (UI 入力用)
+///
+/// ユーザーが押したキーのビットマスク。
+/// `KeyCode` との関係: `key_code = key_mask XOR 0x2FFF`
+///
+/// ビット割り当て:
+/// - bit0=A, bit1=B, bit2=Select, bit3=Start
+/// - bit4=→, bit5=←, bit6=↑, bit7=↓
+/// - bit8=R, bit9=L, bit10=X, bit11=Y
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct KeyMask(pub u32);
+
+impl KeyMask {
+    /// キー入力なしの値
+    pub const NONE: Self = Self(0x0000);
+
+    /// 新しい `KeyMask` を作成
+    pub const fn new(value: u32) -> Self {
+        Self(value)
+    }
+
+    /// 内部値を取得
+    pub const fn value(self) -> u32 {
+        self.0
+    }
+
+    /// `KeyCode` から変換
+    pub const fn from_code(code: KeyCode) -> Self {
+        Self(code.0 ^ 0x2FFF)
+    }
+
+    /// `KeyCode` に変換
+    pub const fn to_code(self) -> KeyCode {
+        KeyCode(self.0 ^ 0x2FFF)
+    }
+}
+
 // ===== ハードウェア列挙型 =====
 
 /// DS ハードウェア種別
@@ -67,21 +142,13 @@ pub struct DsConfig {
 }
 
 /// 探索セグメント (`Timer0` × `VCount` × `KeyCode`)
-///
-/// # `key_code` フォーマット
-///
-/// `key_code = key_mask XOR 0x2FFF`
-///
-/// - `key_mask`: 押下キーのビットマスク (押下時 = 1)
-/// - ビット割り当て: bit0=A, bit1=B, bit2=Select, bit3=Start, bit4=→, bit5=←, bit6=↑, bit7=↓, bit8=R, bit9=L, bit10=X, bit11=Y
-/// - キー入力なし時は `0x2FFF`
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct SearchSegment {
     pub timer0: u16,
     pub vcount: u8,
-    /// キー入力値: `key_mask XOR 0x2FFF` (入力なし = `0x2FFF`)
-    pub key_code: u32,
+    /// キー入力コード
+    pub key_code: KeyCode,
 }
 
 /// VCount/Timer0 範囲
@@ -116,4 +183,49 @@ impl DatetimeParams {
             second,
         }
     }
+}
+
+// ===== 計算入力ソース =====
+
+/// 計算入力のソース指定
+///
+/// Searcher / Generator 共通で使用可能な入力ソース型。
+/// Seed 直接指定、起動条件指定、範囲探索など複数のモードをサポート。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
+pub enum SeedSource {
+    /// 既知の LCG Seed を直接指定
+    Seed {
+        /// 初期 LCG Seed
+        initial_seed: LcgSeed,
+    },
+
+    /// 複数の LCG Seed を指定
+    MultipleSeeds {
+        /// LCG Seed のリスト
+        seeds: Vec<LcgSeed>,
+    },
+
+    /// 起動条件 + 固定 Segment から Seed を導出
+    Startup {
+        /// DS 設定
+        ds: DsConfig,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// 探索対象の Segment（Timer0/VCount/KeyCode の組み合わせ）
+        segments: Vec<SearchSegment>,
+    },
+
+    /// 起動条件 + Timer0/VCount 範囲から探索
+    StartupRange {
+        /// DS 設定
+        ds: DsConfig,
+        /// 起動日時
+        datetime: DatetimeParams,
+        /// Timer0/VCount の範囲指定（複数指定可能）
+        ranges: Vec<VCountTimer0Range>,
+        /// キー入力コード
+        key_code: KeyCode,
+    },
 }

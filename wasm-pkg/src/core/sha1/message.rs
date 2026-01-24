@@ -1,7 +1,7 @@
 //! SHA-1 メッセージビルダー
 
 use crate::core::bcd::to_bcd;
-use crate::types::Hardware;
+use crate::types::{Hardware, KeyCode};
 
 use super::nazo::NazoValues;
 
@@ -149,7 +149,7 @@ impl BaseMessageBuilder {
         mac: [u8; 6],
         vcount: u8,
         timer0: u16,
-        key_code: u32,
+        key_code: KeyCode,
         frame: u8,
     ) -> Self {
         let mut buffer = [0u32; 16];
@@ -176,7 +176,7 @@ impl BaseMessageBuilder {
         buffer[11] = 0;
 
         // KeyCode (エンディアン変換)
-        buffer[12] = swap_bytes_32(key_code);
+        buffer[12] = swap_bytes_32(key_code.value());
 
         // SHA-1 パディング
         buffer[13] = 0x8000_0000;

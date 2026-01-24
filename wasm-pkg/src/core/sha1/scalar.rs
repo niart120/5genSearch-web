@@ -60,7 +60,7 @@ mod tests {
         BaseMessageBuilder, build_date_code, build_time_code, get_frame,
     };
     use crate::core::sha1::nazo::get_nazo_values;
-    use crate::types::{Hardware, RomRegion, RomVersion};
+    use crate::types::{Hardware, KeyCode, RomRegion, RomVersion};
 
     /// 実計算値に基づくテストケース
     ///
@@ -86,7 +86,7 @@ mod tests {
         let frame = get_frame(hardware);
         let timer0: u16 = 0x10F8;
         let vcount: u8 = 0x82;
-        let key_code: u32 = 0x2FFF;
+        let key_code = KeyCode::NONE;
 
         // メッセージ構築
         let mut builder = BaseMessageBuilder::new(&nazo, mac, vcount, timer0, key_code, frame);
@@ -151,7 +151,7 @@ mod tests {
         let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
         let frame = get_frame(Hardware::Ds);
 
-        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, 0x2FFF, frame);
+        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, KeyCode::NONE, frame);
         builder.set_datetime(
             build_date_code(2006, 3, 11),
             build_time_code(18, 53, 27, true),
@@ -170,7 +170,7 @@ mod tests {
         let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
         let frame = get_frame(Hardware::Ds);
 
-        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, 0x2FFF, frame);
+        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, KeyCode::NONE, frame);
         builder.set_datetime(
             build_date_code(2006, 3, 11),
             build_time_code(18, 53, 27, true),

@@ -1,6 +1,6 @@
 //! 乱数シード型
 //!
-//! LCG/MT シード値と針方向を定義。
+//! LCG/MT シード値を定義。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -72,43 +72,5 @@ impl From<u32> for MtSeed {
 impl From<MtSeed> for u32 {
     fn from(seed: MtSeed) -> Self {
         seed.0
-    }
-}
-
-/// レポート針方向 (0-7)
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-#[repr(u8)]
-pub enum NeedleDirection {
-    N = 0,
-    NE = 1,
-    E = 2,
-    SE = 3,
-    S = 4,
-    SW = 5,
-    W = 6,
-    NW = 7,
-}
-
-impl NeedleDirection {
-    /// 数値から変換
-    #[inline]
-    pub const fn from_value(v: u8) -> Self {
-        match v & 7 {
-            0 => Self::N,
-            1 => Self::NE,
-            2 => Self::E,
-            3 => Self::SE,
-            4 => Self::S,
-            5 => Self::SW,
-            6 => Self::W,
-            _ => Self::NW,
-        }
-    }
-
-    /// 数値へ変換
-    #[inline]
-    pub const fn value(self) -> u8 {
-        self as u8
     }
 }

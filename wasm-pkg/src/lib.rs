@@ -12,9 +12,6 @@ pub mod generation;
 pub mod misc;
 pub mod types;
 
-// Re-export SHA-1 wasm-bindgen functions
-pub use core::sha1::{hash_to_lcg_seed, hash_to_mt_seed, sha1_hash_batch, sha1_hash_single};
-
 // Re-export datetime_search types
 pub use datetime_search::{
     MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
@@ -25,20 +22,19 @@ pub use datetime_search::{
 pub use types::{
     DatetimeParams, DsConfig, EncounterMethod, EncounterResult, EncounterType, GameStartConfig,
     GenderRatio, GeneratedEggData, GeneratedPokemonData, GenerationSource, HeldItemSlot,
-    IV_VALUE_UNKNOWN, ItemContent, Ivs, LeadAbilityEffect, MovingEncounterInfo,
-    MovingEncounterLikelihood, NeedleDirection, SaveState, SearchSegment,
-    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, VCountTimer0Range,
+    HiddenPowerType, IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyMask, LcgSeed,
+    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
+    NeedlePattern, SaveState, SearchSegment, SeedSource, SpecialEncounterDirection,
+    SpecialEncounterInfo, StartMode, VCountTimer0Range,
 };
 
-// Re-export generation needle functions (外部公開必要)
-pub use generation::algorithm::{calc_report_needle_direction, calculate_needle_direction};
+// Re-export core needle functions (外部公開必要)
+pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
 
 // Re-export misc module
 pub use misc::{
-    IvCode, IvFilter, MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher,
-    NeedlePattern, NeedleSearchBatch, NeedleSearchInput, NeedleSearchParams, NeedleSearchResult,
-    NeedleSearcher, decode_iv_code, encode_iv_code, get_needle_pattern, needle_direction_arrow,
-    reorder_iv_code_for_roamer,
+    MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, NeedleSearchBatch,
+    NeedleSearchParams, NeedleSearchResult, NeedleSearcher, get_needle_pattern,
 };
 
 #[wasm_bindgen(start)]

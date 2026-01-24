@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::types::SearchSegment;
+use crate::types::{DatetimeParams, GenerationSource, MtSeed, SearchSegment};
 
 use super::base::HashValuesEnumerator;
 use super::types::{SearchRangeParams, TimeRangeParams};
@@ -18,7 +18,7 @@ pub use crate::types::DsConfig;
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeSearchParams {
-    pub target_seeds: Vec<u32>,
+    pub target_seeds: Vec<MtSeed>,
     pub ds: DsConfig,
     pub time_range: TimeRangeParams,
     pub search_range: SearchRangeParams,
@@ -29,16 +29,22 @@ pub struct MtseedDatetimeSearchParams {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeResult {
-    pub seed: u32,
-    pub year: u16,
-    pub month: u8,
-    pub day: u8,
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-    pub timer0: u16,
-    pub vcount: u8,
-    pub key_code: u32,
+    pub seed: MtSeed,
+    pub datetime: DatetimeParams,
+    pub segment: SearchSegment,
+}
+
+impl MtseedDatetimeResult {
+    /// `GenerationSource::Datetime` に変換
+    pub fn to_generation_source(&self, base_seed: u64) -> GenerationSource {
+        GenerationSource::datetime(
+            base_seed,
+            self.datetime,
+            self.segment.timer0,
+            self.segment.vcount,
+            self.segment.key_code,
+        )
+    }
 }
 
 /// バッチ結果
@@ -81,7 +87,7 @@ impl MtseedDatetimeSearcher {
         )?;
 
         Ok(Self {
-            target_seeds: params.target_seeds.into_iter().collect(),
+            target_seeds: params.target_seeds.into_iter().map(MtSeed::value).collect(),
             hash_enumerator,
             total_seconds: u64::from(params.search_range.range_seconds),
             segment: params.segment,
@@ -118,16 +124,16 @@ impl MtseedDatetimeSearcher {
             for entry in entries.iter().take(len as usize) {
                 if self.target_seeds.contains(&entry.mt_seed) {
                     results.push(MtseedDatetimeResult {
-                        seed: entry.mt_seed,
-                        year: entry.year,
-                        month: entry.month,
-                        day: entry.day,
-                        hour: entry.hour,
-                        minute: entry.minute,
-                        second: entry.second,
-                        timer0: self.segment.timer0,
-                        vcount: self.segment.vcount,
-                        key_code: self.segment.key_code,
+                        seed: MtSeed::new(entry.mt_seed),
+                        datetime: DatetimeParams::new(
+                            entry.year,
+                            entry.month,
+                            entry.day,
+                            entry.hour,
+                            entry.minute,
+                            entry.second,
+                        ),
+                        segment: self.segment,
                     });
                 }
             }
@@ -143,11 +149,11 @@ impl MtseedDatetimeSearcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{Hardware, RomRegion, RomVersion};
+    use crate::types::{Hardware, KeyCode, RomRegion, RomVersion};
 
     use super::*;
 
-    fn create_test_params(target_seeds: Vec<u32>) -> MtseedDatetimeSearchParams {
+    fn create_test_params(target_seeds: Vec<MtSeed>) -> MtseedDatetimeSearchParams {
         MtseedDatetimeSearchParams {
             target_seeds,
             ds: DsConfig {
@@ -174,14 +180,14 @@ mod tests {
             segment: SearchSegment {
                 timer0: 0x0C79,
                 vcount: 0x5A,
-                key_code: 0x0000_0000,
+                key_code: KeyCode::new(0x0000_0000),
             },
         }
     }
 
     #[test]
     fn test_searcher_creation() {
-        let params = create_test_params(vec![0x1234_5678]);
+        let params = create_test_params(vec![MtSeed::new(0x1234_5678)]);
         let searcher = MtseedDatetimeSearcher::new(params);
         assert!(searcher.is_ok());
     }
@@ -195,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_searcher_progress() {
-        let params = create_test_params(vec![0x1234_5678]);
+        let params = create_test_params(vec![MtSeed::new(0x1234_5678)]);
         let mut searcher = MtseedDatetimeSearcher::new(params).unwrap();
 
         assert!(!searcher.is_done());
@@ -227,7 +233,7 @@ mod tests {
 
         // 期待される LCG Seed から MT Seed を計算
         let expected_lcg_seed = LcgSeed::new(0x7683_6078_1D1C_E6DD);
-        let expected_mt_seed: u32 = expected_lcg_seed.derive_mt_seed().value();
+        let expected_mt_seed = expected_lcg_seed.derive_mt_seed();
 
         // 検索パラメータ: 2010/09/18 00:00:00 から 1日分 (86400秒)
         let params = MtseedDatetimeSearchParams {
@@ -257,7 +263,7 @@ mod tests {
             segment: SearchSegment {
                 timer0: 0x0C79,
                 vcount: 0x60,
-                key_code: 0x2FFF, // キー入力なし
+                key_code: KeyCode::NONE, // キー入力なし
             },
         };
 
@@ -271,34 +277,36 @@ mod tests {
         }
 
         // 検証: 期待する MT Seed が見つかること
-        let found = all_results.iter().find(|r| r.seed == expected_mt_seed);
+        let found = all_results
+            .iter()
+            .find(|r| r.seed.value() == expected_mt_seed.value());
         assert!(
             found.is_some(),
             "Expected MT Seed {:08X} (derived from LCG Seed 0x768360781D1CE6DD) not found. \
              Found {} results.",
-            expected_mt_seed,
+            expected_mt_seed.value(),
             all_results.len()
         );
 
         // 検証: 日時が 18:13:11 であること
         let result = found.unwrap();
-        assert_eq!(result.year, 2010, "Year mismatch");
-        assert_eq!(result.month, 9, "Month mismatch");
-        assert_eq!(result.day, 18, "Day mismatch");
+        assert_eq!(result.datetime.year, 2010, "Year mismatch");
+        assert_eq!(result.datetime.month, 9, "Month mismatch");
+        assert_eq!(result.datetime.day, 18, "Day mismatch");
         assert_eq!(
-            result.hour, 18,
+            result.datetime.hour, 18,
             "Hour mismatch: expected 18, got {}",
-            result.hour
+            result.datetime.hour
         );
         assert_eq!(
-            result.minute, 13,
+            result.datetime.minute, 13,
             "Minute mismatch: expected 13, got {}",
-            result.minute
+            result.datetime.minute
         );
         assert_eq!(
-            result.second, 11,
+            result.datetime.second, 11,
             "Second mismatch: expected 11, got {}",
-            result.second
+            result.datetime.second
         );
     }
 }

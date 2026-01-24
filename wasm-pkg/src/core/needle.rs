@@ -1,9 +1,11 @@
-//! 針方向計算アルゴリズム
+//! 針方向計算
+//!
+//! LCG Seed からレポート針の方向を計算する関数。
 
 use crate::core::lcg::Lcg64;
 use crate::types::{LcgSeed, NeedleDirection};
 
-/// LCG Seed から針方向を計算 (旧実装)
+/// LCG Seed から針方向を計算
 ///
 /// Seed の上位 32bit のうち、さらに上位 3bit (bit 61-63) を取得して 0-7 に変換。
 /// Generator 内部での使用を想定。
@@ -48,9 +50,6 @@ mod tests {
 
     #[test]
     fn test_calc_report_needle_direction() {
-        // pokemon-gen5-initseed のテストケースを移植
-        // 入力 Seed を 1 回進めて上位 32bit × 8 >> 32 で判定
-
         // 基本動作テスト: 結果が 0-7 の範囲内であること
         let seed = LcgSeed::new(0x0123_4567_89AB_CDEF);
         let dir = calc_report_needle_direction(seed);

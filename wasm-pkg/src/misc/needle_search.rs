@@ -1,7 +1,7 @@
 //! レポート針検索
 //!
 //! 観測したレポート針パターンから消費位置を特定する機能。
-//! 入力ソースとして `LcgSeed` 直接指定と起動条件指定の両方に対応。
+//! 入力ソースとして `SeedSource` を使用し、Seed 直接指定と起動条件指定の両方に対応。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -9,34 +9,13 @@ use wasm_bindgen::prelude::*;
 
 use crate::core::datetime_codes::{get_date_code, get_time_code_for_hardware};
 use crate::core::lcg::Lcg64;
+use crate::core::needle::calc_report_needle_direction;
 use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, get_nazo_values};
 use crate::datetime_search::base::datetime_to_seconds;
-use crate::generation::algorithm::calc_report_needle_direction;
-use crate::types::{DatetimeParams, DsConfig, GenerationSource, Hardware, LcgSeed};
-
-/// レポート針パターン (0-7 の方向値列)
-pub type NeedlePattern = Vec<u8>;
-
-// ===== 検索入力ソース =====
-
-/// 検索入力ソース
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-#[serde(tag = "type")]
-pub enum NeedleSearchInput {
-    /// 既知 Seed から検索 (消費位置特定)
-    Seed { initial_seed: LcgSeed },
-    /// 起動条件から検索 (Timer0/VCount 範囲探索)
-    Startup {
-        ds: DsConfig,
-        datetime: DatetimeParams,
-        timer0_min: u16,
-        timer0_max: u16,
-        vcount_min: u8,
-        vcount_max: u8,
-        key_code: u32,
-    },
-}
+use crate::types::{
+    DatetimeParams, DsConfig, GenerationSource, Hardware, KeyCode, LcgSeed, NeedleDirection,
+    NeedlePattern, SeedSource,
+};
 
 // ===== 検索パラメータ =====
 
@@ -44,8 +23,8 @@ pub enum NeedleSearchInput {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct NeedleSearchParams {
-    /// 入力ソース (Seed または Startup)
-    pub input: NeedleSearchInput,
+    /// 入力ソース (`SeedSource` を使用)
+    pub input: SeedSource,
     /// 観測したレポート針パターン (0-7)
     pub pattern: NeedlePattern,
     /// 検索開始消費位置
@@ -107,7 +86,7 @@ struct StartupState {
     timer0_max: u16,
     vcount_min: u8,
     vcount_max: u8,
-    key_code: u32,
+    key_code: KeyCode,
     // SHA-1 計算用のベースメッセージ (Timer0/VCount 以外が固定)
     base_message: [u32; 16],
     // hardware フラグ
@@ -141,15 +120,13 @@ impl NeedleSearcher {
         if params.pattern.is_empty() {
             return Err("pattern is empty".into());
         }
-        if params.pattern.iter().any(|&d| d > 7) {
-            return Err("Invalid needle direction (must be 0-7)".into());
-        }
+        // NeedleDirection は型レベルで 0-7 保証のため範囲チェック不要
         if params.advance_min > params.advance_max {
             return Err("advance_min > advance_max".into());
         }
 
         let state = match &params.input {
-            NeedleSearchInput::Seed { initial_seed } => {
+            SeedSource::Seed { initial_seed } => {
                 let mut lcg = Lcg64::new(*initial_seed);
                 lcg.jump(u64::from(params.advance_min));
                 SearcherState::Seed {
@@ -158,73 +135,71 @@ impl NeedleSearcher {
                     base_seed: initial_seed.value(),
                 }
             }
-            NeedleSearchInput::Startup {
+            SeedSource::StartupRange {
                 ds,
                 datetime,
-                timer0_min,
-                timer0_max,
-                vcount_min,
-                vcount_max,
+                ranges,
                 key_code,
             } => {
-                // バリデーション
-                if timer0_min > timer0_max {
-                    return Err("timer0_min > timer0_max".into());
+                // VCountTimer0Range から min/max を計算
+                if ranges.is_empty() {
+                    return Err("ranges is empty".into());
                 }
-                if vcount_min > vcount_max {
-                    return Err("vcount_min > vcount_max".into());
-                }
+                // 最初の範囲を使用（複数範囲は今後対応）
+                let range = &ranges[0];
+                let timer0_min = range.timer0_min;
+                let timer0_max = range.timer0_max;
+                let vcount_min = range.vcount;
+                let vcount_max = range.vcount;
 
-                // ベースメッセージ構築 (timer0/vcount は後で差し替え)
-                let nazo = get_nazo_values(ds.version, ds.region);
-                let frame = get_frame(ds.hardware);
-                let builder = BaseMessageBuilder::new(
-                    &nazo,
-                    ds.mac,
-                    *vcount_min,
-                    *timer0_min,
+                Self::create_startup_state(
+                    ds,
+                    *datetime,
+                    timer0_min,
+                    timer0_max,
+                    vcount_min,
+                    vcount_max,
                     *key_code,
-                    frame,
-                );
-                let base_message = builder.to_message();
-
-                // 日時コード計算
-                let is_ds_or_lite = matches!(ds.hardware, Hardware::Ds | Hardware::DsLite);
-                let days =
-                    datetime_to_seconds(datetime.year, datetime.month, datetime.day, 0, 0, 0)
-                        / 86400;
-                #[allow(clippy::cast_possible_truncation)]
-                let date_code = get_date_code(days as u32);
-                let secs_of_day = u32::from(datetime.hour) * 3600
-                    + u32::from(datetime.minute) * 60
-                    + u32::from(datetime.second);
-                let time_code = get_time_code_for_hardware(secs_of_day, is_ds_or_lite);
-
-                // 総組み合わせ数
-                let timer0_count = u64::from(*timer0_max - *timer0_min + 1);
-                let vcount_count = u64::from(*vcount_max - *vcount_min + 1);
-                let advance_count = u64::from(params.advance_max - params.advance_min);
-                let total_combinations = timer0_count * vcount_count * advance_count;
-
-                SearcherState::Startup(StartupState {
-                    datetime: *datetime,
-                    timer0_min: *timer0_min,
-                    timer0_max: *timer0_max,
-                    vcount_min: *vcount_min,
-                    vcount_max: *vcount_max,
-                    key_code: *key_code,
-                    base_message,
-                    is_ds_or_lite,
-                    date_code,
-                    time_code,
-                    current_timer0: *timer0_min,
-                    current_vcount: *vcount_min,
+                    params.advance_min,
+                    params.advance_max,
+                )?
+            }
+            SeedSource::Startup {
+                ds,
+                datetime,
+                segments,
+            } => {
+                // 固定 Segment から探索
+                if segments.is_empty() {
+                    return Err("segments is empty".into());
+                }
+                // 最初の Segment を使用（複数 Segment は今後対応）
+                let seg = &segments[0];
+                Self::create_startup_state(
+                    ds,
+                    *datetime,
+                    seg.timer0,
+                    seg.timer0,
+                    seg.vcount,
+                    seg.vcount,
+                    seg.key_code,
+                    params.advance_min,
+                    params.advance_max,
+                )?
+            }
+            SeedSource::MultipleSeeds { seeds } => {
+                // 最初の Seed を使用（複数 Seed 対応は今後）
+                if seeds.is_empty() {
+                    return Err("seeds is empty".into());
+                }
+                let initial_seed = seeds[0];
+                let mut lcg = Lcg64::new(initial_seed);
+                lcg.jump(u64::from(params.advance_min));
+                SearcherState::Seed {
+                    lcg,
                     current_advance: params.advance_min,
-                    current_lcg: None,
-                    current_base_seed: 0,
-                    total_combinations,
-                    processed_combinations: 0,
-                })
+                    base_seed: initial_seed.value(),
+                }
             }
         };
 
@@ -234,6 +209,72 @@ impl NeedleSearcher {
             advance_max: params.advance_max,
             state,
         })
+    }
+
+    /// Startup 状態を作成するヘルパー
+    #[allow(clippy::too_many_arguments)]
+    fn create_startup_state(
+        ds: &DsConfig,
+        datetime: DatetimeParams,
+        timer0_min: u16,
+        timer0_max: u16,
+        vcount_min: u8,
+        vcount_max: u8,
+        key_code: KeyCode,
+        advance_min: u32,
+        advance_max: u32,
+    ) -> Result<SearcherState, String> {
+        // バリデーション
+        if timer0_min > timer0_max {
+            return Err("timer0_min > timer0_max".into());
+        }
+        if vcount_min > vcount_max {
+            return Err("vcount_min > vcount_max".into());
+        }
+
+        // ベースメッセージ構築 (timer0/vcount は後で差し替え)
+        let nazo = get_nazo_values(ds.version, ds.region);
+        let frame = get_frame(ds.hardware);
+        let builder =
+            BaseMessageBuilder::new(&nazo, ds.mac, vcount_min, timer0_min, key_code, frame);
+        let base_message = builder.to_message();
+
+        // 日時コード計算
+        let is_ds_or_lite = matches!(ds.hardware, Hardware::Ds | Hardware::DsLite);
+        let days =
+            datetime_to_seconds(datetime.year, datetime.month, datetime.day, 0, 0, 0) / 86400;
+        #[allow(clippy::cast_possible_truncation)]
+        let date_code = get_date_code(days as u32);
+        let secs_of_day = u32::from(datetime.hour) * 3600
+            + u32::from(datetime.minute) * 60
+            + u32::from(datetime.second);
+        let time_code = get_time_code_for_hardware(secs_of_day, is_ds_or_lite);
+
+        // 総組み合わせ数
+        let timer0_count = u64::from(timer0_max - timer0_min + 1);
+        let vcount_count = u64::from(vcount_max - vcount_min + 1);
+        let advance_count = u64::from(advance_max - advance_min);
+        let total_combinations = timer0_count * vcount_count * advance_count;
+
+        Ok(SearcherState::Startup(StartupState {
+            datetime,
+            timer0_min,
+            timer0_max,
+            vcount_min,
+            vcount_max,
+            key_code,
+            base_message,
+            is_ds_or_lite,
+            date_code,
+            time_code,
+            current_timer0: timer0_min,
+            current_vcount: vcount_min,
+            current_advance: advance_min,
+            current_lcg: None,
+            current_base_seed: 0,
+            total_combinations,
+            processed_combinations: 0,
+        }))
     }
 
     #[wasm_bindgen(getter)]
@@ -301,7 +342,7 @@ impl NeedleSearcher {
         let end_advance = (*current_advance + chunk_size).min(advance_max);
 
         while *current_advance < end_advance {
-            if matches_pattern_at_seed(lcg.current_seed(), &pattern) {
+            if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                 results.push(NeedleSearchResult {
                     advance: *current_advance,
                     source: GenerationSource::fixed(*base_seed),
@@ -360,7 +401,7 @@ impl NeedleSearcher {
             // Advance 範囲をスキャン
             let lcg = s.current_lcg.as_mut().unwrap();
             while s.current_advance < advance_max && processed < chunk_size {
-                if matches_pattern_at_seed(lcg.current_seed(), &pattern) {
+                if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                     results.push(NeedleSearchResult {
                         advance: s.current_advance,
                         source: GenerationSource::datetime(
@@ -400,11 +441,11 @@ impl NeedleSearcher {
 // ===== 共通ヘルパー =====
 
 /// 指定 Seed からパターンが一致するか判定 (スタンドアロン関数)
-fn matches_pattern_at_seed(seed: LcgSeed, pattern: &[u8]) -> bool {
+fn matches_pattern_at_seed(seed: LcgSeed, pattern: &[NeedleDirection]) -> bool {
     let mut test_seed = seed;
     for &expected in pattern {
         let direction = calc_report_needle_direction(test_seed);
-        if direction.value() != expected {
+        if direction != expected {
             return false;
         }
         test_seed = Lcg64::compute_next(test_seed);
@@ -436,32 +477,17 @@ fn compute_lcg_seed_for_startup(
 
 /// 指定 Seed から針パターンを取得
 #[wasm_bindgen]
-pub fn get_needle_pattern(seed: LcgSeed, length: u32) -> Vec<u8> {
-    let mut pattern = Vec::with_capacity(length as usize);
+pub fn get_needle_pattern(seed: LcgSeed, length: u32) -> NeedlePattern {
+    let mut directions = Vec::with_capacity(length as usize);
     let mut current_seed = seed;
 
     for _ in 0..length {
         let direction = calc_report_needle_direction(current_seed);
-        pattern.push(direction.value());
+        directions.push(direction);
         current_seed = Lcg64::compute_next(current_seed);
     }
 
-    pattern
-}
-
-/// 針方向を矢印文字に変換
-pub fn needle_direction_arrow(direction: u8) -> &'static str {
-    match direction & 7 {
-        0 => "↑",
-        1 => "↗",
-        2 => "→",
-        3 => "↘",
-        4 => "↓",
-        5 => "↙",
-        6 => "←",
-        7 => "↖",
-        _ => "?",
-    }
+    NeedlePattern::new(directions)
 }
 
 #[cfg(test)]
@@ -473,7 +499,7 @@ mod tests {
         let seed = LcgSeed::new(0x0123_4567_89AB_CDEF);
         let pattern = get_needle_pattern(seed, 5);
         assert_eq!(pattern.len(), 5);
-        assert!(pattern.iter().all(|&d| d <= 7));
+        assert!(pattern.iter().all(|d| d.value() <= 7));
     }
 
     #[test]
@@ -482,7 +508,7 @@ mod tests {
         let pattern = get_needle_pattern(seed, 3);
 
         let params = NeedleSearchParams {
-            input: NeedleSearchInput::Seed { initial_seed: seed },
+            input: SeedSource::Seed { initial_seed: seed },
             pattern,
             advance_min: 0,
             advance_max: 10,
@@ -503,30 +529,19 @@ mod tests {
 
     #[test]
     fn test_needle_direction_arrow() {
-        assert_eq!(needle_direction_arrow(0), "↑");
-        assert_eq!(needle_direction_arrow(4), "↓");
-        assert_eq!(needle_direction_arrow(7), "↖");
+        assert_eq!(NeedleDirection::N.arrow(), "↑");
+        assert_eq!(NeedleDirection::S.arrow(), "↓");
+        assert_eq!(NeedleDirection::NW.arrow(), "↖");
     }
 
     #[test]
     fn test_invalid_params() {
         // Empty pattern
         let params = NeedleSearchParams {
-            input: NeedleSearchInput::Seed {
+            input: SeedSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
-            pattern: vec![],
-            advance_min: 0,
-            advance_max: 10,
-        };
-        assert!(NeedleSearcher::new(params).is_err());
-
-        // Invalid direction
-        let params = NeedleSearchParams {
-            input: NeedleSearchInput::Seed {
-                initial_seed: LcgSeed::new(0),
-            },
-            pattern: vec![8], // invalid
+            pattern: NeedlePattern::new(vec![]),
             advance_min: 0,
             advance_max: 10,
         };
@@ -534,10 +549,10 @@ mod tests {
 
         // min > max
         let params = NeedleSearchParams {
-            input: NeedleSearchInput::Seed {
+            input: SeedSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
-            pattern: vec![0],
+            pattern: NeedlePattern::new(vec![NeedleDirection::N]),
             advance_min: 10,
             advance_max: 5,
         };

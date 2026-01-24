@@ -13,7 +13,6 @@ pub use scalar::calculate_pokemon_sha1;
 pub use simd::calculate_pokemon_sha1_simd;
 
 use crate::types::{LcgSeed, MtSeed};
-use wasm_bindgen::prelude::*;
 
 // ===== SHA-1 定数 =====
 
@@ -101,55 +100,50 @@ pub const fn left_rotate(value: u32, amount: u32) -> u32 {
     value.rotate_left(amount)
 }
 
-// ===== wasm-bindgen エクスポート =====
+// ===== 内部ヘルパー関数 =====
 
-/// 単一 SHA-1 計算
+/// 単一 SHA-1 計算 (crate 内部用)
 ///
 /// # Panics
 /// `message` の長さが 16 の場合は panic しない。
 /// 16 以外の場合はゼロベクトルを返す。
-#[wasm_bindgen]
-pub fn sha1_hash_single(message: &[u32]) -> Vec<u32> {
+#[allow(dead_code)]
+pub(crate) fn sha1_hash_single(message: &[u32]) -> Option<HashValues> {
     if message.len() != 16 {
-        return vec![0; 5];
+        return None;
     }
     let msg: [u32; 16] = message.try_into().expect("length checked");
-    let hash = calculate_pokemon_sha1(&msg);
-    vec![hash.h0, hash.h1, hash.h2, hash.h3, hash.h4]
+    Some(calculate_pokemon_sha1(&msg))
 }
 
-/// バッチ SHA-1 計算
-///
-/// # Panics
-/// 各 16 ワードチャンクが正しく存在する場合は panic しない。
-#[wasm_bindgen]
-pub fn sha1_hash_batch(messages: &[u32]) -> Vec<u32> {
+/// バッチ SHA-1 計算 (crate 内部用)
+#[allow(dead_code)]
+pub(crate) fn sha1_hash_batch_internal(messages: &[u32]) -> Vec<HashValues> {
     let count = messages.len() / 16;
-    let mut results = Vec::with_capacity(count * 5);
+    let mut results = Vec::with_capacity(count);
 
     for i in 0..count {
         let msg: [u32; 16] = messages[i * 16..(i + 1) * 16]
             .try_into()
             .expect("slice length is 16");
-        let hash = calculate_pokemon_sha1(&msg);
-        results.extend_from_slice(&[hash.h0, hash.h1, hash.h2, hash.h3, hash.h4]);
+        results.push(calculate_pokemon_sha1(&msg));
     }
 
     results
 }
 
-/// ハッシュから MT Seed を計算
-#[wasm_bindgen]
-pub fn hash_to_mt_seed(h0: u32, h1: u32) -> u32 {
+/// ハッシュから MT Seed を計算 (crate 内部用)
+#[allow(dead_code)]
+pub(crate) fn hash_to_mt_seed(h0: u32, h1: u32) -> MtSeed {
     let hash = HashValues::new(h0, h1, 0, 0, 0);
-    hash.to_mt_seed().value()
+    hash.to_mt_seed()
 }
 
-/// ハッシュから LCG Seed を計算
-#[wasm_bindgen]
-pub fn hash_to_lcg_seed(h0: u32, h1: u32) -> u64 {
+/// ハッシュから LCG Seed を計算 (crate 内部用)
+#[allow(dead_code)]
+pub(crate) fn hash_to_lcg_seed(h0: u32, h1: u32) -> LcgSeed {
     let hash = HashValues::new(h0, h1, 0, 0, 0);
-    hash.to_lcg_seed().value()
+    hash.to_lcg_seed()
 }
 
 #[cfg(test)]
@@ -210,10 +204,10 @@ mod tests {
     }
 
     #[test]
-    fn test_hash_to_mt_seed_wasm() {
+    fn test_hash_to_mt_seed_internal() {
         let h0 = 0x1234_5678;
         let h1 = 0xABCD_EF01;
         let mt = hash_to_mt_seed(h0, h1);
-        assert_ne!(mt, 0);
+        assert_ne!(mt.value(), 0);
     }
 }

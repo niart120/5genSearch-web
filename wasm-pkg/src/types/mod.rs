@@ -5,13 +5,15 @@
 
 mod config;
 mod generation;
+mod needle;
 mod pokemon;
 mod seeds;
 
 // ===== Re-exports =====
 
 pub use config::{
-    DatetimeParams, DsConfig, Hardware, RomRegion, RomVersion, SearchSegment, VCountTimer0Range,
+    DatetimeParams, DsConfig, Hardware, KeyCode, KeyMask, RomRegion, RomVersion, SearchSegment,
+    SeedSource, VCountTimer0Range,
 };
 pub use generation::{
     EncounterMethod, EncounterResult, EncounterType, GameStartConfig, GeneratedEggData,
@@ -19,8 +21,9 @@ pub use generation::{
     MovingEncounterLikelihood, SaveState, SpecialEncounterDirection, SpecialEncounterInfo,
     StartMode,
 };
+pub use needle::{NeedleDirection, NeedlePattern};
 pub use pokemon::{
-    AbilitySlot, Gender, GenderRatio, HeldItemSlot, IV_VALUE_UNKNOWN, IvSet, Ivs,
-    LeadAbilityEffect, Nature, ShinyType,
+    AbilitySlot, Gender, GenderRatio, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN, IvFilter,
+    Ivs, LeadAbilityEffect, Nature, ShinyType,
 };
-pub use seeds::{LcgSeed, MtSeed, NeedleDirection};
+pub use seeds::{LcgSeed, MtSeed};
