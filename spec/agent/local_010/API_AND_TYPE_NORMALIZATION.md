@@ -308,12 +308,12 @@ pub(crate) fn sha1_hash_single(message: &[u32; 16]) -> HashValues { ... }
 - [x] `MtseedDatetimeSearchParams.target_seeds` を `Vec<MtSeed>` に厳格化
 
 ### Phase 6: Newtype Struct 導入
-- [ ] `IvCode` newtype struct 化（`misc/mtseed_search.rs`）
-- [ ] `NeedlePattern` newtype struct 化（`misc/needle_search.rs`）
-- [ ] `KeyCode` newtype struct 新規追加（`types/config.rs`）
-- [ ] `KeyMask` newtype struct 新規追加（`types/config.rs`）
-- [ ] 各使用箇所の修正
-- [ ] テスト修正・追加
+- [x] `IvCode` newtype struct 化（`misc/mtseed_search.rs`）
+- [x] `NeedlePattern` newtype struct 化（`misc/needle_search.rs`）
+- [x] `KeyCode` newtype struct 新規追加（`types/config.rs`）
+- [x] `KeyMask` newtype struct 新規追加（`types/config.rs`）
+- [x] 各使用箇所の修正
+- [x] テスト修正・追加
 
 ## 7. Phase 6: Newtype Struct 詳細設計
 
