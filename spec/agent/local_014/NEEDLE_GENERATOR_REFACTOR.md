@@ -51,11 +51,21 @@
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `wasm-pkg/src/generation/flows/generator.rs` | 変更 | `advance` 起点のバグ修正 (`current_advance=user_offset` で初期化) |
-| `wasm-pkg/src/types/generation.rs` | 変更 | `NeedleGeneratorParams` / `NeedleGeneratorResult` 型を追加 |
+| `wasm-pkg/src/types/generation.rs` | 変更 | `NeedleSearchParams` / `NeedleSearchResult` 型を追加 |
 | `wasm-pkg/src/types/mod.rs` | 変更 | 新規型の re-export 追加 |
-| `wasm-pkg/src/misc/needle_generator.rs` | 変更 | 型定義削除、`GeneratorConfig` 導入、ロジック簡素化 |
+| `wasm-pkg/src/misc/needle_generator.rs` | **削除** | 旧 `NeedleGenerator` クラスを完全削除 |
+| `wasm-pkg/src/misc/needle_search.rs` | **新規** | `search_needle_pattern` 関数を配置 |
+| `wasm-pkg/src/misc/mod.rs` | 変更 | モジュール宣言の変更 (`needle_generator` → `needle_search`) |
 | `wasm-pkg/src/generation/seed_resolver.rs` | 変更 | Iterator 版 Seed 解決関数を追加 (オプション) |
 | `wasm-pkg/src/lib.rs` | 変更 | re-export の調整 |
+
+### 2.1 ファイル名変更の理由
+
+`needle_generator.rs` → `needle_search.rs` へのリネーム理由:
+
+1. **命名の一貫性**: `NeedleGenerator` クラスを廃止し `search_needle_pattern` 関数に変更するため、ファイル名も「検索」を示す名称に統一
+2. **責務の明確化**: "Generator" はイテレータ的な生成器を連想させるが、実際は検索処理
+3. **既存コードへの影響**: `needle_generator.rs` を使用する外部モジュールは `lib.rs` 経由の re-export のみであり、影響は限定的
 
 ## 3. 設計方針
 
@@ -116,7 +126,7 @@ advance=user_offset ← 生成開始位置
 **全 Generator 共通の検索範囲パラメータ**:
 
 ```rust
-pub struct GeneratorConfig {
+pub struct SearchConfig {  // 旧 GeneratorConfig
     pub input: SeedInput,
     pub version: RomVersion,
     pub game_start: GameStartConfig,
@@ -125,20 +135,65 @@ pub struct GeneratorConfig {
 }
 ```
 
-これにより:
-- `NeedleGeneratorParams` から `advance_min` / `advance_max` を削除可能
-- `PokemonGenerator` / `EggGenerator` の `count` 引数を `max_advance` で代替可能
-- 全 Generator で統一された範囲指定
+#### GeneratorConfig 名称変更の検討
 
-### 3.4 NeedleGenerator の目的再定義
+責務: **Seed 解決 + オフセット計算 + 検索範囲指定**
+
+| 名称案 | ニュアンス |
+|--------|------------|
+| `SearchConfig` | 検索設定（汎用的、推奨） |
+| `SeedSearchConfig` | Seed 検索設定（Seed 解決を強調） |
+| `GenerationScope` | 生成範囲（スコープを強調） |
+| `SeedContext` | Seed コンテキスト（文脈情報） |
+
+**推奨: `SearchConfig`** - シンプルで責務を表現
+
+#### PokemonGenerator / EggGenerator における max_advance の扱い
+
+現状は `count` 引数で「生成する個体数」を指定。`max_advance` との関係:
+
+| アプローチ | 説明 | 評価 |
+|------------|------|------|
+| A: count 維持 | `max_advance` は Needle 専用、Pokemon/Egg は `count` 維持 | △ パラメータ不統一 |
+| B: max_advance 統一 | `count` を廃止、`max_advance` で統一 | ○ API 統一、破壊的変更 |
+| C: 両方サポート | `max_advance` 優先、未指定時は `count` 使用 | △ 複雑化 |
+
+**推奨: B (max_advance 統一)**
+
+- `generate_pokemon_list(params, count, filter)` → `generate_pokemon_list(params, filter)`
+- 生成範囲は `params.config.user_offset` ～ `params.config.max_advance`
+- フィルタ結果が `max_advance - user_offset` 件を超えることはない
+
+### 3.4 Needle 検索の目的再定義
 
 **目的**: SeedInput から生成される各 LcgSeed の乱数系列において、指定した NeedlePattern が出現する `advance` と `SeedOrigin` を返す
 
-**現状の問題**:
+#### 返却する advance の定義
+
+**パターン末尾の位置を返す** (ユーザーが最後に観測した針の位置)
+
+```
+パターン: ↑→↓ (長さ 3)
+
+advance=10 で開始した場合:
+  10: ↑ (1番目)
+  11: → (2番目)  
+  12: ↓ (3番目) ← 返却する advance = 12
+```
+
+| 方式 | 説明 | 採用 |
+|------|------|------|
+| 開始位置を返す | パターンが始まる advance | × 直感に反する |
+| 末尾位置を返す | パターンが終わる advance (= 開始 + 長さ - 1) | ○ ユーザー体験に合致 |
+
+**理由**: ユーザーは「最後に見た針」を基準に操作を開始するため、その位置を返す方が自然
+
+#### 現状の問題
+
 - `NeedleGeneratorBatch` はインクリメンタル処理用だが、実際のユースケースでは全件取得で十分
 - Startup モードの timer0×vcount 組み合わせ爆発を懸念していたが、通常は数件程度
 
-**変更案**:
+#### 変更案
 
 ```rust
 /// レポート針パターン検索 (公開 API)
@@ -325,14 +380,16 @@ pub fn search_needle_pattern(
 
 - [ ] `NeedleSearchParams` 型を `types/generation.rs` に追加
 - [ ] `NeedleSearchResult` 型を `types/generation.rs` に追加
+- [ ] `needle_search.rs` ファイルを新規作成
 - [ ] `search_needle_pattern` 関数を実装
+- [ ] `misc/mod.rs` でモジュール宣言を追加
 - [ ] WASM 公開設定
 
 ### Phase 3: 旧 API 廃止
 
-- [ ] `NeedleGenerator` クラスを廃止 (または deprecated 化)
-- [ ] `NeedleGeneratorParams` / `NeedleGeneratorResult` / `NeedleGeneratorBatch` を削除
-- [ ] `lib.rs` / `mod.rs` の re-export 調整
+- [ ] `needle_generator.rs` を削除
+- [ ] `misc/mod.rs` から旧モジュール宣言を削除
+- [ ] `lib.rs` の re-export 調整 (`search_needle_pattern` を公開)
 
 ### Phase 4: 検証
 
