@@ -26,8 +26,7 @@ pub use types::{
     IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
     LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
     NeedlePattern, PokemonGeneratorParams, SaveState, SeedOrigin, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, StaticPokemonGeneratorParams, Timer0VCountRange, TrainerInfo,
-    WildPokemonGeneratorParams,
+    SpecialEncounterInfo, StartMode, Timer0VCountRange, TrainerInfo,
 };
 
 // Re-export core needle functions (外部公開必要)
