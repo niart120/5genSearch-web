@@ -5,42 +5,13 @@
 
 use crate::generation::algorithm::InheritanceSlot;
 use crate::types::{
-    EncounterMethod, EncounterResult, EncounterType, EverstonePlan, Gender, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, HeldItemSlot, Ivs, LeadAbilityEffect,
-    MovingEncounterInfo, Nature, NeedleDirection, RomVersion, SeedOrigin, ShinyType,
+    EncounterResult, EncounterType, Gender, GeneratedEggData, GeneratedPokemonData, HeldItemSlot,
+    Ivs, MovingEncounterInfo, Nature, NeedleDirection, RomVersion, SeedOrigin, ShinyType,
     SpecialEncounterInfo,
 };
 
 // Re-export for internal use
 pub use crate::types::EncounterSlotConfig;
-
-// ===== 生成設定 =====
-
-/// 生成設定 (野生・固定共通)
-#[derive(Clone)]
-pub struct PokemonGenerationConfig {
-    pub version: RomVersion,
-    pub encounter_type: EncounterType,
-    pub tid: u16,
-    pub sid: u16,
-    pub lead_ability: LeadAbilityEffect,
-    pub shiny_charm: bool,
-    /// エンカウント方法 (Normal/Surfing 時のみ使用)
-    pub encounter_method: EncounterMethod,
-}
-
-/// 孵化設定
-#[derive(Clone)]
-pub struct EggGenerationConfig {
-    pub tid: u16,
-    pub sid: u16,
-    pub everstone: EverstonePlan,
-    pub female_has_hidden: bool,
-    pub uses_ditto: bool,
-    pub gender_ratio: GenderRatio,
-    pub nidoran_flag: bool,
-    pub pid_reroll_count: u8,
-}
 
 // ===== オフセット設定 =====
 

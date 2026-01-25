@@ -399,6 +399,7 @@ pub struct PokemonGeneratorParams {
 }
 
 /// 卵 Generator パラメータ
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggGeneratorParams {
@@ -410,10 +411,8 @@ pub struct EggGeneratorParams {
     pub game_start: GameStartConfig,
     /// ユーザオフセット
     pub user_offset: u32,
-    /// トレーナー ID
-    pub tid: u16,
-    /// 裏 ID
-    pub sid: u16,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
     /// かわらずのいし効果
     pub everstone: EverstonePlan,
     /// メス親が夢特性か
@@ -424,8 +423,8 @@ pub struct EggGeneratorParams {
     pub gender_ratio: GenderRatio,
     /// ニドラン♀フラグ
     pub nidoran_flag: bool,
-    /// PID リロール回数 (国際孵化等)
-    pub pid_reroll_count: u8,
+    /// 国際孵化 (Masuda Method)
+    pub masuda_method: bool,
     /// オス親の個体値
     pub parent_male: Ivs,
     /// メス親の個体値
