@@ -21,14 +21,32 @@ use crate::generation::algorithm::{
 use crate::generation::seed_resolver::resolve_all_seeds;
 use crate::types::{
     EggGeneratorParams, EncounterMethod, EncounterType, GeneratedEggData, GeneratedPokemonData,
-    IvFilter, Ivs, LcgSeed, MovingEncounterInfo, PokemonGeneratorParams, SeedOrigin,
+    IvFilter, Ivs, LcgSeed, MovingEncounterInfo, PokemonGeneratorParams, RomVersion, SeedOrigin,
     SpecialEncounterInfo,
 };
 
 use super::egg::generate_egg;
 use super::pokemon_static::generate_static_pokemon;
 use super::pokemon_wild::generate_wild_pokemon;
-use super::types::OffsetConfig;
+
+// ===== MT オフセット計算 =====
+
+/// エンカウント種別とバージョンから MT オフセットを計算
+///
+/// MT19937 で IV 生成を開始する位置を決定する。
+const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterType) -> u32 {
+    match encounter_type {
+        EncounterType::Egg => 7,
+        EncounterType::Roamer => 1,
+        _ => {
+            if version.is_bw2() {
+                2
+            } else {
+                0
+            }
+        }
+    }
+}
 
 // ===== 公開 API =====
 
@@ -127,10 +145,7 @@ fn generate_pokemon_for_seed(
     count: u32,
     filter: Option<&IvFilter>,
 ) -> Result<Vec<GeneratedPokemonData>, String> {
-    let offset_config =
-        OffsetConfig::for_encounter(params.version, params.encounter_type, params.user_offset);
-
-    let mut generator = PokemonGenerator::new(seed, offset_config, origin, params)?;
+    let mut generator = PokemonGenerator::new(seed, origin, params)?;
 
     let pokemons = generator.take(count);
     Ok(apply_filter(pokemons, filter))
@@ -144,9 +159,7 @@ fn generate_egg_for_seed(
     count: u32,
     filter: Option<&IvFilter>,
 ) -> Result<Vec<GeneratedEggData>, String> {
-    let offset_config = OffsetConfig::for_egg(params.user_offset);
-
-    let mut generator = EggGenerator::new(seed, offset_config, origin, params)?;
+    let mut generator = EggGenerator::new(seed, origin, params)?;
 
     let eggs = generator.take(count);
     Ok(apply_egg_filter(eggs, filter))
@@ -196,7 +209,6 @@ impl PokemonGenerator {
     /// # Arguments
     ///
     /// * `base_seed` - LCG 初期シード
-    /// * `offset_config` - オフセット設定
     /// * `source` - 生成元情報
     /// * `params` - 生成パラメータ
     ///
@@ -205,23 +217,23 @@ impl PokemonGenerator {
     /// 無効な起動設定の場合にエラーを返す。
     pub fn new(
         base_seed: LcgSeed,
-        offset_config: OffsetConfig,
         source: SeedOrigin,
         params: &PokemonGeneratorParams,
     ) -> Result<Self, String> {
         let game_offset = calculate_game_offset(base_seed, params.version, &params.game_start)?;
+        let mt_offset = calculate_mt_offset(params.version, params.encounter_type);
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
-        let total_offset = game_offset + offset_config.user_offset;
+        let total_offset = game_offset + params.user_offset;
         lcg.jump(u64::from(total_offset));
 
         Ok(Self {
             lcg,
             game_offset,
-            user_offset: offset_config.user_offset,
+            user_offset: params.user_offset,
             current_advance: 0,
             rng_ivs,
             source,
@@ -355,7 +367,6 @@ impl EggGenerator {
     /// # Arguments
     ///
     /// * `base_seed` - LCG 初期シード
-    /// * `offset_config` - オフセット設定
     /// * `source` - 生成元情報
     /// * `params` - 生成パラメータ
     ///
@@ -363,23 +374,24 @@ impl EggGenerator {
     /// 無効な起動設定の場合にエラーを返す。
     pub fn new(
         base_seed: LcgSeed,
-        offset_config: OffsetConfig,
         source: SeedOrigin,
         params: &EggGeneratorParams,
     ) -> Result<Self, String> {
         let game_offset = calculate_game_offset(base_seed, params.version, &params.game_start)?;
+        // Egg: MT offset = 7 (固定)
+        let mt_offset = 7;
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, offset_config.mt_offset);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
-        let total_offset = game_offset + offset_config.user_offset;
+        let total_offset = game_offset + params.user_offset;
         lcg.jump(u64::from(total_offset));
 
         Ok(Self {
             lcg,
             game_offset,
-            user_offset: offset_config.user_offset,
+            user_offset: params.user_offset,
             current_advance: 0,
             rng_ivs,
             source,
@@ -492,8 +504,6 @@ mod tests {
     #[test]
     fn test_pokemon_generator_wild() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let offset_config =
-            OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
         let source = make_source(base_seed);
         let slots = make_slots();
         let params = PokemonGeneratorParams {
@@ -501,7 +511,7 @@ mod tests {
             ..make_pokemon_params()
         };
 
-        let generator = PokemonGenerator::new(base_seed, offset_config, source, &params);
+        let generator = PokemonGenerator::new(base_seed, source, &params);
 
         assert!(generator.is_ok());
 
@@ -520,8 +530,6 @@ mod tests {
     #[test]
     fn test_pokemon_generator_take() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let offset_config =
-            OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
         let source = make_source(base_seed);
         let slots = make_slots();
         let params = PokemonGeneratorParams {
@@ -529,7 +537,7 @@ mod tests {
             ..make_pokemon_params()
         };
 
-        let mut g = PokemonGenerator::new(base_seed, offset_config, source, &params).unwrap();
+        let mut g = PokemonGenerator::new(base_seed, source, &params).unwrap();
 
         let results = g.take(5);
         assert_eq!(results.len(), 5);
@@ -545,8 +553,6 @@ mod tests {
     #[test]
     fn test_pokemon_generator_static() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let offset_config =
-            OffsetConfig::for_encounter(RomVersion::Black, EncounterType::StaticSymbol, 0);
         let source = make_source(base_seed);
         let slots = vec![EncounterSlotConfig {
             species_id: 150, // Mewtwo
@@ -562,7 +568,7 @@ mod tests {
             ..make_pokemon_params()
         };
 
-        let generator = PokemonGenerator::new(base_seed, offset_config, source, &params);
+        let generator = PokemonGenerator::new(base_seed, source, &params);
 
         assert!(generator.is_ok());
 
@@ -576,7 +582,6 @@ mod tests {
     #[test]
     fn test_egg_generator() {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let offset_config = OffsetConfig::for_egg(0);
         let source = make_source(base_seed);
         let params = EggGeneratorParams {
             source: GeneratorSource::Seeds { seeds: vec![] },
@@ -597,7 +602,7 @@ mod tests {
             parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
         };
 
-        let generator = EggGenerator::new(base_seed, offset_config, source, &params);
+        let generator = EggGenerator::new(base_seed, source, &params);
 
         assert!(generator.is_ok());
 
@@ -608,36 +613,42 @@ mod tests {
     }
 
     #[test]
-    fn test_offset_config() {
-        // 孵化用 (mt_offset = 7)
-        let offset = OffsetConfig::for_egg(100);
-        assert_eq!(offset.user_offset, 100);
-        assert_eq!(offset.mt_offset, 7);
+    fn test_calculate_mt_offset() {
+        // Egg: mt_offset = 7
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black, EncounterType::Egg),
+            7
+        );
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black2, EncounterType::Egg),
+            7
+        );
 
-        // BW 野生用 (mt_offset = 0)
-        let offset = OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 50);
-        assert_eq!(offset.user_offset, 50);
-        assert_eq!(offset.mt_offset, 0);
+        // Roamer: mt_offset = 1
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black, EncounterType::Roamer),
+            1
+        );
 
-        // BW2 野生用 (mt_offset = 2)
-        let offset = OffsetConfig::for_encounter(RomVersion::Black2, EncounterType::Normal, 0);
-        assert_eq!(offset.user_offset, 0);
-        assert_eq!(offset.mt_offset, 2);
+        // BW Wild/Static: mt_offset = 0
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black, EncounterType::Normal),
+            0
+        );
+        assert_eq!(
+            calculate_mt_offset(RomVersion::White, EncounterType::StaticSymbol),
+            0
+        );
 
-        // 徘徊用 (mt_offset = 1)
-        let offset = OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Roamer, 0);
-        assert_eq!(offset.user_offset, 0);
-        assert_eq!(offset.mt_offset, 1);
-
-        // 孵化用 (for_encounter経由, mt_offset = 7)
-        let offset = OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Egg, 10);
-        assert_eq!(offset.user_offset, 10);
-        assert_eq!(offset.mt_offset, 7);
-
-        // カスタム
-        let offset = OffsetConfig::with_custom_mt_offset(50, 0);
-        assert_eq!(offset.user_offset, 50);
-        assert_eq!(offset.mt_offset, 0);
+        // BW2 Wild/Static: mt_offset = 2
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black2, EncounterType::Normal),
+            2
+        );
+        assert_eq!(
+            calculate_mt_offset(RomVersion::White2, EncounterType::StaticSymbol),
+            2
+        );
     }
 
     /// 元実装テストパターン: PID生成の具体値検証
@@ -700,8 +711,7 @@ mod tests {
 
         let source = make_source(initial_seed);
         let mut generator =
-            PokemonGenerator::new(initial_seed, OffsetConfig::default(), source, &params)
-                .expect("Generator作成失敗");
+            PokemonGenerator::new(initial_seed, source, &params).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -758,8 +768,7 @@ mod tests {
 
         let source = make_source(initial_seed);
         let mut generator =
-            PokemonGenerator::new(initial_seed, OffsetConfig::default(), source, &params)
-                .expect("Generator作成失敗");
+            PokemonGenerator::new(initial_seed, source, &params).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -812,8 +821,7 @@ mod tests {
 
         let source = make_source(initial_seed);
         let mut generator =
-            PokemonGenerator::new(initial_seed, OffsetConfig::default(), source, &params)
-                .expect("Generator作成失敗");
+            PokemonGenerator::new(initial_seed, source, &params).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -866,8 +874,7 @@ mod tests {
 
         let source = make_source(initial_seed);
         let mut generator =
-            PokemonGenerator::new(initial_seed, OffsetConfig::default(), source, &params)
-                .expect("Generator作成失敗");
+            PokemonGenerator::new(initial_seed, source, &params).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -920,8 +927,7 @@ mod tests {
 
         let source = make_source(initial_seed);
         let mut generator =
-            PokemonGenerator::new(initial_seed, OffsetConfig::default(), source, &params)
-                .expect("Generator作成失敗");
+            PokemonGenerator::new(initial_seed, source, &params).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
