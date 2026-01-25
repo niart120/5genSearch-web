@@ -1,0 +1,109 @@
+@startuml seed-dataflow
+' =========================================
+' Seed 導出フローと API の位置づけ
+' =========================================
+' 目的: データの流れを理解し、各 API が何を入力に何を出力するかを整理
+' =========================================
+
+scale 0.9
+top to bottom direction
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+skinparam class {
+    BackgroundColor<<data>> #E3F2FD
+    BackgroundColor<<api_search>> #FFF3E0
+    BackgroundColor<<api_gen>> #E8F5E9
+    BackgroundColor<<config>> #FCE4EC
+}
+
+' =========================================
+' データフロー (縦軸)
+' =========================================
+
+package "起動条件 (Startup Condition)" {
+    class "DsConfig" as DsConfig <<data>> {
+        mac, hardware
+        version, region
+    }
+    class "DatetimeParams" as Datetime <<data>> {
+        year/month/day
+        hour/minute/second
+    }
+    class "SearchSegment" as Segment <<data>> {
+        timer0, vcount
+        key_code
+    }
+}
+
+class "SHA-1" as SHA1 <<process>> {
+    hash(起動条件)
+}
+
+class "LcgSeed (64bit)" as LcgSeed <<data>> {
+    初期シード
+}
+
+class "MtSeed (32bit)" as MtSeed <<data>> {
+    derive_mt_seed()
+}
+
+package "乱数消費" {
+    class "MT19937" as MT <<process>> {
+        IV 生成
+    }
+    class "LCG" as LCG <<process>> {
+        性格/性別/色違い等
+    }
+}
+
+class "Ivs" as Ivs <<data>> {
+    hp/atk/def/spa/spd/spe
+}
+
+class "個体データ" as Pokemon <<data>> {
+    Pokemon / Egg
+}
+
+' フロー
+DsConfig --> SHA1
+Datetime --> SHA1
+Segment --> SHA1
+SHA1 --> LcgSeed
+LcgSeed --> MtSeed : derive
+MtSeed --> MT
+MT --> Ivs
+LcgSeed --> LCG
+LCG --> Pokemon
+Ivs --> Pokemon : 合成
+
+' =========================================
+' API の位置づけ (横から介入)
+' =========================================
+
+note right of MtSeed
+  **MtseedSearcher**
+  IvFilter → MtSeed[] を32bit全探索
+  (逆方向: IV条件からMtSeedを求める)
+end note
+
+note right of SHA1
+  **MtseedDatetimeSearcher**
+  MtSeed → 起動条件 を時刻全探索
+  (逆方向: MtSeedから起動時刻を求める)
+end note
+
+note right of LCG
+  **NeedleSearcher**
+  LcgSeed + pattern → 消費位置
+  (順方向: 針パターンの位置を探す)
+end note
+
+note right of Pokemon
+  **Generator**
+  LcgSeed + 設定 → 個体データ
+  (順方向: Seedから個体を生成)
+end note
+
+@enduml
