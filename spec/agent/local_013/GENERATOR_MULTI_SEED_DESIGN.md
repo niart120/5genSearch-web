@@ -20,26 +20,13 @@ Generator の設計を見直し、以下を実現する:
 | `GameOffset` | ゲーム起動条件から導出される事前消費数 |
 | `UserOffset` | API 呼び出し時にユーザが指定する追加オフセット |
 
-### 1.3 背景
+### 1.3 実装状況
 
-現状の設計には以下の課題がある:
-
-1. **責務の混在**: `from_params()` が Seed 解決を内部で実施
-2. **複数 Seed 未対応**: `resolve_single_seed()` のみ使用
-3. **API 形式の不一致**: 内部は Iterator だが、実際のユースケースは一括取得
-
-### 1.4 設計原則
-
-| 原則 | 説明 |
-|------|------|
-| Iterator は内部実装 | LCG を進めながら1体ずつ生成する実装として妥当 |
-| 外部 API は一括取得 | UI は一括取得してテーブル表示 (再レンダリング抑制) |
-| Seed 解決は外部 | Generator は `SeedOrigin` を受け取る |
-| フィルタは合成 | パイプライン的に適用 |
-
-### 1.5 着手条件
-
-- `local_012` (API 入力再設計) 完了後
+| フェーズ | 状況 | 内容 |
+|---------|------|------|
+| Phase 1 | ✅ 完了 | 公開 API 追加 |
+| Phase 2 | ✅ 完了 | Generator 内部整理・統合 |
+| Phase 3 | ✅ 完了 | Wild/Static Generator 統合 |
 
 ## 2. 設計
 
@@ -62,149 +49,214 @@ Generator の設計を見直し、以下を実現する:
                       ↓
 ┌─────────────────────────────────────────────────┐
 │ 内部実装層 (generator.rs 内部)                   │
-│  - PokemonGenerator (Iterator trait 実装)       │
-│  - EggGenerator (Iterator trait 実装)           │
+│  - PokemonGenerator (Iterator パターン)         │
+│  - EggGenerator (Iterator パターン)             │
 │  - LCG 状態管理                                  │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│ 生成アルゴリズム層                               │
+│  - generate_static_pokemon()                    │
+│  - generate_wild_pokemon()                      │
+│  - generate_egg()                               │
 └─────────────────────────────────────────────────┘
 ```
 
-### 2.2 公開 API 設計
+### 2.2 公開 API
 
 ```rust
 /// ポケモン一括生成 (公開 API)
-///
-/// - 複数 Seed 対応: `GeneratorSource` の全バリアントを処理
-/// - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
 pub fn generate_pokemon_list(
-    params: PokemonGeneratorParams,
+    params: &PokemonGeneratorParams,
     count: u32,
-    filter: Option<PokemonFilter>,
-) -> Result<Vec<GeneratedPokemonData>, String> {
-    let seeds = resolve_all_seeds(&params.source)?;
-    
-    let results: Vec<_> = seeds
-        .into_iter()
-        .flat_map(|origin| {
-            let mut gen = PokemonGenerator::new(origin, &params)?;
-            let pokemons = gen.take(count);
-            
-            match &filter {
-                Some(f) => pokemons.into_iter().filter(|p| f.matches(p)).collect(),
-                None => pokemons,
-            }
-        })
-        .collect();
-    
-    Ok(results)
-}
+    filter: Option<&IvFilter>,
+) -> Result<Vec<GeneratedPokemonData>, String>;
 
 /// タマゴ一括生成 (公開 API)
 pub fn generate_egg_list(
-    params: EggGeneratorParams,
+    params: &EggGeneratorParams,
     count: u32,
-    filter: Option<EggFilter>,
-) -> Result<Vec<GeneratedEggData>, String> {
-    // 同様の構造
-}
+    filter: Option<&IvFilter>,
+) -> Result<Vec<GeneratedEggData>, String>;
 ```
 
-### 2.3 Generator 内部実装
+### 2.3 Generator 構造体
+
+#### PokemonGenerator
+
+Wild / Static を統合した単一 Generator。`encounter_type` で動作を分岐。
 
 ```rust
-/// ポケモン Generator (内部実装)
-///
-/// - 単一 Seed 専用
-/// - Iterator パターンで連続生成
-/// - `new()` は `SeedOrigin` を受け取る
-struct PokemonGenerator {
+pub struct PokemonGenerator {
     lcg: Lcg64,
     game_offset: u32,
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
-    origin: SeedOrigin,
-    config: PokemonGenerationConfig,
-    // エンカウント種別固有のフィールド...
+    source: SeedOrigin,
+    params: PokemonGeneratorParams,
 }
 
 impl PokemonGenerator {
-    /// Generator を作成
-    ///
-    /// `SeedOrigin` から `LcgSeed` を取得し、内部状態を初期化。
-    /// GameOffset は params から導出。
-    fn new(origin: SeedOrigin, params: &PokemonGeneratorParams) -> Result<Self, String> {
-        let base_seed = origin.seed();
-        let game_offset = calculate_game_offset(base_seed, params.version, &params.game_start)?;
-        // ...
-    }
+    pub fn new(
+        base_seed: LcgSeed,
+        offset_config: OffsetConfig,
+        source: SeedOrigin,
+        params: &PokemonGeneratorParams,
+    ) -> Result<Self, String>;
 
-    /// 指定数の個体を生成
-    fn take(&mut self, count: u32) -> Vec<GeneratedPokemonData> {
-        (0..count).filter_map(|_| self.next()).collect()
-    }
-
-    /// 次の個体を生成 (Iterator 実装)
-    fn next(&mut self) -> Option<GeneratedPokemonData> {
-        // 現状の generate_next() と同様
-    }
+    pub fn generate_next(&mut self) -> Option<GeneratedPokemonData>;
+    pub fn take(&mut self, count: u32) -> Vec<GeneratedPokemonData>;
 }
 ```
 
-### 2.4 フィルタ設計
+#### EggGenerator
 
 ```rust
-/// ポケモンフィルタ条件
-pub struct PokemonFilter {
-    pub iv_filter: Option<IvFilter>,
-    pub shiny_only: bool,
-    pub nature: Option<Nature>,
-    pub ability: Option<u8>,
-    // ...
+pub struct EggGenerator {
+    lcg: Lcg64,
+    game_offset: u32,
+    user_offset: u32,
+    current_advance: u32,
+    rng_ivs: Ivs,
+    source: SeedOrigin,
+    params: EggGeneratorParams,
 }
 
-impl PokemonFilter {
-    /// 条件に合致するか判定
-    pub fn matches(&self, pokemon: &GeneratedPokemonData) -> bool {
-        // 各条件を AND で評価
-    }
+impl EggGenerator {
+    pub fn new(
+        base_seed: LcgSeed,
+        offset_config: OffsetConfig,
+        source: SeedOrigin,
+        params: &EggGeneratorParams,
+    ) -> Result<Self, String>;
+
+    pub fn generate_next(&mut self) -> GeneratedEggData;
+    pub fn take(&mut self, count: u32) -> Vec<GeneratedEggData>;
 }
 ```
 
-### 2.5 変更対象
+### 2.4 パラメータ型
 
-| 対象 | 変更内容 |
-|------|----------|
-| `WildPokemonGenerator` | `PokemonGenerator` に統合検討 (別課題) |
-| `StaticPokemonGenerator` | `PokemonGenerator` に統合検討 (別課題) |
-| `EggGenerator` | 同様の構造に変更 |
-| `from_params()` | 廃止 |
-| `find()` | 廃止 (フィルタで代替) |
+#### PokemonGeneratorParams
 
-## 3. 移行計画
+Wild / Static を統合したパラメータ。
 
-### Phase 1: 公開 API 追加
+```rust
+pub struct PokemonGeneratorParams {
+    pub source: GeneratorSource,
+    pub version: RomVersion,
+    pub game_start: GameStartConfig,
+    pub user_offset: u32,
+    pub encounter_type: EncounterType,
+    pub encounter_method: EncounterMethod,
+    pub trainer: TrainerInfo,
+    pub lead_ability: LeadAbilityEffect,
+    pub shiny_charm: bool,
+    pub slots: Vec<EncounterSlotConfig>,
+}
+```
 
-1. `generate_pokemon_list()` を `generator.rs` に追加
-2. `generate_egg_list()` を `generator.rs` に追加
-3. `lib.rs` から re-export
+#### EggGeneratorParams
 
-### Phase 2: Generator 内部整理
+```rust
+pub struct EggGeneratorParams {
+    pub source: GeneratorSource,
+    pub version: RomVersion,
+    pub game_start: GameStartConfig,
+    pub user_offset: u32,
+    pub trainer: TrainerInfo,
+    pub everstone: EverstonePlan,
+    pub female_has_hidden: bool,
+    pub uses_ditto: bool,
+    pub gender_ratio: GenderRatio,
+    pub nidoran_flag: bool,
+    pub masuda_method: bool,
+    pub parent_male: Ivs,
+    pub parent_female: Ivs,
+}
+```
 
-1. `from_params()` の呼び出し元を公開 API に移行
-2. `from_params()` を廃止
-3. `find()` を廃止
+#### EncounterSlotConfig
 
-### Phase 3: Generator 統合 (別課題)
+スロット単位の設定。Static の場合は1件、Wild の場合は複数。
 
-1. `WildPokemonGenerator` と `StaticPokemonGenerator` の統合検討
-2. 統合可能であれば `PokemonGenerator` に一本化
+```rust
+pub struct EncounterSlotConfig {
+    pub species_id: u16,
+    pub level_min: u8,
+    pub level_max: u8,
+    pub gender_threshold: u8,
+    pub has_held_item: bool,
+    pub shiny_locked: bool,
+}
+```
 
-## 4. 未決定事項
+### 2.5 生成アルゴリズム関数
+
+| 関数 | 用途 |
+|------|------|
+| `generate_static_pokemon(lcg, params, slot)` | 固定シンボル/イベント/徘徊 |
+| `generate_wild_pokemon(lcg, params)` | 野生エンカウント |
+| `generate_egg(lcg, params)` | タマゴ生成 |
+
+## 3. 実装完了事項
+
+### 3.1 Phase 1: 公開 API 追加 ✅
+
+- [x] `generate_pokemon_list()` を `generator.rs` に追加
+- [x] `generate_egg_list()` を `generator.rs` に追加
+- [x] `lib.rs` から re-export
+
+### 3.2 Phase 2: Generator 内部整理 ✅
+
+- [x] `from_params()` を廃止
+- [x] `find()` を廃止
+- [x] `*GenerationConfig` を廃止 (`*GeneratorParams` を直接使用)
+
+### 3.3 Phase 3: Generator 統合 ✅
+
+- [x] `WildPokemonGenerator` と `StaticPokemonGenerator` を `PokemonGenerator` に統合
+- [x] `encounter_type` による Wild / Static 分岐を実装
+- [x] 関数シグネチャの簡潔化 (重複引数の削除)
+
+## 4. 設計判断の記録
+
+### 4.1 Wild/Static 統合
+
+**判断**: 統合する
+
+**理由**:
+- 両者の差異はエンカウント種別のみ
+- `encounter_type` で分岐可能
+- 重複コードの削減
+
+### 4.2 *GenerationConfig 廃止
+
+**判断**: 廃止する
+
+**理由**:
+- `*GeneratorParams` と `*GenerationConfig` の役割が重複
+- `*GeneratorParams` に全情報を集約し、中間型を不要に
+
+### 4.3 関数シグネチャ簡潔化
+
+**判断**: params から値を取得する形に統一
+
+**変更内容**:
+
+| 関数 | 削除した引数 | アクセス方法 |
+|------|-------------|--------------|
+| `PokemonGenerator::new` | `version`, `game_start`, `slots` | `params.*` |
+| `EggGenerator::new` | `version`, `game_start`, `parent_*` | `params.*` |
+| `generate_static_pokemon` | 個別フィールド5個 | `slot: &EncounterSlotConfig` |
+| `generate_wild_pokemon` | `slots` | `params.slots` |
+
+## 5. 未決定事項
 
 - [ ] `PokemonFilter` / `EggFilter` の具体的なフィールド設計
-- [ ] Generator 統合の可否判断 (エンカウント種別による差異の吸収方法)
 - [ ] `NeedleGenerator` への適用可否
 
-## 5. 関連仕様書
+## 6. 関連仕様書
 
 - [local_012/API_INPUT_REDESIGN.md](../local_012/API_INPUT_REDESIGN.md): API 入力再設計
