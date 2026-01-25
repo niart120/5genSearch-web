@@ -139,7 +139,6 @@ fn generate_pokemon_for_seed(
         sid: params.trainer.sid,
         lead_ability: params.lead_ability,
         shiny_charm: params.shiny_charm,
-        has_held_item: params.slots.iter().any(|s| s.has_held_item),
         encounter_method: if is_static_encounter(params.encounter_type) {
             EncounterMethod::Stationary
         } else {
@@ -317,6 +316,7 @@ impl PokemonGenerator {
                 slot.level_min,
                 slot.gender_threshold,
                 slot.shiny_locked,
+                slot.has_held_item,
             );
 
             self.lcg.next();
@@ -524,7 +524,6 @@ mod tests {
             sid: 54321,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         }
     }
@@ -764,7 +763,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::Synchronize(Nature::Adamant),
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
 
@@ -827,7 +825,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
 
@@ -886,7 +883,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
 
@@ -945,7 +941,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
 
@@ -1004,7 +999,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
 

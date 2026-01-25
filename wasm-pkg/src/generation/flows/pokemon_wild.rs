@@ -152,7 +152,6 @@ mod tests {
             sid: 54321,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         }
     }

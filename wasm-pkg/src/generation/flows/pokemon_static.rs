@@ -19,6 +19,7 @@ pub fn generate_static_pokemon(
     level: u8,
     gender_threshold: u8,
     shiny_locked: bool,
+    has_held_item: bool,
 ) -> RawPokemonData {
     let enc_type = config.encounter_type;
     let is_compound_eyes = matches!(config.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -75,7 +76,7 @@ pub fn generate_static_pokemon(
     };
 
     // 持ち物判定 (StaticSymbol で対象個体のみ)
-    if enc_type == EncounterType::StaticSymbol && config.has_held_item {
+    if enc_type == EncounterType::StaticSymbol && has_held_item {
         lcg.next();
     }
 
@@ -126,7 +127,6 @@ mod tests {
             sid: 54321,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         }
     }
@@ -136,7 +136,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let config = make_config(RomVersion::Black, EncounterType::StaticSymbol);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &config, 150, 70, 255, false);
+        let pokemon = generate_static_pokemon(&mut lcg, &config, 150, 70, 255, false, false);
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
@@ -148,7 +148,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0xABCD_EF01_2345_6789);
         let config = make_config(RomVersion::Black, EncounterType::StaticStarter);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &config, 495, 5, 31, true);
+        let pokemon = generate_static_pokemon(&mut lcg, &config, 495, 5, 31, true, false);
 
         assert_eq!(pokemon.species_id, 495);
         assert_eq!(pokemon.level, 5);
