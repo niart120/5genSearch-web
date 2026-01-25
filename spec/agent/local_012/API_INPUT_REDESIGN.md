@@ -277,17 +277,17 @@ pub struct TimeRange {
 
 ## 6. 実装チェックリスト
 
-- [ ] `DsButton` enum を追加
-- [ ] `KeyInput` 型を追加 (Generator 用)
-- [ ] `KeySpec` 型を追加 (Searcher 用)
-- [ ] `GeneratorSource` を追加 (`SeedSource` からリネーム)
-- [ ] `Timer0VCountRange` を新設計に変更
-- [ ] `Datetime` を Generator 専用として明確化
-- [ ] `DateRange` / `TimeRange` を Searcher 専用として明確化
-- [ ] `NeedleSearcher` → `NeedleGenerator` にリネーム
-- [ ] `SearchSegment` を削除
-- [ ] 旧 `VCountTimer0Range` を削除
-- [ ] 既存テストを更新
+- [x] `DsButton` enum を追加
+- [x] `KeyInput` 型を追加 (Generator 用)
+- [x] `KeySpec` 型を追加 (Searcher 用)
+- [x] `GeneratorSource` を追加 (`SeedSource` からリネーム)
+- [x] `Timer0VCountRange` を新設計に変更
+- [x] `Datetime` を Generator 専用として明確化
+- [x] `DateRange` / `TimeRange` を Searcher 専用として明確化 (現在は `SearchRangeParams` / `TimeRangeParams`)
+- [x] `NeedleSearcher` → `NeedleGenerator` にリネーム
+- [x] `SearchSegment` を削除
+- [x] 旧 `VCountTimer0Range` を削除
+- [x] 既存テストを更新 (148テスト通過)
 
 ## 7. 補足
 

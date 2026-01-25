@@ -3,12 +3,16 @@
 //! 生成フロー内部でのみ使用される設定型・中間データ型を定義。
 //! TS 公開型は `crate::types` に配置。
 
-use crate::generation::algorithm::{EverstonePlan, InheritanceSlot};
+use crate::generation::algorithm::InheritanceSlot;
 use crate::types::{
-    EncounterMethod, EncounterResult, EncounterType, Gender, GenderRatio, GeneratedEggData,
-    GeneratedPokemonData, GenerationSource, HeldItemSlot, Ivs, LeadAbilityEffect,
-    MovingEncounterInfo, Nature, NeedleDirection, RomVersion, ShinyType, SpecialEncounterInfo,
+    EncounterMethod, EncounterResult, EncounterType, EverstonePlan, Gender, GenderRatio,
+    GeneratedEggData, GeneratedPokemonData, HeldItemSlot, Ivs, LeadAbilityEffect,
+    MovingEncounterInfo, Nature, NeedleDirection, RomVersion, SeedOrigin, ShinyType,
+    SpecialEncounterInfo,
 };
+
+// Re-export for internal use
+pub use crate::types::EncounterSlotConfig;
 
 // ===== 生成設定 =====
 
@@ -25,16 +29,6 @@ pub struct PokemonGenerationConfig {
     pub has_held_item: bool,
     /// エンカウント方法 (Normal/Surfing 時のみ使用)
     pub encounter_method: EncounterMethod,
-}
-
-/// エンカウントスロット設定
-#[derive(Clone)]
-pub struct EncounterSlotConfig {
-    pub species_id: u16,
-    pub level_min: u8,
-    pub level_max: u8,
-    pub gender_threshold: u8,
-    pub has_held_item: bool,
 }
 
 /// 孵化設定
@@ -204,7 +198,7 @@ impl GeneratedPokemonData {
         ivs: Ivs,
         advance: u32,
         needle_direction: NeedleDirection,
-        source: GenerationSource,
+        source: SeedOrigin,
         lcg_seed: u64,
         moving_encounter: Option<MovingEncounterInfo>,
         special_encounter: Option<SpecialEncounterInfo>,
@@ -237,7 +231,7 @@ impl GeneratedEggData {
         ivs: Ivs,
         advance: u32,
         needle_direction: NeedleDirection,
-        source: GenerationSource,
+        source: SeedOrigin,
         lcg_seed: u64,
     ) -> Self {
         Self {

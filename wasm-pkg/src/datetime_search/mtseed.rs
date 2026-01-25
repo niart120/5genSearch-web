@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::types::{Datetime, GenerationSource, KeyCode, KeySpec, MtSeed, Timer0VCountRange};
+use crate::types::{Datetime, KeyCode, KeySpec, LcgSeed, MtSeed, SeedOrigin, Timer0VCountRange};
 
 use super::base::HashValuesEnumerator;
 use super::types::{SearchRangeParams, TimeRangeParams};
@@ -49,9 +49,9 @@ pub struct MtseedDatetimeResult {
 }
 
 impl MtseedDatetimeResult {
-    /// `GenerationSource::Datetime` に変換
-    pub fn to_generation_source(&self, base_seed: u64) -> GenerationSource {
-        GenerationSource::datetime(
+    /// `SeedOrigin::Datetime` に変換
+    pub fn to_seed_origin(&self, base_seed: LcgSeed) -> SeedOrigin {
+        SeedOrigin::datetime(
             base_seed,
             self.datetime,
             self.timer0,

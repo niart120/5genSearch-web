@@ -13,8 +13,8 @@ use crate::core::needle::calc_report_needle_direction;
 use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, get_nazo_values};
 use crate::datetime_search::base::datetime_to_seconds;
 use crate::types::{
-    Datetime, DsConfig, GenerationSource, GeneratorSource, Hardware, KeyCode, LcgSeed,
-    NeedleDirection, NeedlePattern,
+    Datetime, DsConfig, GeneratorSource, Hardware, KeyCode, LcgSeed, NeedleDirection,
+    NeedlePattern, SeedOrigin,
 };
 
 // ===== 生成パラメータ =====
@@ -42,7 +42,7 @@ pub struct NeedleGeneratorResult {
     /// パターン開始消費位置
     pub advance: u32,
     /// 生成元情報
-    pub source: GenerationSource,
+    pub source: SeedOrigin,
 }
 
 /// レポート針生成バッチ結果
@@ -73,7 +73,7 @@ enum GeneratorState {
     Seed {
         lcg: Lcg64,
         current_advance: u32,
-        base_seed: u64,
+        base_seed: LcgSeed,
     },
     /// Seeds 入力モード (複数 Seed)
     Seeds {
@@ -109,7 +109,7 @@ struct StartupState {
     current_advance: u32,
     // キャッシュ
     current_lcg: Option<Lcg64>,
-    current_base_seed: u64,
+    current_base_seed: LcgSeed,
     // 総件数
     total_combinations: u64,
     processed_combinations: u64,
@@ -140,7 +140,7 @@ impl NeedleGenerator {
                 GeneratorState::Seed {
                     lcg,
                     current_advance: params.advance_min,
-                    base_seed: initial_seed.value(),
+                    base_seed: *initial_seed,
                 }
             }
             GeneratorSource::Seeds { seeds } => {
@@ -248,7 +248,7 @@ impl NeedleGenerator {
             current_vcount: vcount_min,
             current_advance: advance_min,
             current_lcg: None,
-            current_base_seed: 0,
+            current_base_seed: LcgSeed::new(0),
             total_combinations,
             processed_combinations: 0,
         }))
@@ -347,7 +347,7 @@ impl NeedleGenerator {
             if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                 results.push(NeedleGeneratorResult {
                     advance: *current_advance,
-                    source: GenerationSource::fixed(*base_seed),
+                    source: SeedOrigin::fixed(*base_seed),
                 });
             }
             lcg.advance(1);
@@ -390,14 +390,14 @@ impl NeedleGenerator {
             }
 
             let current_lcg = lcg.as_mut().unwrap();
-            let base_seed = seeds[*current_index].value();
+            let base_seed = seeds[*current_index];
 
             while *current_advance < advance_max && processed < chunk_size {
                 if matches_pattern_at_seed(current_lcg.current_seed(), pattern.directions()) {
                     #[allow(clippy::cast_possible_truncation)]
                     results.push(NeedleGeneratorResult {
                         advance: *current_advance,
-                        source: GenerationSource::multiple(base_seed, *current_index as u32),
+                        source: SeedOrigin::multiple(base_seed, *current_index as u32),
                     });
                 }
                 current_lcg.advance(1);
@@ -456,7 +456,7 @@ impl NeedleGenerator {
                     s.date_code,
                     s.time_code,
                 );
-                s.current_base_seed = lcg_seed.value();
+                s.current_base_seed = lcg_seed;
                 let mut lcg = Lcg64::new(lcg_seed);
                 lcg.jump(u64::from(advance_min));
                 s.current_lcg = Some(lcg);
@@ -469,7 +469,7 @@ impl NeedleGenerator {
                 if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                     results.push(NeedleGeneratorResult {
                         advance: s.current_advance,
-                        source: GenerationSource::datetime(
+                        source: SeedOrigin::datetime(
                             s.current_base_seed,
                             s.datetime,
                             s.current_timer0,
@@ -585,11 +585,8 @@ mod tests {
         // 先頭位置で一致するはず
         assert!(!batch.results.is_empty());
         assert_eq!(batch.results[0].advance, 0);
-        // GenerationSource::Fixed であること
-        assert!(matches!(
-            batch.results[0].source,
-            GenerationSource::Fixed { .. }
-        ));
+        // SeedOrigin::Fixed であること
+        assert!(matches!(batch.results[0].source, SeedOrigin::Fixed { .. }));
     }
 
     #[test]
@@ -613,10 +610,10 @@ mod tests {
         // 最初の Seed の先頭位置で一致するはず
         assert!(!batch.results.is_empty());
         assert_eq!(batch.results[0].advance, 0);
-        // GenerationSource::Multiple であること
+        // SeedOrigin::Multiple であること
         assert!(matches!(
             batch.results[0].source,
-            GenerationSource::Multiple { seed_index: 0, .. }
+            SeedOrigin::Multiple { seed_index: 0, .. }
         ));
     }
 

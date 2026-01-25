@@ -289,16 +289,6 @@ pub struct DsConfig {
     pub region: RomRegion,
 }
 
-/// 探索セグメント (`Timer0` × `VCount` × `KeyCode`)
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct SearchSegment {
-    pub timer0: u16,
-    pub vcount: u8,
-    /// キー入力コード
-    pub key_code: KeyCode,
-}
-
 /// `Timer0` / `VCount` 範囲
 ///
 /// 固定値指定は min = max で表現。

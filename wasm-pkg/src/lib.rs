@@ -20,12 +20,13 @@ pub use datetime_search::{
 
 // Re-export common types
 pub use types::{
-    Datetime, DsButton, DsConfig, EncounterMethod, EncounterResult, EncounterType, GameStartConfig,
-    GenderRatio, GeneratedEggData, GeneratedPokemonData, GenerationSource, GeneratorSource,
-    HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput,
-    KeyMask, KeySpec, LcgSeed, LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood,
-    MtSeed, NeedleDirection, NeedlePattern, SaveState, SearchSegment, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, Timer0VCountRange,
+    Datetime, DsButton, DsConfig, EggGeneratorParams, EncounterMethod, EncounterResult,
+    EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
+    GeneratedEggData, GeneratedPokemonData, GeneratorSource, HeldItemSlot, HiddenPowerType,
+    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
+    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
+    NeedlePattern, SaveState, SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo,
+    StartMode, StaticPokemonGeneratorParams, Timer0VCountRange, WildPokemonGeneratorParams,
 };
 
 // Re-export core needle functions (外部公開必要)
