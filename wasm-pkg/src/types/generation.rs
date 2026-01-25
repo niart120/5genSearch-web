@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{DatetimeParams, KeyCode, RomVersion};
+use super::config::{Datetime, KeyCode, RomVersion};
 use super::needle::NeedleDirection;
 use super::pokemon::{Gender, HeldItemSlot, Ivs, Nature, ShinyType};
 
@@ -207,7 +207,7 @@ pub enum GenerationSource {
         #[tsify(type = "bigint")]
         base_seed: u64,
         /// 起動日時
-        datetime: DatetimeParams,
+        datetime: Datetime,
         /// `Timer0` 値
         timer0: u16,
         /// `VCount` 値
@@ -234,7 +234,7 @@ impl GenerationSource {
     /// Datetime ソースを作成
     pub const fn datetime(
         base_seed: u64,
-        datetime: DatetimeParams,
+        datetime: Datetime,
         timer0: u16,
         vcount: u8,
         key_code: KeyCode,

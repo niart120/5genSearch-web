@@ -1,7 +1,7 @@
-//! レポート針検索
+//! レポート針生成
 //!
 //! 観測したレポート針パターンから消費位置を特定する機能。
-//! 入力ソースとして `SeedSource` を使用し、Seed 直接指定と起動条件指定の両方に対応。
+//! 入力ソースとして `GeneratorSource` を使用し、Seed 直接指定と起動条件指定の両方に対応。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -13,18 +13,18 @@ use crate::core::needle::calc_report_needle_direction;
 use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, get_nazo_values};
 use crate::datetime_search::base::datetime_to_seconds;
 use crate::types::{
-    DatetimeParams, DsConfig, GenerationSource, Hardware, KeyCode, LcgSeed, NeedleDirection,
-    NeedlePattern, SeedSource,
+    Datetime, DsConfig, GenerationSource, GeneratorSource, Hardware, KeyCode, LcgSeed,
+    NeedleDirection, NeedlePattern,
 };
 
-// ===== 検索パラメータ =====
+// ===== 生成パラメータ =====
 
-/// レポート針検索パラメータ
+/// レポート針生成パラメータ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleSearchParams {
-    /// 入力ソース (`SeedSource` を使用)
-    pub input: SeedSource,
+pub struct NeedleGeneratorParams {
+    /// 入力ソース (`GeneratorSource` を使用)
+    pub input: GeneratorSource,
     /// 観測したレポート針パターン (0-7)
     pub pattern: NeedlePattern,
     /// 検索開始消費位置
@@ -33,45 +33,54 @@ pub struct NeedleSearchParams {
     pub advance_max: u32,
 }
 
-// ===== 検索結果 =====
+// ===== 生成結果 =====
 
-/// レポート針検索結果
+/// レポート針生成結果
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleSearchResult {
+pub struct NeedleGeneratorResult {
     /// パターン開始消費位置
     pub advance: u32,
     /// 生成元情報
     pub source: GenerationSource,
 }
 
-/// レポート針検索バッチ結果
+/// レポート針生成バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleSearchBatch {
-    pub results: Vec<NeedleSearchResult>,
+pub struct NeedleGeneratorBatch {
+    pub results: Vec<NeedleGeneratorResult>,
     pub processed: u64,
     pub total: u64,
 }
 
-// ===== 検索器 =====
+// ===== 生成器 =====
 
-/// レポート針検索器
+/// レポート針生成器
+///
+/// LCG Seed から針パターン位置を生成する順算系 API。
 #[wasm_bindgen]
-pub struct NeedleSearcher {
+pub struct NeedleGenerator {
     pattern: NeedlePattern,
     advance_min: u32,
     advance_max: u32,
-    state: SearcherState,
+    state: GeneratorState,
 }
 
-/// 内部検索状態
-enum SearcherState {
+/// 内部生成状態
+enum GeneratorState {
     /// Seed 入力モード
     Seed {
         lcg: Lcg64,
         current_advance: u32,
         base_seed: u64,
+    },
+    /// Seeds 入力モード (複数 Seed)
+    Seeds {
+        seeds: Vec<LcgSeed>,
+        current_index: usize,
+        lcg: Option<Lcg64>,
+        current_advance: u32,
     },
     /// Startup 入力モード
     Startup(StartupState),
@@ -80,7 +89,7 @@ enum SearcherState {
 /// Startup モード内部状態
 struct StartupState {
     // 設定
-    datetime: DatetimeParams,
+    datetime: Datetime,
     #[allow(dead_code)]
     timer0_min: u16,
     timer0_max: u16,
@@ -107,99 +116,67 @@ struct StartupState {
 }
 
 #[wasm_bindgen]
-impl NeedleSearcher {
-    /// 検索器を作成
+impl NeedleGenerator {
+    /// 生成器を作成
     ///
     /// # Errors
     ///
-    /// パターンが空、無効な方向値 (8 以上)、または `advance_min > advance_max` の場合にエラーを返す
+    /// パターンが空、または `advance_min > advance_max` の場合にエラーを返す
     #[wasm_bindgen(constructor)]
     #[allow(clippy::needless_pass_by_value)]
-    pub fn new(params: NeedleSearchParams) -> Result<NeedleSearcher, String> {
+    pub fn new(params: NeedleGeneratorParams) -> Result<NeedleGenerator, String> {
         // 共通バリデーション
         if params.pattern.is_empty() {
             return Err("pattern is empty".into());
         }
-        // NeedleDirection は型レベルで 0-7 保証のため範囲チェック不要
         if params.advance_min > params.advance_max {
             return Err("advance_min > advance_max".into());
         }
 
         let state = match &params.input {
-            SeedSource::Seed { initial_seed } => {
+            GeneratorSource::Seed { initial_seed } => {
                 let mut lcg = Lcg64::new(*initial_seed);
                 lcg.jump(u64::from(params.advance_min));
-                SearcherState::Seed {
+                GeneratorState::Seed {
                     lcg,
                     current_advance: params.advance_min,
                     base_seed: initial_seed.value(),
                 }
             }
-            SeedSource::StartupRange {
+            GeneratorSource::Seeds { seeds } => {
+                if seeds.is_empty() {
+                    return Err("seeds is empty".into());
+                }
+                GeneratorState::Seeds {
+                    seeds: seeds.clone(),
+                    current_index: 0,
+                    lcg: None,
+                    current_advance: params.advance_min,
+                }
+            }
+            GeneratorSource::Startup {
                 ds,
                 datetime,
                 ranges,
-                key_code,
+                key_input,
             } => {
-                // VCountTimer0Range から min/max を計算
                 if ranges.is_empty() {
                     return Err("ranges is empty".into());
                 }
                 // 最初の範囲を使用（複数範囲は今後対応）
                 let range = &ranges[0];
-                let timer0_min = range.timer0_min;
-                let timer0_max = range.timer0_max;
-                let vcount_min = range.vcount;
-                let vcount_max = range.vcount;
 
                 Self::create_startup_state(
                     ds,
                     *datetime,
-                    timer0_min,
-                    timer0_max,
-                    vcount_min,
-                    vcount_max,
-                    *key_code,
+                    range.timer0_min,
+                    range.timer0_max,
+                    range.vcount_min,
+                    range.vcount_max,
+                    key_input.to_key_code(),
                     params.advance_min,
                     params.advance_max,
                 )?
-            }
-            SeedSource::Startup {
-                ds,
-                datetime,
-                segments,
-            } => {
-                // 固定 Segment から探索
-                if segments.is_empty() {
-                    return Err("segments is empty".into());
-                }
-                // 最初の Segment を使用（複数 Segment は今後対応）
-                let seg = &segments[0];
-                Self::create_startup_state(
-                    ds,
-                    *datetime,
-                    seg.timer0,
-                    seg.timer0,
-                    seg.vcount,
-                    seg.vcount,
-                    seg.key_code,
-                    params.advance_min,
-                    params.advance_max,
-                )?
-            }
-            SeedSource::MultipleSeeds { seeds } => {
-                // 最初の Seed を使用（複数 Seed 対応は今後）
-                if seeds.is_empty() {
-                    return Err("seeds is empty".into());
-                }
-                let initial_seed = seeds[0];
-                let mut lcg = Lcg64::new(initial_seed);
-                lcg.jump(u64::from(params.advance_min));
-                SearcherState::Seed {
-                    lcg,
-                    current_advance: params.advance_min,
-                    base_seed: initial_seed.value(),
-                }
             }
         };
 
@@ -215,7 +192,7 @@ impl NeedleSearcher {
     #[allow(clippy::too_many_arguments)]
     fn create_startup_state(
         ds: &DsConfig,
-        datetime: DatetimeParams,
+        datetime: Datetime,
         timer0_min: u16,
         timer0_max: u16,
         vcount_min: u8,
@@ -223,7 +200,7 @@ impl NeedleSearcher {
         key_code: KeyCode,
         advance_min: u32,
         advance_max: u32,
-    ) -> Result<SearcherState, String> {
+    ) -> Result<GeneratorState, String> {
         // バリデーション
         if timer0_min > timer0_max {
             return Err("timer0_min > timer0_max".into());
@@ -256,7 +233,7 @@ impl NeedleSearcher {
         let advance_count = u64::from(advance_max - advance_min);
         let total_combinations = timer0_count * vcount_count * advance_count;
 
-        Ok(SearcherState::Startup(StartupState {
+        Ok(GeneratorState::Startup(StartupState {
             datetime,
             timer0_min,
             timer0_max,
@@ -280,10 +257,19 @@ impl NeedleSearcher {
     #[wasm_bindgen(getter)]
     pub fn is_done(&self) -> bool {
         match &self.state {
-            SearcherState::Seed {
+            GeneratorState::Seed {
                 current_advance, ..
             } => *current_advance >= self.advance_max,
-            SearcherState::Startup(s) => {
+            GeneratorState::Seeds {
+                seeds,
+                current_index,
+                current_advance,
+                ..
+            } => {
+                *current_index >= seeds.len()
+                    || (*current_index == seeds.len() - 1 && *current_advance >= self.advance_max)
+            }
+            GeneratorState::Startup(s) => {
                 s.current_timer0 > s.timer0_max
                     || (s.current_timer0 == s.timer0_max && s.current_vcount > s.vcount_max)
             }
@@ -294,7 +280,7 @@ impl NeedleSearcher {
     #[allow(clippy::cast_precision_loss)]
     pub fn progress(&self) -> f64 {
         match &self.state {
-            SearcherState::Seed {
+            GeneratorState::Seed {
                 current_advance, ..
             } => {
                 let total = u64::from(self.advance_max - self.advance_min);
@@ -303,7 +289,23 @@ impl NeedleSearcher {
                 }
                 f64::from(*current_advance - self.advance_min) / total as f64
             }
-            SearcherState::Startup(s) => {
+            GeneratorState::Seeds {
+                seeds,
+                current_index,
+                current_advance,
+                ..
+            } => {
+                let total_seeds = seeds.len() as u64;
+                let advances_per_seed = u64::from(self.advance_max - self.advance_min);
+                let total = total_seeds * advances_per_seed;
+                if total == 0 {
+                    return 1.0;
+                }
+                let processed = (*current_index as u64) * advances_per_seed
+                    + u64::from(*current_advance - self.advance_min);
+                processed as f64 / total as f64
+            }
+            GeneratorState::Startup(s) => {
                 if s.total_combinations == 0 {
                     return 1.0;
                 }
@@ -312,20 +314,21 @@ impl NeedleSearcher {
         }
     }
 
-    /// 次のバッチを検索
-    pub fn next_batch(&mut self, chunk_size: u32) -> NeedleSearchBatch {
+    /// 次のバッチを生成
+    pub fn next_batch(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
         match &mut self.state {
-            SearcherState::Seed { .. } => self.next_batch_seed(chunk_size),
-            SearcherState::Startup(_) => self.next_batch_startup(chunk_size),
+            GeneratorState::Seed { .. } => self.next_batch_seed(chunk_size),
+            GeneratorState::Seeds { .. } => self.next_batch_seeds(chunk_size),
+            GeneratorState::Startup(_) => self.next_batch_startup(chunk_size),
         }
     }
 }
 
 // ===== Seed モード実装 =====
 
-impl NeedleSearcher {
-    fn next_batch_seed(&mut self, chunk_size: u32) -> NeedleSearchBatch {
-        let SearcherState::Seed {
+impl NeedleGenerator {
+    fn next_batch_seed(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
+        let GeneratorState::Seed {
             lcg,
             current_advance,
             base_seed,
@@ -334,7 +337,6 @@ impl NeedleSearcher {
             unreachable!()
         };
 
-        // 借用エラー回避のためローカル変数を使用
         let pattern = self.pattern.clone();
         let advance_max = self.advance_max;
 
@@ -343,7 +345,7 @@ impl NeedleSearcher {
 
         while *current_advance < end_advance {
             if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
-                results.push(NeedleSearchResult {
+                results.push(NeedleGeneratorResult {
                     advance: *current_advance,
                     source: GenerationSource::fixed(*base_seed),
                 });
@@ -352,24 +354,87 @@ impl NeedleSearcher {
             *current_advance += 1;
         }
 
-        NeedleSearchBatch {
+        NeedleGeneratorBatch {
             results,
             processed: u64::from(*current_advance),
             total: u64::from(self.advance_max),
+        }
+    }
+
+    fn next_batch_seeds(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
+        let GeneratorState::Seeds {
+            seeds,
+            current_index,
+            lcg,
+            current_advance,
+        } = &mut self.state
+        else {
+            unreachable!()
+        };
+
+        let pattern = self.pattern.clone();
+        let advance_min = self.advance_min;
+        let advance_max = self.advance_max;
+
+        let mut results = Vec::new();
+        let mut processed = 0u32;
+
+        while processed < chunk_size && *current_index < seeds.len() {
+            // 現在の Seed に対する LCG を初期化
+            if lcg.is_none() {
+                let seed = seeds[*current_index];
+                let mut new_lcg = Lcg64::new(seed);
+                new_lcg.jump(u64::from(advance_min));
+                *lcg = Some(new_lcg);
+                *current_advance = advance_min;
+            }
+
+            let current_lcg = lcg.as_mut().unwrap();
+            let base_seed = seeds[*current_index].value();
+
+            while *current_advance < advance_max && processed < chunk_size {
+                if matches_pattern_at_seed(current_lcg.current_seed(), pattern.directions()) {
+                    #[allow(clippy::cast_possible_truncation)]
+                    results.push(NeedleGeneratorResult {
+                        advance: *current_advance,
+                        source: GenerationSource::multiple(base_seed, *current_index as u32),
+                    });
+                }
+                current_lcg.advance(1);
+                *current_advance += 1;
+                processed += 1;
+            }
+
+            // Advance 範囲を使い切ったら次の Seed へ
+            if *current_advance >= advance_max {
+                *lcg = None;
+                *current_index += 1;
+            }
+        }
+
+        let total_seeds = seeds.len() as u64;
+        let advances_per_seed = u64::from(advance_max - advance_min);
+        let total = total_seeds * advances_per_seed;
+        let processed_total =
+            (*current_index as u64) * advances_per_seed + u64::from(*current_advance - advance_min);
+
+        NeedleGeneratorBatch {
+            results,
+            processed: processed_total,
+            total,
         }
     }
 }
 
 // ===== Startup モード実装 =====
 
-impl NeedleSearcher {
-    fn next_batch_startup(&mut self, chunk_size: u32) -> NeedleSearchBatch {
-        // 借用エラー回避のためローカル変数を使用
+impl NeedleGenerator {
+    fn next_batch_startup(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
         let pattern = self.pattern.clone();
         let advance_min = self.advance_min;
         let advance_max = self.advance_max;
 
-        let SearcherState::Startup(s) = &mut self.state else {
+        let GeneratorState::Startup(s) = &mut self.state else {
             unreachable!()
         };
 
@@ -402,7 +467,7 @@ impl NeedleSearcher {
             let lcg = s.current_lcg.as_mut().unwrap();
             while s.current_advance < advance_max && processed < chunk_size {
                 if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
-                    results.push(NeedleSearchResult {
+                    results.push(NeedleGeneratorResult {
                         advance: s.current_advance,
                         source: GenerationSource::datetime(
                             s.current_base_seed,
@@ -430,7 +495,7 @@ impl NeedleSearcher {
             }
         }
 
-        NeedleSearchBatch {
+        NeedleGeneratorBatch {
             results,
             processed: s.processed_combinations,
             total: s.total_combinations,
@@ -503,19 +568,19 @@ mod tests {
     }
 
     #[test]
-    fn test_needle_searcher_seed_input() {
+    fn test_needle_generator_seed_input() {
         let seed = LcgSeed::new(0x0123_4567_89AB_CDEF);
         let pattern = get_needle_pattern(seed, 3);
 
-        let params = NeedleSearchParams {
-            input: SeedSource::Seed { initial_seed: seed },
+        let params = NeedleGeneratorParams {
+            input: GeneratorSource::Seed { initial_seed: seed },
             pattern,
             advance_min: 0,
             advance_max: 10,
         };
 
-        let mut searcher = NeedleSearcher::new(params).unwrap();
-        let batch = searcher.next_batch(100);
+        let mut generator = NeedleGenerator::new(params).unwrap();
+        let batch = generator.next_batch(100);
 
         // 先頭位置で一致するはず
         assert!(!batch.results.is_empty());
@@ -524,6 +589,34 @@ mod tests {
         assert!(matches!(
             batch.results[0].source,
             GenerationSource::Fixed { .. }
+        ));
+    }
+
+    #[test]
+    fn test_needle_generator_seeds_input() {
+        let seed1 = LcgSeed::new(0x0123_4567_89AB_CDEF);
+        let seed2 = LcgSeed::new(0xFEDC_BA98_7654_3210);
+        let pattern = get_needle_pattern(seed1, 3);
+
+        let params = NeedleGeneratorParams {
+            input: GeneratorSource::Seeds {
+                seeds: vec![seed1, seed2],
+            },
+            pattern,
+            advance_min: 0,
+            advance_max: 10,
+        };
+
+        let mut generator = NeedleGenerator::new(params).unwrap();
+        let batch = generator.next_batch(100);
+
+        // 最初の Seed の先頭位置で一致するはず
+        assert!(!batch.results.is_empty());
+        assert_eq!(batch.results[0].advance, 0);
+        // GenerationSource::Multiple であること
+        assert!(matches!(
+            batch.results[0].source,
+            GenerationSource::Multiple { seed_index: 0, .. }
         ));
     }
 
@@ -537,25 +630,25 @@ mod tests {
     #[test]
     fn test_invalid_params() {
         // Empty pattern
-        let params = NeedleSearchParams {
-            input: SeedSource::Seed {
+        let params = NeedleGeneratorParams {
+            input: GeneratorSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
             pattern: NeedlePattern::new(vec![]),
             advance_min: 0,
             advance_max: 10,
         };
-        assert!(NeedleSearcher::new(params).is_err());
+        assert!(NeedleGenerator::new(params).is_err());
 
         // min > max
-        let params = NeedleSearchParams {
-            input: SeedSource::Seed {
+        let params = NeedleGeneratorParams {
+            input: GeneratorSource::Seed {
                 initial_seed: LcgSeed::new(0),
             },
             pattern: NeedlePattern::new(vec![NeedleDirection::N]),
             advance_min: 10,
             advance_max: 5,
         };
-        assert!(NeedleSearcher::new(params).is_err());
+        assert!(NeedleGenerator::new(params).is_err());
     }
 }

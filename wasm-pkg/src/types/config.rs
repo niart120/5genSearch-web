@@ -4,8 +4,52 @@
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
+use wasm_bindgen::prelude::*;
 
 use super::seeds::LcgSeed;
+
+// ===== DS Button =====
+
+/// DS ボタン
+///
+/// DS 本体のボタンを表す列挙型。
+/// 各ボタンは SHA-1 計算で使用されるビットマスクを持つ。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum DsButton {
+    A,
+    B,
+    X,
+    Y,
+    L,
+    R,
+    Start,
+    Select,
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl DsButton {
+    /// ビットマスク値を取得
+    pub const fn bit_mask(self) -> u32 {
+        match self {
+            Self::A => 0x0001,
+            Self::B => 0x0002,
+            Self::Select => 0x0004,
+            Self::Start => 0x0008,
+            Self::Right => 0x0010,
+            Self::Left => 0x0020,
+            Self::Up => 0x0040,
+            Self::Down => 0x0080,
+            Self::R => 0x0100,
+            Self::L => 0x0200,
+            Self::X => 0x0400,
+            Self::Y => 0x0800,
+        }
+    }
+}
 
 // ===== Newtype Structs =====
 
@@ -80,6 +124,110 @@ impl KeyMask {
     }
 }
 
+// ===== KeyInput / KeySpec =====
+
+/// キー入力 (Generator 用)
+///
+/// 固定のボタン組み合わせを指定し、単一の `KeyCode` を生成。
+/// Generator 系 API で使用する。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct KeyInput {
+    pub buttons: Vec<DsButton>,
+}
+
+impl KeyInput {
+    /// 新しい `KeyInput` を作成 (ボタンなし)
+    pub fn new() -> Self {
+        Self {
+            buttons: Vec::new(),
+        }
+    }
+
+    /// ボタンリストから作成
+    pub fn from_buttons(buttons: Vec<DsButton>) -> Self {
+        Self { buttons }
+    }
+
+    /// ボタンを追加
+    pub fn add_button(&mut self, button: DsButton) {
+        if !self.buttons.contains(&button) {
+            self.buttons.push(button);
+        }
+    }
+
+    /// `KeyCode` に変換
+    pub fn to_key_code(&self) -> KeyCode {
+        let mask = self.buttons.iter().fold(0u32, |acc, b| acc | b.bit_mask());
+        KeyCode::from_mask(KeyMask::new(mask))
+    }
+}
+
+/// キー入力仕様 (Searcher 用)
+///
+/// 利用可能なボタンを指定し、全組み合わせを探索。
+/// Searcher 系 API で使用する。
+#[wasm_bindgen]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[allow(clippy::unsafe_derive_deserialize)] // wasm_bindgen によるunsafe fn あり
+pub struct KeySpec {
+    available_buttons: Vec<DsButton>,
+}
+
+#[wasm_bindgen]
+impl KeySpec {
+    /// 新しい `KeySpec` を作成 (ボタンなし)
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            available_buttons: Vec::new(),
+        }
+    }
+
+    /// 利用可能なボタンを追加
+    #[wasm_bindgen(js_name = addAvailableButton)]
+    pub fn add_available_button(&mut self, button: DsButton) {
+        if !self.available_buttons.contains(&button) {
+            self.available_buttons.push(button);
+        }
+    }
+
+    /// 組み合わせ総数を取得
+    #[wasm_bindgen(getter)]
+    pub fn combination_count(&self) -> u32 {
+        1 << self.available_buttons.len()
+    }
+}
+
+impl KeySpec {
+    /// 利用可能ボタンリストから作成 (Rust 内部用)
+    pub fn from_buttons(available_buttons: Vec<DsButton>) -> Self {
+        Self { available_buttons }
+    }
+
+    /// 利用可能ボタンリストを取得 (Rust 内部用)
+    pub fn available_buttons(&self) -> &[DsButton] {
+        &self.available_buttons
+    }
+
+    /// 全組み合わせの `KeyCode` を生成
+    pub fn combinations(&self) -> Vec<KeyCode> {
+        let n = self.available_buttons.len();
+        let mut result = Vec::with_capacity(1 << n);
+
+        for bits in 0..(1u32 << n) {
+            let mask = self
+                .available_buttons
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| bits & (1 << i) != 0)
+                .fold(0u32, |acc, (_, b)| acc | b.bit_mask());
+            result.push(KeyCode::from_mask(KeyMask::new(mask)));
+        }
+        result
+    }
+}
+
 // ===== ハードウェア列挙型 =====
 
 /// DS ハードウェア種別
@@ -151,19 +299,62 @@ pub struct SearchSegment {
     pub key_code: KeyCode,
 }
 
-/// VCount/Timer0 範囲
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct VCountTimer0Range {
-    pub vcount: u8,
-    pub timer0_min: u16,
-    pub timer0_max: u16,
-}
-
-/// 起動日時パラメータ
+/// `Timer0` / `VCount` 範囲
+///
+/// 固定値指定は min = max で表現。
+/// `VCount` ごとに異なる `Timer0` 範囲を持つ場合は、複数の Range を配列で持つ。
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct DatetimeParams {
+pub struct Timer0VCountRange {
+    pub timer0_min: u16,
+    pub timer0_max: u16,
+    pub vcount_min: u8,
+    pub vcount_max: u8,
+}
+
+impl Timer0VCountRange {
+    /// 固定値で作成
+    pub const fn fixed(timer0: u16, vcount: u8) -> Self {
+        Self {
+            timer0_min: timer0,
+            timer0_max: timer0,
+            vcount_min: vcount,
+            vcount_max: vcount,
+        }
+    }
+
+    /// `Timer0` 範囲で作成 (`VCount` 固定)
+    pub const fn timer0_range(timer0_min: u16, timer0_max: u16, vcount: u8) -> Self {
+        Self {
+            timer0_min,
+            timer0_max,
+            vcount_min: vcount,
+            vcount_max: vcount,
+        }
+    }
+
+    /// フル範囲で作成
+    pub const fn full_range(
+        timer0_min: u16,
+        timer0_max: u16,
+        vcount_min: u8,
+        vcount_max: u8,
+    ) -> Self {
+        Self {
+            timer0_min,
+            timer0_max,
+            vcount_min,
+            vcount_max,
+        }
+    }
+}
+
+/// 起動日時 (Generator 専用)
+///
+/// 固定の起動時刻を指定。Searcher は `DateRange` / `TimeRange` を使用。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct Datetime {
     pub year: u16,
     pub month: u8,
     pub day: u8,
@@ -172,7 +363,7 @@ pub struct DatetimeParams {
     pub second: u8,
 }
 
-impl DatetimeParams {
+impl Datetime {
     pub const fn new(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> Self {
         Self {
             year,
@@ -185,47 +376,37 @@ impl DatetimeParams {
     }
 }
 
-// ===== 計算入力ソース =====
+// ===== Generator 入力ソース =====
 
-/// 計算入力のソース指定
+/// Generator 入力ソース (Generator 専用)
 ///
-/// Searcher / Generator 共通で使用可能な入力ソース型。
-/// Seed 直接指定、起動条件指定、範囲探索など複数のモードをサポート。
+/// Generator 系 API 用の入力ソース型。
+/// Seed 直接指定、複数 Seed 指定、起動条件指定をサポート。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(tag = "type")]
-pub enum SeedSource {
-    /// 既知の LCG Seed を直接指定
+pub enum GeneratorSource {
+    /// 単一の LCG Seed を直接指定
     Seed {
         /// 初期 LCG Seed
         initial_seed: LcgSeed,
     },
 
     /// 複数の LCG Seed を指定
-    MultipleSeeds {
+    Seeds {
         /// LCG Seed のリスト
         seeds: Vec<LcgSeed>,
     },
 
-    /// 起動条件 + 固定 Segment から Seed を導出
+    /// 起動条件から Seed を導出
     Startup {
         /// DS 設定
         ds: DsConfig,
         /// 起動日時
-        datetime: DatetimeParams,
-        /// 探索対象の Segment（Timer0/VCount/KeyCode の組み合わせ）
-        segments: Vec<SearchSegment>,
-    },
-
-    /// 起動条件 + Timer0/VCount 範囲から探索
-    StartupRange {
-        /// DS 設定
-        ds: DsConfig,
-        /// 起動日時
-        datetime: DatetimeParams,
-        /// Timer0/VCount の範囲指定（複数指定可能）
-        ranges: Vec<VCountTimer0Range>,
-        /// キー入力コード
-        key_code: KeyCode,
+        datetime: Datetime,
+        /// Timer0/VCount 範囲 (複数指定可能)
+        ranges: Vec<Timer0VCountRange>,
+        /// キー入力
+        key_input: KeyInput,
     },
 }

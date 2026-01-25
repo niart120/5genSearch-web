@@ -4,7 +4,7 @@ use crate::core::datetime_codes::{get_date_code, get_time_code_for_hardware};
 use crate::core::sha1::{
     BaseMessageBuilder, calculate_pokemon_sha1_simd, get_frame, get_nazo_values,
 };
-use crate::types::{DsConfig, Hardware, SearchSegment};
+use crate::types::{DsConfig, Hardware, KeyCode};
 
 use super::types::{HashEntry, SearchRangeParams, TimeRangeParams};
 
@@ -204,7 +204,9 @@ pub fn datetime_to_seconds(year: u16, month: u8, day: u8, hour: u8, minute: u8, 
 pub struct HashValuesEnumerator {
     base_message: [u32; 16],
     datetime_enumerator: DateTimeCodeEnumerator,
-    segment: SearchSegment,
+    timer0: u16,
+    vcount: u8,
+    key_code: KeyCode,
     start_seconds: u64,
 }
 
@@ -218,21 +220,16 @@ impl HashValuesEnumerator {
         ds: &DsConfig,
         time_range: &TimeRangeParams,
         search_range: &SearchRangeParams,
-        segment: SearchSegment,
+        timer0: u16,
+        vcount: u8,
+        key_code: KeyCode,
     ) -> Result<Self, String> {
         time_range.validate()?;
 
         let nazo = get_nazo_values(ds.version, ds.region);
         let frame = get_frame(ds.hardware);
 
-        let builder = BaseMessageBuilder::new(
-            &nazo,
-            ds.mac,
-            segment.vcount,
-            segment.timer0,
-            segment.key_code,
-            frame,
-        );
+        let builder = BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, key_code, frame);
 
         let time_code_table = build_ranged_time_code_table(time_range, ds.hardware);
 
@@ -251,7 +248,9 @@ impl HashValuesEnumerator {
         Ok(Self {
             base_message: builder.to_message(),
             datetime_enumerator,
-            segment,
+            timer0,
+            vcount,
+            key_code,
             start_seconds,
         })
     }
@@ -303,9 +302,16 @@ impl HashValuesEnumerator {
             .saturating_sub(self.start_seconds)
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn segment(&self) -> &SearchSegment {
-        &self.segment
+    pub(crate) fn timer0(&self) -> u16 {
+        self.timer0
+    }
+
+    pub(crate) fn vcount(&self) -> u8 {
+        self.vcount
+    }
+
+    pub(crate) fn key_code(&self) -> KeyCode {
+        self.key_code
     }
 }
 
