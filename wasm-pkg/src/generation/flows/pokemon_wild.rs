@@ -30,7 +30,7 @@ pub fn generate_wild_pokemon(
     let encounter_result = match enc_type {
         EncounterType::DustCloud => {
             let rand = lcg.next().unwrap_or(0);
-            let slot_value = rand_to_percent(params.config.version, rand);
+            let slot_value = rand_to_percent(params.context.version, rand);
             let result = dust_cloud_result(slot_value);
             if let EncounterResult::Item(item) = result {
                 dust_cloud_item_table_consume(lcg, item);
@@ -40,7 +40,7 @@ pub fn generate_wild_pokemon(
         }
         EncounterType::PokemonShadow => {
             let rand = lcg.next().unwrap_or(0);
-            let slot_value = rand_to_percent(params.config.version, rand);
+            let slot_value = rand_to_percent(params.context.version, rand);
             let result = pokemon_shadow_result(slot_value);
             if let EncounterResult::Item(_) = result {
                 pokemon_shadow_item_table_consume(lcg);
@@ -68,7 +68,7 @@ pub fn generate_wild_pokemon(
 
     // 3. スロット決定
     let slot_rand = lcg.next().unwrap_or(0);
-    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, params.config.version) as usize;
+    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, params.context.version) as usize;
     let slot_config = &params.slots[slot_idx.min(params.slots.len() - 1)];
 
     // 4. レベル決定
@@ -91,7 +91,7 @@ pub fn generate_wild_pokemon(
             EncounterType::ShakingGrass | EncounterType::SurfingBubble
         );
         determine_held_item_slot(
-            params.config.version,
+            params.context.version,
             item_rand,
             &params.lead_ability,
             has_very_rare,
@@ -101,7 +101,7 @@ pub fn generate_wild_pokemon(
     };
 
     // 8. BW のみ: 最後の消費
-    if params.config.version.is_bw() {
+    if params.context.version.is_bw() {
         lcg.next();
     }
 
@@ -144,8 +144,8 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, GameStartConfig, GeneratorConfig, ItemContent,
-        RomVersion, SaveState, SeedInput, StartMode, TrainerInfo,
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, ItemContent, RomVersion, SaveState,
+        SeedContext, SeedInput, StartMode, TrainerInfo,
     };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
@@ -161,7 +161,7 @@ mod tests {
 
     fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
         PokemonGeneratorParams {
-            config: GeneratorConfig {
+            context: SeedContext {
                 input: SeedInput::Seeds { seeds: vec![] },
                 version,
                 game_start: GameStartConfig {
@@ -169,6 +169,7 @@ mod tests {
                     save_state: SaveState::WithSave,
                 },
                 user_offset: 0,
+                max_advance: 1000,
             },
             trainer: TrainerInfo {
                 tid: 12345,

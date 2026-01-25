@@ -1,7 +1,8 @@
 //! レポート針関連型
 //!
-//! 針方向と針パターンを定義。
+//! 針方向と針パターン、および検索用の型を定義。
 
+use super::generation::{SeedContext, SeedOrigin};
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
@@ -111,6 +112,28 @@ impl NeedlePattern {
     pub fn to_arrows(&self) -> String {
         self.0.iter().map(|d| d.arrow()).collect()
     }
+}
+
+// ===== Needle 検索関連型 =====
+
+/// レポート針パターン検索パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedleSearchParams {
+    /// Seed 解決 + 検索範囲設定
+    pub context: SeedContext,
+    /// 観測したレポート針パターン
+    pub pattern: NeedlePattern,
+}
+
+/// レポート針パターン検索結果
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedleSearchResult {
+    /// パターン末尾消費位置 (`game_offset` からの相対)
+    pub advance: u32,
+    /// 生成元情報
+    pub source: SeedOrigin,
 }
 
 #[cfg(test)]

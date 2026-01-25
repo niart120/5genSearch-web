@@ -82,7 +82,7 @@ pub fn generate_static_pokemon(
     }
 
     // BW のみ: 最後の消費
-    if enc_type == EncounterType::StaticSymbol && params.config.version.is_bw() {
+    if enc_type == EncounterType::StaticSymbol && params.context.version.is_bw() {
         lcg.next();
     }
 
@@ -119,13 +119,13 @@ pub fn generate_static_pokemon(
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, GameStartConfig, GeneratorConfig, RomVersion, SaveState, SeedInput,
-        StartMode, TrainerInfo,
+        EncounterMethod, GameStartConfig, RomVersion, SaveState, SeedContext, SeedInput, StartMode,
+        TrainerInfo,
     };
 
     fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
         PokemonGeneratorParams {
-            config: GeneratorConfig {
+            context: SeedContext {
                 input: SeedInput::Seeds { seeds: vec![] },
                 version,
                 game_start: GameStartConfig {
@@ -133,6 +133,7 @@ mod tests {
                     save_state: SaveState::WithSave,
                 },
                 user_offset: 0,
+                max_advance: 1000,
             },
             trainer: TrainerInfo {
                 tid: 12345,
