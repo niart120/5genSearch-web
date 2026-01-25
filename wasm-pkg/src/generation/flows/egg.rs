@@ -26,8 +26,8 @@ pub fn generate_egg(lcg: &mut Lcg64, params: &EggGeneratorParams) -> RawEggData 
     let pid_reroll_count = if params.masuda_method { 5 } else { 0 };
     let (pid, shiny_type) = generate_egg_pid_with_reroll(
         lcg,
-        params.config.trainer.tid,
-        params.config.trainer.sid,
+        params.trainer.tid,
+        params.trainer.sid,
         pid_reroll_count,
     );
 
@@ -129,10 +129,10 @@ mod tests {
                     save_state: SaveState::WithSave,
                 },
                 user_offset: 0,
-                trainer: TrainerInfo {
-                    tid: 12345,
-                    sid: 54321,
-                },
+            },
+            trainer: TrainerInfo {
+                tid: 12345,
+                sid: 54321,
             },
             everstone: EverstonePlan::None,
             female_has_hidden: false,

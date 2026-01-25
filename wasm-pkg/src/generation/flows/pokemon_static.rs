@@ -34,13 +34,13 @@ pub fn generate_static_pokemon(
             let reroll_count = if params.shiny_charm { 2 } else { 0 };
             let (pid, shiny) = generate_wild_pid_with_reroll(
                 lcg,
-                params.config.trainer.tid,
-                params.config.trainer.sid,
+                params.trainer.tid,
+                params.trainer.sid,
                 reroll_count,
             );
             if slot.shiny_locked {
                 (
-                    apply_shiny_lock(pid, params.config.trainer.tid, params.config.trainer.sid),
+                    apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid),
                     ShinyType::None,
                 )
             } else {
@@ -50,18 +50,16 @@ pub fn generate_static_pokemon(
         EncounterType::StaticStarter | EncounterType::StaticFossil | EncounterType::StaticEvent => {
             let pid = generate_event_pid(lcg.next().unwrap_or(0));
             let pid = if slot.shiny_locked {
-                apply_shiny_lock(pid, params.config.trainer.tid, params.config.trainer.sid)
+                apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid)
             } else {
                 pid
             };
-            let shiny =
-                calculate_shiny_type(pid, params.config.trainer.tid, params.config.trainer.sid);
+            let shiny = calculate_shiny_type(pid, params.trainer.tid, params.trainer.sid);
             (pid, shiny)
         }
         _ => {
             let r = lcg.next().unwrap_or(0);
-            let shiny =
-                calculate_shiny_type(r, params.config.trainer.tid, params.config.trainer.sid);
+            let shiny = calculate_shiny_type(r, params.trainer.tid, params.trainer.sid);
             (r, shiny)
         }
     };
@@ -135,10 +133,10 @@ mod tests {
                     save_state: SaveState::WithSave,
                 },
                 user_offset: 0,
-                trainer: TrainerInfo {
-                    tid: 12345,
-                    sid: 54321,
-                },
+            },
+            trainer: TrainerInfo {
+                tid: 12345,
+                sid: 54321,
             },
             encounter_type,
             encounter_method: EncounterMethod::Stationary,

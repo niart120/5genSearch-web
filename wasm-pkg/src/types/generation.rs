@@ -344,9 +344,10 @@ pub struct EncounterSlotConfig {
     pub shiny_locked: bool,
 }
 
-/// Generator 共通設定
+/// Seed 解決 + オフセット計算設定
 ///
-/// Pokemon / Egg Generator で共通の設定。
+/// Seed の解決とオフセット計算に必要な共通設定。
+/// Pokemon / Egg / Needle Generator で共通して使用。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GeneratorConfig {
@@ -358,8 +359,6 @@ pub struct GeneratorConfig {
     pub game_start: GameStartConfig,
     /// ユーザオフセット
     pub user_offset: u32,
-    /// トレーナー情報
-    pub trainer: TrainerInfo,
 }
 
 /// ポケモン Generator パラメータ (統合版)
@@ -369,8 +368,10 @@ pub struct GeneratorConfig {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonGeneratorParams {
-    /// 共通設定
+    /// Seed 解決 + オフセット設定
     pub config: GeneratorConfig,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
     /// エンカウント種別
     pub encounter_type: EncounterType,
     /// エンカウント方法 (Wild のみ有効、Static は `Stationary` 固定)
@@ -388,8 +389,10 @@ pub struct PokemonGeneratorParams {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggGeneratorParams {
-    /// 共通設定
+    /// Seed 解決 + オフセット設定
     pub config: GeneratorConfig,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
     /// かわらずのいし効果
     pub everstone: EverstonePlan,
     /// メス親が夢特性か

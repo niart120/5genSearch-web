@@ -76,12 +76,8 @@ pub fn generate_wild_pokemon(
 
     // 5. PID 生成
     let reroll_count = if params.shiny_charm { 2 } else { 0 };
-    let (pid, shiny_type) = generate_wild_pid_with_reroll(
-        lcg,
-        params.config.trainer.tid,
-        params.config.trainer.sid,
-        reroll_count,
-    );
+    let (pid, shiny_type) =
+        generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
 
     // 6. 性格決定
     let (nature, sync_applied) = determine_nature(lcg, sync_success, &params.lead_ability);
@@ -173,10 +169,10 @@ mod tests {
                     save_state: SaveState::WithSave,
                 },
                 user_offset: 0,
-                trainer: TrainerInfo {
-                    tid: 12345,
-                    sid: 54321,
-                },
+            },
+            trainer: TrainerInfo {
+                tid: 12345,
+                sid: 54321,
             },
             encounter_type,
             encounter_method: EncounterMethod::Stationary,

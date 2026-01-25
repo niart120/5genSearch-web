@@ -477,16 +477,20 @@ mod tests {
             version: RomVersion::Black,
             game_start: make_game_start(),
             user_offset: 0,
-            trainer: TrainerInfo {
-                tid: 12345,
-                sid: 54321,
-            },
+        }
+    }
+
+    fn make_trainer() -> TrainerInfo {
+        TrainerInfo {
+            tid: 12345,
+            sid: 54321,
         }
     }
 
     fn make_pokemon_params() -> PokemonGeneratorParams {
         PokemonGeneratorParams {
             config: make_config(),
+            trainer: make_trainer(),
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
@@ -594,6 +598,7 @@ mod tests {
         let source = make_source(base_seed);
         let params = EggGeneratorParams {
             config: make_config(),
+            trainer: make_trainer(),
             everstone: EverstonePlan::None,
             female_has_hidden: false,
             uses_ditto: false,
@@ -704,8 +709,8 @@ mod tests {
                 version: RomVersion::Black,
                 game_start,
                 user_offset: 0,
-                trainer: TrainerInfo { tid, sid },
             },
+            trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::Synchronize(Nature::Adamant),
@@ -763,8 +768,8 @@ mod tests {
                 version: RomVersion::Black2,
                 game_start,
                 user_offset: 0,
-                trainer: TrainerInfo { tid, sid },
             },
+            trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
@@ -818,8 +823,8 @@ mod tests {
                 version: RomVersion::Black,
                 game_start,
                 user_offset: 0,
-                trainer: TrainerInfo { tid, sid },
             },
+            trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::Surfing,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
@@ -873,8 +878,8 @@ mod tests {
                 version: RomVersion::Black2,
                 game_start,
                 user_offset: 0,
-                trainer: TrainerInfo { tid, sid },
             },
+            trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::StaticSymbol,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
@@ -928,8 +933,8 @@ mod tests {
                 version: RomVersion::Black2,
                 game_start,
                 user_offset: 0,
-                trainer: TrainerInfo { tid, sid },
             },
+            trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::StaticStarter,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
