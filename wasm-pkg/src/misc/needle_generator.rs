@@ -1,7 +1,7 @@
 //! レポート針生成
 //!
 //! 観測したレポート針パターンから消費位置を特定する機能。
-//! 入力ソースとして `GeneratorSource` を使用し、Seed 直接指定と起動条件指定の両方に対応。
+//! 入力ソースとして `SeedInput` を使用し、Seed 直接指定と起動条件指定の両方に対応。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -13,8 +13,8 @@ use crate::core::needle::calc_report_needle_direction;
 use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, get_nazo_values};
 use crate::datetime_search::base::datetime_to_seconds;
 use crate::types::{
-    Datetime, DsConfig, GeneratorSource, Hardware, KeyCode, LcgSeed, NeedleDirection,
-    NeedlePattern, SeedOrigin,
+    Datetime, DsConfig, Hardware, KeyCode, LcgSeed, NeedleDirection, NeedlePattern, SeedInput,
+    SeedOrigin, StartupCondition,
 };
 
 // ===== 生成パラメータ =====
@@ -23,8 +23,8 @@ use crate::types::{
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct NeedleGeneratorParams {
-    /// 入力ソース (`GeneratorSource` を使用)
-    pub input: GeneratorSource,
+    /// 入力ソース (`SeedInput` を使用)
+    pub input: SeedInput,
     /// 観測したレポート針パターン (0-7)
     pub pattern: NeedlePattern,
     /// 検索開始消費位置
@@ -69,12 +69,6 @@ pub struct NeedleGenerator {
 
 /// 内部生成状態
 enum GeneratorState {
-    /// Seed 入力モード
-    Seed {
-        lcg: Lcg64,
-        current_advance: u32,
-        base_seed: LcgSeed,
-    },
     /// Seeds 入力モード (複数 Seed)
     Seeds {
         seeds: Vec<LcgSeed>,
@@ -134,16 +128,7 @@ impl NeedleGenerator {
         }
 
         let state = match &params.input {
-            GeneratorSource::Seed { initial_seed } => {
-                let mut lcg = Lcg64::new(*initial_seed);
-                lcg.jump(u64::from(params.advance_min));
-                GeneratorState::Seed {
-                    lcg,
-                    current_advance: params.advance_min,
-                    base_seed: *initial_seed,
-                }
-            }
-            GeneratorSource::Seeds { seeds } => {
+            SeedInput::Seeds { seeds } => {
                 if seeds.is_empty() {
                     return Err("seeds is empty".into());
                 }
@@ -154,7 +139,7 @@ impl NeedleGenerator {
                     current_advance: params.advance_min,
                 }
             }
-            GeneratorSource::Startup {
+            SeedInput::Startup {
                 ds,
                 datetime,
                 ranges,
@@ -257,9 +242,6 @@ impl NeedleGenerator {
     #[wasm_bindgen(getter)]
     pub fn is_done(&self) -> bool {
         match &self.state {
-            GeneratorState::Seed {
-                current_advance, ..
-            } => *current_advance >= self.advance_max,
             GeneratorState::Seeds {
                 seeds,
                 current_index,
@@ -280,15 +262,6 @@ impl NeedleGenerator {
     #[allow(clippy::cast_precision_loss)]
     pub fn progress(&self) -> f64 {
         match &self.state {
-            GeneratorState::Seed {
-                current_advance, ..
-            } => {
-                let total = u64::from(self.advance_max - self.advance_min);
-                if total == 0 {
-                    return 1.0;
-                }
-                f64::from(*current_advance - self.advance_min) / total as f64
-            }
             GeneratorState::Seeds {
                 seeds,
                 current_index,
@@ -317,50 +290,15 @@ impl NeedleGenerator {
     /// 次のバッチを生成
     pub fn next_batch(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
         match &mut self.state {
-            GeneratorState::Seed { .. } => self.next_batch_seed(chunk_size),
             GeneratorState::Seeds { .. } => self.next_batch_seeds(chunk_size),
             GeneratorState::Startup(_) => self.next_batch_startup(chunk_size),
         }
     }
 }
 
-// ===== Seed モード実装 =====
+// ===== Seeds モード実装 =====
 
 impl NeedleGenerator {
-    fn next_batch_seed(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
-        let GeneratorState::Seed {
-            lcg,
-            current_advance,
-            base_seed,
-        } = &mut self.state
-        else {
-            unreachable!()
-        };
-
-        let pattern = self.pattern.clone();
-        let advance_max = self.advance_max;
-
-        let mut results = Vec::new();
-        let end_advance = (*current_advance + chunk_size).min(advance_max);
-
-        while *current_advance < end_advance {
-            if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
-                results.push(NeedleGeneratorResult {
-                    advance: *current_advance,
-                    source: SeedOrigin::fixed(*base_seed),
-                });
-            }
-            lcg.advance(1);
-            *current_advance += 1;
-        }
-
-        NeedleGeneratorBatch {
-            results,
-            processed: u64::from(*current_advance),
-            total: u64::from(self.advance_max),
-        }
-    }
-
     fn next_batch_seeds(&mut self, chunk_size: u32) -> NeedleGeneratorBatch {
         let GeneratorState::Seeds {
             seeds,
@@ -397,7 +335,7 @@ impl NeedleGenerator {
                     #[allow(clippy::cast_possible_truncation)]
                     results.push(NeedleGeneratorResult {
                         advance: *current_advance,
-                        source: SeedOrigin::multiple(base_seed, *current_index as u32),
+                        source: SeedOrigin::seed(base_seed),
                     });
                 }
                 current_lcg.advance(1);
@@ -469,12 +407,10 @@ impl NeedleGenerator {
                 if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                     results.push(NeedleGeneratorResult {
                         advance: s.current_advance,
-                        source: SeedOrigin::datetime(
+                        source: SeedOrigin::startup(
                             s.current_base_seed,
                             s.datetime,
-                            s.current_timer0,
-                            s.current_vcount,
-                            s.key_code,
+                            StartupCondition::new(s.current_timer0, s.current_vcount, s.key_code),
                         ),
                     });
                 }
@@ -568,35 +504,13 @@ mod tests {
     }
 
     #[test]
-    fn test_needle_generator_seed_input() {
-        let seed = LcgSeed::new(0x0123_4567_89AB_CDEF);
-        let pattern = get_needle_pattern(seed, 3);
-
-        let params = NeedleGeneratorParams {
-            input: GeneratorSource::Seed { initial_seed: seed },
-            pattern,
-            advance_min: 0,
-            advance_max: 10,
-        };
-
-        let mut generator = NeedleGenerator::new(params).unwrap();
-        let batch = generator.next_batch(100);
-
-        // 先頭位置で一致するはず
-        assert!(!batch.results.is_empty());
-        assert_eq!(batch.results[0].advance, 0);
-        // SeedOrigin::Fixed であること
-        assert!(matches!(batch.results[0].source, SeedOrigin::Fixed { .. }));
-    }
-
-    #[test]
     fn test_needle_generator_seeds_input() {
         let seed1 = LcgSeed::new(0x0123_4567_89AB_CDEF);
         let seed2 = LcgSeed::new(0xFEDC_BA98_7654_3210);
         let pattern = get_needle_pattern(seed1, 3);
 
         let params = NeedleGeneratorParams {
-            input: GeneratorSource::Seeds {
+            input: SeedInput::Seeds {
                 seeds: vec![seed1, seed2],
             },
             pattern,
@@ -610,11 +524,8 @@ mod tests {
         // 最初の Seed の先頭位置で一致するはず
         assert!(!batch.results.is_empty());
         assert_eq!(batch.results[0].advance, 0);
-        // SeedOrigin::Multiple であること
-        assert!(matches!(
-            batch.results[0].source,
-            SeedOrigin::Multiple { seed_index: 0, .. }
-        ));
+        // SeedOrigin::Seed であること
+        assert!(matches!(batch.results[0].source, SeedOrigin::Seed { .. }));
     }
 
     #[test]
@@ -628,8 +539,8 @@ mod tests {
     fn test_invalid_params() {
         // Empty pattern
         let params = NeedleGeneratorParams {
-            input: GeneratorSource::Seed {
-                initial_seed: LcgSeed::new(0),
+            input: SeedInput::Seeds {
+                seeds: vec![LcgSeed::new(0)],
             },
             pattern: NeedlePattern::new(vec![]),
             advance_min: 0,
@@ -639,8 +550,8 @@ mod tests {
 
         // min > max
         let params = NeedleGeneratorParams {
-            input: GeneratorSource::Seed {
-                initial_seed: LcgSeed::new(0),
+            input: SeedInput::Seeds {
+                seeds: vec![LcgSeed::new(0)],
             },
             pattern: NeedlePattern::new(vec![NeedleDirection::N]),
             advance_min: 10,

@@ -339,6 +339,27 @@ impl Timer0VCountRange {
     }
 }
 
+/// 起動条件 (`Timer0` / `VCount` / `KeyCode` の組み合わせ)
+///
+/// 起動時刻検索結果や `SeedOrigin::Startup` で使用される共通型。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct StartupCondition {
+    pub timer0: u16,
+    pub vcount: u8,
+    pub key_code: KeyCode,
+}
+
+impl StartupCondition {
+    pub const fn new(timer0: u16, vcount: u8, key_code: KeyCode) -> Self {
+        Self {
+            timer0,
+            vcount,
+            key_code,
+        }
+    }
+}
+
 /// 起動日時 (Generator 専用)
 ///
 /// 固定の起動時刻を指定。Searcher は `DateRange` / `TimeRange` を使用。
@@ -366,22 +387,16 @@ impl Datetime {
     }
 }
 
-// ===== Generator 入力ソース =====
+// ===== Seed 入力 =====
 
-/// Generator 入力ソース (Generator 専用)
+/// Seed 入力
 ///
 /// Generator 系 API 用の入力ソース型。
-/// Seed 直接指定、複数 Seed 指定、起動条件指定をサポート。
+/// 複数 Seed 指定、または起動条件指定をサポート。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(tag = "type")]
-pub enum GeneratorSource {
-    /// 単一の LCG Seed を直接指定
-    Seed {
-        /// 初期 LCG Seed
-        initial_seed: LcgSeed,
-    },
-
+pub enum SeedInput {
     /// 複数の LCG Seed を指定
     Seeds {
         /// LCG Seed のリスト
@@ -394,7 +409,7 @@ pub enum GeneratorSource {
         ds: DsConfig,
         /// 起動日時
         datetime: Datetime,
-        /// Timer0/VCount 範囲 (複数指定可能)
+        /// `Timer0` / `VCount` 範囲 (複数指定可能)
         ranges: Vec<Timer0VCountRange>,
         /// キー入力
         key_input: KeyInput,

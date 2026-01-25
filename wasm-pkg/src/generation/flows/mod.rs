@@ -7,15 +7,12 @@ pub mod pokemon_wild;
 pub mod types;
 
 pub use egg::generate_egg;
-pub use generator::{EggGenerator, StaticPokemonGenerator, WildPokemonGenerator};
+pub use generator::{EggGenerator, PokemonGenerator, generate_egg_list, generate_pokemon_list};
 pub use pokemon_static::generate_static_pokemon;
 pub use pokemon_wild::generate_wild_pokemon;
 
 // 内部型のみ再エクスポート
-pub use types::{
-    EggGenerationConfig, EncounterSlotConfig, GenerationError, OffsetConfig,
-    PokemonGenerationConfig, RawEggData, RawPokemonData,
-};
+pub use types::{EncounterSlotConfig, GenerationError, RawEggData, RawPokemonData};
 
 // TS 公開型は crate::types から再エクスポート
 pub use crate::types::{

@@ -4,27 +4,32 @@ use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     InheritanceSlot, ParentRole, determine_egg_nature, generate_egg_pid_with_reroll,
 };
-use crate::types::{Gender, GenderRatio};
+use crate::types::{EggGeneratorParams, Gender, GenderRatio};
 
-use super::types::{EggGenerationConfig, RawEggData};
+use super::types::RawEggData;
 
 /// 卵の個体生成 (IV なし)
-pub fn generate_egg(lcg: &mut Lcg64, config: &EggGenerationConfig) -> RawEggData {
+pub fn generate_egg(lcg: &mut Lcg64, params: &EggGeneratorParams) -> RawEggData {
     // 1. 性格決定 (既存関数を使用)
-    let nature = determine_egg_nature(lcg, config.everstone);
+    let nature = determine_egg_nature(lcg, params.everstone);
 
     // 2. 遺伝スロット決定
     let inheritance = determine_inheritance(lcg);
 
     // 3. 夢特性判定
-    let has_hidden = determine_hidden_ability(lcg, config.female_has_hidden, config.uses_ditto);
+    let has_hidden = determine_hidden_ability(lcg, params.female_has_hidden, params.uses_ditto);
 
     // 4. 性別判定
-    let gender = determine_egg_gender(lcg, config.gender_ratio);
+    let gender = determine_egg_gender(lcg, params.gender_ratio);
 
-    // 5. PID 生成
-    let (pid, shiny_type) =
-        generate_egg_pid_with_reroll(lcg, config.tid, config.sid, config.pid_reroll_count);
+    // 5. PID 生成 (国際孵化: BW は +5 回リロール)
+    let pid_reroll_count = if params.masuda_method { 5 } else { 0 };
+    let (pid, shiny_type) = generate_egg_pid_with_reroll(
+        lcg,
+        params.trainer.tid,
+        params.trainer.sid,
+        pid_reroll_count,
+    );
 
     // 特性スロット決定
     let ability_slot = if has_hidden {
@@ -109,27 +114,43 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EverstonePlan, Nature};
+    use crate::types::{
+        EverstonePlan, GameStartConfig, GeneratorConfig, Ivs, Nature, RomVersion, SaveState,
+        SeedInput, StartMode, TrainerInfo,
+    };
 
-    fn make_config() -> EggGenerationConfig {
-        EggGenerationConfig {
-            tid: 12345,
-            sid: 54321,
+    fn make_params() -> EggGeneratorParams {
+        EggGeneratorParams {
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black,
+                game_start: GameStartConfig {
+                    start_mode: StartMode::Continue,
+                    save_state: SaveState::WithSave,
+                },
+                user_offset: 0,
+            },
+            trainer: TrainerInfo {
+                tid: 12345,
+                sid: 54321,
+            },
             everstone: EverstonePlan::None,
             female_has_hidden: false,
             uses_ditto: false,
             gender_ratio: GenderRatio::Threshold(127),
             nidoran_flag: false,
-            pid_reroll_count: 0,
+            masuda_method: false,
+            parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
+            parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
         }
     }
 
     #[test]
     fn test_generate_egg() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
-        let config = make_config();
+        let params = make_params();
 
-        let egg = generate_egg(&mut lcg, &config);
+        let egg = generate_egg(&mut lcg, &params);
 
         // 基本的な検証
         assert!(egg.ability_slot <= 2);
@@ -138,12 +159,12 @@ mod tests {
     #[test]
     fn test_generate_egg_with_everstone() {
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_FFFF_FFFF);
-        let config = EggGenerationConfig {
+        let params = EggGeneratorParams {
             everstone: EverstonePlan::Fixed(Nature::Adamant),
-            ..make_config()
+            ..make_params()
         };
 
-        let egg = generate_egg(&mut lcg, &config);
+        let egg = generate_egg(&mut lcg, &params);
 
         // かわらずのいし使用時のテスト
         // 乱数によって遺伝するかどうかが決まる

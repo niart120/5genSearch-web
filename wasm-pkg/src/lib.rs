@@ -22,15 +22,18 @@ pub use datetime_search::{
 pub use types::{
     Datetime, DsButton, DsConfig, EggGeneratorParams, EncounterMethod, EncounterResult,
     EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, GeneratorSource, HeldItemSlot, HiddenPowerType,
+    GeneratedEggData, GeneratedPokemonData, GeneratorConfig, HeldItemSlot, HiddenPowerType,
     IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
     LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
-    NeedlePattern, SaveState, SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo,
-    StartMode, StaticPokemonGeneratorParams, Timer0VCountRange, WildPokemonGeneratorParams,
+    NeedlePattern, PokemonGeneratorParams, SaveState, SeedInput, SeedOrigin,
+    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, Timer0VCountRange, TrainerInfo,
 };
 
 // Re-export core needle functions (外部公開必要)
 pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
+
+// Re-export generation public API
+pub use generation::{generate_egg_list, generate_pokemon_list};
 
 // Re-export misc module
 pub use misc::{

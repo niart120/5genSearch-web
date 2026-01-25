@@ -7,9 +7,11 @@ use crate::generation::algorithm::{
     fishing_success, generate_wild_pid_with_reroll, perform_sync_check,
     pokemon_shadow_item_table_consume, pokemon_shadow_result, rand_to_percent,
 };
-use crate::types::{EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect};
+use crate::types::{
+    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, PokemonGeneratorParams,
+};
 
-use super::types::{EncounterSlotConfig, GenerationError, PokemonGenerationConfig, RawPokemonData};
+use super::types::{GenerationError, RawPokemonData};
 
 /// 野生ポケモン生成 (IV なし)
 ///
@@ -19,17 +21,16 @@ use super::types::{EncounterSlotConfig, GenerationError, PokemonGenerationConfig
 /// - `GenerationError::NoSlot`: エンカウントスロットが見つからない場合
 pub fn generate_wild_pokemon(
     lcg: &mut Lcg64,
-    config: &PokemonGenerationConfig,
-    slots: &[EncounterSlotConfig],
+    params: &PokemonGeneratorParams,
 ) -> Result<RawPokemonData, GenerationError> {
-    let enc_type = config.encounter_type;
-    let is_compound_eyes = matches!(config.lead_ability, LeadAbilityEffect::CompoundEyes);
+    let enc_type = params.encounter_type;
+    let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
 
     // 0. DustCloud / PokemonShadow: エンカウント判定 (Pokemon vs Item)
     let encounter_result = match enc_type {
         EncounterType::DustCloud => {
             let rand = lcg.next().unwrap_or(0);
-            let slot_value = rand_to_percent(config.version, rand);
+            let slot_value = rand_to_percent(params.config.version, rand);
             let result = dust_cloud_result(slot_value);
             if let EncounterResult::Item(item) = result {
                 dust_cloud_item_table_consume(lcg, item);
@@ -39,7 +40,7 @@ pub fn generate_wild_pokemon(
         }
         EncounterType::PokemonShadow => {
             let rand = lcg.next().unwrap_or(0);
-            let slot_value = rand_to_percent(config.version, rand);
+            let slot_value = rand_to_percent(params.config.version, rand);
             let result = pokemon_shadow_result(slot_value);
             if let EncounterResult::Item(_) = result {
                 pokemon_shadow_item_table_consume(lcg);
@@ -54,7 +55,7 @@ pub fn generate_wild_pokemon(
     let sync_success = if is_compound_eyes {
         false
     } else {
-        perform_sync_check(lcg, enc_type, &config.lead_ability)
+        perform_sync_check(lcg, enc_type, &params.lead_ability)
     };
 
     // 2. 釣り成功判定 (Fishing のみ)
@@ -67,19 +68,19 @@ pub fn generate_wild_pokemon(
 
     // 3. スロット決定
     let slot_rand = lcg.next().unwrap_or(0);
-    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, config.version) as usize;
-    let slot_config = &slots[slot_idx.min(slots.len() - 1)];
+    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, params.config.version) as usize;
+    let slot_config = &params.slots[slot_idx.min(params.slots.len() - 1)];
 
     // 4. レベル決定
     let _level_rand = lcg.next();
 
     // 5. PID 生成
-    let reroll_count = if config.shiny_charm { 2 } else { 0 };
+    let reroll_count = if params.shiny_charm { 2 } else { 0 };
     let (pid, shiny_type) =
-        generate_wild_pid_with_reroll(lcg, config.tid, config.sid, reroll_count);
+        generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
 
     // 6. 性格決定
-    let (nature, sync_applied) = determine_nature(lcg, sync_success, &config.lead_ability);
+    let (nature, sync_applied) = determine_nature(lcg, sync_success, &params.lead_ability);
 
     // 7. 持ち物判定
     let held_item_slot = if encounter_type_supports_held_item(enc_type) && slot_config.has_held_item
@@ -90,9 +91,9 @@ pub fn generate_wild_pokemon(
             EncounterType::ShakingGrass | EncounterType::SurfingBubble
         );
         determine_held_item_slot(
-            config.version,
+            params.config.version,
             item_rand,
-            &config.lead_ability,
+            &params.lead_ability,
             has_very_rare,
         )
     } else {
@@ -100,7 +101,7 @@ pub fn generate_wild_pokemon(
     };
 
     // 8. BW のみ: 最後の消費
-    if config.version.is_bw() {
+    if params.config.version.is_bw() {
         lcg.next();
     }
 
@@ -142,21 +143,10 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, ItemContent, RomVersion};
-
-    fn make_config(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationConfig {
-        PokemonGenerationConfig {
-            version,
-            encounter_type,
-            tid: 12345,
-            sid: 54321,
-            lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
-            shiny_locked: false,
-            has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
-        }
-    }
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GeneratorConfig, ItemContent,
+        RomVersion, SaveState, SeedInput, StartMode, TrainerInfo,
+    };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
@@ -165,16 +155,39 @@ mod tests {
             level_max: 10,
             gender_threshold: 127,
             has_held_item: false,
+            shiny_locked: false,
         }]
+    }
+
+    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
+        PokemonGeneratorParams {
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version,
+                game_start: GameStartConfig {
+                    start_mode: StartMode::Continue,
+                    save_state: SaveState::WithSave,
+                },
+                user_offset: 0,
+            },
+            trainer: TrainerInfo {
+                tid: 12345,
+                sid: 54321,
+            },
+            encounter_type,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: make_slots(),
+        }
     }
 
     #[test]
     fn test_generate_wild_pokemon_normal() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
-        let config = make_config(RomVersion::Black, EncounterType::Normal);
-        let slots = make_slots();
+        let params = make_params(RomVersion::Black, EncounterType::Normal);
 
-        let result = generate_wild_pokemon(&mut lcg, &config, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();
@@ -189,10 +202,9 @@ mod tests {
         // BW2 では rand_to_percent = (rand * 100) >> 32
         // 0x0000_0000 → 0, Pokemon 判定
         let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0001);
-        let config = make_config(RomVersion::Black2, EncounterType::DustCloud);
-        let slots = make_slots();
+        let params = make_params(RomVersion::Black2, EncounterType::DustCloud);
 
-        let result = generate_wild_pokemon(&mut lcg, &config, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();
@@ -208,10 +220,9 @@ mod tests {
         // 0xFFFF_FFFF → 99, Item(Everstone) 判定
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_0000_0001);
         let initial_seed = lcg.current_seed();
-        let config = make_config(RomVersion::Black2, EncounterType::DustCloud);
-        let slots = make_slots();
+        let params = make_params(RomVersion::Black2, EncounterType::DustCloud);
 
-        let result = generate_wild_pokemon(&mut lcg, &config, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();
@@ -235,8 +246,7 @@ mod tests {
         // LCG の next() は seed を進めてから上位32bitを返す
         // 適切な seed を使用: 最初の next() で小さい値が出る seed
         let mut lcg = Lcg64::from_raw(0);
-        let config = make_config(RomVersion::Black2, EncounterType::PokemonShadow);
-        let slots = make_slots();
+        let params = make_params(RomVersion::Black2, EncounterType::PokemonShadow);
 
         // 最初の next() で得られる rand 値を確認
         let first_rand = {
@@ -246,7 +256,7 @@ mod tests {
         // slot_value を計算
         let slot_value = ((u64::from(first_rand) * 100) >> 32) as u32;
 
-        let result = generate_wild_pokemon(&mut lcg, &config, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
 
         if slot_value < 30 {
             // Pokemon の場合
@@ -269,10 +279,9 @@ mod tests {
         // slot_value が 30 以上で Item(Feather) になる seed を使用
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_0000_0001);
         let initial_seed = lcg.current_seed();
-        let config = make_config(RomVersion::Black2, EncounterType::PokemonShadow);
-        let slots = make_slots();
+        let params = make_params(RomVersion::Black2, EncounterType::PokemonShadow);
 
-        let result = generate_wild_pokemon(&mut lcg, &config, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();

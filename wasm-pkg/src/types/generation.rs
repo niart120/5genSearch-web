@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{Datetime, GeneratorSource, KeyCode, RomVersion};
+use super::config::{Datetime, RomVersion, SeedInput, StartupCondition};
 use super::needle::NeedleDirection;
 use super::pokemon::{
     Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
@@ -69,11 +69,25 @@ pub enum EncounterType {
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum EncounterMethod {
-    /// あまいかおり使用 (確定エンカウント、判定スキップ)
+    /// 静止エンカウント (確定エンカウント、判定スキップ)
+    ///
+    /// あまいかおり使用時や固定シンボルとの接触など
     #[default]
-    SweetScent,
-    /// 移動中 (エンカウント判定あり)
+    Stationary,
+    /// 移動エンカウント (エンカウント判定あり)
     Moving,
+}
+
+// ===== トレーナー情報 =====
+
+/// トレーナー情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct TrainerInfo {
+    /// トレーナー ID
+    pub tid: u16,
+    /// 裏 ID
+    pub sid: u16,
 }
 
 // ===== 起動設定 =====
@@ -190,70 +204,45 @@ pub struct SpecialEncounterInfo {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum SeedOrigin {
-    /// 固定 Seed から生成
-    Fixed {
-        /// `BaseSeed` (SHA-1 から導出)
+    /// Seed 値から直接生成
+    Seed {
+        /// `BaseSeed` (LCG 初期値)
         base_seed: LcgSeed,
     },
-    /// 複数 Seed 指定から生成
-    Multiple {
-        /// `BaseSeed` (SHA-1 から導出)
-        base_seed: LcgSeed,
-        /// 入力 seeds 配列のインデックス
-        seed_index: u32,
-    },
-    /// 日時検索から生成
-    Datetime {
+    /// 起動条件から生成
+    Startup {
         /// `BaseSeed` (SHA-1 から導出)
         base_seed: LcgSeed,
         /// 起動日時
         datetime: Datetime,
-        /// `Timer0` 値
-        timer0: u16,
-        /// `VCount` 値
-        vcount: u8,
-        /// キー入力コード
-        key_code: KeyCode,
+        /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
+        condition: StartupCondition,
     },
 }
 
 impl SeedOrigin {
-    /// Fixed ソースを作成
-    pub const fn fixed(base_seed: LcgSeed) -> Self {
-        Self::Fixed { base_seed }
+    /// Seed ソースを作成
+    pub const fn seed(base_seed: LcgSeed) -> Self {
+        Self::Seed { base_seed }
     }
 
-    /// Multiple ソースを作成
-    pub const fn multiple(base_seed: LcgSeed, seed_index: u32) -> Self {
-        Self::Multiple {
-            base_seed,
-            seed_index,
-        }
-    }
-
-    /// Datetime ソースを作成
-    pub const fn datetime(
+    /// Startup ソースを作成
+    pub const fn startup(
         base_seed: LcgSeed,
         datetime: Datetime,
-        timer0: u16,
-        vcount: u8,
-        key_code: KeyCode,
+        condition: StartupCondition,
     ) -> Self {
-        Self::Datetime {
+        Self::Startup {
             base_seed,
             datetime,
-            timer0,
-            vcount,
-            key_code,
+            condition,
         }
     }
 
     /// `BaseSeed` を取得
     pub const fn base_seed(&self) -> LcgSeed {
         match self {
-            Self::Fixed { base_seed }
-            | Self::Multiple { base_seed, .. }
-            | Self::Datetime { base_seed, .. } => *base_seed,
+            Self::Seed { base_seed } | Self::Startup { base_seed, .. } => *base_seed,
         }
     }
 }
@@ -351,84 +340,59 @@ pub struct EncounterSlotConfig {
     pub gender_threshold: u8,
     /// 所持アイテムあり
     pub has_held_item: bool,
+    /// 色違いロック
+    pub shiny_locked: bool,
 }
 
-/// 野生ポケモン Generator パラメータ
+/// Seed 解決 + オフセット計算設定
+///
+/// Seed の解決とオフセット計算に必要な共通設定。
+/// Pokemon / Egg / Needle Generator で共通して使用。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct WildPokemonGeneratorParams {
-    /// 入力ソース
-    pub source: GeneratorSource,
+pub struct GeneratorConfig {
+    /// Seed 入力
+    pub input: SeedInput,
     /// ROM バージョン
     pub version: RomVersion,
     /// 起動設定
     pub game_start: GameStartConfig,
     /// ユーザオフセット
     pub user_offset: u32,
+}
+
+/// ポケモン Generator パラメータ (統合版)
+///
+/// Wild / Static を統合したパラメータ。
+/// `encounter_type` により Wild / Static を判別する。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct PokemonGeneratorParams {
+    /// Seed 解決 + オフセット設定
+    pub config: GeneratorConfig,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
     /// エンカウント種別
     pub encounter_type: EncounterType,
-    /// エンカウント方法
+    /// エンカウント方法 (Wild のみ有効、Static は `Stationary` 固定)
     pub encounter_method: EncounterMethod,
-    /// トレーナー ID
-    pub tid: u16,
-    /// 裏 ID
-    pub sid: u16,
     /// 先頭特性効果
     pub lead_ability: LeadAbilityEffect,
     /// ひかるおまもり所持
     pub shiny_charm: bool,
-    /// エンカウントスロット
+    /// エンカウントスロット (Wild: 複数、Static: 1件)
     pub slots: Vec<EncounterSlotConfig>,
 }
 
-/// 固定ポケモン Generator パラメータ
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct StaticPokemonGeneratorParams {
-    /// 入力ソース
-    pub source: GeneratorSource,
-    /// ROM バージョン
-    pub version: RomVersion,
-    /// 起動設定
-    pub game_start: GameStartConfig,
-    /// ユーザオフセット
-    pub user_offset: u32,
-    /// エンカウント種別
-    pub encounter_type: EncounterType,
-    /// トレーナー ID
-    pub tid: u16,
-    /// 裏 ID
-    pub sid: u16,
-    /// 先頭特性効果
-    pub lead_ability: LeadAbilityEffect,
-    /// ひかるおまもり所持
-    pub shiny_charm: bool,
-    /// 色違いロック
-    pub shiny_locked: bool,
-    /// ポケモン種族 ID
-    pub species_id: u16,
-    /// レベル
-    pub level: u8,
-    /// 性別閾値 (0-255)
-    pub gender_threshold: u8,
-}
-
 /// 卵 Generator パラメータ
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggGeneratorParams {
-    /// 入力ソース
-    pub source: GeneratorSource,
-    /// ROM バージョン
-    pub version: RomVersion,
-    /// 起動設定
-    pub game_start: GameStartConfig,
-    /// ユーザオフセット
-    pub user_offset: u32,
-    /// トレーナー ID
-    pub tid: u16,
-    /// 裏 ID
-    pub sid: u16,
+    /// Seed 解決 + オフセット設定
+    pub config: GeneratorConfig,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
     /// かわらずのいし効果
     pub everstone: EverstonePlan,
     /// メス親が夢特性か
@@ -439,8 +403,8 @@ pub struct EggGeneratorParams {
     pub gender_ratio: GenderRatio,
     /// ニドラン♀フラグ
     pub nidoran_flag: bool,
-    /// PID リロール回数 (国際孵化等)
-    pub pid_reroll_count: u8,
+    /// 国際孵化 (Masuda Method)
+    pub masuda_method: bool,
     /// オス親の個体値
     pub parent_male: Ivs,
     /// メス親の個体値

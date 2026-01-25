@@ -1,32 +1,28 @@
 //! Seed 解決ヘルパー
 //!
-//! `GeneratorSource` から `LcgSeed` を解決する。
+//! `SeedInput` から `LcgSeed` を解決する。
 
 use crate::core::sha1::{
     BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1, get_frame,
     get_nazo_values,
 };
-use crate::types::{GeneratorSource, LcgSeed, SeedOrigin};
+use crate::types::{LcgSeed, SeedInput, SeedOrigin, StartupCondition};
 
-/// `GeneratorSource` から単一の `LcgSeed` を解決
+/// `SeedInput` から単一の `LcgSeed` を解決
 ///
-/// - `Seed`: そのまま返す
 /// - `Seeds`: 最初の Seed を返す (単一解決用)
 /// - `Startup`: SHA-1 計算で導出 (最初の range の min 値を使用)
 ///
 /// # Errors
 /// - `Seeds` が空の場合
 /// - `Startup` で `ranges` が空の場合
-pub fn resolve_single_seed(source: &GeneratorSource) -> Result<(LcgSeed, SeedOrigin), String> {
-    match source {
-        GeneratorSource::Seed { initial_seed } => {
-            Ok((*initial_seed, SeedOrigin::fixed(*initial_seed)))
-        }
-        GeneratorSource::Seeds { seeds } => {
+pub fn resolve_single_seed(input: &SeedInput) -> Result<(LcgSeed, SeedOrigin), String> {
+    match input {
+        SeedInput::Seeds { seeds } => {
             let seed = seeds.first().ok_or("Seeds is empty")?;
-            Ok((*seed, SeedOrigin::multiple(*seed, 0)))
+            Ok((*seed, SeedOrigin::seed(*seed)))
         }
-        GeneratorSource::Startup {
+        SeedInput::Startup {
             ds,
             datetime,
             ranges,
@@ -61,41 +57,36 @@ pub fn resolve_single_seed(source: &GeneratorSource) -> Result<(LcgSeed, SeedOri
 
             Ok((
                 lcg_seed,
-                SeedOrigin::datetime(lcg_seed, *datetime, timer0, vcount, key_code),
+                SeedOrigin::startup(
+                    lcg_seed,
+                    *datetime,
+                    StartupCondition::new(timer0, vcount, key_code),
+                ),
             ))
         }
     }
 }
 
-/// `GeneratorSource` から複数の `(LcgSeed, SeedOrigin)` を解決
+/// `SeedInput` から複数の `(LcgSeed, SeedOrigin)` を解決
 ///
-/// - `Seed`: 単一要素の Vec を返す
 /// - `Seeds`: 全 Seed を返す
 /// - `Startup`: 全 range × `key_input` 組み合わせを返す
 ///
 /// # Errors
 /// - `Seeds` が空の場合
 /// - 起動設定が無効な場合
-pub fn resolve_all_seeds(source: &GeneratorSource) -> Result<Vec<(LcgSeed, SeedOrigin)>, String> {
-    match source {
-        GeneratorSource::Seed { initial_seed } => {
-            Ok(vec![(*initial_seed, SeedOrigin::fixed(*initial_seed))])
-        }
-        GeneratorSource::Seeds { seeds } => {
+pub fn resolve_all_seeds(input: &SeedInput) -> Result<Vec<(LcgSeed, SeedOrigin)>, String> {
+    match input {
+        SeedInput::Seeds { seeds } => {
             if seeds.is_empty() {
                 return Err("Seeds is empty".into());
             }
             Ok(seeds
                 .iter()
-                .enumerate()
-                .map(|(i, seed)| {
-                    #[allow(clippy::cast_possible_truncation)]
-                    let idx = i as u32;
-                    (*seed, SeedOrigin::multiple(*seed, idx))
-                })
+                .map(|seed| (*seed, SeedOrigin::seed(*seed)))
                 .collect())
         }
-        GeneratorSource::Startup {
+        SeedInput::Startup {
             ds,
             datetime,
             ranges,
@@ -134,7 +125,11 @@ pub fn resolve_all_seeds(source: &GeneratorSource) -> Result<Vec<(LcgSeed, SeedO
 
                         results.push((
                             lcg_seed,
-                            SeedOrigin::datetime(lcg_seed, *datetime, timer0, vcount, key_code),
+                            SeedOrigin::startup(
+                                lcg_seed,
+                                *datetime,
+                                StartupCondition::new(timer0, vcount, key_code),
+                            ),
                         ));
                     }
                 }
@@ -153,31 +148,18 @@ mod tests {
     };
 
     #[test]
-    fn test_resolve_single_seed() {
-        let source = GeneratorSource::Seed {
-            initial_seed: LcgSeed::new(0x1234_5678_9ABC_DEF0),
-        };
-        let (seed, gen_source) = resolve_single_seed(&source).unwrap();
-        assert_eq!(seed.value(), 0x1234_5678_9ABC_DEF0);
-        assert!(matches!(gen_source, SeedOrigin::Fixed { .. }));
-    }
-
-    #[test]
     fn test_resolve_single_seed_from_seeds() {
-        let source = GeneratorSource::Seeds {
+        let input = SeedInput::Seeds {
             seeds: vec![LcgSeed::new(0x1111), LcgSeed::new(0x2222)],
         };
-        let (seed, gen_source) = resolve_single_seed(&source).unwrap();
+        let (seed, origin) = resolve_single_seed(&input).unwrap();
         assert_eq!(seed.value(), 0x1111);
-        assert!(matches!(
-            gen_source,
-            SeedOrigin::Multiple { seed_index: 0, .. }
-        ));
+        assert!(matches!(origin, SeedOrigin::Seed { .. }));
     }
 
     #[test]
     fn test_resolve_single_seed_from_startup() {
-        let source = GeneratorSource::Startup {
+        let input = SeedInput::Startup {
             ds: DsConfig {
                 mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
                 hardware: Hardware::DsLite,
@@ -188,22 +170,22 @@ mod tests {
             ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x60)],
             key_input: KeyInput::new(),
         };
-        let result = resolve_single_seed(&source);
+        let result = resolve_single_seed(&input);
         assert!(result.is_ok());
-        let (_, gen_source) = result.unwrap();
-        assert!(matches!(gen_source, SeedOrigin::Datetime { .. }));
+        let (_, origin) = result.unwrap();
+        assert!(matches!(origin, SeedOrigin::Startup { .. }));
     }
 
     #[test]
     fn test_resolve_all_seeds() {
-        let source = GeneratorSource::Seeds {
+        let input = SeedInput::Seeds {
             seeds: vec![
                 LcgSeed::new(0x1111),
                 LcgSeed::new(0x2222),
                 LcgSeed::new(0x3333),
             ],
         };
-        let results = resolve_all_seeds(&source).unwrap();
+        let results = resolve_all_seeds(&input).unwrap();
         assert_eq!(results.len(), 3);
     }
 }
