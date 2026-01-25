@@ -14,7 +14,7 @@
 | レポート針 | レポート中に表示される8方向の針。LCG Seed から決定される |
 | NeedlePattern | 観測した針方向の列 (例: ↑→↓) |
 | advance | LCG の消費位置 |
-| GeneratorConfig | Seed 解決 + オフセット計算の共通設定 |
+| SeedContext | Seed 解決 + オフセット計算 + 検索範囲指定の共通設定 (旧 GeneratorConfig) |
 
 ### 1.3 背景・問題
 
@@ -51,7 +51,7 @@
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `wasm-pkg/src/generation/flows/generator.rs` | 変更 | `advance` 起点のバグ修正 (`current_advance=user_offset` で初期化) |
-| `wasm-pkg/src/types/generation.rs` | 変更 | `NeedleSearchParams` / `NeedleSearchResult` 型を追加 |
+| `wasm-pkg/src/types/needle.rs` | 変更 | `NeedleSearchParams` / `NeedleSearchResult` 型を追加 |
 | `wasm-pkg/src/types/mod.rs` | 変更 | 新規型の re-export 追加 |
 | `wasm-pkg/src/misc/needle_generator.rs` | **削除** | 旧 `NeedleGenerator` クラスを完全削除 |
 | `wasm-pkg/src/misc/needle_search.rs` | **新規** | `search_needle_pattern` 関数を配置 |
@@ -126,7 +126,7 @@ advance=user_offset ← 生成開始位置
 **全 Generator 共通の検索範囲パラメータ**:
 
 ```rust
-pub struct SearchConfig {  // 旧 GeneratorConfig
+pub struct SeedContext {  // 旧 GeneratorConfig
     pub input: SeedInput,
     pub version: RomVersion,
     pub game_start: GameStartConfig,
@@ -135,18 +135,18 @@ pub struct SearchConfig {  // 旧 GeneratorConfig
 }
 ```
 
-#### GeneratorConfig 名称変更の検討
+#### GeneratorConfig 名称変更
 
 責務: **Seed 解決 + オフセット計算 + 検索範囲指定**
 
 | 名称案 | ニュアンス |
 |--------|------------|
-| `SearchConfig` | 検索設定（汎用的、推奨） |
+| `SearchConfig` | 検索設定（汎用的） |
 | `SeedSearchConfig` | Seed 検索設定（Seed 解決を強調） |
 | `GenerationScope` | 生成範囲（スコープを強調） |
 | `SeedContext` | Seed コンテキスト（文脈情報） |
 
-**推奨: `SearchConfig`** - シンプルで責務を表現
+**採用: `SeedContext`** - Seed 解決とその周辺情報（オフセット・検索範囲）を包含する文脈として適切
 
 #### PokemonGenerator / EggGenerator における max_advance の扱い
 
@@ -158,10 +158,10 @@ pub struct SearchConfig {  // 旧 GeneratorConfig
 | B: max_advance 統一 | `count` を廃止、`max_advance` で統一 | ○ API 統一、破壊的変更 |
 | C: 両方サポート | `max_advance` 優先、未指定時は `count` 使用 | △ 複雑化 |
 
-**推奨: B (max_advance 統一)**
+**採用: B (max_advance 統一)**
 
 - `generate_pokemon_list(params, count, filter)` → `generate_pokemon_list(params, filter)`
-- 生成範囲は `params.config.user_offset` ～ `params.config.max_advance`
+- 生成範囲は `params.context.user_offset` ～ `params.context.max_advance`
 - フィルタ結果が `max_advance - user_offset` 件を超えることはない
 
 ### 3.4 Needle 検索の目的再定義
@@ -241,13 +241,13 @@ pub fn search_needle_pattern(params: &NeedleSearchParams) -> Result<Vec<NeedleSe
 
 ## 4. 実装仕様
 
-### 4.1 GeneratorConfig の拡張
+### 4.1 SeedContext の定義 (旧 GeneratorConfig)
 
 ```rust
-/// Seed 解決 + オフセット計算設定
+/// Seed 解決 + オフセット計算 + 検索範囲設定
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct GeneratorConfig {
+pub struct SeedContext {
     /// Seed 入力
     pub input: SeedInput,
     /// ROM バージョン
@@ -269,7 +269,7 @@ pub struct GeneratorConfig {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct NeedleSearchParams {
     /// Seed 解決 + 検索範囲設定
-    pub config: GeneratorConfig,
+    pub context: SeedContext,
     /// 観測したレポート針パターン
     pub pattern: NeedlePattern,
 }
@@ -298,7 +298,7 @@ pub struct NeedleSearchResult {
 /// SeedInput の各 LcgSeed について、NeedlePattern が出現する位置を検索。
 ///
 /// # Arguments
-/// * `params` - 検索パラメータ (config + pattern)
+/// * `params` - 検索パラメータ (context + pattern)
 ///
 /// # Returns
 /// パターンが一致した全件の結果リスト
@@ -307,17 +307,17 @@ pub fn search_needle_pattern(
     params: NeedleSearchParams,
 ) -> Result<Vec<NeedleSearchResult>, String> {
     // 1. 全 Seed を解決
-    let seeds = resolve_all_seeds(&params.config.input)?;
+    let seeds = resolve_all_seeds(&params.context.input)?;
     
     let mut results = Vec::new();
     
     for (seed, origin) in seeds {
         // 2. game_offset 計算
-        let game_offset = calculate_game_offset(seed, params.config.version, &params.config.game_start)?;
+        let game_offset = calculate_game_offset(seed, params.context.version, &params.context.game_start)?;
         
         // 3. 検索範囲: user_offset ～ max_advance
-        let start = params.config.user_offset;
-        let end = params.config.max_advance;
+        let start = params.context.user_offset;
+        let end = params.context.max_advance;
         
         // 4. LCG を初期化してジャンプ
         let mut lcg = Lcg64::new(seed);
@@ -341,15 +341,10 @@ pub fn search_needle_pattern(
 
 ### 4.4 NeedleGenerator クラスの扱い
 
-現状の `NeedleGenerator` (WASM クラス) は以下の選択肢がある:
+**採用: 廃止**
 
-| 選択肢 | 説明 |
-|--------|------|
-| A: 廃止 | `search_needle_pattern` 関数のみ提供 |
-| B: 維持 | インクリメンタル処理が必要な場合に備えて残す |
-| C: ラッパー化 | 内部で `search_needle_pattern` を呼ぶだけのラッパーに |
-
-**推奨: A (廃止)** - 現状のユースケースでは関数 API で十分
+- 現状のユースケースでは関数 API (`search_needle_pattern`) で十分
+- インクリメンタル処理が必要になった場合は将来的に別途検討
 
 ## 5. テスト方針
 
@@ -370,16 +365,17 @@ pub fn search_needle_pattern(
 - [ ] `EggGenerator::new()` で `current_advance: cfg.user_offset` に変更
 - [ ] 既存テストの期待値を確認・修正
 
-### Phase 1: GeneratorConfig 拡張
+### Phase 1: GeneratorConfig → SeedContext リネーム + max_advance 追加
 
-- [ ] `GeneratorConfig` に `max_advance: u32` フィールドを追加
-- [ ] 既存の `PokemonGeneratorParams` / `EggGeneratorParams` への影響を確認
-- [ ] 必要に応じて `generate_pokemon_list` / `generate_egg_list` の `count` 引数を `max_advance` で代替
+- [ ] `GeneratorConfig` を `SeedContext` にリネーム
+- [ ] `SeedContext` に `max_advance: u32` フィールドを追加
+- [ ] 既存の `PokemonGeneratorParams` / `EggGeneratorParams` のフィールド名を `config` → `context` に変更
+- [ ] `generate_pokemon_list` / `generate_egg_list` の `count` 引数を廃止
 
 ### Phase 2: Needle 検索 API 実装
 
-- [ ] `NeedleSearchParams` 型を `types/generation.rs` に追加
-- [ ] `NeedleSearchResult` 型を `types/generation.rs` に追加
+- [ ] `NeedleSearchParams` 型を `types/needle.rs` に追加
+- [ ] `NeedleSearchResult` 型を `types/needle.rs` に追加
 - [ ] `needle_search.rs` ファイルを新規作成
 - [ ] `search_needle_pattern` 関数を実装
 - [ ] `misc/mod.rs` でモジュール宣言を追加
