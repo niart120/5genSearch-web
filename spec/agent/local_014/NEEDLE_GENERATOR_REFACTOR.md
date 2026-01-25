@@ -104,147 +104,208 @@ advance=user_offset ← 生成開始位置
 - 最初に生成される個体の `advance` は `10`
 - 以降 `11`, `12`, `13`... と増加
 
-### 3.3 NeedleGenerator のオフセット要件
+### 3.3 検索範囲パラメータの統一
 
-**結論: NeedleGenerator はオフセット計算が必要**
+現状の `advance_min` / `advance_max` は `user_offset` / `max_advance` で置き換え可能:
 
-| 項目 | 説明 |
-|------|------|
-| 理由 | Pokemon/Egg と同じ起動条件で「advance 50 で目的の個体」なら、針も「advance 50 で一致」であるべき |
-| 動作 | `advance_min` / `advance_max` は `game_offset` からの相対位置として解釈 |
-| LCG ジャンプ | `game_offset + advance_min` 分ジャンプして検索開始 |
+| 現状 | 変更後 | 意味 |
+|------|--------|------|
+| `advance_min` | `user_offset` | 検索開始位置 (`GeneratorConfig` に既存) |
+| `advance_max` | `max_advance` | 検索終了位置 (新規追加) |
 
-### 3.4 構造の簡素化
-
-現状の `StartupState` (17フィールド) を分解:
-
-| 責務 | 現状 | 変更後 |
-|------|------|--------|
-| SHA-1 パラメータ | `base_message`, `date_code`, `time_code` | `SeedIterator` (新規) に移譲 |
-| イテレーション状態 | `current_timer0`, `current_vcount`, etc. | `SeedIterator` に移譲 |
-| 進捗管理 | `total_combinations`, `processed_combinations` | Generator 本体に残す |
-
-### 3.5 設計オプション
-
-#### オプション A: seed_resolver に Iterator 版追加
+**全 Generator 共通の検索範囲パラメータ**:
 
 ```rust
-// seed_resolver.rs
-pub struct SeedIterator { ... }
-
-impl Iterator for SeedIterator {
-    type Item = (LcgSeed, SeedOrigin);
-    fn next(&mut self) -> Option<Self::Item> { ... }
+pub struct GeneratorConfig {
+    pub input: SeedInput,
+    pub version: RomVersion,
+    pub game_start: GameStartConfig,
+    pub user_offset: u32,   // 検索開始位置 (= advance の初期値)
+    pub max_advance: u32,   // 検索終了位置 (新規)
 }
 ```
 
-- メリット: Seed 解決ロジックを完全に一本化
-- デメリット: `seed_resolver` に状態管理が入る
+これにより:
+- `NeedleGeneratorParams` から `advance_min` / `advance_max` を削除可能
+- `PokemonGenerator` / `EggGenerator` の `count` 引数を `max_advance` で代替可能
+- 全 Generator で統一された範囲指定
 
-#### オプション B: NeedleGenerator 内で簡素化のみ
+### 3.4 NeedleGenerator の目的再定義
 
-- `StartupState` のフィールドを整理
-- SHA-1 計算は現状維持 (パフォーマンス考慮)
-- 型定義のみ `types/` に移動
+**目的**: SeedInput から生成される各 LcgSeed の乱数系列において、指定した NeedlePattern が出現する `advance` と `SeedOrigin` を返す
 
-**推奨: オプション B** (最小限の変更でリスク低減)
+**現状の問題**:
+- `NeedleGeneratorBatch` はインクリメンタル処理用だが、実際のユースケースでは全件取得で十分
+- Startup モードの timer0×vcount 組み合わせ爆発を懸念していたが、通常は数件程度
+
+**変更案**:
+
+```rust
+/// レポート針パターン検索 (公開 API)
+///
+/// SeedInput の各 LcgSeed について、NeedlePattern が出現する位置を検索。
+pub fn search_needle_pattern(
+    params: &NeedleSearchParams,
+) -> Result<Vec<NeedleSearchResult>, String>
+```
+
+| 項目 | 説明 |
+|------|------|
+| 入力 | `NeedleSearchParams` (config + pattern) |
+| 出力 | 一致した全件の `Vec<NeedleSearchResult>` |
+| 処理 | 各 LcgSeed で `user_offset` ～ `max_advance` を走査 |
+
+**`NeedleGeneratorBatch` は廃止**:
+- インクリメンタル処理が必要な場合は、将来的に別途検討
+- 現状は同期的に全件返却で十分
+
+### 3.5 構造の簡素化
+
+`NeedleGeneratorBatch` 廃止に伴い、`StartupState` も不要になる可能性が高い。
+
+`resolve_all_seeds()` を使用すれば:
+- Startup モードでも全 (timer0, vcount) 組み合わせを事前解決
+- 各 LcgSeed に対して単純なループで検索可能
+- 複雑な状態管理が不要に
+
+```rust
+// 簡素化後のイメージ
+pub fn search_needle_pattern(params: &NeedleSearchParams) -> Result<Vec<NeedleSearchResult>, String> {
+    let seeds = resolve_all_seeds(&params.config.input)?;
+    let game_offset = calculate_game_offset(...)?;
+    
+    let mut results = Vec::new();
+    for (seed, origin) in seeds {
+        // user_offset ～ max_advance を走査
+        let matches = find_pattern_matches(seed, game_offset, &params.config, &params.pattern);
+        results.extend(matches.into_iter().map(|advance| NeedleSearchResult { advance, source: origin.clone() }));
+    }
+    Ok(results)
+}
+```
 
 ## 4. 実装仕様
 
-### 4.1 新規型定義 (types/generation.rs)
+### 4.1 GeneratorConfig の拡張
 
 ```rust
-/// レポート針 Generator パラメータ
+/// Seed 解決 + オフセット計算設定
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleGeneratorParams {
-    /// Seed 解決 + オフセット設定
+pub struct GeneratorConfig {
+    /// Seed 入力
+    pub input: SeedInput,
+    /// ROM バージョン
+    pub version: RomVersion,
+    /// 起動設定
+    pub game_start: GameStartConfig,
+    /// 検索開始位置 (= advance の初期値)
+    pub user_offset: u32,
+    /// 検索終了位置 (新規追加)
+    pub max_advance: u32,
+}
+```
+
+### 4.2 NeedleSearchParams / NeedleSearchResult
+
+```rust
+/// レポート針パターン検索パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct NeedleSearchParams {
+    /// Seed 解決 + 検索範囲設定
     pub config: GeneratorConfig,
     /// 観測したレポート針パターン
     pub pattern: NeedlePattern,
-    /// 検索開始消費位置 (オフセット適用後)
-    pub advance_min: u32,
-    /// 検索終了消費位置 (オフセット適用後)
-    pub advance_max: u32,
 }
 
-/// レポート針生成結果
+/// レポート針パターン検索結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleGeneratorResult {
-    /// パターン開始消費位置
+pub struct NeedleSearchResult {
+    /// パターン開始消費位置 (game_offset からの相対)
     pub advance: u32,
     /// 生成元情報
     pub source: SeedOrigin,
 }
-
-/// レポート針生成バッチ結果
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleGeneratorBatch {
-    /// 一致した結果
-    pub results: Vec<NeedleGeneratorResult>,
-    /// 処理済み件数
-    pub processed: u64,
-    /// 総件数
-    pub total: u64,
-}
 ```
 
-### 4.2 NeedleGenerator 変更後
+**廃止する型**:
+- `NeedleGeneratorParams` → `NeedleSearchParams` に置換
+- `NeedleGeneratorResult` → `NeedleSearchResult` に置換
+- `NeedleGeneratorBatch` → 廃止
+
+### 4.3 公開 API
 
 ```rust
-// misc/needle_generator.rs (概要)
-
-use crate::types::{
-    GeneratorConfig, NeedleGeneratorBatch, NeedleGeneratorParams, NeedleGeneratorResult,
-    NeedlePattern, SeedInput, SeedOrigin,
-};
-
+/// レポート針パターン検索 (公開 API)
+///
+/// SeedInput の各 LcgSeed について、NeedlePattern が出現する位置を検索。
+///
+/// # Arguments
+/// * `params` - 検索パラメータ (config + pattern)
+///
+/// # Returns
+/// パターンが一致した全件の結果リスト
 #[wasm_bindgen]
-pub struct NeedleGenerator {
-    pattern: NeedlePattern,
-    // オフセット適用後の範囲
-    effective_advance_min: u32,
-    effective_advance_max: u32,
-    // 内部状態
-    state: GeneratorState,
-}
-
-impl NeedleGenerator {
-    pub fn new(params: NeedleGeneratorParams) -> Result<Self, String> {
-        // 1. GeneratorConfig からオフセット計算
-        let game_offset = calculate_game_offset(&params.config)?;
-        let total_offset = params.config.user_offset + game_offset;
-
-        // 2. オフセット適用後の範囲
-        let effective_min = params.advance_min + total_offset;
-        let effective_max = params.advance_max + total_offset;
-
-        // 3. 状態初期化 (現状ロジック維持)
-        let state = match &params.config.input {
-            SeedInput::Seeds { seeds } => { ... }
-            SeedInput::Startup { .. } => { ... }
-        };
-
-        Ok(Self { ... })
+pub fn search_needle_pattern(
+    params: NeedleSearchParams,
+) -> Result<Vec<NeedleSearchResult>, String> {
+    // 1. 全 Seed を解決
+    let seeds = resolve_all_seeds(&params.config.input)?;
+    
+    let mut results = Vec::new();
+    
+    for (seed, origin) in seeds {
+        // 2. game_offset 計算
+        let game_offset = calculate_game_offset(seed, params.config.version, &params.config.game_start)?;
+        
+        // 3. 検索範囲: user_offset ～ max_advance
+        let start = params.config.user_offset;
+        let end = params.config.max_advance;
+        
+        // 4. LCG を初期化してジャンプ
+        let mut lcg = Lcg64::new(seed);
+        lcg.jump(u64::from(game_offset + start));
+        
+        // 5. パターン検索
+        for advance in start..end {
+            if matches_pattern_at_seed(lcg.current_seed(), &params.pattern) {
+                results.push(NeedleSearchResult {
+                    advance,
+                    source: origin.clone(),
+                });
+            }
+            lcg.advance(1);
+        }
     }
+    
+    Ok(results)
 }
 ```
 
-### 4.3 オフセット計算の共通化
+### 4.4 NeedleGenerator クラスの扱い
 
-現在 `generator.rs` にある `calculate_game_offset` を `generation/algorithm/game_offset.rs` からインポートするだけで対応可能 (既に公開済み)。
+現状の `NeedleGenerator` (WASM クラス) は以下の選択肢がある:
+
+| 選択肢 | 説明 |
+|--------|------|
+| A: 廃止 | `search_needle_pattern` 関数のみ提供 |
+| B: 維持 | インクリメンタル処理が必要な場合に備えて残す |
+| C: ラッパー化 | 内部で `search_needle_pattern` を呼ぶだけのラッパーに |
+
+**推奨: A (廃止)** - 現状のユースケースでは関数 API で十分
 
 ## 5. テスト方針
 
 | テスト種別 | 内容 |
 |------------|------|
-| ユニットテスト | `NeedleGeneratorParams` の `GeneratorConfig` からのオフセット計算 |
-| ユニットテスト | オフセット適用後の advance 範囲が正しいこと |
-| 統合テスト | Seeds 入力 + オフセット適用で一致位置が正しく検出されること |
-| 統合テスト | Startup 入力 + オフセット適用で一致位置が正しく検出されること |
-| 既存テスト | 既存テストが引き続き pass すること (オフセット=0 で互換性確認) |
+| ユニットテスト | `search_needle_pattern` でパターン一致位置が正しく検出されること |
+| ユニットテスト | `game_offset` 計算が正しく適用されること |
+| ユニットテスト | `user_offset` ～ `max_advance` の範囲で検索されること |
+| 統合テスト | Seeds 入力で一致位置が正しく検出されること |
+| 統合テスト | Startup 入力で一致位置が正しく検出されること |
+| 既存テスト | `PokemonGenerator` / `EggGenerator` の advance 起点修正後もテストが pass すること |
 
 ## 6. 実装チェックリスト
 
@@ -254,27 +315,24 @@ impl NeedleGenerator {
 - [ ] `EggGenerator::new()` で `current_advance: cfg.user_offset` に変更
 - [ ] 既存テストの期待値を確認・修正
 
-### Phase 1: 型の移動
+### Phase 1: GeneratorConfig 拡張
 
-- [ ] `NeedleGeneratorParams` を `types/generation.rs` に移動
-- [ ] `NeedleGeneratorResult` を `types/generation.rs` に移動
-- [ ] `NeedleGeneratorBatch` を `types/generation.rs` に移動
-- [ ] `types/mod.rs` の re-export 更新
-- [ ] `misc/needle_generator.rs` から型定義を削除、import 追加
-- [ ] `lib.rs` の re-export 調整
+- [ ] `GeneratorConfig` に `max_advance: u32` フィールドを追加
+- [ ] 既存の `PokemonGeneratorParams` / `EggGeneratorParams` への影響を確認
+- [ ] 必要に応じて `generate_pokemon_list` / `generate_egg_list` の `count` 引数を `max_advance` で代替
 
-### Phase 2: GeneratorConfig 導入
+### Phase 2: Needle 検索 API 実装
 
-- [ ] `NeedleGeneratorParams.input` を `NeedleGeneratorParams.config: GeneratorConfig` に変更
-- [ ] `NeedleGenerator::new()` でオフセット計算を追加
-- [ ] オフセット適用後の advance 範囲で動作するよう修正
-- [ ] 既存テストの修正 (config 構造に合わせる)
+- [ ] `NeedleSearchParams` 型を `types/generation.rs` に追加
+- [ ] `NeedleSearchResult` 型を `types/generation.rs` に追加
+- [ ] `search_needle_pattern` 関数を実装
+- [ ] WASM 公開設定
 
-### Phase 3: 内部構造の簡素化 (オプション)
+### Phase 3: 旧 API 廃止
 
-- [ ] `StartupState` のフィールド整理
-- [ ] 不要な `#[allow(dead_code)]` 削除
-- [ ] 進捗計算ロジックの見直し
+- [ ] `NeedleGenerator` クラスを廃止 (または deprecated 化)
+- [ ] `NeedleGeneratorParams` / `NeedleGeneratorResult` / `NeedleGeneratorBatch` を削除
+- [ ] `lib.rs` / `mod.rs` の re-export 調整
 
 ### Phase 4: 検証
 
