@@ -6,7 +6,7 @@ use crate::core::sha1::{
     BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1, get_frame,
     get_nazo_values,
 };
-use crate::types::{GeneratorSource, LcgSeed, SeedOrigin};
+use crate::types::{GeneratorSource, LcgSeed, SeedOrigin, StartupCondition};
 
 /// `GeneratorSource` から単一の `LcgSeed` を解決
 ///
@@ -20,11 +20,11 @@ use crate::types::{GeneratorSource, LcgSeed, SeedOrigin};
 pub fn resolve_single_seed(source: &GeneratorSource) -> Result<(LcgSeed, SeedOrigin), String> {
     match source {
         GeneratorSource::Seed { initial_seed } => {
-            Ok((*initial_seed, SeedOrigin::fixed(*initial_seed)))
+            Ok((*initial_seed, SeedOrigin::seed(*initial_seed)))
         }
         GeneratorSource::Seeds { seeds } => {
             let seed = seeds.first().ok_or("Seeds is empty")?;
-            Ok((*seed, SeedOrigin::multiple(*seed, 0)))
+            Ok((*seed, SeedOrigin::seed(*seed)))
         }
         GeneratorSource::Startup {
             ds,
@@ -61,7 +61,11 @@ pub fn resolve_single_seed(source: &GeneratorSource) -> Result<(LcgSeed, SeedOri
 
             Ok((
                 lcg_seed,
-                SeedOrigin::datetime(lcg_seed, *datetime, timer0, vcount, key_code),
+                SeedOrigin::startup(
+                    lcg_seed,
+                    *datetime,
+                    StartupCondition::new(timer0, vcount, key_code),
+                ),
             ))
         }
     }
@@ -79,7 +83,7 @@ pub fn resolve_single_seed(source: &GeneratorSource) -> Result<(LcgSeed, SeedOri
 pub fn resolve_all_seeds(source: &GeneratorSource) -> Result<Vec<(LcgSeed, SeedOrigin)>, String> {
     match source {
         GeneratorSource::Seed { initial_seed } => {
-            Ok(vec![(*initial_seed, SeedOrigin::fixed(*initial_seed))])
+            Ok(vec![(*initial_seed, SeedOrigin::seed(*initial_seed))])
         }
         GeneratorSource::Seeds { seeds } => {
             if seeds.is_empty() {
@@ -87,12 +91,7 @@ pub fn resolve_all_seeds(source: &GeneratorSource) -> Result<Vec<(LcgSeed, SeedO
             }
             Ok(seeds
                 .iter()
-                .enumerate()
-                .map(|(i, seed)| {
-                    #[allow(clippy::cast_possible_truncation)]
-                    let idx = i as u32;
-                    (*seed, SeedOrigin::multiple(*seed, idx))
-                })
+                .map(|seed| (*seed, SeedOrigin::seed(*seed)))
                 .collect())
         }
         GeneratorSource::Startup {
@@ -134,7 +133,11 @@ pub fn resolve_all_seeds(source: &GeneratorSource) -> Result<Vec<(LcgSeed, SeedO
 
                         results.push((
                             lcg_seed,
-                            SeedOrigin::datetime(lcg_seed, *datetime, timer0, vcount, key_code),
+                            SeedOrigin::startup(
+                                lcg_seed,
+                                *datetime,
+                                StartupCondition::new(timer0, vcount, key_code),
+                            ),
                         ));
                     }
                 }
@@ -159,7 +162,7 @@ mod tests {
         };
         let (seed, gen_source) = resolve_single_seed(&source).unwrap();
         assert_eq!(seed.value(), 0x1234_5678_9ABC_DEF0);
-        assert!(matches!(gen_source, SeedOrigin::Fixed { .. }));
+        assert!(matches!(gen_source, SeedOrigin::Seed { .. }));
     }
 
     #[test]
@@ -169,10 +172,7 @@ mod tests {
         };
         let (seed, gen_source) = resolve_single_seed(&source).unwrap();
         assert_eq!(seed.value(), 0x1111);
-        assert!(matches!(
-            gen_source,
-            SeedOrigin::Multiple { seed_index: 0, .. }
-        ));
+        assert!(matches!(gen_source, SeedOrigin::Seed { .. }));
     }
 
     #[test]
@@ -191,7 +191,7 @@ mod tests {
         let result = resolve_single_seed(&source);
         assert!(result.is_ok());
         let (_, gen_source) = result.unwrap();
-        assert!(matches!(gen_source, SeedOrigin::Datetime { .. }));
+        assert!(matches!(gen_source, SeedOrigin::Startup { .. }));
     }
 
     #[test]

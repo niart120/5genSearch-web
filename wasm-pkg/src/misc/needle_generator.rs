@@ -14,7 +14,7 @@ use crate::core::sha1::{BaseMessageBuilder, calculate_pokemon_sha1, get_frame, g
 use crate::datetime_search::base::datetime_to_seconds;
 use crate::types::{
     Datetime, DsConfig, GeneratorSource, Hardware, KeyCode, LcgSeed, NeedleDirection,
-    NeedlePattern, SeedOrigin,
+    NeedlePattern, SeedOrigin, StartupCondition,
 };
 
 // ===== 生成パラメータ =====
@@ -347,7 +347,7 @@ impl NeedleGenerator {
             if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                 results.push(NeedleGeneratorResult {
                     advance: *current_advance,
-                    source: SeedOrigin::fixed(*base_seed),
+                    source: SeedOrigin::seed(*base_seed),
                 });
             }
             lcg.advance(1);
@@ -397,7 +397,7 @@ impl NeedleGenerator {
                     #[allow(clippy::cast_possible_truncation)]
                     results.push(NeedleGeneratorResult {
                         advance: *current_advance,
-                        source: SeedOrigin::multiple(base_seed, *current_index as u32),
+                        source: SeedOrigin::seed(base_seed),
                     });
                 }
                 current_lcg.advance(1);
@@ -469,12 +469,10 @@ impl NeedleGenerator {
                 if matches_pattern_at_seed(lcg.current_seed(), pattern.directions()) {
                     results.push(NeedleGeneratorResult {
                         advance: s.current_advance,
-                        source: SeedOrigin::datetime(
+                        source: SeedOrigin::startup(
                             s.current_base_seed,
                             s.datetime,
-                            s.current_timer0,
-                            s.current_vcount,
-                            s.key_code,
+                            StartupCondition::new(s.current_timer0, s.current_vcount, s.key_code),
                         ),
                     });
                 }
@@ -585,8 +583,8 @@ mod tests {
         // 先頭位置で一致するはず
         assert!(!batch.results.is_empty());
         assert_eq!(batch.results[0].advance, 0);
-        // SeedOrigin::Fixed であること
-        assert!(matches!(batch.results[0].source, SeedOrigin::Fixed { .. }));
+        // SeedOrigin::Seed であること
+        assert!(matches!(batch.results[0].source, SeedOrigin::Seed { .. }));
     }
 
     #[test]
@@ -610,11 +608,8 @@ mod tests {
         // 最初の Seed の先頭位置で一致するはず
         assert!(!batch.results.is_empty());
         assert_eq!(batch.results[0].advance, 0);
-        // SeedOrigin::Multiple であること
-        assert!(matches!(
-            batch.results[0].source,
-            SeedOrigin::Multiple { seed_index: 0, .. }
-        ));
+        // SeedOrigin::Seed であること
+        assert!(matches!(batch.results[0].source, SeedOrigin::Seed { .. }));
     }
 
     #[test]

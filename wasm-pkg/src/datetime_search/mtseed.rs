@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::types::{Datetime, KeyCode, KeySpec, LcgSeed, MtSeed, SeedOrigin, Timer0VCountRange};
+use crate::types::{
+    Datetime, KeySpec, LcgSeed, MtSeed, SeedOrigin, StartupCondition, Timer0VCountRange,
+};
 
 use super::base::HashValuesEnumerator;
 use super::types::{SearchRangeParams, TimeRangeParams};
@@ -40,24 +42,14 @@ pub struct MtseedDatetimeResult {
     pub seed: MtSeed,
     /// 起動日時
     pub datetime: Datetime,
-    /// Timer0 値
-    pub timer0: u16,
-    /// `VCount` 値
-    pub vcount: u8,
-    /// キー入力コード
-    pub key_code: KeyCode,
+    /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
+    pub condition: StartupCondition,
 }
 
 impl MtseedDatetimeResult {
-    /// `SeedOrigin::Datetime` に変換
+    /// `SeedOrigin::Startup` に変換
     pub fn to_seed_origin(&self, base_seed: LcgSeed) -> SeedOrigin {
-        SeedOrigin::datetime(
-            base_seed,
-            self.datetime,
-            self.timer0,
-            self.vcount,
-            self.key_code,
-        )
+        SeedOrigin::startup(base_seed, self.datetime, self.condition)
     }
 }
 
@@ -70,14 +62,6 @@ pub struct MtseedDatetimeSearchBatch {
     pub total_seconds: u64,
 }
 
-/// 探索対象の組み合わせ
-#[derive(Clone, Copy, Debug)]
-struct SearchCombination {
-    timer0: u16,
-    vcount: u8,
-    key_code: KeyCode,
-}
-
 /// MT Seed 起動時刻検索器
 #[wasm_bindgen]
 pub struct MtseedDatetimeSearcher {
@@ -87,7 +71,7 @@ pub struct MtseedDatetimeSearcher {
     time_range: TimeRangeParams,
     search_range: SearchRangeParams,
     // 全組み合わせ
-    combinations: Vec<SearchCombination>,
+    combinations: Vec<StartupCondition>,
     current_combination_index: usize,
     // 現在の Enumerator
     current_enumerator: Option<HashValuesEnumerator>,
@@ -123,11 +107,7 @@ impl MtseedDatetimeSearcher {
             for timer0 in range.timer0_min..=range.timer0_max {
                 for vcount in range.vcount_min..=range.vcount_max {
                     for &key_code in &key_codes {
-                        combinations.push(SearchCombination {
-                            timer0,
-                            vcount,
-                            key_code,
-                        });
+                        combinations.push(StartupCondition::new(timer0, vcount, key_code));
                     }
                 }
             }
@@ -215,9 +195,11 @@ impl MtseedDatetimeSearcher {
                                 entry.minute,
                                 entry.second,
                             ),
-                            timer0: enumerator.timer0(),
-                            vcount: enumerator.vcount(),
-                            key_code: enumerator.key_code(),
+                            condition: StartupCondition::new(
+                                enumerator.timer0(),
+                                enumerator.vcount(),
+                                enumerator.key_code(),
+                            ),
                         });
                     }
                 }
@@ -258,7 +240,7 @@ impl MtseedDatetimeSearcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{Hardware, RomRegion, RomVersion};
+    use crate::types::{Hardware, KeyCode, RomRegion, RomVersion};
 
     use super::*;
 
@@ -421,9 +403,9 @@ mod tests {
         );
 
         // 検証: Timer0, VCount, KeyCode
-        assert_eq!(result.timer0, 0x0C79);
-        assert_eq!(result.vcount, 0x60);
-        assert_eq!(result.key_code, KeyCode::NONE);
+        assert_eq!(result.condition.timer0, 0x0C79);
+        assert_eq!(result.condition.vcount, 0x60);
+        assert_eq!(result.condition.key_code, KeyCode::NONE);
     }
 
     #[test]

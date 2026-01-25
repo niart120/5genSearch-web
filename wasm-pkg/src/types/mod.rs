@@ -13,7 +13,7 @@ mod seeds;
 
 pub use config::{
     Datetime, DsButton, DsConfig, GeneratorSource, Hardware, KeyCode, KeyInput, KeyMask, KeySpec,
-    RomRegion, RomVersion, Timer0VCountRange,
+    RomRegion, RomVersion, StartupCondition, Timer0VCountRange,
 };
 pub use generation::{
     EggGeneratorParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,

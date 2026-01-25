@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{Datetime, GeneratorSource, KeyCode, RomVersion};
+use super::config::{Datetime, GeneratorSource, RomVersion, StartupCondition};
 use super::needle::NeedleDirection;
 use super::pokemon::{
     Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
@@ -204,70 +204,45 @@ pub struct SpecialEncounterInfo {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum SeedOrigin {
-    /// 固定 Seed から生成
-    Fixed {
-        /// `BaseSeed` (SHA-1 から導出)
+    /// Seed 値から直接生成
+    Seed {
+        /// `BaseSeed` (LCG 初期値)
         base_seed: LcgSeed,
     },
-    /// 複数 Seed 指定から生成
-    Multiple {
-        /// `BaseSeed` (SHA-1 から導出)
-        base_seed: LcgSeed,
-        /// 入力 seeds 配列のインデックス
-        seed_index: u32,
-    },
-    /// 日時検索から生成
-    Datetime {
+    /// 起動条件から生成
+    Startup {
         /// `BaseSeed` (SHA-1 から導出)
         base_seed: LcgSeed,
         /// 起動日時
         datetime: Datetime,
-        /// `Timer0` 値
-        timer0: u16,
-        /// `VCount` 値
-        vcount: u8,
-        /// キー入力コード
-        key_code: KeyCode,
+        /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
+        condition: StartupCondition,
     },
 }
 
 impl SeedOrigin {
-    /// Fixed ソースを作成
-    pub const fn fixed(base_seed: LcgSeed) -> Self {
-        Self::Fixed { base_seed }
+    /// Seed ソースを作成
+    pub const fn seed(base_seed: LcgSeed) -> Self {
+        Self::Seed { base_seed }
     }
 
-    /// Multiple ソースを作成
-    pub const fn multiple(base_seed: LcgSeed, seed_index: u32) -> Self {
-        Self::Multiple {
-            base_seed,
-            seed_index,
-        }
-    }
-
-    /// Datetime ソースを作成
-    pub const fn datetime(
+    /// Startup ソースを作成
+    pub const fn startup(
         base_seed: LcgSeed,
         datetime: Datetime,
-        timer0: u16,
-        vcount: u8,
-        key_code: KeyCode,
+        condition: StartupCondition,
     ) -> Self {
-        Self::Datetime {
+        Self::Startup {
             base_seed,
             datetime,
-            timer0,
-            vcount,
-            key_code,
+            condition,
         }
     }
 
     /// `BaseSeed` を取得
     pub const fn base_seed(&self) -> LcgSeed {
         match self {
-            Self::Fixed { base_seed }
-            | Self::Multiple { base_seed, .. }
-            | Self::Datetime { base_seed, .. } => *base_seed,
+            Self::Seed { base_seed } | Self::Startup { base_seed, .. } => *base_seed,
         }
     }
 }

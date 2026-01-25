@@ -339,6 +339,27 @@ impl Timer0VCountRange {
     }
 }
 
+/// 起動条件 (`Timer0` / `VCount` / `KeyCode` の組み合わせ)
+///
+/// 起動時刻検索結果や `SeedOrigin::Startup` で使用される共通型。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct StartupCondition {
+    pub timer0: u16,
+    pub vcount: u8,
+    pub key_code: KeyCode,
+}
+
+impl StartupCondition {
+    pub const fn new(timer0: u16, vcount: u8, key_code: KeyCode) -> Self {
+        Self {
+            timer0,
+            vcount,
+            key_code,
+        }
+    }
+}
+
 /// 起動日時 (Generator 専用)
 ///
 /// 固定の起動時刻を指定。Searcher は `DateRange` / `TimeRange` を使用。

@@ -498,7 +498,7 @@ mod tests {
     }
 
     fn make_source(seed: LcgSeed) -> SeedOrigin {
-        SeedOrigin::fixed(seed)
+        SeedOrigin::seed(seed)
     }
 
     #[test]
