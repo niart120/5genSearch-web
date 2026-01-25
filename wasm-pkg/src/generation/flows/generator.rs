@@ -6,6 +6,11 @@
 //! - `GameOffset`: ゲーム起動条件により自動計算 (`calculate_game_offset`)
 //! - `UserOffset`: ユーザ指定の追加オフセット
 //! - `MtOffset`: MT19937 で IV 生成を開始する位置
+//!
+//! ## 公開 API
+//!
+//! - `generate_pokemon_list` - ポケモン一括生成 (複数 Seed 対応、フィルタ対応)
+//! - `generate_egg_list` - タマゴ一括生成 (複数 Seed 対応、フィルタ対応)
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
@@ -13,11 +18,12 @@ use crate::generation::algorithm::{
     generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
     is_moving_encounter_type, is_special_encounter_type,
 };
-use crate::generation::seed_resolver::resolve_single_seed;
+use crate::generation::seed_resolver::{resolve_all_seeds, resolve_single_seed};
 use crate::types::{
-    EggGeneratorParams, EncounterMethod, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
-    Ivs, LcgSeed, MovingEncounterInfo, RomVersion, SeedOrigin, SpecialEncounterInfo,
-    StaticPokemonGeneratorParams, WildPokemonGeneratorParams,
+    EggGeneratorParams, EncounterMethod, EncounterType, GameStartConfig, GeneratedEggData,
+    GeneratedPokemonData, IvFilter, Ivs, LcgSeed, MovingEncounterInfo, PokemonGeneratorParams,
+    RomVersion, SeedOrigin, SpecialEncounterInfo, StaticPokemonGeneratorParams,
+    WildPokemonGeneratorParams,
 };
 
 use super::egg::generate_egg;
@@ -26,6 +32,216 @@ use super::pokemon_wild::generate_wild_pokemon;
 use super::types::{
     EggGenerationConfig, EncounterSlotConfig, OffsetConfig, PokemonGenerationConfig,
 };
+
+// ===== 公開 API =====
+
+/// ポケモン一括生成 (公開 API)
+///
+/// - 複数 Seed 対応: `GeneratorSource` の全バリアントを処理
+/// - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
+///
+/// # Arguments
+///
+/// * `params` - 生成パラメータ (Wild / Static 統合)
+/// * `count` - 各 Seed から生成する個体数
+/// * `filter` - IV フィルタ (None の場合は全件返却)
+///
+/// # Errors
+///
+/// - `GeneratorSource` の解決に失敗した場合
+/// - 起動設定が無効な場合
+/// - エンカウントスロットが空の場合
+pub fn generate_pokemon_list(
+    params: &PokemonGeneratorParams,
+    count: u32,
+    filter: Option<&IvFilter>,
+) -> Result<Vec<GeneratedPokemonData>, String> {
+    // バリデーション
+    if params.slots.is_empty() {
+        return Err("Encounter slots is empty".into());
+    }
+
+    // Static の場合はスロットが1件のみ許容
+    if is_static_encounter(params.encounter_type) && params.slots.len() > 1 {
+        return Err("Static encounter requires exactly one slot".into());
+    }
+
+    // 複数 Seed を解決
+    let seeds = resolve_all_seeds(&params.source)?;
+
+    // 各 Seed に対して生成
+    let results: Result<Vec<_>, String> = seeds
+        .into_iter()
+        .map(|(seed, origin)| generate_pokemon_for_seed(seed, origin, params, count, filter))
+        .collect();
+
+    Ok(results?.into_iter().flatten().collect())
+}
+
+/// タマゴ一括生成 (公開 API)
+///
+/// - 複数 Seed 対応: `GeneratorSource` の全バリアントを処理
+/// - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
+///
+/// # Arguments
+///
+/// * `params` - 生成パラメータ
+/// * `count` - 各 Seed から生成する個体数
+/// * `filter` - IV フィルタ (None の場合は全件返却)
+///
+/// # Errors
+///
+/// - `GeneratorSource` の解決に失敗した場合
+/// - 起動設定が無効な場合
+pub fn generate_egg_list(
+    params: &EggGeneratorParams,
+    count: u32,
+    filter: Option<&IvFilter>,
+) -> Result<Vec<GeneratedEggData>, String> {
+    // 複数 Seed を解決
+    let seeds = resolve_all_seeds(&params.source)?;
+
+    // 各 Seed に対して生成
+    let results: Result<Vec<_>, String> = seeds
+        .into_iter()
+        .map(|(seed, origin)| generate_egg_for_seed(seed, origin, params, count, filter))
+        .collect();
+
+    Ok(results?.into_iter().flatten().collect())
+}
+
+/// エンカウント種別が Static かどうか判定
+fn is_static_encounter(encounter_type: EncounterType) -> bool {
+    matches!(
+        encounter_type,
+        EncounterType::StaticSymbol
+            | EncounterType::StaticStarter
+            | EncounterType::StaticFossil
+            | EncounterType::StaticEvent
+            | EncounterType::Roamer
+    )
+}
+
+/// 単一 Seed に対してポケモンを生成 (内部関数)
+fn generate_pokemon_for_seed(
+    seed: LcgSeed,
+    origin: SeedOrigin,
+    params: &PokemonGeneratorParams,
+    count: u32,
+    filter: Option<&IvFilter>,
+) -> Result<Vec<GeneratedPokemonData>, String> {
+    let offset_config =
+        OffsetConfig::for_encounter(params.version, params.encounter_type, params.user_offset);
+
+    let config = PokemonGenerationConfig {
+        version: params.version,
+        encounter_type: params.encounter_type,
+        tid: params.trainer.tid,
+        sid: params.trainer.sid,
+        lead_ability: params.lead_ability,
+        shiny_charm: params.shiny_charm,
+        shiny_locked: params.shiny_locked,
+        has_held_item: params.slots.iter().any(|s| s.has_held_item),
+        encounter_method: if is_static_encounter(params.encounter_type) {
+            EncounterMethod::Stationary
+        } else {
+            params.encounter_method
+        },
+    };
+
+    if is_static_encounter(params.encounter_type) {
+        // Static 用 Generator
+        let slot = &params.slots[0];
+        let mut generator = StaticPokemonGenerator::new(
+            seed,
+            params.version,
+            &params.game_start,
+            offset_config,
+            origin,
+            config,
+            slot.species_id,
+            slot.level_min, // Static は level_min を使用
+            slot.gender_threshold,
+        )?;
+
+        let pokemons = generator.take(count);
+        Ok(apply_filter(pokemons, filter))
+    } else {
+        // Wild 用 Generator
+        let mut generator = WildPokemonGenerator::new(
+            seed,
+            params.version,
+            &params.game_start,
+            offset_config,
+            origin,
+            config,
+            params.slots.clone(),
+        )?;
+
+        let pokemons = generator.take(count);
+        Ok(apply_filter(pokemons, filter))
+    }
+}
+
+/// 単一 Seed に対してタマゴを生成 (内部関数)
+fn generate_egg_for_seed(
+    seed: LcgSeed,
+    origin: SeedOrigin,
+    params: &EggGeneratorParams,
+    count: u32,
+    filter: Option<&IvFilter>,
+) -> Result<Vec<GeneratedEggData>, String> {
+    let offset_config = OffsetConfig::for_egg(params.user_offset);
+
+    let config = EggGenerationConfig {
+        tid: params.tid,
+        sid: params.sid,
+        everstone: params.everstone,
+        female_has_hidden: params.female_has_hidden,
+        uses_ditto: params.uses_ditto,
+        gender_ratio: params.gender_ratio,
+        nidoran_flag: params.nidoran_flag,
+        pid_reroll_count: params.pid_reroll_count,
+    };
+
+    let mut generator = EggGenerator::new(
+        seed,
+        params.version,
+        &params.game_start,
+        offset_config,
+        origin,
+        config,
+        params.parent_male,
+        params.parent_female,
+    )?;
+
+    let eggs = generator.take(count);
+    Ok(apply_egg_filter(eggs, filter))
+}
+
+/// IV フィルタを適用
+fn apply_filter(
+    pokemons: Vec<GeneratedPokemonData>,
+    filter: Option<&IvFilter>,
+) -> Vec<GeneratedPokemonData> {
+    match filter {
+        Some(f) => pokemons.into_iter().filter(|p| f.matches(&p.ivs)).collect(),
+        None => pokemons,
+    }
+}
+
+/// IV フィルタを適用 (タマゴ用)
+fn apply_egg_filter(
+    eggs: Vec<GeneratedEggData>,
+    filter: Option<&IvFilter>,
+) -> Vec<GeneratedEggData> {
+    match filter {
+        Some(f) => eggs.into_iter().filter(|e| f.matches(&e.ivs)).collect(),
+        None => eggs,
+    }
+}
+
+// ===== Generator 構造体 =====
 
 /// 野生ポケモン Generator (Iterator パターン)
 pub struct WildPokemonGenerator {
@@ -42,9 +258,12 @@ pub struct WildPokemonGenerator {
 impl WildPokemonGenerator {
     /// WASM パラメータから Generator を作成
     ///
+    /// @deprecated `generate_pokemon_list()` を使用してください
+    ///
     /// # Errors
     /// - 無効な起動設定の場合
     /// - `GeneratorSource` の解決に失敗した場合
+    #[deprecated(note = "Use generate_pokemon_list() instead")]
     pub fn from_params(params: WildPokemonGeneratorParams) -> Result<Self, String> {
         let (base_seed, gen_source) = resolve_single_seed(&params.source)?;
 
@@ -238,9 +457,12 @@ pub struct StaticPokemonGenerator {
 impl StaticPokemonGenerator {
     /// WASM パラメータから Generator を作成
     ///
+    /// @deprecated `generate_pokemon_list()` を使用してください
+    ///
     /// # Errors
     /// - 無効な起動設定の場合
     /// - `GeneratorSource` の解決に失敗した場合
+    #[deprecated(note = "Use generate_pokemon_list() instead")]
     #[allow(clippy::needless_pass_by_value)]
     pub fn from_params(params: StaticPokemonGeneratorParams) -> Result<Self, String> {
         let (base_seed, gen_source) = resolve_single_seed(&params.source)?;
@@ -257,7 +479,7 @@ impl StaticPokemonGenerator {
             shiny_charm: params.shiny_charm,
             shiny_locked: params.shiny_locked,
             has_held_item: false,
-            encounter_method: crate::types::EncounterMethod::SweetScent,
+            encounter_method: crate::types::EncounterMethod::Stationary,
         };
 
         Self::new(
@@ -396,9 +618,12 @@ pub struct EggGenerator {
 impl EggGenerator {
     /// WASM パラメータから Generator を作成
     ///
+    /// @deprecated `generate_egg_list()` を使用してください
+    ///
     /// # Errors
     /// - 無効な起動設定の場合
     /// - `GeneratorSource` の解決に失敗した場合
+    #[deprecated(note = "Use generate_egg_list() instead")]
     #[allow(clippy::needless_pass_by_value)]
     pub fn from_params(params: EggGeneratorParams) -> Result<Self, String> {
         let (base_seed, gen_source) = resolve_single_seed(&params.source)?;
@@ -556,7 +781,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         }
     }
 
@@ -813,7 +1038,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         };
 
         let slots = vec![EncounterSlotConfig {
@@ -892,7 +1117,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         };
 
         let slots = vec![EncounterSlotConfig {
@@ -961,7 +1186,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         };
 
         let slots = vec![EncounterSlotConfig {
@@ -1031,7 +1256,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         };
 
         // 固定シンボルは StaticPokemonGenerator を使う
@@ -1094,7 +1319,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         };
 
         // 御三家は StaticPokemonGenerator を使う

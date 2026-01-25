@@ -69,11 +69,25 @@ pub enum EncounterType {
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum EncounterMethod {
-    /// あまいかおり使用 (確定エンカウント、判定スキップ)
+    /// 静止エンカウント (確定エンカウント、判定スキップ)
+    ///
+    /// あまいかおり使用時や固定シンボルとの接触など
     #[default]
-    SweetScent,
-    /// 移動中 (エンカウント判定あり)
+    Stationary,
+    /// 移動エンカウント (エンカウント判定あり)
     Moving,
+}
+
+// ===== トレーナー情報 =====
+
+/// トレーナー情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct TrainerInfo {
+    /// トレーナー ID
+    pub tid: u16,
+    /// 裏 ID
+    pub sid: u16,
 }
 
 // ===== 起動設定 =====
@@ -354,6 +368,8 @@ pub struct EncounterSlotConfig {
 }
 
 /// 野生ポケモン Generator パラメータ
+///
+/// @deprecated `PokemonGeneratorParams` を使用してください
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WildPokemonGeneratorParams {
@@ -382,6 +398,8 @@ pub struct WildPokemonGeneratorParams {
 }
 
 /// 固定ポケモン Generator パラメータ
+///
+/// @deprecated `PokemonGeneratorParams` を使用してください
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StaticPokemonGeneratorParams {
@@ -411,6 +429,37 @@ pub struct StaticPokemonGeneratorParams {
     pub level: u8,
     /// 性別閾値 (0-255)
     pub gender_threshold: u8,
+}
+
+/// ポケモン Generator パラメータ (統合版)
+///
+/// Wild / Static を統合したパラメータ。
+/// `encounter_type` により Wild / Static を判別する。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct PokemonGeneratorParams {
+    /// 入力ソース
+    pub source: GeneratorSource,
+    /// ROM バージョン
+    pub version: RomVersion,
+    /// 起動設定
+    pub game_start: GameStartConfig,
+    /// ユーザオフセット
+    pub user_offset: u32,
+    /// エンカウント種別
+    pub encounter_type: EncounterType,
+    /// エンカウント方法 (Wild のみ有効、Static は `Stationary` 固定)
+    pub encounter_method: EncounterMethod,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
+    /// 先頭特性効果
+    pub lead_ability: LeadAbilityEffect,
+    /// ひかるおまもり所持
+    pub shiny_charm: bool,
+    /// 色違いロック (Static のみ有効)
+    pub shiny_locked: bool,
+    /// エンカウントスロット (Wild: 複数、Static: 1件)
+    pub slots: Vec<EncounterSlotConfig>,
 }
 
 /// 卵 Generator パラメータ

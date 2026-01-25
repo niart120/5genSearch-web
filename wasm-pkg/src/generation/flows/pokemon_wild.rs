@@ -154,7 +154,7 @@ mod tests {
             shiny_charm: false,
             shiny_locked: false,
             has_held_item: false,
-            encounter_method: EncounterMethod::SweetScent,
+            encounter_method: EncounterMethod::Stationary,
         }
     }
 

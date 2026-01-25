@@ -25,12 +25,16 @@ pub use types::{
     GeneratedEggData, GeneratedPokemonData, GeneratorSource, HeldItemSlot, HiddenPowerType,
     IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
     LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
-    NeedlePattern, SaveState, SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo,
-    StartMode, StaticPokemonGeneratorParams, Timer0VCountRange, WildPokemonGeneratorParams,
+    NeedlePattern, PokemonGeneratorParams, SaveState, SeedOrigin, SpecialEncounterDirection,
+    SpecialEncounterInfo, StartMode, StaticPokemonGeneratorParams, Timer0VCountRange, TrainerInfo,
+    WildPokemonGeneratorParams,
 };
 
 // Re-export core needle functions (外部公開必要)
 pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
+
+// Re-export generation public API
+pub use generation::{generate_egg_list, generate_pokemon_list};
 
 // Re-export misc module
 pub use misc::{
