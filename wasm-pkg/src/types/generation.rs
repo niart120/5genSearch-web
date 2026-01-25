@@ -344,21 +344,23 @@ pub struct EncounterSlotConfig {
     pub shiny_locked: bool,
 }
 
-/// Seed 解決 + オフセット計算設定
+/// Seed 解決 + オフセット計算 + 検索範囲設定
 ///
 /// Seed の解決とオフセット計算に必要な共通設定。
 /// Pokemon / Egg / Needle Generator で共通して使用。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct GeneratorConfig {
+pub struct SeedContext {
     /// Seed 入力
     pub input: SeedInput,
     /// ROM バージョン
     pub version: RomVersion,
     /// 起動設定
     pub game_start: GameStartConfig,
-    /// ユーザオフセット
+    /// ユーザオフセット (検索開始位置)
     pub user_offset: u32,
+    /// 検索終了位置
+    pub max_advance: u32,
 }
 
 /// ポケモン Generator パラメータ (統合版)
@@ -368,8 +370,8 @@ pub struct GeneratorConfig {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonGeneratorParams {
-    /// Seed 解決 + オフセット設定
-    pub config: GeneratorConfig,
+    /// Seed 解決 + オフセット + 検索範囲設定
+    pub context: SeedContext,
     /// トレーナー情報
     pub trainer: TrainerInfo,
     /// エンカウント種別
@@ -389,8 +391,8 @@ pub struct PokemonGeneratorParams {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggGeneratorParams {
-    /// Seed 解決 + オフセット設定
-    pub config: GeneratorConfig,
+    /// Seed 解決 + オフセット + 検索範囲設定
+    pub context: SeedContext,
     /// トレーナー情報
     pub trainer: TrainerInfo,
     /// かわらずのいし効果

@@ -17,8 +17,8 @@ pub use config::{
 };
 pub use generation::{
     EggGeneratorParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,
-    EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GeneratorConfig,
-    ItemContent, MovingEncounterInfo, MovingEncounterLikelihood, PokemonGeneratorParams, SaveState,
+    EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, ItemContent,
+    MovingEncounterInfo, MovingEncounterLikelihood, PokemonGeneratorParams, SaveState, SeedContext,
     SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TrainerInfo,
 };
 pub use needle::{NeedleDirection, NeedlePattern};

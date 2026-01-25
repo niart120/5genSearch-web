@@ -22,10 +22,10 @@ pub use datetime_search::{
 pub use types::{
     Datetime, DsButton, DsConfig, EggGeneratorParams, EncounterMethod, EncounterResult,
     EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, GeneratorConfig, HeldItemSlot, HiddenPowerType,
-    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
-    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
-    NeedlePattern, PokemonGeneratorParams, SaveState, SeedInput, SeedOrigin,
+    GeneratedEggData, GeneratedPokemonData, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
+    ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed, LeadAbilityEffect,
+    MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection, NeedlePattern,
+    PokemonGeneratorParams, SaveState, SeedContext, SeedInput, SeedOrigin,
     SpecialEncounterDirection, SpecialEncounterInfo, StartMode, Timer0VCountRange, TrainerInfo,
 };
 
