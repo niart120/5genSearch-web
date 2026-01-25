@@ -11,7 +11,7 @@ use crate::types::{
     EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, PokemonGeneratorParams,
 };
 
-use super::types::{EncounterSlotConfig, GenerationError, RawPokemonData};
+use super::types::{GenerationError, RawPokemonData};
 
 /// 野生ポケモン生成 (IV なし)
 ///
@@ -22,7 +22,6 @@ use super::types::{EncounterSlotConfig, GenerationError, RawPokemonData};
 pub fn generate_wild_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGeneratorParams,
-    slots: &[EncounterSlotConfig],
 ) -> Result<RawPokemonData, GenerationError> {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -70,7 +69,7 @@ pub fn generate_wild_pokemon(
     // 3. スロット決定
     let slot_rand = lcg.next().unwrap_or(0);
     let slot_idx = calculate_encounter_slot(enc_type, slot_rand, params.version) as usize;
-    let slot_config = &slots[slot_idx.min(slots.len() - 1)];
+    let slot_config = &params.slots[slot_idx.min(params.slots.len() - 1)];
 
     // 4. レベル決定
     let _level_rand = lcg.next();
@@ -145,9 +144,20 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, GameStartConfig, GeneratorSource, ItemContent, RomVersion, SaveState,
-        StartMode, TrainerInfo,
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GeneratorSource, ItemContent,
+        RomVersion, SaveState, StartMode, TrainerInfo,
     };
+
+    fn make_slots() -> Vec<EncounterSlotConfig> {
+        vec![EncounterSlotConfig {
+            species_id: 1,
+            level_min: 5,
+            level_max: 10,
+            gender_threshold: 127,
+            has_held_item: false,
+            shiny_locked: false,
+        }]
+    }
 
     fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
         PokemonGeneratorParams {
@@ -166,28 +176,16 @@ mod tests {
                 save_state: SaveState::WithSave,
             },
             user_offset: 0,
-            slots: vec![],
+            slots: make_slots(),
         }
-    }
-
-    fn make_slots() -> Vec<EncounterSlotConfig> {
-        vec![EncounterSlotConfig {
-            species_id: 1,
-            level_min: 5,
-            level_max: 10,
-            gender_threshold: 127,
-            has_held_item: false,
-            shiny_locked: false,
-        }]
     }
 
     #[test]
     fn test_generate_wild_pokemon_normal() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let params = make_params(RomVersion::Black, EncounterType::Normal);
-        let slots = make_slots();
 
-        let result = generate_wild_pokemon(&mut lcg, &params, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();
@@ -203,9 +201,8 @@ mod tests {
         // 0x0000_0000 → 0, Pokemon 判定
         let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0001);
         let params = make_params(RomVersion::Black2, EncounterType::DustCloud);
-        let slots = make_slots();
 
-        let result = generate_wild_pokemon(&mut lcg, &params, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();
@@ -222,9 +219,8 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_0000_0001);
         let initial_seed = lcg.current_seed();
         let params = make_params(RomVersion::Black2, EncounterType::DustCloud);
-        let slots = make_slots();
 
-        let result = generate_wild_pokemon(&mut lcg, &params, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();
@@ -249,7 +245,6 @@ mod tests {
         // 適切な seed を使用: 最初の next() で小さい値が出る seed
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(RomVersion::Black2, EncounterType::PokemonShadow);
-        let slots = make_slots();
 
         // 最初の next() で得られる rand 値を確認
         let first_rand = {
@@ -259,7 +254,7 @@ mod tests {
         // slot_value を計算
         let slot_value = ((u64::from(first_rand) * 100) >> 32) as u32;
 
-        let result = generate_wild_pokemon(&mut lcg, &params, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
 
         if slot_value < 30 {
             // Pokemon の場合
@@ -283,9 +278,8 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_0000_0001);
         let initial_seed = lcg.current_seed();
         let params = make_params(RomVersion::Black2, EncounterType::PokemonShadow);
-        let slots = make_slots();
 
-        let result = generate_wild_pokemon(&mut lcg, &params, &slots);
+        let result = generate_wild_pokemon(&mut lcg, &params);
         assert!(result.is_ok());
 
         let pokemon = result.unwrap();

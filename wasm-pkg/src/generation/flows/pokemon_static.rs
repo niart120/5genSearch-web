@@ -10,17 +10,13 @@ use crate::types::{
     PokemonGeneratorParams, ShinyType,
 };
 
-use super::types::RawPokemonData;
+use super::types::{EncounterSlotConfig, RawPokemonData};
 
 /// 固定ポケモン生成 (IV なし)
 pub fn generate_static_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGeneratorParams,
-    species_id: u16,
-    level: u8,
-    gender_threshold: u8,
-    shiny_locked: bool,
-    has_held_item: bool,
+    slot: &EncounterSlotConfig,
 ) -> RawPokemonData {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -42,7 +38,7 @@ pub fn generate_static_pokemon(
                 params.trainer.sid,
                 reroll_count,
             );
-            if shiny_locked {
+            if slot.shiny_locked {
                 (
                     apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid),
                     ShinyType::None,
@@ -53,7 +49,7 @@ pub fn generate_static_pokemon(
         }
         EncounterType::StaticStarter | EncounterType::StaticFossil | EncounterType::StaticEvent => {
             let pid = generate_event_pid(lcg.next().unwrap_or(0));
-            let pid = if shiny_locked {
+            let pid = if slot.shiny_locked {
                 apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid)
             } else {
                 pid
@@ -81,7 +77,7 @@ pub fn generate_static_pokemon(
     };
 
     // 持ち物判定 (StaticSymbol で対象個体のみ)
-    if enc_type == EncounterType::StaticSymbol && has_held_item {
+    if enc_type == EncounterType::StaticSymbol && slot.has_held_item {
         lcg.next();
     }
 
@@ -92,7 +88,7 @@ pub fn generate_static_pokemon(
 
     // === Resolve ===
     let ability_slot = ((pid >> 16) & 1) as u8;
-    let gender = match gender_threshold {
+    let gender = match slot.gender_threshold {
         0 => Gender::Male,
         254 => Gender::Female,
         255 => Gender::Genderless,
@@ -107,8 +103,8 @@ pub fn generate_static_pokemon(
 
     RawPokemonData {
         pid,
-        species_id,
-        level,
+        species_id: slot.species_id,
+        level: slot.level_min,
         nature,
         sync_applied,
         ability_slot,
@@ -148,12 +144,30 @@ mod tests {
         }
     }
 
+    fn make_slot(
+        species_id: u16,
+        level: u8,
+        gender_threshold: u8,
+        shiny_locked: bool,
+        has_held_item: bool,
+    ) -> EncounterSlotConfig {
+        EncounterSlotConfig {
+            species_id,
+            level_min: level,
+            level_max: level,
+            gender_threshold,
+            shiny_locked,
+            has_held_item,
+        }
+    }
+
     #[test]
     fn test_generate_static_pokemon_symbol() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let params = make_params(RomVersion::Black, EncounterType::StaticSymbol);
+        let slot = make_slot(150, 70, 255, false, false);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &params, 150, 70, 255, false, false);
+        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot);
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
@@ -164,8 +178,9 @@ mod tests {
     fn test_generate_static_pokemon_starter() {
         let mut lcg = Lcg64::from_raw(0xABCD_EF01_2345_6789);
         let params = make_params(RomVersion::Black, EncounterType::StaticStarter);
+        let slot = make_slot(495, 5, 31, true, false);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &params, 495, 5, 31, true, false);
+        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot);
 
         assert_eq!(pokemon.species_id, 495);
         assert_eq!(pokemon.level, 5);
