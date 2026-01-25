@@ -361,34 +361,34 @@ pub fn search_needle_pattern(
 
 ### Phase 0: 既存 Generator の advance バグ修正
 
-- [ ] `PokemonGenerator::new()` で `current_advance: cfg.user_offset` に変更
-- [ ] `EggGenerator::new()` で `current_advance: cfg.user_offset` に変更
-- [ ] 既存テストの期待値を確認・修正
+- [x] `PokemonGenerator::new()` で `current_advance: cfg.user_offset` に変更
+- [x] `EggGenerator::new()` で `current_advance: cfg.user_offset` に変更
+- [x] 既存テストの期待値を確認・修正
 
 ### Phase 1: GeneratorConfig → SeedContext リネーム + max_advance 追加
 
-- [ ] `GeneratorConfig` を `SeedContext` にリネーム
-- [ ] `SeedContext` に `max_advance: u32` フィールドを追加
-- [ ] 既存の `PokemonGeneratorParams` / `EggGeneratorParams` のフィールド名を `config` → `context` に変更
-- [ ] `generate_pokemon_list` / `generate_egg_list` の `count` 引数を廃止
+- [x] `GeneratorConfig` を `SeedContext` にリネーム
+- [x] `SeedContext` に `max_advance: u32` フィールドを追加
+- [x] 既存の `PokemonGeneratorParams` / `EggGeneratorParams` のフィールド名を `config` → `context` に変更
+- [x] `generate_pokemon_list` / `generate_egg_list` の `count` 引数を廃止
 
 ### Phase 2: Needle 検索 API 実装
 
-- [ ] `NeedleSearchParams` 型を `types/needle.rs` に追加
-- [ ] `NeedleSearchResult` 型を `types/needle.rs` に追加
-- [ ] `needle_search.rs` ファイルを新規作成
-- [ ] `search_needle_pattern` 関数を実装
-- [ ] `misc/mod.rs` でモジュール宣言を追加
-- [ ] WASM 公開設定
+- [x] `NeedleSearchParams` 型を `types/needle.rs` に追加
+- [x] `NeedleSearchResult` 型を `types/needle.rs` に追加
+- [x] `needle_search.rs` ファイルを新規作成
+- [x] `search_needle_pattern` 関数を実装
+- [x] `misc/mod.rs` でモジュール宣言を追加
+- [x] WASM 公開設定
 
 ### Phase 3: 旧 API 廃止
 
-- [ ] `needle_generator.rs` を削除
-- [ ] `misc/mod.rs` から旧モジュール宣言を削除
-- [ ] `lib.rs` の re-export 調整 (`search_needle_pattern` を公開)
+- [x] `needle_generator.rs` を削除
+- [x] `misc/mod.rs` から旧モジュール宣言を削除
+- [x] `lib.rs` の re-export 調整 (`search_needle_pattern` を公開)
 
 ### Phase 4: 検証
 
-- [ ] `cargo test` 全件 pass
-- [ ] `cargo clippy --all-targets -- -D warnings` 警告なし
-- [ ] `cargo fmt --check` 差分なし
+- [x] `cargo test` 全件 pass
+- [x] `cargo clippy --all-targets -- -D warnings` 警告なし
+- [x] `cargo fmt --check` 差分なし
