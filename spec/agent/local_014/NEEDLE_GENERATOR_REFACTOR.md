@@ -28,6 +28,12 @@
 | StartupState の肥大化 | 17フィールドの巨大構造体。SHA-1 計算・日時コード生成・イテレーション状態が混在 |
 | オフセット未対応 | Pokemon/Egg Generator と異なり、ゲーム起動時のオフセット計算が未適用 |
 
+また、`PokemonGenerator` / `EggGenerator` にも以下のバグがある:
+
+| 問題 | 詳細 |
+|------|------|
+| `advance` 起点の誤り | 現状 `current_advance=0` から開始。正しくは `current_advance=user_offset` から開始すべき |
+
 ### 1.4 期待効果
 
 | 項目 | 効果 |
@@ -44,6 +50,7 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
+| `wasm-pkg/src/generation/flows/generator.rs` | 変更 | `advance` 起点のバグ修正 (`current_advance=user_offset` で初期化) |
 | `wasm-pkg/src/types/generation.rs` | 変更 | `NeedleGeneratorParams` / `NeedleGeneratorResult` 型を追加 |
 | `wasm-pkg/src/types/mod.rs` | 変更 | 新規型の re-export 追加 |
 | `wasm-pkg/src/misc/needle_generator.rs` | 変更 | 型定義削除、`GeneratorConfig` 導入、ロジック簡素化 |
@@ -70,17 +77,44 @@
 +-----------------------------------------------------------------------+
 ```
 
-### 3.2 NeedleGenerator のオフセット要件
+### 3.2 `advance` の定義
+
+**`advance` は `game_offset` 消費後の位置からの相対値**
+
+```
+LCG 初期化
+    ↓
+game_offset 分消費 (起動条件により自動計算)
+    ↓
+advance=0 ← ここが起点
+    ↓
+user_offset 分消費 (ユーザ指定)
+    ↓
+advance=user_offset ← 生成開始位置
+```
+
+| 項目 | 値 |
+|------|-----|
+| LCG ジャンプ量 | `game_offset + user_offset` |
+| `advance=0` の起点 | `game_offset` 消費後の位置 |
+| 生成開始位置 | `advance = user_offset` |
+| 出力される `advance` | `game_offset` からの相対位置 |
+
+**例: `user_offset=10` の場合**
+- 最初に生成される個体の `advance` は `10`
+- 以降 `11`, `12`, `13`... と増加
+
+### 3.3 NeedleGenerator のオフセット要件
 
 **結論: NeedleGenerator はオフセット計算が必要**
 
 | 項目 | 説明 |
 |------|------|
 | 理由 | Pokemon/Egg と同じ起動条件で「advance 50 で目的の個体」なら、針も「advance 50 で一致」であるべき |
-| 計算式 | `effective_advance = user_offset + game_offset + advance` |
-| 影響 | `advance_min` / `advance_max` はオフセット適用後の位置を示す |
+| 動作 | `advance_min` / `advance_max` は `game_offset` からの相対位置として解釈 |
+| LCG ジャンプ | `game_offset + advance_min` 分ジャンプして検索開始 |
 
-### 3.3 構造の簡素化
+### 3.4 構造の簡素化
 
 現状の `StartupState` (17フィールド) を分解:
 
@@ -90,7 +124,7 @@
 | イテレーション状態 | `current_timer0`, `current_vcount`, etc. | `SeedIterator` に移譲 |
 | 進捗管理 | `total_combinations`, `processed_combinations` | Generator 本体に残す |
 
-### 3.4 設計オプション
+### 3.5 設計オプション
 
 #### オプション A: seed_resolver に Iterator 版追加
 
@@ -213,6 +247,12 @@ impl NeedleGenerator {
 | 既存テスト | 既存テストが引き続き pass すること (オフセット=0 で互換性確認) |
 
 ## 6. 実装チェックリスト
+
+### Phase 0: 既存 Generator の advance バグ修正
+
+- [ ] `PokemonGenerator::new()` で `current_advance: cfg.user_offset` に変更
+- [ ] `EggGenerator::new()` で `current_advance: cfg.user_offset` に変更
+- [ ] 既存テストの期待値を確認・修正
 
 ### Phase 1: 型の移動
 
