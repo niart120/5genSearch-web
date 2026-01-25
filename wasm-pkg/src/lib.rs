@@ -37,9 +37,8 @@ pub use generation::{generate_egg_list, generate_pokemon_list};
 
 // Re-export misc module
 pub use misc::{
-    MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, NeedleGenerator,
-    NeedleGeneratorBatch, NeedleGeneratorParams, NeedleGeneratorResult, get_needle_pattern,
-    get_needle_pattern_at, search_needle_pattern,
+    MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, get_needle_pattern_at,
+    search_needle_pattern,
 };
 
 // Re-export needle search types
