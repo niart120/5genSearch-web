@@ -152,7 +152,6 @@ mod tests {
             sid: 54321,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         }
@@ -165,6 +164,7 @@ mod tests {
             level_max: 10,
             gender_threshold: 127,
             has_held_item: false,
+            shiny_locked: false,
         }]
     }
 

@@ -18,6 +18,7 @@ pub fn generate_static_pokemon(
     species_id: u16,
     level: u8,
     gender_threshold: u8,
+    shiny_locked: bool,
 ) -> RawPokemonData {
     let enc_type = config.encounter_type;
     let is_compound_eyes = matches!(config.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -35,7 +36,7 @@ pub fn generate_static_pokemon(
             let reroll_count = if config.shiny_charm { 2 } else { 0 };
             let (pid, shiny) =
                 generate_wild_pid_with_reroll(lcg, config.tid, config.sid, reroll_count);
-            if config.shiny_locked {
+            if shiny_locked {
                 (
                     apply_shiny_lock(pid, config.tid, config.sid),
                     ShinyType::None,
@@ -46,7 +47,7 @@ pub fn generate_static_pokemon(
         }
         EncounterType::StaticStarter | EncounterType::StaticFossil | EncounterType::StaticEvent => {
             let pid = generate_event_pid(lcg.next().unwrap_or(0));
-            let pid = if config.shiny_locked {
+            let pid = if shiny_locked {
                 apply_shiny_lock(pid, config.tid, config.sid)
             } else {
                 pid
@@ -117,11 +118,7 @@ mod tests {
     use super::*;
     use crate::types::{EncounterMethod, RomVersion};
 
-    fn make_config(
-        version: RomVersion,
-        encounter_type: EncounterType,
-        shiny_locked: bool,
-    ) -> PokemonGenerationConfig {
+    fn make_config(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationConfig {
         PokemonGenerationConfig {
             version,
             encounter_type,
@@ -129,7 +126,6 @@ mod tests {
             sid: 54321,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         }
@@ -138,9 +134,9 @@ mod tests {
     #[test]
     fn test_generate_static_pokemon_symbol() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
-        let config = make_config(RomVersion::Black, EncounterType::StaticSymbol, false);
+        let config = make_config(RomVersion::Black, EncounterType::StaticSymbol);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &config, 150, 70, 255);
+        let pokemon = generate_static_pokemon(&mut lcg, &config, 150, 70, 255, false);
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
@@ -150,9 +146,9 @@ mod tests {
     #[test]
     fn test_generate_static_pokemon_starter() {
         let mut lcg = Lcg64::from_raw(0xABCD_EF01_2345_6789);
-        let config = make_config(RomVersion::Black, EncounterType::StaticStarter, true);
+        let config = make_config(RomVersion::Black, EncounterType::StaticStarter);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &config, 495, 5, 31);
+        let pokemon = generate_static_pokemon(&mut lcg, &config, 495, 5, 31, true);
 
         assert_eq!(pokemon.species_id, 495);
         assert_eq!(pokemon.level, 5);

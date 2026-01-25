@@ -25,7 +25,6 @@ pub struct PokemonGenerationConfig {
     pub sid: u16,
     pub lead_ability: LeadAbilityEffect,
     pub shiny_charm: bool,
-    pub shiny_locked: bool,
     pub has_held_item: bool,
     /// エンカウント方法 (Normal/Surfing 時のみ使用)
     pub encounter_method: EncounterMethod,

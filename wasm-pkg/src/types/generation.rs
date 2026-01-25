@@ -365,6 +365,8 @@ pub struct EncounterSlotConfig {
     pub gender_threshold: u8,
     /// 所持アイテムあり
     pub has_held_item: bool,
+    /// 色違いロック
+    pub shiny_locked: bool,
 }
 
 /// ポケモン Generator パラメータ (統合版)
@@ -392,8 +394,6 @@ pub struct PokemonGeneratorParams {
     pub lead_ability: LeadAbilityEffect,
     /// ひかるおまもり所持
     pub shiny_charm: bool,
-    /// 色違いロック (Static のみ有効)
-    pub shiny_locked: bool,
     /// エンカウントスロット (Wild: 複数、Static: 1件)
     pub slots: Vec<EncounterSlotConfig>,
 }

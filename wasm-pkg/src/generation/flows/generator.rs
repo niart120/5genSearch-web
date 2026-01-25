@@ -139,7 +139,6 @@ fn generate_pokemon_for_seed(
         sid: params.trainer.sid,
         lead_ability: params.lead_ability,
         shiny_charm: params.shiny_charm,
-        shiny_locked: params.shiny_locked,
         has_held_item: params.slots.iter().any(|s| s.has_held_item),
         encounter_method: if is_static_encounter(params.encounter_type) {
             EncounterMethod::Stationary
@@ -317,6 +316,7 @@ impl PokemonGenerator {
                 slot.species_id,
                 slot.level_min,
                 slot.gender_threshold,
+                slot.shiny_locked,
             );
 
             self.lcg.next();
@@ -524,7 +524,6 @@ mod tests {
             sid: 54321,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         }
@@ -537,6 +536,7 @@ mod tests {
             level_max: 10,
             gender_threshold: 127,
             has_held_item: false,
+            shiny_locked: false,
         }]
     }
 
@@ -627,6 +627,7 @@ mod tests {
             level_max: 70,
             gender_threshold: 255, // Genderless
             has_held_item: false,
+            shiny_locked: false,
         }];
 
         let generator = PokemonGenerator::new(
@@ -763,7 +764,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::Synchronize(Nature::Adamant),
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
@@ -774,6 +774,7 @@ mod tests {
             level_max: 10,
             gender_threshold: 127,
             has_held_item: false,
+            shiny_locked: false,
         }];
 
         let source = make_source(initial_seed);
@@ -826,7 +827,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
@@ -837,6 +837,7 @@ mod tests {
             level_max: 10,
             gender_threshold: 127,
             has_held_item: false,
+            shiny_locked: false,
         }];
 
         let source = make_source(initial_seed);
@@ -885,7 +886,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
@@ -896,6 +896,7 @@ mod tests {
             level_max: 10,
             gender_threshold: 127,
             has_held_item: false,
+            shiny_locked: false,
         }];
 
         let source = make_source(initial_seed);
@@ -944,7 +945,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
@@ -955,6 +955,7 @@ mod tests {
             level_max: 50,
             gender_threshold: 255, // genderless
             has_held_item: false,
+            shiny_locked: false,
         }];
 
         let source = make_source(initial_seed);
@@ -1003,7 +1004,6 @@ mod tests {
             sid,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            shiny_locked: false,
             has_held_item: false,
             encounter_method: EncounterMethod::Stationary,
         };
@@ -1014,6 +1014,7 @@ mod tests {
             level_max: 5,
             gender_threshold: 31, // 7:1 ratio
             has_held_item: false,
+            shiny_locked: false,
         }];
 
         let source = make_source(initial_seed);
