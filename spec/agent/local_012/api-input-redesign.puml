@@ -1,0 +1,197 @@
+@startuml api-input-redesign
+' =========================================
+' API 入力型の再設計
+' =========================================
+' 目的: Generator / Searcher の入力構造を整理
+' =========================================
+
+scale 0.8
+top to bottom direction
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+skinparam class {
+    BackgroundColor<<gen>> #E8F5E9
+    BackgroundColor<<search>> #FFF3E0
+    BackgroundColor<<shared>> #E3F2FD
+}
+
+' =========================================
+' API 分類
+' =========================================
+
+package "逆算系 Searcher" <<search>> {
+    class MtseedSearcher <<search>> {
+        入力: IvFilter, mt_offset
+        出力: MtSeed[]
+    }
+
+    class MtseedDatetimeSearcher <<search>> {
+        入力: MtSeed[], DsConfig
+        入力: TimeRange, DateRange
+        入力: Timer0VCountRange[], KeySpec
+        出力: SearchResult[]
+    }
+}
+
+package "順算系 Generator" <<gen>> {
+    class NeedleGenerator <<gen>> {
+        旧名: NeedleSearcher
+        入力: GeneratorSource
+        入力: NeedlePattern, AdvanceRange
+        出力: NeedleResult[]
+    }
+
+    class WildPokemonGenerator <<gen>> {
+        入力: GeneratorSource
+        入力: GameStartConfig, OffsetConfig
+        入力: TrainerInfo, WildEncounterConfig
+        入力: EncounterSlot[]
+        出力: GeneratedPokemonData[]
+    }
+
+    class StaticPokemonGenerator <<gen>> {
+        入力: GeneratorSource
+        入力: GameStartConfig, OffsetConfig
+        入力: TrainerInfo, StaticEncounterConfig
+        出力: GeneratedPokemonData[]
+    }
+
+    class EggGenerator <<gen>> {
+        入力: GeneratorSource
+        入力: GameStartConfig, OffsetConfig
+        入力: TrainerInfo, EggConfig, ParentIvs
+        出力: GeneratedEggData[]
+    }
+}
+
+' =========================================
+' 入力型 - Generator 専用
+' =========================================
+
+package "Generator 入力" <<gen>> {
+    enum GeneratorSource <<gen>> {
+        Seed
+        Seeds
+        Startup
+    }
+
+    class Datetime <<gen>> {
+        year, month, day
+        hour, minute, second
+    }
+
+    class KeyInput <<gen>> {
+        buttons: Vec of DsButton
+        ..
+        to_key_code(): KeyCode
+    }
+
+    class GameStartConfig <<gen>> {
+        start_mode
+        save_state
+    }
+
+    class OffsetConfig <<gen>> {
+        user_offset
+        mt_offset
+    }
+
+    class TrainerInfo <<gen>> {
+        tid, sid
+    }
+}
+
+' =========================================
+' 入力型 - Searcher 専用
+' =========================================
+
+package "Searcher 入力" <<search>> {
+    class DateRange <<search>> {
+        start_year, start_month, start_day
+        start_second_offset
+        range_seconds
+    }
+
+    class TimeRange <<search>> {
+        hour_min, hour_max
+        minute_min, minute_max
+        second_min, second_max
+    }
+
+    class KeySpec <<search>> {
+        available_buttons: Vec of DsButton
+        ..
+        combinations(): Vec of KeyCode
+    }
+
+    class IvFilter <<search>> {
+        hp, atk, def, spa, spd, spe
+        hidden_power_types
+        hidden_power_min_power
+    }
+
+    class NeedlePattern <<search>> {
+        directions: Vec of NeedleDirection
+    }
+
+    class AdvanceRange <<search>> {
+        min, max
+    }
+}
+
+' =========================================
+' 入力型 - 共通
+' =========================================
+
+package "共通入力" <<shared>> {
+    class DsConfig <<shared>> {
+        mac, hardware
+        version, region
+    }
+
+    class Timer0VCountRange <<shared>> {
+        timer0_min, timer0_max
+        vcount_min, vcount_max
+    }
+
+    enum DsButton <<shared>> {
+        A, B, X, Y
+        L, R
+        Start, Select
+        Up, Down, Left, Right
+    }
+
+    class LcgSeed <<shared>> {
+        64bit seed
+    }
+
+    class MtSeed <<shared>> {
+        32bit seed
+    }
+}
+
+' =========================================
+' 依存関係
+' =========================================
+
+GeneratorSource --> Datetime
+GeneratorSource --> Timer0VCountRange
+GeneratorSource --> KeyInput
+GeneratorSource --> DsConfig
+GeneratorSource --> LcgSeed
+
+KeyInput --> DsButton
+KeySpec --> DsButton
+
+MtseedDatetimeSearcher --> Timer0VCountRange
+MtseedDatetimeSearcher --> KeySpec
+MtseedDatetimeSearcher --> MtSeed
+
+NeedleGenerator --> GeneratorSource
+WildPokemonGenerator --> GeneratorSource
+StaticPokemonGenerator --> GeneratorSource
+EggGenerator --> GeneratorSource
+
+@enduml

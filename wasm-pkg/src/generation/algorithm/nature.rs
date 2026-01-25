@@ -2,7 +2,7 @@
 #![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
-use crate::types::{EncounterType, LeadAbilityEffect, Nature};
+use crate::types::{EncounterType, EverstonePlan, LeadAbilityEffect, Nature};
 
 /// 乱数から性格 ID を決定 (0-24)
 #[inline]
@@ -61,14 +61,6 @@ pub fn determine_nature(
         return (*nature, true);
     }
     (Nature::from_u8(rng_nature), false)
-}
-
-/// かわらずのいし効果
-#[derive(Clone, Copy, Debug, Default)]
-pub enum EverstonePlan {
-    #[default]
-    None,
-    Fixed(Nature),
 }
 
 /// 孵化時の性格決定

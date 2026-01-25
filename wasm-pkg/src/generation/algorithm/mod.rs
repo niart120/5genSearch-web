@@ -20,7 +20,6 @@ pub(crate) use encounter::{
 pub(crate) use game_offset::calculate_game_offset;
 pub(crate) use iv::{InheritanceSlot, ParentRole};
 pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset, generate_roamer_ivs};
-pub(crate) use nature::EverstonePlan;
 pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, perform_sync_check};
 pub(crate) use pid::{
     apply_shiny_lock, calculate_shiny_type, generate_egg_pid_with_reroll, generate_event_pid,

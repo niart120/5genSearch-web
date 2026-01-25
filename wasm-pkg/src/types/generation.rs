@@ -5,9 +5,12 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{DatetimeParams, KeyCode, RomVersion};
+use super::config::{Datetime, GeneratorSource, KeyCode, RomVersion};
 use super::needle::NeedleDirection;
-use super::pokemon::{Gender, HeldItemSlot, Ivs, Nature, ShinyType};
+use super::pokemon::{
+    Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
+};
+use super::seeds::LcgSeed;
 
 // ===== エンカウント結果 =====
 
@@ -186,28 +189,25 @@ pub struct SpecialEncounterInfo {
 /// 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum GenerationSource {
+pub enum SeedOrigin {
     /// 固定 Seed から生成
     Fixed {
         /// `BaseSeed` (SHA-1 から導出)
-        #[tsify(type = "bigint")]
-        base_seed: u64,
+        base_seed: LcgSeed,
     },
     /// 複数 Seed 指定から生成
     Multiple {
         /// `BaseSeed` (SHA-1 から導出)
-        #[tsify(type = "bigint")]
-        base_seed: u64,
+        base_seed: LcgSeed,
         /// 入力 seeds 配列のインデックス
         seed_index: u32,
     },
     /// 日時検索から生成
     Datetime {
         /// `BaseSeed` (SHA-1 から導出)
-        #[tsify(type = "bigint")]
-        base_seed: u64,
+        base_seed: LcgSeed,
         /// 起動日時
-        datetime: DatetimeParams,
+        datetime: Datetime,
         /// `Timer0` 値
         timer0: u16,
         /// `VCount` 値
@@ -217,14 +217,14 @@ pub enum GenerationSource {
     },
 }
 
-impl GenerationSource {
+impl SeedOrigin {
     /// Fixed ソースを作成
-    pub const fn fixed(base_seed: u64) -> Self {
+    pub const fn fixed(base_seed: LcgSeed) -> Self {
         Self::Fixed { base_seed }
     }
 
     /// Multiple ソースを作成
-    pub const fn multiple(base_seed: u64, seed_index: u32) -> Self {
+    pub const fn multiple(base_seed: LcgSeed, seed_index: u32) -> Self {
         Self::Multiple {
             base_seed,
             seed_index,
@@ -233,8 +233,8 @@ impl GenerationSource {
 
     /// Datetime ソースを作成
     pub const fn datetime(
-        base_seed: u64,
-        datetime: DatetimeParams,
+        base_seed: LcgSeed,
+        datetime: Datetime,
         timer0: u16,
         vcount: u8,
         key_code: KeyCode,
@@ -249,7 +249,7 @@ impl GenerationSource {
     }
 
     /// `BaseSeed` を取得
-    pub const fn base_seed(&self) -> u64 {
+    pub const fn base_seed(&self) -> LcgSeed {
         match self {
             Self::Fixed { base_seed }
             | Self::Multiple { base_seed, .. }
@@ -268,7 +268,7 @@ pub struct GeneratedPokemonData {
     pub advance: u32,
     pub needle_direction: NeedleDirection,
     /// 生成元情報
-    pub source: GenerationSource,
+    pub source: SeedOrigin,
     // Seed 情報
     #[tsify(type = "bigint")]
     pub lcg_seed: u64,
@@ -302,7 +302,7 @@ pub struct GeneratedEggData {
     pub advance: u32,
     pub needle_direction: NeedleDirection,
     /// 生成元情報
-    pub source: GenerationSource,
+    pub source: SeedOrigin,
     // Seed 情報
     #[tsify(type = "bigint")]
     pub lcg_seed: u64,
@@ -322,4 +322,127 @@ pub struct GeneratedEggData {
     pub inheritance_2_parent: u8,
     // IV (遺伝適用後)
     pub ivs: Ivs,
+}
+
+// ===== Generator パラメータ (WASM 公開用) =====
+
+/// かわらずのいし効果
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum EverstonePlan {
+    /// かわらずのいしなし
+    #[default]
+    None,
+    /// 固定性格 (所持親の性格)
+    Fixed(Nature),
+}
+
+/// エンカウントスロット設定
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct EncounterSlotConfig {
+    /// ポケモン種族 ID
+    pub species_id: u16,
+    /// 最小レベル
+    pub level_min: u8,
+    /// 最大レベル
+    pub level_max: u8,
+    /// 性別閾値 (0-255)
+    pub gender_threshold: u8,
+    /// 所持アイテムあり
+    pub has_held_item: bool,
+}
+
+/// 野生ポケモン Generator パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct WildPokemonGeneratorParams {
+    /// 入力ソース
+    pub source: GeneratorSource,
+    /// ROM バージョン
+    pub version: RomVersion,
+    /// 起動設定
+    pub game_start: GameStartConfig,
+    /// ユーザオフセット
+    pub user_offset: u32,
+    /// エンカウント種別
+    pub encounter_type: EncounterType,
+    /// エンカウント方法
+    pub encounter_method: EncounterMethod,
+    /// トレーナー ID
+    pub tid: u16,
+    /// 裏 ID
+    pub sid: u16,
+    /// 先頭特性効果
+    pub lead_ability: LeadAbilityEffect,
+    /// ひかるおまもり所持
+    pub shiny_charm: bool,
+    /// エンカウントスロット
+    pub slots: Vec<EncounterSlotConfig>,
+}
+
+/// 固定ポケモン Generator パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct StaticPokemonGeneratorParams {
+    /// 入力ソース
+    pub source: GeneratorSource,
+    /// ROM バージョン
+    pub version: RomVersion,
+    /// 起動設定
+    pub game_start: GameStartConfig,
+    /// ユーザオフセット
+    pub user_offset: u32,
+    /// エンカウント種別
+    pub encounter_type: EncounterType,
+    /// トレーナー ID
+    pub tid: u16,
+    /// 裏 ID
+    pub sid: u16,
+    /// 先頭特性効果
+    pub lead_ability: LeadAbilityEffect,
+    /// ひかるおまもり所持
+    pub shiny_charm: bool,
+    /// 色違いロック
+    pub shiny_locked: bool,
+    /// ポケモン種族 ID
+    pub species_id: u16,
+    /// レベル
+    pub level: u8,
+    /// 性別閾値 (0-255)
+    pub gender_threshold: u8,
+}
+
+/// 卵 Generator パラメータ
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct EggGeneratorParams {
+    /// 入力ソース
+    pub source: GeneratorSource,
+    /// ROM バージョン
+    pub version: RomVersion,
+    /// 起動設定
+    pub game_start: GameStartConfig,
+    /// ユーザオフセット
+    pub user_offset: u32,
+    /// トレーナー ID
+    pub tid: u16,
+    /// 裏 ID
+    pub sid: u16,
+    /// かわらずのいし効果
+    pub everstone: EverstonePlan,
+    /// メス親が夢特性か
+    pub female_has_hidden: bool,
+    /// メタモン使用
+    pub uses_ditto: bool,
+    /// 性別比率
+    pub gender_ratio: GenderRatio,
+    /// ニドラン♀フラグ
+    pub nidoran_flag: bool,
+    /// PID リロール回数 (国際孵化等)
+    pub pid_reroll_count: u8,
+    /// オス親の個体値
+    pub parent_male: Ivs,
+    /// メス親の個体値
+    pub parent_female: Ivs,
 }

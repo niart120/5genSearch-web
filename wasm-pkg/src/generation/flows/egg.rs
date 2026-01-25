@@ -109,8 +109,7 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::generation::algorithm::EverstonePlan;
-    use crate::types::Nature;
+    use crate::types::{EverstonePlan, Nature};
 
     fn make_config() -> EggGenerationConfig {
         EggGenerationConfig {

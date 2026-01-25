@@ -13,9 +13,11 @@ use crate::generation::algorithm::{
     generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
     is_moving_encounter_type, is_special_encounter_type,
 };
+use crate::generation::seed_resolver::resolve_single_seed;
 use crate::types::{
-    EncounterMethod, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GenerationSource,
-    Ivs, LcgSeed, MovingEncounterInfo, RomVersion, SpecialEncounterInfo,
+    EggGeneratorParams, EncounterMethod, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
+    Ivs, LcgSeed, MovingEncounterInfo, RomVersion, SeedOrigin, SpecialEncounterInfo,
+    StaticPokemonGeneratorParams, WildPokemonGeneratorParams,
 };
 
 use super::egg::generate_egg;
@@ -32,12 +34,46 @@ pub struct WildPokemonGenerator {
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
-    source: GenerationSource,
+    source: SeedOrigin,
     config: PokemonGenerationConfig,
     slots: Vec<EncounterSlotConfig>,
 }
 
 impl WildPokemonGenerator {
+    /// WASM パラメータから Generator を作成
+    ///
+    /// # Errors
+    /// - 無効な起動設定の場合
+    /// - `GeneratorSource` の解決に失敗した場合
+    pub fn from_params(params: WildPokemonGeneratorParams) -> Result<Self, String> {
+        let (base_seed, gen_source) = resolve_single_seed(&params.source)?;
+
+        let offset_config =
+            OffsetConfig::for_encounter(params.version, params.encounter_type, params.user_offset);
+
+        let config = PokemonGenerationConfig {
+            version: params.version,
+            encounter_type: params.encounter_type,
+            tid: params.tid,
+            sid: params.sid,
+            lead_ability: params.lead_ability,
+            shiny_charm: params.shiny_charm,
+            shiny_locked: false,
+            has_held_item: params.slots.iter().any(|s| s.has_held_item),
+            encounter_method: params.encounter_method,
+        };
+
+        Self::new(
+            base_seed,
+            params.version,
+            &params.game_start,
+            offset_config,
+            gen_source,
+            config,
+            params.slots,
+        )
+    }
+
     /// Generator を作成
     ///
     /// # Errors
@@ -47,7 +83,7 @@ impl WildPokemonGenerator {
         version: RomVersion,
         game_start: &GameStartConfig,
         offset_config: OffsetConfig,
-        source: GenerationSource,
+        source: SeedOrigin,
         config: PokemonGenerationConfig,
         slots: Vec<EncounterSlotConfig>,
     ) -> Result<Self, String> {
@@ -192,7 +228,7 @@ pub struct StaticPokemonGenerator {
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
-    source: GenerationSource,
+    source: SeedOrigin,
     config: PokemonGenerationConfig,
     species_id: u16,
     level: u8,
@@ -200,6 +236,43 @@ pub struct StaticPokemonGenerator {
 }
 
 impl StaticPokemonGenerator {
+    /// WASM パラメータから Generator を作成
+    ///
+    /// # Errors
+    /// - 無効な起動設定の場合
+    /// - `GeneratorSource` の解決に失敗した場合
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn from_params(params: StaticPokemonGeneratorParams) -> Result<Self, String> {
+        let (base_seed, gen_source) = resolve_single_seed(&params.source)?;
+
+        let offset_config =
+            OffsetConfig::for_encounter(params.version, params.encounter_type, params.user_offset);
+
+        let config = PokemonGenerationConfig {
+            version: params.version,
+            encounter_type: params.encounter_type,
+            tid: params.tid,
+            sid: params.sid,
+            lead_ability: params.lead_ability,
+            shiny_charm: params.shiny_charm,
+            shiny_locked: params.shiny_locked,
+            has_held_item: false,
+            encounter_method: crate::types::EncounterMethod::SweetScent,
+        };
+
+        Self::new(
+            base_seed,
+            params.version,
+            &params.game_start,
+            offset_config,
+            gen_source,
+            config,
+            params.species_id,
+            params.level,
+            params.gender_threshold,
+        )
+    }
+
     /// Generator を作成
     ///
     /// # Errors
@@ -210,7 +283,7 @@ impl StaticPokemonGenerator {
         version: RomVersion,
         game_start: &GameStartConfig,
         offset_config: OffsetConfig,
-        source: GenerationSource,
+        source: SeedOrigin,
         config: PokemonGenerationConfig,
         species_id: u16,
         level: u8,
@@ -314,13 +387,47 @@ pub struct EggGenerator {
     user_offset: u32,
     current_advance: u32,
     rng_ivs: Ivs,
-    source: GenerationSource,
+    source: SeedOrigin,
     config: EggGenerationConfig,
     parent_male: Ivs,
     parent_female: Ivs,
 }
 
 impl EggGenerator {
+    /// WASM パラメータから Generator を作成
+    ///
+    /// # Errors
+    /// - 無効な起動設定の場合
+    /// - `GeneratorSource` の解決に失敗した場合
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn from_params(params: EggGeneratorParams) -> Result<Self, String> {
+        let (base_seed, gen_source) = resolve_single_seed(&params.source)?;
+
+        let offset_config = OffsetConfig::for_egg(params.user_offset);
+
+        let config = EggGenerationConfig {
+            tid: params.tid,
+            sid: params.sid,
+            everstone: params.everstone,
+            female_has_hidden: params.female_has_hidden,
+            uses_ditto: params.uses_ditto,
+            gender_ratio: params.gender_ratio,
+            nidoran_flag: params.nidoran_flag,
+            pid_reroll_count: params.pid_reroll_count,
+        };
+
+        Self::new(
+            base_seed,
+            params.version,
+            &params.game_start,
+            offset_config,
+            gen_source,
+            config,
+            params.parent_male,
+            params.parent_female,
+        )
+    }
+
     /// Generator を作成
     ///
     /// # Errors
@@ -331,7 +438,7 @@ impl EggGenerator {
         version: RomVersion,
         game_start: &GameStartConfig,
         offset_config: OffsetConfig,
-        source: GenerationSource,
+        source: SeedOrigin,
         config: EggGenerationConfig,
         parent_male: Ivs,
         parent_female: Ivs,
@@ -428,8 +535,9 @@ impl EggGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::generation::algorithm::EverstonePlan;
-    use crate::types::{EncounterType, GenderRatio, LeadAbilityEffect, SaveState, StartMode};
+    use crate::types::{
+        EncounterType, EverstonePlan, GenderRatio, LeadAbilityEffect, SaveState, StartMode,
+    };
 
     fn make_game_start() -> GameStartConfig {
         GameStartConfig {
@@ -462,8 +570,8 @@ mod tests {
         }]
     }
 
-    fn make_source(seed: u64) -> GenerationSource {
-        GenerationSource::fixed(seed)
+    fn make_source(seed: LcgSeed) -> SeedOrigin {
+        SeedOrigin::fixed(seed)
     }
 
     #[test]
@@ -472,7 +580,7 @@ mod tests {
         let game_start = make_game_start();
         let offset_config =
             OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
-        let source = make_source(base_seed.value());
+        let source = make_source(base_seed);
         let config = make_pokemon_config();
         let slots = make_slots();
 
@@ -508,7 +616,7 @@ mod tests {
         let game_start = make_game_start();
         let offset_config =
             OffsetConfig::for_encounter(RomVersion::Black, EncounterType::Normal, 0);
-        let source = make_source(base_seed.value());
+        let source = make_source(base_seed);
         let config = make_pokemon_config();
         let slots = make_slots();
 
@@ -542,7 +650,7 @@ mod tests {
         let game_start = make_game_start();
         let offset_config =
             OffsetConfig::for_encounter(RomVersion::Black, EncounterType::StaticSymbol, 0);
-        let source = make_source(base_seed.value());
+        let source = make_source(base_seed);
         let config = PokemonGenerationConfig {
             encounter_type: EncounterType::StaticSymbol,
             ..make_pokemon_config()
@@ -573,7 +681,7 @@ mod tests {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let game_start = make_game_start();
         let offset_config = OffsetConfig::for_egg(0);
-        let source = make_source(base_seed.value());
+        let source = make_source(base_seed);
         let config = EggGenerationConfig {
             tid: 12345,
             sid: 54321,
@@ -717,7 +825,7 @@ mod tests {
         }];
 
         // Generator を使って生成
-        let source = make_source(initial_seed.value());
+        let source = make_source(initial_seed);
         let mut generator = WildPokemonGenerator::new(
             initial_seed,
             RomVersion::Black,
@@ -796,7 +904,7 @@ mod tests {
         }];
 
         // Generator を使って生成
-        let source = make_source(initial_seed.value());
+        let source = make_source(initial_seed);
         let mut generator = WildPokemonGenerator::new(
             initial_seed,
             RomVersion::Black2,
@@ -865,7 +973,7 @@ mod tests {
         }];
 
         // Generator を使って生成
-        let source = make_source(initial_seed.value());
+        let source = make_source(initial_seed);
         let mut generator = WildPokemonGenerator::new(
             initial_seed,
             RomVersion::Black,
@@ -927,7 +1035,7 @@ mod tests {
         };
 
         // 固定シンボルは StaticPokemonGenerator を使う
-        let source = make_source(initial_seed.value());
+        let source = make_source(initial_seed);
         let mut generator = StaticPokemonGenerator::new(
             initial_seed,
             RomVersion::Black2,
@@ -990,7 +1098,7 @@ mod tests {
         };
 
         // 御三家は StaticPokemonGenerator を使う
-        let source = make_source(initial_seed.value());
+        let source = make_source(initial_seed);
         let mut generator = StaticPokemonGenerator::new(
             initial_seed,
             RomVersion::Black2,

@@ -20,12 +20,13 @@ pub use datetime_search::{
 
 // Re-export common types
 pub use types::{
-    DatetimeParams, DsConfig, EncounterMethod, EncounterResult, EncounterType, GameStartConfig,
-    GenderRatio, GeneratedEggData, GeneratedPokemonData, GenerationSource, HeldItemSlot,
-    HiddenPowerType, IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyMask, LcgSeed,
+    Datetime, DsButton, DsConfig, EggGeneratorParams, EncounterMethod, EncounterResult,
+    EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
+    GeneratedEggData, GeneratedPokemonData, GeneratorSource, HeldItemSlot, HiddenPowerType,
+    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
     LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
-    NeedlePattern, SaveState, SearchSegment, SeedSource, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, VCountTimer0Range,
+    NeedlePattern, SaveState, SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo,
+    StartMode, StaticPokemonGeneratorParams, Timer0VCountRange, WildPokemonGeneratorParams,
 };
 
 // Re-export core needle functions (外部公開必要)
@@ -33,8 +34,8 @@ pub use core::needle::{calc_report_needle_direction, calculate_needle_direction}
 
 // Re-export misc module
 pub use misc::{
-    MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, NeedleSearchBatch,
-    NeedleSearchParams, NeedleSearchResult, NeedleSearcher, get_needle_pattern,
+    MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, NeedleGenerator,
+    NeedleGeneratorBatch, NeedleGeneratorParams, NeedleGeneratorResult, get_needle_pattern,
 };
 
 #[wasm_bindgen(start)]
