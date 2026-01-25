@@ -22,11 +22,11 @@ pub use datetime_search::{
 pub use types::{
     Datetime, DsButton, DsConfig, EggGeneratorParams, EncounterMethod, EncounterResult,
     EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, GeneratorSource, HeldItemSlot, HiddenPowerType,
+    GeneratedEggData, GeneratedPokemonData, GeneratorConfig, HeldItemSlot, HiddenPowerType,
     IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
     LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
-    NeedlePattern, PokemonGeneratorParams, SaveState, SeedOrigin, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, Timer0VCountRange, TrainerInfo,
+    NeedlePattern, PokemonGeneratorParams, SaveState, SeedInput, SeedOrigin,
+    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, Timer0VCountRange, TrainerInfo,
 };
 
 // Re-export core needle functions (外部公開必要)

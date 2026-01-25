@@ -52,7 +52,7 @@ const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterType)
 
 /// ポケモン一括生成 (公開 API)
 ///
-/// - 複数 Seed 対応: `GeneratorSource` の全バリアントを処理
+/// - 複数 Seed 対応: `SeedInput` の全バリアントを処理
 /// - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
 ///
 /// # Arguments
@@ -63,7 +63,7 @@ const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterType)
 ///
 /// # Errors
 ///
-/// - `GeneratorSource` の解決に失敗した場合
+/// - `SeedInput` の解決に失敗した場合
 /// - 起動設定が無効な場合
 /// - エンカウントスロットが空の場合
 pub fn generate_pokemon_list(
@@ -82,7 +82,7 @@ pub fn generate_pokemon_list(
     }
 
     // 複数 Seed を解決
-    let seeds = resolve_all_seeds(&params.source)?;
+    let seeds = resolve_all_seeds(&params.config.input)?;
 
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = seeds
@@ -95,7 +95,7 @@ pub fn generate_pokemon_list(
 
 /// タマゴ一括生成 (公開 API)
 ///
-/// - 複数 Seed 対応: `GeneratorSource` の全バリアントを処理
+/// - 複数 Seed 対応: `SeedInput` の全バリアントを処理
 /// - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
 ///
 /// # Arguments
@@ -106,7 +106,7 @@ pub fn generate_pokemon_list(
 ///
 /// # Errors
 ///
-/// - `GeneratorSource` の解決に失敗した場合
+/// - `SeedInput` の解決に失敗した場合
 /// - 起動設定が無効な場合
 pub fn generate_egg_list(
     params: &EggGeneratorParams,
@@ -114,7 +114,7 @@ pub fn generate_egg_list(
     filter: Option<&IvFilter>,
 ) -> Result<Vec<GeneratedEggData>, String> {
     // 複数 Seed を解決
-    let seeds = resolve_all_seeds(&params.source)?;
+    let seeds = resolve_all_seeds(&params.config.input)?;
 
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = seeds
@@ -220,20 +220,21 @@ impl PokemonGenerator {
         source: SeedOrigin,
         params: &PokemonGeneratorParams,
     ) -> Result<Self, String> {
-        let game_offset = calculate_game_offset(base_seed, params.version, &params.game_start)?;
-        let mt_offset = calculate_mt_offset(params.version, params.encounter_type);
+        let cfg = &params.config;
+        let game_offset = calculate_game_offset(base_seed, cfg.version, &cfg.game_start)?;
+        let mt_offset = calculate_mt_offset(cfg.version, params.encounter_type);
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
-        let total_offset = game_offset + params.user_offset;
+        let total_offset = game_offset + cfg.user_offset;
         lcg.jump(u64::from(total_offset));
 
         Ok(Self {
             lcg,
             game_offset,
-            user_offset: params.user_offset,
+            user_offset: cfg.user_offset,
             current_advance: 0,
             rng_ivs,
             source,
@@ -328,7 +329,8 @@ impl PokemonGenerator {
         {
             gen_lcg.next(); // 空消費 1
             let rand_value = gen_lcg.next().unwrap_or(0); // エンカウント判定 1
-            let moving_info = generate_moving_encounter_info(self.params.version, rand_value);
+            let moving_info =
+                generate_moving_encounter_info(self.params.config.version, rand_value);
             return (Some(moving_info), None);
         }
 
@@ -377,7 +379,8 @@ impl EggGenerator {
         source: SeedOrigin,
         params: &EggGeneratorParams,
     ) -> Result<Self, String> {
-        let game_offset = calculate_game_offset(base_seed, params.version, &params.game_start)?;
+        let cfg = &params.config;
+        let game_offset = calculate_game_offset(base_seed, cfg.version, &cfg.game_start)?;
         // Egg: MT offset = 7 (固定)
         let mt_offset = 7;
         let mt_seed = base_seed.derive_mt_seed();
@@ -385,13 +388,13 @@ impl EggGenerator {
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
-        let total_offset = game_offset + params.user_offset;
+        let total_offset = game_offset + cfg.user_offset;
         lcg.jump(u64::from(total_offset));
 
         Ok(Self {
             lcg,
             game_offset,
-            user_offset: params.user_offset,
+            user_offset: cfg.user_offset,
             current_advance: 0,
             rng_ivs,
             source,
@@ -457,8 +460,8 @@ mod tests {
     use super::*;
     use crate::types::{
         EncounterMethod, EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig,
-        GenderRatio, GeneratorSource, LeadAbilityEffect, Nature, RomVersion, SaveState, StartMode,
-        TrainerInfo,
+        GenderRatio, GeneratorConfig, LeadAbilityEffect, Nature, RomVersion, SaveState, SeedInput,
+        StartMode, TrainerInfo,
     };
 
     fn make_game_start() -> GameStartConfig {
@@ -468,20 +471,26 @@ mod tests {
         }
     }
 
-    fn make_pokemon_params() -> PokemonGeneratorParams {
-        PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
+    fn make_config() -> GeneratorConfig {
+        GeneratorConfig {
+            input: SeedInput::Seeds { seeds: vec![] },
             version: RomVersion::Black,
-            encounter_type: EncounterType::Normal,
+            game_start: make_game_start(),
+            user_offset: 0,
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,
             },
+        }
+    }
+
+    fn make_pokemon_params() -> PokemonGeneratorParams {
+        PokemonGeneratorParams {
+            config: make_config(),
+            encounter_type: EncounterType::Normal,
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start: make_game_start(),
-            user_offset: 0,
             slots: vec![],
         }
     }
@@ -584,20 +593,13 @@ mod tests {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let source = make_source(base_seed);
         let params = EggGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black,
-            trainer: TrainerInfo {
-                tid: 12345,
-                sid: 54321,
-            },
+            config: make_config(),
             everstone: EverstonePlan::None,
             female_has_hidden: false,
             uses_ditto: false,
             gender_ratio: GenderRatio::Threshold(127),
             nidoran_flag: false,
             masuda_method: false,
-            game_start: make_game_start(),
-            user_offset: 0,
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
             parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
         };
@@ -697,15 +699,17 @@ mod tests {
         }];
 
         let params = PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black,
+                game_start,
+                user_offset: 0,
+                trainer: TrainerInfo { tid, sid },
+            },
             encounter_type: EncounterType::Normal,
-            trainer: TrainerInfo { tid, sid },
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::Synchronize(Nature::Adamant),
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start,
-            user_offset: 0,
             slots: slots.clone(),
         };
 
@@ -754,15 +758,17 @@ mod tests {
         }];
 
         let params = PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black2,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black2,
+                game_start,
+                user_offset: 0,
+                trainer: TrainerInfo { tid, sid },
+            },
             encounter_type: EncounterType::Normal,
-            trainer: TrainerInfo { tid, sid },
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start,
-            user_offset: 0,
             slots: slots.clone(),
         };
 
@@ -807,15 +813,17 @@ mod tests {
         }];
 
         let params = PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black,
+                game_start,
+                user_offset: 0,
+                trainer: TrainerInfo { tid, sid },
+            },
             encounter_type: EncounterType::Surfing,
-            trainer: TrainerInfo { tid, sid },
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start,
-            user_offset: 0,
             slots: slots.clone(),
         };
 
@@ -860,15 +868,17 @@ mod tests {
         }];
 
         let params = PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black2,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black2,
+                game_start,
+                user_offset: 0,
+                trainer: TrainerInfo { tid, sid },
+            },
             encounter_type: EncounterType::StaticSymbol,
-            trainer: TrainerInfo { tid, sid },
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start,
-            user_offset: 0,
             slots: slots.clone(),
         };
 
@@ -913,15 +923,17 @@ mod tests {
         }];
 
         let params = PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black2,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black2,
+                game_start,
+                user_offset: 0,
+                trainer: TrainerInfo { tid, sid },
+            },
             encounter_type: EncounterType::StaticStarter,
-            trainer: TrainerInfo { tid, sid },
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start,
-            user_offset: 0,
             slots: slots.clone(),
         };
 

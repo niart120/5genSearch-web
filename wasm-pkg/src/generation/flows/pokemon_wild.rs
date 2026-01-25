@@ -30,7 +30,7 @@ pub fn generate_wild_pokemon(
     let encounter_result = match enc_type {
         EncounterType::DustCloud => {
             let rand = lcg.next().unwrap_or(0);
-            let slot_value = rand_to_percent(params.version, rand);
+            let slot_value = rand_to_percent(params.config.version, rand);
             let result = dust_cloud_result(slot_value);
             if let EncounterResult::Item(item) = result {
                 dust_cloud_item_table_consume(lcg, item);
@@ -40,7 +40,7 @@ pub fn generate_wild_pokemon(
         }
         EncounterType::PokemonShadow => {
             let rand = lcg.next().unwrap_or(0);
-            let slot_value = rand_to_percent(params.version, rand);
+            let slot_value = rand_to_percent(params.config.version, rand);
             let result = pokemon_shadow_result(slot_value);
             if let EncounterResult::Item(_) = result {
                 pokemon_shadow_item_table_consume(lcg);
@@ -68,7 +68,7 @@ pub fn generate_wild_pokemon(
 
     // 3. スロット決定
     let slot_rand = lcg.next().unwrap_or(0);
-    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, params.version) as usize;
+    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, params.config.version) as usize;
     let slot_config = &params.slots[slot_idx.min(params.slots.len() - 1)];
 
     // 4. レベル決定
@@ -76,8 +76,12 @@ pub fn generate_wild_pokemon(
 
     // 5. PID 生成
     let reroll_count = if params.shiny_charm { 2 } else { 0 };
-    let (pid, shiny_type) =
-        generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
+    let (pid, shiny_type) = generate_wild_pid_with_reroll(
+        lcg,
+        params.config.trainer.tid,
+        params.config.trainer.sid,
+        reroll_count,
+    );
 
     // 6. 性格決定
     let (nature, sync_applied) = determine_nature(lcg, sync_success, &params.lead_ability);
@@ -91,7 +95,7 @@ pub fn generate_wild_pokemon(
             EncounterType::ShakingGrass | EncounterType::SurfingBubble
         );
         determine_held_item_slot(
-            params.version,
+            params.config.version,
             item_rand,
             &params.lead_ability,
             has_very_rare,
@@ -101,7 +105,7 @@ pub fn generate_wild_pokemon(
     };
 
     // 8. BW のみ: 最後の消費
-    if params.version.is_bw() {
+    if params.config.version.is_bw() {
         lcg.next();
     }
 
@@ -144,8 +148,8 @@ fn determine_gender(pid: u32, threshold: u8) -> Gender {
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, GameStartConfig, GeneratorSource, ItemContent,
-        RomVersion, SaveState, StartMode, TrainerInfo,
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GeneratorConfig, ItemContent,
+        RomVersion, SaveState, SeedInput, StartMode, TrainerInfo,
     };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
@@ -161,21 +165,23 @@ mod tests {
 
     fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
         PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version,
-            encounter_type,
-            trainer: TrainerInfo {
-                tid: 12345,
-                sid: 54321,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version,
+                game_start: GameStartConfig {
+                    start_mode: StartMode::Continue,
+                    save_state: SaveState::WithSave,
+                },
+                user_offset: 0,
+                trainer: TrainerInfo {
+                    tid: 12345,
+                    sid: 54321,
+                },
             },
+            encounter_type,
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start: GameStartConfig {
-                start_mode: StartMode::Continue,
-                save_state: SaveState::WithSave,
-            },
-            user_offset: 0,
             slots: make_slots(),
         }
     }

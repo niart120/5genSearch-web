@@ -12,14 +12,14 @@ mod seeds;
 // ===== Re-exports =====
 
 pub use config::{
-    Datetime, DsButton, DsConfig, GeneratorSource, Hardware, KeyCode, KeyInput, KeyMask, KeySpec,
-    RomRegion, RomVersion, StartupCondition, Timer0VCountRange,
+    Datetime, DsButton, DsConfig, Hardware, KeyCode, KeyInput, KeyMask, KeySpec, RomRegion,
+    RomVersion, SeedInput, StartupCondition, Timer0VCountRange,
 };
 pub use generation::{
     EggGeneratorParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,
-    EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, ItemContent,
-    MovingEncounterInfo, MovingEncounterLikelihood, PokemonGeneratorParams, SaveState, SeedOrigin,
-    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TrainerInfo,
+    EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GeneratorConfig,
+    ItemContent, MovingEncounterInfo, MovingEncounterLikelihood, PokemonGeneratorParams, SaveState,
+    SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TrainerInfo,
 };
 pub use needle::{NeedleDirection, NeedlePattern};
 pub use pokemon::{

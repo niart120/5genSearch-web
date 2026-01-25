@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{Datetime, GeneratorSource, RomVersion, StartupCondition};
+use super::config::{Datetime, RomVersion, SeedInput, StartupCondition};
 use super::needle::NeedleDirection;
 use super::pokemon::{
     Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
@@ -344,6 +344,24 @@ pub struct EncounterSlotConfig {
     pub shiny_locked: bool,
 }
 
+/// Generator 共通設定
+///
+/// Pokemon / Egg Generator で共通の設定。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct GeneratorConfig {
+    /// Seed 入力
+    pub input: SeedInput,
+    /// ROM バージョン
+    pub version: RomVersion,
+    /// 起動設定
+    pub game_start: GameStartConfig,
+    /// ユーザオフセット
+    pub user_offset: u32,
+    /// トレーナー情報
+    pub trainer: TrainerInfo,
+}
+
 /// ポケモン Generator パラメータ (統合版)
 ///
 /// Wild / Static を統合したパラメータ。
@@ -351,20 +369,12 @@ pub struct EncounterSlotConfig {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonGeneratorParams {
-    /// 入力ソース
-    pub source: GeneratorSource,
-    /// ROM バージョン
-    pub version: RomVersion,
-    /// 起動設定
-    pub game_start: GameStartConfig,
-    /// ユーザオフセット
-    pub user_offset: u32,
+    /// 共通設定
+    pub config: GeneratorConfig,
     /// エンカウント種別
     pub encounter_type: EncounterType,
     /// エンカウント方法 (Wild のみ有効、Static は `Stationary` 固定)
     pub encounter_method: EncounterMethod,
-    /// トレーナー情報
-    pub trainer: TrainerInfo,
     /// 先頭特性効果
     pub lead_ability: LeadAbilityEffect,
     /// ひかるおまもり所持
@@ -378,16 +388,8 @@ pub struct PokemonGeneratorParams {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggGeneratorParams {
-    /// 入力ソース
-    pub source: GeneratorSource,
-    /// ROM バージョン
-    pub version: RomVersion,
-    /// 起動設定
-    pub game_start: GameStartConfig,
-    /// ユーザオフセット
-    pub user_offset: u32,
-    /// トレーナー情報
-    pub trainer: TrainerInfo,
+    /// 共通設定
+    pub config: GeneratorConfig,
     /// かわらずのいし効果
     pub everstone: EverstonePlan,
     /// メス親が夢特性か

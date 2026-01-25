@@ -387,22 +387,16 @@ impl Datetime {
     }
 }
 
-// ===== Generator 入力ソース =====
+// ===== Seed 入力 =====
 
-/// Generator 入力ソース (Generator 専用)
+/// Seed 入力
 ///
 /// Generator 系 API 用の入力ソース型。
-/// Seed 直接指定、複数 Seed 指定、起動条件指定をサポート。
+/// 複数 Seed 指定、または起動条件指定をサポート。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(tag = "type")]
-pub enum GeneratorSource {
-    /// 単一の LCG Seed を直接指定
-    Seed {
-        /// 初期 LCG Seed
-        initial_seed: LcgSeed,
-    },
-
+pub enum SeedInput {
     /// 複数の LCG Seed を指定
     Seeds {
         /// LCG Seed のリスト
@@ -415,7 +409,7 @@ pub enum GeneratorSource {
         ds: DsConfig,
         /// 起動日時
         datetime: Datetime,
-        /// Timer0/VCount 範囲 (複数指定可能)
+        /// `Timer0` / `VCount` 範囲 (複数指定可能)
         ranges: Vec<Timer0VCountRange>,
         /// キー入力
         key_input: KeyInput,

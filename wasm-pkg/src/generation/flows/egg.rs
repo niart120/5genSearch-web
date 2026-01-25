@@ -26,8 +26,8 @@ pub fn generate_egg(lcg: &mut Lcg64, params: &EggGeneratorParams) -> RawEggData 
     let pid_reroll_count = if params.masuda_method { 5 } else { 0 };
     let (pid, shiny_type) = generate_egg_pid_with_reroll(
         lcg,
-        params.trainer.tid,
-        params.trainer.sid,
+        params.config.trainer.tid,
+        params.config.trainer.sid,
         pid_reroll_count,
     );
 
@@ -115,17 +115,24 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 mod tests {
     use super::*;
     use crate::types::{
-        EverstonePlan, GameStartConfig, GeneratorSource, Ivs, Nature, RomVersion, SaveState,
-        StartMode, TrainerInfo,
+        EverstonePlan, GameStartConfig, GeneratorConfig, Ivs, Nature, RomVersion, SaveState,
+        SeedInput, StartMode, TrainerInfo,
     };
 
     fn make_params() -> EggGeneratorParams {
         EggGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version: RomVersion::Black,
-            trainer: TrainerInfo {
-                tid: 12345,
-                sid: 54321,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version: RomVersion::Black,
+                game_start: GameStartConfig {
+                    start_mode: StartMode::Continue,
+                    save_state: SaveState::WithSave,
+                },
+                user_offset: 0,
+                trainer: TrainerInfo {
+                    tid: 12345,
+                    sid: 54321,
+                },
             },
             everstone: EverstonePlan::None,
             female_has_hidden: false,
@@ -133,11 +140,6 @@ mod tests {
             gender_ratio: GenderRatio::Threshold(127),
             nidoran_flag: false,
             masuda_method: false,
-            game_start: GameStartConfig {
-                start_mode: StartMode::Continue,
-                save_state: SaveState::WithSave,
-            },
-            user_offset: 0,
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
             parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
         }

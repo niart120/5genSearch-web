@@ -34,13 +34,13 @@ pub fn generate_static_pokemon(
             let reroll_count = if params.shiny_charm { 2 } else { 0 };
             let (pid, shiny) = generate_wild_pid_with_reroll(
                 lcg,
-                params.trainer.tid,
-                params.trainer.sid,
+                params.config.trainer.tid,
+                params.config.trainer.sid,
                 reroll_count,
             );
             if slot.shiny_locked {
                 (
-                    apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid),
+                    apply_shiny_lock(pid, params.config.trainer.tid, params.config.trainer.sid),
                     ShinyType::None,
                 )
             } else {
@@ -50,16 +50,18 @@ pub fn generate_static_pokemon(
         EncounterType::StaticStarter | EncounterType::StaticFossil | EncounterType::StaticEvent => {
             let pid = generate_event_pid(lcg.next().unwrap_or(0));
             let pid = if slot.shiny_locked {
-                apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid)
+                apply_shiny_lock(pid, params.config.trainer.tid, params.config.trainer.sid)
             } else {
                 pid
             };
-            let shiny = calculate_shiny_type(pid, params.trainer.tid, params.trainer.sid);
+            let shiny =
+                calculate_shiny_type(pid, params.config.trainer.tid, params.config.trainer.sid);
             (pid, shiny)
         }
         _ => {
             let r = lcg.next().unwrap_or(0);
-            let shiny = calculate_shiny_type(r, params.trainer.tid, params.trainer.sid);
+            let shiny =
+                calculate_shiny_type(r, params.config.trainer.tid, params.config.trainer.sid);
             (r, shiny)
         }
     };
@@ -82,7 +84,7 @@ pub fn generate_static_pokemon(
     }
 
     // BW のみ: 最後の消費
-    if enc_type == EncounterType::StaticSymbol && params.version.is_bw() {
+    if enc_type == EncounterType::StaticSymbol && params.config.version.is_bw() {
         lcg.next();
     }
 
@@ -119,27 +121,29 @@ pub fn generate_static_pokemon(
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, GameStartConfig, GeneratorSource, RomVersion, SaveState, StartMode,
-        TrainerInfo,
+        EncounterMethod, GameStartConfig, GeneratorConfig, RomVersion, SaveState, SeedInput,
+        StartMode, TrainerInfo,
     };
 
     fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
         PokemonGeneratorParams {
-            source: GeneratorSource::Seeds { seeds: vec![] },
-            version,
-            encounter_type,
-            trainer: TrainerInfo {
-                tid: 12345,
-                sid: 54321,
+            config: GeneratorConfig {
+                input: SeedInput::Seeds { seeds: vec![] },
+                version,
+                game_start: GameStartConfig {
+                    start_mode: StartMode::Continue,
+                    save_state: SaveState::WithSave,
+                },
+                user_offset: 0,
+                trainer: TrainerInfo {
+                    tid: 12345,
+                    sid: 54321,
+                },
             },
+            encounter_type,
+            encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
             shiny_charm: false,
-            encounter_method: EncounterMethod::Stationary,
-            game_start: GameStartConfig {
-                start_mode: StartMode::Continue,
-                save_state: SaveState::WithSave,
-            },
-            user_offset: 0,
             slots: vec![],
         }
     }
