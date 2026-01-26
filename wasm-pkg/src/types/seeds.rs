@@ -1,9 +1,11 @@
 //! 乱数シード型
 //!
-//! LCG/MT シード値を定義。
+//! LCG/MT シード値と生成元情報を定義。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
+
+use super::config::{Datetime, StartupCondition};
 
 // ===== Seed 型 (NewType パターン) =====
 
@@ -74,5 +76,67 @@ impl From<u32> for MtSeed {
 impl From<MtSeed> for u32 {
     fn from(seed: MtSeed) -> Self {
         seed.0
+    }
+}
+
+// ===== 生成元情報 =====
+
+/// 生成元情報
+///
+/// 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum SeedOrigin {
+    /// Seed 値から直接生成
+    Seed {
+        /// `BaseSeed` (LCG 初期値)
+        base_seed: LcgSeed,
+        /// MT Seed (LCG から導出)
+        mt_seed: MtSeed,
+    },
+    /// 起動条件から生成
+    Startup {
+        /// `BaseSeed` (SHA-1 から導出)
+        base_seed: LcgSeed,
+        /// MT Seed (LCG から導出)
+        mt_seed: MtSeed,
+        /// 起動日時
+        datetime: Datetime,
+        /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
+        condition: StartupCondition,
+    },
+}
+
+impl SeedOrigin {
+    /// Seed ソースを作成 (`MtSeed` は `LcgSeed` から導出)
+    pub fn seed(base_seed: LcgSeed) -> Self {
+        Self::Seed {
+            base_seed,
+            mt_seed: base_seed.derive_mt_seed(),
+        }
+    }
+
+    /// Startup ソースを作成 (`MtSeed` は `LcgSeed` から導出)
+    pub fn startup(base_seed: LcgSeed, datetime: Datetime, condition: StartupCondition) -> Self {
+        Self::Startup {
+            base_seed,
+            mt_seed: base_seed.derive_mt_seed(),
+            datetime,
+            condition,
+        }
+    }
+
+    /// `BaseSeed` を取得
+    pub const fn base_seed(&self) -> LcgSeed {
+        match self {
+            Self::Seed { base_seed, .. } | Self::Startup { base_seed, .. } => *base_seed,
+        }
+    }
+
+    /// `MtSeed` を取得
+    pub const fn mt_seed(&self) -> MtSeed {
+        match self {
+            Self::Seed { mt_seed, .. } | Self::Startup { mt_seed, .. } => *mt_seed,
+        }
     }
 }

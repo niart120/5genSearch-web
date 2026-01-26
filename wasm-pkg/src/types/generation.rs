@@ -5,12 +5,12 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{Datetime, RomVersion, SeedInput, StartupCondition};
+use super::config::{RomVersion, StartMode, SaveState};
 use super::needle::NeedleDirection;
 use super::pokemon::{
     Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
 };
-use super::seeds::{LcgSeed, MtSeed};
+use super::seeds::SeedOrigin;
 
 // ===== エンカウント結果 =====
 
@@ -196,66 +196,22 @@ pub struct SpecialEncounterInfo {
     pub direction_rand: u32,
 }
 
-// ===== 生成元情報 =====
+// ===== 生成共通設定 =====
 
-/// 生成元情報
+/// 生成共通設定
 ///
-/// 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
+/// オフセット計算と検索範囲を定義。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum SeedOrigin {
-    /// Seed 値から直接生成
-    Seed {
-        /// `BaseSeed` (LCG 初期値)
-        base_seed: LcgSeed,
-        /// MT Seed (LCG から導出)
-        mt_seed: MtSeed,
-    },
-    /// 起動条件から生成
-    Startup {
-        /// `BaseSeed` (SHA-1 から導出)
-        base_seed: LcgSeed,
-        /// MT Seed (LCG から導出)
-        mt_seed: MtSeed,
-        /// 起動日時
-        datetime: Datetime,
-        /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
-        condition: StartupCondition,
-    },
-}
-
-impl SeedOrigin {
-    /// Seed ソースを作成 (`MtSeed` は `LcgSeed` から導出)
-    pub fn seed(base_seed: LcgSeed) -> Self {
-        Self::Seed {
-            base_seed,
-            mt_seed: base_seed.derive_mt_seed(),
-        }
-    }
-
-    /// Startup ソースを作成 (`MtSeed` は `LcgSeed` から導出)
-    pub fn startup(base_seed: LcgSeed, datetime: Datetime, condition: StartupCondition) -> Self {
-        Self::Startup {
-            base_seed,
-            mt_seed: base_seed.derive_mt_seed(),
-            datetime,
-            condition,
-        }
-    }
-
-    /// `BaseSeed` を取得
-    pub const fn base_seed(&self) -> LcgSeed {
-        match self {
-            Self::Seed { base_seed, .. } | Self::Startup { base_seed, .. } => *base_seed,
-        }
-    }
-
-    /// `MtSeed` を取得
-    pub const fn mt_seed(&self) -> MtSeed {
-        match self {
-            Self::Seed { mt_seed, .. } | Self::Startup { mt_seed, .. } => *mt_seed,
-        }
-    }
+pub struct GenerationConfig {
+    /// ROM バージョン (game_offset 計算用)
+    pub version: RomVersion,
+    /// 起動設定 (game_offset 計算用)
+    pub game_start: GameStartConfig,
+    /// 検索開始位置 (advance の初期値)
+    pub user_offset: u32,
+    /// 検索終了位置
+    pub max_advance: u32,
 }
 
 // ===== 生成結果 =====
@@ -269,9 +225,6 @@ pub struct GeneratedPokemonData {
     pub needle_direction: NeedleDirection,
     /// 生成元情報
     pub source: SeedOrigin,
-    // Seed 情報
-    #[tsify(type = "bigint")]
-    pub lcg_seed: u64,
     // 基本情報
     pub pid: u32,
     pub species_id: u16,
@@ -303,9 +256,6 @@ pub struct GeneratedEggData {
     pub needle_direction: NeedleDirection,
     /// 生成元情報
     pub source: SeedOrigin,
-    // Seed 情報
-    #[tsify(type = "bigint")]
-    pub lcg_seed: u64,
     // 基本情報
     pub pid: u32,
     // 個体情報
@@ -324,7 +274,7 @@ pub struct GeneratedEggData {
     pub ivs: Ivs,
 }
 
-// ===== Generator パラメータ (WASM 公開用) =====
+// ===== 生成パラメータ (WASM 公開用) =====
 
 /// かわらずのいし効果
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -355,34 +305,12 @@ pub struct EncounterSlotConfig {
     pub shiny_locked: bool,
 }
 
-/// Seed 解決 + オフセット計算 + 検索範囲設定
+/// ポケモン生成パラメータ
 ///
-/// Seed の解決とオフセット計算に必要な共通設定。
-/// Pokemon / Egg / Needle Generator で共通して使用。
+/// GenerationConfig を含まない。生成条件のみを定義。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct SeedContext {
-    /// Seed 入力
-    pub input: SeedInput,
-    /// ROM バージョン
-    pub version: RomVersion,
-    /// 起動設定
-    pub game_start: GameStartConfig,
-    /// ユーザオフセット (検索開始位置)
-    pub user_offset: u32,
-    /// 検索終了位置
-    pub max_advance: u32,
-}
-
-/// ポケモン Generator パラメータ (統合版)
-///
-/// Wild / Static を統合したパラメータ。
-/// `encounter_type` により Wild / Static を判別する。
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct PokemonGeneratorParams {
-    /// Seed 解決 + オフセット + 検索範囲設定
-    pub context: SeedContext,
+pub struct PokemonGenerationParams {
     /// トレーナー情報
     pub trainer: TrainerInfo,
     /// エンカウント種別
@@ -397,13 +325,13 @@ pub struct PokemonGeneratorParams {
     pub slots: Vec<EncounterSlotConfig>,
 }
 
-/// 卵 Generator パラメータ
+/// 卵生成パラメータ
+///
+/// GenerationConfig を含まない。生成条件のみを定義。
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct EggGeneratorParams {
-    /// Seed 解決 + オフセット + 検索範囲設定
-    pub context: SeedContext,
+pub struct EggGenerationParams {
     /// トレーナー情報
     pub trainer: TrainerInfo,
     /// かわらずのいし効果
