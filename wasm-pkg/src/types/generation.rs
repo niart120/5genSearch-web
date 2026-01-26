@@ -204,9 +204,9 @@ pub struct SpecialEncounterInfo {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GenerationConfig {
-    /// ROM バージョン (game_offset 計算用)
+    /// ROM バージョン (`game_offset` 計算用)
     pub version: RomVersion,
-    /// 起動設定 (game_offset 計算用)
+    /// 起動設定 (`game_offset` 計算用)
     pub game_start: GameStartConfig,
     /// 検索開始位置 (advance の初期値)
     pub user_offset: u32,
@@ -307,7 +307,7 @@ pub struct EncounterSlotConfig {
 
 /// ポケモン生成パラメータ
 ///
-/// GenerationConfig を含まない。生成条件のみを定義。
+/// `GenerationConfig` を含まない。生成条件のみを定義。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonGenerationParams {
@@ -327,7 +327,7 @@ pub struct PokemonGenerationParams {
 
 /// 卵生成パラメータ
 ///
-/// GenerationConfig を含まない。生成条件のみを定義。
+/// `GenerationConfig` を含まない。生成条件のみを定義。
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

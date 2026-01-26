@@ -25,6 +25,3 @@ pub(crate) use pid::{
     apply_shiny_lock, calculate_shiny_type, generate_egg_pid_with_reroll, generate_event_pid,
     generate_wild_pid_with_reroll,
 };
-// テスト用 (generator.rs のテストで使用)
-#[cfg(test)]
-pub(crate) use pid::{generate_base_pid, generate_wild_pid};

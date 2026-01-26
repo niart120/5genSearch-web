@@ -18,7 +18,7 @@ use crate::types::{GenerationConfig, NeedleDirection, NeedlePattern, NeedleSearc
 /// # Arguments
 /// * `origins` - 既に解決された Seed リスト
 /// * `pattern` - 検索する針パターン
-/// * `config` - 生成設定 (version, game_start, user_offset, max_advance)
+/// * `config` - 生成設定 (`version`, `game_start`, `user_offset`, `max_advance`)
 ///
 /// # Returns
 /// パターンが一致した全件の結果リスト
