@@ -14,19 +14,20 @@ pub mod types;
 
 // Re-export datetime_search types
 pub use datetime_search::{
-    MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
-    MtseedDatetimeSearcher, SearchRangeParams, TimeRangeParams,
+    MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
+    generate_mtseed_search_tasks,
 };
 
 // Re-export common types
 pub use types::{
-    Datetime, DsButton, DsConfig, EggGeneratorParams, EncounterMethod, EncounterResult,
-    EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
-    ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed, LeadAbilityEffect,
-    MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection, NeedlePattern,
-    PokemonGeneratorParams, SaveState, SeedContext, SeedInput, SeedOrigin,
-    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, Timer0VCountRange, TrainerInfo,
+    Datetime, DatetimeSearchContext, DsButton, DsConfig, EggGeneratorParams, EncounterMethod,
+    EncounterResult, EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig,
+    GenderRatio, GeneratedEggData, GeneratedPokemonData, HeldItemSlot, HiddenPowerType,
+    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeyMask, KeySpec, LcgSeed,
+    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
+    NeedlePattern, PokemonGeneratorParams, SaveState, SearchRangeParams, SeedContext, SeedInput,
+    SeedOrigin, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TimeRangeParams,
+    Timer0VCountRange, TrainerInfo,
 };
 
 // Re-export core needle functions (外部公開必要)

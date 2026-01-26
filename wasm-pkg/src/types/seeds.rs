@@ -45,7 +45,9 @@ impl From<LcgSeed> for u64 {
 ///
 /// LCG から導出される MT19937 初期シード。
 /// u32 は JavaScript の safe integer 範囲内のため number として扱われる。
-#[derive(Tsify, Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Tsify, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(transparent)]
 #[repr(transparent)]

@@ -2,10 +2,8 @@
 
 pub mod base;
 pub mod mtseed;
-pub mod types;
 
 pub use mtseed::{
-    MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
-    MtseedDatetimeSearcher,
+    MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
+    generate_mtseed_search_tasks,
 };
-pub use types::{SearchRangeParams, TimeRangeParams};

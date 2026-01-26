@@ -363,7 +363,7 @@ impl StartupCondition {
 /// 起動日時 (Generator 専用)
 ///
 /// 固定の起動時刻を指定。Searcher は `DateRange` / `TimeRange` を使用。
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Datetime {
     pub year: u16,
@@ -414,4 +414,76 @@ pub enum SeedInput {
         /// キー入力
         key_input: KeyInput,
     },
+}
+
+// ===== 起動時刻検索パラメータ =====
+
+/// 1日内の時刻範囲
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct TimeRangeParams {
+    pub hour_start: u8,
+    pub hour_end: u8,
+    pub minute_start: u8,
+    pub minute_end: u8,
+    pub second_start: u8,
+    pub second_end: u8,
+}
+
+impl TimeRangeParams {
+    /// バリデーション
+    ///
+    /// # Errors
+    ///
+    /// 時間・分・秒の範囲が不正な場合
+    pub fn validate(&self) -> Result<(), String> {
+        if self.hour_end > 23 || self.hour_start > self.hour_end {
+            return Err("Invalid hour range".into());
+        }
+        if self.minute_end > 59 || self.minute_start > self.minute_end {
+            return Err("Invalid minute range".into());
+        }
+        if self.second_end > 59 || self.second_start > self.second_end {
+            return Err("Invalid second range".into());
+        }
+        Ok(())
+    }
+
+    /// 有効な秒数をカウント
+    pub fn count_valid_seconds(&self) -> u32 {
+        let start = u32::from(self.hour_start) * 3600
+            + u32::from(self.minute_start) * 60
+            + u32::from(self.second_start);
+        let end = u32::from(self.hour_end) * 3600
+            + u32::from(self.minute_end) * 60
+            + u32::from(self.second_end);
+        end - start + 1
+    }
+}
+
+/// 検索範囲
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct SearchRangeParams {
+    pub start_year: u16,
+    pub start_month: u8,
+    pub start_day: u8,
+    /// 開始日内のオフセット秒 (0-86399)
+    pub start_second_offset: u32,
+    /// 検索範囲秒数
+    pub range_seconds: u32,
+}
+
+/// 起動時刻検索の共通コンテキスト
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct DatetimeSearchContext {
+    /// DS 設定
+    pub ds: DsConfig,
+    /// 1日内の時刻範囲
+    pub time_range: TimeRangeParams,
+    /// Timer0/VCount 範囲 (複数指定可能)
+    pub ranges: Vec<Timer0VCountRange>,
+    /// キー入力仕様 (全組み合わせを探索)
+    pub key_spec: KeySpec,
 }

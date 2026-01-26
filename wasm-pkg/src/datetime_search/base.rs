@@ -2,11 +2,11 @@
 
 use crate::core::datetime_codes::{get_date_code, get_time_code_for_hardware};
 use crate::core::sha1::{
-    BaseMessageBuilder, calculate_pokemon_sha1_simd, get_frame, get_nazo_values,
+    BaseMessageBuilder, HashValues, calculate_pokemon_sha1_simd, get_frame, get_nazo_values,
 };
-use crate::types::{DsConfig, Hardware, KeyCode};
-
-use super::types::{HashEntry, SearchRangeParams, TimeRangeParams};
+use crate::types::{
+    Datetime, DsConfig, Hardware, SearchRangeParams, StartupCondition, TimeRangeParams,
+};
 
 /// 86,400 秒分の `time_code` テーブル
 type RangedTimeCodeTable = Box<[Option<u32>; 86400]>;
@@ -200,18 +200,17 @@ pub fn datetime_to_seconds(year: u16, month: u8, day: u8, hour: u8, minute: u8, 
     u64::from(days) * 86400 + u64::from(hour) * 3600 + u64::from(minute) * 60 + u64::from(second)
 }
 
-/// ハッシュ値列挙器
-pub struct HashValuesEnumerator {
+/// 起動時刻候補とハッシュ値の生成器
+///
+/// 指定された日時範囲と `StartupCondition` に対して、
+/// 有効な起動時刻候補と対応する `HashValues` を生成する。
+pub struct DatetimeHashGenerator {
     base_message: [u32; 16],
     datetime_enumerator: DateTimeCodeEnumerator,
-    timer0: u16,
-    vcount: u8,
-    key_code: KeyCode,
-    start_seconds: u64,
 }
 
-impl HashValuesEnumerator {
-    /// 新しい `HashValuesEnumerator` を作成
+impl DatetimeHashGenerator {
+    /// 新しい `DatetimeHashGenerator` を作成
     ///
     /// # Errors
     ///
@@ -220,16 +219,21 @@ impl HashValuesEnumerator {
         ds: &DsConfig,
         time_range: &TimeRangeParams,
         search_range: &SearchRangeParams,
-        timer0: u16,
-        vcount: u8,
-        key_code: KeyCode,
+        condition: StartupCondition,
     ) -> Result<Self, String> {
         time_range.validate()?;
 
         let nazo = get_nazo_values(ds.version, ds.region);
         let frame = get_frame(ds.hardware);
 
-        let builder = BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, key_code, frame);
+        let builder = BaseMessageBuilder::new(
+            &nazo,
+            ds.mac,
+            condition.vcount,
+            condition.timer0,
+            condition.key_code,
+            frame,
+        );
 
         let time_code_table = build_ranged_time_code_table(time_range, ds.hardware);
 
@@ -248,15 +252,14 @@ impl HashValuesEnumerator {
         Ok(Self {
             base_message: builder.to_message(),
             datetime_enumerator,
-            timer0,
-            vcount,
-            key_code,
-            start_seconds,
         })
     }
 
     /// 4件ずつ SHA-1 計算 (SIMD)
-    pub(crate) fn next_quad(&mut self) -> ([HashEntry; 4], u8) {
+    ///
+    /// 戻り値: (配列, 有効件数)
+    /// `HashValues` には `to_lcg_seed()` / `to_mt_seed()` で Seed を取得可能
+    pub(crate) fn next_quad(&mut self) -> ([(Datetime, HashValues); 4], u8) {
         let (entries, len) = self.datetime_enumerator.next_quad();
         if len == 0 {
             return (Default::default(), 0);
@@ -271,22 +274,17 @@ impl HashValuesEnumerator {
 
         let hashes = calculate_pokemon_sha1_simd(date_codes, time_codes, &self.base_message);
 
-        let mut results: [HashEntry; 4] = Default::default();
+        let mut results: [(Datetime, HashValues); 4] = Default::default();
         for i in 0..usize::from(len) {
-            let lcg_seed = hashes[i].to_lcg_seed().value();
-            let mt_seed = hashes[i].to_mt_seed().value();
-            results[i] = HashEntry {
-                year: entries[i].0,
-                month: entries[i].1,
-                day: entries[i].2,
-                hour: entries[i].3,
-                minute: entries[i].4,
-                second: entries[i].5,
-                date_code: entries[i].6,
-                time_code: entries[i].7,
-                lcg_seed,
-                mt_seed,
-            };
+            let datetime = Datetime::new(
+                entries[i].0,
+                entries[i].1,
+                entries[i].2,
+                entries[i].3,
+                entries[i].4,
+                entries[i].5,
+            );
+            results[i] = (datetime, hashes[i]);
         }
 
         (results, len)
@@ -294,24 +292,6 @@ impl HashValuesEnumerator {
 
     pub(crate) fn is_exhausted(&self) -> bool {
         self.datetime_enumerator.is_exhausted()
-    }
-
-    pub(crate) fn processed_seconds(&self) -> u64 {
-        self.datetime_enumerator
-            .current_seconds()
-            .saturating_sub(self.start_seconds)
-    }
-
-    pub(crate) fn timer0(&self) -> u16 {
-        self.timer0
-    }
-
-    pub(crate) fn vcount(&self) -> u8 {
-        self.vcount
-    }
-
-    pub(crate) fn key_code(&self) -> KeyCode {
-        self.key_code
     }
 }
 

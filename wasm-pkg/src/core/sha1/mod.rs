@@ -7,7 +7,7 @@ mod nazo;
 mod scalar;
 mod simd;
 
-pub use message::{BaseMessageBuilder, DateTime, build_date_code, build_time_code, get_frame};
+pub use message::{BaseMessageBuilder, build_date_code, build_time_code, get_frame};
 pub use nazo::{NazoValues, get_nazo_values};
 pub use scalar::calculate_pokemon_sha1;
 pub use simd::calculate_pokemon_sha1_simd;
@@ -29,7 +29,7 @@ pub const K: [u32; 4] = [0x5A82_7999, 0x6ED9_EBA1, 0x8F1B_BCDC, 0xCA62_C1D6];
 // ===== HashValues =====
 
 /// SHA-1 ハッシュ値 (5 ワード)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct HashValues {
     pub h0: u32,
     pub h1: u32,
