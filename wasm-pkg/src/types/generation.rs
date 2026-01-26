@@ -10,7 +10,7 @@ use super::needle::NeedleDirection;
 use super::pokemon::{
     Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
 };
-use super::seeds::LcgSeed;
+use super::seeds::{LcgSeed, MtSeed};
 
 // ===== エンカウント結果 =====
 
@@ -208,11 +208,15 @@ pub enum SeedOrigin {
     Seed {
         /// `BaseSeed` (LCG 初期値)
         base_seed: LcgSeed,
+        /// MT Seed (LCG から導出)
+        mt_seed: MtSeed,
     },
     /// 起動条件から生成
     Startup {
         /// `BaseSeed` (SHA-1 から導出)
         base_seed: LcgSeed,
+        /// MT Seed (LCG から導出)
+        mt_seed: MtSeed,
         /// 起動日時
         datetime: Datetime,
         /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
@@ -221,19 +225,19 @@ pub enum SeedOrigin {
 }
 
 impl SeedOrigin {
-    /// Seed ソースを作成
-    pub const fn seed(base_seed: LcgSeed) -> Self {
-        Self::Seed { base_seed }
+    /// Seed ソースを作成 (`MtSeed` は `LcgSeed` から導出)
+    pub fn seed(base_seed: LcgSeed) -> Self {
+        Self::Seed {
+            base_seed,
+            mt_seed: base_seed.derive_mt_seed(),
+        }
     }
 
-    /// Startup ソースを作成
-    pub const fn startup(
-        base_seed: LcgSeed,
-        datetime: Datetime,
-        condition: StartupCondition,
-    ) -> Self {
+    /// Startup ソースを作成 (`MtSeed` は `LcgSeed` から導出)
+    pub fn startup(base_seed: LcgSeed, datetime: Datetime, condition: StartupCondition) -> Self {
         Self::Startup {
             base_seed,
+            mt_seed: base_seed.derive_mt_seed(),
             datetime,
             condition,
         }
@@ -242,7 +246,14 @@ impl SeedOrigin {
     /// `BaseSeed` を取得
     pub const fn base_seed(&self) -> LcgSeed {
         match self {
-            Self::Seed { base_seed } | Self::Startup { base_seed, .. } => *base_seed,
+            Self::Seed { base_seed, .. } | Self::Startup { base_seed, .. } => *base_seed,
+        }
+    }
+
+    /// `MtSeed` を取得
+    pub const fn mt_seed(&self) -> MtSeed {
+        match self {
+            Self::Seed { mt_seed, .. } | Self::Startup { mt_seed, .. } => *mt_seed,
         }
     }
 }

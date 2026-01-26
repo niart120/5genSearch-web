@@ -12,8 +12,9 @@ mod seeds;
 // ===== Re-exports =====
 
 pub use config::{
-    Datetime, DsButton, DsConfig, Hardware, KeyCode, KeyInput, KeyMask, KeySpec, RomRegion,
-    RomVersion, SeedInput, StartupCondition, Timer0VCountRange,
+    Datetime, DatetimeSearchContext, DsButton, DsConfig, Hardware, KeyCode, KeyInput, KeyMask,
+    KeySpec, RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition,
+    TimeRangeParams, Timer0VCountRange,
 };
 pub use generation::{
     EggGeneratorParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,

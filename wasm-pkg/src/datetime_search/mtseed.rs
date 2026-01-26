@@ -7,77 +7,54 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::types::{
-    Datetime, KeySpec, LcgSeed, MtSeed, SeedOrigin, StartupCondition, Timer0VCountRange,
+    DatetimeSearchContext, MtSeed, SearchRangeParams, SeedOrigin, StartupCondition, TimeRangeParams,
 };
 
-use super::base::HashValuesEnumerator;
-use super::types::{SearchRangeParams, TimeRangeParams};
+use super::base::DatetimeHashGenerator;
 
 // Re-export DsConfig from types for API convenience
 pub use crate::types::DsConfig;
 
-/// MT Seed 検索パラメータ
+/// MT Seed 検索パラメータ (単一組み合わせ)
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeSearchParams {
-    /// 検索対象の MT Seed リスト
+    /// 検索対象の MT Seed セット
     pub target_seeds: Vec<MtSeed>,
     /// DS 設定
     pub ds: DsConfig,
-    /// 時刻範囲
+    /// 1日内の時刻範囲
     pub time_range: TimeRangeParams,
-    /// 日付範囲
+    /// 検索範囲 (秒単位)
     pub search_range: SearchRangeParams,
-    /// Timer0/VCount 範囲 (複数指定可能)
-    pub ranges: Vec<Timer0VCountRange>,
-    /// キー入力仕様 (全組み合わせを探索)
-    pub key_spec: KeySpec,
-}
-
-/// 検索結果
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedDatetimeResult {
-    /// 見つかった MT Seed
-    pub seed: MtSeed,
-    /// 起動日時
-    pub datetime: Datetime,
-    /// 起動条件 (`Timer0` / `VCount` / `KeyCode`)
+    /// 起動条件 (単一)
     pub condition: StartupCondition,
-}
-
-impl MtseedDatetimeResult {
-    /// `SeedOrigin::Startup` に変換
-    pub fn to_seed_origin(&self, base_seed: LcgSeed) -> SeedOrigin {
-        SeedOrigin::startup(base_seed, self.datetime, self.condition)
-    }
 }
 
 /// バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeSearchBatch {
-    pub results: Vec<MtseedDatetimeResult>,
-    pub processed_seconds: u64,
-    pub total_seconds: u64,
+    /// 見つかった結果 (`SeedOrigin::Startup` 形式)
+    pub results: Vec<SeedOrigin>,
+    /// 処理済み件数
+    pub processed_count: u64,
+    /// 総件数
+    pub total_count: u64,
 }
 
 /// MT Seed 起動時刻検索器
 #[wasm_bindgen]
 pub struct MtseedDatetimeSearcher {
-    target_seeds: BTreeSet<u32>,
-    // 探索パラメータ (Enumerator 再作成用)
-    ds: DsConfig,
-    time_range: TimeRangeParams,
-    search_range: SearchRangeParams,
-    // 全組み合わせ
-    combinations: Vec<StartupCondition>,
-    current_combination_index: usize,
-    // 現在の Enumerator
-    current_enumerator: Option<HashValuesEnumerator>,
+    /// 検索対象 Seed (型安全な `BTreeSet`)
+    target_seeds: BTreeSet<MtSeed>,
+    /// 起動時刻とハッシュ値の生成器
+    generator: DatetimeHashGenerator,
+    /// 起動条件 (結果生成用)
+    condition: StartupCondition,
     // 進捗管理
-    total_combinations: u64,
-    processed_combinations: u64,
+    total_count: u64,
+    processed_count: u64,
 }
 
 #[wasm_bindgen]
@@ -87,7 +64,6 @@ impl MtseedDatetimeSearcher {
     /// # Errors
     ///
     /// - `target_seeds` が空の場合
-    /// - `ranges` が空の場合
     /// - `time_range` のバリデーション失敗
     #[wasm_bindgen(constructor)]
     #[allow(clippy::needless_pass_by_value)]
@@ -95,152 +71,130 @@ impl MtseedDatetimeSearcher {
         if params.target_seeds.is_empty() {
             return Err("target_seeds is empty".into());
         }
-        if params.ranges.is_empty() {
-            return Err("ranges is empty".into());
-        }
 
-        // Timer0/VCount/KeyCode の全組み合わせを展開
-        let key_codes = params.key_spec.combinations();
-        let mut combinations = Vec::new();
-
-        for range in &params.ranges {
-            for timer0 in range.timer0_min..=range.timer0_max {
-                for vcount in range.vcount_min..=range.vcount_max {
-                    for &key_code in &key_codes {
-                        combinations.push(StartupCondition::new(timer0, vcount, key_code));
-                    }
-                }
-            }
-        }
-
-        if combinations.is_empty() {
-            return Err("No valid combinations".into());
-        }
-
-        let seconds_per_combination = u64::from(params.search_range.range_seconds);
-        #[allow(clippy::cast_possible_truncation)]
-        let total_combinations = combinations.len() as u64 * seconds_per_combination;
-
-        // 最初の Enumerator を作成
-        let first_comb = combinations[0];
-        let enumerator = HashValuesEnumerator::new(
+        let generator = DatetimeHashGenerator::new(
             &params.ds,
             &params.time_range,
             &params.search_range,
-            first_comb.timer0,
-            first_comb.vcount,
-            first_comb.key_code,
+            params.condition,
         )?;
 
+        // 進捗計算: 有効秒数 (time_range 内の秒数 × 日数相当)
+        let valid_seconds_per_day = params.time_range.count_valid_seconds();
+        let days = params.search_range.range_seconds.div_ceil(86400);
+        let total_count = u64::from(valid_seconds_per_day) * u64::from(days);
+
         Ok(Self {
-            target_seeds: params.target_seeds.into_iter().map(MtSeed::value).collect(),
-            ds: params.ds,
-            time_range: params.time_range,
-            search_range: params.search_range,
-            combinations,
-            current_combination_index: 0,
-            current_enumerator: Some(enumerator),
-            total_combinations,
-            processed_combinations: 0,
+            target_seeds: params.target_seeds.into_iter().collect(),
+            generator,
+            condition: params.condition,
+            total_count,
+            processed_count: 0,
         })
     }
 
     #[wasm_bindgen(getter)]
     pub fn is_done(&self) -> bool {
-        self.current_combination_index >= self.combinations.len()
+        self.generator.is_exhausted()
     }
 
     #[wasm_bindgen(getter)]
     #[allow(clippy::cast_precision_loss)]
     pub fn progress(&self) -> f64 {
-        if self.total_combinations == 0 {
+        if self.generator.is_exhausted() {
             return 1.0;
         }
-        self.processed_combinations as f64 / self.total_combinations as f64
+        if self.total_count == 0 {
+            return 1.0;
+        }
+        self.processed_count as f64 / self.total_count as f64
     }
 
     /// 次のバッチを検索
-    pub fn next_batch(&mut self, chunk_seconds: u32) -> MtseedDatetimeSearchBatch {
+    pub fn next_batch(&mut self, chunk_count: u32) -> MtseedDatetimeSearchBatch {
         let mut results = Vec::new();
-        let mut remaining_seconds = u64::from(chunk_seconds);
+        let mut remaining = u64::from(chunk_count);
 
-        while remaining_seconds > 0 && !self.is_done() {
-            let Some(enumerator) = &mut self.current_enumerator else {
+        while remaining > 0 && !self.generator.is_exhausted() {
+            let (entries, len) = self.generator.next_quad();
+            if len == 0 {
                 break;
-            };
-
-            let start_processed = enumerator.processed_seconds();
-
-            // 現在の Enumerator からバッチ取得
-            while !enumerator.is_exhausted() {
-                let processed_in_batch = enumerator.processed_seconds() - start_processed;
-                if processed_in_batch >= remaining_seconds {
-                    break;
-                }
-
-                let (entries, len) = enumerator.next_quad();
-                if len == 0 {
-                    break;
-                }
-
-                for entry in entries.iter().take(len as usize) {
-                    if self.target_seeds.contains(&entry.mt_seed) {
-                        results.push(MtseedDatetimeResult {
-                            seed: MtSeed::new(entry.mt_seed),
-                            datetime: Datetime::new(
-                                entry.year,
-                                entry.month,
-                                entry.day,
-                                entry.hour,
-                                entry.minute,
-                                entry.second,
-                            ),
-                            condition: StartupCondition::new(
-                                enumerator.timer0(),
-                                enumerator.vcount(),
-                                enumerator.key_code(),
-                            ),
-                        });
-                    }
-                }
             }
 
-            let processed_this_round = enumerator.processed_seconds() - start_processed;
-            self.processed_combinations += processed_this_round;
-            remaining_seconds = remaining_seconds.saturating_sub(processed_this_round);
+            let processed = u64::from(len);
+            self.processed_count += processed;
+            remaining = remaining.saturating_sub(processed);
 
-            // 現在の Enumerator が終了したら次の組み合わせに進む
-            if enumerator.is_exhausted() {
-                self.current_combination_index += 1;
-
-                if self.current_combination_index < self.combinations.len() {
-                    let next_comb = self.combinations[self.current_combination_index];
-                    self.current_enumerator = HashValuesEnumerator::new(
-                        &self.ds,
-                        &self.time_range,
-                        &self.search_range,
-                        next_comb.timer0,
-                        next_comb.vcount,
-                        next_comb.key_code,
-                    )
-                    .ok();
-                } else {
-                    self.current_enumerator = None;
+            for (datetime, hash_values) in entries.iter().take(len as usize) {
+                let mt_seed = hash_values.to_mt_seed();
+                if self.target_seeds.contains(&mt_seed) {
+                    let lcg_seed = hash_values.to_lcg_seed();
+                    // SeedOrigin::Startup を直接生成
+                    results.push(SeedOrigin::startup(lcg_seed, *datetime, self.condition));
                 }
             }
         }
 
         MtseedDatetimeSearchBatch {
             results,
-            processed_seconds: self.processed_combinations,
-            total_seconds: self.total_combinations,
+            processed_count: self.processed_count,
+            total_count: self.total_count,
         }
     }
 }
 
+// ===== タスク生成関数 =====
+
+/// 組み合わせ展開 (内部関数)
+fn expand_combinations(context: &DatetimeSearchContext) -> Vec<StartupCondition> {
+    let key_codes = context.key_spec.combinations();
+    let mut combinations = Vec::new();
+
+    for range in &context.ranges {
+        for timer0 in range.timer0_min..=range.timer0_max {
+            for vcount in range.vcount_min..=range.vcount_max {
+                for &key_code in &key_codes {
+                    combinations.push(StartupCondition::new(timer0, vcount, key_code));
+                }
+            }
+        }
+    }
+    combinations
+}
+
+/// タスク生成関数
+///
+/// `DatetimeSearchContext` から組み合わせを展開し、
+/// 各 Worker に渡すパラメータを生成する。
+#[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
+pub fn generate_mtseed_search_tasks(
+    context: DatetimeSearchContext,
+    target_seeds: Vec<MtSeed>,
+    search_range: SearchRangeParams,
+) -> Vec<MtseedDatetimeSearchParams> {
+    // 1. 組み合わせ展開
+    let combinations = expand_combinations(&context);
+
+    // 2. タスク生成 (各組み合わせにつき1タスク)
+    combinations
+        .into_iter()
+        .map(|condition| MtseedDatetimeSearchParams {
+            target_seeds: target_seeds.clone(),
+            ds: context.ds.clone(),
+            time_range: context.time_range.clone(),
+            search_range: search_range.clone(),
+            condition,
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::types::{Hardware, KeyCode, RomRegion, RomVersion};
+    use crate::types::{
+        Datetime, DsButton, Hardware, KeyCode, KeySpec, LcgSeed, RomRegion, RomVersion,
+        Timer0VCountRange,
+    };
 
     use super::*;
 
@@ -268,8 +222,7 @@ mod tests {
                 start_second_offset: 0,
                 range_seconds: 60, // Search only 60 seconds for test
             },
-            ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x5A)],
-            key_spec: KeySpec::new(), // No key input
+            condition: StartupCondition::new(0x0C79, 0x5A, KeyCode::NONE),
         }
     }
 
@@ -283,14 +236,6 @@ mod tests {
     #[test]
     fn test_searcher_empty_seeds() {
         let params = create_test_params(vec![]);
-        let searcher = MtseedDatetimeSearcher::new(params);
-        assert!(searcher.is_err());
-    }
-
-    #[test]
-    fn test_searcher_empty_ranges() {
-        let mut params = create_test_params(vec![MtSeed::new(0x1234_5678)]);
-        params.ranges = vec![];
         let searcher = MtseedDatetimeSearcher::new(params);
         assert!(searcher.is_err());
     }
@@ -325,8 +270,6 @@ mod tests {
     /// - 期待 LCG Seed: `0x768360781D1CE6DD`
     #[test]
     fn test_searcher_finds_known_seed() {
-        use crate::types::LcgSeed;
-
         // 期待される LCG Seed から MT Seed を計算
         let expected_lcg_seed = LcgSeed::new(0x7683_6078_1D1C_E6DD);
         let expected_mt_seed = expected_lcg_seed.derive_mt_seed();
@@ -356,8 +299,7 @@ mod tests {
                 start_second_offset: 0, // 00:00:00
                 range_seconds: 86400,   // 1日分
             },
-            ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x60)],
-            key_spec: KeySpec::new(), // キー入力なし
+            condition: StartupCondition::new(0x0C79, 0x60, KeyCode::NONE),
         };
 
         let mut searcher = MtseedDatetimeSearcher::new(params).expect("Failed to create searcher");
@@ -372,7 +314,7 @@ mod tests {
         // 検証: 期待する MT Seed が見つかること
         let found = all_results
             .iter()
-            .find(|r| r.seed.value() == expected_mt_seed.value());
+            .find(|r| r.mt_seed().value() == expected_mt_seed.value());
         assert!(
             found.is_some(),
             "Expected MT Seed {:08X} (derived from LCG Seed 0x768360781D1CE6DD) not found. \
@@ -383,37 +325,43 @@ mod tests {
 
         // 検証: 日時が 18:13:11 であること
         let result = found.unwrap();
-        assert_eq!(result.datetime.year, 2010, "Year mismatch");
-        assert_eq!(result.datetime.month, 9, "Month mismatch");
-        assert_eq!(result.datetime.day, 18, "Day mismatch");
+        let SeedOrigin::Startup {
+            datetime,
+            condition,
+            ..
+        } = result
+        else {
+            panic!("Expected SeedOrigin::Startup")
+        };
+
+        assert_eq!(datetime.year, 2010, "Year mismatch");
+        assert_eq!(datetime.month, 9, "Month mismatch");
+        assert_eq!(datetime.day, 18, "Day mismatch");
         assert_eq!(
-            result.datetime.hour, 18,
+            datetime.hour, 18,
             "Hour mismatch: expected 18, got {}",
-            result.datetime.hour
+            datetime.hour
         );
         assert_eq!(
-            result.datetime.minute, 13,
+            datetime.minute, 13,
             "Minute mismatch: expected 13, got {}",
-            result.datetime.minute
+            datetime.minute
         );
         assert_eq!(
-            result.datetime.second, 11,
+            datetime.second, 11,
             "Second mismatch: expected 11, got {}",
-            result.datetime.second
+            datetime.second
         );
 
         // 検証: Timer0, VCount, KeyCode
-        assert_eq!(result.condition.timer0, 0x0C79);
-        assert_eq!(result.condition.vcount, 0x60);
-        assert_eq!(result.condition.key_code, KeyCode::NONE);
+        assert_eq!(condition.timer0, 0x0C79);
+        assert_eq!(condition.vcount, 0x60);
+        assert_eq!(condition.key_code, KeyCode::NONE);
     }
 
     #[test]
-    fn test_multiple_key_combinations() {
-        use crate::types::DsButton;
-
-        let params = MtseedDatetimeSearchParams {
-            target_seeds: vec![MtSeed::new(0x1234_5678)],
+    fn test_generate_mtseed_search_tasks() {
+        let context = DatetimeSearchContext {
             ds: DsConfig {
                 mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
                 hardware: Hardware::DsLite,
@@ -428,19 +376,76 @@ mod tests {
                 second_start: 0,
                 second_end: 0,
             },
-            search_range: SearchRangeParams {
-                start_year: 2023,
-                start_month: 1,
-                start_day: 1,
-                start_second_offset: 0,
-                range_seconds: 1,
-            },
             ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x5A)],
             key_spec: KeySpec::from_buttons(vec![DsButton::A, DsButton::B]), // 4 combinations
         };
 
-        let searcher = MtseedDatetimeSearcher::new(params).unwrap();
+        let search_range = SearchRangeParams {
+            start_year: 2023,
+            start_month: 1,
+            start_day: 1,
+            start_second_offset: 0,
+            range_seconds: 1,
+        };
+
+        let tasks =
+            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], search_range);
+
         // 1 range * 1 timer0 * 1 vcount * 4 key_codes = 4 combinations
-        assert_eq!(searcher.combinations.len(), 4);
+        assert_eq!(tasks.len(), 4);
+    }
+
+    #[test]
+    fn test_time_range_count_valid_seconds() {
+        let range = TimeRangeParams {
+            hour_start: 10,
+            hour_end: 10,
+            minute_start: 0,
+            minute_end: 0,
+            second_start: 0,
+            second_end: 59,
+        };
+        // 10:00:00 - 10:00:59 = 60 seconds
+        assert_eq!(range.count_valid_seconds(), 60);
+
+        let full_day = TimeRangeParams {
+            hour_start: 0,
+            hour_end: 23,
+            minute_start: 0,
+            minute_end: 59,
+            second_start: 0,
+            second_end: 59,
+        };
+        // Full day = 86400 seconds
+        assert_eq!(full_day.count_valid_seconds(), 86400);
+    }
+
+    #[test]
+    fn test_mtseed_ord() {
+        let seed1 = MtSeed::new(100);
+        let seed2 = MtSeed::new(200);
+        assert!(seed1 < seed2);
+
+        let mut set = BTreeSet::new();
+        set.insert(seed2);
+        set.insert(seed1);
+        assert!(set.contains(&seed1));
+        assert!(set.contains(&seed2));
+    }
+
+    #[test]
+    fn test_seed_origin_mt_seed() {
+        let lcg_seed = LcgSeed::new(0x7683_6078_1D1C_E6DD);
+        let expected_mt_seed = lcg_seed.derive_mt_seed();
+
+        let origin_seed = SeedOrigin::seed(lcg_seed);
+        assert_eq!(origin_seed.mt_seed(), expected_mt_seed);
+
+        let origin_startup = SeedOrigin::startup(
+            lcg_seed,
+            Datetime::new(2010, 9, 18, 18, 13, 11),
+            StartupCondition::new(0x0C79, 0x60, KeyCode::NONE),
+        );
+        assert_eq!(origin_startup.mt_seed(), expected_mt_seed);
     }
 }
