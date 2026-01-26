@@ -2,7 +2,7 @@
 //!
 //! 針方向と針パターン、および検索用の型を定義。
 
-use super::generation::{SeedContext, SeedOrigin};
+use super::seeds::SeedOrigin;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
@@ -115,16 +115,6 @@ impl NeedlePattern {
 }
 
 // ===== Needle 検索関連型 =====
-
-/// レポート針パターン検索パラメータ
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct NeedleSearchParams {
-    /// Seed 解決 + 検索範囲設定
-    pub context: SeedContext,
-    /// 観測したレポート針パターン
-    pub pattern: NeedlePattern,
-}
 
 /// レポート針パターン検索結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]

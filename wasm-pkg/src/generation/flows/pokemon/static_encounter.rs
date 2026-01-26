@@ -5,18 +5,18 @@ use crate::generation::algorithm::{
     apply_shiny_lock, calculate_shiny_type, generate_event_pid, generate_wild_pid_with_reroll,
     nature_roll, perform_sync_check,
 };
+use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
     EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, Nature,
-    PokemonGeneratorParams, ShinyType,
+    PokemonGenerationParams, RomVersion, ShinyType,
 };
-
-use super::types::{EncounterSlotConfig, RawPokemonData};
 
 /// 固定ポケモン生成 (IV なし)
 pub fn generate_static_pokemon(
     lcg: &mut Lcg64,
-    params: &PokemonGeneratorParams,
+    params: &PokemonGenerationParams,
     slot: &EncounterSlotConfig,
+    version: RomVersion,
 ) -> RawPokemonData {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -82,7 +82,7 @@ pub fn generate_static_pokemon(
     }
 
     // BW のみ: 最後の消費
-    if enc_type == EncounterType::StaticSymbol && params.context.version.is_bw() {
+    if enc_type == EncounterType::StaticSymbol && version.is_bw() {
         lcg.next();
     }
 
@@ -118,23 +118,10 @@ pub fn generate_static_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{
-        EncounterMethod, GameStartConfig, RomVersion, SaveState, SeedContext, SeedInput, StartMode,
-        TrainerInfo,
-    };
+    use crate::types::{EncounterMethod, TrainerInfo};
 
-    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
-        PokemonGeneratorParams {
-            context: SeedContext {
-                input: SeedInput::Seeds { seeds: vec![] },
-                version,
-                game_start: GameStartConfig {
-                    start_mode: StartMode::Continue,
-                    save_state: SaveState::WithSave,
-                },
-                user_offset: 0,
-                max_advance: 1000,
-            },
+    fn make_params(encounter_type: EncounterType) -> PokemonGenerationParams {
+        PokemonGenerationParams {
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,
@@ -167,10 +154,10 @@ mod tests {
     #[test]
     fn test_generate_static_pokemon_symbol() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
-        let params = make_params(RomVersion::Black, EncounterType::StaticSymbol);
+        let params = make_params(EncounterType::StaticSymbol);
         let slot = make_slot(150, 70, 255, false, false);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot);
+        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, RomVersion::Black);
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
@@ -180,10 +167,10 @@ mod tests {
     #[test]
     fn test_generate_static_pokemon_starter() {
         let mut lcg = Lcg64::from_raw(0xABCD_EF01_2345_6789);
-        let params = make_params(RomVersion::Black, EncounterType::StaticStarter);
+        let params = make_params(EncounterType::StaticStarter);
         let slot = make_slot(495, 5, 31, true, false);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot);
+        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, RomVersion::Black);
 
         assert_eq!(pokemon.species_id, 495);
         assert_eq!(pokemon.level, 5);

@@ -78,7 +78,6 @@ impl GeneratedPokemonData {
         advance: u32,
         needle_direction: NeedleDirection,
         source: SeedOrigin,
-        lcg_seed: u64,
         moving_encounter: Option<MovingEncounterInfo>,
         special_encounter: Option<SpecialEncounterInfo>,
     ) -> Self {
@@ -86,7 +85,6 @@ impl GeneratedPokemonData {
             advance,
             needle_direction,
             source,
-            lcg_seed,
             pid: raw.pid,
             species_id: raw.species_id,
             level: raw.level,
@@ -111,13 +109,11 @@ impl GeneratedEggData {
         advance: u32,
         needle_direction: NeedleDirection,
         source: SeedOrigin,
-        lcg_seed: u64,
     ) -> Self {
         Self {
             advance,
             needle_direction,
             source,
-            lcg_seed,
             pid: raw.pid,
             nature: raw.nature,
             gender: raw.gender,
