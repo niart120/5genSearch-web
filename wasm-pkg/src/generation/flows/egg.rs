@@ -4,12 +4,12 @@ use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     InheritanceSlot, ParentRole, determine_egg_nature, generate_egg_pid_with_reroll,
 };
-use crate::types::{EggGeneratorParams, Gender, GenderRatio};
+use crate::types::{EggGenerationParams, Gender, GenderRatio};
 
 use super::types::RawEggData;
 
 /// 卵の個体生成 (IV なし)
-pub fn generate_egg(lcg: &mut Lcg64, params: &EggGeneratorParams) -> RawEggData {
+pub fn generate_egg(lcg: &mut Lcg64, params: &EggGenerationParams) -> RawEggData {
     // 1. 性格決定 (既存関数を使用)
     let nature = determine_egg_nature(lcg, params.everstone);
 
@@ -119,8 +119,8 @@ mod tests {
         StartMode, TrainerInfo,
     };
 
-    fn make_params() -> EggGeneratorParams {
-        EggGeneratorParams {
+    fn make_params() -> EggGenerationParams {
+        EggGenerationParams {
             context: SeedContext {
                 input: SeedInput::Seeds { seeds: vec![] },
                 version: RomVersion::Black,
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn test_generate_egg_with_everstone() {
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_FFFF_FFFF);
-        let params = EggGeneratorParams {
+        let params = EggGenerationParams {
             everstone: EverstonePlan::Fixed(Nature::Adamant),
             ..make_params()
         };

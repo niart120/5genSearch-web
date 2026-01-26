@@ -8,7 +8,7 @@ use crate::generation::algorithm::{
     pokemon_shadow_item_table_consume, pokemon_shadow_result, rand_to_percent,
 };
 use crate::types::{
-    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, PokemonGenerationParams,
+    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, PokemonGeneratorParams,
 };
 
 use super::types::{GenerationError, RawPokemonData};
@@ -21,7 +21,7 @@ use super::types::{GenerationError, RawPokemonData};
 /// - `GenerationError::NoSlot`: エンカウントスロットが見つからない場合
 pub fn generate_wild_pokemon(
     lcg: &mut Lcg64,
-    params: &PokemonGenerationParams,
+    params: &PokemonGeneratorParams,
 ) -> Result<RawPokemonData, GenerationError> {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -159,8 +159,8 @@ mod tests {
         }]
     }
 
-    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationParams {
-        PokemonGenerationParams {
+    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
+        PokemonGeneratorParams {
             context: SeedContext {
                 input: SeedInput::Seeds { seeds: vec![] },
                 version,

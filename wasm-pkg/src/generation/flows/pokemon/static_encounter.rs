@@ -7,7 +7,7 @@ use crate::generation::algorithm::{
 };
 use crate::types::{
     EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, Nature,
-    PokemonGenerationParams, ShinyType,
+    PokemonGeneratorParams, ShinyType,
 };
 
 use super::types::{EncounterSlotConfig, RawPokemonData};
@@ -15,7 +15,7 @@ use super::types::{EncounterSlotConfig, RawPokemonData};
 /// 固定ポケモン生成 (IV なし)
 pub fn generate_static_pokemon(
     lcg: &mut Lcg64,
-    params: &PokemonGenerationParams,
+    params: &PokemonGeneratorParams,
     slot: &EncounterSlotConfig,
 ) -> RawPokemonData {
     let enc_type = params.encounter_type;
@@ -123,8 +123,8 @@ mod tests {
         TrainerInfo,
     };
 
-    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationParams {
-        PokemonGenerationParams {
+    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGeneratorParams {
+        PokemonGeneratorParams {
             context: SeedContext {
                 input: SeedInput::Seeds { seeds: vec![] },
                 version,
