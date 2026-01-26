@@ -43,7 +43,7 @@ pub use misc::{
 };
 
 // Re-export needle search types
-pub use types::{NeedleSearchParams, NeedleSearchResult};
+pub use types::NeedleSearchResult;
 
 #[wasm_bindgen(start)]
 pub fn init() {

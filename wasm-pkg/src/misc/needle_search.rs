@@ -1,59 +1,59 @@
 //! レポート針パターン検索
 //!
 //! 観測したレポート針パターンから消費位置を特定する。
-//! `SeedInput` を使用し、Seed 直接指定と起動条件指定の両方に対応。
+//! 既に解決された `SeedOrigin` を使用する。
 
 use wasm_bindgen::prelude::*;
 
 use crate::core::lcg::Lcg64;
 use crate::core::needle::calc_report_needle_direction;
 use crate::generation::algorithm::calculate_game_offset;
-use crate::generation::seed_resolver::resolve_all_seeds;
-use crate::types::{NeedleDirection, NeedleSearchParams, NeedleSearchResult};
+use crate::types::{GenerationConfig, NeedleDirection, NeedlePattern, NeedleSearchResult, SeedOrigin};
 
 /// レポート針パターン検索 (公開 API)
 ///
-/// `SeedInput` の各 `LcgSeed` について、`NeedlePattern` が出現する位置を検索。
+/// 各 `SeedOrigin` について、`NeedlePattern` が出現する位置を検索。
 /// 返却する `advance` はパターン末尾位置 (ユーザーが最後に観測した針の位置)。
 ///
 /// # Arguments
-/// * `params` - 検索パラメータ (context + pattern)
+/// * `origins` - 既に解決された Seed リスト
+/// * `pattern` - 検索する針パターン
+/// * `config` - 生成設定 (version, game_start, user_offset, max_advance)
 ///
 /// # Returns
 /// パターンが一致した全件の結果リスト
 ///
 /// # Errors
-/// - `SeedInput` の解決に失敗した場合
 /// - 起動設定が無効な場合
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
 pub fn search_needle_pattern(
-    params: NeedleSearchParams,
+    origins: Vec<SeedOrigin>,
+    pattern: NeedlePattern,
+    config: &GenerationConfig,
 ) -> Result<Vec<NeedleSearchResult>, String> {
-    let ctx = &params.context;
-    let pattern = params.pattern.directions();
+    let pattern_dirs = pattern.directions();
 
-    if pattern.is_empty() {
+    if pattern_dirs.is_empty() {
         return Err("Pattern is empty".into());
     }
 
-    // 全 Seed を解決
-    let seeds = resolve_all_seeds(&ctx.input)?;
-
     let mut results = Vec::new();
 
-    for (seed, origin) in seeds {
+    for origin in origins {
+        let seed = origin.base_seed();
+        
         // game_offset 計算
-        let game_offset = calculate_game_offset(seed, ctx.version, &ctx.game_start)?;
+        let game_offset = calculate_game_offset(seed, config.version, &config.game_start)?;
 
         // 検索範囲: user_offset ～ max_advance
-        let start = ctx.user_offset;
-        let end = ctx.max_advance;
+        let start = config.user_offset;
+        let end = config.max_advance;
 
         // パターン長を考慮した終了位置の調整
         // パターン末尾が end を超えないようにする
         #[allow(clippy::cast_possible_truncation)]
-        let pattern_len = pattern.len() as u32;
+        let pattern_len = pattern_dirs.len() as u32;
         if pattern_len == 0 || start + pattern_len - 1 > end {
             continue;
         }
@@ -65,7 +65,7 @@ pub fn search_needle_pattern(
 
         // パターン検索
         for advance in start..=search_end {
-            if matches_pattern(&lcg, pattern) {
+            if matches_pattern(&lcg, pattern_dirs) {
                 // パターン末尾位置を返す
                 let end_advance = advance + pattern_len - 1;
                 results.push(NeedleSearchResult {
@@ -118,13 +118,12 @@ pub fn get_needle_pattern_at(seed_value: u64, advance: u32, count: u32) -> Vec<u
 mod tests {
     use super::*;
     use crate::types::{
-        GameStartConfig, LcgSeed, NeedlePattern, RomVersion, SaveState, SeedContext, SeedInput,
-        StartMode,
+        GameStartConfig, GenerationConfig, LcgSeed, NeedlePattern, RomVersion, SaveState,
+        SeedOrigin, StartMode,
     };
 
-    fn make_context(seed: LcgSeed) -> SeedContext {
-        SeedContext {
-            input: SeedInput::Seeds { seeds: vec![seed] },
+    fn make_config() -> GenerationConfig {
+        GenerationConfig {
             version: RomVersion::Black,
             game_start: GameStartConfig {
                 start_mode: StartMode::Continue,
@@ -140,10 +139,10 @@ mod tests {
         use crate::generation::algorithm::calculate_game_offset;
 
         let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let ctx = make_context(seed);
+        let config = make_config();
 
         // game_offset を計算
-        let game_offset = calculate_game_offset(seed, ctx.version, &ctx.game_start).unwrap();
+        let game_offset = calculate_game_offset(seed, config.version, &config.game_start).unwrap();
 
         // game_offset を考慮した位置で針パターンを取得
         // advance=10 は game_offset からの相対なので、実際の LCG 位置は game_offset + 10
@@ -151,12 +150,14 @@ mod tests {
         let pattern = get_needle_pattern_at(seed.value(), game_offset + target_advance, 3);
         let needle_pattern = NeedlePattern::from_values(&pattern);
 
-        let params = NeedleSearchParams {
-            context: ctx,
-            pattern: needle_pattern,
+        // SeedOrigin を構築
+        let mt_seed = seed.derive_mt_seed();
+        let origin = SeedOrigin::Seed {
+            base_seed: seed,
+            mt_seed,
         };
 
-        let results = search_needle_pattern(params);
+        let results = search_needle_pattern(vec![origin], needle_pattern, &config);
         assert!(results.is_ok());
 
         let results = results.unwrap();
@@ -168,12 +169,15 @@ mod tests {
     #[test]
     fn test_search_needle_pattern_empty_pattern() {
         let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let params = NeedleSearchParams {
-            context: make_context(seed),
-            pattern: NeedlePattern::new(vec![]),
+        let config = make_config();
+
+        let mt_seed = seed.derive_mt_seed();
+        let origin = SeedOrigin::Seed {
+            base_seed: seed,
+            mt_seed,
         };
 
-        let result = search_needle_pattern(params);
+        let result = search_needle_pattern(vec![origin], NeedlePattern::new(vec![]), &config);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("empty"));
     }
