@@ -185,8 +185,8 @@ impl PokemonGenerator {
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LeadAbilityEffect,
-        LcgSeed, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LcgSeed,
+        LeadAbilityEffect, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
     fn make_game_start() -> GameStartConfig {

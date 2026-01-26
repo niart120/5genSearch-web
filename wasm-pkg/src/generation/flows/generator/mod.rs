@@ -183,67 +183,13 @@ fn apply_egg_filter(
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig,
-        GenderRatio, Ivs, LcgSeed, LeadAbilityEffect, Nature, RomVersion, SaveState, SeedOrigin,
-        StartMode, TrainerInfo,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LeadAbilityEffect,
+        LcgSeed, Nature, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
-
-    fn make_game_start() -> GameStartConfig {
-        GameStartConfig {
-            start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-        }
-    }
-
-    fn make_config() -> GenerationConfig {
-        GenerationConfig {
-            version: RomVersion::Black,
-            game_start: make_game_start(),
-            user_offset: 0,
-            max_advance: 1000,
-        }
-    }
-
-    fn make_trainer() -> TrainerInfo {
-        TrainerInfo {
-            tid: 12345,
-            sid: 54321,
-        }
-    }
-
-    fn make_pokemon_params() -> PokemonGenerationParams {
-        PokemonGenerationParams {
-            trainer: make_trainer(),
-            encounter_type: EncounterType::Normal,
-            encounter_method: EncounterMethod::Stationary,
-            lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
-            slots: vec![],
-        }
-    }
-
-    fn make_slots() -> Vec<EncounterSlotConfig> {
-        vec![EncounterSlotConfig {
-            species_id: 1,
-            level_min: 5,
-            level_max: 10,
-            gender_threshold: 127,
-            has_held_item: false,
-            shiny_locked: false,
-        }]
-    }
 
     fn make_source(seed: LcgSeed) -> SeedOrigin {
         SeedOrigin::seed(seed)
     }
-
-    #[test]
-
-    #[test]
-
-    #[test]
-
-    #[test]
 
     #[test]
     fn test_calculate_mt_offset() {
