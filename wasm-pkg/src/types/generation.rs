@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::config::{RomVersion, StartMode, SaveState};
+use super::config::RomVersion;
 use super::needle::NeedleDirection;
 use super::pokemon::{
     Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,

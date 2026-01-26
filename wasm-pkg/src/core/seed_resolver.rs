@@ -1,12 +1,29 @@
 //! Seed 解決ヘルパー
 //!
-//! `SeedInput` から `LcgSeed` を解決する。
+//! `SeedInput` から `SeedOrigin` リストを解決する。
+
+use wasm_bindgen::prelude::*;
 
 use crate::core::sha1::{
-    BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1, get_frame,
-    get_nazo_values,
+    build_date_code, build_time_code, calculate_pokemon_sha1, get_frame, get_nazo_values,
+    BaseMessageBuilder,
 };
 use crate::types::{LcgSeed, SeedInput, SeedOrigin, StartupCondition};
+
+/// Seed 解決 (公開 API)
+///
+/// `SeedInput` から `SeedOrigin` のリストを生成。
+/// UI/Worker 側で事前に呼び出す。
+///
+/// # Errors
+/// - `Seeds` が空の場合
+/// - `Startup` で `ranges` が空の場合
+#[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
+pub fn resolve_seeds(input: SeedInput) -> Result<Vec<SeedOrigin>, String> {
+    let results = resolve_all_seeds(&input)?;
+    Ok(results.into_iter().map(|(_, origin)| origin).collect())
+}
 
 /// `SeedInput` から単一の `LcgSeed` を解決
 ///

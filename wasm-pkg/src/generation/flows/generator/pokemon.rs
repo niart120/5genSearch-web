@@ -9,13 +9,12 @@ use crate::generation::algorithm::{
     generate_rng_ivs_with_offset, generate_special_encounter_info, is_moving_encounter_type,
     is_special_encounter_type,
 };
+use crate::generation::flows::pokemon::{generate_static_pokemon, generate_wild_pokemon};
 use crate::types::{
     EncounterMethod, GeneratedPokemonData, GenerationConfig, Ivs, LcgSeed, MovingEncounterInfo,
     PokemonGenerationParams, SeedOrigin, SpecialEncounterInfo,
 };
 
-use super::super::pokemon_static::generate_static_pokemon;
-use super::super::pokemon_wild::generate_wild_pokemon;
 use super::{calculate_mt_offset, is_static_encounter};
 
 /// ポケモン Generator (Wild / Static 統合)
@@ -101,7 +100,7 @@ impl PokemonGenerator {
         if is_static_encounter(self.params.encounter_type) {
             // Static: スロットは1件、常に成功
             let slot = &self.params.slots[0];
-            let raw = generate_static_pokemon(&mut gen_lcg, &self.params, slot);
+            let raw = generate_static_pokemon(&mut gen_lcg, &self.params, slot, self.config.version);
 
             self.lcg.next();
             self.current_advance += 1;
@@ -120,7 +119,7 @@ impl PokemonGenerator {
             let (moving_encounter, special_encounter) =
                 self.calculate_encounter_info(current_seed, &mut gen_lcg);
 
-            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params) {
+            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, self.config.version) {
                 self.lcg.next();
                 self.current_advance += 1;
 

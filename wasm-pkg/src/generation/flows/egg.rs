@@ -114,23 +114,10 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{
-        EverstonePlan, GameStartConfig, Ivs, Nature, RomVersion, SaveState, SeedContext, SeedInput,
-        StartMode, TrainerInfo,
-    };
+    use crate::types::{EverstonePlan, Ivs, Nature, TrainerInfo};
 
     fn make_params() -> EggGenerationParams {
         EggGenerationParams {
-            context: SeedContext {
-                input: SeedInput::Seeds { seeds: vec![] },
-                version: RomVersion::Black,
-                game_start: GameStartConfig {
-                    start_mode: StartMode::Continue,
-                    save_state: SaveState::WithSave,
-                },
-                user_offset: 0,
-                max_advance: 1000,
-            },
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,
