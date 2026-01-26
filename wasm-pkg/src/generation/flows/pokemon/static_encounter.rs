@@ -120,8 +120,9 @@ mod tests {
     use super::*;
     use crate::types::{EncounterMethod, TrainerInfo};
 
-    fn make_params(_version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationParams {
+    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationParams {
         PokemonGenerationParams {
+            version,
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,

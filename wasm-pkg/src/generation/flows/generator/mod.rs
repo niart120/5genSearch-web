@@ -178,3 +178,495 @@ fn apply_egg_filter(
         None => eggs,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig,
+        GenderRatio, Ivs, LeadAbilityEffect, LcgSeed, Nature, RomVersion, SaveState, SeedOrigin,
+        StartMode, TrainerInfo,
+    };
+
+    fn make_game_start() -> GameStartConfig {
+        GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        }
+    }
+
+    fn make_config() -> GenerationConfig {
+        GenerationConfig {
+            game_start: make_game_start(),
+            user_offset: 0,
+            max_advance: 1000,
+        }
+    }
+
+    fn make_trainer() -> TrainerInfo {
+        TrainerInfo {
+            tid: 12345,
+            sid: 54321,
+        }
+    }
+
+    fn make_pokemon_params(version: RomVersion) -> PokemonGenerationParams {
+        PokemonGenerationParams {
+            version,
+            trainer: make_trainer(),
+            encounter_type: EncounterType::Normal,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: vec![],
+        }
+    }
+
+    fn make_slots() -> Vec<EncounterSlotConfig> {
+        vec![EncounterSlotConfig {
+            species_id: 1,
+            level_min: 5,
+            level_max: 10,
+            gender_threshold: 127,
+            has_held_item: false,
+            shiny_locked: false,
+        }]
+    }
+
+    fn make_source(seed: LcgSeed) -> SeedOrigin {
+        SeedOrigin::seed(seed)
+    }
+
+    #[test]
+    fn test_pokemon_generator_wild() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let slots = make_slots();
+        let params = PokemonGenerationParams {
+            slots: slots.clone(),
+            ..make_pokemon_params(RomVersion::Black)
+        };
+        let config = make_config();
+
+        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        assert!(g.game_offset() > 0);
+
+        let pokemon = g.generate_next();
+        assert!(pokemon.is_some());
+        assert_eq!(g.current_advance(), 1);
+
+        let pokemon2 = g.generate_next();
+        assert!(pokemon2.is_some());
+        assert_eq!(g.current_advance(), 2);
+    }
+
+    #[test]
+    fn test_pokemon_generator_take() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let slots = make_slots();
+        let params = PokemonGenerationParams {
+            slots: slots.clone(),
+            ..make_pokemon_params(RomVersion::Black)
+        };
+        let config = make_config();
+
+        let mut g = PokemonGenerator::new(base_seed, source, &params, &config).unwrap();
+
+        let results = g.take(5);
+        assert_eq!(results.len(), 5);
+        assert_eq!(g.current_advance(), 5);
+
+        for (i, pokemon) in results.iter().enumerate() {
+            #[allow(clippy::cast_possible_truncation)]
+            let expected_advance = i as u32;
+            assert_eq!(pokemon.advance, expected_advance);
+        }
+    }
+
+    #[test]
+    fn test_pokemon_generator_static() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let slots = vec![EncounterSlotConfig {
+            species_id: 150, // Mewtwo
+            level_min: 70,
+            level_max: 70,
+            gender_threshold: 255, // Genderless
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+        let params = PokemonGenerationParams {
+            version: RomVersion::Black,
+            encounter_type: EncounterType::StaticSymbol,
+            slots: slots.clone(),
+            ..make_pokemon_params(RomVersion::Black)
+        };
+        let config = make_config();
+
+        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        let pokemon = g.generate_next();
+        assert!(pokemon.is_some());
+        assert_eq!(pokemon.unwrap().species_id, 150);
+        assert_eq!(g.current_advance(), 1);
+    }
+
+    #[test]
+    fn test_egg_generator() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let params = EggGenerationParams {
+            version: RomVersion::Black,
+            trainer: make_trainer(),
+            everstone: EverstonePlan::None,
+            female_has_hidden: false,
+            uses_ditto: false,
+            gender_ratio: GenderRatio::Threshold(127),
+            nidoran_flag: false,
+            masuda_method: false,
+            parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
+            parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
+        };
+        let config = make_config();
+
+        let generator = EggGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        let egg = g.generate_next();
+        assert!(egg.ivs.hp <= 31);
+        assert_eq!(g.current_advance(), 1);
+    }
+
+    #[test]
+    fn test_calculate_mt_offset() {
+        // Egg: mt_offset = 7
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black, EncounterType::Egg),
+            7
+        );
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black2, EncounterType::Egg),
+            7
+        );
+
+        // Roamer: mt_offset = 1
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black, EncounterType::Roamer),
+            1
+        );
+
+        // BW Wild/Static: mt_offset = 0
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black, EncounterType::Normal),
+            0
+        );
+        assert_eq!(
+            calculate_mt_offset(RomVersion::White, EncounterType::StaticSymbol),
+            0
+        );
+
+        // BW2 Wild/Static: mt_offset = 2
+        assert_eq!(
+            calculate_mt_offset(RomVersion::Black2, EncounterType::Normal),
+            2
+        );
+        assert_eq!(
+            calculate_mt_offset(RomVersion::White2, EncounterType::StaticSymbol),
+            2
+        );
+    }
+
+    /// 統合テスト: BW 続きから + 野生 + シンクロあり(いじっぱり)
+    #[test]
+    fn test_integrated_bw_continue_wild_sync_adamant() {
+        let initial_seed = LcgSeed::new(0x1C40_524D_87E8_0030);
+        let tid = 0_u16;
+        let sid = 0_u16;
+        let expected_pid = 0xDF8F_ECE9_u32;
+        let expected_nature = 14_u8; // むじゃき (Naive)
+
+        let game_start = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        };
+
+        let config = GenerationConfig {
+            game_start,
+            user_offset: 0,
+            max_advance: 1000,
+        };
+
+        let slots = vec![EncounterSlotConfig {
+            species_id: 1,
+            level_min: 5,
+            level_max: 10,
+            gender_threshold: 127,
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+
+        let params = PokemonGenerationParams {
+            version: RomVersion::Black,
+            trainer: TrainerInfo { tid, sid },
+            encounter_type: EncounterType::Normal,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::Synchronize(Nature::Adamant),
+            shiny_charm: false,
+            slots: slots.clone(),
+        };
+
+        let source = make_source(initial_seed);
+        let mut generator =
+            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let pokemon = generator.generate_next().expect("生成に失敗しました");
+
+        assert_eq!(
+            pokemon.pid, expected_pid,
+            "PID が期待値と一致しません: calculated=0x{:08X}, expected=0x{:08X}",
+            pokemon.pid, expected_pid
+        );
+        assert_eq!(
+            pokemon.nature as u8, expected_nature,
+            "性格が期待値と一致しません: calculated={}, expected={} (むじゃき)",
+            pokemon.nature as u8, expected_nature
+        );
+        assert!(
+            !pokemon.sync_applied,
+            "シンクロは失敗するはずだが適用されている"
+        );
+    }
+
+    /// 統合テスト: BW2 続きから(思い出リンクなし) + 通常エンカウント
+    #[test]
+    fn test_integrated_pattern1_bw2_continue_no_memory_link() {
+        let initial_seed = LcgSeed::new(0x11111);
+        let tid = 54321_u16;
+        let sid = 12345_u16;
+        let expected_pid = 0x5642_E610_u32;
+        let expected_nature = 1_u8; // さみしがり (Lonely)
+
+        let game_start = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        };
+
+        let config = GenerationConfig {
+            game_start,
+            user_offset: 0,
+            max_advance: 1000,
+        };
+
+        let slots = vec![EncounterSlotConfig {
+            species_id: 1,
+            level_min: 5,
+            level_max: 10,
+            gender_threshold: 127,
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+
+        let params = PokemonGenerationParams {
+            version: RomVersion::Black2,
+            trainer: TrainerInfo { tid, sid },
+            encounter_type: EncounterType::Normal,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: slots.clone(),
+        };
+
+        let source = make_source(initial_seed);
+        let mut generator =
+            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let pokemon = generator.generate_next().expect("生成に失敗しました");
+
+        assert_eq!(
+            pokemon.pid, expected_pid,
+            "PID mismatch: 0x{:08X} vs expected 0x{:08X}",
+            pokemon.pid, expected_pid
+        );
+        assert_eq!(
+            pokemon.nature as u8, expected_nature,
+            "Nature mismatch: {} vs expected {} (さみしがり)",
+            pokemon.nature as u8, expected_nature
+        );
+    }
+
+    /// 統合テスト: BW 続きから + なみのり
+    #[test]
+    fn test_integrated_pattern2_bw_continue_surfing() {
+        let initial_seed = LcgSeed::new(0x77777);
+        let tid = 54321_u16;
+        let sid = 12345_u16;
+        let expected_pid = 0x8E0F_06F1_u32;
+        let expected_nature = 17_u8; // れいせい (Quiet)
+
+        let game_start = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        };
+
+        let config = GenerationConfig {
+            game_start,
+            user_offset: 0,
+            max_advance: 1000,
+        };
+
+        let slots = vec![EncounterSlotConfig {
+            species_id: 1,
+            level_min: 5,
+            level_max: 10,
+            gender_threshold: 127,
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+
+        let params = PokemonGenerationParams {
+            version: RomVersion::Black,
+            trainer: TrainerInfo { tid, sid },
+            encounter_type: EncounterType::Surfing,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: slots.clone(),
+        };
+
+        let source = make_source(initial_seed);
+        let mut generator =
+            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let pokemon = generator.generate_next().expect("生成に失敗しました");
+
+        assert_eq!(
+            pokemon.pid, expected_pid,
+            "Pattern2 PID mismatch: 0x{:08X} vs expected 0x{:08X}",
+            pokemon.pid, expected_pid
+        );
+        assert_eq!(
+            pokemon.nature as u8, expected_nature,
+            "Pattern2 Nature mismatch: {} vs expected {} (れいせい)",
+            pokemon.nature as u8, expected_nature
+        );
+    }
+
+    /// 統合テスト: BW2 続きから(思い出リンク有り) + 固定シンボル(伝説)
+    #[test]
+    fn test_integrated_pattern3_bw2_continue_with_memory_link_static() {
+        let initial_seed = LcgSeed::new(0x99999);
+        let tid = 54321_u16;
+        let sid = 12345_u16;
+        let expected_pid = 0x59E0_C098_u32;
+        let expected_nature = 15_u8; // ひかえめ (Modest)
+
+        let game_start = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithMemoryLink,
+        };
+
+        let config = GenerationConfig {
+            game_start,
+            user_offset: 0,
+            max_advance: 1000,
+        };
+
+        let slots = vec![EncounterSlotConfig {
+            species_id: 150,
+            level_min: 50,
+            level_max: 50,
+            gender_threshold: 255, // genderless
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+
+        let params = PokemonGenerationParams {
+            version: RomVersion::Black2,
+            trainer: TrainerInfo { tid, sid },
+            encounter_type: EncounterType::StaticSymbol,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: slots.clone(),
+        };
+
+        let source = make_source(initial_seed);
+        let mut generator =
+            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let pokemon = generator.generate_next().expect("生成に失敗しました");
+
+        assert_eq!(
+            pokemon.pid, expected_pid,
+            "Pattern3 PID mismatch: 0x{:08X} vs expected 0x{:08X}",
+            pokemon.pid, expected_pid
+        );
+        assert_eq!(
+            pokemon.nature as u8, expected_nature,
+            "Pattern3 Nature mismatch: {} vs expected {} (ひかえめ)",
+            pokemon.nature as u8, expected_nature
+        );
+    }
+
+    /// 統合テスト: BW2 続きから(思い出リンクなし) + ギフト(御三家)
+    #[test]
+    fn test_integrated_pattern4_bw2_continue_starter() {
+        let initial_seed = LcgSeed::new(0xBBBBB);
+        let tid = 54321_u16;
+        let sid = 12345_u16;
+        let expected_pid = 0xC423_5DBE_u32;
+        let expected_nature = 9_u8; // のうてんき (Lax)
+
+        let game_start = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        };
+
+        let config = GenerationConfig {
+            game_start,
+            user_offset: 0,
+            max_advance: 1000,
+        };
+
+        let slots = vec![EncounterSlotConfig {
+            species_id: 495, // Snivy
+            level_min: 5,
+            level_max: 5,
+            gender_threshold: 31, // 7:1 ratio
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+
+        let params = PokemonGenerationParams {
+            version: RomVersion::Black2,
+            trainer: TrainerInfo { tid, sid },
+            encounter_type: EncounterType::StaticStarter,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: slots.clone(),
+        };
+
+        let source = make_source(initial_seed);
+        let mut generator =
+            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let pokemon = generator.generate_next().expect("生成に失敗しました");
+
+        assert_eq!(
+            pokemon.pid, expected_pid,
+            "Pattern4 PID mismatch: 0x{:08X} vs expected 0x{:08X}",
+            pokemon.pid, expected_pid
+        );
+        assert_eq!(
+            pokemon.nature as u8, expected_nature,
+            "Pattern4 Nature mismatch: {} vs expected {} (のうてんき)",
+            pokemon.nature as u8, expected_nature
+        );
+    }
+}

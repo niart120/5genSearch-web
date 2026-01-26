@@ -204,8 +204,6 @@ pub struct SpecialEncounterInfo {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GenerationConfig {
-    /// ROM バージョン (`game_offset` 計算用)
-    pub version: RomVersion,
     /// 起動設定 (`game_offset` 計算用)
     pub game_start: GameStartConfig,
     /// 検索開始位置 (advance の初期値)
@@ -311,6 +309,8 @@ pub struct EncounterSlotConfig {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonGenerationParams {
+    /// ROM バージョン
+    pub version: RomVersion,
     /// トレーナー情報
     pub trainer: TrainerInfo,
     /// エンカウント種別
@@ -332,6 +332,8 @@ pub struct PokemonGenerationParams {
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggGenerationParams {
+    /// ROM バージョン
+    pub version: RomVersion,
     /// トレーナー情報
     pub trainer: TrainerInfo,
     /// かわらずのいし効果

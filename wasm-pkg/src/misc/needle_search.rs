@@ -8,7 +8,9 @@ use wasm_bindgen::prelude::*;
 use crate::core::lcg::Lcg64;
 use crate::core::needle::calc_report_needle_direction;
 use crate::generation::algorithm::calculate_game_offset;
-use crate::types::{GenerationConfig, NeedleDirection, NeedlePattern, NeedleSearchResult, SeedOrigin};
+use crate::types::{
+    GenerationConfig, NeedleDirection, NeedlePattern, NeedleSearchResult, RomVersion, SeedOrigin,
+};
 
 /// レポート針パターン検索 (公開 API)
 ///
@@ -18,7 +20,8 @@ use crate::types::{GenerationConfig, NeedleDirection, NeedlePattern, NeedleSearc
 /// # Arguments
 /// * `origins` - 既に解決された Seed リスト
 /// * `pattern` - 検索する針パターン
-/// * `config` - 生成設定 (`version`, `game_start`, `user_offset`, `max_advance`)
+/// * `version` - ROM バージョン
+/// * `config` - 生成設定 (`game_start`, `user_offset`, `max_advance`)
 ///
 /// # Returns
 /// パターンが一致した全件の結果リスト
@@ -30,6 +33,7 @@ use crate::types::{GenerationConfig, NeedleDirection, NeedlePattern, NeedleSearc
 pub fn search_needle_pattern(
     origins: Vec<SeedOrigin>,
     pattern: NeedlePattern,
+    version: RomVersion,
     config: &GenerationConfig,
 ) -> Result<Vec<NeedleSearchResult>, String> {
     let pattern_dirs = pattern.directions();
@@ -42,9 +46,9 @@ pub fn search_needle_pattern(
 
     for origin in origins {
         let seed = origin.base_seed();
-        
+
         // game_offset 計算
-        let game_offset = calculate_game_offset(seed, config.version, &config.game_start)?;
+        let game_offset = calculate_game_offset(seed, version, &config.game_start)?;
 
         // 検索範囲: user_offset ～ max_advance
         let start = config.user_offset;
@@ -124,7 +128,6 @@ mod tests {
 
     fn make_config() -> GenerationConfig {
         GenerationConfig {
-            version: RomVersion::Black,
             game_start: GameStartConfig {
                 start_mode: StartMode::Continue,
                 save_state: SaveState::WithSave,
@@ -140,9 +143,10 @@ mod tests {
 
         let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let config = make_config();
+        let version = RomVersion::Black;
 
         // game_offset を計算
-        let game_offset = calculate_game_offset(seed, config.version, &config.game_start).unwrap();
+        let game_offset = calculate_game_offset(seed, version, &config.game_start).unwrap();
 
         // game_offset を考慮した位置で針パターンを取得
         // advance=10 は game_offset からの相対なので、実際の LCG 位置は game_offset + 10
@@ -157,7 +161,7 @@ mod tests {
             mt_seed,
         };
 
-        let results = search_needle_pattern(vec![origin], needle_pattern, &config);
+        let results = search_needle_pattern(vec![origin], needle_pattern, version, &config);
         assert!(results.is_ok());
 
         let results = results.unwrap();
@@ -170,6 +174,7 @@ mod tests {
     fn test_search_needle_pattern_empty_pattern() {
         let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let config = make_config();
+        let version = RomVersion::Black;
 
         let mt_seed = seed.derive_mt_seed();
         let origin = SeedOrigin::Seed {
@@ -177,7 +182,7 @@ mod tests {
             mt_seed,
         };
 
-        let result = search_needle_pattern(vec![origin], NeedlePattern::new(vec![]), &config);
+        let result = search_needle_pattern(vec![origin], NeedlePattern::new(vec![]), version, &config);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("empty"));
     }

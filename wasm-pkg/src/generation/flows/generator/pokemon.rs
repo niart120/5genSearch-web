@@ -28,7 +28,6 @@ pub struct PokemonGenerator {
     rng_ivs: Ivs,
     source: SeedOrigin,
     params: PokemonGenerationParams,
-    config: GenerationConfig,
 }
 
 impl PokemonGenerator {
@@ -50,8 +49,8 @@ impl PokemonGenerator {
         params: &PokemonGenerationParams,
         config: &GenerationConfig,
     ) -> Result<Self, String> {
-        let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
-        let mt_offset = calculate_mt_offset(config.version, params.encounter_type);
+        let game_offset = calculate_game_offset(base_seed, params.version, &config.game_start)?;
+        let mt_offset = calculate_mt_offset(params.version, params.encounter_type);
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
 
@@ -68,7 +67,6 @@ impl PokemonGenerator {
             rng_ivs,
             source,
             params: params.clone(),
-            config: config.clone(),
         })
     }
 
@@ -100,7 +98,7 @@ impl PokemonGenerator {
         if is_static_encounter(self.params.encounter_type) {
             // Static: スロットは1件、常に成功
             let slot = &self.params.slots[0];
-            let raw = generate_static_pokemon(&mut gen_lcg, &self.params, slot, self.config.version);
+            let raw = generate_static_pokemon(&mut gen_lcg, &self.params, slot, self.params.version);
 
             self.lcg.next();
             self.current_advance += 1;
@@ -119,7 +117,7 @@ impl PokemonGenerator {
             let (moving_encounter, special_encounter) =
                 self.calculate_encounter_info(current_seed, &mut gen_lcg);
 
-            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, self.config.version) {
+            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, self.params.version) {
                 self.lcg.next();
                 self.current_advance += 1;
 
@@ -157,7 +155,7 @@ impl PokemonGenerator {
         {
             gen_lcg.next(); // 空消費 1
             let rand_value = gen_lcg.next().unwrap_or(0); // エンカウント判定 1
-            let moving_info = generate_moving_encounter_info(self.config.version, rand_value);
+            let moving_info = generate_moving_encounter_info(self.params.version, rand_value);
             return (Some(moving_info), None);
         }
 
