@@ -5,8 +5,8 @@
 use wasm_bindgen::prelude::*;
 
 use crate::core::sha1::{
-    build_date_code, build_time_code, calculate_pokemon_sha1, get_frame, get_nazo_values,
-    BaseMessageBuilder,
+    BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1, get_frame,
+    get_nazo_values,
 };
 use crate::types::{LcgSeed, SeedInput, SeedOrigin, StartupCondition};
 

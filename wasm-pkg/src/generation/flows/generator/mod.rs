@@ -184,7 +184,7 @@ mod tests {
     use super::*;
     use crate::types::{
         EncounterMethod, EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig,
-        GenderRatio, Ivs, LeadAbilityEffect, LcgSeed, Nature, RomVersion, SaveState, SeedOrigin,
+        GenderRatio, Ivs, LcgSeed, LeadAbilityEffect, Nature, RomVersion, SaveState, SeedOrigin,
         StartMode, TrainerInfo,
     };
 
@@ -197,6 +197,7 @@ mod tests {
 
     fn make_config() -> GenerationConfig {
         GenerationConfig {
+            version: RomVersion::Black,
             game_start: make_game_start(),
             user_offset: 0,
             max_advance: 1000,
@@ -210,9 +211,8 @@ mod tests {
         }
     }
 
-    fn make_pokemon_params(version: RomVersion) -> PokemonGenerationParams {
+    fn make_pokemon_params() -> PokemonGenerationParams {
         PokemonGenerationParams {
-            version,
             trainer: make_trainer(),
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
@@ -244,7 +244,7 @@ mod tests {
         let slots = make_slots();
         let params = PokemonGenerationParams {
             slots: slots.clone(),
-            ..make_pokemon_params(RomVersion::Black)
+            ..make_pokemon_params()
         };
         let config = make_config();
 
@@ -271,7 +271,7 @@ mod tests {
         let slots = make_slots();
         let params = PokemonGenerationParams {
             slots: slots.clone(),
-            ..make_pokemon_params(RomVersion::Black)
+            ..make_pokemon_params()
         };
         let config = make_config();
 
@@ -301,10 +301,9 @@ mod tests {
             shiny_locked: false,
         }];
         let params = PokemonGenerationParams {
-            version: RomVersion::Black,
             encounter_type: EncounterType::StaticSymbol,
             slots: slots.clone(),
-            ..make_pokemon_params(RomVersion::Black)
+            ..make_pokemon_params()
         };
         let config = make_config();
 
@@ -324,7 +323,6 @@ mod tests {
         let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
         let source = make_source(base_seed);
         let params = EggGenerationParams {
-            version: RomVersion::Black,
             trainer: make_trainer(),
             everstone: EverstonePlan::None,
             female_has_hidden: false,
@@ -401,6 +399,7 @@ mod tests {
         };
 
         let config = GenerationConfig {
+            version: RomVersion::Black,
             game_start,
             user_offset: 0,
             max_advance: 1000,
@@ -416,7 +415,6 @@ mod tests {
         }];
 
         let params = PokemonGenerationParams {
-            version: RomVersion::Black,
             trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
@@ -426,8 +424,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator =
-            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
+            .expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -461,6 +459,7 @@ mod tests {
         };
 
         let config = GenerationConfig {
+            version: RomVersion::Black2,
             game_start,
             user_offset: 0,
             max_advance: 1000,
@@ -476,7 +475,6 @@ mod tests {
         }];
 
         let params = PokemonGenerationParams {
-            version: RomVersion::Black2,
             trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
@@ -486,8 +484,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator =
-            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
+            .expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -517,6 +515,7 @@ mod tests {
         };
 
         let config = GenerationConfig {
+            version: RomVersion::Black,
             game_start,
             user_offset: 0,
             max_advance: 1000,
@@ -532,7 +531,6 @@ mod tests {
         }];
 
         let params = PokemonGenerationParams {
-            version: RomVersion::Black,
             trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::Surfing,
             encounter_method: EncounterMethod::Stationary,
@@ -542,8 +540,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator =
-            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
+            .expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -573,6 +571,7 @@ mod tests {
         };
 
         let config = GenerationConfig {
+            version: RomVersion::Black2,
             game_start,
             user_offset: 0,
             max_advance: 1000,
@@ -588,7 +587,6 @@ mod tests {
         }];
 
         let params = PokemonGenerationParams {
-            version: RomVersion::Black2,
             trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::StaticSymbol,
             encounter_method: EncounterMethod::Stationary,
@@ -598,8 +596,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator =
-            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
+            .expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -629,6 +627,7 @@ mod tests {
         };
 
         let config = GenerationConfig {
+            version: RomVersion::Black2,
             game_start,
             user_offset: 0,
             max_advance: 1000,
@@ -644,7 +643,6 @@ mod tests {
         }];
 
         let params = PokemonGenerationParams {
-            version: RomVersion::Black2,
             trainer: TrainerInfo { tid, sid },
             encounter_type: EncounterType::StaticStarter,
             encounter_method: EncounterMethod::Stationary,
@@ -654,8 +652,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator =
-            PokemonGenerator::new(initial_seed, source, &params, &config).expect("Generator作成失敗");
+        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
+            .expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(

@@ -152,9 +152,8 @@ mod tests {
         }]
     }
 
-    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationParams {
+    fn make_params(encounter_type: EncounterType) -> PokemonGenerationParams {
         PokemonGenerationParams {
-            version,
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,
@@ -170,7 +169,7 @@ mod tests {
     #[test]
     fn test_generate_wild_pokemon_normal() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
-        let params = make_params(RomVersion::Black, EncounterType::Normal);
+        let params = make_params(EncounterType::Normal);
 
         let result = generate_wild_pokemon(&mut lcg, &params, RomVersion::Black);
         assert!(result.is_ok());
@@ -187,7 +186,7 @@ mod tests {
         // BW2 では rand_to_percent = (rand * 100) >> 32
         // 0x0000_0000 → 0, Pokemon 判定
         let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0001);
-        let params = make_params(RomVersion::Black2, EncounterType::DustCloud);
+        let params = make_params(EncounterType::DustCloud);
 
         let result = generate_wild_pokemon(&mut lcg, &params, RomVersion::Black2);
         assert!(result.is_ok());
@@ -205,7 +204,7 @@ mod tests {
         // 0xFFFF_FFFF → 99, Item(Everstone) 判定
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_0000_0001);
         let initial_seed = lcg.current_seed();
-        let params = make_params(RomVersion::Black2, EncounterType::DustCloud);
+        let params = make_params(EncounterType::DustCloud);
 
         let result = generate_wild_pokemon(&mut lcg, &params, RomVersion::Black2);
         assert!(result.is_ok());
@@ -231,7 +230,7 @@ mod tests {
         // LCG の next() は seed を進めてから上位32bitを返す
         // 適切な seed を使用: 最初の next() で小さい値が出る seed
         let mut lcg = Lcg64::from_raw(0);
-        let params = make_params(RomVersion::Black2, EncounterType::PokemonShadow);
+        let params = make_params(EncounterType::PokemonShadow);
 
         // 最初の next() で得られる rand 値を確認
         let first_rand = {
@@ -264,7 +263,7 @@ mod tests {
         // slot_value が 30 以上で Item(Feather) になる seed を使用
         let mut lcg = Lcg64::from_raw(0xFFFF_FFFF_0000_0001);
         let initial_seed = lcg.current_seed();
-        let params = make_params(RomVersion::Black2, EncounterType::PokemonShadow);
+        let params = make_params(EncounterType::PokemonShadow);
 
         let result = generate_wild_pokemon(&mut lcg, &params, RomVersion::Black2);
         assert!(result.is_ok());

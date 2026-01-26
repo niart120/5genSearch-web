@@ -13,7 +13,7 @@ pub mod sha1;
 // Re-export commonly used items
 pub use bcd::{from_bcd, to_bcd};
 pub use datetime_codes::{get_date_code, get_time_code, get_time_code_for_hardware};
-pub use lcg::{Lcg64, LCG_INCREMENT, LCG_MULTIPLIER};
+pub use lcg::{LCG_INCREMENT, LCG_MULTIPLIER, Lcg64};
 pub use mt::{Mt19937, Mt19937x4};
 pub use needle::{calc_report_needle_direction, calculate_needle_direction};
-pub use sha1::{calculate_pokemon_sha1, calculate_pokemon_sha1_simd, HashValues};
+pub use sha1::{HashValues, calculate_pokemon_sha1, calculate_pokemon_sha1_simd};

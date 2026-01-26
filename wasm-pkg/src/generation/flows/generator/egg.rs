@@ -41,7 +41,7 @@ impl EggGenerator {
         params: &EggGenerationParams,
         config: &GenerationConfig,
     ) -> Result<Self, String> {
-        let game_offset = calculate_game_offset(base_seed, params.version, &config.game_start)?;
+        let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
         // Egg: MT offset = 7 (固定)
         let mt_offset = 7;
         let mt_seed = base_seed.derive_mt_seed();
@@ -100,13 +100,7 @@ impl EggGenerator {
         self.lcg.next();
         self.current_advance += 1;
 
-        GeneratedEggData::from_raw(
-            &raw,
-            final_ivs,
-            advance,
-            needle,
-            self.source.clone(),
-        )
+        GeneratedEggData::from_raw(&raw, final_ivs, advance, needle, self.source.clone())
     }
 
     /// 指定数の個体を生成

@@ -6,7 +6,7 @@ pub mod pokemon;
 pub mod types;
 
 pub use egg::generate_egg;
-pub use generator::{generate_egg_list, generate_pokemon_list, EggGenerator, PokemonGenerator};
+pub use generator::{EggGenerator, PokemonGenerator, generate_egg_list, generate_pokemon_list};
 pub use pokemon::{generate_static_pokemon, generate_wild_pokemon};
 
 // 内部型のみ再エクスポート

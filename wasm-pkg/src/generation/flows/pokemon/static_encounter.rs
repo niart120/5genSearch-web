@@ -120,9 +120,8 @@ mod tests {
     use super::*;
     use crate::types::{EncounterMethod, TrainerInfo};
 
-    fn make_params(version: RomVersion, encounter_type: EncounterType) -> PokemonGenerationParams {
+    fn make_params(encounter_type: EncounterType) -> PokemonGenerationParams {
         PokemonGenerationParams {
-            version,
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,
@@ -155,7 +154,7 @@ mod tests {
     #[test]
     fn test_generate_static_pokemon_symbol() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
-        let params = make_params(RomVersion::Black, EncounterType::StaticSymbol);
+        let params = make_params(EncounterType::StaticSymbol);
         let slot = make_slot(150, 70, 255, false, false);
 
         let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, RomVersion::Black);
@@ -168,7 +167,7 @@ mod tests {
     #[test]
     fn test_generate_static_pokemon_starter() {
         let mut lcg = Lcg64::from_raw(0xABCD_EF01_2345_6789);
-        let params = make_params(RomVersion::Black, EncounterType::StaticStarter);
+        let params = make_params(EncounterType::StaticStarter);
         let slot = make_slot(495, 5, 31, true, false);
 
         let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, RomVersion::Black);

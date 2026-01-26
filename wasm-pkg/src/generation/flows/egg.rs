@@ -114,11 +114,10 @@ fn determine_egg_gender(lcg: &mut Lcg64, gender_ratio: GenderRatio) -> Gender {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EverstonePlan, Ivs, Nature, RomVersion, TrainerInfo};
+    use crate::types::{EverstonePlan, Ivs, Nature, TrainerInfo};
 
     fn make_params() -> EggGenerationParams {
         EggGenerationParams {
-            version: RomVersion::Black,
             trainer: TrainerInfo {
                 tid: 12345,
                 sid: 54321,
