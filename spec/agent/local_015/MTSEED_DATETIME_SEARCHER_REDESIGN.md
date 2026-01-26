@@ -14,6 +14,8 @@
 | `DatetimeSearchContext` | 起動時刻検索の共通設定 (DS設定、時刻範囲、Timer0/VCount範囲、キー入力仕様) |
 | `SeedOrigin` | 生成結果のソース情報。`Seed` / `Startup` の2種 |
 | `StartupCondition` | 起動条件 (Timer0 / VCount / KeyCode) |
+| `StartupSeedIterator` | 起動時刻から Seed を計算するイテレータ (旧 `HashValuesEnumerator`) |
+| `HashValues` | SHA-1 ハッシュ結果 (5ワード)。`to_lcg_seed()` / `to_mt_seed()` で変換可能 |
 | タスク分割 | `generate_mtseed_search_tasks()` で日時範囲×組み合わせをタスクに分割 |
 
 ### 1.3 背景・問題
@@ -25,6 +27,9 @@
 | 進捗単位の不整合 | フィールド名は `processed_seconds` だが、実際は組み合わせ × 秒数を計算 |
 | `SeedOrigin` に `MtSeed` がない | 検索結果から Generator に渡す際、`MtSeed` を別途保持する必要がある |
 | 型の配置 | `TimeRangeParams` / `SearchRangeParams` が `datetime_search/types.rs` にあり、共通型としてアクセスしづらい |
+| `MtSeed` の型安全性 | `BTreeSet<u32>` でフィルタしており、`MtSeed` 型を活用できていない |
+| `HashEntry` の冗長性 | 10フィールドの構造体で、`date_code`/`time_code` は内部計算用なのに外部に露出。既存の `Datetime`/`HashValues` 型を活用できていない |
+| `HashValuesEnumerator` の命名 | `HashValues` を enumerate していない。実際は起動時刻から Seed を計算するイテレータ |
 
 ### 1.4 期待効果
 
@@ -35,6 +40,9 @@
 | 並列化の柔軟性 | 日時範囲×組み合わせ の両軸で任意に分割可能 |
 | 進捗単位の明確化 | `processed_count` / `total_count` で処理件数ベースに統一 |
 | 型の共通化 | `TimeRangeParams` / `SearchRangeParams` を `types/` に移動 |
+| `MtSeed` の型安全性向上 | `Ord`/`Eq`/`Hash` を追加し、`BTreeSet<MtSeed>` で型安全にフィルタ |
+| 内部型の簡素化 | `HashEntry` 廃止、`(Datetime, HashValues)` タプルで既存型を活用 |
+| Iterator の責務明確化 | `HashValuesEnumerator` → `StartupSeedIterator` にリネーム |
 
 ### 1.5 着手条件
 
@@ -45,12 +53,14 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
+| `types/seeds.rs` | 変更 | `MtSeed` に `Ord`/`Eq`/`Hash` 追加 |
 | `types/generation.rs` | 変更 | `SeedOrigin` に `mt_seed` フィールド追加 |
 | `types/config.rs` | 変更 | `DatetimeSearchContext`, `TimeRangeParams`, `SearchRangeParams` 追加 |
 | `types/mod.rs` | 変更 | re-export 追加 |
-| `datetime_search/types.rs` | 変更 | `TimeRangeParams`, `SearchRangeParams` を `types/` に移動、内部型のみ残す |
-| `datetime_search/mtseed.rs` | 変更 | `MtseedDatetimeSearcher` 再設計、`generate_mtseed_search_tasks()` 追加 |
-| `datetime_search/base.rs` | 変更 | `HashValuesEnumerator` のインターフェース調整 |
+| `datetime_search/types.rs` | 削除 | `HashEntry` 廃止、ファイルごと削除 |
+| `datetime_search/base.rs` | 変更 | `HashValuesEnumerator` → `StartupSeedIterator` リネーム、`(Datetime, HashValues)` を返す設計に変更 |
+| `datetime_search/mtseed.rs` | 変更 | `MtseedDatetimeSearcher` 再設計、`MtseedDatetimeResult` 廃止、`generate_mtseed_search_tasks()` 追加 |
+| `datetime_search/mod.rs` | 変更 | re-export 調整 |
 | `lib.rs` | 変更 | re-export 調整 |
 
 ## 3. 設計方針
@@ -263,8 +273,8 @@ pub struct DatetimeSearchContext {
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeSearchParams {
-    /// 検索対象の MT Seed リスト
-    pub target_seeds: Vec<MtSeed>,
+    /// 検索対象の MT Seed セット (BTreeSet で効率的な探索)
+    pub target_seeds: BTreeSet<MtSeed>,
     /// DS 設定
     pub ds: DsConfig,
     /// 1日内の時刻範囲
@@ -276,43 +286,29 @@ pub struct MtseedDatetimeSearchParams {
 }
 ```
 
-### 3.7 MtseedDatetimeResult の再設計
+### 3.7 MtseedDatetimeResult の廃止
 
-`SeedOrigin` をラップする構造体。
+`MtseedDatetimeResult` は `SeedOrigin` を単純にラップするだけの型であり、不要な間接層となっている。
 
-```rust
-/// 検索結果 (単一ヒット)
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedDatetimeResult {
-    /// 生成元情報 (Startup 形式)
-    pub origin: SeedOrigin,
-}
+**変更方針**: `MtseedDatetimeResult` を廃止し、検索結果は `Vec<SeedOrigin>` を直接使用する。
 
-impl MtseedDatetimeResult {
-    /// 新規作成
-    pub fn new(lcg_seed: LcgSeed, datetime: Datetime, condition: StartupCondition) -> Self {
-        Self {
-            origin: SeedOrigin::startup(lcg_seed, datetime, condition),
-        }
-    }
+**理由**:
 
-    /// MtSeed を取得
-    pub fn mt_seed(&self) -> MtSeed {
-        self.origin.mt_seed()
-    }
-}
-```
+- `SeedOrigin::Startup` は既に `datetime` と `condition` を保持している
+- `MtSeed` も `SeedOrigin::mt_seed()` で取得可能
+- ラッパー型は API の複雑化を招くだけで実質的なメリットがない
 
 ### 3.8 MtseedDatetimeSearchBatch の再設計
+
+`MtseedDatetimeResult` 廃止に伴い、結果は `Vec<SeedOrigin>` を直接使用。
 
 ```rust
 /// バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedDatetimeSearchBatch {
-    /// 見つかった結果
-    pub results: Vec<MtseedDatetimeResult>,
+    /// 見つかった結果 (SeedOrigin::Startup 形式)
+    pub results: Vec<SeedOrigin>,
     /// 処理済み件数
     pub processed_count: u64,
     /// 総件数
@@ -422,6 +418,119 @@ fn split_search_range(range: &SearchRangeParams, n: u32) -> Vec<SearchRangeParam
 }
 ```
 
+### 3.10 StartupSeedIterator (base.rs)
+
+現在の `HashValuesEnumerator` を `StartupSeedIterator` にリネームし、責務を明確化する。
+
+**変更内容**:
+
+1. **リネーム**: `HashValuesEnumerator` → `StartupSeedIterator`
+2. **戻り値型変更**: `HashEntry` を廃止し、`(Datetime, HashValues)` タプルを返す
+3. **責務明確化**: 指定された日時範囲と条件に対して、起動時刻候補と対応するハッシュ値を生成するイテレータ
+
+```rust
+/// 起動時刻候補のイテレータ
+///
+/// 指定された日時範囲と StartupCondition に対して、
+/// 有効な起動時刻候補と対応する HashValues を生成する。
+pub struct StartupSeedIterator {
+    // 内部状態 (日時進行、条件固定)
+    ds: DsConfig,
+    time_range: TimeRangeParams,
+    search_range: SearchRangeParams,
+    condition: StartupCondition,
+    // イテレータ状態
+    current_datetime: Datetime,
+    exhausted: bool,
+}
+
+impl StartupSeedIterator {
+    /// 新規作成
+    pub fn new(
+        ds: &DsConfig,
+        time_range: &TimeRangeParams,
+        search_range: &SearchRangeParams,
+        condition: StartupCondition,
+    ) -> Result<Self, String> {
+        time_range.validate()?;
+        // ...初期化
+    }
+
+    /// 完了判定
+    pub fn is_exhausted(&self) -> bool {
+        self.exhausted
+    }
+
+    /// 次の4件を取得 (SIMD最適化用)
+    ///
+    /// 戻り値: (配列, 有効件数)
+    /// HashValues には lcg_seed と mt_seed を計算済み
+    pub fn next_quad(&mut self) -> ([(Datetime, HashValues); 4], u8) {
+        // ...実装
+    }
+}
+```
+
+**HashValues の活用**:
+
+`HashValues` は既に `to_lcg_seed()` と `to_mt_seed()` メソッドを持つため、呼び出し側で必要な seed 値を取得できる。
+
+```rust
+// 使用例
+let (datetime, hash_values) = ...;
+let lcg_seed = hash_values.to_lcg_seed();
+let mt_seed = hash_values.to_mt_seed();
+```
+
+### 3.11 MtSeed 型拡張 (types/seeds.rs)
+
+`target_seeds` を `BTreeSet<MtSeed>` として管理するため、`MtSeed` に必要なトレイトを追加。
+
+**追加トレイト**:
+
+```rust
+#[derive(
+    Tsify, Serialize, Deserialize,
+    Clone, Copy, Debug,
+    PartialEq, Eq, PartialOrd, Ord, Hash  // 追加
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct MtSeed(u32);
+```
+
+**理由**:
+
+- `BTreeSet<MtSeed>`: `Ord` が必要
+- `HashSet<MtSeed>` (将来の選択肢): `Hash` + `Eq` が必要
+- 値の比較・ソート: `PartialOrd` + `Ord` が必要
+
+### 3.12 HashEntry の廃止
+
+`HashEntry` は 10 フィールドを持つ構造体だが、その情報は既存の型で表現可能。
+
+**現状の HashEntry**:
+```rust
+pub(crate) struct HashEntry {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+    pub date_code: u32,
+    pub time_code: u32,
+    pub lcg_seed: u64,
+    pub mt_seed: u32,
+}
+```
+
+**変更方針**: `HashEntry` を廃止し、`(Datetime, HashValues)` タプルで代替。
+
+- `year`, `month`, `day`, `hour`, `minute`, `second` → `Datetime`
+- `date_code`, `time_code`, `lcg_seed`, `mt_seed` → `HashValues` (既存メソッドで取得)
+
+**結果**: `datetime_search/types.rs` は不要になり、ファイル自体を削除。
+
 ## 4. 実装仕様
 
 ### 4.1 MtseedDatetimeSearcher
@@ -432,8 +541,11 @@ fn split_search_range(range: &SearchRangeParams, n: u32) -> Vec<SearchRangeParam
 /// MT Seed 起動時刻検索器
 #[wasm_bindgen]
 pub struct MtseedDatetimeSearcher {
-    target_seeds: BTreeSet<u32>,
-    enumerator: HashValuesEnumerator,
+    /// 検索対象 Seed (型安全な BTreeSet)
+    target_seeds: BTreeSet<MtSeed>,
+    /// 起動時刻イテレータ
+    iterator: StartupSeedIterator,
+    /// 起動条件 (結果生成用)
     condition: StartupCondition,
     // 進捗管理
     total_count: u64,
@@ -448,13 +560,11 @@ impl MtseedDatetimeSearcher {
             return Err("target_seeds is empty".into());
         }
 
-        let enumerator = HashValuesEnumerator::new(
+        let iterator = StartupSeedIterator::new(
             &params.ds,
             &params.time_range,
             &params.search_range,
-            params.condition.timer0,
-            params.condition.vcount,
-            params.condition.key_code,
+            params.condition,
         )?;
 
         // 進捗計算: 有効秒数 (time_range 内の秒数 × 日数相当)
@@ -463,8 +573,8 @@ impl MtseedDatetimeSearcher {
         let total_count = u64::from(valid_seconds_per_day) * u64::from(days);
 
         Ok(Self {
-            target_seeds: params.target_seeds.into_iter().map(MtSeed::value).collect(),
-            enumerator,
+            target_seeds: params.target_seeds,  // BTreeSet<MtSeed> をそのまま使用
+            iterator,
             condition: params.condition,
             total_count,
             processed_count: 0,
@@ -473,7 +583,7 @@ impl MtseedDatetimeSearcher {
 
     #[wasm_bindgen(getter)]
     pub fn is_done(&self) -> bool {
-        self.enumerator.is_exhausted()
+        self.iterator.is_exhausted()
     }
 
     #[wasm_bindgen(getter)]
@@ -489,8 +599,8 @@ impl MtseedDatetimeSearcher {
         let mut results = Vec::new();
         let mut remaining = u64::from(chunk_count);
 
-        while remaining > 0 && !self.enumerator.is_exhausted() {
-            let (entries, len) = self.enumerator.next_quad();
+        while remaining > 0 && !self.iterator.is_exhausted() {
+            let (entries, len) = self.iterator.next_quad();
             if len == 0 {
                 break;
             }
@@ -499,19 +609,14 @@ impl MtseedDatetimeSearcher {
             self.processed_count += processed;
             remaining = remaining.saturating_sub(processed);
 
-            for entry in entries.iter().take(len as usize) {
-                if self.target_seeds.contains(&entry.mt_seed) {
-                    let datetime = Datetime::new(
-                        entry.year,
-                        entry.month,
-                        entry.day,
-                        entry.hour,
-                        entry.minute,
-                        entry.second,
-                    );
-                    results.push(MtseedDatetimeResult::new(
-                        LcgSeed::new(entry.lcg_seed),
-                        datetime,
+            for (datetime, hash_values) in entries.iter().take(len as usize) {
+                let mt_seed = hash_values.to_mt_seed();
+                if self.target_seeds.contains(&mt_seed) {
+                    let lcg_seed = hash_values.to_lcg_seed();
+                    // SeedOrigin::Startup を直接生成
+                    results.push(SeedOrigin::startup(
+                        lcg_seed,
+                        *datetime,
                         self.condition,
                     ));
                 }
@@ -527,46 +632,39 @@ impl MtseedDatetimeSearcher {
 }
 ```
 
-### 4.2 datetime_search/types.rs
+### 4.2 datetime_search/types.rs の削除
 
-`TimeRangeParams` / `SearchRangeParams` を `types/` に移動後、内部型のみ残す。
+`HashEntry` 廃止に伴い、`datetime_search/types.rs` は不要となる。
 
-```rust
-//! 起動時刻検索用内部型定義
+**対応**:
+- `TimeRangeParams`, `SearchRangeParams` は既に `types/config.rs` に移動済み
+- `HashEntry` は廃止 (`(Datetime, HashValues)` タプルで代替)
+- ファイル自体を削除
 
-/// ハッシュエントリ (日時 + ハッシュ結果) - 内部実装用
-#[derive(Clone, Default, Debug)]
-pub(crate) struct HashEntry {
-    pub year: u16,
-    pub month: u8,
-    pub day: u8,
-    pub hour: u8,
-    pub minute: u8,
-    pub second: u8,
-    pub date_code: u32,
-    pub time_code: u32,
-    pub lcg_seed: u64,
-    pub mt_seed: u32,
-}
-```
+### 4.3 datetime_search/base.rs
 
-### 4.3 datetime_search/mod.rs
+`HashValuesEnumerator` を `StartupSeedIterator` にリネーム。
+
+**変更内容**:
+- 構造体名: `HashValuesEnumerator` → `StartupSeedIterator`
+- コンストラクタ引数: `timer0`, `vcount`, `key_code` を別々に受け取るのではなく `StartupCondition` を受け取る
+- 戻り値: `HashEntry` → `(Datetime, HashValues)`
+
+### 4.4 datetime_search/mod.rs
 
 ```rust
 //! 起動時刻検索
 
 pub mod base;
 pub mod mtseed;
-mod types;
+// types.rs は削除
 
 pub use mtseed::{
     generate_mtseed_search_tasks,
-    MtseedDatetimeResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
+    MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
     MtseedDatetimeSearcher,
 };
-
-// 内部使用
-pub(crate) use types::HashEntry;
+// MtseedDatetimeResult は廃止
 ```
 
 ## 5. テスト方針
@@ -580,14 +678,17 @@ pub(crate) use types::HashEntry;
 | `TimeRangeParams::count_valid_seconds()` | 有効秒数の計算が正しいこと |
 | `expand_combinations()` | 組み合わせ展開が正しいこと |
 | `split_search_range()` | 日時範囲分割が正しいこと |
+| `MtSeed` Ord/Eq/Hash | BTreeSet/HashSet での使用が可能であること |
+| `StartupSeedIterator::next_quad()` | `(Datetime, HashValues)` が正しく返ること |
 
 ### 5.2 統合テスト
 
 | テスト | 検証内容 |
-|--------|----------|
+|--------|---------|
 | 既知 Seed の検索 | 期待する日時・条件で発見できること |
 | 進捗計算 | `processed_count` / `total_count` が整合すること |
 | タスク生成 | `generate_mtseed_search_tasks()` の出力が正しいこと |
+| 結果型検証 | `Vec<SeedOrigin>` から `mt_seed()` で MtSeed が取得可能であること |
 
 ### 5.3 コマンド
 
@@ -599,6 +700,8 @@ cargo clippy --all-targets -- -D warnings
 
 ## 6. 実装チェックリスト
 
+- [ ] `types/seeds.rs`
+  - [ ] `MtSeed` に `Ord`, `Eq`, `Hash` トレイト追加
 - [ ] `types/generation.rs`
   - [ ] `SeedOrigin` に `mt_seed` フィールド追加
   - [ ] `SeedOrigin::seed()` / `startup()` で MtSeed を導出
@@ -611,24 +714,28 @@ cargo clippy --all-targets -- -D warnings
 - [ ] `types/mod.rs`
   - [ ] re-export 追加
 - [ ] `datetime_search/types.rs`
-  - [ ] `TimeRangeParams`, `SearchRangeParams` 削除
-  - [ ] `HashEntry` のみ残す
+  - [ ] ファイル削除 (`HashEntry` 廃止)
+- [ ] `datetime_search/base.rs`
+  - [ ] `HashValuesEnumerator` → `StartupSeedIterator` リネーム
+  - [ ] コンストラクタ引数を `StartupCondition` に変更
+  - [ ] 戻り値を `(Datetime, HashValues)` に変更
 - [ ] `datetime_search/mtseed.rs`
-  - [ ] `MtseedDatetimeSearchParams` 再設計 (単一 condition)
-  - [ ] `MtseedDatetimeResult` 再設計 (SeedOrigin ラップ)
-  - [ ] `MtseedDatetimeSearchBatch` フィールド名変更
-  - [ ] `MtseedDatetimeSearcher` 簡素化
+  - [ ] `MtseedDatetimeSearchParams.target_seeds` を `BTreeSet<MtSeed>` に
+  - [ ] `MtseedDatetimeResult` 削除
+  - [ ] `MtseedDatetimeSearchBatch.results` を `Vec<SeedOrigin>` に
+  - [ ] `MtseedDatetimeSearcher` を `StartupSeedIterator` を使う形に更新
   - [ ] `generate_mtseed_search_tasks()` 追加
   - [ ] `expand_combinations()` 追加
   - [ ] `split_search_range()` 追加
-- [ ] `datetime_search/base.rs`
-  - [ ] import 調整
 - [ ] `datetime_search/mod.rs`
-  - [ ] re-export 調整
+  - [ ] `types` モジュール削除
+  - [ ] `MtseedDatetimeResult` の re-export 削除
 - [ ] `lib.rs`
   - [ ] re-export 調整
 - [ ] テスト
   - [ ] 既存テストの修正
-  - [ ] 新規テスト追加
+  - [ ] `StartupSeedIterator` テスト追加
+  - [ ] `MtSeed` トレイトテスト追加
+  - [ ] 結果型 (`Vec<SeedOrigin>`) 検証テスト追加
 - [ ] `cargo test` パス確認
 - [ ] `cargo clippy` パス確認
