@@ -183,8 +183,8 @@ fn apply_egg_filter(
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LeadAbilityEffect,
-        LcgSeed, Nature, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LcgSeed,
+        LeadAbilityEffect, Nature, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
     fn make_source(seed: LcgSeed) -> SeedOrigin {
