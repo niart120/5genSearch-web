@@ -180,3 +180,142 @@ impl PokemonGenerator {
         (0..count).filter_map(|_| self.generate_next()).collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LeadAbilityEffect,
+        LcgSeed, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+    };
+
+    fn make_game_start() -> GameStartConfig {
+        GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        }
+    }
+
+    fn make_config() -> GenerationConfig {
+        GenerationConfig {
+            version: RomVersion::Black,
+            game_start: make_game_start(),
+            user_offset: 0,
+            max_advance: 1000,
+        }
+    }
+
+    fn make_trainer() -> TrainerInfo {
+        TrainerInfo {
+            tid: 12345,
+            sid: 54321,
+        }
+    }
+
+    fn make_pokemon_params() -> PokemonGenerationParams {
+        PokemonGenerationParams {
+            trainer: make_trainer(),
+            encounter_type: EncounterType::Normal,
+            encounter_method: EncounterMethod::Stationary,
+            lead_ability: LeadAbilityEffect::None,
+            shiny_charm: false,
+            slots: vec![],
+        }
+    }
+
+    fn make_slots() -> Vec<EncounterSlotConfig> {
+        vec![EncounterSlotConfig {
+            species_id: 1,
+            level_min: 5,
+            level_max: 10,
+            gender_threshold: 127,
+            has_held_item: false,
+            shiny_locked: false,
+        }]
+    }
+
+    fn make_source(seed: LcgSeed) -> SeedOrigin {
+        SeedOrigin::seed(seed)
+    }
+
+    #[test]
+    fn test_pokemon_generator_wild() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let slots = make_slots();
+        let params = PokemonGenerationParams {
+            slots: slots.clone(),
+            ..make_pokemon_params()
+        };
+        let config = make_config();
+
+        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        assert!(g.game_offset() > 0);
+
+        let pokemon = g.generate_next();
+        assert!(pokemon.is_some());
+        assert_eq!(g.current_advance(), 1);
+
+        let pokemon2 = g.generate_next();
+        assert!(pokemon2.is_some());
+        assert_eq!(g.current_advance(), 2);
+    }
+
+    #[test]
+    fn test_pokemon_generator_take() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let slots = make_slots();
+        let params = PokemonGenerationParams {
+            slots: slots.clone(),
+            ..make_pokemon_params()
+        };
+        let config = make_config();
+
+        let mut g = PokemonGenerator::new(base_seed, source, &params, &config).unwrap();
+
+        let results = g.take(5);
+        assert_eq!(results.len(), 5);
+        assert_eq!(g.current_advance(), 5);
+
+        for (i, pokemon) in results.iter().enumerate() {
+            #[allow(clippy::cast_possible_truncation)]
+            let expected_advance = i as u32;
+            assert_eq!(pokemon.advance, expected_advance);
+        }
+    }
+
+    #[test]
+    fn test_pokemon_generator_static() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let slots = vec![EncounterSlotConfig {
+            species_id: 150, // Mewtwo
+            level_min: 70,
+            level_max: 70,
+            gender_threshold: 255, // Genderless
+            has_held_item: false,
+            shiny_locked: false,
+        }];
+        let params = PokemonGenerationParams {
+            encounter_type: EncounterType::StaticSymbol,
+            slots: slots.clone(),
+            ..make_pokemon_params()
+        };
+        let config = make_config();
+
+        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        let pokemon = g.generate_next();
+        assert!(pokemon.is_some());
+        assert_eq!(pokemon.unwrap().species_id, 150);
+        assert_eq!(g.current_advance(), 1);
+    }
+}

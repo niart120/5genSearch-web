@@ -238,112 +238,12 @@ mod tests {
     }
 
     #[test]
-    fn test_pokemon_generator_wild() {
-        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let source = make_source(base_seed);
-        let slots = make_slots();
-        let params = PokemonGenerationParams {
-            slots: slots.clone(),
-            ..make_pokemon_params()
-        };
-        let config = make_config();
-
-        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
-
-        assert!(generator.is_ok());
-
-        let mut g = generator.unwrap();
-        assert!(g.game_offset() > 0);
-
-        let pokemon = g.generate_next();
-        assert!(pokemon.is_some());
-        assert_eq!(g.current_advance(), 1);
-
-        let pokemon2 = g.generate_next();
-        assert!(pokemon2.is_some());
-        assert_eq!(g.current_advance(), 2);
-    }
 
     #[test]
-    fn test_pokemon_generator_take() {
-        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let source = make_source(base_seed);
-        let slots = make_slots();
-        let params = PokemonGenerationParams {
-            slots: slots.clone(),
-            ..make_pokemon_params()
-        };
-        let config = make_config();
-
-        let mut g = PokemonGenerator::new(base_seed, source, &params, &config).unwrap();
-
-        let results = g.take(5);
-        assert_eq!(results.len(), 5);
-        assert_eq!(g.current_advance(), 5);
-
-        for (i, pokemon) in results.iter().enumerate() {
-            #[allow(clippy::cast_possible_truncation)]
-            let expected_advance = i as u32;
-            assert_eq!(pokemon.advance, expected_advance);
-        }
-    }
 
     #[test]
-    fn test_pokemon_generator_static() {
-        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let source = make_source(base_seed);
-        let slots = vec![EncounterSlotConfig {
-            species_id: 150, // Mewtwo
-            level_min: 70,
-            level_max: 70,
-            gender_threshold: 255, // Genderless
-            has_held_item: false,
-            shiny_locked: false,
-        }];
-        let params = PokemonGenerationParams {
-            encounter_type: EncounterType::StaticSymbol,
-            slots: slots.clone(),
-            ..make_pokemon_params()
-        };
-        let config = make_config();
-
-        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
-
-        assert!(generator.is_ok());
-
-        let mut g = generator.unwrap();
-        let pokemon = g.generate_next();
-        assert!(pokemon.is_some());
-        assert_eq!(pokemon.unwrap().species_id, 150);
-        assert_eq!(g.current_advance(), 1);
-    }
 
     #[test]
-    fn test_egg_generator() {
-        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-        let source = make_source(base_seed);
-        let params = EggGenerationParams {
-            trainer: make_trainer(),
-            everstone: EverstonePlan::None,
-            female_has_hidden: false,
-            uses_ditto: false,
-            gender_ratio: GenderRatio::Threshold(127),
-            nidoran_flag: false,
-            masuda_method: false,
-            parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
-            parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
-        };
-        let config = make_config();
-
-        let generator = EggGenerator::new(base_seed, source, &params, &config);
-
-        assert!(generator.is_ok());
-
-        let mut g = generator.unwrap();
-        let egg = g.generate_next();
-        assert!(egg.ivs.hp <= 31);
-        assert_eq!(g.current_advance(), 1);
-    }
 
     #[test]
     fn test_calculate_mt_offset() {

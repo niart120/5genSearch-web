@@ -108,3 +108,66 @@ impl EggGenerator {
         (0..count).map(|_| self.generate_next()).collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        EverstonePlan, GameStartConfig, GenderRatio, Ivs, LcgSeed, RomVersion, SaveState,
+        SeedOrigin, StartMode, TrainerInfo,
+    };
+
+    fn make_game_start() -> GameStartConfig {
+        GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        }
+    }
+
+    fn make_config() -> GenerationConfig {
+        GenerationConfig {
+            version: RomVersion::Black,
+            game_start: make_game_start(),
+            user_offset: 0,
+            max_advance: 1000,
+        }
+    }
+
+    fn make_trainer() -> TrainerInfo {
+        TrainerInfo {
+            tid: 12345,
+            sid: 54321,
+        }
+    }
+
+    fn make_source(seed: LcgSeed) -> SeedOrigin {
+        SeedOrigin::seed(seed)
+    }
+
+    #[test]
+    fn test_egg_generator() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let params = EggGenerationParams {
+            trainer: make_trainer(),
+            everstone: EverstonePlan::None,
+            female_has_hidden: false,
+            uses_ditto: false,
+            gender_ratio: GenderRatio::Threshold(127),
+            nidoran_flag: false,
+            masuda_method: false,
+            parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
+            parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
+        };
+        let config = make_config();
+
+        let generator = EggGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        let egg = g.generate_next();
+        assert!(egg.ivs.hp <= 31);
+        assert_eq!(g.current_advance(), 1);
+    }
+}
