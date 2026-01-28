@@ -30,6 +30,7 @@ pub fn supports_sync(encounter_type: EncounterType) -> bool {
             | EncounterType::SurfingBubble
             | EncounterType::FishingBubble
             | EncounterType::StaticSymbol
+            | EncounterType::HiddenGrotto
     )
 }
 

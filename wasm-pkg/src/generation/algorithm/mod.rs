@@ -12,11 +12,11 @@ pub use crate::core::needle::{calc_report_needle_direction, calculate_needle_dir
 
 // その他のアルゴリズムは crate 内部のみ (使用されている関数のみ re-export)
 pub(crate) use encounter::{
-    calculate_encounter_slot, determine_held_item_slot, dust_cloud_item_table_consume,
-    dust_cloud_result, encounter_type_supports_held_item, fishing_success,
-    generate_moving_encounter_info, generate_special_encounter_info, is_moving_encounter_type,
-    is_special_encounter_type, pokemon_shadow_item_table_consume, pokemon_shadow_result,
-    rand_to_percent,
+    calculate_encounter_slot, calculate_level, determine_held_item_slot,
+    dust_cloud_item_table_consume, dust_cloud_result, encounter_type_supports_held_item,
+    fishing_success, generate_moving_encounter_info, generate_special_encounter_info,
+    is_moving_encounter_type, is_special_encounter_type, pokemon_shadow_item_table_consume,
+    pokemon_shadow_result, rand_to_percent,
 };
 pub(crate) use game_offset::calculate_game_offset;
 pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset, generate_roamer_ivs};

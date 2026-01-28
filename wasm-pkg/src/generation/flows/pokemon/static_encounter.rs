@@ -2,8 +2,8 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    apply_shiny_lock, calculate_shiny_type, generate_event_pid, generate_wild_pid_with_reroll,
-    nature_roll, perform_sync_check,
+    apply_shiny_lock, calculate_level, calculate_shiny_type, determine_held_item_slot,
+    generate_event_pid, generate_wild_pid_with_reroll, nature_roll, perform_sync_check,
 };
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
@@ -115,6 +115,99 @@ pub fn generate_static_pokemon(
     }
 }
 
+/// 隠し穴ポケモン生成 (BW2 限定)
+///
+/// # 乱数消費順序
+/// 1. レベル決定 (Range, 先頭)
+/// 2. シンクロ判定
+/// 3. 性格値生成 (色違い無効、ID補正なし)
+/// 4. 性別値決定
+/// 5. 性格決定
+/// 6. 持ち物判定
+///
+/// 特徴: 色違い無効、ID 補正なし
+pub fn generate_hidden_grotto_pokemon(
+    lcg: &mut Lcg64,
+    params: &PokemonGenerationParams,
+    slot: &EncounterSlotConfig,
+) -> RawPokemonData {
+    // 1. レベル決定 (Range, 先頭)
+    let level_rand = lcg.next().unwrap_or(0);
+    let level = calculate_level(
+        RomVersion::Black2, // HiddenGrotto は BW2 限定
+        level_rand,
+        slot.level_min,
+        slot.level_max,
+    );
+
+    // 2. シンクロ判定
+    let sync_success = perform_sync_check(lcg, EncounterType::HiddenGrotto, &params.lead_ability);
+
+    // 3. 性格値生成 (色違い無効、ID補正なし)
+    // 通常の PID 生成と同じだが、色違い判定は無効
+    let pid = lcg.next().unwrap_or(0);
+
+    // 4. 性別値決定 (別途消費)
+    let gender_rand = lcg.next().unwrap_or(0);
+
+    // 5. 性格決定
+    let nature = if sync_success {
+        if let LeadAbilityEffect::Synchronize(n) = params.lead_ability {
+            let _r = lcg.next(); // 消費
+            n
+        } else {
+            Nature::from_u8(nature_roll(lcg.next().unwrap_or(0)))
+        }
+    } else {
+        Nature::from_u8(nature_roll(lcg.next().unwrap_or(0)))
+    };
+
+    // 6. 持ち物判定
+    let held_item_slot = if slot.has_held_item {
+        let item_rand = lcg.next().unwrap_or(0);
+        determine_held_item_slot(RomVersion::Black2, item_rand, &params.lead_ability, false)
+    } else {
+        HeldItemSlot::None
+    };
+
+    // === Resolve (乱数消費なし) ===
+    // 性別は別途消費した gender_rand から決定
+    let gender = determine_gender_from_rand(gender_rand, slot.gender_threshold);
+    let ability_slot = ((pid >> 16) & 1) as u8;
+
+    RawPokemonData {
+        pid,
+        species_id: slot.species_id,
+        level,
+        nature,
+        sync_applied: sync_success,
+        ability_slot,
+        gender,
+        shiny_type: ShinyType::None, // 色違い無効
+        held_item_slot,
+        encounter_result: EncounterResult::Pokemon,
+    }
+}
+
+/// 性別判定 (乱数値から)
+#[allow(clippy::cast_possible_truncation)]
+fn determine_gender_from_rand(rand_value: u32, threshold: u8) -> Gender {
+    match threshold {
+        0 => Gender::Male,
+        254 => Gender::Female,
+        255 => Gender::Genderless,
+        t => {
+            // (rand * 252) >> 32 で 0-251 の値を取得
+            let gender_value = ((u64::from(rand_value) * 252) >> 32) as u8;
+            if gender_value < t {
+                Gender::Female
+            } else {
+                Gender::Male
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -176,5 +269,79 @@ mod tests {
         assert_eq!(pokemon.level, 5);
         // shiny_locked = true なので None
         assert_eq!(pokemon.shiny_type, ShinyType::None);
+    }
+
+    fn make_slot_with_range(
+        species_id: u16,
+        level_min: u8,
+        level_max: u8,
+        gender_threshold: u8,
+    ) -> EncounterSlotConfig {
+        EncounterSlotConfig {
+            species_id,
+            level_min,
+            level_max,
+            gender_threshold,
+            shiny_locked: false,
+            has_held_item: false,
+        }
+    }
+
+    #[test]
+    fn test_generate_hidden_grotto_pokemon() {
+        let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
+        let params = make_params(EncounterType::HiddenGrotto);
+        let slot = make_slot_with_range(591, 55, 60, 127); // エモンガ
+
+        let pokemon = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
+
+        assert_eq!(pokemon.species_id, 591);
+        // レベルは 55-60 の範囲内
+        assert!(pokemon.level >= 55 && pokemon.level <= 60);
+        // 色違い無効
+        assert_eq!(pokemon.shiny_type, ShinyType::None);
+    }
+
+    #[test]
+    fn test_hidden_grotto_shiny_lock() {
+        // どんな seed でも色違いにならない
+        let mut lcg = Lcg64::from_raw(0);
+        let params = make_params(EncounterType::HiddenGrotto);
+        let slot = make_slot(591, 55, 127, false, false);
+
+        for _ in 0..100 {
+            let pokemon = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
+            assert_eq!(pokemon.shiny_type, ShinyType::None);
+        }
+    }
+
+    #[test]
+    fn test_hidden_grotto_consumption() {
+        // 消費数: level(1) + sync(1) + pid(1) + gender(1) + nature(1) = 5 (持ち物なし)
+        let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
+        let initial_seed = lcg.current_seed();
+        let params = make_params(EncounterType::HiddenGrotto);
+        let slot = make_slot(591, 55, 127, false, false);
+
+        let _ = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
+
+        let mut expected_lcg = Lcg64::new(initial_seed);
+        expected_lcg.advance(5);
+        assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
+    }
+
+    #[test]
+    fn test_hidden_grotto_consumption_with_item() {
+        // 消費数: level(1) + sync(1) + pid(1) + gender(1) + nature(1) + item(1) = 6
+        let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
+        let initial_seed = lcg.current_seed();
+        let params = make_params(EncounterType::HiddenGrotto);
+        let slot = make_slot(591, 55, 127, false, true);
+
+        let _ = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
+
+        let mut expected_lcg = Lcg64::new(initial_seed);
+        expected_lcg.advance(6);
+        assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 }

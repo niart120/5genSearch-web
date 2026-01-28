@@ -18,6 +18,7 @@ pub use crate::types::EncounterSlotConfig;
 pub enum GenerationError {
     FishingFailed,
     InvalidConfig(String),
+    UnsupportedEncounterType,
 }
 
 // ===== 中間データ =====

@@ -46,11 +46,12 @@ pub enum ItemContent {
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum EncounterType {
-    // 野生エンカウント
+    // 野生エンカウント - 陸上
     Normal,
     ShakingGrass,
     DustCloud,
     PokemonShadow,
+    // 野生エンカウント - 水上
     Surfing,
     SurfingBubble,
     Fishing,
@@ -61,6 +62,7 @@ pub enum EncounterType {
     StaticFossil,
     StaticEvent,
     Roamer,
+    HiddenGrotto,
     // 孵化
     Egg,
 }
