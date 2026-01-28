@@ -2,7 +2,9 @@
 name = "wasm-pkg"
 version = "0.1.0"
 edition = "2024"
-authors = ["5genSearch Team"]
+authors = ["niart120"]
+license = "MIT"
+repository = "https://github.com/niart120/5genSearch-web"
 description = "WASM calculation engine for Pokemon Gen5 RNG manipulation"
 
 [lib]
