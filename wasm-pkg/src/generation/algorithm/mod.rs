@@ -4,6 +4,7 @@ mod encounter;
 mod game_offset;
 mod iv;
 mod nature;
+mod npc;
 mod pid;
 
 // needle は core/needle.rs に移動済み
@@ -18,9 +19,9 @@ pub(crate) use encounter::{
     rand_to_percent,
 };
 pub(crate) use game_offset::calculate_game_offset;
-pub(crate) use iv::{InheritanceSlot, ParentRole};
 pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset, generate_roamer_ivs};
 pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, perform_sync_check};
+pub(crate) use npc::resolve_egg_npc_advance;
 pub(crate) use pid::{
     apply_shiny_lock, calculate_shiny_type, generate_egg_pid_with_reroll, generate_event_pid,
     generate_wild_pid_with_reroll,

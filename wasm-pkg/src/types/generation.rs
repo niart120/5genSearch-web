@@ -8,7 +8,7 @@ use tsify::Tsify;
 use super::config::RomVersion;
 use super::needle::NeedleDirection;
 use super::pokemon::{
-    Gender, GenderRatio, HeldItemSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
+    Gender, GenderRatio, HeldItemSlot, InheritanceSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
 };
 use super::seeds::SeedOrigin;
 
@@ -263,15 +263,12 @@ pub struct GeneratedEggData {
     pub gender: Gender,
     pub ability_slot: u8,
     pub shiny_type: ShinyType,
-    // 遺伝情報 (配列は Tsify で問題が出る場合があるので個別フィールド化)
-    pub inheritance_0_stat: usize,
-    pub inheritance_0_parent: u8,
-    pub inheritance_1_stat: usize,
-    pub inheritance_1_parent: u8,
-    pub inheritance_2_stat: usize,
-    pub inheritance_2_parent: u8,
+    // 遺伝情報 (配列化)
+    pub inheritance: [InheritanceSlot; 3],
     // IV (遺伝適用後)
     pub ivs: Ivs,
+    // NPC消費による猶予フレーム (consider_npc = false 時は None)
+    pub margin_frames: Option<u32>,
 }
 
 // ===== 生成パラメータ (WASM 公開用) =====
@@ -350,4 +347,6 @@ pub struct EggGenerationParams {
     pub parent_male: Ivs,
     /// メス親の個体値
     pub parent_female: Ivs,
+    /// NPC消費を考慮するか
+    pub consider_npc: bool,
 }

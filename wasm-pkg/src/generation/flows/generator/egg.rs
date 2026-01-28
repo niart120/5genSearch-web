@@ -5,7 +5,7 @@
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     apply_inheritance, calculate_game_offset, calculate_needle_direction,
-    generate_rng_ivs_with_offset,
+    generate_rng_ivs_with_offset, resolve_egg_npc_advance,
 };
 use crate::types::{
     EggGenerationParams, GeneratedEggData, GenerationConfig, Ivs, LcgSeed, SeedOrigin,
@@ -84,8 +84,15 @@ impl EggGenerator {
         let needle = calculate_needle_direction(current_seed);
         let advance = self.current_advance;
 
-        let mut gen_lcg = self.lcg.clone();
+        // NPC消費を考慮する場合
+        let (gen_lcg, margin_frames) = if self.params.consider_npc {
+            let result = resolve_egg_npc_advance(current_seed);
+            (Lcg64::new(result.seed), Some(result.margin_frames))
+        } else {
+            (self.lcg.clone(), None)
+        };
 
+        let mut gen_lcg = gen_lcg;
         let raw = generate_egg(&mut gen_lcg, &self.params);
 
         // 遺伝適用
@@ -100,7 +107,14 @@ impl EggGenerator {
         self.lcg.next();
         self.current_advance += 1;
 
-        GeneratedEggData::from_raw(&raw, final_ivs, advance, needle, self.source.clone())
+        GeneratedEggData::from_raw(
+            &raw,
+            final_ivs,
+            advance,
+            needle,
+            self.source.clone(),
+            margin_frames,
+        )
     }
 
     /// 指定数の個体を生成
@@ -158,6 +172,7 @@ mod tests {
             masuda_method: false,
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
             parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
+            consider_npc: false,
         };
         let config = make_config();
 
@@ -169,5 +184,34 @@ mod tests {
         let egg = g.generate_next();
         assert!(egg.ivs.hp <= 31);
         assert_eq!(g.current_advance(), 1);
+        assert!(egg.margin_frames.is_none());
+    }
+
+    #[test]
+    fn test_egg_generator_with_npc() {
+        let base_seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let source = make_source(base_seed);
+        let params = EggGenerationParams {
+            trainer: make_trainer(),
+            everstone: EverstonePlan::None,
+            female_has_hidden: false,
+            uses_ditto: false,
+            gender_ratio: GenderRatio::Threshold(127),
+            nidoran_flag: false,
+            masuda_method: false,
+            parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
+            parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
+            consider_npc: true,
+        };
+        let config = make_config();
+
+        let generator = EggGenerator::new(base_seed, source, &params, &config);
+
+        assert!(generator.is_ok());
+
+        let mut g = generator.unwrap();
+        let egg = g.generate_next();
+        assert!(egg.ivs.hp <= 31);
+        assert!(egg.margin_frames.is_some());
     }
 }

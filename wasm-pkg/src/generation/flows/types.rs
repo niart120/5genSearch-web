@@ -3,10 +3,9 @@
 //! 生成フロー内部でのみ使用される設定型・中間データ型を定義。
 //! TS 公開型は `crate::types` に配置。
 
-use crate::generation::algorithm::InheritanceSlot;
 use crate::types::{
-    EncounterResult, Gender, GeneratedEggData, GeneratedPokemonData, HeldItemSlot, Ivs,
-    MovingEncounterInfo, Nature, NeedleDirection, SeedOrigin, ShinyType, SpecialEncounterInfo,
+    EncounterResult, Gender, GeneratedEggData, GeneratedPokemonData, HeldItemSlot, InheritanceSlot,
+    Ivs, MovingEncounterInfo, Nature, NeedleDirection, SeedOrigin, ShinyType, SpecialEncounterInfo,
 };
 
 // Re-export for internal use
@@ -109,6 +108,7 @@ impl GeneratedEggData {
         advance: u32,
         needle_direction: NeedleDirection,
         source: SeedOrigin,
+        margin_frames: Option<u32>,
     ) -> Self {
         Self {
             advance,
@@ -119,13 +119,9 @@ impl GeneratedEggData {
             gender: raw.gender,
             ability_slot: raw.ability_slot,
             shiny_type: raw.shiny_type,
-            inheritance_0_stat: raw.inheritance[0].stat,
-            inheritance_0_parent: raw.inheritance[0].parent_as_u8(),
-            inheritance_1_stat: raw.inheritance[1].stat,
-            inheritance_1_parent: raw.inheritance[1].parent_as_u8(),
-            inheritance_2_stat: raw.inheritance[2].stat,
-            inheritance_2_parent: raw.inheritance[2].parent_as_u8(),
+            inheritance: raw.inheritance,
             ivs,
+            margin_frames,
         }
     }
 }

@@ -2,7 +2,7 @@
 #![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::mt::Mt19937;
-use crate::types::{Ivs, MtSeed};
+use crate::types::{InheritanceSlot, Ivs, MtSeed};
 
 /// MT19937 出力から IV を抽出 (0-31)
 #[inline]
@@ -76,48 +76,6 @@ pub fn generate_roamer_ivs(seed: MtSeed) -> Ivs {
     Ivs::new(hp, atk, def, spa, spd, spe)
 }
 
-/// 親の役割
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum ParentRole {
-    #[default]
-    Male,
-    Female,
-}
-
-impl ParentRole {
-    /// u8 値から変換
-    #[inline]
-    pub const fn from_u8(value: u8) -> Self {
-        if value == 0 { Self::Male } else { Self::Female }
-    }
-
-    /// u8 値へ変換
-    #[inline]
-    pub const fn as_u8(self) -> u8 {
-        match self {
-            Self::Male => 0,
-            Self::Female => 1,
-        }
-    }
-}
-
-/// 遺伝スロット
-#[derive(Clone, Copy, Debug, Default)]
-pub struct InheritanceSlot {
-    /// 遺伝先ステータス (0=HP, 1=Atk, 2=Def, 3=SpA, 4=SpD, 5=Spe)
-    pub stat: usize,
-    /// 遺伝元親
-    pub parent: ParentRole,
-}
-
-impl InheritanceSlot {
-    /// 親を u8 として取得
-    #[inline]
-    pub const fn parent_as_u8(&self) -> u8 {
-        self.parent.as_u8()
-    }
-}
-
 /// 遺伝適用
 pub fn apply_inheritance(
     rng_ivs: &Ivs,
@@ -128,11 +86,12 @@ pub fn apply_inheritance(
     let mut result = *rng_ivs;
 
     for slot in slots {
-        let parent_iv = match slot.parent {
-            ParentRole::Male => parent_male.get(slot.stat),
-            ParentRole::Female => parent_female.get(slot.stat),
+        let parent_iv = if slot.parent == 0 {
+            parent_male.get(usize::from(slot.stat))
+        } else {
+            parent_female.get(usize::from(slot.stat))
         };
-        result.set(slot.stat, parent_iv);
+        result.set(usize::from(slot.stat), parent_iv);
     }
 
     result
@@ -161,18 +120,9 @@ mod tests {
         let male = Ivs::new(31, 0, 0, 0, 0, 0);
         let female = Ivs::new(0, 31, 0, 0, 0, 0);
         let slots = [
-            InheritanceSlot {
-                stat: 0,
-                parent: ParentRole::Male,
-            }, // HP from male
-            InheritanceSlot {
-                stat: 1,
-                parent: ParentRole::Female,
-            }, // Atk from female
-            InheritanceSlot {
-                stat: 2,
-                parent: ParentRole::Male,
-            }, // Def from male
+            InheritanceSlot::new(0, 0), // HP from male
+            InheritanceSlot::new(1, 1), // Atk from female
+            InheritanceSlot::new(2, 0), // Def from male
         ];
         let result = apply_inheritance(&rng_ivs, &male, &female, &slots);
         assert_eq!(result.hp, 31);
