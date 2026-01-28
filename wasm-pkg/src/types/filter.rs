@@ -111,7 +111,7 @@ impl IvFilter {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ShinyFilter {
     /// 色違いのみ (Star or Square)
-    Any,
+    Shiny,
     /// 星型のみ
     Star,
     /// ひし形のみ
@@ -123,7 +123,7 @@ impl ShinyFilter {
     #[inline]
     pub fn matches(&self, shiny_type: ShinyType) -> bool {
         match self {
-            Self::Any => shiny_type != ShinyType::None,
+            Self::Shiny => shiny_type != ShinyType::None,
             Self::Star => shiny_type == ShinyType::Star,
             Self::Square => shiny_type == ShinyType::Square,
         }
@@ -141,8 +141,8 @@ impl ShinyFilter {
 pub struct ResultFilter {
     /// IV フィルター
     pub iv: Option<IvFilter>,
-    /// 性格
-    pub nature: Option<Nature>,
+    /// 性格 (複数指定可、いずれかに一致)
+    pub natures: Option<Vec<Nature>>,
     /// 性別
     pub gender: Option<Gender>,
     /// 特性スロット (0, 1, 2)
@@ -156,7 +156,7 @@ impl ResultFilter {
     pub const fn any() -> Self {
         Self {
             iv: None,
-            nature: None,
+            natures: None,
             gender: None,
             ability_slot: None,
             shiny: None,
@@ -201,9 +201,10 @@ impl ResultFilter {
             return false;
         }
 
-        // 性格
-        if let Some(required_nature) = self.nature
-            && nature != required_nature
+        // 性格 (複数指定のいずれかに一致)
+        if let Some(ref required_natures) = self.natures
+            && !required_natures.is_empty()
+            && !required_natures.contains(&nature)
         {
             return false;
         }
@@ -393,8 +394,8 @@ mod tests {
     // === ShinyFilter Tests ===
 
     #[test]
-    fn test_shiny_filter_any() {
-        let filter = ShinyFilter::Any;
+    fn test_shiny_filter_shiny() {
+        let filter = ShinyFilter::Shiny;
         assert!(!filter.matches(ShinyType::None));
         assert!(filter.matches(ShinyType::Star));
         assert!(filter.matches(ShinyType::Square));
@@ -466,7 +467,7 @@ mod tests {
     #[test]
     fn test_result_filter_nature() {
         let filter = ResultFilter {
-            nature: Some(Nature::Adamant),
+            natures: Some(vec![Nature::Adamant]),
             ..Default::default()
         };
         let pokemon_adamant = make_pokemon(
@@ -488,6 +489,45 @@ mod tests {
             50,
         );
         assert!(filter.matches_pokemon(&pokemon_adamant));
+        assert!(!filter.matches_pokemon(&pokemon_timid));
+    }
+
+    #[test]
+    fn test_result_filter_nature_multiple() {
+        // 複数性格指定: Adamant or Jolly
+        let filter = ResultFilter {
+            natures: Some(vec![Nature::Adamant, Nature::Jolly]),
+            ..Default::default()
+        };
+        let pokemon_adamant = make_pokemon(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            0,
+            ShinyType::None,
+            1,
+            50,
+        );
+        let pokemon_jolly = make_pokemon(
+            Ivs::uniform(15),
+            Nature::Jolly,
+            Gender::Male,
+            0,
+            ShinyType::None,
+            1,
+            50,
+        );
+        let pokemon_timid = make_pokemon(
+            Ivs::uniform(15),
+            Nature::Timid,
+            Gender::Male,
+            0,
+            ShinyType::None,
+            1,
+            50,
+        );
+        assert!(filter.matches_pokemon(&pokemon_adamant));
+        assert!(filter.matches_pokemon(&pokemon_jolly));
         assert!(!filter.matches_pokemon(&pokemon_timid));
     }
 
@@ -550,7 +590,7 @@ mod tests {
     #[test]
     fn test_result_filter_shiny() {
         let filter = ResultFilter {
-            shiny: Some(ShinyFilter::Any),
+            shiny: Some(ShinyFilter::Shiny),
             ..Default::default()
         };
         let pokemon_shiny = make_pokemon(
@@ -580,9 +620,9 @@ mod tests {
         // 複合条件: 6V + Adamant + Female + Shiny
         let filter = ResultFilter {
             iv: Some(IvFilter::six_v()),
-            nature: Some(Nature::Adamant),
+            natures: Some(vec![Nature::Adamant]),
             gender: Some(Gender::Female),
-            shiny: Some(ShinyFilter::Any),
+            shiny: Some(ShinyFilter::Shiny),
             ..Default::default()
         };
         // すべて満たす
@@ -718,8 +758,8 @@ mod tests {
     fn test_egg_filter_combined() {
         let filter = EggFilter {
             base: ResultFilter {
-                nature: Some(Nature::Jolly),
-                shiny: Some(ShinyFilter::Any),
+                natures: Some(vec![Nature::Jolly]),
+                shiny: Some(ShinyFilter::Shiny),
                 ..Default::default()
             },
             min_margin_frames: Some(5),

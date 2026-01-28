@@ -10,11 +10,11 @@ Generator / Searcher 共通で利用可能なフィルター型体系を整備�
 
 | 用語 | 説明 |
 |------|------|
-| `IvFilter` | IV 条件フィルター (既存、変更なし) |
+| `IvFilter` | IV 条件フィルター (`filter.rs` に移動済み) |
 | `ResultFilter` | 生成結果の共通フィルター条件 (IV + 性格 + 性別 + 特性 + 色違い) |
 | `PokemonFilter` | 野生/固定ポケモン用フィルター (`ResultFilter` + 種族・レベル条件) |
 | `EggFilter` | 孵化用フィルター (`ResultFilter` + 猶予フレーム条件) |
-| `ShinyFilter` | 色違い条件 (`Any` / `Star` / `Square`) |
+| `ShinyFilter` | 色違い条件 (`Shiny` / `Star` / `Square`) |
 
 ### 1.3 背景・問題
 
@@ -54,12 +54,12 @@ Generator / Searcher 共通で利用可能なフィルター型体系を整備�
 ### 3.1 型階層
 
 ```
-IvFilter (既存、変更なし)
+IvFilter (filter.rs に移動済み)
     │
     ▼
 ResultFilter (新規: 共通条件)
     ├─ iv: Option<IvFilter>
-    ├─ nature: Option<Nature>
+    ├─ natures: Option<Vec<Nature>>  // 複数指定可
     ├─ gender: Option<Gender>
     ├─ ability_slot: Option<u8>
     └─ shiny: Option<ShinyFilter>
@@ -124,7 +124,7 @@ impl ResultFilter {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ShinyFilter {
     /// 色違いのみ (Star or Square)
-    Any,
+    Shiny,
     /// 星型のみ
     Star,
     /// ひし形のみ
@@ -135,7 +135,7 @@ impl ShinyFilter {
     /// 色違い条件に一致するか判定
     pub fn matches(&self, shiny_type: ShinyType) -> bool {
         match self {
-            Self::Any => shiny_type != ShinyType::None,
+            Self::Shiny => shiny_type != ShinyType::None,
             Self::Star => shiny_type == ShinyType::Star,
             Self::Square => shiny_type == ShinyType::Square,
         }
@@ -157,8 +157,8 @@ impl ShinyFilter {
 pub struct ResultFilter {
     /// IV フィルター
     pub iv: Option<IvFilter>,
-    /// 性格
-    pub nature: Option<Nature>,
+    /// 性格 (複数指定可、いずれかに一致)
+    pub natures: Option<Vec<Nature>>,
     /// 性別
     pub gender: Option<Gender>,
     /// 特性スロット (0, 1, 2)
@@ -172,7 +172,7 @@ impl ResultFilter {
     pub const fn any() -> Self {
         Self {
             iv: None,
-            nature: None,
+            natures: None,
             gender: None,
             ability_slot: None,
             shiny: None,
@@ -182,7 +182,7 @@ impl ResultFilter {
     /// `GeneratedPokemonData` が条件に一致するか判定
     pub fn matches_pokemon(&self, data: &GeneratedPokemonData) -> bool {
         self.matches_core(
-            &data.ivs,
+            data.ivs,
             data.nature,
             data.gender,
             data.ability_slot,
@@ -193,7 +193,7 @@ impl ResultFilter {
     /// `GeneratedEggData` が条件に一致するか判定
     pub fn matches_egg(&self, data: &GeneratedEggData) -> bool {
         self.matches_core(
-            &data.ivs,
+            data.ivs,
             data.nature,
             data.gender,
             data.ability_slot,
@@ -204,45 +204,46 @@ impl ResultFilter {
     /// 共通の判定ロジック
     fn matches_core(
         &self,
-        ivs: &Ivs,
+        ivs: Ivs,
         nature: Nature,
         gender: Gender,
         ability_slot: u8,
         shiny_type: ShinyType,
     ) -> bool {
         // IV フィルター
-        if let Some(ref iv_filter) = self.iv {
-            if !iv_filter.matches(ivs) {
-                return false;
-            }
+        if let Some(ref iv_filter) = self.iv
+            && !iv_filter.matches(&ivs)
+        {
+            return false;
         }
 
-        // 性格
-        if let Some(required_nature) = self.nature {
-            if nature != required_nature {
-                return false;
-            }
+        // 性格 (複数指定のいずれかに一致)
+        if let Some(ref required_natures) = self.natures
+            && !required_natures.is_empty()
+            && !required_natures.contains(&nature)
+        {
+            return false;
         }
 
         // 性別
-        if let Some(required_gender) = self.gender {
-            if gender != required_gender {
-                return false;
-            }
+        if let Some(required_gender) = self.gender
+            && gender != required_gender
+        {
+            return false;
         }
 
         // 特性スロット
-        if let Some(required_slot) = self.ability_slot {
-            if ability_slot != required_slot {
-                return false;
-            }
+        if let Some(required_slot) = self.ability_slot
+            && ability_slot != required_slot
+        {
+            return false;
         }
 
         // 色違い
-        if let Some(ref shiny_filter) = self.shiny {
-            if !shiny_filter.matches(shiny_type) {
-                return false;
-            }
+        if let Some(ref shiny_filter) = self.shiny
+            && !shiny_filter.matches(shiny_type)
+        {
+            return false;
         }
 
         true
@@ -402,7 +403,7 @@ fn apply_egg_filter(
 
 | テストケース | 検証内容 |
 |--------------|----------|
-| `test_shiny_filter_any` | `ShinyFilter::Any` が Star/Square を通過すること |
+| `test_shiny_filter_shiny` | `ShinyFilter::Shiny` が Star/Square を通過すること |
 | `test_shiny_filter_star` | `ShinyFilter::Star` が Star のみ通過すること |
 | `test_shiny_filter_square` | `ShinyFilter::Square` が Square のみ通過すること |
 | `test_result_filter_iv` | IV 条件が正しく評価されること |
