@@ -93,25 +93,17 @@ pub enum GenderRatio {
     Genderless,
     MaleOnly,
     FemaleOnly,
-    /// 性別値の閾値 (例: 127 = 1:1, 31 = 7:1, 63 = 3:1, 191 = 1:3)
-    Threshold(u8),
+    /// ♀:♂ = 1:7 (閾値 31)
+    F1M7,
+    /// ♀:♂ = 1:3 (閾値 63)
+    F1M3,
+    /// ♀:♂ = 1:1 (閾値 127)
+    F1M1,
+    /// ♀:♂ = 3:1 (閾値 191)
+    F3M1,
 }
 
 impl GenderRatio {
-    // ===== 性別比定数 =====
-
-    /// ♀:♂ = 1:7 (閾値 31)
-    pub const F1_M7: Self = Self::Threshold(31);
-
-    /// ♀:♂ = 1:3 (閾値 63)
-    pub const F1_M3: Self = Self::Threshold(63);
-
-    /// ♀:♂ = 1:1 (閾値 127)
-    pub const F1_M1: Self = Self::Threshold(127);
-
-    /// ♀:♂ = 3:1 (閾値 191)
-    pub const F3_M1: Self = Self::Threshold(191);
-
     // ===== 性別判定 =====
 
     /// PID から性別を判定
@@ -119,13 +111,14 @@ impl GenderRatio {
     /// 性別値 (PID 下位 8bit) が閾値未満なら Female、以上なら Male。
     #[inline]
     pub fn determine_gender(self, pid: u32) -> Gender {
-        match self {
-            Self::Genderless => Gender::Genderless,
-            Self::MaleOnly => Gender::Male,
-            Self::FemaleOnly => Gender::Female,
-            Self::Threshold(threshold) => {
+        let threshold = self.to_threshold();
+        match threshold {
+            0 => Gender::Male,
+            254 => Gender::Female,
+            255 => Gender::Genderless,
+            t => {
                 let gender_value = (pid & 0xFF) as u8;
-                if gender_value < threshold {
+                if gender_value < t {
                     Gender::Female
                 } else {
                     Gender::Male
@@ -136,25 +129,31 @@ impl GenderRatio {
 
     /// 閾値から `GenderRatio` を作成
     ///
-    /// `EncounterSlotConfig` 等で使用される閾値 (0, 254, 255, その他) を変換。
+    /// `EncounterSlotConfig` 等で使用される閾値を変換。
     #[inline]
     pub const fn from_threshold(threshold: u8) -> Self {
         match threshold {
             0 => Self::MaleOnly,
+            31 => Self::F1M7,
+            63 => Self::F1M3,
+            127 => Self::F1M1,
+            191 => Self::F3M1,
             254 => Self::FemaleOnly,
-            255 => Self::Genderless,
-            t => Self::Threshold(t),
+            _ => Self::Genderless,
         }
     }
 
-    /// 閾値を取得 (Threshold でない場合は特殊値を返す)
+    /// 閾値を取得
     #[inline]
     pub const fn to_threshold(self) -> u8 {
         match self {
             Self::MaleOnly => 0,
+            Self::F1M7 => 31,
+            Self::F1M3 => 63,
+            Self::F1M1 => 127,
+            Self::F3M1 => 191,
             Self::FemaleOnly => 254,
             Self::Genderless => 255,
-            Self::Threshold(t) => t,
         }
     }
 
@@ -164,14 +163,15 @@ impl GenderRatio {
     #[inline]
     #[allow(clippy::cast_possible_truncation)]
     pub fn determine_gender_from_rand(self, rand_value: u32) -> Gender {
-        match self {
-            Self::Genderless => Gender::Genderless,
-            Self::MaleOnly => Gender::Male,
-            Self::FemaleOnly => Gender::Female,
-            Self::Threshold(threshold) => {
+        let threshold = self.to_threshold();
+        match threshold {
+            0 => Gender::Male,
+            254 => Gender::Female,
+            255 => Gender::Genderless,
+            t => {
                 // (rand * 252) >> 32 で 0-251 の値を取得
                 let gender_value = ((u64::from(rand_value) * 252) >> 32) as u8;
-                if gender_value < threshold {
+                if gender_value < t {
                     Gender::Female
                 } else {
                     Gender::Male

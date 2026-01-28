@@ -187,12 +187,12 @@ mod tests {
         );
         // 1:1 ratio: PID & 0xFF = 0x78 = 120 < 127 → Female
         assert_eq!(
-            GenderRatio::F1_M1.determine_gender(0x1234_5678),
+            GenderRatio::F1M1.determine_gender(0x1234_5678),
             Gender::Female
         );
         // PID & 0xFF = 0x80 = 128 >= 127 → Male
         assert_eq!(
-            GenderRatio::F1_M1.determine_gender(0x1234_5680),
+            GenderRatio::F1M1.determine_gender(0x1234_5680),
             Gender::Male
         );
     }

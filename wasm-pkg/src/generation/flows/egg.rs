@@ -114,7 +114,7 @@ mod tests {
             everstone: EverstonePlan::None,
             female_has_hidden: false,
             uses_ditto: false,
-            gender_ratio: GenderRatio::Threshold(127),
+            gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,
             masuda_method: false,
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
@@ -190,13 +190,13 @@ mod tests {
 
         // Threshold: low value -> Female
         assert_eq!(
-            GenderRatio::F1_M1.determine_gender(0x1234_5600),
+            GenderRatio::F1M1.determine_gender(0x1234_5600),
             Gender::Female
         );
 
         // Threshold: high value -> Male
         assert_eq!(
-            GenderRatio::F1_M1.determine_gender(0x1234_56FF),
+            GenderRatio::F1M1.determine_gender(0x1234_56FF),
             Gender::Male
         );
     }
