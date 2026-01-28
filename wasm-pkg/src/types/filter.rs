@@ -6,7 +6,103 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use super::generation::{GeneratedEggData, GeneratedPokemonData};
-use super::pokemon::{Gender, IvFilter, Ivs, Nature, ShinyType};
+use super::pokemon::{Gender, HiddenPowerType, Ivs, Nature, ShinyType};
+
+// ===== IvFilter =====
+
+/// IV フィルタ条件
+///
+/// 各ステータスの範囲指定に加え、めざめるパワーのタイプ・威力条件を指定可能。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct IvFilter {
+    /// HP (min, max)
+    pub hp: (u8, u8),
+    /// 攻撃 (min, max)
+    pub atk: (u8, u8),
+    /// 防御 (min, max)
+    pub def: (u8, u8),
+    /// 特攻 (min, max)
+    pub spa: (u8, u8),
+    /// 特防 (min, max)
+    pub spd: (u8, u8),
+    /// 素早さ (min, max)
+    pub spe: (u8, u8),
+    /// めざパタイプ条件 (指定タイプのいずれかに一致)
+    #[serde(default)]
+    pub hidden_power_types: Option<Vec<HiddenPowerType>>,
+    /// めざパ威力下限 (30-70)
+    #[serde(default)]
+    pub hidden_power_min_power: Option<u8>,
+}
+
+impl IvFilter {
+    /// 全範囲 (0-31) を許容するフィルタ
+    pub const fn any() -> Self {
+        Self {
+            hp: (0, 31),
+            atk: (0, 31),
+            def: (0, 31),
+            spa: (0, 31),
+            spd: (0, 31),
+            spe: (0, 31),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        }
+    }
+
+    /// 6V フィルタ
+    pub const fn six_v() -> Self {
+        Self {
+            hp: (31, 31),
+            atk: (31, 31),
+            def: (31, 31),
+            spa: (31, 31),
+            spd: (31, 31),
+            spe: (31, 31),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        }
+    }
+
+    /// 指定 IV が条件を満たすか判定
+    #[inline]
+    pub fn matches(&self, ivs: &Ivs) -> bool {
+        // 各ステータスの範囲チェック
+        if ivs.hp < self.hp.0
+            || ivs.hp > self.hp.1
+            || ivs.atk < self.atk.0
+            || ivs.atk > self.atk.1
+            || ivs.def < self.def.0
+            || ivs.def > self.def.1
+            || ivs.spa < self.spa.0
+            || ivs.spa > self.spa.1
+            || ivs.spd < self.spd.0
+            || ivs.spd > self.spd.1
+            || ivs.spe < self.spe.0
+            || ivs.spe > self.spe.1
+        {
+            return false;
+        }
+
+        // めざパタイプチェック
+        if let Some(ref types) = self.hidden_power_types
+            && !types.is_empty()
+            && !types.contains(&ivs.hidden_power_type())
+        {
+            return false;
+        }
+
+        // めざパ威力チェック
+        if let Some(min_power) = self.hidden_power_min_power
+            && ivs.hidden_power_power() < min_power
+        {
+            return false;
+        }
+
+        true
+    }
+}
 
 // ===== ShinyFilter =====
 
@@ -238,7 +334,7 @@ impl EggFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{InheritanceSlot, Ivs, NeedleDirection, SeedOrigin};
+    use crate::types::{HiddenPowerType, InheritanceSlot, Ivs, NeedleDirection, SeedOrigin};
 
     // テスト用ヘルパー: GeneratedPokemonData を生成
     fn make_pokemon(
@@ -655,5 +751,67 @@ mod tests {
         assert!(filter.matches(&egg_pass));
         assert!(!filter.matches(&egg_fail_nature));
         assert!(!filter.matches(&egg_fail_margin));
+    }
+
+    // === IvFilter Tests ===
+
+    #[test]
+    fn test_iv_filter_any() {
+        let filter = IvFilter::any();
+        let ivs = Ivs::new(15, 15, 15, 15, 15, 15);
+        assert!(filter.matches(&ivs));
+    }
+
+    #[test]
+    fn test_iv_filter_six_v() {
+        let filter = IvFilter::six_v();
+        let ivs_6v = Ivs::new(31, 31, 31, 31, 31, 31);
+        let ivs_5v = Ivs::new(31, 30, 31, 31, 31, 31);
+        assert!(filter.matches(&ivs_6v));
+        assert!(!filter.matches(&ivs_5v));
+    }
+
+    #[test]
+    fn test_iv_filter_hidden_power_type() {
+        let filter = IvFilter {
+            hp: (0, 31),
+            atk: (0, 31),
+            def: (0, 31),
+            spa: (0, 31),
+            spd: (0, 31),
+            spe: (0, 31),
+            hidden_power_types: Some(vec![HiddenPowerType::Ice]),
+            hidden_power_min_power: None,
+        };
+
+        // めざ氷: 31-30-30-31-31-31
+        let ivs_ice = Ivs::new(31, 30, 30, 31, 31, 31);
+        assert!(filter.matches(&ivs_ice));
+
+        // めざ炎: 30-31-30-30-31-30
+        let ivs_fire = Ivs::new(30, 31, 30, 30, 31, 30);
+        assert!(!filter.matches(&ivs_fire));
+    }
+
+    #[test]
+    fn test_iv_filter_hidden_power_power() {
+        let filter = IvFilter {
+            hp: (0, 31),
+            atk: (0, 31),
+            def: (0, 31),
+            spa: (0, 31),
+            spd: (0, 31),
+            spe: (0, 31),
+            hidden_power_types: None,
+            hidden_power_min_power: Some(70),
+        };
+
+        // 威力最大 (70): 6V
+        let ivs_max = Ivs::new(31, 31, 31, 31, 31, 31);
+        assert!(filter.matches(&ivs_max));
+
+        // 威力最小 (30): 0V
+        let ivs_min = Ivs::new(0, 0, 0, 0, 0, 0);
+        assert!(!filter.matches(&ivs_min));
     }
 }

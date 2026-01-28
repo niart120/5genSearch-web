@@ -17,7 +17,7 @@ pub use config::{
     RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition, TimeRangeParams,
     Timer0VCountRange,
 };
-pub use filter::{EggFilter, PokemonFilter, ResultFilter, ShinyFilter};
+pub use filter::{EggFilter, IvFilter, PokemonFilter, ResultFilter, ShinyFilter};
 pub use generation::{
     EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,
     EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GenerationConfig,
@@ -27,6 +27,6 @@ pub use generation::{
 pub use needle::{NeedleDirection, NeedlePattern, NeedleSearchResult};
 pub use pokemon::{
     AbilitySlot, Gender, GenderRatio, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
-    InheritanceSlot, IvFilter, Ivs, LeadAbilityEffect, Nature, ShinyType,
+    InheritanceSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
 };
 pub use seeds::{LcgSeed, MtSeed, SeedOrigin};
