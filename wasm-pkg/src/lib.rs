@@ -14,8 +14,9 @@ pub mod types;
 
 // Re-export datetime_search types
 pub use datetime_search::{
+    EggDatetimeSearchBatch, EggDatetimeSearchParams, EggDatetimeSearchResult, EggDatetimeSearcher,
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
-    generate_mtseed_search_tasks,
+    generate_egg_search_tasks, generate_mtseed_search_tasks,
 };
 
 // Re-export common types

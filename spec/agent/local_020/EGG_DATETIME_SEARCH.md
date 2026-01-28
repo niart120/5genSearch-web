@@ -473,20 +473,20 @@ wasm-pack build --target web
 
 > **前提**: [local_019](../local_019/FILTER_REDESIGN.md) (フィルター設計) が実装済みであること。
 
-- [ ] `datetime_search/mod.rs` に `expand_combinations` を共通関数として移動
-- [ ] `datetime_search/mtseed.rs` の `expand_combinations` を `mod.rs` のものに置き換え
-- [ ] `datetime_search/egg.rs` 新規作成
-  - [ ] `EggDatetimeSearchParams`
-  - [ ] `EggDatetimeSearchResult`
-  - [ ] `EggDatetimeSearchBatch`
-  - [ ] `EggDatetimeSearcher`
-  - [ ] `generate_egg_search_tasks`
-- [ ] `datetime_search/mod.rs` に `egg` モジュール追加・re-export
-- [ ] `lib.rs` に WASM エクスポート追加
-- [ ] ユニットテスト追加
-- [ ] `cargo test` パス確認
-- [ ] `cargo clippy` 警告なし
-- [ ] `wasm-pack build --target web` 成功確認
+- [x] `datetime_search/mod.rs` に `expand_combinations` を共通関数として移動
+- [x] `datetime_search/mtseed.rs` の `expand_combinations` を `mod.rs` のものに置き換え
+- [x] `datetime_search/egg.rs` 新規作成
+  - [x] `EggDatetimeSearchParams`
+  - [x] `EggDatetimeSearchResult`
+  - [x] `EggDatetimeSearchBatch`
+  - [x] `EggDatetimeSearcher`
+  - [x] `generate_egg_search_tasks`
+- [x] `datetime_search/mod.rs` に `egg` モジュール追加・re-export
+- [x] `lib.rs` に WASM エクスポート追加
+- [x] ユニットテスト追加
+- [x] `cargo test` パス確認
+- [x] `cargo clippy` 警告なし
+- [x] `wasm-pack build --target web` 成功確認
 
 ## 7. 関連ドキュメント
 
