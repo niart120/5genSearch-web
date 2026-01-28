@@ -45,7 +45,7 @@ pub fn generate_phenomena_pokemon(
             let result = dust_cloud_result(slot_value);
             if let EncounterResult::Item(item) = result {
                 dust_cloud_item_table_consume(lcg, item);
-                return RawPokemonData::item_only(result);
+                return RawPokemonData::not_pokemon(result);
             }
             result
         }
@@ -55,7 +55,7 @@ pub fn generate_phenomena_pokemon(
             let result = pokemon_shadow_result(slot_value);
             if let EncounterResult::Item(_) = result {
                 pokemon_shadow_item_table_consume(lcg);
-                return RawPokemonData::item_only(result);
+                return RawPokemonData::not_pokemon(result);
             }
             result
         }

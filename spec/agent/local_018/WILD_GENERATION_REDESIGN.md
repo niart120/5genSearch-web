@@ -14,6 +14,7 @@
 | Range パターン | 乱数値から min-max 範囲内でレベルを計算 |
 | Static パターン | 乱数消費なし、固定レベル |
 | HiddenGrotto | BW2 限定の隠し穴エンカウント |
+| EncounterResult | エンカウント結果 (`Pokemon` / `Item` / `FishingFailed`) |
 
 ### 1.3 背景・問題
 
@@ -180,33 +181,6 @@ pub enum EncounterType {
 ### 4.2 レベル決定関数
 
 ```rust
-/// レベル乱数値を使用するか (Range パターン)
-pub fn uses_level_rand_value(encounter_type: EncounterType) -> bool {
-    matches!(
-        encounter_type,
-        EncounterType::Surfing
-            | EncounterType::SurfingBubble
-            | EncounterType::Fishing
-            | EncounterType::FishingBubble
-            | EncounterType::HiddenGrotto
-    )
-}
-
-/// レベル乱数を消費するか
-pub fn consumes_level_rand(encounter_type: EncounterType) -> bool {
-    matches!(
-        encounter_type,
-        EncounterType::Normal
-            | EncounterType::ShakingGrass
-            | EncounterType::DustCloud
-            | EncounterType::PokemonShadow
-            | EncounterType::Surfing
-            | EncounterType::SurfingBubble
-            | EncounterType::Fishing
-            | EncounterType::FishingBubble
-    )
-}
-
 /// レベル乱数値からレベルを決定
 pub fn calculate_level(
     version: RomVersion,
@@ -234,7 +208,32 @@ pub fn calculate_level(
 }
 ```
 
-### 4.3 通常エンカウント関数
+### 4.3 エンカウント結果型
+
+```rust
+/// エンカウント結果
+pub enum EncounterResult {
+    /// ポケモン出現
+    Pokemon,
+    /// アイテム取得 (DustCloud/PokemonShadow)
+    Item(ItemContent),
+    /// 釣り失敗
+    FishingFailed,
+}
+```
+
+### 4.4 RawPokemonData ヘルパー
+
+```rust
+impl RawPokemonData {
+    /// ポケモン以外のエンカウント結果を生成
+    ///
+    /// Item 取得、釣り失敗など、ポケモンが生成されない場合に使用。
+    pub fn not_pokemon(encounter_result: EncounterResult) -> Self { ... }
+}
+```
+
+### 4.5 通常エンカウント関数
 
 ```rust
 // normal.rs
@@ -245,7 +244,7 @@ pub fn generate_normal_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
     version: RomVersion,
-) -> Result<RawPokemonData, GenerationError> {
+) -> RawPokemonData {
     // 1. シンクロ判定
     // 2. スロット決定
     // 3. レベル消費 (値未使用)
@@ -256,19 +255,22 @@ pub fn generate_normal_pokemon(
 }
 ```
 
-### 4.4 特殊現象エンカウント関数
+### 4.6 特殊現象エンカウント関数
 
 ```rust
 // phenomena.rs
 
 /// 特殊現象野生ポケモン生成
 /// 対象: DustCloud, PokemonShadow
+///
+/// Item 取得時は `EncounterResult::Item` を持つ `RawPokemonData` を返す。
 pub fn generate_phenomena_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
     version: RomVersion,
-) -> Result<RawPokemonData, GenerationError> {
+) -> RawPokemonData {
     // 0. エンカウント判定 (Pokemon vs Item)
+    //    Item の場合: RawPokemonData::not_pokemon(result) を返却
     // 1. シンクロ判定
     // 2. スロット決定
     // 3. レベル消費 (値未使用)
@@ -279,7 +281,7 @@ pub fn generate_phenomena_pokemon(
 }
 ```
 
-### 4.5 波乗りエンカウント関数
+### 4.7 波乗りエンカウント関数
 
 ```rust
 // surfing.rs
@@ -290,8 +292,8 @@ pub fn generate_surfing_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
     version: RomVersion,
-) -> Result<RawPokemonData, GenerationError> {
-    // 0. SurfingBubble: 泡判定 (TBD)
+) -> RawPokemonData {
+    // 0. SurfingBubble: 泡空消費 (1回)
     // 1. シンクロ判定
     // 2. スロット決定
     // 3. レベル決定 (Range)
@@ -302,21 +304,23 @@ pub fn generate_surfing_pokemon(
 }
 ```
 
-### 4.6 釣りエンカウント関数
+### 4.8 釣りエンカウント関数
 
 ```rust
 // fishing.rs
 
 /// 釣り野生ポケモン生成
 /// 対象: Fishing, FishingBubble
+///
+/// 釣り失敗時は `EncounterResult::FishingFailed` を持つ `RawPokemonData` を返す。
 pub fn generate_fishing_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
     version: RomVersion,
-) -> Result<RawPokemonData, GenerationError> {
-    // 0. FishingBubble: 泡判定 (TBD)
+) -> RawPokemonData {
     // 1. シンクロ判定
-    // 2. 釣り成功判定
+    // 2. 釣り成功判定 (Fishing のみ、FishingBubble はスキップ)
+    //    失敗時: RawPokemonData::not_pokemon(FishingFailed) を返却
     // 3. スロット決定
     // 4. レベル決定 (Range)
     // 5. PID 生成
@@ -326,7 +330,7 @@ pub fn generate_fishing_pokemon(
 }
 ```
 
-### 4.7 隠し穴エンカウント関数
+### 4.9 隠し穴エンカウント関数
 
 ```rust
 // static_encounter.rs に追加
@@ -346,12 +350,14 @@ pub fn generate_hidden_grotto_pokemon(
 }
 ```
 
-### 4.8 ディスパッチ関数
+### 4.10 ディスパッチ関数
 
 ```rust
 // mod.rs
 
 /// 野生ポケモン生成 (エンカウント種別に応じてディスパッチ)
+///
+/// 釣り失敗時は `EncounterResult::FishingFailed` を持つ `RawPokemonData` を返す。
 pub fn generate_wild_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
@@ -359,16 +365,16 @@ pub fn generate_wild_pokemon(
 ) -> Result<RawPokemonData, GenerationError> {
     match params.encounter_type {
         EncounterType::Normal
-        | EncounterType::ShakingGrass => normal::generate_normal_pokemon(lcg, params, version),
+        | EncounterType::ShakingGrass => Ok(normal::generate_normal_pokemon(lcg, params, version)),
 
         EncounterType::DustCloud
-        | EncounterType::PokemonShadow => phenomena::generate_phenomena_pokemon(lcg, params, version),
+        | EncounterType::PokemonShadow => Ok(phenomena::generate_phenomena_pokemon(lcg, params, version)),
 
         EncounterType::Surfing
-        | EncounterType::SurfingBubble => surfing::generate_surfing_pokemon(lcg, params, version),
+        | EncounterType::SurfingBubble => Ok(surfing::generate_surfing_pokemon(lcg, params, version)),
 
         EncounterType::Fishing
-        | EncounterType::FishingBubble => fishing::generate_fishing_pokemon(lcg, params, version),
+        | EncounterType::FishingBubble => Ok(fishing::generate_fishing_pokemon(lcg, params, version)),
 
         _ => Err(GenerationError::UnsupportedEncounterType),
     }
@@ -408,21 +414,22 @@ pub fn generate_wild_pokemon(
 
 ## 6. 実装チェックリスト
 
-- [ ] `types/generation.rs` に `EncounterType::HiddenGrotto` を追加
-- [ ] `generation/algorithm/encounter.rs` にレベル決定関数を追加
-- [ ] `generation/algorithm/mod.rs` で新関数を export
-- [ ] `generation/flows/pokemon/normal.rs` を新規作成
-- [ ] `generation/flows/pokemon/phenomena.rs` を新規作成
-- [ ] `generation/flows/pokemon/surfing.rs` を新規作成
-- [ ] `generation/flows/pokemon/fishing.rs` を新規作成
-- [ ] `generation/flows/pokemon/static_encounter.rs` に HiddenGrotto 関数を追加
-- [ ] `generation/flows/pokemon/mod.rs` を修正 (ディスパッチ関数追加)
-- [ ] `generation/flows/pokemon/wild.rs` を削除
-- [ ] `generation/flows/mod.rs` の export を整理
-- [ ] 既存テスト (`wild.rs` 内) を各モジュールへ移植
-- [ ] 消費数テストを追加
-- [ ] レベル計算テストを追加
-- [ ] 隠し穴テストを追加
-- [ ] `cargo test` 通過
-- [ ] `cargo clippy` 通過
-- [ ] `pnpm test:wasm` 通過
+- [x] `types/generation.rs` に `EncounterType::HiddenGrotto` を追加
+- [x] `types/generation.rs` に `EncounterResult::FishingFailed` を追加
+- [x] `generation/algorithm/encounter.rs` に `calculate_level` 関数を追加
+- [x] `generation/algorithm/mod.rs` で新関数を export
+- [x] `generation/flows/types.rs` に `RawPokemonData::not_pokemon()` を追加
+- [x] `generation/flows/pokemon/normal.rs` を新規作成
+- [x] `generation/flows/pokemon/phenomena.rs` を新規作成
+- [x] `generation/flows/pokemon/surfing.rs` を新規作成 (SurfingBubble 泡空消費対応)
+- [x] `generation/flows/pokemon/fishing.rs` を新規作成 (Fishing のみ成功判定)
+- [x] `generation/flows/pokemon/static_encounter.rs` に HiddenGrotto 関数を追加
+- [x] `generation/flows/pokemon/mod.rs` を修正 (ディスパッチ関数追加)
+- [x] `generation/flows/pokemon/wild.rs` を削除
+- [x] `generation/flows/mod.rs` の export を整理
+- [x] 消費数テストを追加
+- [x] レベル計算テストを追加
+- [x] 隠し穴テストを追加
+- [x] `cargo test` 通過
+- [x] `cargo clippy` 通過
+- [x] `pnpm test:wasm` 通過

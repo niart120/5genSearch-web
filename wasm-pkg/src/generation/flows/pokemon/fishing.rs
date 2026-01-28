@@ -48,7 +48,7 @@ pub fn generate_fishing_pokemon(
     if enc_type == EncounterType::Fishing {
         let fishing_result = lcg.next().unwrap_or(0);
         if !fishing_success(fishing_result) {
-            return RawPokemonData::fishing_failed();
+            return RawPokemonData::not_pokemon(EncounterResult::FishingFailed);
         }
     }
 
