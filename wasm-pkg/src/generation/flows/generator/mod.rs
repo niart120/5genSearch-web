@@ -19,8 +19,8 @@ pub use egg::EggGenerator;
 pub use pokemon::PokemonGenerator;
 
 use crate::types::{
-    EggGenerationParams, EncounterType, GeneratedEggData, GeneratedPokemonData, GenerationConfig,
-    IvFilter, PokemonGenerationParams, SeedOrigin,
+    EggFilter, EggGenerationParams, EncounterType, GeneratedEggData, GeneratedPokemonData,
+    GenerationConfig, PokemonFilter, PokemonGenerationParams, SeedOrigin,
 };
 
 // ===== 公開 API =====
@@ -35,7 +35,7 @@ use crate::types::{
 /// * `origins` - 解決済み Seed リスト
 /// * `params` - 生成パラメータ (Wild / Static 統合)
 /// * `config` - 共通設定 (バージョン、オフセット、検索範囲)
-/// * `filter` - IV フィルタ (None の場合は全件返却)
+/// * `filter` - ポケモンフィルタ (None の場合は全件返却)
 ///
 /// # Errors
 ///
@@ -45,7 +45,7 @@ pub fn generate_pokemon_list(
     origins: Vec<SeedOrigin>,
     params: &PokemonGenerationParams,
     config: &GenerationConfig,
-    filter: Option<&IvFilter>,
+    filter: Option<&PokemonFilter>,
 ) -> Result<Vec<GeneratedPokemonData>, String> {
     // バリデーション
     if params.slots.is_empty() {
@@ -76,7 +76,7 @@ pub fn generate_pokemon_list(
 /// * `origins` - 解決済み Seed リスト
 /// * `params` - 生成パラメータ
 /// * `config` - 共通設定 (バージョン、オフセット、検索範囲)
-/// * `filter` - IV フィルタ (None の場合は全件返却)
+/// * `filter` - 孵化フィルタ (None の場合は全件返却)
 ///
 /// # Errors
 ///
@@ -85,7 +85,7 @@ pub fn generate_egg_list(
     origins: Vec<SeedOrigin>,
     params: &EggGenerationParams,
     config: &GenerationConfig,
-    filter: Option<&IvFilter>,
+    filter: Option<&EggFilter>,
 ) -> Result<Vec<GeneratedEggData>, String> {
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = origins
@@ -113,14 +113,14 @@ fn generate_pokemon_for_seed(
     origin: SeedOrigin,
     params: &PokemonGenerationParams,
     config: &GenerationConfig,
-    filter: Option<&IvFilter>,
+    filter: Option<&PokemonFilter>,
 ) -> Result<Vec<GeneratedPokemonData>, String> {
     let base_seed = origin.base_seed();
     let mut generator = PokemonGenerator::new(base_seed, origin, params, config)?;
 
     let count = config.max_advance - config.user_offset;
     let pokemons = generator.take(count);
-    Ok(apply_filter(pokemons, filter))
+    Ok(apply_pokemon_filter(pokemons, filter))
 }
 
 /// 単一 Seed に対してタマゴを生成 (内部関数)
@@ -128,7 +128,7 @@ fn generate_egg_for_seed(
     origin: SeedOrigin,
     params: &EggGenerationParams,
     config: &GenerationConfig,
-    filter: Option<&IvFilter>,
+    filter: Option<&EggFilter>,
 ) -> Result<Vec<GeneratedEggData>, String> {
     let base_seed = origin.base_seed();
     let mut generator = EggGenerator::new(base_seed, origin, params, config)?;
@@ -138,24 +138,24 @@ fn generate_egg_for_seed(
     Ok(apply_egg_filter(eggs, filter))
 }
 
-/// IV フィルタを適用
-fn apply_filter(
+/// ポケモンフィルタを適用
+fn apply_pokemon_filter(
     pokemons: Vec<GeneratedPokemonData>,
-    filter: Option<&IvFilter>,
+    filter: Option<&PokemonFilter>,
 ) -> Vec<GeneratedPokemonData> {
     match filter {
-        Some(f) => pokemons.into_iter().filter(|p| f.matches(&p.ivs)).collect(),
+        Some(f) => pokemons.into_iter().filter(|p| f.matches(p)).collect(),
         None => pokemons,
     }
 }
 
-/// IV フィルタを適用 (タマゴ用)
+/// 孵化フィルタを適用
 fn apply_egg_filter(
     eggs: Vec<GeneratedEggData>,
-    filter: Option<&IvFilter>,
+    filter: Option<&EggFilter>,
 ) -> Vec<GeneratedEggData> {
     match filter {
-        Some(f) => eggs.into_iter().filter(|e| f.matches(&e.ivs)).collect(),
+        Some(f) => eggs.into_iter().filter(|e| f.matches(e)).collect(),
         None => eggs,
     }
 }

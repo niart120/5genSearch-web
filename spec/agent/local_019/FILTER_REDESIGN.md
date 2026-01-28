@@ -375,7 +375,7 @@ pub fn generate_egg_list(
 ) -> Result<Vec<GeneratedEggData>, String>;
 
 // 内部関数も変更
-fn apply_filter(
+fn apply_pokemon_filter(
     pokemons: Vec<GeneratedPokemonData>,
     filter: Option<&PokemonFilter>,
 ) -> Vec<GeneratedPokemonData> {
@@ -394,21 +394,6 @@ fn apply_egg_filter(
         None => eggs,
     }
 }
-```
-
-### 4.3 後方互換性
-
-`IvFilter` は既存のまま維持する。`ResultFilter.iv` で埋め込み利用可能。
-
-```rust
-// 既存コード (IvFilter 単独利用)
-let iv_filter = IvFilter::six_v();
-
-// 新コード (ResultFilter 経由)
-let filter = ResultFilter {
-    iv: Some(IvFilter::six_v()),
-    ..Default::default()
-};
 ```
 
 ## 5. テスト方針
@@ -447,18 +432,18 @@ cargo test generation::flows::generator
 
 ## 6. 実装チェックリスト
 
-- [ ] `types/filter.rs` 新規作成
-- [ ] `types/filter.rs` に `ShinyFilter` 追加
-- [ ] `types/filter.rs` に `ResultFilter` 追加
-- [ ] `types/filter.rs` に `PokemonFilter` 追加
-- [ ] `types/filter.rs` に `EggFilter` 追加
-- [ ] `types/mod.rs` に `filter` モジュール追加・re-export 追加
-- [ ] `generation/flows/generator/mod.rs` の API を `PokemonFilter` / `EggFilter` に変更
-- [ ] `lib.rs` に re-export 追加
-- [ ] ユニットテスト追加
-- [ ] `cargo test` パス確認
-- [ ] `cargo clippy` 警告なし
-- [ ] `wasm-pack build --target web` 成功確認
+- [x] `types/filter.rs` 新規作成
+- [x] `types/filter.rs` に `ShinyFilter` 追加
+- [x] `types/filter.rs` に `ResultFilter` 追加
+- [x] `types/filter.rs` に `PokemonFilter` 追加
+- [x] `types/filter.rs` に `EggFilter` 追加
+- [x] `types/mod.rs` に `filter` モジュール追加・re-export 追加
+- [x] `generation/flows/generator/mod.rs` の API を `PokemonFilter` / `EggFilter` に変更
+- [x] `lib.rs` に re-export 追加
+- [x] ユニットテスト追加
+- [x] `cargo test` パス確認
+- [x] `cargo clippy` 警告なし
+- [x] `wasm-pack build --target web` 成功確認
 
 ## 7. 関連ドキュメント
 

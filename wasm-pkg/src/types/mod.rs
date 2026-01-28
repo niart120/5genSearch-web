@@ -4,6 +4,7 @@
 //! サブモジュールに分割された型を re-export する。
 
 mod config;
+mod filter;
 mod generation;
 mod needle;
 mod pokemon;
@@ -16,6 +17,7 @@ pub use config::{
     RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition, TimeRangeParams,
     Timer0VCountRange,
 };
+pub use filter::{EggFilter, PokemonFilter, ResultFilter, ShinyFilter};
 pub use generation::{
     EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,
     EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GenerationConfig,
