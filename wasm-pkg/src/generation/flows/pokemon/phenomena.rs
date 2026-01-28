@@ -10,8 +10,8 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
-    EncounterResult, EncounterType, GenderRatio, HeldItemSlot, LeadAbilityEffect,
-    PokemonGenerationParams, RomVersion,
+    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, PokemonGenerationParams,
+    RomVersion,
 };
 
 /// 特殊現象野生ポケモン生成
@@ -99,7 +99,7 @@ pub fn generate_phenomena_pokemon(
     }
 
     // === Resolve (乱数消費なし) ===
-    let gender = GenderRatio::from_threshold(slot_config.gender_threshold).determine_gender(pid);
+    let gender = slot_config.gender_ratio.determine_gender(pid);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
     RawPokemonData {
@@ -119,14 +119,16 @@ pub fn generate_phenomena_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, ItemContent, TrainerInfo};
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, GenderRatio, ItemContent, TrainerInfo,
+    };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }]

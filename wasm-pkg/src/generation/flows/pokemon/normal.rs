@@ -9,8 +9,8 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
-    EncounterResult, EncounterType, GenderRatio, HeldItemSlot, LeadAbilityEffect,
-    PokemonGenerationParams, RomVersion,
+    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, PokemonGenerationParams,
+    RomVersion,
 };
 
 /// 通常野生ポケモン生成
@@ -72,7 +72,7 @@ pub fn generate_normal_pokemon(
     }
 
     // === Resolve (乱数消費なし) ===
-    let gender = GenderRatio::from_threshold(slot_config.gender_threshold).determine_gender(pid);
+    let gender = slot_config.gender_ratio.determine_gender(pid);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
     RawPokemonData {
@@ -92,14 +92,14 @@ pub fn generate_normal_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, TrainerInfo};
+    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo};
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }]
@@ -172,17 +172,17 @@ mod tests {
 
         // Male only
         assert_eq!(
-            GenderRatio::from_threshold(0).determine_gender(0x1234_5678),
+            GenderRatio::MaleOnly.determine_gender(0x1234_5678),
             Gender::Male
         );
         // Female only
         assert_eq!(
-            GenderRatio::from_threshold(254).determine_gender(0x1234_5678),
+            GenderRatio::FemaleOnly.determine_gender(0x1234_5678),
             Gender::Female
         );
         // Genderless
         assert_eq!(
-            GenderRatio::from_threshold(255).determine_gender(0x1234_5678),
+            GenderRatio::Genderless.determine_gender(0x1234_5678),
             Gender::Genderless
         );
         // 1:1 ratio: PID & 0xFF = 0x78 = 120 < 127 → Female

@@ -298,8 +298,8 @@ pub struct EncounterSlotConfig {
     pub level_min: u8,
     /// 最大レベル
     pub level_max: u8,
-    /// 性別閾値 (0-255)
-    pub gender_threshold: u8,
+    /// 性別比
+    pub gender_ratio: GenderRatio,
     /// 所持アイテムあり
     pub has_held_item: bool,
     /// 色違いロック

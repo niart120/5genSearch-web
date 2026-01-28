@@ -165,7 +165,7 @@ mod tests {
     use super::*;
     use crate::generation::algorithm::calculate_mt_offset;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LcgSeed,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
         LeadAbilityEffect, Nature, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
@@ -237,7 +237,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -297,7 +297,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -353,7 +353,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -409,7 +409,7 @@ mod tests {
             species_id: 150,
             level_min: 50,
             level_max: 50,
-            gender_threshold: 255, // genderless
+            gender_ratio: GenderRatio::Genderless,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -465,7 +465,7 @@ mod tests {
             species_id: 495, // Snivy
             level_min: 5,
             level_max: 5,
-            gender_threshold: 31, // 7:1 ratio
+            gender_ratio: GenderRatio::F1M7,
             has_held_item: false,
             shiny_locked: false,
         }];

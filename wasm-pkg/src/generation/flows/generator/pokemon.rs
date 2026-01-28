@@ -186,7 +186,7 @@ impl PokemonGenerator {
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LcgSeed,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
         LeadAbilityEffect, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
@@ -229,7 +229,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }]
@@ -298,7 +298,7 @@ mod tests {
             species_id: 150, // Mewtwo
             level_min: 70,
             level_max: 70,
-            gender_threshold: 255, // Genderless
+            gender_ratio: GenderRatio::Genderless,
             has_held_item: false,
             shiny_locked: false,
         }];

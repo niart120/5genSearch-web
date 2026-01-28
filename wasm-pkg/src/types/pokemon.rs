@@ -127,22 +127,6 @@ impl GenderRatio {
         }
     }
 
-    /// 閾値から `GenderRatio` を作成
-    ///
-    /// `EncounterSlotConfig` 等で使用される閾値を変換。
-    #[inline]
-    pub const fn from_threshold(threshold: u8) -> Self {
-        match threshold {
-            0 => Self::MaleOnly,
-            31 => Self::F1M7,
-            63 => Self::F1M3,
-            127 => Self::F1M1,
-            191 => Self::F3M1,
-            254 => Self::FemaleOnly,
-            _ => Self::Genderless,
-        }
-    }
-
     /// 閾値を取得
     #[inline]
     pub const fn to_threshold(self) -> u8 {
