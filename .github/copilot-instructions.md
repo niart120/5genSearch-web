@@ -45,7 +45,7 @@
 ## コーディング規約
 
 - TypeScript strict mode 使用
-  - class利用禁止 (関数型プログラミング推奨)
+  - class利用最小化 (関数型プログラミング推奨)
   - 型定義を厳密に行う (any, unknown, 型アサーションの多用禁止)
 - React function-based components 使用
   - React Hooks 使用

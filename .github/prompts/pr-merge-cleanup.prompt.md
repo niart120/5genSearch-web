@@ -3,10 +3,7 @@ name: 'pr-merge-cleanup'
 description: '作業ブランチをPR経由でマージし、ローカル同期・ブランチ削除まで実行'
 agent: agent
 tools:
-  - mcp_github_create_pull_request
-  - mcp_github_merge_pull_request
-  - mcp_github_get_me
-  - run_in_terminal
+  ['vscode', 'execute', 'read', 'edit', 'search', 'github/create_pull_request', 'github/get_commit', 'github/get_me', 'github/merge_pull_request', 'github/pull_request_read', 'github/search_repositories', 'github/update_pull_request', 'todo']
 ---
 
 ## PR作成・マージ・クリーンアップ プロンプト
