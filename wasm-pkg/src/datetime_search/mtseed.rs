@@ -145,23 +145,6 @@ impl MtseedDatetimeSearcher {
 
 // ===== タスク生成関数 =====
 
-/// 組み合わせ展開 (内部関数)
-fn expand_combinations(context: &DatetimeSearchContext) -> Vec<StartupCondition> {
-    let key_codes = context.key_spec.combinations();
-    let mut combinations = Vec::new();
-
-    for range in &context.ranges {
-        for timer0 in range.timer0_min..=range.timer0_max {
-            for vcount in range.vcount_min..=range.vcount_max {
-                for &key_code in &key_codes {
-                    combinations.push(StartupCondition::new(timer0, vcount, key_code));
-                }
-            }
-        }
-    }
-    combinations
-}
-
 /// タスク生成関数
 ///
 /// `DatetimeSearchContext` から組み合わせを展開し、
@@ -173,8 +156,8 @@ pub fn generate_mtseed_search_tasks(
     target_seeds: Vec<MtSeed>,
     search_range: SearchRangeParams,
 ) -> Vec<MtseedDatetimeSearchParams> {
-    // 1. 組み合わせ展開
-    let combinations = expand_combinations(&context);
+    // 1. 組み合わせ展開 (共通関数を使用)
+    let combinations = super::expand_combinations(&context);
 
     // 2. タスク生成 (各組み合わせにつき1タスク)
     combinations
