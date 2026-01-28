@@ -76,17 +76,12 @@ impl KeyCode {
     }
 
     /// `KeyMask` から変換
-    pub const fn from_mask(mask: KeyMask) -> Self {
+    pub(crate) const fn from_mask(mask: KeyMask) -> Self {
         Self(mask.0 ^ 0x2FFF)
-    }
-
-    /// `KeyMask` に変換
-    pub const fn to_mask(self) -> KeyMask {
-        KeyMask(self.0 ^ 0x2FFF)
     }
 }
 
-/// キー入力マスク (UI 入力用)
+/// キー入力マスク (内部使用)
 ///
 /// ユーザーが押したキーのビットマスク。
 /// `KeyCode` との関係: `key_code = key_mask XOR 0x2FFF`
@@ -95,32 +90,13 @@ impl KeyCode {
 /// - bit0=A, bit1=B, bit2=Select, bit3=Start
 /// - bit4=→, bit5=←, bit6=↑, bit7=↓
 /// - bit8=R, bit9=L, bit10=X, bit11=Y
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct KeyMask(pub u32);
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub(crate) struct KeyMask(pub u32);
 
 impl KeyMask {
-    /// キー入力なしの値
-    pub const NONE: Self = Self(0x0000);
-
     /// 新しい `KeyMask` を作成
-    pub const fn new(value: u32) -> Self {
+    pub(crate) const fn new(value: u32) -> Self {
         Self(value)
-    }
-
-    /// 内部値を取得
-    pub const fn value(self) -> u32 {
-        self.0
-    }
-
-    /// `KeyCode` から変換
-    pub const fn from_code(code: KeyCode) -> Self {
-        Self(code.0 ^ 0x2FFF)
-    }
-
-    /// `KeyCode` に変換
-    pub const fn to_code(self) -> KeyCode {
-        KeyCode(self.0 ^ 0x2FFF)
     }
 }
 
@@ -167,6 +143,11 @@ impl KeyInput {
 ///
 /// 利用可能なボタンを指定し、全組み合わせを探索。
 /// Searcher 系 API で使用する。
+///
+/// 組み合わせ生成時に以下の無効パターンは自動除外:
+/// - 上下同時押し (Up + Down)
+/// - 左右同時押し (Left + Right)
+/// - L+R+Start+Select 同時押し (ソフトリセットコマンド)
 #[wasm_bindgen]
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[allow(clippy::unsafe_derive_deserialize)] // wasm_bindgen によるunsafe fn あり
@@ -174,43 +155,61 @@ pub struct KeySpec {
     available_buttons: Vec<DsButton>,
 }
 
-#[wasm_bindgen]
-impl KeySpec {
-    /// 新しい `KeySpec` を作成 (ボタンなし)
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Self {
-            available_buttons: Vec::new(),
-        }
-    }
+/// マスク値が無効な組み合わせかを判定
+///
+/// 無効パターン:
+/// - 上下同時押し
+/// - 左右同時押し
+/// - L+R+Start+Select 同時押し
+fn is_invalid_button_combination(mask: u32) -> bool {
+    let up = DsButton::Up.bit_mask();
+    let down = DsButton::Down.bit_mask();
+    let left = DsButton::Left.bit_mask();
+    let right = DsButton::Right.bit_mask();
+    let l = DsButton::L.bit_mask();
+    let r = DsButton::R.bit_mask();
+    let start = DsButton::Start.bit_mask();
+    let select = DsButton::Select.bit_mask();
 
-    /// 利用可能なボタンを追加
-    #[wasm_bindgen(js_name = addAvailableButton)]
-    pub fn add_available_button(&mut self, button: DsButton) {
-        if !self.available_buttons.contains(&button) {
-            self.available_buttons.push(button);
-        }
-    }
+    // 上下同時押し
+    let has_up_down = (mask & up != 0) && (mask & down != 0);
+    // 左右同時押し
+    let has_left_right = (mask & left != 0) && (mask & right != 0);
+    // L+R+Start+Select (ソフトリセット)
+    let soft_reset_mask = l | r | start | select;
+    let has_soft_reset = (mask & soft_reset_mask) == soft_reset_mask;
 
-    /// 組み合わせ総数を取得
-    #[wasm_bindgen(getter)]
-    pub fn combination_count(&self) -> u32 {
-        1 << self.available_buttons.len()
-    }
+    has_up_down || has_left_right || has_soft_reset
 }
 
+#[wasm_bindgen]
 impl KeySpec {
-    /// 利用可能ボタンリストから作成 (Rust 内部用)
+    /// ボタンリストから作成
+    #[wasm_bindgen(constructor)]
     pub fn from_buttons(available_buttons: Vec<DsButton>) -> Self {
         Self { available_buttons }
     }
 
+    /// 有効な組み合わせ総数を取得
+    ///
+    /// 無効パターン (上下/左右同時押し、ソフトリセット) を除外した数
+    #[wasm_bindgen(getter)]
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn combination_count(&self) -> u32 {
+        // ボタン数は最大 12 なので u32 に収まる
+        self.combinations().len() as u32
+    }
+}
+
+impl KeySpec {
     /// 利用可能ボタンリストを取得 (Rust 内部用)
     pub fn available_buttons(&self) -> &[DsButton] {
         &self.available_buttons
     }
 
-    /// 全組み合わせの `KeyCode` を生成
+    /// 有効な全組み合わせの `KeyCode` を生成
+    ///
+    /// 無効パターン (上下/左右同時押し、ソフトリセット) は除外される
     pub fn combinations(&self) -> Vec<KeyCode> {
         let n = self.available_buttons.len();
         let mut result = Vec::with_capacity(1 << n);
@@ -222,7 +221,10 @@ impl KeySpec {
                 .enumerate()
                 .filter(|(i, _)| bits & (1 << i) != 0)
                 .fold(0u32, |acc, (_, b)| acc | b.bit_mask());
-            result.push(KeyCode::from_mask(KeyMask::new(mask)));
+
+            if !is_invalid_button_combination(mask) {
+                result.push(KeyCode::from_mask(KeyMask::new(mask)));
+            }
         }
         result
     }
@@ -486,4 +488,126 @@ pub struct DatetimeSearchContext {
     pub ranges: Vec<Timer0VCountRange>,
     /// キー入力仕様 (全組み合わせを探索)
     pub key_spec: KeySpec,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_invalid_button_combination_up_down() {
+        let up_down = DsButton::Up.bit_mask() | DsButton::Down.bit_mask();
+        assert!(is_invalid_button_combination(up_down));
+
+        let up_only = DsButton::Up.bit_mask();
+        assert!(!is_invalid_button_combination(up_only));
+
+        let down_only = DsButton::Down.bit_mask();
+        assert!(!is_invalid_button_combination(down_only));
+    }
+
+    #[test]
+    fn is_invalid_button_combination_left_right() {
+        let left_right = DsButton::Left.bit_mask() | DsButton::Right.bit_mask();
+        assert!(is_invalid_button_combination(left_right));
+
+        let left_only = DsButton::Left.bit_mask();
+        assert!(!is_invalid_button_combination(left_only));
+
+        let right_only = DsButton::Right.bit_mask();
+        assert!(!is_invalid_button_combination(right_only));
+    }
+
+    #[test]
+    fn is_invalid_button_combination_soft_reset() {
+        let soft_reset = DsButton::L.bit_mask()
+            | DsButton::R.bit_mask()
+            | DsButton::Start.bit_mask()
+            | DsButton::Select.bit_mask();
+        assert!(is_invalid_button_combination(soft_reset));
+
+        // L+R+Start (Select がない) は有効
+        let partial = DsButton::L.bit_mask() | DsButton::R.bit_mask() | DsButton::Start.bit_mask();
+        assert!(!is_invalid_button_combination(partial));
+    }
+
+    #[test]
+    fn is_invalid_button_combination_soft_reset_with_others() {
+        // ソフトリセット + 他のボタンも無効
+        let soft_reset_plus_a = DsButton::L.bit_mask()
+            | DsButton::R.bit_mask()
+            | DsButton::Start.bit_mask()
+            | DsButton::Select.bit_mask()
+            | DsButton::A.bit_mask();
+        assert!(is_invalid_button_combination(soft_reset_plus_a));
+    }
+
+    #[test]
+    fn key_spec_combinations_filters_up_down() {
+        let spec = KeySpec::from_buttons(vec![DsButton::Up, DsButton::Down, DsButton::A]);
+        let combos = spec.combinations();
+
+        // 2^3 = 8 から上下同時押しを除外
+        // 上下同時押し: {Up, Down}, {Up, Down, A} の2パターン
+        assert_eq!(combos.len(), 6);
+
+        // 上下同時押しが含まれていないことを確認
+        let up_down_mask = DsButton::Up.bit_mask() | DsButton::Down.bit_mask();
+        for code in &combos {
+            let mask = code.0 ^ 0x2FFF;
+            assert!(
+                (mask & up_down_mask) != up_down_mask,
+                "上下同時押しが含まれている: {mask:#06X}"
+            );
+        }
+    }
+
+    #[test]
+    fn key_spec_combinations_filters_left_right() {
+        let spec = KeySpec::from_buttons(vec![DsButton::Left, DsButton::Right]);
+        let combos = spec.combinations();
+
+        // 2^2 = 4 から左右同時押しを除外
+        // 除外: {Left, Right} の1パターン
+        assert_eq!(combos.len(), 3);
+    }
+
+    #[test]
+    fn key_spec_combinations_filters_soft_reset() {
+        let spec = KeySpec::from_buttons(vec![
+            DsButton::L,
+            DsButton::R,
+            DsButton::Start,
+            DsButton::Select,
+        ]);
+        let combos = spec.combinations();
+
+        // 2^4 = 16 からソフトリセットを除外
+        // 除外: {L, R, Start, Select} の1パターン
+        assert_eq!(combos.len(), 15);
+    }
+
+    #[test]
+    #[allow(clippy::cast_possible_truncation)]
+    fn key_spec_combination_count_matches_combinations_len() {
+        let spec = KeySpec::from_buttons(vec![
+            DsButton::Up,
+            DsButton::Down,
+            DsButton::L,
+            DsButton::R,
+            DsButton::Start,
+            DsButton::Select,
+        ]);
+        assert_eq!(spec.combination_count(), spec.combinations().len() as u32);
+    }
+
+    #[test]
+    fn key_spec_empty_buttons() {
+        let spec = KeySpec::from_buttons(vec![]);
+        let combos = spec.combinations();
+
+        // 空のボタンリスト → キー入力なしの1パターンのみ
+        assert_eq!(combos.len(), 1);
+        assert_eq!(combos[0], KeyCode::NONE);
+    }
 }
