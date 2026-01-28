@@ -8,7 +8,7 @@ use crate::generation::algorithm::{
     dust_cloud_item_table_consume, dust_cloud_result, generate_wild_pid_with_reroll,
     perform_sync_check, pokemon_shadow_item_table_consume, pokemon_shadow_result, rand_to_percent,
 };
-use crate::generation::flows::types::{GenerationError, RawPokemonData};
+use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
     EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect,
     PokemonGenerationParams, RomVersion,
@@ -27,12 +27,13 @@ use crate::types::{
 /// 5. 性格決定
 /// 6. 持ち物判定
 /// 7. BW 末尾消費
-#[allow(clippy::unnecessary_wraps)]
+///
+/// Item 取得時は `EncounterResult::Item` を持つ `RawPokemonData` を返す。
 pub fn generate_phenomena_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
     version: RomVersion,
-) -> Result<RawPokemonData, GenerationError> {
+) -> RawPokemonData {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
 
@@ -44,7 +45,7 @@ pub fn generate_phenomena_pokemon(
             let result = dust_cloud_result(slot_value);
             if let EncounterResult::Item(item) = result {
                 dust_cloud_item_table_consume(lcg, item);
-                return Ok(RawPokemonData::item_only(result));
+                return RawPokemonData::item_only(result);
             }
             result
         }
@@ -54,7 +55,7 @@ pub fn generate_phenomena_pokemon(
             let result = pokemon_shadow_result(slot_value);
             if let EncounterResult::Item(_) = result {
                 pokemon_shadow_item_table_consume(lcg);
-                return Ok(RawPokemonData::item_only(result));
+                return RawPokemonData::item_only(result);
             }
             result
         }
@@ -101,7 +102,7 @@ pub fn generate_phenomena_pokemon(
     let gender = determine_gender(pid, slot_config.gender_threshold);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
-    Ok(RawPokemonData {
+    RawPokemonData {
         pid,
         species_id: slot_config.species_id,
         level: slot_config.level_min,
@@ -112,7 +113,7 @@ pub fn generate_phenomena_pokemon(
         shiny_type,
         held_item_slot,
         encounter_result,
-    })
+    }
 }
 
 /// 性別判定
@@ -168,10 +169,8 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0001);
         let params = make_params(EncounterType::DustCloud);
 
-        let result = generate_phenomena_pokemon(&mut lcg, &params, RomVersion::Black2);
-        assert!(result.is_ok());
+        let pokemon = generate_phenomena_pokemon(&mut lcg, &params, RomVersion::Black2);
 
-        let pokemon = result.unwrap();
         assert_eq!(pokemon.encounter_result, EncounterResult::Pokemon);
         assert_eq!(pokemon.species_id, 1);
     }
@@ -183,10 +182,8 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::DustCloud);
 
-        let result = generate_phenomena_pokemon(&mut lcg, &params, RomVersion::Black2);
-        assert!(result.is_ok());
+        let pokemon = generate_phenomena_pokemon(&mut lcg, &params, RomVersion::Black2);
 
-        let pokemon = result.unwrap();
         assert!(matches!(pokemon.encounter_result, EncounterResult::Item(_)));
         assert_eq!(pokemon.species_id, 0);
         assert_eq!(pokemon.level, 0);
@@ -204,10 +201,8 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::PokemonShadow);
 
-        let result = generate_phenomena_pokemon(&mut lcg, &params, RomVersion::Black2);
-        assert!(result.is_ok());
+        let pokemon = generate_phenomena_pokemon(&mut lcg, &params, RomVersion::Black2);
 
-        let pokemon = result.unwrap();
         assert_eq!(
             pokemon.encounter_result,
             EncounterResult::Item(ItemContent::Feather)

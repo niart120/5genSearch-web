@@ -14,7 +14,7 @@ use super::seeds::SeedOrigin;
 
 // ===== エンカウント結果 =====
 
-/// エンカウント結果 (`DustCloud` / `PokemonShadow` 用)
+/// エンカウント結果 (`DustCloud` / `PokemonShadow` / `Fishing` 用)
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(tag = "type", content = "item")]
@@ -24,6 +24,8 @@ pub enum EncounterResult {
     Pokemon,
     /// アイテム取得
     Item(ItemContent),
+    /// 釣り失敗
+    FishingFailed,
 }
 
 /// アイテム内容 (`DustCloud` / `PokemonShadow` 用)

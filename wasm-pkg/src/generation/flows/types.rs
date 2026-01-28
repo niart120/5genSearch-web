@@ -16,7 +16,6 @@ pub use crate::types::EncounterSlotConfig;
 /// 生成エラー
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GenerationError {
-    FishingFailed,
     InvalidConfig(String),
     UnsupportedEncounterType,
 }
@@ -53,6 +52,22 @@ impl RawPokemonData {
             shiny_type: ShinyType::None,
             held_item_slot: HeldItemSlot::None,
             encounter_result,
+        }
+    }
+
+    /// 釣り失敗時のデータ生成
+    pub fn fishing_failed() -> Self {
+        Self {
+            pid: 0,
+            species_id: 0,
+            level: 0,
+            nature: Nature::Hardy,
+            sync_applied: false,
+            ability_slot: 0,
+            gender: Gender::Genderless,
+            shiny_type: ShinyType::None,
+            held_item_slot: HeldItemSlot::None,
+            encounter_result: EncounterResult::FishingFailed,
         }
     }
 }

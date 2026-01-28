@@ -22,9 +22,10 @@ pub use static_encounter::{generate_hidden_grotto_pokemon, generate_static_pokem
 /// - `Surfing`, `SurfingBubble`: 波乗りエンカウント
 /// - `Fishing`, `FishingBubble`: 釣りエンカウント
 ///
+/// 釣り失敗時は `EncounterResult::FishingFailed` を持つ `RawPokemonData` を返す。
+///
 /// # Errors
 ///
-/// - `GenerationError::FishingFailed`: 釣り失敗時
 /// - `GenerationError::UnsupportedEncounterType`: 非対応エンカウント種別
 pub fn generate_wild_pokemon(
     lcg: &mut Lcg64,
@@ -37,7 +38,7 @@ pub fn generate_wild_pokemon(
         }
 
         EncounterType::DustCloud | EncounterType::PokemonShadow => {
-            phenomena::generate_phenomena_pokemon(lcg, params, version)
+            Ok(phenomena::generate_phenomena_pokemon(lcg, params, version))
         }
 
         EncounterType::Surfing | EncounterType::SurfingBubble => {
@@ -45,7 +46,7 @@ pub fn generate_wild_pokemon(
         }
 
         EncounterType::Fishing | EncounterType::FishingBubble => {
-            fishing::generate_fishing_pokemon(lcg, params, version)
+            Ok(fishing::generate_fishing_pokemon(lcg, params, version))
         }
 
         _ => Err(GenerationError::UnsupportedEncounterType),

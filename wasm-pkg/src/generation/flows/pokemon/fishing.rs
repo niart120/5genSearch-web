@@ -8,7 +8,7 @@ use crate::generation::algorithm::{
     encounter_type_supports_held_item, fishing_success, generate_wild_pid_with_reroll,
     perform_sync_check,
 };
-use crate::generation::flows::types::{GenerationError, RawPokemonData};
+use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
     EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect,
     PokemonGenerationParams, RomVersion,
@@ -20,7 +20,7 @@ use crate::types::{
 ///
 /// # 乱数消費順序
 /// 1. シンクロ判定
-/// 2. 釣り成功判定
+/// 2. 釣り成功判定 (通常釣りのみ)
 /// 3. スロット決定
 /// 4. レベル決定 (Range)
 /// 5. PID 生成
@@ -28,15 +28,12 @@ use crate::types::{
 /// 7. 持ち物判定
 /// 8. BW 末尾消費
 ///
-/// # Errors
-///
-/// - `GenerationError::FishingFailed`: 釣り失敗時
-/// - `GenerationError::NoSlot`: スロットが見つからない場合
+/// 釣り失敗時は `EncounterResult::FishingFailed` を持つ `RawPokemonData` を返す。
 pub fn generate_fishing_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
     version: RomVersion,
-) -> Result<RawPokemonData, GenerationError> {
+) -> RawPokemonData {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
 
@@ -51,7 +48,7 @@ pub fn generate_fishing_pokemon(
     if enc_type == EncounterType::Fishing {
         let fishing_result = lcg.next().unwrap_or(0);
         if !fishing_success(fishing_result) {
-            return Err(GenerationError::FishingFailed);
+            return RawPokemonData::fishing_failed();
         }
     }
 
@@ -96,7 +93,7 @@ pub fn generate_fishing_pokemon(
     let gender = determine_gender(pid, slot_config.gender_threshold);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
-    Ok(RawPokemonData {
+    RawPokemonData {
         pid,
         species_id: slot_config.species_id,
         level,
@@ -107,7 +104,7 @@ pub fn generate_fishing_pokemon(
         shiny_type,
         held_item_slot,
         encounter_result: EncounterResult::Pokemon,
-    })
+    }
 }
 
 /// 性別判定
@@ -165,19 +162,19 @@ mod tests {
         let params = make_params(EncounterType::Fishing);
 
         // LCG の状態によって成功/失敗が変わる
-        // テストでは成功するケースを確認
-        let result = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
 
         // 成功または失敗のどちらかになる
-        match result {
-            Ok(pokemon) => {
+        match pokemon.encounter_result {
+            EncounterResult::Pokemon => {
                 assert_eq!(pokemon.species_id, 129);
                 assert!((10..=25).contains(&pokemon.level));
             }
-            Err(GenerationError::FishingFailed) => {
+            EncounterResult::FishingFailed => {
                 // 釣り失敗もOK
+                assert_eq!(pokemon.species_id, 0);
             }
-            Err(e) => panic!("Unexpected error: {e:?}"),
+            EncounterResult::Item(_) => panic!("Unexpected item result"),
         }
     }
 
@@ -193,10 +190,13 @@ mod tests {
         let params = make_params(EncounterType::Fishing);
 
         // この seed では失敗する可能性が高い
-        let result = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
 
         // 失敗または成功のどちらかになる
-        assert!(result.is_ok() || matches!(result, Err(GenerationError::FishingFailed)));
+        assert!(matches!(
+            pokemon.encounter_result,
+            EncounterResult::Pokemon | EncounterResult::FishingFailed
+        ));
     }
 
     #[test]
@@ -207,10 +207,13 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(EncounterType::Fishing);
 
-        let result = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black);
 
         // 成功/失敗に関わらず、消費は発生している
-        assert!(result.is_ok() || matches!(result, Err(GenerationError::FishingFailed)));
+        assert!(matches!(
+            pokemon.encounter_result,
+            EncounterResult::Pokemon | EncounterResult::FishingFailed
+        ));
     }
 
     #[test]
@@ -220,10 +223,13 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(EncounterType::FishingBubble);
 
-        let result = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
 
-        assert!(result.is_ok(), "FishingBubble should always succeed");
-        let pokemon = result.unwrap();
+        assert_eq!(
+            pokemon.encounter_result,
+            EncounterResult::Pokemon,
+            "FishingBubble should always succeed"
+        );
         assert_eq!(pokemon.species_id, 129);
         assert!((10..=25).contains(&pokemon.level));
     }
