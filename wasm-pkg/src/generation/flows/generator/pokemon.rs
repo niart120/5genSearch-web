@@ -5,9 +5,9 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    calculate_game_offset, calculate_needle_direction, generate_moving_encounter_info,
-    generate_rng_ivs_with_offset, generate_special_encounter_info, is_moving_encounter_type,
-    is_special_encounter_type,
+    calculate_game_offset, calculate_mt_offset, calculate_needle_direction,
+    generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
+    is_moving_encounter_type, is_special_encounter_type,
 };
 use crate::generation::flows::pokemon::{generate_static_pokemon, generate_wild_pokemon};
 use crate::types::{
@@ -15,7 +15,7 @@ use crate::types::{
     PokemonGenerationParams, SeedOrigin, SpecialEncounterInfo,
 };
 
-use super::{calculate_mt_offset, is_static_encounter};
+use super::is_static_encounter;
 
 /// ポケモン Generator (Wild / Static 統合)
 /// Iterator パターンで連続的に個体を生成。

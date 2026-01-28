@@ -1,10 +1,13 @@
-//! Game Offset 計算アルゴリズム
+//! オフセット計算アルゴリズム
+//!
+//! - `GameOffset`: LCG オフセット (起動条件による乱数消費)
+//! - `MtOffset`: MT19937 で IV 生成を開始する位置
 //!
 //! 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/wasm-pkg/src/offset_calculator.rs>
 #![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
-use crate::types::{GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
+use crate::types::{EncounterType, GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
 
 /// PT操作の6段階テーブル定義（元実装準拠）
 /// 各レベルで最大5つの閾値をチェックする
@@ -272,6 +275,31 @@ pub fn create_offset_lcg(
     let mut lcg = Lcg64::new(seed);
     lcg.jump(u64::from(offset));
     Ok(lcg)
+}
+
+// ===== MT オフセット計算 =====
+
+/// エンカウント種別とバージョンから MT オフセットを計算
+///
+/// MT19937 で IV 生成を開始する位置を決定する。
+///
+/// | エンカウント種別 | BW | BW2 |
+/// |------------------|---:|----:|
+/// | Egg              |  7 |   7 |
+/// | Roamer           |  1 |   - |
+/// | Wild / Static    |  0 |   2 |
+pub const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterType) -> u32 {
+    match encounter_type {
+        EncounterType::Egg => 7,
+        EncounterType::Roamer => 1,
+        _ => {
+            if version.is_bw2() {
+                2
+            } else {
+                0
+            }
+        }
+    }
 }
 
 #[cfg(test)]

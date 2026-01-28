@@ -4,11 +4,12 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    apply_inheritance, calculate_game_offset, calculate_needle_direction,
+    apply_inheritance, calculate_game_offset, calculate_mt_offset, calculate_needle_direction,
     generate_rng_ivs_with_offset, resolve_egg_npc_advance,
 };
 use crate::types::{
-    EggGenerationParams, GeneratedEggData, GenerationConfig, Ivs, LcgSeed, SeedOrigin,
+    EggGenerationParams, EncounterType, GeneratedEggData, GenerationConfig, Ivs, LcgSeed,
+    SeedOrigin,
 };
 
 use super::super::egg::generate_egg;
@@ -42,8 +43,7 @@ impl EggGenerator {
         config: &GenerationConfig,
     ) -> Result<Self, String> {
         let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
-        // Egg: MT offset = 7 (固定)
-        let mt_offset = 7;
+        let mt_offset = calculate_mt_offset(config.version, EncounterType::Egg);
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
 
