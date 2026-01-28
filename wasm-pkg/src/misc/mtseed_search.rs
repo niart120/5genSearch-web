@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::generation::algorithm::{generate_rng_ivs_with_offset, generate_roamer_ivs};
+use crate::generation::algorithm::generate_rng_ivs_with_offset;
 use crate::types::{IvFilter, Ivs, MtSeed};
 
 // ===== MT Seed 検索 =====
@@ -92,12 +92,7 @@ impl MtseedSearcher {
             #[allow(clippy::cast_possible_truncation)]
             let seed = MtSeed::new(self.current_seed as u32);
 
-            // 徘徊ポケモンモード時は専用関数、通常は汎用関数
-            let ivs = if self.is_roamer {
-                generate_roamer_ivs(seed)
-            } else {
-                generate_rng_ivs_with_offset(seed, self.mt_offset)
-            };
+            let ivs = generate_rng_ivs_with_offset(seed, self.mt_offset, self.is_roamer);
 
             if self.iv_filter.matches(&ivs) {
                 candidates.push(MtseedResult { seed, ivs });

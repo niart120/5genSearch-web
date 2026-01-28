@@ -45,7 +45,7 @@ impl EggGenerator {
         let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
         let mt_offset = calculate_mt_offset(config.version, EncounterType::Egg);
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset, false);
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
