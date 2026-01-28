@@ -56,10 +56,16 @@ pub fn generate_event_pid(r: u32) -> u32 {
     generate_base_pid(r)
 }
 
-/// 孵化/ギフト PID 生成 (2乱数合成)
+/// n分率計算
 #[inline]
-pub fn generate_egg_pid(r1: u32, r2: u32) -> u32 {
-    ((r1 & 0xFFFF_0000) >> 16) | (r2 & 0xFFFF_0000)
+pub fn roll_fraction(r: u32, n: u32) -> u32 {
+    ((u64::from(r) * u64::from(n)) >> 32) as u32
+}
+
+/// 孵化 PID 生成 (1乱数方式、参照実装準拠)
+#[inline]
+pub fn generate_egg_pid(r: u32) -> u32 {
+    roll_fraction(r, 0xFFFF_FFFF)
 }
 
 /// 色違いロック適用
@@ -96,7 +102,9 @@ pub fn generate_wild_pid_with_reroll(
     (pid, shiny)
 }
 
-/// 孵化 PID 生成 (リロール付き)
+/// 孵化 PID 生成 (リロール付き、1乱数方式)
+///
+/// 国際孵化時は `reroll_count = 5`。
 pub fn generate_egg_pid_with_reroll(
     lcg: &mut Lcg64,
     tid: u16,
@@ -104,9 +112,7 @@ pub fn generate_egg_pid_with_reroll(
     reroll_count: u8,
 ) -> (u32, ShinyType) {
     for _ in 0..reroll_count {
-        let r1 = lcg.next().unwrap_or(0);
-        let r2 = lcg.next().unwrap_or(0);
-        let pid = generate_egg_pid(r1, r2);
+        let pid = generate_egg_pid(lcg.next().unwrap_or(0));
         let shiny = calculate_shiny_type(pid, tid, sid);
         if shiny != ShinyType::None {
             return (pid, shiny);
@@ -114,9 +120,7 @@ pub fn generate_egg_pid_with_reroll(
     }
 
     // 最後の試行
-    let r1 = lcg.next().unwrap_or(0);
-    let r2 = lcg.next().unwrap_or(0);
-    let pid = generate_egg_pid(r1, r2);
+    let pid = generate_egg_pid(lcg.next().unwrap_or(0));
     let shiny = calculate_shiny_type(pid, tid, sid);
     (pid, shiny)
 }
@@ -215,17 +219,23 @@ mod tests {
 
     #[test]
     fn test_generate_egg_pid() {
-        // 元実装テストパターン: r1 = 0x12345678, r2 = 0x9ABCDEF0
-        let r1 = 0x1234_5678_u32;
-        let r2 = 0x9ABC_DEF0_u32;
-        let pid = generate_egg_pid(r1, r2);
+        // 1乱数方式: roll_fraction(r, 0xFFFF_FFFF)
+        let r = 0x8000_0000_u32;
+        let pid = generate_egg_pid(r);
 
-        // high = r1 >> 16 = 0x1234 (→ low 16bit に配置)
-        // r2_high = r2 & 0xFFFF_0000 = 0x9ABC_0000
-        // result = 0x9ABC_0000 | 0x1234 = 0x9ABC_1234
-        let expected = ((r1 & 0xFFFF_0000) >> 16) | (r2 & 0xFFFF_0000);
+        // roll_fraction(0x80000000, 0xFFFFFFFF) = (0x80000000 * 0xFFFFFFFF) >> 32
+        // = 0x7FFFFFFF80000000 >> 32 = 0x7FFFFFFF
+        let expected = roll_fraction(r, 0xFFFF_FFFF);
         assert_eq!(pid, expected);
-        assert_eq!(pid, 0x9ABC_1234);
+    }
+
+    #[test]
+    fn test_roll_fraction() {
+        // 境界値テスト
+        assert_eq!(roll_fraction(0, 4), 0);
+        assert_eq!(roll_fraction(0xFFFF_FFFF, 4), 3);
+        assert_eq!(roll_fraction(0x8000_0000, 4), 2);
+        assert_eq!(roll_fraction(0x4000_0000, 4), 1);
     }
 
     #[test]

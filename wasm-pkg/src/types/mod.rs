@@ -24,7 +24,7 @@ pub use generation::{
 };
 pub use needle::{NeedleDirection, NeedlePattern, NeedleSearchResult};
 pub use pokemon::{
-    AbilitySlot, Gender, GenderRatio, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN, IvFilter,
-    Ivs, LeadAbilityEffect, Nature, ShinyType,
+    AbilitySlot, Gender, GenderRatio, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
+    InheritanceSlot, IvFilter, Ivs, LeadAbilityEffect, Nature, ShinyType,
 };
 pub use seeds::{LcgSeed, MtSeed, SeedOrigin};

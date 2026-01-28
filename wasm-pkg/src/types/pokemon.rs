@@ -118,6 +118,26 @@ pub enum ShinyType {
     Square,
 }
 
+// ===== 遺伝 =====
+
+/// 遺伝スロット
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct InheritanceSlot {
+    /// 遺伝先ステータス (0=HP, 1=Atk, 2=Def, 3=SpA, 4=SpD, 5=Spe)
+    pub stat: u8,
+    /// 遺伝元親 (0=Male, 1=Female)
+    pub parent: u8,
+}
+
+impl InheritanceSlot {
+    /// 新しい遺伝スロットを作成
+    #[inline]
+    pub const fn new(stat: u8, parent: u8) -> Self {
+        Self { stat, parent }
+    }
+}
+
 // ===== 持ち物 =====
 
 /// 持ち物スロット
