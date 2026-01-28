@@ -16,8 +16,8 @@ pub use crate::types::EncounterSlotConfig;
 /// 生成エラー
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GenerationError {
-    FishingFailed,
     InvalidConfig(String),
+    UnsupportedEncounterType,
 }
 
 // ===== 中間データ =====
@@ -34,18 +34,19 @@ pub struct RawPokemonData {
     pub gender: Gender,
     pub shiny_type: ShinyType,
     pub held_item_slot: HeldItemSlot,
-    /// エンカウント結果 (DustCloud/PokemonShadow 時に使用。通常は Pokemon)
     pub encounter_result: EncounterResult,
 }
 
 impl RawPokemonData {
-    /// Item 取得時のデータ生成
-    pub fn item_only(encounter_result: EncounterResult) -> Self {
+    /// ポケモン以外のエンカウント結果を生成
+    ///
+    /// Item 取得、釣り失敗など、ポケモンが生成されない場合に使用。
+    pub fn not_pokemon(encounter_result: EncounterResult) -> Self {
         Self {
             pid: 0,
             species_id: 0,
             level: 0,
-            nature: Nature::Hardy, // デフォルト
+            nature: Nature::Hardy,
             sync_applied: false,
             ability_slot: 0,
             gender: Gender::Genderless,

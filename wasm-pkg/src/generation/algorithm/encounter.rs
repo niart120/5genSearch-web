@@ -117,6 +117,31 @@ pub fn rand_to_percent(version: RomVersion, rand_value: u32) -> u32 {
     }
 }
 
+// ===== レベル決定 =====
+
+/// レベル乱数値からレベルを決定
+#[inline]
+#[allow(clippy::cast_possible_truncation)]
+pub fn calculate_level(version: RomVersion, rand_value: u32, min_level: u8, max_level: u8) -> u8 {
+    if min_level == max_level {
+        return min_level;
+    }
+
+    let range = u64::from(max_level - min_level + 1);
+
+    match version {
+        RomVersion::Black | RomVersion::White => {
+            let percent = rand_to_percent(version, rand_value);
+            let offset = (u64::from(percent) % range) as u8;
+            min_level + offset
+        }
+        RomVersion::Black2 | RomVersion::White2 => {
+            let offset = ((u64::from(rand_value) * range) >> 32) as u8;
+            min_level + offset
+        }
+    }
+}
+
 /// 通常エンカウント・揺れる草むら: スロット決定 (12スロット)
 pub fn normal_encounter_slot(slot_value: u32) -> u8 {
     match slot_value {
@@ -347,5 +372,33 @@ mod tests {
             pokemon_shadow_result(99),
             EncounterResult::Item(ItemContent::Feather)
         );
+    }
+
+    #[test]
+    fn test_calculate_level_same_min_max() {
+        // min == max の場合は固定レベル
+        assert_eq!(calculate_level(RomVersion::Black, 0, 10, 10), 10);
+        assert_eq!(calculate_level(RomVersion::Black2, 0xFFFF_FFFF, 10, 10), 10);
+    }
+
+    #[test]
+    fn test_calculate_level_bw() {
+        // BW: percent % range
+        // rand = 0 → percent = 0 → offset = 0
+        assert_eq!(calculate_level(RomVersion::Black, 0, 10, 15), 10);
+        // rand = 0x8000_0000 → percent ≈ 50 → offset = 50 % 6 = 2
+        let level = calculate_level(RomVersion::Black, 0x8000_0000, 10, 15);
+        assert!((10..=15).contains(&level));
+    }
+
+    #[test]
+    fn test_calculate_level_bw2() {
+        // BW2: (rand * range) >> 32
+        // rand = 0 → offset = 0
+        assert_eq!(calculate_level(RomVersion::Black2, 0, 10, 15), 10);
+        // rand = 0xFFFF_FFFF → offset = 5
+        assert_eq!(calculate_level(RomVersion::Black2, 0xFFFF_FFFF, 10, 15), 15);
+        // rand = 0x8000_0000 → offset = 3 (half of 6)
+        assert_eq!(calculate_level(RomVersion::Black2, 0x8000_0000, 10, 15), 13);
     }
 }
