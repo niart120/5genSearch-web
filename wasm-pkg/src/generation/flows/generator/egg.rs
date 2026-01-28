@@ -4,11 +4,12 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    apply_inheritance, calculate_game_offset, calculate_needle_direction,
+    apply_inheritance, calculate_game_offset, calculate_mt_offset, calculate_needle_direction,
     generate_rng_ivs_with_offset, resolve_egg_npc_advance,
 };
 use crate::types::{
-    EggGenerationParams, GeneratedEggData, GenerationConfig, Ivs, LcgSeed, SeedOrigin,
+    EggGenerationParams, EncounterType, GeneratedEggData, GenerationConfig, Ivs, LcgSeed,
+    SeedOrigin,
 };
 
 use super::super::egg::generate_egg;
@@ -42,10 +43,9 @@ impl EggGenerator {
         config: &GenerationConfig,
     ) -> Result<Self, String> {
         let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
-        // Egg: MT offset = 7 (固定)
-        let mt_offset = 7;
+        let mt_offset = calculate_mt_offset(config.version, EncounterType::Egg);
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset, false);
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
@@ -167,7 +167,7 @@ mod tests {
             everstone: EverstonePlan::None,
             female_has_hidden: false,
             uses_ditto: false,
-            gender_ratio: GenderRatio::Threshold(127),
+            gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,
             masuda_method: false,
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
@@ -196,7 +196,7 @@ mod tests {
             everstone: EverstonePlan::None,
             female_has_hidden: false,
             uses_ditto: false,
-            gender_ratio: GenderRatio::Threshold(127),
+            gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,
             masuda_method: false,
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),

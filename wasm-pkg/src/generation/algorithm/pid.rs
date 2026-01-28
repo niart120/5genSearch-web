@@ -56,11 +56,7 @@ pub fn generate_event_pid(r: u32) -> u32 {
     generate_base_pid(r)
 }
 
-/// n分率計算
-#[inline]
-pub fn roll_fraction(r: u32, n: u32) -> u32 {
-    ((u64::from(r) * u64::from(n)) >> 32) as u32
-}
+use crate::core::roll_fraction;
 
 /// 孵化 PID 生成 (1乱数方式、参照実装準拠)
 #[inline]

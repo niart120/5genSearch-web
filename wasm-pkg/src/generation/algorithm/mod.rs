@@ -1,10 +1,10 @@
 //! 生成アルゴリズム
 
 mod encounter;
-mod game_offset;
 mod iv;
 mod nature;
 mod npc;
+mod offset;
 mod pid;
 
 // needle は core/needle.rs に移動済み
@@ -18,10 +18,10 @@ pub(crate) use encounter::{
     is_moving_encounter_type, is_special_encounter_type, pokemon_shadow_item_table_consume,
     pokemon_shadow_result, rand_to_percent,
 };
-pub(crate) use game_offset::calculate_game_offset;
-pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset, generate_roamer_ivs};
+pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset};
 pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, perform_sync_check};
 pub(crate) use npc::resolve_egg_npc_advance;
+pub(crate) use offset::{calculate_game_offset, calculate_mt_offset};
 pub(crate) use pid::{
     apply_shiny_lock, calculate_shiny_type, generate_egg_pid_with_reroll, generate_event_pid,
     generate_wild_pid_with_reroll,

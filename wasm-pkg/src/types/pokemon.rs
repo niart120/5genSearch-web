@@ -93,8 +93,76 @@ pub enum GenderRatio {
     Genderless,
     MaleOnly,
     FemaleOnly,
-    /// 性別値の閾値 (例: 127 = 1:1, 31 = 7:1, 63 = 3:1, 191 = 1:3)
-    Threshold(u8),
+    /// ♀:♂ = 1:7 (閾値 31)
+    F1M7,
+    /// ♀:♂ = 1:3 (閾値 63)
+    F1M3,
+    /// ♀:♂ = 1:1 (閾値 127)
+    F1M1,
+    /// ♀:♂ = 3:1 (閾値 191)
+    F3M1,
+}
+
+impl GenderRatio {
+    // ===== 性別判定 =====
+
+    /// PID から性別を判定
+    ///
+    /// 性別値 (PID 下位 8bit) が閾値未満なら Female、以上なら Male。
+    #[inline]
+    pub fn determine_gender(self, pid: u32) -> Gender {
+        let threshold = self.to_threshold();
+        match threshold {
+            0 => Gender::Male,
+            254 => Gender::Female,
+            255 => Gender::Genderless,
+            t => {
+                let gender_value = (pid & 0xFF) as u8;
+                if gender_value < t {
+                    Gender::Female
+                } else {
+                    Gender::Male
+                }
+            }
+        }
+    }
+
+    /// 閾値を取得
+    #[inline]
+    pub const fn to_threshold(self) -> u8 {
+        match self {
+            Self::MaleOnly => 0,
+            Self::F1M7 => 31,
+            Self::F1M3 => 63,
+            Self::F1M1 => 127,
+            Self::F3M1 => 191,
+            Self::FemaleOnly => 254,
+            Self::Genderless => 255,
+        }
+    }
+
+    /// 乱数値から性別を判定 (Hidden Grotto 等で使用)
+    ///
+    /// 乱数値を 0-251 の範囲に変換し、閾値と比較。
+    #[inline]
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn determine_gender_from_rand(self, rand_value: u32) -> Gender {
+        let threshold = self.to_threshold();
+        match threshold {
+            0 => Gender::Male,
+            254 => Gender::Female,
+            255 => Gender::Genderless,
+            t => {
+                // (rand * 252) >> 32 で 0-251 の値を取得
+                let gender_value = ((u64::from(rand_value) * 252) >> 32) as u8;
+                if gender_value < t {
+                    Gender::Female
+                } else {
+                    Gender::Male
+                }
+            }
+        }
+    }
 }
 
 // ===== 特性・色違い =====

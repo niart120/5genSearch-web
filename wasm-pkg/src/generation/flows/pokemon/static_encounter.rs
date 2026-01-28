@@ -7,7 +7,7 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
-    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, Nature,
+    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, Nature,
     PokemonGenerationParams, RomVersion, ShinyType,
 };
 
@@ -88,18 +88,7 @@ pub fn generate_static_pokemon(
 
     // === Resolve ===
     let ability_slot = ((pid >> 16) & 1) as u8;
-    let gender = match slot.gender_threshold {
-        0 => Gender::Male,
-        254 => Gender::Female,
-        255 => Gender::Genderless,
-        t => {
-            if ((pid & 0xFF) as u8) < t {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
-    };
+    let gender = slot.gender_ratio.determine_gender(pid);
 
     RawPokemonData {
         pid,
@@ -172,7 +161,7 @@ pub fn generate_hidden_grotto_pokemon(
 
     // === Resolve (乱数消費なし) ===
     // 性別は別途消費した gender_rand から決定
-    let gender = determine_gender_from_rand(gender_rand, slot.gender_threshold);
+    let gender = slot.gender_ratio.determine_gender_from_rand(gender_rand);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
     RawPokemonData {
@@ -189,29 +178,10 @@ pub fn generate_hidden_grotto_pokemon(
     }
 }
 
-/// 性別判定 (乱数値から)
-#[allow(clippy::cast_possible_truncation)]
-fn determine_gender_from_rand(rand_value: u32, threshold: u8) -> Gender {
-    match threshold {
-        0 => Gender::Male,
-        254 => Gender::Female,
-        255 => Gender::Genderless,
-        t => {
-            // (rand * 252) >> 32 で 0-251 の値を取得
-            let gender_value = ((u64::from(rand_value) * 252) >> 32) as u8;
-            if gender_value < t {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, TrainerInfo};
+    use crate::types::{EncounterMethod, GenderRatio, TrainerInfo};
 
     fn make_params(encounter_type: EncounterType) -> PokemonGenerationParams {
         PokemonGenerationParams {
@@ -230,7 +200,7 @@ mod tests {
     fn make_slot(
         species_id: u16,
         level: u8,
-        gender_threshold: u8,
+        gender_ratio: GenderRatio,
         shiny_locked: bool,
         has_held_item: bool,
     ) -> EncounterSlotConfig {
@@ -238,7 +208,7 @@ mod tests {
             species_id,
             level_min: level,
             level_max: level,
-            gender_threshold,
+            gender_ratio,
             shiny_locked,
             has_held_item,
         }
@@ -248,20 +218,20 @@ mod tests {
     fn test_generate_static_pokemon_symbol() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let params = make_params(EncounterType::StaticSymbol);
-        let slot = make_slot(150, 70, 255, false, false);
+        let slot = make_slot(150, 70, GenderRatio::Genderless, false, false);
 
         let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, RomVersion::Black);
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
-        assert_eq!(pokemon.gender, Gender::Genderless);
+        assert_eq!(pokemon.gender, crate::types::Gender::Genderless);
     }
 
     #[test]
     fn test_generate_static_pokemon_starter() {
         let mut lcg = Lcg64::from_raw(0xABCD_EF01_2345_6789);
         let params = make_params(EncounterType::StaticStarter);
-        let slot = make_slot(495, 5, 31, true, false);
+        let slot = make_slot(495, 5, GenderRatio::F1M7, true, false);
 
         let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, RomVersion::Black);
 
@@ -275,13 +245,13 @@ mod tests {
         species_id: u16,
         level_min: u8,
         level_max: u8,
-        gender_threshold: u8,
+        gender_ratio: GenderRatio,
     ) -> EncounterSlotConfig {
         EncounterSlotConfig {
             species_id,
             level_min,
             level_max,
-            gender_threshold,
+            gender_ratio,
             shiny_locked: false,
             has_held_item: false,
         }
@@ -291,7 +261,7 @@ mod tests {
     fn test_generate_hidden_grotto_pokemon() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let params = make_params(EncounterType::HiddenGrotto);
-        let slot = make_slot_with_range(591, 55, 60, 127); // エモンガ
+        let slot = make_slot_with_range(591, 55, 60, GenderRatio::F1M1); // エモンガ
 
         let pokemon = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
 
@@ -307,7 +277,7 @@ mod tests {
         // どんな seed でも色違いにならない
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(EncounterType::HiddenGrotto);
-        let slot = make_slot(591, 55, 127, false, false);
+        let slot = make_slot(591, 55, GenderRatio::F1M1, false, false);
 
         for _ in 0..100 {
             let pokemon = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
@@ -321,7 +291,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::HiddenGrotto);
-        let slot = make_slot(591, 55, 127, false, false);
+        let slot = make_slot(591, 55, GenderRatio::F1M1, false, false);
 
         let _ = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
 
@@ -336,7 +306,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::HiddenGrotto);
-        let slot = make_slot(591, 55, 127, false, true);
+        let slot = make_slot(591, 55, GenderRatio::F1M1, false, true);
 
         let _ = generate_hidden_grotto_pokemon(&mut lcg, &params, &slot);
 

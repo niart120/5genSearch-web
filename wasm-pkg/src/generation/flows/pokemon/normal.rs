@@ -9,8 +9,8 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
-    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect,
-    PokemonGenerationParams, RomVersion,
+    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, PokemonGenerationParams,
+    RomVersion,
 };
 
 /// 通常野生ポケモン生成
@@ -72,7 +72,7 @@ pub fn generate_normal_pokemon(
     }
 
     // === Resolve (乱数消費なし) ===
-    let gender = determine_gender(pid, slot_config.gender_threshold);
+    let gender = slot_config.gender_ratio.determine_gender(pid);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
     RawPokemonData {
@@ -89,34 +89,17 @@ pub fn generate_normal_pokemon(
     }
 }
 
-/// 性別判定
-fn determine_gender(pid: u32, threshold: u8) -> Gender {
-    match threshold {
-        0 => Gender::Male,
-        254 => Gender::Female,
-        255 => Gender::Genderless,
-        t => {
-            let gender_value = (pid & 0xFF) as u8;
-            if gender_value < t {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, TrainerInfo};
+    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo};
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }]
@@ -185,15 +168,32 @@ mod tests {
 
     #[test]
     fn test_determine_gender() {
+        use crate::types::Gender;
+
         // Male only
-        assert_eq!(determine_gender(0x1234_5678, 0), Gender::Male);
+        assert_eq!(
+            GenderRatio::MaleOnly.determine_gender(0x1234_5678),
+            Gender::Male
+        );
         // Female only
-        assert_eq!(determine_gender(0x1234_5678, 254), Gender::Female);
+        assert_eq!(
+            GenderRatio::FemaleOnly.determine_gender(0x1234_5678),
+            Gender::Female
+        );
         // Genderless
-        assert_eq!(determine_gender(0x1234_5678, 255), Gender::Genderless);
+        assert_eq!(
+            GenderRatio::Genderless.determine_gender(0x1234_5678),
+            Gender::Genderless
+        );
         // 1:1 ratio: PID & 0xFF = 0x78 = 120 < 127 → Female
-        assert_eq!(determine_gender(0x1234_5678, 127), Gender::Female);
+        assert_eq!(
+            GenderRatio::F1M1.determine_gender(0x1234_5678),
+            Gender::Female
+        );
         // PID & 0xFF = 0x80 = 128 >= 127 → Male
-        assert_eq!(determine_gender(0x1234_5680, 127), Gender::Male);
+        assert_eq!(
+            GenderRatio::F1M1.determine_gender(0x1234_5680),
+            Gender::Male
+        );
     }
 }

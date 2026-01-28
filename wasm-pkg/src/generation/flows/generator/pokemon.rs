@@ -5,9 +5,9 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    calculate_game_offset, calculate_needle_direction, generate_moving_encounter_info,
-    generate_rng_ivs_with_offset, generate_special_encounter_info, is_moving_encounter_type,
-    is_special_encounter_type,
+    calculate_game_offset, calculate_mt_offset, calculate_needle_direction,
+    generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
+    is_moving_encounter_type, is_special_encounter_type,
 };
 use crate::generation::flows::pokemon::{generate_static_pokemon, generate_wild_pokemon};
 use crate::types::{
@@ -15,7 +15,7 @@ use crate::types::{
     PokemonGenerationParams, SeedOrigin, SpecialEncounterInfo,
 };
 
-use super::{calculate_mt_offset, is_static_encounter};
+use super::is_static_encounter;
 
 /// ポケモン Generator (Wild / Static 統合)
 /// Iterator パターンで連続的に個体を生成。
@@ -53,7 +53,8 @@ impl PokemonGenerator {
         let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
         let mt_offset = calculate_mt_offset(config.version, params.encounter_type);
         let mt_seed = base_seed.derive_mt_seed();
-        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset);
+        let is_roamer = params.encounter_type == crate::types::EncounterType::Roamer;
+        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset, is_roamer);
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
@@ -185,7 +186,7 @@ impl PokemonGenerator {
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LcgSeed,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
         LeadAbilityEffect, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
@@ -228,7 +229,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }]
@@ -297,7 +298,7 @@ mod tests {
             species_id: 150, // Mewtwo
             level_min: 70,
             level_max: 70,
-            gender_threshold: 255, // Genderless
+            gender_ratio: GenderRatio::Genderless,
             has_held_item: false,
             shiny_locked: false,
         }];

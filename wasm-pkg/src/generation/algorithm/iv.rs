@@ -10,70 +10,53 @@ pub fn extract_iv(mt_output: u32) -> u8 {
     (mt_output >> 27) as u8
 }
 
-/// 乱数 IV を生成 (野生・固定シンボル用)
+/// 徘徊ポケモン用 IV 並び替え (HABDSC → HABCDS)
 ///
-/// MT19937 の最初の 7 回を破棄後、6 回取得。
-#[allow(dead_code)]
-pub fn generate_rng_ivs(seed: MtSeed) -> Ivs {
-    let mut mt = Mt19937::new(seed);
-
-    // 最初の 7 回を破棄
-    for _ in 0..7 {
-        mt.next_u32();
-    }
-
+/// 徘徊ポケモンは IV が HABDSC 順で生成されるため、
+/// 標準順 (HABCDS) に並び替える。
+/// pokemon-gen5-initseed の `reorder_for_roamer` に準拠。
+#[inline]
+fn reorder_for_roamer(ivs: Ivs) -> Ivs {
+    // 入力: HABDSC 順 (hp, atk, def, spa, spd, spe として格納)
+    // 実際は 4,5,6 番目が D,S,C の順で生成されている
+    // 出力: HABCDS 順 (hp, atk, def, spa, spd, spe)
     Ivs::new(
-        extract_iv(mt.next_u32()), // HP
-        extract_iv(mt.next_u32()), // Atk
-        extract_iv(mt.next_u32()), // Def
-        extract_iv(mt.next_u32()), // SpA
-        extract_iv(mt.next_u32()), // SpD
-        extract_iv(mt.next_u32()), // Spe
+        ivs.hp,  // H
+        ivs.atk, // A
+        ivs.def, // B
+        ivs.spd, // 4番目に生成された値 (D) が C (spa) になる
+        ivs.spe, // 5番目に生成された値 (S) が D (spd) になる
+        ivs.spa, // 6番目に生成された値 (C) が S (spe) になる
     )
 }
 
 /// 指定オフセットで IV 生成
 ///
-/// BW2 固定シンボル等、オフセットが異なるケースで使用。
-pub fn generate_rng_ivs_with_offset(seed: MtSeed, offset: u32) -> Ivs {
+/// # Arguments
+/// * `seed` - MT19937 シード
+/// * `offset` - IV 生成開始位置（破棄する乱数回数）
+/// * `is_roamer` - 徘徊ポケモンモード（HABDSC → HABCDS 並び替え適用）
+pub fn generate_rng_ivs_with_offset(seed: MtSeed, offset: u32, is_roamer: bool) -> Ivs {
     let mut mt = Mt19937::new(seed);
 
     for _ in 0..offset {
         mt.next_u32();
     }
 
-    Ivs::new(
+    let ivs = Ivs::new(
         extract_iv(mt.next_u32()),
         extract_iv(mt.next_u32()),
         extract_iv(mt.next_u32()),
         extract_iv(mt.next_u32()),
         extract_iv(mt.next_u32()),
         extract_iv(mt.next_u32()),
-    )
-}
+    );
 
-/// 徘徊ポケモン用 IV 生成 (HABDSC 順序)
-///
-/// MT19937 の最初の 7 回を破棄後、HABDSC 順で 6 回取得し、標準順 (HABCDS) に並び替え。
-/// pokemon-gen5-initseed の `reorder_for_roamer` に準拠。
-pub fn generate_roamer_ivs(seed: MtSeed) -> Ivs {
-    let mut mt = Mt19937::new(seed);
-
-    // 最初の 7 回を破棄
-    for _ in 0..7 {
-        mt.next_u32();
+    if is_roamer {
+        reorder_for_roamer(ivs)
+    } else {
+        ivs
     }
-
-    // HABDSC 順で取得
-    let hp = extract_iv(mt.next_u32()); // H
-    let atk = extract_iv(mt.next_u32()); // A
-    let def = extract_iv(mt.next_u32()); // B
-    let spd = extract_iv(mt.next_u32()); // D (SpD)
-    let spe = extract_iv(mt.next_u32()); // S (Spe)
-    let spa = extract_iv(mt.next_u32()); // C (SpA)
-
-    // 標準順 (HABCDS) で返却
-    Ivs::new(hp, atk, def, spa, spd, spe)
 }
 
 /// 遺伝適用
@@ -104,7 +87,8 @@ mod tests {
     #[test]
     fn test_generate_rng_ivs() {
         let seed = MtSeed::new(0x1234_5678);
-        let ivs = generate_rng_ivs(seed);
+        // offset=7 (通常ケース)、is_roamer=false
+        let ivs = generate_rng_ivs_with_offset(seed, 7, false);
         // 各 IV は 0-31 の範囲
         assert!(ivs.hp <= 31);
         assert!(ivs.atk <= 31);
@@ -112,6 +96,28 @@ mod tests {
         assert!(ivs.spa <= 31);
         assert!(ivs.spd <= 31);
         assert!(ivs.spe <= 31);
+    }
+
+    #[test]
+    fn test_generate_rng_ivs_roamer() {
+        let seed = MtSeed::new(0x1234_5678);
+        // offset=1 (徘徊ケース)、is_roamer=true
+        let roamer_ivs = generate_rng_ivs_with_offset(seed, 1, true);
+        // 各 IV は 0-31 の範囲
+        assert!(roamer_ivs.hp <= 31);
+        assert!(roamer_ivs.atk <= 31);
+        assert!(roamer_ivs.def <= 31);
+        assert!(roamer_ivs.spa <= 31);
+        assert!(roamer_ivs.spd <= 31);
+        assert!(roamer_ivs.spe <= 31);
+
+        // 通常モードとは異なる並び順になる（同じoffsetで比較）
+        let normal_ivs = generate_rng_ivs_with_offset(seed, 1, false);
+        // roamer では SpA/SpD/Spe の並び替えが発生するため、値が異なる場合がある
+        // (同じ値の場合もあり得るが、異なるロジックであることを確認)
+        assert_eq!(roamer_ivs.hp, normal_ivs.hp);
+        assert_eq!(roamer_ivs.atk, normal_ivs.atk);
+        assert_eq!(roamer_ivs.def, normal_ivs.def);
     }
 
     #[test]

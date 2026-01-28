@@ -5,7 +5,7 @@
 //! オフセット対応:
 //! - `GameOffset`: ゲーム起動条件により自動計算 (`calculate_game_offset`)
 //! - `UserOffset`: ユーザ指定の追加オフセット
-//! - `MtOffset`: MT19937 で IV 生成を開始する位置
+//! - `MtOffset`: MT19937 で IV 生成を開始する位置 (`calculate_mt_offset`)
 //!
 //! ## 公開 API
 //!
@@ -20,27 +20,8 @@ pub use pokemon::PokemonGenerator;
 
 use crate::types::{
     EggGenerationParams, EncounterType, GeneratedEggData, GeneratedPokemonData, GenerationConfig,
-    IvFilter, PokemonGenerationParams, RomVersion, SeedOrigin,
+    IvFilter, PokemonGenerationParams, SeedOrigin,
 };
-
-// ===== MT オフセット計算 =====
-
-/// エンカウント種別とバージョンから MT オフセットを計算
-///
-/// MT19937 で IV 生成を開始する位置を決定する。
-pub(super) const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterType) -> u32 {
-    match encounter_type {
-        EncounterType::Egg => 7,
-        EncounterType::Roamer => 1,
-        _ => {
-            if version.is_bw2() {
-                2
-            } else {
-                0
-            }
-        }
-    }
-}
 
 // ===== 公開 API =====
 
@@ -182,8 +163,9 @@ fn apply_egg_filter(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::generation::algorithm::calculate_mt_offset;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, LcgSeed,
+        EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
         LeadAbilityEffect, Nature, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
@@ -255,7 +237,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -315,7 +297,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -371,7 +353,7 @@ mod tests {
             species_id: 1,
             level_min: 5,
             level_max: 10,
-            gender_threshold: 127,
+            gender_ratio: GenderRatio::F1M1,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -427,7 +409,7 @@ mod tests {
             species_id: 150,
             level_min: 50,
             level_max: 50,
-            gender_threshold: 255, // genderless
+            gender_ratio: GenderRatio::Genderless,
             has_held_item: false,
             shiny_locked: false,
         }];
@@ -483,7 +465,7 @@ mod tests {
             species_id: 495, // Snivy
             level_min: 5,
             level_max: 5,
-            gender_threshold: 31, // 7:1 ratio
+            gender_ratio: GenderRatio::F1M7,
             has_held_item: false,
             shiny_locked: false,
         }];

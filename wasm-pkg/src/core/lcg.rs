@@ -10,6 +10,15 @@ pub const LCG_MULTIPLIER: u64 = 0x5D58_8B65_6C07_8965;
 /// 加算定数
 pub const LCG_INCREMENT: u64 = 0x0026_9EC3;
 
+/// n 分率を計算: (rand * n) >> 32
+///
+/// 乱数値を n 分の 1 に変換する際に使用。
+/// 例: `roll_fraction(r, 100)` は 0-99 の範囲を返す。
+#[inline]
+pub const fn roll_fraction(rand: u32, n: u32) -> u32 {
+    ((rand as u64 * n as u64) >> 32) as u32
+}
+
 /// 64bit LCG 乱数生成器
 ///
 /// Iterator trait を実装しており、`next()` で 32bit 乱数を取得可能。
@@ -155,12 +164,6 @@ impl Lcg64 {
             .wrapping_add(LCG_INCREMENT);
         let dir = ((next >> 32).wrapping_mul(8)) >> 32;
         NeedleDirection::from_value((dir & 7) as u8)
-    }
-
-    /// n 分率を計算: (rand * n) >> 32
-    #[inline]
-    pub const fn calc_ratio(rand: u32, n: u32) -> u32 {
-        ((rand as u64 * n as u64) >> 32) as u32
     }
 }
 
