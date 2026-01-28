@@ -7,6 +7,7 @@ pub mod datetime_codes;
 pub mod lcg;
 pub mod mt;
 pub mod needle;
+pub mod seed_resolver;
 pub mod sha1;
 
 // Re-export commonly used items
