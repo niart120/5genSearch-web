@@ -119,35 +119,6 @@ pub fn rand_to_percent(version: RomVersion, rand_value: u32) -> u32 {
 
 // ===== レベル決定 =====
 
-/// レベル乱数値を使用するか (Range パターン)
-#[allow(dead_code)]
-pub fn uses_level_rand_value(encounter_type: EncounterType) -> bool {
-    matches!(
-        encounter_type,
-        EncounterType::Surfing
-            | EncounterType::SurfingBubble
-            | EncounterType::Fishing
-            | EncounterType::FishingBubble
-            | EncounterType::HiddenGrotto
-    )
-}
-
-/// レベル乱数を消費するか
-#[allow(dead_code)]
-pub fn consumes_level_rand(encounter_type: EncounterType) -> bool {
-    matches!(
-        encounter_type,
-        EncounterType::Normal
-            | EncounterType::ShakingGrass
-            | EncounterType::DustCloud
-            | EncounterType::PokemonShadow
-            | EncounterType::Surfing
-            | EncounterType::SurfingBubble
-            | EncounterType::Fishing
-            | EncounterType::FishingBubble
-    )
-}
-
 /// レベル乱数値からレベルを決定
 #[inline]
 #[allow(clippy::cast_possible_truncation)]
@@ -401,35 +372,6 @@ mod tests {
             pokemon_shadow_result(99),
             EncounterResult::Item(ItemContent::Feather)
         );
-    }
-
-    #[test]
-    fn test_uses_level_rand_value() {
-        // Range パターン
-        assert!(uses_level_rand_value(EncounterType::Surfing));
-        assert!(uses_level_rand_value(EncounterType::SurfingBubble));
-        assert!(uses_level_rand_value(EncounterType::Fishing));
-        assert!(uses_level_rand_value(EncounterType::FishingBubble));
-        assert!(uses_level_rand_value(EncounterType::HiddenGrotto));
-        // Consumed パターン
-        assert!(!uses_level_rand_value(EncounterType::Normal));
-        assert!(!uses_level_rand_value(EncounterType::ShakingGrass));
-        // Static パターン
-        assert!(!uses_level_rand_value(EncounterType::StaticSymbol));
-    }
-
-    #[test]
-    fn test_consumes_level_rand() {
-        // Consumed / Range パターン
-        assert!(consumes_level_rand(EncounterType::Normal));
-        assert!(consumes_level_rand(EncounterType::ShakingGrass));
-        assert!(consumes_level_rand(EncounterType::DustCloud));
-        assert!(consumes_level_rand(EncounterType::PokemonShadow));
-        assert!(consumes_level_rand(EncounterType::Surfing));
-        assert!(consumes_level_rand(EncounterType::Fishing));
-        // Static パターン (消費なし)
-        assert!(!consumes_level_rand(EncounterType::StaticSymbol));
-        assert!(!consumes_level_rand(EncounterType::HiddenGrotto));
     }
 
     #[test]

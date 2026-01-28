@@ -34,8 +34,10 @@ pub fn generate_surfing_pokemon(
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
 
-    // 0. SurfingBubble: 泡判定 (TBD - 現状スキップ)
-    // 泡発生判定は歩行時に別途行われるため、ここでは追加消費なし
+    // 0. SurfingBubble: 泡判定空消費 (泡発生判定とは別物)
+    if enc_type == EncounterType::SurfingBubble {
+        lcg.next();
+    }
 
     // 1. シンクロ判定 (ふくがん先頭時はスキップ)
     let sync_success = if is_compound_eyes {
@@ -201,9 +203,15 @@ mod tests {
 
     #[test]
     fn test_surfing_bubble_pokemon() {
+        // SurfingBubble: 泡空消費(1) + sync(1) + slot(1) + level(1) + pid(1) + nature(1) = 6
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
+        let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::SurfingBubble);
 
         let _pokemon = generate_surfing_pokemon(&mut lcg, &params, RomVersion::Black2);
+
+        let mut expected_lcg = Lcg64::new(initial_seed);
+        expected_lcg.advance(6); // 泡空消費分 +1
+        assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 }

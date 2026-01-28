@@ -47,10 +47,12 @@ pub fn generate_fishing_pokemon(
         perform_sync_check(lcg, enc_type, &params.lead_ability)
     };
 
-    // 2. 釣り成功判定 (50%)
-    let fishing_result = lcg.next().unwrap_or(0);
-    if !fishing_success(fishing_result) {
-        return Err(GenerationError::FishingFailed);
+    // 2. 釣り成功判定 (50%) - 通常釣りのみ (泡釣りはスキップ)
+    if enc_type == EncounterType::Fishing {
+        let fishing_result = lcg.next().unwrap_or(0);
+        if !fishing_success(fishing_result) {
+            return Err(GenerationError::FishingFailed);
+        }
     }
 
     // 3. スロット決定
@@ -213,12 +215,16 @@ mod tests {
 
     #[test]
     fn test_fishing_bubble_pokemon() {
+        // FishingBubble: 釣り成功判定がないので必ず成功
+        // sync(1) + slot(1) + level(1) + pid(1) + nature(1) = 5 (BW2)
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(EncounterType::FishingBubble);
 
         let result = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
 
-        // 成功または失敗のどちらか
-        assert!(result.is_ok() || matches!(result, Err(GenerationError::FishingFailed)));
+        assert!(result.is_ok(), "FishingBubble should always succeed");
+        let pokemon = result.unwrap();
+        assert_eq!(pokemon.species_id, 129);
+        assert!((10..=25).contains(&pokemon.level));
     }
 }
