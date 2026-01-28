@@ -163,11 +163,6 @@ pub struct InheritanceSlot {
 ```rust
 // wasm-pkg/src/types/generation.rs
 
-/// 猶予フレーム NewType
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MarginFrames(pub u32);
-
 /// 完全な卵データ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -188,7 +183,7 @@ pub struct GeneratedEggData {
     // IV (遺伝適用後)
     pub ivs: Ivs,
     // NPC消費による猶予フレーム (consider_npc = false 時は None)
-    pub margin_frames: Option<MarginFrames>,
+    pub margin_frames: Option<u32>,
 }
 ```
 
@@ -380,13 +375,12 @@ fn determine_gender_from_pid(pid: u32, gender_ratio: GenderRatio) -> Gender {
 
 NPC消費ロジックは `algorithm/npc.rs` に分離し、Generator 側で個体生成前に適用する。
 
-#### 4.3.1 型定義
+#### 4.3.1 定数・型定義
 
 ```rust
 // wasm-pkg/src/generation/algorithm/npc.rs
 
-use crate::core::lcg::Lcg64;
-use crate::types::generation::MarginFrames;
+use crate::core::lcg::{Lcg64, LcgSeed};
 
 /// タマゴNPC消費定数 (参照実装準拠)
 const FOUR_FRACTION_FRAMES: [u32; 4] = [32, 64, 96, 128];
@@ -396,25 +390,18 @@ const DIRECTION_MISMATCH_FRAMES: u32 = 20;
 const INITIAL_NPC_ADVANCE_COST: u32 = 3;
 const FINAL_NPC_ADVANCE_COST: u32 = 2;
 
-/// フレーム閾値 NewType
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FrameThreshold(pub u8);
-
-impl Default for FrameThreshold {
-    fn default() -> Self {
-        Self(96)
-    }
-}
+/// 小屋から出てから育て屋爺に話しかけるまでの最短フレーム数
+const NPC_FRAME_THRESHOLD: u32 = 96;
 
 /// タマゴNPC消費結果
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EggNpcAdvanceResult {
     /// 消費後の Seed
-    pub seed: u64,
+    pub seed: LcgSeed,
     /// 消費した乱数回数
     pub consumed: u32,
     /// 猶予フレーム (閾値超過後の余剰フレーム数)
-    pub margin_frames: MarginFrames,
+    pub margin_frames: u32,
 }
 ```
 
@@ -430,12 +417,11 @@ pub struct EggNpcAdvanceResult {
 ///
 /// # Arguments
 /// * `seed` - 現在の LCG Seed
-/// * `frame_threshold` - 判定対象フレーム閾値
 ///
 /// # Returns
 /// * `EggNpcAdvanceResult` - 消費後のSeed、消費回数、猶予フレーム
-pub fn resolve_egg_npc_advance(seed: u64, frame_threshold: FrameThreshold) -> EggNpcAdvanceResult {
-    let mut lcg = Lcg64::from_raw(seed);
+pub fn resolve_egg_npc_advance(seed: LcgSeed) -> EggNpcAdvanceResult {
+    let mut lcg = Lcg64::from_seed(seed);
     let mut consumed = 0u32;
 
     // 初期消費 (3回)
@@ -444,7 +430,6 @@ pub fn resolve_egg_npc_advance(seed: u64, frame_threshold: FrameThreshold) -> Eg
     }
     consumed += INITIAL_NPC_ADVANCE_COST;
 
-    let threshold = u32::from(frame_threshold.0);
     let mut elapsed = 0u32;
     let mut first_direction: Option<u32> = None;
 
@@ -453,7 +438,7 @@ pub fn resolve_egg_npc_advance(seed: u64, frame_threshold: FrameThreshold) -> Eg
     consumed += 1;
     elapsed += FOUR_FRACTION_FRAMES[roll1];
 
-    if elapsed <= threshold {
+    if elapsed <= NPC_FRAME_THRESHOLD {
         // ステップ2: 2分率 (方向決定)
         let direction = roll_fraction(lcg.next().unwrap_or(0), 2);
         consumed += 1;
@@ -461,14 +446,14 @@ pub fn resolve_egg_npc_advance(seed: u64, frame_threshold: FrameThreshold) -> Eg
         elapsed += if direction == 0 { LEFT_DIRECTION_FRAMES } else { RIGHT_DIRECTION_FRAMES };
     }
 
-    if elapsed <= threshold {
+    if elapsed <= NPC_FRAME_THRESHOLD {
         // ステップ3: 4分率 (待機時間)
         let roll3 = roll_fraction(lcg.next().unwrap_or(0), 4) as usize;
         consumed += 1;
         elapsed += FOUR_FRACTION_FRAMES[roll3];
     }
 
-    if elapsed <= threshold {
+    if elapsed <= NPC_FRAME_THRESHOLD {
         // ステップ4: 2分率 (方向決定、前回との差で追加フレーム)
         let direction2 = roll_fraction(lcg.next().unwrap_or(0), 2);
         consumed += 1;
@@ -479,7 +464,7 @@ pub fn resolve_egg_npc_advance(seed: u64, frame_threshold: FrameThreshold) -> Eg
         }
     }
 
-    if elapsed <= threshold {
+    if elapsed <= NPC_FRAME_THRESHOLD {
         // ステップ5: 4分率 (待機時間)
         let roll5 = roll_fraction(lcg.next().unwrap_or(0), 4) as usize;
         consumed += 1;
@@ -493,12 +478,12 @@ pub fn resolve_egg_npc_advance(seed: u64, frame_threshold: FrameThreshold) -> Eg
     consumed += FINAL_NPC_ADVANCE_COST;
 
     // 猶予フレーム算出 (閾値超過分)
-    let margin = elapsed.saturating_sub(threshold);
+    let margin = elapsed.saturating_sub(NPC_FRAME_THRESHOLD);
 
     EggNpcAdvanceResult {
-        seed: lcg.current_raw(),
+        seed: lcg.current_seed(),
         consumed,
-        margin_frames: MarginFrames(margin),
+        margin_frames: margin,
     }
 }
 
@@ -513,8 +498,7 @@ fn roll_fraction(r: u32, n: u32) -> u32 {
 ```rust
 // wasm-pkg/src/generation/flows/generator/egg.rs
 
-use crate::generation::algorithm::npc::{resolve_egg_npc_advance, FrameThreshold};
-use crate::types::generation::MarginFrames;
+use crate::generation::algorithm::npc::resolve_egg_npc_advance;
 
 impl EggGenerator {
     pub fn next(&mut self) -> Option<GeneratedEggData> {
@@ -522,12 +506,9 @@ impl EggGenerator {
 
         // NPC消費を考慮する場合
         let margin_frames = if self.params.consider_npc {
-            let result = resolve_egg_npc_advance(
-                self.lcg.current_raw(),
-                FrameThreshold::default(), // 96
-            );
+            let result = resolve_egg_npc_advance(self.lcg.current_seed());
             // LCG を消費後の状態に更新
-            self.lcg = Lcg64::from_raw(result.seed);
+            self.lcg = Lcg64::from_seed(result.seed);
             Some(result.margin_frames)
         } else {
             None
@@ -620,9 +601,8 @@ pub fn apply_inheritance(
 ## 6. 実装チェックリスト
 
 - [ ] `InheritanceSlot` を `types/pokemon.rs` に移動し tsify 対応
-- [ ] `MarginFrames` NewType を `types/generation.rs` に追加
 - [ ] `GeneratedEggData.inheritance` を `[InheritanceSlot; 3]` に変更
-- [ ] `GeneratedEggData.margin_frames` を追加
+- [ ] `GeneratedEggData.margin_frames: Option<u32>` を追加
 - [ ] `EggGenerationParams.allow_hidden_ability` を追加
 - [ ] `EggGenerationParams.consider_npc` を追加
 - [ ] `roll_fraction` 関数を追加
@@ -634,8 +614,8 @@ pub fn apply_inheritance(
 - [ ] メタモン追加消費を実装
 - [ ] ニドランフラグ処理を実装
 - [ ] `algorithm/npc.rs` を新規作成
-- [ ] `resolve_egg_npc_advance` を実装
-- [ ] `FrameThreshold` NewType を実装
+- [ ] `resolve_egg_npc_advance(seed: LcgSeed)` を実装
+- [ ] `NPC_FRAME_THRESHOLD` 定数を定義
 - [ ] Generator に NPC消費処理を追加
 - [ ] 参照実装のテストを移植
 - [ ] ユニットテストを追加
