@@ -97,6 +97,90 @@ pub enum GenderRatio {
     Threshold(u8),
 }
 
+impl GenderRatio {
+    // ===== 性別比定数 =====
+
+    /// ♀:♂ = 1:7 (閾値 31)
+    pub const F1_M7: Self = Self::Threshold(31);
+
+    /// ♀:♂ = 1:3 (閾値 63)
+    pub const F1_M3: Self = Self::Threshold(63);
+
+    /// ♀:♂ = 1:1 (閾値 127)
+    pub const F1_M1: Self = Self::Threshold(127);
+
+    /// ♀:♂ = 3:1 (閾値 191)
+    pub const F3_M1: Self = Self::Threshold(191);
+
+    // ===== 性別判定 =====
+
+    /// PID から性別を判定
+    ///
+    /// 性別値 (PID 下位 8bit) が閾値未満なら Female、以上なら Male。
+    #[inline]
+    pub fn determine_gender(self, pid: u32) -> Gender {
+        match self {
+            Self::Genderless => Gender::Genderless,
+            Self::MaleOnly => Gender::Male,
+            Self::FemaleOnly => Gender::Female,
+            Self::Threshold(threshold) => {
+                let gender_value = (pid & 0xFF) as u8;
+                if gender_value < threshold {
+                    Gender::Female
+                } else {
+                    Gender::Male
+                }
+            }
+        }
+    }
+
+    /// 閾値から `GenderRatio` を作成
+    ///
+    /// `EncounterSlotConfig` 等で使用される閾値 (0, 254, 255, その他) を変換。
+    #[inline]
+    pub const fn from_threshold(threshold: u8) -> Self {
+        match threshold {
+            0 => Self::MaleOnly,
+            254 => Self::FemaleOnly,
+            255 => Self::Genderless,
+            t => Self::Threshold(t),
+        }
+    }
+
+    /// 閾値を取得 (Threshold でない場合は特殊値を返す)
+    #[inline]
+    pub const fn to_threshold(self) -> u8 {
+        match self {
+            Self::MaleOnly => 0,
+            Self::FemaleOnly => 254,
+            Self::Genderless => 255,
+            Self::Threshold(t) => t,
+        }
+    }
+
+    /// 乱数値から性別を判定 (Hidden Grotto 等で使用)
+    ///
+    /// 乱数値を 0-251 の範囲に変換し、閾値と比較。
+    #[inline]
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn determine_gender_from_rand(self, rand_value: u32) -> Gender {
+        match self {
+            Self::Genderless => Gender::Genderless,
+            Self::MaleOnly => Gender::Male,
+            Self::FemaleOnly => Gender::Female,
+            Self::Threshold(threshold) => {
+                // (rand * 252) >> 32 で 0-251 の値を取得
+                let gender_value = ((u64::from(rand_value) * 252) >> 32) as u8;
+                if gender_value < threshold {
+                    Gender::Female
+                } else {
+                    Gender::Male
+                }
+            }
+        }
+    }
+}
+
 // ===== 特性・色違い =====
 
 /// 特性スロット

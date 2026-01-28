@@ -10,7 +10,7 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
-    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect,
+    EncounterResult, EncounterType, GenderRatio, HeldItemSlot, LeadAbilityEffect,
     PokemonGenerationParams, RomVersion,
 };
 
@@ -90,7 +90,7 @@ pub fn generate_fishing_pokemon(
     }
 
     // === Resolve (乱数消費なし) ===
-    let gender = determine_gender(pid, slot_config.gender_threshold);
+    let gender = GenderRatio::from_threshold(slot_config.gender_threshold).determine_gender(pid);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
     RawPokemonData {
@@ -104,23 +104,6 @@ pub fn generate_fishing_pokemon(
         shiny_type,
         held_item_slot,
         encounter_result: EncounterResult::Pokemon,
-    }
-}
-
-/// 性別判定
-fn determine_gender(pid: u32, threshold: u8) -> Gender {
-    match threshold {
-        0 => Gender::Male,
-        254 => Gender::Female,
-        255 => Gender::Genderless,
-        t => {
-            let gender_value = (pid & 0xFF) as u8;
-            if gender_value < t {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
     }
 }
 

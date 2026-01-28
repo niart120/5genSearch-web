@@ -7,7 +7,7 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
-    EncounterResult, EncounterType, Gender, HeldItemSlot, LeadAbilityEffect, Nature,
+    EncounterResult, EncounterType, GenderRatio, HeldItemSlot, LeadAbilityEffect, Nature,
     PokemonGenerationParams, RomVersion, ShinyType,
 };
 
@@ -88,18 +88,7 @@ pub fn generate_static_pokemon(
 
     // === Resolve ===
     let ability_slot = ((pid >> 16) & 1) as u8;
-    let gender = match slot.gender_threshold {
-        0 => Gender::Male,
-        254 => Gender::Female,
-        255 => Gender::Genderless,
-        t => {
-            if ((pid & 0xFF) as u8) < t {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
-    };
+    let gender = GenderRatio::from_threshold(slot.gender_threshold).determine_gender(pid);
 
     RawPokemonData {
         pid,
@@ -172,7 +161,8 @@ pub fn generate_hidden_grotto_pokemon(
 
     // === Resolve (乱数消費なし) ===
     // 性別は別途消費した gender_rand から決定
-    let gender = determine_gender_from_rand(gender_rand, slot.gender_threshold);
+    let gender =
+        GenderRatio::from_threshold(slot.gender_threshold).determine_gender_from_rand(gender_rand);
     let ability_slot = ((pid >> 16) & 1) as u8;
 
     RawPokemonData {
@@ -186,25 +176,6 @@ pub fn generate_hidden_grotto_pokemon(
         shiny_type: ShinyType::None, // 色違い無効
         held_item_slot,
         encounter_result: EncounterResult::Pokemon,
-    }
-}
-
-/// 性別判定 (乱数値から)
-#[allow(clippy::cast_possible_truncation)]
-fn determine_gender_from_rand(rand_value: u32, threshold: u8) -> Gender {
-    match threshold {
-        0 => Gender::Male,
-        254 => Gender::Female,
-        255 => Gender::Genderless,
-        t => {
-            // (rand * 252) >> 32 で 0-251 の値を取得
-            let gender_value = ((u64::from(rand_value) * 252) >> 32) as u8;
-            if gender_value < t {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
     }
 }
 
@@ -254,7 +225,7 @@ mod tests {
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
-        assert_eq!(pokemon.gender, Gender::Genderless);
+        assert_eq!(pokemon.gender, crate::types::Gender::Genderless);
     }
 
     #[test]

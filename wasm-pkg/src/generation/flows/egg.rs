@@ -3,7 +3,7 @@
 use crate::core::lcg::Lcg64;
 use crate::core::roll_fraction;
 use crate::generation::algorithm::{determine_egg_nature, generate_egg_pid_with_reroll};
-use crate::types::{EggGenerationParams, Gender, GenderRatio, InheritanceSlot};
+use crate::types::{EggGenerationParams, Gender, InheritanceSlot};
 
 use super::types::RawEggData;
 
@@ -42,7 +42,7 @@ pub fn generate_egg(lcg: &mut Lcg64, params: &EggGenerationParams) -> RawEggData
     let gender = match nidoran_roll {
         Some(0) => Gender::Female,
         Some(_) => Gender::Male,
-        None => determine_gender_from_pid(pid, params.gender_ratio),
+        None => params.gender_ratio.determine_gender(pid),
     };
 
     // 8. 特性スロット決定
@@ -85,23 +85,6 @@ fn determine_inheritance(lcg: &mut Lcg64) -> [InheritanceSlot; 3] {
     slots
 }
 
-/// PID から性別を判定
-fn determine_gender_from_pid(pid: u32, gender_ratio: GenderRatio) -> Gender {
-    match gender_ratio {
-        GenderRatio::Genderless => Gender::Genderless,
-        GenderRatio::MaleOnly => Gender::Male,
-        GenderRatio::FemaleOnly => Gender::Female,
-        GenderRatio::Threshold(threshold) => {
-            let value = (pid & 0xFF) as u8;
-            if value < threshold {
-                Gender::Female
-            } else {
-                Gender::Male
-            }
-        }
-    }
-}
-
 /// 特性スロット決定
 fn determine_ability_slot(pid: u32, ha_roll: u32, uses_ditto: bool, female_has_hidden: bool) -> u8 {
     // 夢特性条件判定
@@ -120,7 +103,7 @@ fn determine_ability_slot(pid: u32, ha_roll: u32, uses_ditto: bool, female_has_h
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EverstonePlan, Ivs, Nature, TrainerInfo};
+    use crate::types::{EverstonePlan, GenderRatio, Ivs, Nature, TrainerInfo};
 
     fn make_params() -> EggGenerationParams {
         EggGenerationParams {
@@ -185,33 +168,35 @@ mod tests {
 
     #[test]
     fn test_determine_gender_from_pid() {
+        use crate::types::GenderRatio;
+
         // Genderless
         assert_eq!(
-            determine_gender_from_pid(0x1234_5678, GenderRatio::Genderless),
+            GenderRatio::Genderless.determine_gender(0x1234_5678),
             Gender::Genderless
         );
 
         // MaleOnly
         assert_eq!(
-            determine_gender_from_pid(0x1234_5678, GenderRatio::MaleOnly),
+            GenderRatio::MaleOnly.determine_gender(0x1234_5678),
             Gender::Male
         );
 
         // FemaleOnly
         assert_eq!(
-            determine_gender_from_pid(0x1234_5678, GenderRatio::FemaleOnly),
+            GenderRatio::FemaleOnly.determine_gender(0x1234_5678),
             Gender::Female
         );
 
         // Threshold: low value -> Female
         assert_eq!(
-            determine_gender_from_pid(0x1234_5600, GenderRatio::Threshold(127)),
+            GenderRatio::F1_M1.determine_gender(0x1234_5600),
             Gender::Female
         );
 
         // Threshold: high value -> Male
         assert_eq!(
-            determine_gender_from_pid(0x1234_56FF, GenderRatio::Threshold(127)),
+            GenderRatio::F1_M1.determine_gender(0x1234_56FF),
             Gender::Male
         );
     }
