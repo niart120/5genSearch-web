@@ -3,6 +3,7 @@
 //! 育て屋前でタマゴ受け取り待機中に発生する乱数消費をシミュレート。
 
 use crate::core::lcg::Lcg64;
+use crate::core::roll_fraction;
 use crate::types::LcgSeed;
 
 /// タマゴNPC消費定数 (参照実装準拠)
@@ -25,12 +26,6 @@ pub struct EggNpcAdvanceResult {
     pub consumed: u32,
     /// 猶予フレーム (閾値超過後の余剰フレーム数)
     pub margin_frames: u32,
-}
-
-/// n分率計算
-#[inline]
-fn roll_fraction(r: u32, n: u32) -> u32 {
-    ((u64::from(r) * u64::from(n)) >> 32) as u32
 }
 
 /// タマゴ受け取り時のNPC消費シミュレーション

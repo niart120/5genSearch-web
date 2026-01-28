@@ -1,16 +1,11 @@
 //! 孵化個体生成 (参照実装準拠)
 
 use crate::core::lcg::Lcg64;
+use crate::core::roll_fraction;
 use crate::generation::algorithm::{determine_egg_nature, generate_egg_pid_with_reroll};
 use crate::types::{EggGenerationParams, Gender, GenderRatio, InheritanceSlot};
 
 use super::types::RawEggData;
-
-/// n分率計算
-#[inline]
-fn roll_fraction(r: u32, n: u32) -> u32 {
-    ((u64::from(r) * u64::from(n)) >> 32) as u32
-}
 
 /// 卵の個体生成 (参照実装準拠)
 pub fn generate_egg(lcg: &mut Lcg64, params: &EggGenerationParams) -> RawEggData {
