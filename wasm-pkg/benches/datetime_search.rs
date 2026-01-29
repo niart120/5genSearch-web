@@ -129,7 +129,7 @@ fn bench_egg_datetime_search(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(5));
     group.sample_size(20);
 
-    let chunk_size = 10000_u32;
+    let chunk_size = 1000_u32;
     group.throughput(Throughput::Elements(u64::from(chunk_size)));
 
     group.bench_function("next_batch", |b| {
