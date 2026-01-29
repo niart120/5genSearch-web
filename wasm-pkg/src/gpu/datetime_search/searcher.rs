@@ -25,17 +25,16 @@ impl GpuMtseedDatetimeSearcher {
     /// # Errors
     ///
     /// `target_seeds` が空の場合。
-    #[allow(clippy::unused_async)] // WASM 環境で GPU コンテキストが async のため
-    pub async fn new(
+    pub fn new(
         ctx: &GpuDeviceContext,
-        params: MtseedDatetimeSearchParams,
+        params: &MtseedDatetimeSearchParams,
     ) -> Result<GpuMtseedDatetimeSearcher, String> {
         if params.target_seeds.is_empty() {
             return Err("target_seeds is empty".into());
         }
 
-        let pipeline = SearchPipeline::new(ctx, &params);
-        let total_count = calculate_total_count(&params);
+        let pipeline = SearchPipeline::new(ctx, params);
+        let total_count = calculate_total_count(params);
 
         Ok(Self {
             pipeline,

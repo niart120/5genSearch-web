@@ -4,8 +4,9 @@
 
 use wgpu::util::DeviceExt;
 
+use crate::core::sha1::get_nazo_values;
 use crate::datetime_search::MtseedDatetimeSearchParams;
-use crate::types::{Datetime, Hardware, MtSeed, RomRegion, RomVersion, StartupCondition};
+use crate::types::{Datetime, Hardware, MtSeed, StartupCondition};
 
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;
@@ -245,7 +246,7 @@ impl SearchPipeline {
         );
 
         // NAZO 値 (ROM バージョン・リージョン依存)
-        let nazo = get_nazo_values(ds.version, ds.region, ds.hardware);
+        let nazo = get_nazo_values(ds.version, ds.region);
 
         // 時刻範囲
         let hour_range_start = u32::from(time_range.hour_start);
@@ -270,11 +271,11 @@ impl SearchPipeline {
             minute_range_count,
             second_range_start,
             second_range_count,
-            nazo0: nazo[0],
-            nazo1: nazo[1],
-            nazo2: nazo[2],
-            nazo3: nazo[3],
-            nazo4: nazo[4],
+            nazo0: nazo.values[0],
+            nazo1: nazo.values[1],
+            nazo2: nazo.values[2],
+            nazo3: nazo.values[3],
+            nazo4: nazo.values[4],
             reserved0: 0,
         }
     }
@@ -510,6 +511,8 @@ pub struct MatchResult {
 }
 
 // ===== ヘルパー関数 =====
+// TODO: core::datetime_codes や datetime_search::base との共通化を検討
+// 現状これらのヘルパー関数は private のため直接利用できない
 
 /// バイトスワップ (リトルエンディアン → ビッグエンディアン)
 fn swap_bytes_u32(v: u32) -> u32 {
@@ -589,41 +592,4 @@ fn offset_to_date(start_year: u32, start_day_of_year: u32, day_offset: u32) -> (
     }
 
     (year as u16, month, doy as u8)
-}
-
-/// NAZO 値を取得 (既存実装を流用)
-/// ROM バージョンごとのアームは将来の拡張を考慮して分離
-#[allow(clippy::match_same_arms)]
-#[allow(clippy::unreadable_literal)] // NAZO 値はアドレス値のためそのまま記述
-fn get_nazo_values(version: RomVersion, region: RomRegion, hardware: Hardware) -> [u32; 5] {
-    // NAZO 値は ROM バージョン・リージョン・ハードウェアによって異なる
-    // 詳細は core/sha1.rs の get_nazo_values を参照
-    let base: [u32; 5] = match (version, region) {
-        (RomVersion::Black, RomRegion::Jpn) => {
-            [0x02215F10, 0x02215F30, 0x02761150, 0x00000000, 0x02761150]
-        }
-        (RomVersion::White, RomRegion::Jpn) => {
-            [0x02215F30, 0x02215F50, 0x02761150, 0x00000000, 0x02761150]
-        }
-        (RomVersion::Black2, RomRegion::Jpn) => {
-            [0x0209A8DC, 0x0209A8FC, 0x027AA5A8, 0x00000000, 0x027AA5A8]
-        }
-        (RomVersion::White2, RomRegion::Jpn) => {
-            [0x0209A8FC, 0x0209A91C, 0x027AA5A8, 0x00000000, 0x027AA5A8]
-        }
-        // その他のリージョンはデフォルト値を使用
-        _ => [0x02215F10, 0x02215F30, 0x02761150, 0x00000000, 0x02761150],
-    };
-
-    // DSi/3DS の場合はオフセットを適用
-    match hardware {
-        Hardware::Dsi | Hardware::Dsi3ds => [
-            base[0].wrapping_add(0x0000_FA00),
-            base[1].wrapping_add(0x0000_FA00),
-            base[2].wrapping_add(0x0000_FA00),
-            base[3],
-            base[4].wrapping_add(0x0000_FA00),
-        ],
-        _ => base,
-    }
 }
