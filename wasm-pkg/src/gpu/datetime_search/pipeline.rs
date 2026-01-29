@@ -325,7 +325,9 @@ impl SearchPipeline {
         device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("match-output-buffer"),
             size,
-            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            usage: wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_SRC
+                | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         })
     }
