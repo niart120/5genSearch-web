@@ -285,10 +285,25 @@ struct DispatchSlot {
 }
 ```
 
-#### 3.7.2 ダブルバッファリング
+#### 3.7.2 バッチディスパッチ (ダブルバッファリングの代替)
+
+> **Note:** WASM 環境では threads が使用できないため、真のダブルバッファリング（GPU 計算と CPU 処理の同時進行）は実現できない。代わりに「バッチディスパッチ」パターンを採用する。
+
+**制約:**
+- WASM はシングルスレッド（async/await は cooperative multitasking）
+- GPU 計算待機中に CPU 処理を「並列」実行することは不可能
+
+**バッチディスパッチパターン:**
+1. 複数のセグメントを連続して `queue.submit()` （GPU に投げるだけ、待機しない）
+2. 全ディスパッチ完了後、まとめて `buffer.map_async()` で結果読み出し
+3. 各スロットの結果を順次処理
+
+```
+[submit seg0] → [submit seg1] → [submit seg2] → [await all] → [process results]
+```
 
 - 各スロットが独立した `match_output_buffer` と `readback_buffer` を持つ
-- GPU 書き込みと CPU 読み出しを並行して実行可能
+- GPU パイプラインを埋めることでスループット向上
 - `max_dispatches_in_flight` 個のスロットを事前確保
 
 #### 3.7.3 acquire/release パターン
@@ -306,16 +321,22 @@ impl SearchPipeline {
 - GPU 計算完了を待たずに次のディスパッチを発行
 - パイプライン深度を最大化し、GPU 使用率を向上
 
-#### 3.7.4 結果処理の並行化
+#### 3.7.4 パイプライン充填による効率化
+
+**WASM (シングルスレッド) での実行フロー:**
 
 ```
-[DispatchSlot 0] ── dispatch ──▶ [GPU 計算中] ──▶ [readback] ──▶ [CPU 処理]
-[DispatchSlot 1] ── dispatch ──▶ [GPU 計算中] ──▶ [readback] ──▶ [CPU 処理]
-[DispatchSlot 2] ── dispatch ──▶ [GPU 計算中] ──▶ [readback] ──▶ ...
+時間軸 →
+[submit 0][submit 1][submit 2] ────────────────▶ [await] ▶ [process 0][process 1][process 2]
+                                  GPU が並列処理
 ```
 
-- GPU 計算と CPU 結果処理を並行
-- `dispatchInflight` と `processingInflight` を分離管理
+**効果:**
+- GPU は複数ディスパッチを内部でパイプライン処理
+- CPU 側は submit 後に即座に次の submit を発行可能
+- 全 submit 完了後にまとめて await することで GPU 利用率を最大化
+
+> **Native 環境 (テスト用):** threads が使える場合は真の並列処理も可能だが、本実装では WASM 互換性を優先してバッチディスパッチを採用する。
 
 ---
 
@@ -328,11 +349,14 @@ impl SearchPipeline {
 
 #[cfg(feature = "gpu")]
 use wgpu;
+
+#[cfg(all(feature = "gpu", target_arch = "wasm32"))]
 use wasm_bindgen::prelude::*;
 
 /// WebGPU デバイスコンテキスト
+/// WASM/Native 両環境で共通のインターフェースを提供
 #[cfg(feature = "gpu")]
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct GpuDeviceContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -341,13 +365,21 @@ pub struct GpuDeviceContext {
 }
 
 #[cfg(feature = "gpu")]
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl GpuDeviceContext {
     /// コンテキスト作成 (非同期)
-    #[wasm_bindgen(constructor)]
+    /// WASM: WebGPU バックエンド、Native: Vulkan/Metal/DX12
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
     pub async fn new() -> Result<GpuDeviceContext, String> {
+        let backends = {
+            #[cfg(target_arch = "wasm32")]
+            { wgpu::Backends::BROWSER_WEBGPU }
+            #[cfg(not(target_arch = "wasm32"))]
+            { wgpu::Backends::PRIMARY }
+        };
+
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::BROWSER_WEBGPU,
+            backends,
             ..Default::default()
         });
 
@@ -357,7 +389,7 @@ impl GpuDeviceContext {
                 ..Default::default()
             })
             .await
-            .ok_or("WebGPU adapter not found")?;
+            .ok_or("GPU adapter not found")?;
 
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor::default(), None)
@@ -371,7 +403,7 @@ impl GpuDeviceContext {
     }
 
     /// WebGPU 可用性チェック (同期版、簡易判定)
-    #[wasm_bindgen]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn is_available() -> bool {
         #[cfg(target_arch = "wasm32")]
         {
@@ -381,41 +413,9 @@ impl GpuDeviceContext {
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
-            // Native 環境: wgpu が利用可能なバックエンドを持つかチェック
-            // テスト時に GPU 処理を呼び出せるようにする
-            true // 実際の可用性は new() で確認
+            // Native 環境: 実際の可用性は new() で確認
+            true
         }
-    }
-}
-
-#[cfg(feature = "gpu")]
-impl GpuDeviceContext {
-    /// Native 環境向けコンテキスト作成 (テスト用)
-    #[cfg(not(target_arch = "wasm32"))]
-    pub async fn new_native() -> Result<GpuDeviceContext, String> {
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::PRIMARY,
-            ..Default::default()
-        });
-
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                compatible_surface: None,
-                force_fallback_adapter: false,
-            })
-            .await
-            .ok_or("No GPU adapter found (native)")?;
-
-        let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
-            .await
-            .map_err(|e| format!("Device request failed: {e}"))?;
-
-        let limits = device.limits();
-        let profile = GpuProfile::detect(&adapter);
-
-        Ok(Self { device, queue, limits, profile })
     }
 }
 
