@@ -16,6 +16,15 @@ use super::super::limits::SearchJobLimits;
 /// ダブルバッファリング用スロット数
 const SLOT_COUNT: usize = 2;
 
+/// スロット状態
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SlotState {
+    /// 使用可能
+    Idle,
+    /// GPU 処理中
+    Computing,
+}
+
 /// ディスパッチスロット
 ///
 /// 各スロットは独立した `output_buffer` と `staging_buffer` を持つ。
@@ -26,6 +35,12 @@ struct DispatchSlot {
     staging_buffer: wgpu::Buffer,
     /// バインドグループ（このスロットの `output_buffer` を参照）
     bind_group: wgpu::BindGroup,
+    /// スロット状態
+    state: std::cell::Cell<SlotState>,
+    /// ベースオフセット（結果復元用）
+    base_offset: std::cell::Cell<u32>,
+    /// 処理したメッセージ数
+    processed_count: std::cell::Cell<u32>,
 }
 
 /// GPU 検索パイプライン
@@ -234,6 +249,9 @@ impl SearchPipeline {
                 output_buffer,
                 staging_buffer,
                 bind_group,
+                state: std::cell::Cell::new(SlotState::Idle),
+                base_offset: std::cell::Cell::new(0),
+                processed_count: std::cell::Cell::new(0),
             }
         });
 
@@ -414,9 +432,11 @@ impl SearchPipeline {
     /// GPU ディスパッチ実行（ダブルバッファリング対応）
     ///
     /// スロットを交互に使用し、GPU のアイドル時間を削減する。
+    /// テスト用に残しているが、通常は `dispatch_pipelined` を使用する。
     ///
     /// # Returns
     /// `(matches, processed_count)`
+    #[allow(dead_code)]
     pub async fn dispatch(&self, max_count: u32, offset: u32) -> (Vec<MatchResult>, u32) {
         let count = max_count.min(self.limits.max_messages_per_dispatch);
         if count == 0 {
@@ -426,6 +446,18 @@ impl SearchPipeline {
         // 現在のスロットを取得し、次回用に切り替え
         let slot_index = self.current_slot.get();
         self.current_slot.set((slot_index + 1) % SLOT_COUNT);
+
+        // スロットに submit
+        self.submit_to_slot(slot_index, count, offset);
+
+        // 結果を待って読み出し
+        let matches = self.await_slot(slot_index).await;
+
+        (matches, count)
+    }
+
+    /// スロットに GPU コマンドを投入（非同期、即座に戻る）
+    fn submit_to_slot(&self, slot_index: usize, count: u32, offset: u32) {
         let slot = &self.slots[slot_index];
 
         // ディスパッチ状態を更新
@@ -469,10 +501,73 @@ impl SearchPipeline {
 
         self.queue.submit(std::iter::once(encoder.finish()));
 
-        // 結果読み出し
-        let matches = self.read_slot_results(slot, offset).await;
+        // スロット状態を更新
+        slot.state.set(SlotState::Computing);
+        slot.base_offset.set(offset);
+        slot.processed_count.set(count);
+    }
 
-        (matches, count)
+    /// スロットの結果を待って読み出し
+    async fn await_slot(&self, slot_index: usize) -> Vec<MatchResult> {
+        let slot = &self.slots[slot_index];
+        let base_offset = slot.base_offset.get();
+
+        let matches = self.read_slot_results(slot, base_offset).await;
+        slot.state.set(SlotState::Idle);
+        matches
+    }
+
+    /// パイプライン化ディスパッチ実行
+    ///
+    /// 2つのスロットを交互に使用し、1つで GPU 処理中に別のスロットの結果を読み出す。
+    /// 初回は submit のみ、2回目以降は submit + 前回の結果読み出しを並行実行。
+    ///
+    /// # Returns
+    /// `(matches, processed_count)` - 初回は空の結果を返す
+    pub async fn dispatch_pipelined(
+        &self,
+        max_count: u32,
+        offset: u32,
+    ) -> (Vec<MatchResult>, u32, u32) {
+        let count = max_count.min(self.limits.max_messages_per_dispatch);
+        if count == 0 {
+            return (vec![], 0, 0);
+        }
+
+        // 現在のスロットを取得し、次回用に切り替え
+        let current = self.current_slot.get();
+        let prev = (current + SLOT_COUNT - 1) % SLOT_COUNT;
+        self.current_slot.set((current + 1) % SLOT_COUNT);
+
+        // 現在のスロットに submit
+        self.submit_to_slot(current, count, offset);
+
+        // 前のスロットが処理中なら、その結果を読み出す
+        let prev_slot = &self.slots[prev];
+        if prev_slot.state.get() == SlotState::Computing {
+            let prev_matches = self.await_slot(prev).await;
+            let prev_count = self.slots[prev].processed_count.get();
+            (prev_matches, prev_count, count)
+        } else {
+            // 初回または前のスロットが Idle の場合
+            (vec![], 0, count)
+        }
+    }
+
+    /// パイプラインをフラッシュ（最後の処理中スロットの結果を回収）
+    pub async fn flush_pipeline(&self) -> (Vec<MatchResult>, u32) {
+        // 現在のスロット（最後に submit したスロット）の1つ前を確認
+        let current = self.current_slot.get();
+        let prev = (current + SLOT_COUNT - 1) % SLOT_COUNT;
+
+        let prev_slot = &self.slots[prev];
+        if prev_slot.state.get() == SlotState::Computing {
+            let matches = self.await_slot(prev).await;
+            let count = self.slots[prev].processed_count.get();
+            (matches, count)
+        } else {
+            (vec![], 0)
+        }
     }
 
     /// スロットから結果を読み出し

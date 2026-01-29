@@ -35,6 +35,7 @@ pub struct GpuSearchBatch {
 /// `AsyncIterator` パターンで GPU 検索を実行する。
 /// `next()` を呼び出すたびに最適バッチサイズで GPU ディスパッチを実行し、
 /// 結果・進捗・スループットを返す。
+/// ダブルバッファリングにより GPU のアイドル時間を削減。
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct GpuDatetimeSearchIterator {
     /// GPU パイプライン
@@ -48,6 +49,8 @@ pub struct GpuDatetimeSearchIterator {
     total_count: u64,
     /// 処理済み数
     processed_count: u64,
+    /// パイプラインで投入済みだが未回収のメッセージ数
+    pending_count: u64,
 
     /// スループット計測: 前回の処理済み数
     last_processed: u64,
@@ -82,6 +85,7 @@ impl GpuDatetimeSearchIterator {
             current_offset: 0,
             total_count,
             processed_count: 0,
+            pending_count: 0,
             last_processed: 0,
             last_time_secs: current_time_secs(),
         })
@@ -90,31 +94,79 @@ impl GpuDatetimeSearchIterator {
     /// 次のバッチを取得
     ///
     /// 検索完了時は `None` を返す。
+    /// ダブルバッファリングにより、1つのスロットで GPU 処理中に
+    /// 別のスロットの結果を読み出すことで GPU のアイドル時間を削減。
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn next(&mut self) -> Option<GpuSearchBatch> {
-        if self.is_done() {
+        // 全処理完了かつ pending なしなら終了
+        if self.is_done() && self.pending_count == 0 {
             return None;
         }
 
-        // 最適バッチサイズで GPU ディスパッチ
-        let chunk_count = self.limits.max_messages_per_dispatch;
+        // 残りの処理数を計算（pending を含む）
         #[allow(clippy::cast_possible_truncation)]
-        let remaining = (self.total_count - self.processed_count) as u32;
-        let to_process = chunk_count.min(remaining);
+        let total_remaining = (self.total_count - self.processed_count - self.pending_count) as u32;
 
-        if to_process == 0 {
-            return None;
+        // まだ処理すべきデータがある場合
+        if total_remaining > 0 {
+            let chunk_count = self.limits.max_messages_per_dispatch;
+            let to_process = chunk_count.min(total_remaining);
+
+            // パイプライン化ディスパッチ: 新しいバッチを submit しつつ、前の結果を読み出し
+            let (matches, prev_processed, submitted) = self
+                .pipeline
+                .dispatch_pipelined(to_process, self.current_offset)
+                .await;
+
+            // pending を更新
+            self.pending_count += u64::from(submitted);
+            self.current_offset += submitted;
+
+            // 前のバッチの結果があれば処理
+            if prev_processed > 0 {
+                self.processed_count += u64::from(prev_processed);
+                self.pending_count -= u64::from(prev_processed);
+
+                return Some(self.build_batch_result(matches));
+            }
+
+            // 初回は結果がないので、もう一度 dispatch して結果を得る
+            // (これにより2つのスロットが稼働する)
+            if total_remaining > submitted {
+                let next_to_process = chunk_count.min(total_remaining - submitted);
+                let (matches2, prev_processed2, submitted2) = self
+                    .pipeline
+                    .dispatch_pipelined(next_to_process, self.current_offset)
+                    .await;
+
+                self.pending_count += u64::from(submitted2);
+                self.current_offset += submitted2;
+
+                if prev_processed2 > 0 {
+                    self.processed_count += u64::from(prev_processed2);
+                    self.pending_count -= u64::from(prev_processed2);
+
+                    return Some(self.build_batch_result(matches2));
+                }
+            }
         }
 
-        // GPU 実行
-        let (matches, processed) = self
-            .pipeline
-            .dispatch(to_process, self.current_offset)
-            .await;
+        // pending があればフラッシュ
+        if self.pending_count > 0 {
+            let (matches, flushed) = self.pipeline.flush_pipeline().await;
+            if flushed > 0 {
+                self.processed_count += u64::from(flushed);
+                self.pending_count -= u64::from(flushed);
 
-        self.processed_count += u64::from(processed);
-        self.current_offset += processed;
+                return Some(self.build_batch_result(matches));
+            }
+        }
 
+        None
+    }
+
+    /// バッチ結果を構築
+    fn build_batch_result(&mut self, matches: Vec<super::pipeline::MatchResult>) -> GpuSearchBatch {
         // スループット計算
         let now = current_time_secs();
         let elapsed = now - self.last_time_secs;
@@ -135,13 +187,13 @@ impl GpuDatetimeSearchIterator {
             .map(|m| SeedOrigin::startup(m.lcg_seed, m.datetime, condition))
             .collect();
 
-        Some(GpuSearchBatch {
+        GpuSearchBatch {
             results,
             progress: self.progress(),
             throughput,
             processed_count: self.processed_count,
             total_count: self.total_count,
-        })
+        }
     }
 
     /// 検索が完了したか
