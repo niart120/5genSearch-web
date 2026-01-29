@@ -12,9 +12,11 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["console_error_panic_hook"]
+gpu = ["dep:wgpu", "dep:web-sys", "dep:bytemuck", "dep:futures-channel"]
 
 [dependencies]
 wasm-bindgen = "0.2.108"
+wasm-bindgen-futures = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
 tsify = { version = "0.5.6", default-features = false, features = ["js"] }
@@ -22,8 +24,15 @@ tsify = { version = "0.5.6", default-features = false, features = ["js"] }
 # Error handling in WASM
 console_error_panic_hook = { version = "0.1", optional = true }
 
+# GPU support (optional)
+wgpu = { version = "24", optional = true, default-features = false, features = ["webgpu", "wgsl"] }
+web-sys = { version = "0.3", optional = true, features = ["Window", "Navigator", "Gpu"] }
+bytemuck = { version = "1.21", optional = true, features = ["derive"] }
+futures-channel = { version = "0.3", optional = true }
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+pollster = "0.4"
 
 [lints.rust]
 # Enable nightly features for Portable SIMD

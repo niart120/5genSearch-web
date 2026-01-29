@@ -408,22 +408,6 @@ impl GpuDeviceContext {
 
         Ok(Self { device, queue, limits, profile })
     }
-
-    /// WebGPU 可用性チェック (同期版、簡易判定)
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn is_available() -> bool {
-        #[cfg(target_arch = "wasm32")]
-        {
-            web_sys::window()
-                .and_then(|w| w.navigator().gpu())
-                .is_some()
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            // Native 環境: 実際の可用性は new() で確認
-            true
-        }
-    }
 }
 
 #[cfg(feature = "gpu")]
@@ -1015,12 +999,7 @@ async function runSearch(params: MtseedDatetimeSearchParams) {
   try {
     await init();
 
-    // GPU コンテキスト初期化
-    if (!GpuDeviceContext.is_available()) {
-      self.postMessage({ type: 'ERROR', error: 'WebGPU not available' });
-      return;
-    }
-
+    // GPU コンテキスト初期化 (WebGPU 非対応環境ではエラーが投げられる)
     context = await new GpuDeviceContext();
     searcher = await new GpuMtseedDatetimeSearcher(context, params);
 
@@ -1105,7 +1084,6 @@ wasm-pack test --headless --chrome --features gpu
 - [ ] `wasm-pkg/src/gpu/mod.rs` 作成
 - [ ] `wasm-pkg/src/gpu/context.rs` 作成
   - [ ] `GpuDeviceContext`
-  - [ ] `is_available()` (WebGPU 可用性チェック)
 - [ ] `wasm-pkg/src/gpu/profile.rs` 作成
   - [ ] `GpuProfile`, `GpuKind`
   - [ ] プロファイル検出

@@ -12,6 +12,9 @@ pub mod generation;
 pub mod misc;
 pub mod types;
 
+#[cfg(feature = "gpu")]
+pub mod gpu;
+
 // Re-export datetime_search types
 pub use datetime_search::{
     EggDatetimeSearchBatch, EggDatetimeSearchParams, EggDatetimeSearchResult, EggDatetimeSearcher,
@@ -46,6 +49,10 @@ pub use misc::{
 
 // Re-export needle search types
 pub use types::NeedleSearchResult;
+
+// Re-export GPU module (when enabled)
+#[cfg(feature = "gpu")]
+pub use gpu::{GpuDeviceContext, GpuKind, GpuMtseedDatetimeSearcher, GpuProfile, SearchJobLimits};
 
 #[wasm_bindgen(start)]
 pub fn init() {
