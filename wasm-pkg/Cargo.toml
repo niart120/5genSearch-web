@@ -33,6 +33,24 @@ futures-channel = { version = "0.3", optional = true }
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 pollster = "0.4"
+criterion = { version = "0.6", features = ["html_reports"] }
+
+[[bench]]
+name = "datetime_search"
+harness = false
+
+[[bench]]
+name = "generator"
+harness = false
+
+[[bench]]
+name = "mtseed_search"
+harness = false
+
+[[bench]]
+name = "gpu_datetime_search"
+harness = false
+required-features = ["gpu"]
 
 [lints.rust]
 # Enable nightly features for Portable SIMD
