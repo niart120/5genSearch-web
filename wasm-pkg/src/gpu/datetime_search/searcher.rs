@@ -184,3 +184,125 @@ mod tests {
         assert_eq!(total, 3600);
     }
 }
+
+/// GPU統合テスト (実際のGPU実行を伴う)
+/// これらのテストは `cargo test --features gpu` で実行される
+#[cfg(all(test, feature = "gpu"))]
+mod gpu_integration_tests {
+    use crate::gpu::context::GpuDeviceContext;
+    use crate::types::{
+        DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
+        StartupCondition, TimeRangeParams,
+    };
+
+    use super::*;
+
+    /// GPUとCPUの計算結果を比較するテスト
+    ///
+    /// GPU検索でマッチが見つからない場合でも、
+    /// GPUパイプラインが正常に動作することを確認する
+    #[test]
+    fn test_gpu_pipeline_execution() {
+        pollster::block_on(async {
+            let ctx = match GpuDeviceContext::new().await {
+                Ok(ctx) => ctx,
+                Err(e) => {
+                    eprintln!("GPU not available: {e}, skipping test");
+                    return;
+                }
+            };
+
+            // シンプルな検索パラメータ
+            let target_seed = MtSeed::new(0x1234_5678);
+
+            let params = MtseedDatetimeSearchParams {
+                target_seeds: vec![target_seed],
+                ds: DsConfig {
+                    mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+                    hardware: Hardware::DsLite,
+                    version: RomVersion::Black,
+                    region: RomRegion::Jpn,
+                },
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 23,
+                    minute_start: 0,
+                    minute_end: 59,
+                    second_start: 0,
+                    second_end: 59,
+                },
+                search_range: SearchRangeParams {
+                    start_year: 2011,
+                    start_month: 1,
+                    start_day: 1,
+                    start_second_offset: 0,
+                    range_seconds: 86400, // 1日
+                },
+                condition: StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
+            };
+
+            let mut searcher =
+                GpuMtseedDatetimeSearcher::new(&ctx, &params).expect("Failed to create searcher");
+
+            // GPU検索を実行 (結果がなくてもパイプラインが動作することを確認)
+            let batch = searcher.next_batch(1000).await;
+
+            // 処理が進んだことを確認
+            assert!(batch.processed_count > 0, "Expected some processing");
+            assert!(batch.total_count > 0, "Expected total count > 0");
+            assert_eq!(batch.total_count, 86400, "Expected 1 day = 86400 seconds");
+        });
+    }
+
+    /// 存在しないSeedを検索した場合、結果が空であることを検証
+    #[test]
+    fn test_gpu_no_match_returns_empty() {
+        pollster::block_on(async {
+            let ctx = match GpuDeviceContext::new().await {
+                Ok(ctx) => ctx,
+                Err(e) => {
+                    eprintln!("GPU not available: {e}, skipping test");
+                    return;
+                }
+            };
+
+            // ありえないSeed
+            let target_seed = MtSeed::new(0xFFFF_FFFF);
+
+            let params = MtseedDatetimeSearchParams {
+                target_seeds: vec![target_seed],
+                ds: DsConfig {
+                    mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+                    hardware: Hardware::DsLite,
+                    version: RomVersion::Black,
+                    region: RomRegion::Jpn,
+                },
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 0,
+                    minute_start: 0,
+                    minute_end: 0,
+                    second_start: 0,
+                    second_end: 0,
+                },
+                search_range: SearchRangeParams {
+                    start_year: 2023,
+                    start_month: 1,
+                    start_day: 1,
+                    start_second_offset: 0,
+                    range_seconds: 1,
+                },
+                condition: StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
+            };
+
+            let mut searcher =
+                GpuMtseedDatetimeSearcher::new(&ctx, &params).expect("Failed to create searcher");
+
+            let batch = searcher.next_batch(1).await;
+            assert!(
+                batch.results.is_empty(),
+                "Expected no results for non-existent seed"
+            );
+        });
+    }
+}

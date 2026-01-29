@@ -47,15 +47,6 @@ impl GpuDeviceContext {
             .await
             .ok_or("GPU adapter not found")?;
 
-        #[cfg(debug_assertions)]
-        {
-            let info = adapter.get_info();
-            eprintln!(
-                "[DEBUG GpuDeviceContext] Adapter: {} ({:?}), Backend: {:?}",
-                info.name, info.device_type, info.backend
-            );
-        }
-
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor::default(), None)
             .await

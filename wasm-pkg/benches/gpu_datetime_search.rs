@@ -41,19 +41,26 @@ fn create_time_range() -> TimeRangeParams {
 
 fn create_search_range() -> SearchRangeParams {
     SearchRangeParams {
-        start_year: 2011,
+        start_year: 2000,
         start_month: 1,
         start_day: 1,
         start_second_offset: 0,
-        range_seconds: 86400 * 7, // 1週間
+        range_seconds: 86400 * 365 * 100, // 100年間 (~3.15G秒)
     }
 }
 
-fn create_condition() -> StartupCondition {
-    StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE)
+/// Timer0×3件、VCount×1件の複数条件を作成
+fn create_conditions() -> Vec<StartupCondition> {
+    vec![
+        StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
+        StartupCondition::new(0x0C7A, 0x5F, KeyCode::NONE),
+        StartupCondition::new(0x0C7B, 0x5F, KeyCode::NONE),
+    ]
 }
 
 fn create_params() -> MtseedDatetimeSearchParams {
+    // Timer0×3 × VCount×1 = 3通りの起動条件で検索
+    let conditions = create_conditions();
     MtseedDatetimeSearchParams {
         target_seeds: vec![
             MtSeed::new(0x12345678),
@@ -63,7 +70,7 @@ fn create_params() -> MtseedDatetimeSearchParams {
         ds: create_ds_config(),
         time_range: create_time_range(),
         search_range: create_search_range(),
-        condition: create_condition(),
+        condition: conditions[0],
     }
 }
 

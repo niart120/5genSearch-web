@@ -12,9 +12,6 @@ use crate::types::{Datetime, Hardware, MtSeed, StartupCondition};
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;
 
-/// ワークグループサイズのプレースホルダー
-const WORKGROUP_SIZE_PLACEHOLDER: &str = "WORKGROUP_SIZE_PLACEHOLDER";
-
 /// GPU 検索パイプライン
 pub struct SearchPipeline {
     device: wgpu::Device,
@@ -94,14 +91,9 @@ impl SearchPipeline {
 
         // シェーダーモジュール作成
         let shader_source = include_str!("shader.wgsl");
-        let shader_code = shader_source.replace(
-            WORKGROUP_SIZE_PLACEHOLDER,
-            &limits.workgroup_size.to_string(),
-        );
-
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("mtseed-datetime-search"),
-            source: wgpu::ShaderSource::Wgsl(shader_code.into()),
+            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
         });
 
         // バインドグループレイアウト
@@ -167,7 +159,15 @@ impl SearchPipeline {
             layout: Some(&pipeline_layout),
             module: &module,
             entry_point: Some("sha1_generate"),
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &[(
+                    String::from("WORKGROUP_SIZE"),
+                    f64::from(limits.workgroup_size),
+                )]
+                .into_iter()
+                .collect(),
+                ..Default::default()
+            },
             cache: None,
         });
 

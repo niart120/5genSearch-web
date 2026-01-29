@@ -2,8 +2,8 @@
 //
 // SHA-1 ハッシュを計算し、ターゲット MT Seed とマッチングする。
 
-// ワークグループサイズ (Rust 側で動的に置換)
-const WORKGROUP_SIZE: u32 = WORKGROUP_SIZE_PLACEHOLDERu;
+// ワークグループサイズ (パイプライン作成時にRust側から注入)
+override WORKGROUP_SIZE: u32 = 64u;
 
 // ===== バッファ構造体 =====
 
