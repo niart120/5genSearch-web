@@ -119,7 +119,7 @@ impl MtseedDatetimeSearcher {
 
 // GPU 版 (新規)
 impl GpuMtseedDatetimeSearcher {
-    pub async fn new(ctx: &GpuDeviceContext, params: MtseedDatetimeSearchParams) 
+    pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) 
         -> Result<Self, String>;
     pub fn is_done(&self) -> bool;
     pub fn progress(&self) -> f64;
@@ -446,20 +446,18 @@ pub struct GpuMtseedDatetimeSearcher {
 }
 
 #[cfg(feature = "gpu")]
-#[wasm_bindgen]
 impl GpuMtseedDatetimeSearcher {
     /// 検索器を作成
-    #[wasm_bindgen(constructor)]
-    pub async fn new(
+    pub fn new(
         ctx: &GpuDeviceContext,
-        params: MtseedDatetimeSearchParams,
+        params: &MtseedDatetimeSearchParams,
     ) -> Result<GpuMtseedDatetimeSearcher, String> {
         if params.target_seeds.is_empty() {
             return Err("target_seeds is empty".into());
         }
 
-        let pipeline = SearchPipeline::new(ctx, &params)?;
-        let total_count = calculate_total_count(&params);
+        let pipeline = SearchPipeline::new(ctx, params);
+        let total_count = calculate_total_count(params);
 
         Ok(Self {
             pipeline,
@@ -1001,7 +999,8 @@ async function runSearch(params: MtseedDatetimeSearchParams) {
 
     // GPU コンテキスト初期化 (WebGPU 非対応環境ではエラーが投げられる)
     context = await new GpuDeviceContext();
-    searcher = await new GpuMtseedDatetimeSearcher(context, params);
+    // new() は同期だが、WASM 経由では Promise になる可能性あり
+    searcher = new GpuMtseedDatetimeSearcher(context, params);
 
     const BATCH_SIZE = 100_000;
 
