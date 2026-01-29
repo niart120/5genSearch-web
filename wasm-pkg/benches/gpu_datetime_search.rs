@@ -8,7 +8,7 @@
 
 use std::time::Duration;
 
-use criterion::{Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::MtseedDatetimeSearchParams;
 use wasm_pkg::gpu::GpuDatetimeSearchIterator;
 use wasm_pkg::types::{
@@ -78,6 +78,19 @@ fn create_gpu_iterator() -> GpuDatetimeSearchIterator {
         .expect("Failed to create GpuDatetimeSearchIterator")
 }
 
+/// 5バッチ分処理して合計処理数を返す
+fn run_batches(iterator: &mut GpuDatetimeSearchIterator, batch_count: usize) -> u64 {
+    let mut total_processed = 0u64;
+    for _ in 0..batch_count {
+        if let Some(batch) = pollster::block_on(iterator.next()) {
+            total_processed += batch.processed_count - (total_processed);
+        } else {
+            break;
+        }
+    }
+    total_processed
+}
+
 // ===== ベンチマーク =====
 
 fn bench_gpu_mtseed_datetime_search(c: &mut Criterion) {
@@ -91,21 +104,30 @@ fn bench_gpu_mtseed_datetime_search(c: &mut Criterion) {
     }
 
     let mut group = c.benchmark_group("gpu_mtseed_datetime_search");
-    group.warm_up_time(Duration::from_secs(2));
-    group.measurement_time(Duration::from_secs(5));
+    group.warm_up_time(Duration::from_secs(5));
+    group.measurement_time(Duration::from_secs(50));
     group.sample_size(10);
 
-    // バッチサイズはイテレータが自動決定するため、推定値を使用
+    // 5バッチ分の推定処理数 (256 × 65535 × 5)
+    const BATCH_COUNT: usize = 5;
     let estimated_batch_size = 16_776_960_u64; // 256 × 65535
-    group.throughput(Throughput::Elements(estimated_batch_size));
+    let total_elements = estimated_batch_size * BATCH_COUNT as u64;
+    group.throughput(Throughput::Elements(total_elements));
 
-    group.bench_function("next", |b| {
-        b.iter_batched(
-            create_gpu_iterator,
-            |mut iterator| pollster::block_on(iterator.next()),
-            criterion::BatchSize::SmallInput,
-        );
-    });
+    group.bench_function(
+        BenchmarkId::new("next", format!("{}batches", BATCH_COUNT)),
+        |b| {
+            // イテレータを1回だけ作成し、複数バッチを処理
+            let mut iterator = create_gpu_iterator();
+            b.iter(|| {
+                // イテレータがまだ処理可能な場合は継続、そうでなければ再作成
+                if iterator.is_done() {
+                    iterator = create_gpu_iterator();
+                }
+                run_batches(&mut iterator, BATCH_COUNT)
+            });
+        },
+    );
 
     group.finish();
 }

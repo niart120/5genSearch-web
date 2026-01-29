@@ -17,10 +17,16 @@ pub struct SearchPipeline {
     device: wgpu::Device,
     queue: wgpu::Queue,
     pipeline: wgpu::ComputePipeline,
+    /// `BindGroup` を通じてバッファを参照するため、直接は使用しないが所有権を保持
+    #[allow(dead_code)]
     bind_group_layout: wgpu::BindGroupLayout,
-    /// ターゲット Seed バッファ
+    /// キャッシュされたバインドグループ
+    bind_group: wgpu::BindGroup,
+    /// `BindGroup` を通じてバッファを参照するため、直接は使用しないが所有権を保持
+    #[allow(dead_code)]
     target_buffer: wgpu::Buffer,
-    /// 定数バッファ
+    /// `BindGroup` を通じてバッファを参照するため、直接は使用しないが所有権を保持
+    #[allow(dead_code)]
     constants_buffer: wgpu::Buffer,
     /// ディスパッチ状態バッファ
     dispatch_state_buffer: wgpu::Buffer,
@@ -86,6 +92,7 @@ struct MatchRecord {
 
 impl SearchPipeline {
     /// パイプラインを作成
+    #[allow(clippy::too_many_lines)]
     pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) -> Self {
         let device = ctx.device().clone();
         let queue = ctx.queue().clone();
@@ -183,11 +190,36 @@ impl SearchPipeline {
         let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity);
         let staging_buffer = Self::create_staging_buffer(&device, limits.candidate_capacity);
 
+        // BindGroup をキャッシュ
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("mtseed-datetime-search-bind-group"),
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: dispatch_state_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: constants_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: target_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: output_buffer.as_entire_binding(),
+                },
+            ],
+        });
+
         Self {
             device,
             queue,
             pipeline,
             bind_group_layout,
+            bind_group,
             target_buffer,
             constants_buffer,
             dispatch_state_buffer,
@@ -349,32 +381,6 @@ impl SearchPipeline {
         })
     }
 
-    /// バインドグループを作成
-    fn create_bind_group(&self) -> wgpu::BindGroup {
-        self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("mtseed-datetime-search-bind-group"),
-            layout: &self.bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: self.dispatch_state_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: self.constants_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: self.target_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: self.output_buffer.as_entire_binding(),
-                },
-            ],
-        })
-    }
-
     /// GPU ディスパッチ実行
     ///
     /// # Returns
@@ -410,7 +416,7 @@ impl SearchPipeline {
         {
             let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
             pass.set_pipeline(&self.pipeline);
-            pass.set_bind_group(0, &self.create_bind_group(), &[]);
+            pass.set_bind_group(0, &self.bind_group, &[]);
             let workgroup_count = count.div_ceil(self.workgroup_size);
             pass.dispatch_workgroups(workgroup_count, 1, 1);
         }
