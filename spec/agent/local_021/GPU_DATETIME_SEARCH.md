@@ -70,6 +70,7 @@ WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化す�
 | `wasm-pkg/src/gpu/datetime_search/shader.wgsl` | 新規 | WGSL シェーダー本体 |
 | `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 新規 | パイプライン・バッファ管理 |
 | `src/workers/mtseed-datetime-search-worker-gpu.ts` | 新規 | GPU Worker (WASM 呼び出し) |
+| `.github/workflows/ci.yml` | 変更 | GPU feature 対応 (lint/test 分離) |
 
 ---
 
@@ -261,6 +262,60 @@ impl SearchJobLimits {
 | `max_messages_per_dispatch` | 1 回のディスパッチで処理するメッセージ数 | `workgroup_size × max_workgroups` |
 | `candidate_capacity` | 結果バッファのレコード数上限 | 固定値 (メモリ効率) |
 | `max_dispatches_in_flight` | パイプライン深度 | GPU プロファイル |
+
+### 3.7 パイプライン処理の工夫
+
+参照実装のパイプライン最適化パターンを採用する:
+
+#### 3.7.1 DispatchSlot プール
+
+```rust
+/// ディスパッチスロット
+/// 各スロットが独立したバッファセットを持ち、並行ディスパッチを実現
+struct DispatchSlot {
+    id: usize,
+    /// ディスパッチ状態バッファ (message_count, base_offset, capacity, padding)
+    dispatch_state_buffer: wgpu::Buffer,
+    /// uniform バッファ (セグメント固有パラメータ)
+    uniform_buffer: wgpu::Buffer,
+    /// 結果出力バッファ (GPU 書き込み用)
+    match_output_buffer: wgpu::Buffer,
+    /// 結果読み出しバッファ (CPU 読み出し用、MAP_READ)
+    readback_buffer: wgpu::Buffer,
+}
+```
+
+#### 3.7.2 ダブルバッファリング
+
+- 各スロットが独立した `match_output_buffer` と `readback_buffer` を持つ
+- GPU 書き込みと CPU 読み出しを並行して実行可能
+- `max_dispatches_in_flight` 個のスロットを事前確保
+
+#### 3.7.3 acquire/release パターン
+
+```rust
+impl SearchPipeline {
+    /// 利用可能なスロットを取得 (空きがなければ待機)
+    async fn acquire_slot(&self) -> DispatchSlot { ... }
+    
+    /// スロットを解放 (待機中のタスクがあれば通知)
+    fn release_slot(&self, slot: DispatchSlot) { ... }
+}
+```
+
+- GPU 計算完了を待たずに次のディスパッチを発行
+- パイプライン深度を最大化し、GPU 使用率を向上
+
+#### 3.7.4 結果処理の並行化
+
+```
+[DispatchSlot 0] ── dispatch ──▶ [GPU 計算中] ──▶ [readback] ──▶ [CPU 処理]
+[DispatchSlot 1] ── dispatch ──▶ [GPU 計算中] ──▶ [readback] ──▶ [CPU 処理]
+[DispatchSlot 2] ── dispatch ──▶ [GPU 計算中] ──▶ [readback] ──▶ ...
+```
+
+- GPU 計算と CPU 結果処理を並行
+- `dispatchInflight` と `processingInflight` を分離管理
 
 ---
 
@@ -1071,6 +1126,10 @@ wasm-pack test --headless --chrome --features gpu
   - [ ] CPU 版との結果一致確認
   - [ ] `cargo test` パス
   - [ ] `wasm-pack test` パス
+- [ ] CI 更新 (`.github/workflows/ci.yml`)
+  - [ ] `lint-rust` ジョブ: `--features gpu` で clippy 実行
+  - [ ] `test-rust` ジョブ: `--no-default-features` で GPU テストスキップ
+  - [ ] WASM ビルドジョブ追加: `wasm-pack build --features gpu`
 
 ---
 
