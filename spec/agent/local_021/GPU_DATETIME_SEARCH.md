@@ -153,7 +153,14 @@ gpu = ["dep:wgpu", "dep:web-sys"]
 [dependencies]
 wgpu = { version = "24", optional = true, default-features = false, features = ["webgpu", "wgsl"] }
 web-sys = { version = "0.3", optional = true, features = ["Navigator", "Gpu"] }
+
+[dev-dependencies]
+pollster = "0.4"  # Native 環境で wgpu の async をブロック実行
 ```
+
+> **Note:** wgpu の async 関数は環境によって異なるランタイムを使用する:
+> - **WASM**: `wasm-bindgen-futures` (自動適用)
+> - **Native**: `pollster::block_on()` または `tokio` でブロック実行
 
 #### CI 環境での考慮事項
 
@@ -1141,4 +1148,95 @@ wasm-pack test --headless --chrome --features gpu
 | [mig_002/gpu/device-context.md](../mig_002/gpu/device-context.md) | GPU デバイスコンテキスト設計 |
 | [datetime_search/mtseed.rs](../../../wasm-pkg/src/datetime_search/mtseed.rs) | CPU 版実装 |
 | [types/seeds.rs](../../../wasm-pkg/src/types/seeds.rs) | `SeedOrigin` 定義 |
+
+---
+
+## 補遁 A. ベンチマーク実装例
+
+Native 環境 (Vulkan/DX12/Metal) で criterion による GPU ベンチマークが可能。
+
+### A.1 Cargo.toml 追記
+
+```toml
+# wasm-pkg/Cargo.toml
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["async_tokio"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
+pollster = "0.4"
+
+[[bench]]
+name = "gpu_datetime_search"
+harness = false
+required-features = ["gpu"]
+```
+
+### A.2 ベンチマークコード例
+
+```rust
+// benches/gpu_datetime_search.rs
+
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use wasm_pkg::gpu::{GpuDeviceContext, GpuMtseedDatetimeSearcher};
+use wasm_pkg::datetime_search::MtseedDatetimeSearchParams;
+use tokio::runtime::Runtime;
+
+fn bench_10year_search(c: &mut Criterion) {
+    let rt = Runtime::new().unwrap();
+
+    // Native GPU コンテキスト作成 (Vulkan/DX12/Metal)
+    let ctx = rt.block_on(async {
+        GpuDeviceContext::new().await.expect("GPU required for benchmark")
+    });
+
+    let params = MtseedDatetimeSearchParams {
+        // 10年分の検索範囲 (2000-01-01 〜 2009-12-31)
+        // ... パラメータ設定
+        ..Default::default()
+    };
+
+    let mut group = c.benchmark_group("gpu_datetime_search");
+    group.sample_size(10);  // GPU ベンチは時間がかかるためサンプル数を減らす
+
+    group.bench_with_input(
+        BenchmarkId::new("search", "10years"),
+        &params,
+        |b, params| {
+            b.to_async(&rt).iter(|| async {
+                let mut searcher = GpuMtseedDatetimeSearcher::new(&ctx, params.clone())
+                    .await
+                    .unwrap();
+                while !searcher.is_done() {
+                    searcher.next_batch(1_000_000).await;
+                }
+            });
+        },
+    );
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_10year_search);
+criterion_main!(benches);
+```
+
+### A.3 実行方法
+
+```powershell
+# GPU ベンチマーク実行
+cargo bench --features gpu --bench gpu_datetime_search
+
+# 特定のベンチのみ
+cargo bench --features gpu --bench gpu_datetime_search -- "10years"
+```
+
+### A.4 注意事項
+
+| 項目 | 説明 |
+|------|------|
+| CI 環境 | GitHub Actions の標準 Runner には GPU がないため、ローカル実行または GPU 付き Runner が必要 |
+| バックエンド差異 | Native (Vulkan/DX12/Metal) と WebGPU で性能特性が異なる可能性 |
+| シェーダー互換性 | WGSL は両環境で動作するが、最適化パスが異なる |
+| ウォームアップ | 初回実行時はシェーダーコンパイルが発生するため、`sample_size` を調整 |
+| メモリ | 10年検索は大量の結果を生成する可能性があるため、メモリ使用量に注意 |
 
