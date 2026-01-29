@@ -24,8 +24,8 @@ impl GpuMtseedDatetimeSearcher {
     ///
     /// # Errors
     ///
-    /// `target_seeds` が空の場合、またはパイプライン作成に失敗した場合。
-    #[allow(clippy::unused_async)]
+    /// `target_seeds` が空の場合。
+    #[allow(clippy::unused_async)] // WASM 環境で GPU コンテキストが async のため
     pub async fn new(
         ctx: &GpuDeviceContext,
         params: MtseedDatetimeSearchParams,
@@ -34,7 +34,7 @@ impl GpuMtseedDatetimeSearcher {
             return Err("target_seeds is empty".into());
         }
 
-        let pipeline = SearchPipeline::new(ctx, &params)?;
+        let pipeline = SearchPipeline::new(ctx, &params);
         let total_count = calculate_total_count(&params);
 
         Ok(Self {
@@ -51,7 +51,7 @@ impl GpuMtseedDatetimeSearcher {
     }
 
     /// 進捗率 (0.0 - 1.0)
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_precision_loss)] // 進捗率計算では精度損失は許容
     pub fn progress(&self) -> f64 {
         if self.total_count == 0 {
             1.0
@@ -61,7 +61,7 @@ impl GpuMtseedDatetimeSearcher {
     }
 
     /// 次のバッチを検索 (GPU 実行)
-    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_possible_truncation)] // remaining_total は chunk_count 以下
     pub async fn next_batch(&mut self, chunk_count: u32) -> MtseedDatetimeSearchBatch {
         let mut results = Vec::new();
         let mut remaining = chunk_count;

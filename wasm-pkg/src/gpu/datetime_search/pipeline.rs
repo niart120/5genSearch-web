@@ -2,10 +2,6 @@
 //!
 //! wgpu パイプライン・バッファ管理を行う。
 
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::cast_lossless)]
-#![allow(clippy::unreadable_literal)]
-
 use wgpu::util::DeviceExt;
 
 use crate::datetime_search::MtseedDatetimeSearchParams;
@@ -18,7 +14,6 @@ use super::super::limits::SearchJobLimits;
 const WORKGROUP_SIZE_PLACEHOLDER: &str = "WORKGROUP_SIZE_PLACEHOLDER";
 
 /// GPU 検索パイプライン
-#[allow(dead_code)]
 pub struct SearchPipeline {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -42,8 +37,6 @@ pub struct SearchPipeline {
     search_constants: SearchConstants,
     /// 起動条件 (結果復元用)
     condition: StartupCondition,
-    /// ターゲット Seed 数
-    target_count: u32,
 }
 
 /// シェーダー定数 (GPU バッファにコピー)
@@ -92,11 +85,7 @@ struct MatchRecord {
 
 impl SearchPipeline {
     /// パイプラインを作成
-    #[allow(clippy::unnecessary_wraps)]
-    pub fn new(
-        ctx: &GpuDeviceContext,
-        params: &MtseedDatetimeSearchParams,
-    ) -> Result<Self, String> {
+    pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) -> Self {
         let device = ctx.device().clone();
         let queue = ctx.queue().clone();
         let limits = SearchJobLimits::from_device_limits(ctx.limits(), ctx.gpu_profile());
@@ -190,7 +179,7 @@ impl SearchPipeline {
         let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity);
         let staging_buffer = Self::create_staging_buffer(&device, limits.candidate_capacity);
 
-        Ok(Self {
+        Self {
             device,
             queue,
             pipeline,
@@ -204,8 +193,7 @@ impl SearchPipeline {
             limits,
             search_constants,
             condition: params.condition,
-            target_count: params.target_seeds.len() as u32,
-        })
+        }
     }
 
     /// 検索定数を構築
@@ -292,6 +280,7 @@ impl SearchPipeline {
     }
 
     /// ターゲット Seed バッファを作成
+    #[allow(clippy::cast_possible_truncation)] // seeds.len() は u32 範囲内
     fn create_target_buffer(device: &wgpu::Device, seeds: &[MtSeed]) -> wgpu::Buffer {
         // バッファ構造: [count: u32, values: array<u32>]
         let mut data = Vec::with_capacity(1 + seeds.len());
@@ -327,6 +316,7 @@ impl SearchPipeline {
     }
 
     /// 結果バッファを作成
+    #[allow(clippy::cast_lossless)] // capacity u32 -> u64
     fn create_output_buffer(device: &wgpu::Device, capacity: u32) -> wgpu::Buffer {
         // 構造: [match_count: u32, records: array<MatchRecord>]
         let size = 4 + capacity as u64 * std::mem::size_of::<MatchRecord>() as u64;
@@ -339,6 +329,7 @@ impl SearchPipeline {
     }
 
     /// ステージングバッファを作成
+    #[allow(clippy::cast_lossless)] // capacity u32 -> u64
     fn create_staging_buffer(device: &wgpu::Device, capacity: u32) -> wgpu::Buffer {
         let size = 4 + capacity as u64 * std::mem::size_of::<MatchRecord>() as u64;
         device.create_buffer(&wgpu::BufferDescriptor {
@@ -433,6 +424,7 @@ impl SearchPipeline {
     }
 
     /// 結果を読み出し
+    #[allow(clippy::cast_possible_truncation)] // match_count は capacity 以下
     async fn read_results(&self, base_offset: u32) -> Vec<MatchResult> {
         let buffer_slice = self.staging_buffer.slice(..);
         let (tx, rx) = futures_channel::oneshot::channel();
@@ -473,6 +465,7 @@ impl SearchPipeline {
     }
 
     /// オフセットから日時を復元
+    #[allow(clippy::cast_possible_truncation)] // hour/minute/second は範囲内の値
     fn offset_to_datetime(&self, offset: u32) -> Datetime {
         let c = &self.search_constants;
         let combos_per_day =
@@ -502,12 +495,6 @@ impl SearchPipeline {
             minute,
             second,
         }
-    }
-
-    /// ターゲット Seed 数を取得
-    #[allow(dead_code)]
-    pub fn target_count(&self) -> u32 {
-        self.target_count
     }
 
     /// 起動条件を取得
@@ -572,6 +559,7 @@ fn day_of_week(year: u16, month: u8, day: u8) -> u32 {
 }
 
 /// オフセットから年月日を復元
+#[allow(clippy::cast_possible_truncation)] // year/doy は有効範囲内
 fn offset_to_date(start_year: u32, start_day_of_year: u32, day_offset: u32) -> (u16, u8, u8) {
     let mut year = start_year;
     let mut doy = start_day_of_year + day_offset;
@@ -604,7 +592,9 @@ fn offset_to_date(start_year: u32, start_day_of_year: u32, day_offset: u32) -> (
 }
 
 /// NAZO 値を取得 (既存実装を流用)
+/// ROM バージョンごとのアームは将来の拡張を考慮して分離
 #[allow(clippy::match_same_arms)]
+#[allow(clippy::unreadable_literal)] // NAZO 値はアドレス値のためそのまま記述
 fn get_nazo_values(version: RomVersion, region: RomRegion, hardware: Hardware) -> [u32; 5] {
     // NAZO 値は ROM バージョン・リージョン・ハードウェアによって異なる
     // 詳細は core/sha1.rs の get_nazo_values を参照
