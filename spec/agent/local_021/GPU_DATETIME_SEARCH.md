@@ -30,11 +30,13 @@ WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化す�
 
 ### 1.4 背景・問題
 
-| 項目 | CPU 版の制約 | GPU 版の解決策 |
+| 項目 | CPU 版の特性 | GPU 版の解決策 |
 |------|-------------|---------------|
-| 処理速度 | 単一 Worker で逐次処理 | 数千スレッドの並列 SHA-1 計算 |
-| 検索範囲 | 1 日分で数秒〜数十秒 | 1 日分を 1 秒未満で処理可能 |
-| スケーラビリティ | Worker 追加で線形向上のみ | GPU 性能に応じた自動最適化 |
+| 処理速度 | 複数 Worker 並列でも CPU コア数に依存 | 数千スレッドの並列 SHA-1 計算 |
+| 検索範囲 | 1 日分で数秒 (Worker 数依存) | 1 日分を 1 秒未満で処理可能 |
+| スケーラビリティ | Worker 追加で線形向上 (CPU コア上限) | GPU 性能に応じた自動最適化 |
+
+> **Note:** CPU 版も複数 Web Worker による並列化を前提とした設計になっている。各 Worker が独立した `MtseedDatetimeSearcher` インスタンスを持ち、検索範囲を分割して並列処理する。
 
 ### 1.5 期待効果
 
@@ -65,7 +67,7 @@ WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化す�
 | `wasm-pkg/src/gpu/limits.rs` | 新規 | `SearchJobLimits` (制限値導出) |
 | `wasm-pkg/src/gpu/datetime_search/mod.rs` | 新規 | GPU 起動時刻検索モジュール |
 | `wasm-pkg/src/gpu/datetime_search/searcher.rs` | 新規 | `GpuMtseedDatetimeSearcher` |
-| `wasm-pkg/src/gpu/datetime_search/shader.rs` | 新規 | WGSL シェーダー管理 |
+| `wasm-pkg/src/gpu/datetime_search/shader.wgsl` | 新規 | WGSL シェーダー本体 |
 | `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 新規 | パイプライン・バッファ管理 |
 | `src/workers/mtseed-datetime-search-worker-gpu.ts` | 新規 | GPU Worker (WASM 呼び出し) |
 
@@ -144,11 +146,34 @@ impl GpuMtseedDatetimeSearcher {
 ```toml
 # wasm-pkg/Cargo.toml
 [features]
-default = ["console_error_panic_hook"]
-gpu = ["wgpu"]
+default = ["console_error_panic_hook", "gpu"]
+gpu = ["dep:wgpu", "dep:web-sys"]
 
 [dependencies]
-wgpu = { version = "24", optional = true, features = ["webgpu"] }
+wgpu = { version = "24", optional = true, default-features = false, features = ["webgpu", "wgsl"] }
+web-sys = { version = "0.3", optional = true, features = ["Navigator", "Gpu"] }
+```
+
+#### CI 環境での考慮事項
+
+| 環境 | 対応 |
+|------|------|
+| `cargo test` (native) | `--no-default-features` で GPU テストをスキップ |
+| `cargo clippy` | GPU コードも静的解析対象 (feature 有効) |
+| `wasm-pack build` | `--features gpu` でビルド |
+| `wasm-pack test --headless --chrome` | WebGPU 対応ブラウザでのみ GPU テスト実行 |
+
+**CI スクリプト例:**
+
+```powershell
+# Lint (GPU コード含む)
+cargo clippy --all-targets --features gpu -- -D warnings
+
+# Native テスト (GPU スキップ)
+cargo test --no-default-features --features console_error_panic_hook
+
+# WASM ビルド
+wasm-pack build --target web --features gpu
 ```
 
 ### 3.5 モジュール構成
@@ -167,9 +192,75 @@ wasm-pkg/src/
     └── datetime_search/
         ├── mod.rs           # GpuMtseedDatetimeSearcher
         ├── searcher.rs      # 検索ロジック本体
-        ├── shader.rs        # WGSL シェーダー (include_str!)
+        ├── shader.wgsl      # WGSL シェーダー
         └── pipeline.rs      # パイプライン・バッファ管理
 ```
+
+### 3.6 SearchJobLimits
+
+GPU デバイス制限から検索ジョブのパラメータを導出する:
+
+```rust
+// wasm-pkg/src/gpu/limits.rs
+
+/// GPU 検索ジョブの制限値
+#[derive(Debug, Clone)]
+pub struct SearchJobLimits {
+    /// ワークグループサイズ (スレッド数/ワークグループ)
+    pub workgroup_size: u32,
+    /// 最大ワークグループ数 (1 ディスパッチあたり)
+    pub max_workgroups: u32,
+    /// 1 ディスパッチあたりの最大メッセージ数
+    pub max_messages_per_dispatch: u32,
+    /// 候補バッファ容量 (マッチ結果の最大数)
+    pub candidate_capacity: u32,
+    /// 同時実行可能なディスパッチ数
+    pub max_dispatches_in_flight: u32,
+}
+
+impl SearchJobLimits {
+    /// デバイス制限から導出
+    pub fn from_device_limits(limits: &wgpu::Limits, profile: &GpuProfile) -> Self {
+        let workgroup_size = match profile.kind {
+            GpuKind::Discrete => 256,
+            GpuKind::Integrated => 256,
+            GpuKind::Mobile => 128,
+            GpuKind::Unknown => 128,
+        };
+
+        let max_workgroups = limits
+            .max_compute_workgroups_per_dimension
+            .min(65535);
+
+        let max_messages_per_dispatch = workgroup_size * max_workgroups;
+
+        // 候補バッファ: 4KB (1024 レコード × 8 bytes)
+        let candidate_capacity = 1024;
+
+        let max_dispatches_in_flight = match profile.kind {
+            GpuKind::Discrete => 4,
+            GpuKind::Integrated => 2,
+            _ => 1,
+        };
+
+        Self {
+            workgroup_size,
+            max_workgroups,
+            max_messages_per_dispatch,
+            candidate_capacity,
+            max_dispatches_in_flight,
+        }
+    }
+}
+```
+
+| フィールド | 用途 | 導出元 |
+|-----------|------|-------|
+| `workgroup_size` | シェーダーの `@workgroup_size` | GPU プロファイル |
+| `max_workgroups` | `dispatch_workgroups(N, 1, 1)` の N | `limits.max_compute_workgroups_per_dimension` |
+| `max_messages_per_dispatch` | 1 回のディスパッチで処理するメッセージ数 | `workgroup_size × max_workgroups` |
+| `candidate_capacity` | 結果バッファのレコード数上限 | 固定値 (メモリ効率) |
+| `max_dispatches_in_flight` | パイプライン深度 | GPU プロファイル |
 
 ---
 
@@ -224,10 +315,9 @@ impl GpuDeviceContext {
         Ok(Self { device, queue, limits, profile })
     }
 
-    /// WebGPU 可用性チェック
+    /// WebGPU 可用性チェック (同期版、簡易判定)
     #[wasm_bindgen]
     pub fn is_available() -> bool {
-        // wasm 環境では navigator.gpu の存在をチェック
         #[cfg(target_arch = "wasm32")]
         {
             web_sys::window()
@@ -235,7 +325,42 @@ impl GpuDeviceContext {
                 .is_some()
         }
         #[cfg(not(target_arch = "wasm32"))]
-        false
+        {
+            // Native 環境: wgpu が利用可能なバックエンドを持つかチェック
+            // テスト時に GPU 処理を呼び出せるようにする
+            true // 実際の可用性は new() で確認
+        }
+    }
+}
+
+#[cfg(feature = "gpu")]
+impl GpuDeviceContext {
+    /// Native 環境向けコンテキスト作成 (テスト用)
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn new_native() -> Result<GpuDeviceContext, String> {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::PRIMARY,
+            ..Default::default()
+        });
+
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: None,
+                force_fallback_adapter: false,
+            })
+            .await
+            .ok_or("No GPU adapter found (native)")?;
+
+        let (device, queue) = adapter
+            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .await
+            .map_err(|e| format!("Device request failed: {e}"))?;
+
+        let limits = device.limits();
+        let profile = GpuProfile::detect(&adapter);
+
+        Ok(Self { device, queue, limits, profile })
     }
 }
 
