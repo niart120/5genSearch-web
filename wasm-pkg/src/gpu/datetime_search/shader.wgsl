@@ -67,8 +67,12 @@ struct TargetSeedBuffer {
 struct MatchRecord {
     /// マッチしたメッセージインデックス
     message_index: u32,
-    /// マッチした MT Seed
-    seed: u32,
+    /// SHA-1 ハッシュ h0
+    h0: u32,
+    /// SHA-1 ハッシュ h1
+    h1: u32,
+    /// パディング (アライメント用)
+    padding: u32,
 };
 
 struct MatchOutputBuffer {
@@ -378,7 +382,9 @@ fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
         let match_idx = atomicAdd(&output_buffer.match_count, 1u);
         if (match_idx < state.candidate_capacity) {
             output_buffer.records[match_idx].message_index = idx;
-            output_buffer.records[match_idx].seed = mt_seed;
+            output_buffer.records[match_idx].h0 = h0;
+            output_buffer.records[match_idx].h1 = h1;
+            output_buffer.records[match_idx].padding = 0u;
         }
     }
 }

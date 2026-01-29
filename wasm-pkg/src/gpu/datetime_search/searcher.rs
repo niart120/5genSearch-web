@@ -87,14 +87,8 @@ impl GpuMtseedDatetimeSearcher {
             // マッチ結果を SeedOrigin に変換
             let condition = self.pipeline.condition();
             for match_result in matches {
-                // LCG Seed は MT Seed から逆算が必要だが、
-                // GPU 側では MT Seed のみを返すため、
-                // ここでは仮の LCG Seed を生成
-                // (実際には SHA-1 ハッシュ全体を保存する必要があるが、
-                //  現状は MT Seed のマッチのみを確認する設計)
-                let lcg_seed = crate::types::LcgSeed::new(u64::from(match_result.mt_seed.0) << 32);
                 results.push(SeedOrigin::startup(
-                    lcg_seed,
+                    match_result.lcg_seed,
                     match_result.datetime,
                     condition,
                 ));
@@ -191,16 +185,98 @@ mod tests {
 mod gpu_integration_tests {
     use crate::gpu::context::GpuDeviceContext;
     use crate::types::{
-        DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
+        DsConfig, Hardware, KeyCode, LcgSeed, MtSeed, RomRegion, RomVersion, SearchRangeParams,
         StartupCondition, TimeRangeParams,
     };
 
     use super::*;
 
-    /// GPUとCPUの計算結果を比較するテスト
+    /// 既知のSeedを検索し、正しい日時・LCG Seedが見つかることを検証
     ///
-    /// GPU検索でマッチが見つからない場合でも、
-    /// GPUパイプラインが正常に動作することを確認する
+    /// テストベクター (scalar.rs の test_sha1_with_real_case と同一):
+    /// - MT Seed: 0xD2F057AD
+    /// - LCG Seed: 0x20D00C5C6EEBCD7E
+    /// - 条件: W2/JPN, DS, Timer0=0x10F8, VCount=0x82
+    /// - MAC: [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F]
+    /// - 期待日時: 2006/03/11 18:53:27
+    #[test]
+    fn test_gpu_finds_known_seed_with_correct_lcg() {
+        pollster::block_on(async {
+            let ctx = match GpuDeviceContext::new().await {
+                Ok(ctx) => ctx,
+                Err(e) => {
+                    eprintln!("GPU not available: {e}, skipping test");
+                    return;
+                }
+            };
+
+            // 既知のMT Seed
+            let target_seed = MtSeed::new(0xD2F0_57AD);
+
+            let params = MtseedDatetimeSearchParams {
+                target_seeds: vec![target_seed],
+                ds: DsConfig {
+                    mac: [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F],
+                    hardware: Hardware::Ds,
+                    version: RomVersion::White2,
+                    region: RomRegion::Jpn,
+                },
+                time_range: TimeRangeParams {
+                    hour_start: 18,
+                    hour_end: 18,
+                    minute_start: 53,
+                    minute_end: 53,
+                    second_start: 27,
+                    second_end: 27,
+                },
+                search_range: SearchRangeParams {
+                    start_year: 2006,
+                    start_month: 3,
+                    start_day: 11,
+                    start_second_offset: 0,
+                    range_seconds: 1, // 1秒のみ検索
+                },
+                condition: StartupCondition::new(0x10F8, 0x82, KeyCode::NONE),
+            };
+
+            let mut searcher =
+                GpuMtseedDatetimeSearcher::new(&ctx, &params).expect("Failed to create searcher");
+
+            // 検索実行
+            let batch = searcher.next_batch(1).await;
+
+            // 結果検証
+            assert!(!batch.results.is_empty(), "Expected at least 1 result");
+            let result = &batch.results[0];
+
+            // LCG Seed 検証
+            let expected_lcg_seed = LcgSeed::new(0x20D0_0C5C_6EEB_CD7E);
+            assert_eq!(
+                result.base_seed(),
+                expected_lcg_seed,
+                "LCG Seed mismatch: expected 0x{:016X}, got 0x{:016X}",
+                expected_lcg_seed.value(),
+                result.base_seed().value()
+            );
+
+            // MT Seed 検証
+            assert_eq!(result.mt_seed().value(), 0xD2F0_57AD, "MT Seed mismatch");
+
+            // 日時検証
+            if let crate::types::SeedOrigin::Startup { datetime, .. } = result {
+                assert_eq!(datetime.year, 2006, "Year mismatch");
+                assert_eq!(datetime.month, 3, "Month mismatch");
+                assert_eq!(datetime.day, 11, "Day mismatch");
+                assert_eq!(datetime.hour, 18, "Hour mismatch");
+                assert_eq!(datetime.minute, 53, "Minute mismatch");
+                assert_eq!(datetime.second, 27, "Second mismatch");
+            } else {
+                panic!("Expected SeedOrigin::Startup variant");
+            }
+        });
+    }
+
+    /// GPUパイプラインが正常に動作することを確認
     #[test]
     fn test_gpu_pipeline_execution() {
         pollster::block_on(async {
