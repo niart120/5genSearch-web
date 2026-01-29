@@ -2,8 +2,8 @@
 //
 // SHA-1 ハッシュを計算し、ターゲット MT Seed とマッチングする。
 
-// ワークグループサイズ (Rust 側で動的に置換)
-const WORKGROUP_SIZE: u32 = WORKGROUP_SIZE_PLACEHOLDERu;
+// ワークグループサイズ (パイプライン作成時にRust側から注入)
+override WORKGROUP_SIZE: u32 = 64u;
 
 // ===== バッファ構造体 =====
 
@@ -67,8 +67,12 @@ struct TargetSeedBuffer {
 struct MatchRecord {
     /// マッチしたメッセージインデックス
     message_index: u32,
-    /// マッチした MT Seed
-    seed: u32,
+    /// SHA-1 ハッシュ h0
+    h0: u32,
+    /// SHA-1 ハッシュ h1
+    h1: u32,
+    /// パディング (アライメント用)
+    padding: u32,
 };
 
 struct MatchOutputBuffer {
@@ -84,6 +88,16 @@ struct MatchOutputBuffer {
 @group(0) @binding(1) var<uniform> constants: SearchConstants;
 @group(0) @binding(2) var<storage, read> target_seeds: TargetSeedBuffer;
 @group(0) @binding(3) var<storage, read_write> output_buffer: MatchOutputBuffer;
+
+// ===== 月の日数テーブル =====
+
+const MONTH_LENGTHS_COMMON: array<u32, 12> = array<u32, 12>(
+    31u, 28u, 31u, 30u, 31u, 30u, 31u, 31u, 30u, 31u, 30u, 31u
+);
+
+const MONTH_LENGTHS_LEAP: array<u32, 12> = array<u32, 12>(
+    31u, 29u, 31u, 30u, 31u, 30u, 31u, 31u, 30u, 31u, 30u, 31u
+);
 
 // ===== BCD ルックアップテーブル (0-99) =====
 
@@ -114,15 +128,15 @@ fn is_leap_year(year: u32) -> bool {
 
 /// 年内通算日から月と日を計算
 fn month_day_from_day_of_year(day_of_year: u32, leap: bool) -> vec2<u32> {
-    var day = day_of_year;
-    let feb = select(28u, 29u, leap);
-    let months = array<u32, 12>(31u, feb, 31u, 30u, 31u, 30u, 31u, 31u, 30u, 31u, 30u, 31u);
-    
-    for (var m = 0u; m < 12u; m = m + 1u) {
-        if (day <= months[m]) {
-            return vec2<u32>(m + 1u, day);
+    var remaining = day_of_year;
+    var month = 1u;
+    for (var i = 0u; i < 12u; i = i + 1u) {
+        let length = select(MONTH_LENGTHS_COMMON[i], MONTH_LENGTHS_LEAP[i], leap);
+        if (remaining <= length) {
+            return vec2<u32>(month, remaining);
         }
-        day = day - months[m];
+        remaining = remaining - length;
+        month = month + 1u;
     }
     return vec2<u32>(12u, 31u);
 }
@@ -137,62 +151,72 @@ fn linear_search(code: u32) -> bool {
     return false;
 }
 
-/// SHA-1 圧縮関数
-fn sha1_compress(w_in: array<u32, 16>) -> array<u32, 5> {
-    var w = w_in;
-    var a: u32 = 0x67452301u;
-    var b: u32 = 0xEFCDAB89u;
-    var c: u32 = 0x98BADCFEu;
-    var d: u32 = 0x10325476u;
-    var e: u32 = 0xC3D2E1F0u;
+// ===== 64bit 演算補助構造体 =====
 
-    for (var i: u32 = 0u; i < 80u; i = i + 1u) {
-        let w_index = i & 15u;
-        var w_value: u32;
-        if (i < 16u) {
-            w_value = w[w_index];
-        } else {
-            w_value = left_rotate(
-                w[(w_index + 13u) & 15u] ^
-                w[(w_index + 8u) & 15u] ^
-                w[(w_index + 2u) & 15u] ^
-                w[w_index],
-                1u
-            );
-            w[w_index] = w_value;
-        }
+struct WideProduct {
+    lo: u32,
+    hi: u32,
+};
 
-        var f: u32;
-        var k: u32;
-        if (i < 20u) {
-            f = (b & c) | ((~b) & d);
-            k = 0x5A827999u;
-        } else if (i < 40u) {
-            f = b ^ c ^ d;
-            k = 0x6ED9EBA1u;
-        } else if (i < 60u) {
-            f = (b & c) | (b & d) | (c & d);
-            k = 0x8F1BBCDCu;
-        } else {
-            f = b ^ c ^ d;
-            k = 0xCA62C1D6u;
-        }
+struct CarryResult {
+    sum: u32,
+    carry: u32,
+};
 
-        let temp = left_rotate(a, 5u) + f + e + k + w_value;
-        e = d;
-        d = c;
-        c = left_rotate(b, 30u);
-        b = a;
-        a = temp;
-    }
+/// 32bit x 32bit -> 64bit 乗算
+fn mulExtended(a: u32, b: u32) -> WideProduct {
+    let a_lo = a & 0xFFFFu;
+    let a_hi = a >> 16u;
+    let b_lo = b & 0xFFFFu;
+    let b_hi = b >> 16u;
 
-    return array<u32, 5>(
-        0x67452301u + a,
-        0xEFCDAB89u + b,
-        0x98BADCFEu + c,
-        0x10325476u + d,
-        0xC3D2E1F0u + e
-    );
+    let low = a_lo * b_lo;
+    let mid1 = a_lo * b_hi;
+    let mid2 = a_hi * b_lo;
+    let high = a_hi * b_hi;
+
+    let carry_mid = (low >> 16u) + (mid1 & 0xFFFFu) + (mid2 & 0xFFFFu);
+    let lo = (low & 0xFFFFu) | ((carry_mid & 0xFFFFu) << 16u);
+    let hi = high + (mid1 >> 16u) + (mid2 >> 16u) + (carry_mid >> 16u);
+
+    return WideProduct(lo, hi);
+}
+
+/// キャリー付き加算
+fn addCarry(a: u32, b: u32) -> CarryResult {
+    let sum = a + b;
+    let carry = select(0u, 1u, sum < a);
+    return CarryResult(sum, carry);
+}
+
+/// SHA-1 ハッシュから MT Seed を計算 (64bit LCG 演算)
+fn compute_seed_from_hash(h0: u32, h1: u32) -> u32 {
+    // リトルエンディアン変換
+    let le0 = ((h0 & 0x000000FFu) << 24u) |
+              ((h0 & 0x0000FF00u) << 8u) |
+              ((h0 & 0x00FF0000u) >> 8u) |
+              ((h0 & 0xFF000000u) >> 24u);
+    let le1 = ((h1 & 0x000000FFu) << 24u) |
+              ((h1 & 0x0000FF00u) << 8u) |
+              ((h1 & 0x00FF0000u) >> 8u) |
+              ((h1 & 0xFF000000u) >> 24u);
+
+    let mul_lo: u32 = 0x6C078965u;
+    let mul_hi: u32 = 0x5D588B65u;
+    let increment: u32 = 0x00269EC3u;
+
+    let prod0 = mulExtended(le0, mul_lo);
+    let prod1 = mulExtended(le0, mul_hi);
+    let prod2 = mulExtended(le1, mul_lo);
+    let inc = addCarry(prod0.lo, increment);
+
+    // ((le1<<32 | le0) * multiplier + increment) の上位32bit
+    var upper_word = prod0.hi;
+    upper_word = upper_word + prod1.lo;
+    upper_word = upper_word + prod2.lo;
+    upper_word = upper_word + inc.carry;
+
+    return upper_word;
 }
 
 // ===== メインカーネル =====
@@ -273,18 +297,94 @@ fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     w[14] = 0u;
     w[15] = 0x000001A0u;  // メッセージ長 (52 * 8 = 416 = 0x1A0)
 
-    // SHA-1 計算
-    let hash = sha1_compress(w);
+    // SHA-1 計算 (インライン展開)
+    var a: u32 = 0x67452301u;
+    var b: u32 = 0xEFCDAB89u;
+    var c: u32 = 0x98BADCFEu;
+    var d: u32 = 0x10325476u;
+    var e: u32 = 0xC3D2E1F0u;
 
-    // MT Seed = hash[0] (上位 32bit)
-    let mt_seed = hash[0];
+    // Round 0-19: f = (b & c) | ((~b) & d), k = 0x5A827999
+    var i: u32 = 0u;
+    for (; i < 20u; i = i + 1u) {
+        let w_index = i & 15u;
+        var w_value: u32;
+        if (i < 16u) {
+            w_value = w[w_index];
+        } else {
+            let expanded = w[(i - 3u) & 15u] ^ w[(i - 8u) & 15u] ^ w[(i - 14u) & 15u] ^ w[w_index];
+            let rotated = left_rotate(expanded, 1u);
+            w[w_index] = rotated;
+            w_value = rotated;
+        }
+
+        let temp = left_rotate(a, 5u) + ((b & c) | ((~b) & d)) + e + 0x5A827999u + w_value;
+        e = d;
+        d = c;
+        c = left_rotate(b, 30u);
+        b = a;
+        a = temp;
+    }
+
+    // Round 20-39: f = b ^ c ^ d, k = 0x6ED9EBA1
+    for (; i < 40u; i = i + 1u) {
+        let w_index = i & 15u;
+        let expanded = w[(i - 3u) & 15u] ^ w[(i - 8u) & 15u] ^ w[(i - 14u) & 15u] ^ w[w_index];
+        let rotated = left_rotate(expanded, 1u);
+        w[w_index] = rotated;
+
+        let temp = left_rotate(a, 5u) + (b ^ c ^ d) + e + 0x6ED9EBA1u + rotated;
+        e = d;
+        d = c;
+        c = left_rotate(b, 30u);
+        b = a;
+        a = temp;
+    }
+
+    // Round 40-59: f = (b & c) | (b & d) | (c & d), k = 0x8F1BBCDC
+    for (; i < 60u; i = i + 1u) {
+        let w_index = i & 15u;
+        let expanded = w[(i - 3u) & 15u] ^ w[(i - 8u) & 15u] ^ w[(i - 14u) & 15u] ^ w[w_index];
+        let rotated = left_rotate(expanded, 1u);
+        w[w_index] = rotated;
+
+        let temp = left_rotate(a, 5u) + ((b & c) | (b & d) | (c & d)) + e + 0x8F1BBCDCu + rotated;
+        e = d;
+        d = c;
+        c = left_rotate(b, 30u);
+        b = a;
+        a = temp;
+    }
+
+    // Round 60-79: f = b ^ c ^ d, k = 0xCA62C1D6
+    for (; i < 80u; i = i + 1u) {
+        let w_index = i & 15u;
+        let expanded = w[(i - 3u) & 15u] ^ w[(i - 8u) & 15u] ^ w[(i - 14u) & 15u] ^ w[w_index];
+        let rotated = left_rotate(expanded, 1u);
+        w[w_index] = rotated;
+
+        let temp = left_rotate(a, 5u) + (b ^ c ^ d) + e + 0xCA62C1D6u + rotated;
+        e = d;
+        d = c;
+        c = left_rotate(b, 30u);
+        b = a;
+        a = temp;
+    }
+
+    let h0 = 0x67452301u + a;
+    let h1 = 0xEFCDAB89u + b;
+
+    // MT Seed = SHA-1 ハッシュから 64bit LCG 演算で導出
+    let mt_seed = compute_seed_from_hash(h0, h1);
 
     // ターゲットとマッチ判定
     if (linear_search(mt_seed)) {
         let match_idx = atomicAdd(&output_buffer.match_count, 1u);
         if (match_idx < state.candidate_capacity) {
             output_buffer.records[match_idx].message_index = idx;
-            output_buffer.records[match_idx].seed = mt_seed;
+            output_buffer.records[match_idx].h0 = h0;
+            output_buffer.records[match_idx].h1 = h1;
+            output_buffer.records[match_idx].padding = 0u;
         }
     }
 }

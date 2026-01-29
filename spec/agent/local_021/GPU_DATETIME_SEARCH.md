@@ -723,12 +723,19 @@ struct DispatchState {
     padding: u32,
 };
 
+// 定数構築ルール:
+// - timer0_vcount_swapped: swap_bytes((vcount << 16) | timer0)
+// - mac_lower: (mac[4] << 8) | mac[5]  ※16bit のみ
+// - data7_swapped: swap_bytes(mac[0..4] ^ GX_STAT ^ frame)
+//   - GX_STAT = 0x0600_0000
+//   - frame = get_frame(hardware)  // DS:8, DsLite/Dsi:6, Dsi3ds:9
+// - nazo0..4: swap_bytes(nazo.values[i])  ※エンディアン変換必須
 struct SearchConstants {
-    timer0_vcount_swapped: u32,
-    mac_lower: u32,
-    data7_swapped: u32,
-    key_input_swapped: u32,
-    hardware_type: u32,
+    timer0_vcount_swapped: u32,  // swap_bytes((vcount << 16) | timer0)
+    mac_lower: u32,              // (mac[4] << 8) | mac[5] ※16bit
+    data7_swapped: u32,          // swap_bytes(mac_upper ^ GX_STAT ^ frame)
+    key_input_swapped: u32,      // swap_bytes(key_code)
+    hardware_type: u32,          // 0:DS, 1:DsLite, 2:Dsi, 3:Dsi3ds
     start_year: u32,
     start_day_of_year: u32,
     start_day_of_week: u32,
@@ -738,11 +745,11 @@ struct SearchConstants {
     minute_range_count: u32,
     second_range_start: u32,
     second_range_count: u32,
-    nazo0: u32,
-    nazo1: u32,
-    nazo2: u32,
-    nazo3: u32,
-    nazo4: u32,
+    nazo0: u32,  // swap_bytes(nazo.values[0])
+    nazo1: u32,  // swap_bytes(nazo.values[1])
+    nazo2: u32,  // swap_bytes(nazo.values[2])
+    nazo3: u32,  // swap_bytes(nazo.values[3])
+    nazo4: u32,  // swap_bytes(nazo.values[4])
     reserved0: u32,
 };
 
@@ -753,7 +760,9 @@ struct TargetSeedBuffer {
 
 struct MatchRecord {
     message_index: u32,
-    seed: u32,
+    h0: u32,  // SHA-1 ハッシュ h0 (LCG Seed 下位用)
+    h1: u32,  // SHA-1 ハッシュ h1 (LCG Seed 上位用)
+    padding: u32,  // アライメント用
 };
 
 struct MatchOutputBuffer {
@@ -956,7 +965,9 @@ fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
         let match_idx = atomicAdd(&output_buffer.match_count, 1u);
         if (match_idx < state.candidate_capacity) {
             output_buffer.records[match_idx].message_index = idx;
-            output_buffer.records[match_idx].seed = mt_seed;
+            output_buffer.records[match_idx].h0 = hash[0];  // LCG Seed 下位用
+            output_buffer.records[match_idx].h1 = hash[1];  // LCG Seed 上位用
+            output_buffer.records[match_idx].padding = 0u;
         }
     }
 }

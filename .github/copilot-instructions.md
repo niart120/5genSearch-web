@@ -65,6 +65,7 @@
 - Lint: `pnpm lint` / `cargo clippy --all-targets -- -D warnings`
 - フォーマット: `pnpm format` / `pnpm format:check` / `cargo fmt --check`
 - 型チェック: `pnpm exec tsc --noEmit`
+- ベンチマーク: `cargo bench --package wasm-pkg` / `cargo bench --package wasm-pkg --features gpu`
 
 ## シェルの前提
 

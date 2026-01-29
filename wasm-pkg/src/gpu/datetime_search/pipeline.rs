@@ -5,15 +5,12 @@
 use wgpu::util::DeviceExt;
 
 use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
-use crate::core::sha1::get_nazo_values;
+use crate::core::sha1::{get_frame, get_nazo_values};
 use crate::datetime_search::MtseedDatetimeSearchParams;
-use crate::types::{Datetime, Hardware, MtSeed, StartupCondition};
+use crate::types::{Datetime, Hardware, LcgSeed, MtSeed, StartupCondition};
 
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;
-
-/// ワークグループサイズのプレースホルダー
-const WORKGROUP_SIZE_PLACEHOLDER: &str = "WORKGROUP_SIZE_PLACEHOLDER";
 
 /// GPU 検索パイプライン
 pub struct SearchPipeline {
@@ -82,7 +79,9 @@ struct DispatchState {
 #[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct MatchRecord {
     message_index: u32,
-    seed: u32,
+    h0: u32,
+    h1: u32,
+    padding: u32,
 }
 
 impl SearchPipeline {
@@ -94,14 +93,9 @@ impl SearchPipeline {
 
         // シェーダーモジュール作成
         let shader_source = include_str!("shader.wgsl");
-        let shader_code = shader_source.replace(
-            WORKGROUP_SIZE_PLACEHOLDER,
-            &limits.workgroup_size.to_string(),
-        );
-
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("mtseed-datetime-search"),
-            source: wgpu::ShaderSource::Wgsl(shader_code.into()),
+            source: wgpu::ShaderSource::Wgsl(shader_source.into()),
         });
 
         // バインドグループレイアウト
@@ -167,7 +161,15 @@ impl SearchPipeline {
             layout: Some(&pipeline_layout),
             module: &module,
             entry_point: Some("sha1_generate"),
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &[(
+                    String::from("WORKGROUP_SIZE"),
+                    f64::from(limits.workgroup_size),
+                )]
+                .into_iter()
+                .collect(),
+                ..Default::default()
+            },
             cache: None,
         });
 
@@ -210,16 +212,17 @@ impl SearchPipeline {
         let vcount = condition.vcount;
         let timer0_vcount_swapped = swap_bytes_u32(u32::from(timer0) | (u32::from(vcount) << 16));
 
-        // MAC 下位4バイト
-        let mac_lower = u32::from(ds.mac[2]) << 24
-            | u32::from(ds.mac[3]) << 16
-            | u32::from(ds.mac[4]) << 8
-            | u32::from(ds.mac[5]);
+        // message[6]: MAC 下位 16bit (mac[4], mac[5]) - エンディアン変換なし
+        let mac_lower = (u32::from(ds.mac[4]) << 8) | u32::from(ds.mac[5]);
 
-        // データ7: (VFrame << 24) | (GxStat << 16) | MAC下位2バイト
-        // VFrame = 8 (固定), GxStat = 6 (固定)
-        let data7 = (8u32 << 24) | (6u32 << 16) | u32::from(ds.mac[4]) << 8 | u32::from(ds.mac[5]);
-        let data7_swapped = swap_bytes_u32(data7);
+        // message[7]: MAC 上位 32bit (mac[0..4] as little-endian) XOR GX_STAT XOR frame
+        const GX_STAT: u32 = 0x0600_0000;
+        let frame = get_frame(ds.hardware);
+        let mac_upper = u32::from(ds.mac[0])
+            | (u32::from(ds.mac[1]) << 8)
+            | (u32::from(ds.mac[2]) << 16)
+            | (u32::from(ds.mac[3]) << 24);
+        let data7_swapped = swap_bytes_u32(mac_upper ^ GX_STAT ^ u32::from(frame));
 
         // キー入力
         let key_code = condition.key_code;
@@ -272,11 +275,12 @@ impl SearchPipeline {
             minute_range_count,
             second_range_start,
             second_range_count,
-            nazo0: nazo.values[0],
-            nazo1: nazo.values[1],
-            nazo2: nazo.values[2],
-            nazo3: nazo.values[3],
-            nazo4: nazo.values[4],
+            // NAZO 値にエンディアン変換を適用 (CPU 側と同様)
+            nazo0: swap_bytes_u32(nazo.values[0]),
+            nazo1: swap_bytes_u32(nazo.values[1]),
+            nazo2: swap_bytes_u32(nazo.values[2]),
+            nazo3: swap_bytes_u32(nazo.values[3]),
+            nazo4: swap_bytes_u32(nazo.values[4]),
             reserved0: 0,
         }
     }
@@ -325,7 +329,9 @@ impl SearchPipeline {
         device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("match-output-buffer"),
             size,
-            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            usage: wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_SRC
+                | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         })
     }
@@ -448,16 +454,18 @@ impl SearchPipeline {
         let mut matches = Vec::with_capacity(record_count);
         for i in 0..record_count {
             let offset = 4 + i * std::mem::size_of::<MatchRecord>();
-            let record: MatchRecord = bytemuck::pod_read_unaligned(&data[offset..offset + 8]);
+            let record: MatchRecord = bytemuck::pod_read_unaligned(&data[offset..offset + 16]);
 
             // メッセージインデックスから日時を復元
             let total_offset = base_offset + record.message_index;
             let datetime = self.offset_to_datetime(total_offset);
 
-            matches.push(MatchResult {
-                datetime,
-                mt_seed: MtSeed(record.seed),
-            });
+            // h0, h1 から LcgSeed を構築 (HashValues::to_lcg_seed と同じ計算)
+            let h0_swapped = record.h0.swap_bytes();
+            let h1_swapped = record.h1.swap_bytes();
+            let lcg_seed = LcgSeed::new((u64::from(h1_swapped) << 32) | u64::from(h0_swapped));
+
+            matches.push(MatchResult { datetime, lcg_seed });
         }
 
         drop(data);
@@ -508,7 +516,7 @@ impl SearchPipeline {
 /// マッチ結果 (パイプライン内部用)
 pub struct MatchResult {
     pub datetime: Datetime,
-    pub mt_seed: MtSeed,
+    pub lcg_seed: LcgSeed,
 }
 
 // ===== ヘルパー関数 =====
