@@ -4,22 +4,31 @@
 
 ### 1.1 目的
 
-WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化する。現行の `MtseedDatetimeSearcher` (CPU 版) と同等の機能を GPU で実装し、検索速度を大幅に向上させる。
+WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化する。現行の `MtseedDatetimeSearcher` (CPU 版) と同等の機能を Rust/WASM (wgpu) で GPU 実装し、検索速度を大幅に向上させる。
 
-### 1.2 用語定義
+### 1.2 設計方針
+
+| 項目 | 方針 |
+|------|------|
+| 実装言語 | Rust (wgpu + wasm-bindgen) |
+| シェーダー | WGSL (Rust 側で管理) |
+| 型定義 | 既存の `SeedOrigin`, `MtseedDatetimeSearchBatch` を再利用 |
+| Worker 連携 | TypeScript Worker から WASM API を呼び出し |
+| 出力形式 | CPU 版と同一 (`Vec<SeedOrigin>`) |
+
+### 1.3 用語定義
 
 | 用語 | 定義 |
 |------|------|
 | MT Seed | MT19937 の初期化に使用される 32bit Seed。LCG Seed の上位 32bit から導出 |
 | LCG Seed | 64bit 線形合同法の Seed。起動時刻パラメータから SHA-1 ハッシュで生成 |
 | SHA-1 メッセージ | DS パラメータ・起動時刻を BCD 形式で構築した 13 ワード (52 bytes) のデータ |
-| 起動時刻検索 | 指定 MT Seed に一致する LCG Seed を生成する起動時刻を探索する処理 |
+| wgpu | Rust の WebGPU 抽象化ライブラリ。WASM ターゲットで WebGPU を利用可能 |
 | ワークグループ | GPU 計算シェーダーの実行単位。複数スレッドで構成 |
 | ディスパッチ | GPU カーネルの実行命令。ワークグループ数を指定 |
 | セグメント | Timer0 × VCount × KeyCode の組み合わせ単位 |
-| 候補バッファ | GPU で検出したマッチ結果を格納するバッファ |
 
-### 1.3 背景・問題
+### 1.4 背景・問題
 
 | 項目 | CPU 版の制約 | GPU 版の解決策 |
 |------|-------------|---------------|
@@ -27,18 +36,19 @@ WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化す�
 | 検索範囲 | 1 日分で数秒〜数十秒 | 1 日分を 1 秒未満で処理可能 |
 | スケーラビリティ | Worker 追加で線形向上のみ | GPU 性能に応じた自動最適化 |
 
-### 1.4 期待効果
+### 1.5 期待効果
 
 | 項目 | 効果 |
 |------|------|
 | 検索速度 | CPU 比 10〜100 倍 (GPU 性能依存) |
 | 応答性 | バックグラウンド実行でメインスレッド非ブロック |
-| 省電力 | CPU 負荷軽減 (モバイル環境で有効) |
+| 型統一 | CPU 版と同一の出力型 (`SeedOrigin`) |
 
-### 1.5 着手条件
+### 1.6 着手条件
 
 - `datetime_search/mtseed.rs` (CPU 版) が完成していること
-- WebGPU 対応ブラウザでの動作を前提とする
+- `gpu` feature flag で有効化
+- WebGPU 対応ブラウザでの動作を前提
 - GPU 非対応環境では CPU 版にフォールバック
 
 ---
@@ -47,13 +57,17 @@ WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化す�
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `src/lib/webgpu/kernel/mtseed-datetime-search.wgsl` | 新規 | SHA-1 計算シェーダー |
-| `src/lib/webgpu/mtseed-datetime-search/types.ts` | 新規 | 型定義 |
-| `src/lib/webgpu/mtseed-datetime-search/prepare-job.ts` | 新規 | ジョブ準備 |
-| `src/lib/webgpu/mtseed-datetime-search/engine.ts` | 新規 | GPU エンジン |
-| `src/lib/webgpu/mtseed-datetime-search/controller.ts` | 新規 | 進捗管理・コールバック |
-| `src/lib/webgpu/utils/device-context.ts` | 変更 | 共通コンテキスト (既存活用) |
-| `src/workers/mtseed-datetime-search-worker-gpu.ts` | 新規 | GPU Worker |
+| `wasm-pkg/Cargo.toml` | 変更 | `gpu` feature + wgpu 依存追加 |
+| `wasm-pkg/src/lib.rs` | 変更 | `gpu` モジュール re-export |
+| `wasm-pkg/src/gpu/mod.rs` | 新規 | GPU モジュール宣言 |
+| `wasm-pkg/src/gpu/context.rs` | 新規 | `GpuDeviceContext` (デバイス管理) |
+| `wasm-pkg/src/gpu/profile.rs` | 新規 | `GpuProfile`, `GpuKind` (プロファイル検出) |
+| `wasm-pkg/src/gpu/limits.rs` | 新規 | `SearchJobLimits` (制限値導出) |
+| `wasm-pkg/src/gpu/datetime_search/mod.rs` | 新規 | GPU 起動時刻検索モジュール |
+| `wasm-pkg/src/gpu/datetime_search/searcher.rs` | 新規 | `GpuMtseedDatetimeSearcher` |
+| `wasm-pkg/src/gpu/datetime_search/shader.rs` | 新規 | WGSL シェーダー管理 |
+| `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 新規 | パイプライン・バッファ管理 |
+| `src/workers/mtseed-datetime-search-worker-gpu.ts` | 新規 | GPU Worker (WASM 呼び出し) |
 
 ---
 
@@ -62,120 +76,475 @@ WebGPU による GPU 並列計算で MT Seed 起動時刻検索を高速化す�
 ### 3.1 アーキテクチャ概要
 
 ```
-[Main Thread]
+[TypeScript Worker]
     │
-    ├─ MtseedDatetimeSearchParams (検索条件)
+    ├─ import { GpuMtseedDatetimeSearcher } from 'wasm-pkg'
     │
-    └─ Worker.postMessage()
+    └─ searcher.next_batch(chunk_count)
            │
            ▼
-[GPU Worker]
+[Rust/WASM (wgpu)]
     │
-    ├─ prepareSearchJob() → セグメント分割
+    ├─ GpuDeviceContext (デバイス・キュー管理)
     │
-    ├─ GpuEngine.initialize() → デバイス・パイプライン初期化
+    ├─ GpuMtseedDatetimeSearcher
+    │   ├─ パイプライン初期化
+    │   ├─ バッファ作成・書き込み
+    │   ├─ ディスパッチ実行
+    │   └─ 結果読み出し → Vec<SeedOrigin>
     │
-    └─ for each segment:
+    └─ MtseedDatetimeSearchBatch (既存型)
            │
-           ├─ uniform バッファ書き込み
-           │
-           ├─ dispatch() → WGSL カーネル実行
-           │
-           ├─ 候補バッファ読み出し
-           │
-           └─ onResult() コールバック
+           ▼
+[TypeScript Worker]
+    │
+    └─ postMessage({ type: 'RESULT', batch })
 ```
 
-### 3.2 セグメント分割戦略
+### 3.2 CPU 版との API 互換性
 
-参照実装と同様に、以下の組み合わせでセグメントを分割する:
+GPU 版は CPU 版 (`MtseedDatetimeSearcher`) と同一のインターフェースを提供する:
 
-```
-セグメント = { timer0, vcount, keyCode, baseSecondOffset, messageCount }
-```
+```rust
+// CPU 版 (既存)
+impl MtseedDatetimeSearcher {
+    pub fn new(params: MtseedDatetimeSearchParams) -> Result<Self, String>;
+    pub fn is_done(&self) -> bool;
+    pub fn progress(&self) -> f64;
+    pub fn next_batch(&mut self, chunk_count: u32) -> MtseedDatetimeSearchBatch;
+}
 
-1 セグメントあたりの `messageCount` はデバイス制限から導出:
-
-```typescript
-const maxMessagesPerDispatch = limits.workgroupSize * limits.maxWorkgroups;
-```
-
-### 3.3 データフロー
-
-```
-[TypeScript]                    [WGSL Shader]
-    │                                │
-    ├─ SearchConstants (uniform)  ──▶ constants
-    │   ├─ timer0_vcount_swapped     ├─ メッセージ構築
-    │   ├─ mac_lower                 │
-    │   ├─ data7_swapped            │
-    │   ├─ key_input_swapped        │
-    │   ├─ hardware_type            │
-    │   ├─ start_year               │
-    │   ├─ start_day_of_year        │
-    │   ├─ start_day_of_week        │
-    │   ├─ hour/minute/second_range │
-    │   └─ nazo[5]                  │
-    │                                │
-    ├─ DispatchState (storage)    ──▶ state
-    │   ├─ message_count            ├─ global_id → 日時計算
-    │   ├─ base_second_offset       │
-    │   └─ candidate_capacity       │
-    │                                │
-    ├─ TargetSeeds (storage)      ──▶ target_seeds
-    │   ├─ count                    ├─ マッチ判定
-    │   └─ values[]                 │
-    │                                │
-    └─ MatchOutput (storage)      ◀── output_buffer
-        ├─ match_count              └─ 結果書き込み
-        └─ records[]
+// GPU 版 (新規)
+impl GpuMtseedDatetimeSearcher {
+    pub async fn new(ctx: &GpuDeviceContext, params: MtseedDatetimeSearchParams) 
+        -> Result<Self, String>;
+    pub fn is_done(&self) -> bool;
+    pub fn progress(&self) -> f64;
+    pub async fn next_batch(&mut self, chunk_count: u32) -> MtseedDatetimeSearchBatch;
+}
 ```
 
-### 3.4 SHA-1 メッセージ構造
+**差異:**
+- コンストラクタが `GpuDeviceContext` を要求
+- `next_batch` が async (GPU 計算待機)
 
-DS の起動時刻から生成される SHA-1 メッセージ (13 ワード = 52 bytes):
+### 3.3 既存型の再利用
 
-| Word | 内容 | 形式 |
-|------|------|------|
-| 0-4 | nazo 値 (ROM 依存) | u32 × 5 |
-| 5 | timer0 << 16 \| vcount | swapped |
-| 6 | mac_lower | swapped |
-| 7 | data7 (MAC + frame) | swapped |
-| 8 | 日付 (年月日曜日) | BCD |
-| 9 | 時刻 (時分秒 + PM フラグ) | BCD |
-| 10 | 0 | - |
-| 11 | 0 | - |
-| 12 | key_input | swapped |
+| 型 | 定義元 | 用途 |
+|----|--------|------|
+| `MtseedDatetimeSearchParams` | `datetime_search/mtseed.rs` | 検索パラメータ |
+| `MtseedDatetimeSearchBatch` | `datetime_search/mtseed.rs` | バッチ結果 |
+| `SeedOrigin` | `types/seeds.rs` | 検索結果 (起動条件付き) |
+| `StartupCondition` | `types/config.rs` | Timer0 / VCount / KeyCode |
+| `Datetime` | `types/config.rs` | 日時情報 |
+| `MtSeed`, `LcgSeed` | `types/seeds.rs` | Seed 型 |
 
-パディング:
+### 3.4 Feature Flag
 
-| Word | 内容 |
-|------|------|
-| 13 | 0x80000000 (パディング開始) |
-| 14 | 0 |
-| 15 | 0x000001A0 (メッセージ長 = 416 bits) |
+```toml
+# wasm-pkg/Cargo.toml
+[features]
+default = ["console_error_panic_hook"]
+gpu = ["wgpu"]
 
-### 3.5 GPU プロファイル
+[dependencies]
+wgpu = { version = "24", optional = true, features = ["webgpu"] }
+```
 
-デバイス能力に応じた最適化パラメータ:
+### 3.5 モジュール構成
 
-| プロファイル | workgroupSize | maxDispatchesInFlight |
-|-------------|---------------|----------------------|
-| Discrete | 256 | 4 |
-| Integrated | 256 | 2 |
-| Mobile | 128 | 1 |
-| Unknown | 128 | 1 |
+```
+wasm-pkg/src/
+├── lib.rs                    # gpu モジュール re-export
+├── datetime_search/
+│   ├── mtseed.rs            # CPU 版 (既存)
+│   └── ...
+└── gpu/
+    ├── mod.rs               # サブモジュール宣言
+    ├── context.rs           # GpuDeviceContext
+    ├── profile.rs           # GpuProfile, GpuKind
+    ├── limits.rs            # SearchJobLimits
+    └── datetime_search/
+        ├── mod.rs           # GpuMtseedDatetimeSearcher
+        ├── searcher.rs      # 検索ロジック本体
+        ├── shader.rs        # WGSL シェーダー (include_str!)
+        └── pipeline.rs      # パイプライン・バッファ管理
+```
 
 ---
 
 ## 4. 実装仕様
 
-### 4.1 WGSL シェーダー
+### 4.1 GpuDeviceContext
 
-#### 4.1.1 バインディング定義
+```rust
+// wasm-pkg/src/gpu/context.rs
+
+#[cfg(feature = "gpu")]
+use wgpu;
+use wasm_bindgen::prelude::*;
+
+/// WebGPU デバイスコンテキスト
+#[cfg(feature = "gpu")]
+#[wasm_bindgen]
+pub struct GpuDeviceContext {
+    device: wgpu::Device,
+    queue: wgpu::Queue,
+    limits: wgpu::Limits,
+    profile: GpuProfile,
+}
+
+#[cfg(feature = "gpu")]
+#[wasm_bindgen]
+impl GpuDeviceContext {
+    /// コンテキスト作成 (非同期)
+    #[wasm_bindgen(constructor)]
+    pub async fn new() -> Result<GpuDeviceContext, String> {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::BROWSER_WEBGPU,
+            ..Default::default()
+        });
+
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                ..Default::default()
+            })
+            .await
+            .ok_or("WebGPU adapter not found")?;
+
+        let (device, queue) = adapter
+            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .await
+            .map_err(|e| format!("Device request failed: {e}"))?;
+
+        let limits = device.limits();
+        let profile = GpuProfile::detect(&adapter);
+
+        Ok(Self { device, queue, limits, profile })
+    }
+
+    /// WebGPU 可用性チェック
+    #[wasm_bindgen]
+    pub fn is_available() -> bool {
+        // wasm 環境では navigator.gpu の存在をチェック
+        #[cfg(target_arch = "wasm32")]
+        {
+            web_sys::window()
+                .and_then(|w| w.navigator().gpu())
+                .is_some()
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        false
+    }
+}
+
+#[cfg(feature = "gpu")]
+impl GpuDeviceContext {
+    pub fn device(&self) -> &wgpu::Device { &self.device }
+    pub fn queue(&self) -> &wgpu::Queue { &self.queue }
+    pub fn limits(&self) -> &wgpu::Limits { &self.limits }
+    pub fn profile(&self) -> &GpuProfile { &self.profile }
+}
+```
+
+### 4.2 GpuMtseedDatetimeSearcher
+
+```rust
+// wasm-pkg/src/gpu/datetime_search/searcher.rs
+
+use crate::datetime_search::{MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams};
+use crate::types::{Datetime, LcgSeed, MtSeed, SeedOrigin, StartupCondition};
+use super::pipeline::SearchPipeline;
+use super::super::context::GpuDeviceContext;
+
+/// GPU 版 MT Seed 起動時刻検索器
+#[cfg(feature = "gpu")]
+#[wasm_bindgen]
+pub struct GpuMtseedDatetimeSearcher {
+    pipeline: SearchPipeline,
+    params: MtseedDatetimeSearchParams,
+    /// 現在のセグメントインデックス
+    current_segment: usize,
+    /// セグメント内の処理済みオフセット
+    segment_offset: u32,
+    /// 総処理数
+    total_count: u64,
+    /// 処理済み数
+    processed_count: u64,
+}
+
+#[cfg(feature = "gpu")]
+#[wasm_bindgen]
+impl GpuMtseedDatetimeSearcher {
+    /// 検索器を作成
+    #[wasm_bindgen(constructor)]
+    pub async fn new(
+        ctx: &GpuDeviceContext,
+        params: MtseedDatetimeSearchParams,
+    ) -> Result<GpuMtseedDatetimeSearcher, String> {
+        if params.target_seeds.is_empty() {
+            return Err("target_seeds is empty".into());
+        }
+
+        let pipeline = SearchPipeline::new(ctx, &params)?;
+        let total_count = calculate_total_count(&params);
+
+        Ok(Self {
+            pipeline,
+            params,
+            current_segment: 0,
+            segment_offset: 0,
+            total_count,
+            processed_count: 0,
+        })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn is_done(&self) -> bool {
+        self.processed_count >= self.total_count
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn progress(&self) -> f64 {
+        if self.total_count == 0 { 1.0 }
+        else { self.processed_count as f64 / self.total_count as f64 }
+    }
+
+    /// 次のバッチを検索 (GPU 実行)
+    pub async fn next_batch(&mut self, chunk_count: u32) -> MtseedDatetimeSearchBatch {
+        let mut results = Vec::new();
+        let mut remaining = chunk_count;
+
+        while remaining > 0 && !self.is_done() {
+            // GPU ディスパッチ実行
+            let (matches, processed) = self.pipeline
+                .dispatch(remaining, self.current_segment, self.segment_offset)
+                .await;
+
+            self.processed_count += u64::from(processed);
+            remaining = remaining.saturating_sub(processed);
+
+            // マッチ結果を SeedOrigin に変換
+            for (datetime, lcg_seed, condition) in matches {
+                results.push(SeedOrigin::startup(lcg_seed, datetime, condition));
+            }
+
+            // セグメント進行管理
+            self.segment_offset += processed;
+            if self.segment_offset >= self.pipeline.segment_size(self.current_segment) {
+                self.current_segment += 1;
+                self.segment_offset = 0;
+            }
+        }
+
+        MtseedDatetimeSearchBatch {
+            results,
+            processed_count: self.processed_count,
+            total_count: self.total_count,
+        }
+    }
+}
+```
+
+### 4.3 SearchPipeline
+
+```rust
+// wasm-pkg/src/gpu/datetime_search/pipeline.rs
+
+use wgpu;
+use crate::datetime_search::MtseedDatetimeSearchParams;
+use crate::types::{Datetime, LcgSeed, StartupCondition};
+
+/// GPU 検索パイプライン
+#[cfg(feature = "gpu")]
+pub struct SearchPipeline {
+    device: wgpu::Device,
+    queue: wgpu::Queue,
+    pipeline: wgpu::ComputePipeline,
+    bind_group_layout: wgpu::BindGroupLayout,
+    /// セグメント情報 (Timer0 × VCount × KeyCode)
+    segments: Vec<SegmentInfo>,
+    /// ターゲット Seed バッファ
+    target_buffer: wgpu::Buffer,
+    /// 定数バッファ
+    constants_buffer: wgpu::Buffer,
+    /// 結果バッファ
+    output_buffer: wgpu::Buffer,
+    /// 結果読み出し用ステージングバッファ
+    staging_buffer: wgpu::Buffer,
+    /// ワークグループサイズ
+    workgroup_size: u32,
+}
+
+#[derive(Clone)]
+struct SegmentInfo {
+    timer0: u16,
+    vcount: u8,
+    key_code: u32,
+    message_count: u32,
+}
+
+#[cfg(feature = "gpu")]
+impl SearchPipeline {
+    pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) -> Result<Self, String> {
+        let device = ctx.device().clone();
+        let queue = ctx.queue().clone();
+
+        // シェーダーモジュール作成
+        let shader_source = include_str!("shader.wgsl");
+        let workgroup_size = derive_workgroup_size(ctx.limits());
+        let shader_code = shader_source.replace("WORKGROUP_SIZE_PLACEHOLDER", &workgroup_size.to_string());
+
+        let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("mtseed-datetime-search"),
+            source: wgpu::ShaderSource::Wgsl(shader_code.into()),
+        });
+
+        // バインドグループレイアウト
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("mtseed-datetime-search-layout"),
+            entries: &[
+                // binding 0: DispatchState (storage, read)
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                // binding 1: SearchConstants (uniform)
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                // binding 2: TargetSeeds (storage, read)
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                // binding 3: MatchOutput (storage, read_write)
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+            ],
+        });
+
+        // パイプライン作成
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("mtseed-datetime-search-pipeline-layout"),
+            bind_group_layouts: &[&bind_group_layout],
+            push_constant_ranges: &[],
+        });
+
+        let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("mtseed-datetime-search-pipeline"),
+            layout: Some(&pipeline_layout),
+            module: &module,
+            entry_point: Some("sha1_generate"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
+
+        // セグメント展開
+        let segments = expand_segments(params);
+
+        // バッファ作成
+        let target_buffer = create_target_buffer(&device, &params.target_seeds);
+        let constants_buffer = create_constants_buffer(&device, params);
+        let output_buffer = create_output_buffer(&device);
+        let staging_buffer = create_staging_buffer(&device);
+
+        Ok(Self {
+            device,
+            queue,
+            pipeline,
+            bind_group_layout,
+            segments,
+            target_buffer,
+            constants_buffer,
+            output_buffer,
+            staging_buffer,
+            workgroup_size,
+        })
+    }
+
+    /// GPU ディスパッチ実行
+    pub async fn dispatch(
+        &self,
+        max_count: u32,
+        segment_idx: usize,
+        offset: u32,
+    ) -> (Vec<(Datetime, LcgSeed, StartupCondition)>, u32) {
+        let segment = &self.segments[segment_idx];
+        let remaining = segment.message_count.saturating_sub(offset);
+        let count = max_count.min(remaining);
+
+        if count == 0 {
+            return (vec![], 0);
+        }
+
+        // ディスパッチ状態を更新
+        self.update_dispatch_state(segment, offset, count);
+
+        // コマンドエンコード
+        let mut encoder = self.device.create_command_encoder(&Default::default());
+        {
+            let mut pass = encoder.begin_compute_pass(&Default::default());
+            pass.set_pipeline(&self.pipeline);
+            pass.set_bind_group(0, &self.create_bind_group(segment), &[]);
+            let workgroup_count = count.div_ceil(self.workgroup_size);
+            pass.dispatch_workgroups(workgroup_count, 1, 1);
+        }
+
+        // 結果コピー
+        encoder.copy_buffer_to_buffer(
+            &self.output_buffer, 0,
+            &self.staging_buffer, 0,
+            self.staging_buffer.size(),
+        );
+
+        self.queue.submit(std::iter::once(encoder.finish()));
+
+        // 結果読み出し
+        let matches = self.read_results(segment).await;
+
+        (matches, count)
+    }
+
+    pub fn segment_size(&self, idx: usize) -> u32 {
+        self.segments.get(idx).map_or(0, |s| s.message_count)
+    }
+}
+```
+
+### 4.4 WGSL シェーダー
 
 ```wgsl
-// ワークグループサイズ (TypeScript 側で置換)
+// wasm-pkg/src/gpu/datetime_search/shader.wgsl
+
 const WORKGROUP_SIZE: u32 = WORKGROUP_SIZE_PLACEHOLDERu;
 
 struct DispatchState {
@@ -227,130 +596,51 @@ struct MatchOutputBuffer {
 @group(0) @binding(1) var<uniform> constants: SearchConstants;
 @group(0) @binding(2) var<storage, read> target_seeds: TargetSeedBuffer;
 @group(0) @binding(3) var<storage, read_write> output_buffer: MatchOutputBuffer;
-```
 
-#### 4.1.2 BCD ルックアップテーブル
-
-```wgsl
+// BCD ルックアップテーブル (0-99)
 const BCD_LOOKUP: array<u32, 100> = array<u32, 100>(
     0x00u, 0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u,
     0x10u, 0x11u, 0x12u, 0x13u, 0x14u, 0x15u, 0x16u, 0x17u, 0x18u, 0x19u,
-    // ... (0-99)
+    0x20u, 0x21u, 0x22u, 0x23u, 0x24u, 0x25u, 0x26u, 0x27u, 0x28u, 0x29u,
+    0x30u, 0x31u, 0x32u, 0x33u, 0x34u, 0x35u, 0x36u, 0x37u, 0x38u, 0x39u,
+    0x40u, 0x41u, 0x42u, 0x43u, 0x44u, 0x45u, 0x46u, 0x47u, 0x48u, 0x49u,
+    0x50u, 0x51u, 0x52u, 0x53u, 0x54u, 0x55u, 0x56u, 0x57u, 0x58u, 0x59u,
+    0x60u, 0x61u, 0x62u, 0x63u, 0x64u, 0x65u, 0x66u, 0x67u, 0x68u, 0x69u,
+    0x70u, 0x71u, 0x72u, 0x73u, 0x74u, 0x75u, 0x76u, 0x77u, 0x78u, 0x79u,
+    0x80u, 0x81u, 0x82u, 0x83u, 0x84u, 0x85u, 0x86u, 0x87u, 0x88u, 0x89u,
     0x90u, 0x91u, 0x92u, 0x93u, 0x94u, 0x95u, 0x96u, 0x97u, 0x98u, 0x99u
 );
-```
 
-#### 4.1.3 日時計算
+fn left_rotate(value: u32, amount: u32) -> u32 {
+    return (value << amount) | (value >> (32u - amount));
+}
 
-```wgsl
 fn is_leap_year(year: u32) -> bool {
     return (year % 4u == 0u) && ((year % 100u != 0u) || (year % 400u == 0u));
 }
 
 fn month_day_from_day_of_year(day_of_year: u32, leap: bool) -> vec2<u32> {
     // 月と日を返す (1-indexed)
-    // ...
+    var day = day_of_year;
+    let feb = select(28u, 29u, leap);
+    let months = array<u32, 12>(31u, feb, 31u, 30u, 31u, 30u, 31u, 31u, 30u, 31u, 30u, 31u);
+    
+    for (var m = 0u; m < 12u; m = m + 1u) {
+        if (day <= months[m]) {
+            return vec2<u32>(m + 1u, day);
+        }
+        day = day - months[m];
+    }
+    return vec2<u32>(12u, 31u);
 }
 
-@compute @workgroup_size(WORKGROUP_SIZE)
-fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let global_linear_index = global_id.x;
-    if (global_linear_index >= state.message_count) {
-        return;
-    }
-
-    // 時刻範囲から日時を計算
-    let combos_per_day = constants.hour_range_count 
-                       * constants.minute_range_count 
-                       * constants.second_range_count;
-    let total_second_offset = state.base_second_offset + global_linear_index;
-
-    let day_offset = total_second_offset / combos_per_day;
-    let remainder = total_second_offset - day_offset * combos_per_day;
-
-    // hour, minute, second を算出
-    let entries_per_hour = constants.minute_range_count * constants.second_range_count;
-    let hour_index = remainder / entries_per_hour;
-    let remainder_after_hour = remainder - hour_index * entries_per_hour;
-    let minute_index = remainder_after_hour / constants.second_range_count;
-    let second_index = remainder_after_hour - minute_index * constants.second_range_count;
-
-    let hour = constants.hour_range_start + hour_index;
-    let minute = constants.minute_range_start + minute_index;
-    let second = constants.second_range_start + second_index;
-
-    // 年・月・日を計算
-    var year = constants.start_year;
-    var day_of_year = constants.start_day_of_year + day_offset;
-    loop {
-        let year_length = select(365u, 366u, is_leap_year(year));
-        if (day_of_year <= year_length) { break; }
-        day_of_year = day_of_year - year_length;
-        year = year + 1u;
-    }
-
-    let leap = is_leap_year(year);
-    let month_day = month_day_from_day_of_year(day_of_year, leap);
-    let month = month_day.x;
-    let day = month_day.y;
-
-    let day_of_week = (constants.start_day_of_week + day_offset) % 7u;
-
-    // BCD 形式で日時ワードを構築
-    let year_mod = year % 100u;
-    let date_word = (BCD_LOOKUP[year_mod] << 24u) |
-                    (BCD_LOOKUP[month] << 16u) |
-                    (BCD_LOOKUP[day] << 8u) |
-                    BCD_LOOKUP[day_of_week];
-
-    let is_pm = (constants.hardware_type <= 1u) && (hour >= 12u);
-    let pm_flag = select(0u, 1u, is_pm);
-    let time_word = (pm_flag << 30u) |
-                    (BCD_LOOKUP[hour] << 24u) |
-                    (BCD_LOOKUP[minute] << 16u) |
-                    (BCD_LOOKUP[second] << 8u);
-
-    // SHA-1 メッセージ構築
-    var w: array<u32, 16>;
-    w[0] = constants.nazo0;
-    w[1] = constants.nazo1;
-    w[2] = constants.nazo2;
-    w[3] = constants.nazo3;
-    w[4] = constants.nazo4;
-    w[5] = constants.timer0_vcount_swapped;
-    w[6] = constants.mac_lower;
-    w[7] = constants.data7_swapped;
-    w[8] = date_word;
-    w[9] = time_word;
-    w[10] = 0u;
-    w[11] = 0u;
-    w[12] = constants.key_input_swapped;
-    w[13] = 0x80000000u;
-    w[14] = 0u;
-    w[15] = 0x000001A0u;
-
-    // SHA-1 計算
-    let hash = sha1_compress(w);
-
-    // MT Seed = hash[0] (上位 32bit)
-    let mt_seed = hash[0];
-
-    // ターゲットとマッチ判定
-    if (linear_search(mt_seed)) {
-        let idx = atomicAdd(&output_buffer.match_count, 1u);
-        if (idx < state.candidate_capacity) {
-            output_buffer.records[idx].message_index = global_linear_index;
-            output_buffer.records[idx].seed = mt_seed;
+fn linear_search(code: u32) -> bool {
+    for (var i = 0u; i < target_seeds.count; i = i + 1u) {
+        if (target_seeds.values[i] == code) {
+            return true;
         }
     }
-}
-```
-
-#### 4.1.4 SHA-1 圧縮関数
-
-```wgsl
-fn left_rotate(value: u32, amount: u32) -> u32 {
-    return (value << amount) | (value >> (32u - amount));
+    return false;
 }
 
 fn sha1_compress(w_in: array<u32, 16>) -> array<u32, 5> {
@@ -409,268 +699,115 @@ fn sha1_compress(w_in: array<u32, 16>) -> array<u32, 5> {
         0xC3D2E1F0u + e
     );
 }
-```
 
-#### 4.1.5 線形探索
+@compute @workgroup_size(WORKGROUP_SIZE)
+fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let idx = global_id.x;
+    if (idx >= state.message_count) {
+        return;
+    }
 
-```wgsl
-fn linear_search(code: u32) -> bool {
-    for (var i = 0u; i < target_seeds.count; i = i + 1u) {
-        if (target_seeds.values[i] == code) {
-            return true;
+    // 時刻範囲から日時を計算
+    let combos_per_day = max(constants.hour_range_count, 1u)
+                       * max(constants.minute_range_count, 1u)
+                       * max(constants.second_range_count, 1u);
+    let total_offset = state.base_second_offset + idx;
+
+    let day_offset = total_offset / combos_per_day;
+    let remainder = total_offset - day_offset * combos_per_day;
+
+    let entries_per_hour = max(constants.minute_range_count, 1u) 
+                         * max(constants.second_range_count, 1u);
+    let hour_index = remainder / entries_per_hour;
+    let remainder2 = remainder - hour_index * entries_per_hour;
+    let minute_index = remainder2 / max(constants.second_range_count, 1u);
+    let second_index = remainder2 - minute_index * max(constants.second_range_count, 1u);
+
+    let hour = constants.hour_range_start + hour_index;
+    let minute = constants.minute_range_start + minute_index;
+    let second = constants.second_range_start + second_index;
+
+    // 年・月・日を計算
+    var year = constants.start_year;
+    var day_of_year = constants.start_day_of_year + day_offset;
+    loop {
+        let year_length = select(365u, 366u, is_leap_year(year));
+        if (day_of_year <= year_length) { break; }
+        day_of_year = day_of_year - year_length;
+        year = year + 1u;
+    }
+
+    let leap = is_leap_year(year);
+    let month_day = month_day_from_day_of_year(day_of_year, leap);
+    let month = month_day.x;
+    let day = month_day.y;
+    let day_of_week = (constants.start_day_of_week + day_offset) % 7u;
+
+    // BCD 形式で日時ワードを構築
+    let year_mod = year % 100u;
+    let date_word = (BCD_LOOKUP[year_mod] << 24u) |
+                    (BCD_LOOKUP[month] << 16u) |
+                    (BCD_LOOKUP[day] << 8u) |
+                    BCD_LOOKUP[day_of_week];
+
+    let is_pm = (constants.hardware_type <= 1u) && (hour >= 12u);
+    let pm_flag = select(0u, 1u, is_pm);
+    let time_word = (pm_flag << 30u) |
+                    (BCD_LOOKUP[hour] << 24u) |
+                    (BCD_LOOKUP[minute] << 16u) |
+                    (BCD_LOOKUP[second] << 8u);
+
+    // SHA-1 メッセージ構築
+    var w: array<u32, 16>;
+    w[0] = constants.nazo0;
+    w[1] = constants.nazo1;
+    w[2] = constants.nazo2;
+    w[3] = constants.nazo3;
+    w[4] = constants.nazo4;
+    w[5] = constants.timer0_vcount_swapped;
+    w[6] = constants.mac_lower;
+    w[7] = constants.data7_swapped;
+    w[8] = date_word;
+    w[9] = time_word;
+    w[10] = 0u;
+    w[11] = 0u;
+    w[12] = constants.key_input_swapped;
+    w[13] = 0x80000000u;
+    w[14] = 0u;
+    w[15] = 0x000001A0u;
+
+    // SHA-1 計算
+    let hash = sha1_compress(w);
+
+    // MT Seed = hash[0] (上位 32bit)
+    let mt_seed = hash[0];
+
+    // ターゲットとマッチ判定
+    if (linear_search(mt_seed)) {
+        let match_idx = atomicAdd(&output_buffer.match_count, 1u);
+        if (match_idx < state.candidate_capacity) {
+            output_buffer.records[match_idx].message_index = idx;
+            output_buffer.records[match_idx].seed = mt_seed;
         }
     }
-    return false;
 }
 ```
 
-### 4.2 TypeScript 型定義
-
-```typescript
-// src/lib/webgpu/mtseed-datetime-search/types.ts
-
-export interface MtseedDatetimeGpuJobLimits {
-  workgroupSize: number;
-  maxWorkgroups: number;
-  candidateCapacityPerDispatch: number;
-  maxDispatchesInFlight: number;
-}
-
-export interface MtseedDatetimeGpuSegment {
-  id: string;
-  timer0: number;
-  vcount: number;
-  keyCode: number;
-  messageCount: number;
-  baseSecondOffset: number;
-  globalMessageOffset: number;
-  workgroupCount: number;
-  getUniformWords: () => Uint32Array;
-}
-
-export interface MtseedDatetimeGpuJob {
-  segments: MtseedDatetimeGpuSegment[];
-  targetSeeds: Uint32Array;
-  summary: {
-    totalMessages: number;
-    totalSegments: number;
-    targetSeedCount: number;
-    rangeSeconds: number;
-  };
-  timePlan: {
-    startDate: Date;
-    combosPerDay: number;
-  };
-  conditions: MtseedDatetimeSearchParams;
-}
-
-export interface MtseedDatetimeGpuResult {
-  mt_seed: number;
-  lcg_seed: bigint;
-  datetime: Date;
-  timer0: number;
-  vcount: number;
-  keyCode: number;
-}
-
-export interface MtseedDatetimeGpuProgress {
-  processedMessages: number;
-  totalMessages: number;
-  processedSegments: number;
-  totalSegments: number;
-  matchesFound: number;
-}
-
-export interface MtseedDatetimeGpuCallbacks {
-  onProgress: (progress: MtseedDatetimeGpuProgress) => void;
-  onResult: (result: MtseedDatetimeGpuResult) => void;
-  onComplete: (message: string) => void;
-  onError: (error: string, errorCode?: string) => void;
-}
-```
-
-### 4.3 ジョブ準備
-
-```typescript
-// src/lib/webgpu/mtseed-datetime-search/prepare-job.ts
-
-export function prepareMtseedDatetimeGpuJob(
-  params: MtseedDatetimeSearchParams,
-  limits: MtseedDatetimeGpuJobLimits
-): MtseedDatetimeGpuJob {
-  // 1. 時刻範囲を正規化
-  const timePlan = resolveTimePlan(params.time_range, params.search_range);
-
-  // 2. セグメント展開 (Timer0 × VCount × KeyCode)
-  const segments: MtseedDatetimeGpuSegment[] = [];
-  let globalMessageOffset = 0;
-
-  for (const condition of expandConditions(params)) {
-    const { timer0, vcount, keyCode } = condition;
-    
-    // メッセージ数を制限内で分割
-    let remainingMessages = timePlan.totalCombos;
-    let baseSecondOffset = 0;
-
-    while (remainingMessages > 0) {
-      const messageCount = Math.min(
-        remainingMessages,
-        limits.workgroupSize * limits.maxWorkgroups
-      );
-      const workgroupCount = Math.ceil(messageCount / limits.workgroupSize);
-
-      segments.push({
-        id: `${timer0}-${vcount}-${keyCode}-${baseSecondOffset}`,
-        timer0,
-        vcount,
-        keyCode,
-        messageCount,
-        baseSecondOffset,
-        globalMessageOffset,
-        workgroupCount,
-        getUniformWords: () => encodeSearchConstants({
-          timer0,
-          vcount,
-          keyCode,
-          params,
-          timePlan,
-        }),
-      });
-
-      globalMessageOffset += messageCount;
-      baseSecondOffset += messageCount;
-      remainingMessages -= messageCount;
-    }
-  }
-
-  // 3. ターゲット Seed 配列
-  const targetSeeds = new Uint32Array(params.target_seeds.map(s => s.value));
-
-  return {
-    segments,
-    targetSeeds,
-    summary: {
-      totalMessages: globalMessageOffset,
-      totalSegments: segments.length,
-      targetSeedCount: targetSeeds.length,
-      rangeSeconds: params.search_range.range_seconds,
-    },
-    timePlan: {
-      startDate: timePlan.startDate,
-      combosPerDay: timePlan.combosPerDay,
-    },
-    conditions: params,
-  };
-}
-```
-
-### 4.4 GPU エンジン
-
-```typescript
-// src/lib/webgpu/mtseed-datetime-search/engine.ts
-
-export interface MtseedDatetimeGpuEngine {
-  isAvailable: () => boolean;
-  initialize: () => Promise<void>;
-  deriveJobLimits: (preferences?: Partial<MtseedDatetimeGpuJobLimits>) 
-    => MtseedDatetimeGpuJobLimits;
-  dispatch: (segment: MtseedDatetimeGpuSegment) => Promise<Uint32Array>;
-  destroy: () => void;
-}
-
-export function createMtseedDatetimeGpuEngine(): MtseedDatetimeGpuEngine {
-  let device: GPUDevice | null = null;
-  let pipeline: GPUComputePipeline | null = null;
-  let bindGroupLayout: GPUBindGroupLayout | null = null;
-  let targetSeedBuffer: GPUBuffer | null = null;
-
-  return {
-    isAvailable: () => typeof navigator !== 'undefined' && 'gpu' in navigator,
-
-    async initialize() {
-      const adapter = await navigator.gpu.requestAdapter({
-        powerPreference: 'high-performance',
-      });
-      if (!adapter) throw new Error('WebGPU adapter not found');
-
-      device = await adapter.requestDevice();
-
-      const module = device.createShaderModule({
-        code: buildShaderSource(256), // workgroupSize
-      });
-
-      bindGroupLayout = device.createBindGroupLayout({
-        entries: [
-          { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
-          { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
-          { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
-          { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-        ],
-      });
-
-      pipeline = device.createComputePipeline({
-        layout: device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
-        compute: { module, entryPoint: 'sha1_generate' },
-      });
-    },
-
-    deriveJobLimits(preferences = {}) {
-      const limits = device?.limits ?? {
-        maxComputeWorkgroupSizeX: 256,
-        maxComputeWorkgroupsPerDimension: 65535,
-        maxStorageBufferBindingSize: 128 * 1024 * 1024,
-      };
-
-      return {
-        workgroupSize: preferences.workgroupSize ?? 256,
-        maxWorkgroups: Math.min(
-          preferences.maxWorkgroups ?? limits.maxComputeWorkgroupsPerDimension,
-          limits.maxComputeWorkgroupsPerDimension
-        ),
-        candidateCapacityPerDispatch: preferences.candidateCapacityPerDispatch ?? 4096,
-        maxDispatchesInFlight: preferences.maxDispatchesInFlight ?? 2,
-      };
-    },
-
-    async dispatch(segment: MtseedDatetimeGpuSegment) {
-      if (!device || !pipeline || !bindGroupLayout) {
-        throw new Error('Engine not initialized');
-      }
-
-      // バッファ作成・書き込み
-      // ...
-
-      // ディスパッチ実行
-      const encoder = device.createCommandEncoder();
-      const pass = encoder.beginComputePass();
-      pass.setPipeline(pipeline);
-      pass.setBindGroup(0, bindGroup);
-      pass.dispatchWorkgroups(segment.workgroupCount);
-      pass.end();
-
-      // 結果読み出し
-      // ...
-
-      return matchResults;
-    },
-
-    destroy() {
-      targetSeedBuffer?.destroy();
-      device = null;
-    },
-  };
-}
-```
-
-### 4.5 Worker 実装
+### 4.5 Worker 実装 (TypeScript)
 
 ```typescript
 // src/workers/mtseed-datetime-search-worker-gpu.ts
 
-import { createMtseedDatetimeGpuEngine } from '@/lib/webgpu/mtseed-datetime-search/engine';
-import { prepareMtseedDatetimeGpuJob } from '@/lib/webgpu/mtseed-datetime-search/prepare-job';
+import init, {
+  GpuDeviceContext,
+  GpuMtseedDatetimeSearcher,
+  type MtseedDatetimeSearchParams,
+  type MtseedDatetimeSearchBatch,
+} from '@wasm/wasm_pkg';
 
-const engine = createMtseedDatetimeGpuEngine();
+let context: GpuDeviceContext | null = null;
+let searcher: GpuMtseedDatetimeSearcher | null = null;
+let stopRequested = false;
 
 self.onmessage = async (event: MessageEvent) => {
   const { type, payload } = event.data;
@@ -680,53 +817,61 @@ self.onmessage = async (event: MessageEvent) => {
       await runSearch(payload);
       break;
     case 'STOP':
-      // 停止処理
+      stopRequested = true;
       break;
   }
 };
 
 async function runSearch(params: MtseedDatetimeSearchParams) {
-  if (!engine.isAvailable()) {
-    self.postMessage({ type: 'ERROR', error: 'WebGPU not available' });
-    return;
-  }
+  stopRequested = false;
 
   try {
-    await engine.initialize();
-    const limits = engine.deriveJobLimits();
-    const job = prepareMtseedDatetimeGpuJob(params, limits);
+    await init();
 
-    let processedMessages = 0;
-    let matchesFound = 0;
+    // GPU コンテキスト初期化
+    if (!GpuDeviceContext.is_available()) {
+      self.postMessage({ type: 'ERROR', error: 'WebGPU not available' });
+      return;
+    }
 
-    for (const segment of job.segments) {
-      const matches = await engine.dispatch(segment);
+    context = await new GpuDeviceContext();
+    searcher = await new GpuMtseedDatetimeSearcher(context, params);
 
-      // 結果を CPU で検証・変換
-      for (const match of matches) {
-        const result = verifyAndConvertMatch(match, segment, job);
-        if (result) {
-          self.postMessage({ type: 'RESULT', result });
-          matchesFound++;
-        }
+    const BATCH_SIZE = 100_000;
+
+    while (!searcher.is_done && !stopRequested) {
+      const batch: MtseedDatetimeSearchBatch = await searcher.next_batch(BATCH_SIZE);
+
+      // 結果をメインスレッドに送信
+      for (const result of batch.results) {
+        self.postMessage({ type: 'RESULT', result });
       }
 
-      processedMessages += segment.messageCount;
+      // 進捗を送信
       self.postMessage({
         type: 'PROGRESS',
         progress: {
-          processedMessages,
-          totalMessages: job.summary.totalMessages,
-          matchesFound,
+          processed: batch.processed_count,
+          total: batch.total_count,
+          percentage: searcher.progress,
         },
       });
     }
 
-    self.postMessage({ type: 'COMPLETE', message: 'Search completed' });
+    self.postMessage({
+      type: 'COMPLETE',
+      message: stopRequested ? 'Search stopped' : 'Search completed',
+    });
   } catch (error) {
-    self.postMessage({ type: 'ERROR', error: String(error) });
+    self.postMessage({
+      type: 'ERROR',
+      error: error instanceof Error ? error.message : String(error),
+    });
   } finally {
-    engine.destroy();
+    searcher?.free();
+    context?.free();
+    searcher = null;
+    context = null;
   }
 }
 ```
@@ -735,67 +880,72 @@ async function runSearch(params: MtseedDatetimeSearchParams) {
 
 ## 5. テスト方針
 
-### 5.1 ユニットテスト
+### 5.1 ユニットテスト (Rust)
 
 | テストケース | 検証内容 |
 |--------------|----------|
-| `test_bcd_lookup` | BCD 変換テーブルの正確性 |
+| `test_bcd_encode` | BCD 変換の正確性 |
 | `test_date_calculation` | 年月日・曜日計算の正確性 |
-| `test_time_calculation` | 時分秒・PM フラグ計算の正確性 |
-| `test_message_construction` | SHA-1 メッセージ構築の正確性 |
-| `test_segment_split` | セグメント分割の正確性 |
+| `test_message_construction` | SHA-1 メッセージ構築の CPU 版との一致 |
+| `test_sha1_hash` | SHA-1 ハッシュ計算の正確性 |
 
 ### 5.2 統合テスト
 
 | テストケース | 検証内容 |
 |--------------|----------|
-| `test_gpu_cpu_consistency` | GPU 結果と CPU 結果の一致 |
+| `test_gpu_cpu_consistency` | GPU 結果と CPU 結果の完全一致 |
 | `test_known_seed_detection` | 既知の MT Seed が正しく検出されること |
-| `test_progress_callback` | 進捗コールバックの正確性 |
+| `test_batch_output_format` | `MtseedDatetimeSearchBatch` 形式の正確性 |
 
-### 5.3 パフォーマンステスト
+### 5.3 WASM テスト
 
-| テストケース | 検証内容 |
-|--------------|----------|
-| `bench_gpu_vs_cpu` | GPU / CPU 速度比較 |
-| `bench_large_range` | 大規模検索範囲での性能 |
+```powershell
+# CPU テスト
+cargo test
+
+# GPU 有効テスト (ブラウザ環境でのみ実行可能)
+wasm-pack test --headless --chrome --features gpu
+```
 
 ---
 
 ## 6. 実装チェックリスト
 
-- [ ] `mtseed-datetime-search.wgsl` 作成
-  - [ ] バインディング定義
-  - [ ] BCD ルックアップテーブル
-  - [ ] 日時計算関数
-  - [ ] SHA-1 圧縮関数
-  - [ ] 線形探索関数
-  - [ ] メインエントリポイント
-- [ ] `types.ts` 作成
-  - [ ] ジョブ制限値型
-  - [ ] セグメント型
-  - [ ] 結果型
-  - [ ] コールバック型
-- [ ] `prepare-job.ts` 作成
-  - [ ] 時刻範囲正規化
-  - [ ] セグメント分割
-  - [ ] uniform エンコード
-- [ ] `engine.ts` 作成
-  - [ ] デバイス初期化
-  - [ ] パイプライン作成
+- [ ] `wasm-pkg/Cargo.toml` 更新
+  - [ ] wgpu 依存追加 (`features = ["webgpu"]`)
+  - [ ] web-sys features 追加 (`Navigator`, `Gpu`)
+  - [ ] `gpu` feature flag 追加
+- [ ] `wasm-pkg/src/gpu/mod.rs` 作成
+- [ ] `wasm-pkg/src/gpu/context.rs` 作成
+  - [ ] `GpuDeviceContext`
+  - [ ] `is_available()` (WebGPU 可用性チェック)
+- [ ] `wasm-pkg/src/gpu/profile.rs` 作成
+  - [ ] `GpuProfile`, `GpuKind`
+  - [ ] プロファイル検出
+- [ ] `wasm-pkg/src/gpu/limits.rs` 作成
+  - [ ] `SearchJobLimits`
+  - [ ] デバイス制限からの導出
+- [ ] `wasm-pkg/src/gpu/datetime_search/mod.rs` 作成
+- [ ] `wasm-pkg/src/gpu/datetime_search/searcher.rs` 作成
+  - [ ] `GpuMtseedDatetimeSearcher`
+  - [ ] CPU 版と同一の API
+- [ ] `wasm-pkg/src/gpu/datetime_search/pipeline.rs` 作成
+  - [ ] パイプライン初期化
   - [ ] バッファ管理
   - [ ] ディスパッチ実行
-- [ ] `controller.ts` 作成
-  - [ ] 進捗管理
-  - [ ] 結果検証・変換
-  - [ ] コールバック集約
+- [ ] `wasm-pkg/src/gpu/datetime_search/shader.wgsl` 作成
+  - [ ] SHA-1 計算
+  - [ ] 日時計算
+  - [ ] マッチ判定
+- [ ] `wasm-pkg/src/lib.rs` 更新
+  - [ ] `gpu` モジュール re-export
 - [ ] Worker 実装
-  - [ ] メッセージハンドリング
-  - [ ] エラーハンドリング
-  - [ ] 停止処理
-- [ ] ユニットテスト
-- [ ] 統合テスト (CPU 結果との一致)
-- [ ] パフォーマンステスト
+  - [ ] WASM API 呼び出し
+  - [ ] 進捗・結果送信
+- [ ] テスト
+  - [ ] CPU 版との結果一致確認
+  - [ ] `cargo test` パス
+  - [ ] `wasm-pack test` パス
 
 ---
 
@@ -805,5 +955,6 @@ async function runSearch(params: MtseedDatetimeSearchParams) {
 |-------------|------|
 | [local_007 (DEPRECATED)](../local_007/GPU_COMPUTE.md) | 旧 GPU 計算基盤仕様 (欠番) |
 | [mig_002/gpu/device-context.md](../mig_002/gpu/device-context.md) | GPU デバイスコンテキスト設計 |
-| [mig_002/gpu/api.md](../mig_002/gpu/api.md) | GPU API 設計 |
-| [datetime_search/mtseed.rs](../../../wasm-pkg/src/datetime_search/mtseed.rs) | CPU 版実装 (参照) |
+| [datetime_search/mtseed.rs](../../../wasm-pkg/src/datetime_search/mtseed.rs) | CPU 版実装 |
+| [types/seeds.rs](../../../wasm-pkg/src/types/seeds.rs) | `SeedOrigin` 定義 |
+
