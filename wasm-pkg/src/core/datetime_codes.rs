@@ -70,13 +70,13 @@ pub fn get_time_code_for_hardware(seconds_of_day: u32, is_ds_or_lite: bool) -> u
 
 /// うるう年判定
 #[allow(clippy::manual_is_multiple_of)]
-const fn is_leap_year(year: u32) -> bool {
+pub const fn is_leap_year(year: u32) -> bool {
     // const fn では is_multiple_of() が使えないため % を使用
     (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 
 /// 月の日数
-const fn days_in_month(year: u32, month: u32) -> u32 {
+pub const fn days_in_month(year: u32, month: u32) -> u32 {
     match month {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
         4 | 6 | 9 | 11 => 30,
@@ -92,12 +92,15 @@ const fn days_in_month(year: u32, month: u32) -> u32 {
 }
 
 /// 曜日計算 (Zeller の公式)
+///
+/// # Returns
+/// 0: 日曜, 1: 月曜, ..., 6: 土曜
 #[allow(
     clippy::many_single_char_names,
     clippy::cast_possible_wrap,
     clippy::cast_sign_loss
 )]
-const fn get_day_of_week(year: u32, month: u32, day: u32) -> u32 {
+pub const fn get_day_of_week(year: u32, month: u32, day: u32) -> u32 {
     // Zeller の公式では符号付き整数が必要
     let mut year_adj = year as i32;
     let mut month_adj = month as i32;
