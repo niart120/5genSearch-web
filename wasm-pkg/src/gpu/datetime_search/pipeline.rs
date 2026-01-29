@@ -4,6 +4,7 @@
 
 use wgpu::util::DeviceExt;
 
+use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
 use crate::core::sha1::get_nazo_values;
 use crate::datetime_search::MtseedDatetimeSearchParams;
 use crate::types::{Datetime, Hardware, MtSeed, StartupCondition};
@@ -239,10 +240,10 @@ impl SearchPipeline {
             search_range.start_month,
             search_range.start_day,
         );
-        let start_day_of_week = day_of_week(
-            search_range.start_year,
-            search_range.start_month,
-            search_range.start_day,
+        let start_day_of_week = get_day_of_week(
+            u32::from(search_range.start_year),
+            u32::from(search_range.start_month),
+            u32::from(search_range.start_day),
         );
 
         // NAZO 値 (ROM バージョン・リージョン依存)
@@ -511,54 +512,20 @@ pub struct MatchResult {
 }
 
 // ===== ヘルパー関数 =====
-// TODO: core::datetime_codes や datetime_search::base との共通化を検討
-// 現状これらのヘルパー関数は private のため直接利用できない
 
 /// バイトスワップ (リトルエンディアン → ビッグエンディアン)
 fn swap_bytes_u32(v: u32) -> u32 {
     v.swap_bytes()
 }
 
-/// 閏年判定
-fn is_leap_year(year: u32) -> bool {
-    year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400))
-}
-
 /// 年内通算日を計算 (1-indexed)
 fn day_of_year(year: u16, month: u8, day: u8) -> u32 {
-    let is_leap = is_leap_year(u32::from(year));
-    let days_in_months: [u32; 12] = if is_leap {
-        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    } else {
-        [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    };
-
+    let year_u32 = u32::from(year);
     let mut doy = u32::from(day);
-    for &days in days_in_months.iter().take(month as usize - 1) {
-        doy += days;
+    for m in 1..month {
+        doy += days_in_month(year_u32, u32::from(m));
     }
     doy
-}
-
-/// 曜日を計算 (0: 日曜 - 6: 土曜)
-/// Zeller の公式を使用
-#[allow(clippy::cast_sign_loss)]
-fn day_of_week(year: u16, month: u8, day: u8) -> u32 {
-    let y = if month <= 2 {
-        i32::from(year) - 1
-    } else {
-        i32::from(year)
-    };
-    let m = if month <= 2 {
-        i32::from(month) + 12
-    } else {
-        i32::from(month)
-    };
-    let d = i32::from(day);
-
-    let h = (d + (13 * (m + 1)) / 5 + y + y / 4 - y / 100 + y / 400) % 7;
-    // Zeller の結果 (0: 土曜) を (0: 日曜) に変換
-    ((h + 6) % 7) as u32
 }
 
 /// オフセットから年月日を復元
@@ -576,14 +543,9 @@ fn offset_to_date(start_year: u32, start_day_of_year: u32, day_offset: u32) -> (
         year += 1;
     }
 
-    let days_in_months: [u32; 12] = if is_leap_year(year) {
-        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    } else {
-        [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    };
-
-    let mut month = 1u8;
-    for days in days_in_months {
+    let mut month = 1u32;
+    loop {
+        let days = days_in_month(year, month);
         if doy <= days {
             break;
         }
@@ -591,5 +553,5 @@ fn offset_to_date(start_year: u32, start_day_of_year: u32, day_offset: u32) -> (
         month += 1;
     }
 
-    (year as u16, month, doy as u8)
+    (year as u16, month as u8, doy as u8)
 }
