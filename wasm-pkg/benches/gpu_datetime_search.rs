@@ -1,17 +1,16 @@
 //! GPU 起動時刻検索ベンチマーク
 //!
-//! `GpuMtseedDatetimeSearcher::next_batch()` スループット測定
+//! 100年分全探索のスループット測定
 //!
 //! GPU が利用できない環境ではスキップされる。
 
 #![cfg(feature = "gpu")]
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use criterion::{Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{Criterion, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::MtseedDatetimeSearchParams;
-use wasm_pkg::gpu::GpuMtseedDatetimeSearcher;
-use wasm_pkg::gpu::context::GpuDeviceContext;
+use wasm_pkg::gpu::GpuDatetimeSearchIterator;
 use wasm_pkg::types::{
     DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
     StartupCondition, TimeRangeParams,
@@ -49,18 +48,7 @@ fn create_search_range() -> SearchRangeParams {
     }
 }
 
-/// Timer0×3件、VCount×1件の複数条件を作成
-fn create_conditions() -> Vec<StartupCondition> {
-    vec![
-        StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
-        StartupCondition::new(0x0C7A, 0x5F, KeyCode::NONE),
-        StartupCondition::new(0x0C7B, 0x5F, KeyCode::NONE),
-    ]
-}
-
 fn create_params() -> MtseedDatetimeSearchParams {
-    // Timer0×3 × VCount×1 = 3通りの起動条件で検索
-    let conditions = create_conditions();
     MtseedDatetimeSearchParams {
         target_seeds: vec![
             MtSeed::new(0x12345678),
@@ -70,47 +58,88 @@ fn create_params() -> MtseedDatetimeSearchParams {
         ds: create_ds_config(),
         time_range: create_time_range(),
         search_range: create_search_range(),
-        condition: conditions[0],
+        condition: StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
     }
 }
 
-fn create_gpu_searcher(ctx: &GpuDeviceContext) -> GpuMtseedDatetimeSearcher {
-    GpuMtseedDatetimeSearcher::new(ctx, &create_params())
-        .expect("Failed to create GpuMtseedDatetimeSearcher")
+fn create_gpu_iterator() -> GpuDatetimeSearchIterator {
+    pollster::block_on(GpuDatetimeSearchIterator::new(create_params()))
+        .expect("Failed to create GpuDatetimeSearchIterator")
+}
+
+/// 100年分全探索を実行し、処理数と経過時間を返す
+fn run_full_search() -> (u64, Duration) {
+    let mut iterator = create_gpu_iterator();
+    let start = Instant::now();
+    let mut processed = 0u64;
+
+    while let Some(batch) = pollster::block_on(iterator.next()) {
+        processed = batch.processed_count;
+    }
+
+    (processed, start.elapsed())
 }
 
 // ===== ベンチマーク =====
 
-fn bench_gpu_mtseed_datetime_search(c: &mut Criterion) {
-    // GPU コンテキスト初期化 (ベンチマーク外)
-    let ctx = pollster::block_on(async { GpuDeviceContext::new().await });
+fn bench_gpu_full_search(c: &mut Criterion) {
+    // GPU 初期化テスト (ベンチマーク外)
+    let test_iterator =
+        pollster::block_on(async { GpuDatetimeSearchIterator::new(create_params()).await });
 
-    let ctx = match ctx {
-        Ok(ctx) => ctx,
-        Err(e) => {
-            eprintln!("GPU unavailable: {e}, skipping GPU benchmark");
-            return;
-        }
-    };
+    if let Err(e) = test_iterator {
+        eprintln!("GPU unavailable: {e}, skipping GPU benchmark");
+        return;
+    }
 
-    let mut group = c.benchmark_group("gpu_mtseed_datetime_search");
-    group.warm_up_time(Duration::from_secs(2));
-    group.measurement_time(Duration::from_secs(5));
-    group.sample_size(10);
+    // 期待する総メッセージ数: 24h * 60m * 60s * 365days * 100years
+    // = 86400 * 36500 ≈ 3.15G
+    let expected_total = 86400u64 * 36500;
 
-    let chunk_size = 100000_u32;
-    group.throughput(Throughput::Elements(u64::from(chunk_size)));
+    // ウォームアップ: 1回全探索
+    eprintln!("Warmup: running full 100-year search...");
+    let (warmup_processed, warmup_time) = run_full_search();
+    let warmup_throughput = warmup_processed as f64 / warmup_time.as_secs_f64() / 1e9;
+    eprintln!(
+        "Warmup complete: {} elements in {:.2}s ({:.2} Gelem/s)",
+        warmup_processed,
+        warmup_time.as_secs_f64(),
+        warmup_throughput
+    );
 
-    group.bench_function("next_batch", |b| {
-        b.iter_batched(
-            || create_gpu_searcher(&ctx),
-            |mut searcher| pollster::block_on(searcher.next_batch(chunk_size)),
-            criterion::BatchSize::SmallInput,
-        );
+    let mut group = c.benchmark_group("gpu_full_100year_search");
+    group.measurement_time(Duration::from_secs(20));
+    group.sample_size(10); // 20秒内で可能なサンプル数
+
+    group.bench_function("full_search", |b| {
+        b.iter_custom(|iters| {
+            let mut total_time = Duration::ZERO;
+            for _ in 0..iters {
+                let (processed, elapsed) = run_full_search();
+                assert!(
+                    processed >= expected_total * 99 / 100,
+                    "Incomplete search: {} < {}",
+                    processed,
+                    expected_total
+                );
+                total_time += elapsed;
+            }
+            total_time
+        });
     });
 
     group.finish();
+
+    // 最終スループット表示
+    let (final_processed, final_time) = run_full_search();
+    let final_throughput = final_processed as f64 / final_time.as_secs_f64() / 1e9;
+    eprintln!(
+        "Final: {} elements in {:.2}s ({:.2} Gelem/s)",
+        final_processed,
+        final_time.as_secs_f64(),
+        final_throughput
+    );
 }
 
-criterion_group!(benches, bench_gpu_mtseed_datetime_search);
+criterion_group!(benches, bench_gpu_full_search);
 criterion_main!(benches);

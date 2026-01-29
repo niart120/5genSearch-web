@@ -2,7 +2,7 @@
 //!
 //! WebGPU による MT Seed 起動時刻検索を提供する。
 
+mod iterator;
 mod pipeline;
-mod searcher;
 
-pub use searcher::GpuMtseedDatetimeSearcher;
+pub use iterator::{GpuDatetimeSearchIterator, GpuSearchBatch};

@@ -1,8 +1,12 @@
 //! GPU 検索パイプライン
 //!
 //! wgpu パイプライン・バッファ管理を行う。
+//! ダブルバッファリングにより GPU のアイドル時間を削減。
 
 use wgpu::util::DeviceExt;
+
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsValue;
 
 use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
 use crate::core::sha1::{get_frame, get_nazo_values};
@@ -12,22 +16,56 @@ use crate::types::{Datetime, Hardware, LcgSeed, MtSeed, StartupCondition};
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;
 
+/// ダブルバッファリング用スロット数
+const SLOT_COUNT: usize = 2;
+
+/// スロット状態
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SlotState {
+    /// 使用可能
+    Idle,
+    /// GPU 処理中
+    Computing,
+}
+
+/// ディスパッチスロット
+///
+/// 各スロットは独立した `output_buffer` と `staging_buffer` を持つ。
+struct DispatchSlot {
+    /// 結果バッファ
+    output_buffer: wgpu::Buffer,
+    /// ステージングバッファ
+    staging_buffer: wgpu::Buffer,
+    /// バインドグループ（このスロットの `output_buffer` を参照）
+    bind_group: wgpu::BindGroup,
+    /// スロット状態
+    state: std::cell::Cell<SlotState>,
+    /// ベースオフセット（結果復元用）
+    base_offset: std::cell::Cell<u32>,
+    /// 処理したメッセージ数
+    processed_count: std::cell::Cell<u32>,
+}
+
 /// GPU 検索パイプライン
 pub struct SearchPipeline {
     device: wgpu::Device,
     queue: wgpu::Queue,
     pipeline: wgpu::ComputePipeline,
+    /// `BindGroup` を通じてバッファを参照するため、直接は使用しないが所有権を保持
+    #[allow(dead_code)]
     bind_group_layout: wgpu::BindGroupLayout,
-    /// ターゲット Seed バッファ
+    /// `BindGroup` を通じてバッファを参照するため、直接は使用しないが所有権を保持
+    #[allow(dead_code)]
     target_buffer: wgpu::Buffer,
-    /// 定数バッファ
+    /// `BindGroup` を通じてバッファを参照するため、直接は使用しないが所有権を保持
+    #[allow(dead_code)]
     constants_buffer: wgpu::Buffer,
-    /// ディスパッチ状態バッファ
+    /// ディスパッチ状態バッファ（全スロット共有）
     dispatch_state_buffer: wgpu::Buffer,
-    /// 結果バッファ
-    output_buffer: wgpu::Buffer,
-    /// 結果読み出し用ステージングバッファ
-    staging_buffer: wgpu::Buffer,
+    /// ダブルバッファリング用スロット
+    slots: [DispatchSlot; SLOT_COUNT],
+    /// 現在のスロットインデックス
+    current_slot: std::cell::Cell<usize>,
     /// ワークグループサイズ
     workgroup_size: u32,
     /// 検索制限
@@ -86,6 +124,7 @@ struct MatchRecord {
 
 impl SearchPipeline {
     /// パイプラインを作成
+    #[allow(clippy::too_many_lines)]
     pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) -> Self {
         let device = ctx.device().clone();
         let queue = ctx.queue().clone();
@@ -176,12 +215,48 @@ impl SearchPipeline {
         // 検索定数を構築
         let search_constants = Self::build_constants(params);
 
-        // バッファ作成
+        // 共有バッファ作成
         let target_buffer = Self::create_target_buffer(&device, &params.target_seeds);
         let constants_buffer = Self::create_constants_buffer(&device, &search_constants);
         let dispatch_state_buffer = Self::create_dispatch_state_buffer(&device);
-        let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity);
-        let staging_buffer = Self::create_staging_buffer(&device, limits.candidate_capacity);
+
+        // ダブルバッファリング用スロットを作成
+        let slots = std::array::from_fn(|i| {
+            let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity, i);
+            let staging_buffer = Self::create_staging_buffer(&device, limits.candidate_capacity, i);
+
+            let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some(&format!("slot-{i}-bind-group")),
+                layout: &bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: dispatch_state_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: constants_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: target_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 3,
+                        resource: output_buffer.as_entire_binding(),
+                    },
+                ],
+            });
+
+            DispatchSlot {
+                output_buffer,
+                staging_buffer,
+                bind_group,
+                state: std::cell::Cell::new(SlotState::Idle),
+                base_offset: std::cell::Cell::new(0),
+                processed_count: std::cell::Cell::new(0),
+            }
+        });
 
         Self {
             device,
@@ -191,8 +266,8 @@ impl SearchPipeline {
             target_buffer,
             constants_buffer,
             dispatch_state_buffer,
-            output_buffer,
-            staging_buffer,
+            slots,
+            current_slot: std::cell::Cell::new(0),
             workgroup_size: limits.workgroup_size,
             limits,
             search_constants,
@@ -201,6 +276,7 @@ impl SearchPipeline {
     }
 
     /// 検索定数を構築
+    #[allow(clippy::items_after_statements)]
     fn build_constants(params: &MtseedDatetimeSearchParams) -> SearchConstants {
         let ds = &params.ds;
         let condition = params.condition;
@@ -323,11 +399,15 @@ impl SearchPipeline {
 
     /// 結果バッファを作成
     #[allow(clippy::cast_lossless)] // capacity u32 -> u64
-    fn create_output_buffer(device: &wgpu::Device, capacity: u32) -> wgpu::Buffer {
+    fn create_output_buffer(
+        device: &wgpu::Device,
+        capacity: u32,
+        slot_index: usize,
+    ) -> wgpu::Buffer {
         // 構造: [match_count: u32, records: array<MatchRecord>]
         let size = 4 + capacity as u64 * std::mem::size_of::<MatchRecord>() as u64;
         device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("match-output-buffer"),
+            label: Some(&format!("slot-{slot_index}-output")),
             size,
             usage: wgpu::BufferUsages::STORAGE
                 | wgpu::BufferUsages::COPY_SRC
@@ -338,51 +418,50 @@ impl SearchPipeline {
 
     /// ステージングバッファを作成
     #[allow(clippy::cast_lossless)] // capacity u32 -> u64
-    fn create_staging_buffer(device: &wgpu::Device, capacity: u32) -> wgpu::Buffer {
+    fn create_staging_buffer(
+        device: &wgpu::Device,
+        capacity: u32,
+        slot_index: usize,
+    ) -> wgpu::Buffer {
         let size = 4 + capacity as u64 * std::mem::size_of::<MatchRecord>() as u64;
         device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("staging-buffer"),
+            label: Some(&format!("slot-{slot_index}-staging")),
             size,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         })
     }
 
-    /// バインドグループを作成
-    fn create_bind_group(&self) -> wgpu::BindGroup {
-        self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("mtseed-datetime-search-bind-group"),
-            layout: &self.bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: self.dispatch_state_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: self.constants_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: self.target_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: self.output_buffer.as_entire_binding(),
-                },
-            ],
-        })
-    }
-
-    /// GPU ディスパッチ実行
+    /// GPU ディスパッチ実行（ダブルバッファリング対応）
+    ///
+    /// スロットを交互に使用し、GPU のアイドル時間を削減する。
+    /// テスト用に残しているが、通常は `dispatch_pipelined` を使用する。
     ///
     /// # Returns
     /// `(matches, processed_count)`
+    #[allow(dead_code)]
     pub async fn dispatch(&self, max_count: u32, offset: u32) -> (Vec<MatchResult>, u32) {
         let count = max_count.min(self.limits.max_messages_per_dispatch);
         if count == 0 {
             return (vec![], 0);
         }
+
+        // 現在のスロットを取得し、次回用に切り替え
+        let slot_index = self.current_slot.get();
+        self.current_slot.set((slot_index + 1) % SLOT_COUNT);
+
+        // スロットに submit
+        self.submit_to_slot(slot_index, count, offset);
+
+        // 結果を待って読み出し
+        let matches = self.await_slot(slot_index).await;
+
+        (matches, count)
+    }
+
+    /// スロットに GPU コマンドを投入（非同期、即座に戻る）
+    fn submit_to_slot(&self, slot_index: usize, count: u32, offset: u32) {
+        let slot = &self.slots[slot_index];
 
         // ディスパッチ状態を更新
         let dispatch_state = DispatchState {
@@ -400,7 +479,7 @@ impl SearchPipeline {
         // 出力バッファをクリア (match_count = 0)
         let zero_count: [u32; 1] = [0];
         self.queue
-            .write_buffer(&self.output_buffer, 0, bytemuck::cast_slice(&zero_count));
+            .write_buffer(&slot.output_buffer, 0, bytemuck::cast_slice(&zero_count));
 
         // コマンドエンコード
         let mut encoder = self
@@ -409,42 +488,132 @@ impl SearchPipeline {
         {
             let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
             pass.set_pipeline(&self.pipeline);
-            pass.set_bind_group(0, &self.create_bind_group(), &[]);
+            pass.set_bind_group(0, &slot.bind_group, &[]);
             let workgroup_count = count.div_ceil(self.workgroup_size);
             pass.dispatch_workgroups(workgroup_count, 1, 1);
         }
 
         // 結果コピー
         encoder.copy_buffer_to_buffer(
-            &self.output_buffer,
+            &slot.output_buffer,
             0,
-            &self.staging_buffer,
+            &slot.staging_buffer,
             0,
-            self.staging_buffer.size(),
+            slot.staging_buffer.size(),
         );
 
         self.queue.submit(std::iter::once(encoder.finish()));
 
-        // 結果読み出し
-        let matches = self.read_results(offset).await;
-
-        (matches, count)
+        // スロット状態を更新
+        slot.state.set(SlotState::Computing);
+        slot.base_offset.set(offset);
+        slot.processed_count.set(count);
     }
 
-    /// 結果を読み出し
+    /// スロットの結果を待って読み出し
+    async fn await_slot(&self, slot_index: usize) -> Vec<MatchResult> {
+        let slot = &self.slots[slot_index];
+        let base_offset = slot.base_offset.get();
+
+        let matches = self.read_slot_results(slot, base_offset).await;
+        slot.state.set(SlotState::Idle);
+        matches
+    }
+
+    /// パイプライン化ディスパッチ実行
+    ///
+    /// 2つのスロットを交互に使用し、1つで GPU 処理中に別のスロットの結果を読み出す。
+    /// 初回は submit のみ、2回目以降は submit + 前回の結果読み出しを並行実行。
+    ///
+    /// # Returns
+    /// `(matches, processed_count)` - 初回は空の結果を返す
+    pub async fn dispatch_pipelined(
+        &self,
+        max_count: u32,
+        offset: u32,
+    ) -> (Vec<MatchResult>, u32, u32) {
+        let count = max_count.min(self.limits.max_messages_per_dispatch);
+        if count == 0 {
+            return (vec![], 0, 0);
+        }
+
+        // 現在のスロットを取得し、次回用に切り替え
+        let current = self.current_slot.get();
+        let prev = (current + SLOT_COUNT - 1) % SLOT_COUNT;
+        self.current_slot.set((current + 1) % SLOT_COUNT);
+
+        // 現在のスロットに submit
+        self.submit_to_slot(current, count, offset);
+
+        // 前のスロットが処理中なら、その結果を読み出す
+        let prev_slot = &self.slots[prev];
+        if prev_slot.state.get() == SlotState::Computing {
+            let prev_matches = self.await_slot(prev).await;
+            let prev_count = self.slots[prev].processed_count.get();
+            (prev_matches, prev_count, count)
+        } else {
+            // 初回または前のスロットが Idle の場合
+            (vec![], 0, count)
+        }
+    }
+
+    /// パイプラインをフラッシュ（最後の処理中スロットの結果を回収）
+    pub async fn flush_pipeline(&self) -> (Vec<MatchResult>, u32) {
+        // 現在のスロット（最後に submit したスロット）の1つ前を確認
+        let current = self.current_slot.get();
+        let prev = (current + SLOT_COUNT - 1) % SLOT_COUNT;
+
+        let prev_slot = &self.slots[prev];
+        if prev_slot.state.get() == SlotState::Computing {
+            let matches = self.await_slot(prev).await;
+            let count = self.slots[prev].processed_count.get();
+            (matches, count)
+        } else {
+            (vec![], 0)
+        }
+    }
+
+    /// スロットから結果を読み出し（非同期ポーリング）
     #[allow(clippy::cast_possible_truncation)] // match_count は capacity 以下
-    async fn read_results(&self, base_offset: u32) -> Vec<MatchResult> {
-        let buffer_slice = self.staging_buffer.slice(..);
-        let (tx, rx) = futures_channel::oneshot::channel();
+    #[allow(clippy::unused_async)] // Native では await がないが、API 一貫性のため async を維持
+    async fn read_slot_results(&self, slot: &DispatchSlot, base_offset: u32) -> Vec<MatchResult> {
+        let buffer_slice = slot.staging_buffer.slice(..);
+
+        #[allow(unused_mut)] // WASM では mutable が必要
+        let (tx, mut rx) = futures_channel::oneshot::channel();
 
         buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
             let _ = tx.send(result);
         });
 
-        self.device.poll(wgpu::Maintain::Wait);
+        // WASM: 非ブロッキングポーリングでイベントループをブロックしない
+        // Native: 同期的に Wait でブロック
+        #[cfg(target_arch = "wasm32")]
+        {
+            loop {
+                self.device.poll(wgpu::Maintain::Poll);
 
-        if rx.await.ok().and_then(Result::ok).is_none() {
-            return vec![];
+                match rx.try_recv() {
+                    Ok(Some(Ok(()))) => break,
+                    Ok(Some(Err(_)) | None) => return vec![],
+                    Err(_) => {
+                        // yield してイベントループに制御を戻す
+                        wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(
+                            &JsValue::NULL,
+                        ))
+                        .await
+                        .ok();
+                    }
+                }
+            }
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.device.poll(wgpu::Maintain::Wait);
+            if rx.await.ok().and_then(Result::ok).is_none() {
+                return vec![];
+            }
         }
 
         let data = buffer_slice.get_mapped_range();
@@ -469,7 +638,7 @@ impl SearchPipeline {
         }
 
         drop(data);
-        self.staging_buffer.unmap();
+        slot.staging_buffer.unmap();
 
         matches
     }

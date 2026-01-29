@@ -13,4 +13,4 @@ pub use limits::SearchJobLimits;
 pub use profile::{GpuKind, GpuProfile};
 
 // Re-export GPU datetime search
-pub use datetime_search::GpuMtseedDatetimeSearcher;
+pub use datetime_search::{GpuDatetimeSearchIterator, GpuSearchBatch};
