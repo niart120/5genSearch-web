@@ -427,26 +427,26 @@ self.onmessage = async (event: MessageEvent) => {
 
 ### 6.1 Rust 実装
 
-- [ ] `searcher.rs` 削除
-- [ ] `iterator.rs` 新規作成
-  - [ ] `GpuSearchBatch` 構造体 (tsify 対応)
-  - [ ] `GpuDatetimeSearchIterator` 構造体
-  - [ ] `new()` コンストラクタ (async)
-  - [ ] `next()` メソッド (async)
-  - [ ] `is_done` / `progress` getter
-  - [ ] スループット計測ロジック
-- [ ] `mod.rs` 更新 (`iterator` モジュール公開)
-- [ ] `gpu/mod.rs` 更新 (公開型変更)
-- [ ] `lib.rs` 更新 (GPU API 公開)
+- [x] `searcher.rs` 削除
+- [x] `iterator.rs` 新規作成
+  - [x] `GpuSearchBatch` 構造体 (tsify 対応)
+  - [x] `GpuDatetimeSearchIterator` 構造体
+  - [x] `new()` コンストラクタ (async)
+  - [x] `next()` メソッド (async)
+  - [x] `is_done` / `progress` getter
+  - [x] スループット計測ロジック
+- [x] `mod.rs` 更新 (`iterator` モジュール公開)
+- [x] `gpu/mod.rs` 更新 (公開型変更)
+- [x] `lib.rs` 更新 (GPU API 公開)
 
 ### 6.2 テスト・ベンチマーク
 
-- [ ] 既存 GPU テスト移行 (`searcher.rs` → `iterator.rs`)
-- [ ] ベンチマーク更新 (`gpu_datetime_search.rs`)
+- [x] 既存 GPU テスト移行 (`searcher.rs` → `iterator.rs`)
+- [x] ベンチマーク更新 (`gpu_datetime_search.rs`)
 
 ### 6.3 依存関係
 
-- [ ] `web-time` crate 追加 (時刻計測用)
+- [x] 時刻計測: WASM では `js_sys::Date::now()`, ネイティブでは `std::time` を使用 (`web-time` は不要)
 
 ---
 

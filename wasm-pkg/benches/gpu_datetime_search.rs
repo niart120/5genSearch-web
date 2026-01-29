@@ -1,6 +1,6 @@
 //! GPU 起動時刻検索ベンチマーク
 //!
-//! `GpuMtseedDatetimeSearcher::next_batch()` スループット測定
+//! `GpuDatetimeSearchIterator::next()` スループット測定
 //!
 //! GPU が利用できない環境ではスキップされる。
 
@@ -10,8 +10,7 @@ use std::time::Duration;
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::MtseedDatetimeSearchParams;
-use wasm_pkg::gpu::GpuMtseedDatetimeSearcher;
-use wasm_pkg::gpu::context::GpuDeviceContext;
+use wasm_pkg::gpu::GpuDatetimeSearchIterator;
 use wasm_pkg::types::{
     DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
     StartupCondition, TimeRangeParams,
@@ -74,37 +73,36 @@ fn create_params() -> MtseedDatetimeSearchParams {
     }
 }
 
-fn create_gpu_searcher(ctx: &GpuDeviceContext) -> GpuMtseedDatetimeSearcher {
-    GpuMtseedDatetimeSearcher::new(ctx, &create_params())
-        .expect("Failed to create GpuMtseedDatetimeSearcher")
+fn create_gpu_iterator() -> GpuDatetimeSearchIterator {
+    pollster::block_on(GpuDatetimeSearchIterator::new(create_params()))
+        .expect("Failed to create GpuDatetimeSearchIterator")
 }
 
 // ===== ベンチマーク =====
 
 fn bench_gpu_mtseed_datetime_search(c: &mut Criterion) {
-    // GPU コンテキスト初期化 (ベンチマーク外)
-    let ctx = pollster::block_on(async { GpuDeviceContext::new().await });
+    // GPU 初期化テスト (ベンチマーク外)
+    let test_iterator =
+        pollster::block_on(async { GpuDatetimeSearchIterator::new(create_params()).await });
 
-    let ctx = match ctx {
-        Ok(ctx) => ctx,
-        Err(e) => {
-            eprintln!("GPU unavailable: {e}, skipping GPU benchmark");
-            return;
-        }
-    };
+    if let Err(e) = test_iterator {
+        eprintln!("GPU unavailable: {e}, skipping GPU benchmark");
+        return;
+    }
 
     let mut group = c.benchmark_group("gpu_mtseed_datetime_search");
     group.warm_up_time(Duration::from_secs(2));
     group.measurement_time(Duration::from_secs(5));
     group.sample_size(10);
 
-    let chunk_size = 100000_u32;
-    group.throughput(Throughput::Elements(u64::from(chunk_size)));
+    // バッチサイズはイテレータが自動決定するため、推定値を使用
+    let estimated_batch_size = 16_776_960_u64; // 256 × 65535
+    group.throughput(Throughput::Elements(estimated_batch_size));
 
-    group.bench_function("next_batch", |b| {
+    group.bench_function("next", |b| {
         b.iter_batched(
-            || create_gpu_searcher(&ctx),
-            |mut searcher| pollster::block_on(searcher.next_batch(chunk_size)),
+            create_gpu_iterator,
+            |mut iterator| pollster::block_on(iterator.next()),
             criterion::BatchSize::SmallInput,
         );
     });

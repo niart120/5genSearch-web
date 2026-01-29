@@ -201,6 +201,7 @@ impl SearchPipeline {
     }
 
     /// 検索定数を構築
+    #[allow(clippy::items_after_statements)]
     fn build_constants(params: &MtseedDatetimeSearchParams) -> SearchConstants {
         let ds = &params.ds;
         let condition = params.condition;

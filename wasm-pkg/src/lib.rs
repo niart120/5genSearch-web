@@ -52,7 +52,10 @@ pub use types::NeedleSearchResult;
 
 // Re-export GPU module (when enabled)
 #[cfg(feature = "gpu")]
-pub use gpu::{GpuDeviceContext, GpuKind, GpuMtseedDatetimeSearcher, GpuProfile, SearchJobLimits};
+pub use gpu::{
+    GpuDatetimeSearchIterator, GpuDeviceContext, GpuKind, GpuProfile, GpuSearchBatch,
+    SearchJobLimits,
+};
 
 #[wasm_bindgen(start)]
 pub fn init() {
