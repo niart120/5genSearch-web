@@ -354,50 +354,153 @@ async function runGpuSearch(params: MtseedDatetimeSearchParams) {
 }
 ```
 
-### 4.3 Worker 実装 (将来設計参考)
+### 4.3 WebWorker 実装パターン
 
-Worker 実装は本仕様のスコープ外とする。以下は将来実装時の参考例:
+WebWorker 内で `GpuDatetimeSearchIterator` を使用する推奨パターン:
+
+#### Worker 側 (gpu-search.worker.ts)
 
 ```typescript
-// gpu-search-worker.ts (将来実装の参考)
-import { GpuDatetimeSearchIterator, MtseedDatetimeSearchParams } from 'wasm-pkg';
+import init, { GpuDatetimeSearchIterator, MtseedDatetimeSearchParams } from 'wasm-pkg';
 
-let shouldCancel = false;
+// WASM 初期化
+let wasmReady = init();
 
 self.onmessage = async (event: MessageEvent) => {
   const { type, params } = event.data;
   
-  if (type === 'cancel') {
-    shouldCancel = true;
-    return;
-  }
+  if (type !== 'start') return;
   
-  if (type === 'start') {
-    shouldCancel = false;
+  try {
+    await wasmReady;
+    
+    const iterator = await new GpuDatetimeSearchIterator(params as MtseedDatetimeSearchParams);
     
     try {
-      const iterator = await new GpuDatetimeSearchIterator(params as MtseedDatetimeSearchParams);
-      
-      try {
-        let batch = await iterator.next();
-        while (batch !== undefined && !shouldCancel) {
-          self.postMessage({ type: 'batch', batch });
-          batch = await iterator.next();
-        }
-        
-        if (shouldCancel) {
-          self.postMessage({ type: 'cancelled' });
-        } else {
-          self.postMessage({ type: 'complete' });
-        }
-      } finally {
-        iterator.free();
+      let batch = await iterator.next();
+      while (batch !== undefined) {
+        self.postMessage({ type: 'batch', batch });
+        batch = await iterator.next();
       }
-    } catch (error) {
-      self.postMessage({ type: 'error', error: String(error) });
+      
+      self.postMessage({ type: 'complete' });
+    } finally {
+      iterator.free();
     }
+  } catch (error) {
+    self.postMessage({ type: 'error', error: String(error) });
   }
 };
+```
+
+#### 呼び出し側 (useGpuSearch.ts)
+
+```typescript
+import type { GpuSearchBatch, MtseedDatetimeSearchParams } from 'wasm-pkg';
+
+interface SearchCallbacks {
+  onBatch: (batch: GpuSearchBatch) => void;
+  onComplete: () => void;
+  onError: (error: string) => void;
+}
+
+export function createGpuSearchWorker(
+  params: MtseedDatetimeSearchParams,
+  callbacks: SearchCallbacks,
+): () => void {
+  const worker = new Worker(
+    new URL('./gpu-search.worker.ts', import.meta.url),
+    { type: 'module' }
+  );
+
+  worker.onmessage = (event: MessageEvent) => {
+    const { type, batch, error } = event.data;
+
+    switch (type) {
+      case 'batch':
+        callbacks.onBatch(batch);
+        break;
+      case 'complete':
+        callbacks.onComplete();
+        worker.terminate();
+        break;
+      case 'error':
+        callbacks.onError(error);
+        worker.terminate();
+        break;
+    }
+  };
+
+  worker.onerror = (event) => {
+    callbacks.onError(event.message);
+    worker.terminate();
+  };
+
+  // 検索開始
+  worker.postMessage({ type: 'start', params });
+
+  // キャンセル関数を返す
+  // Worker.terminate() で WASM インスタンスごと破棄される
+  return () => worker.terminate();
+}
+```
+
+#### React コンポーネントでの使用例
+
+```typescript
+function GpuSearchButton({ params }: { params: MtseedDatetimeSearchParams }) {
+  const [progress, setProgress] = useState(0);
+  const [results, setResults] = useState<SeedOrigin[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const cancelRef = useRef<(() => void) | null>(null);
+
+  const handleStart = () => {
+    setIsRunning(true);
+    setResults([]);
+
+    cancelRef.current = createGpuSearchWorker(params, {
+      onBatch: (batch) => {
+        setProgress(batch.progress);
+        if (batch.results.length > 0) {
+          setResults((prev) => [...prev, ...batch.results]);
+        }
+      },
+      onComplete: () => {
+        setIsRunning(false);
+        cancelRef.current = null;
+      },
+      onError: (error) => {
+        console.error('GPU search error:', error);
+        setIsRunning(false);
+        cancelRef.current = null;
+      },
+    });
+  };
+
+  const handleCancel = () => {
+    cancelRef.current?.();
+    cancelRef.current = null;
+    setIsRunning(false);
+  };
+
+  return (
+    <div>
+      <button onClick={isRunning ? handleCancel : handleStart}>
+        {isRunning ? 'キャンセル' : '検索開始'}
+      </button>
+      <progress value={progress} max={1} />
+      <p>結果: {results.length} 件</p>
+    </div>
+  );
+}
+```
+
+#### 設計ポイント
+
+1. **キャンセル**: `worker.terminate()` で WASM インスタンスごと破棄。wasm 側にキャンセル API は不要
+2. **メモリ**: 結果はバッチごとにメインスレッドへ転送。Worker 内でメモリが蓄積しない
+3. **エラー処理**: Worker 内例外は `postMessage` でメインスレッドへ伝播
+4. **複数条件**: 条件ごとに Worker を順次起動するか、複数 Worker を並列実行
 ```
 
 ---
