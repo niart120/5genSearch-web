@@ -17,7 +17,7 @@ DustCloud / PokemonShadow エンカウントにおける「ポケモン出現 vs
 
 ### 1.3 背景・問題
 
-- mig_002 仕様書で `EncounterResult` / `ItemContent` の型・アルゴリズムは定義済み
+- `EncounterResult` / `ItemContent` の型・アルゴリズムは定義済み
 - [encounter.rs](../../wasm-pkg/src/generation/algorithm/encounter.rs) に実装済みだが `#[allow(dead_code)]` 状態
 - 生成フロー (`generate_wild_pokemon`) から呼び出されておらず、実質的に未統合
 - `GeneratedPokemonData` に結果を格納するフィールドがない
@@ -34,7 +34,6 @@ DustCloud / PokemonShadow エンカウントにおける「ポケモン出現 vs
 ### 1.5 着手条件
 
 - local_009（types モジュール構造化）完了済み
-- mig_002 仕様書の encounter.md セクション 5, 5.5 参照可能
 
 ---
 
@@ -349,6 +348,10 @@ export type ItemContent =
 
 ## 関連ドキュメント
 
-- [mig_002/generation/algorithm/encounter.md](../mig_002/generation/algorithm/encounter.md) - セクション 5, 5.5
-- [mig_002/generation/flows/pokemon-wild.md](../mig_002/generation/flows/pokemon-wild.md) - セクション 2.5
+> **Note**: 以下のドキュメントは削除されました。Git履歴を参照してください。
+> (削除対象: `spec/agent/mig_002/`)
+>
+> - mig_002/generation/algorithm/encounter.md - セクション 5, 5.5
+> - mig_002/generation/flows/pokemon-wild.md - セクション 2.5
+
 - [local_009/TYPES_MODULE_RESTRUCTURING.md](../local_009/TYPES_MODULE_RESTRUCTURING.md) - types モジュール構造化

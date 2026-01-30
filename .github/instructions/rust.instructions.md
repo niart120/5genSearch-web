@@ -8,7 +8,7 @@ applyTo: '**/wasm-pkg/**/*.rs'
 
 ディレクトリ構成・モジュール設計については下記仕様書を参照:
 
-→ [spec/architecture/rust-structure.md](../../spec/architecture/rust-structure.md)
+→ [spec/agent/architecture/rust-structure.md](../../spec/agent/architecture/rust-structure.md)
 
 ## ツールチェイン
 
