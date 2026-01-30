@@ -243,40 +243,6 @@ pub fn calculate_game_offset(
     Ok(advances)
 }
 
-/// 初期 Seed に Game Offset を適用し、オフセット適用後の Seed を返す
-///
-/// # Errors
-/// 無効な起動設定の組み合わせの場合にエラーを返す。
-#[allow(dead_code)]
-pub fn apply_game_offset(
-    seed: LcgSeed,
-    version: RomVersion,
-    config: &GameStartConfig,
-) -> Result<LcgSeed, String> {
-    let offset = calculate_game_offset(seed, version, config)?;
-    let mut lcg = Lcg64::new(seed);
-    lcg.jump(u64::from(offset));
-    Ok(lcg.current_seed())
-}
-
-/// 初期 Seed に Game Offset を適用し、オフセット適用済みの Lcg64 を返す
-///
-/// 呼び出し側はそのまま乱数生成を続けられる。
-///
-/// # Errors
-/// 無効な起動設定の組み合わせの場合にエラーを返す。
-#[allow(dead_code)]
-pub fn create_offset_lcg(
-    seed: LcgSeed,
-    version: RomVersion,
-    config: &GameStartConfig,
-) -> Result<Lcg64, String> {
-    let offset = calculate_game_offset(seed, version, config)?;
-    let mut lcg = Lcg64::new(seed);
-    lcg.jump(u64::from(offset));
-    Ok(lcg)
-}
-
 // ===== MT オフセット計算 =====
 
 /// エンカウント種別とバージョンから MT オフセットを計算
@@ -436,18 +402,20 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // ===== apply_game_offset テスト =====
+    // ===== オフセット適用テスト =====
 
     #[test]
-    fn test_apply_game_offset() {
+    fn test_apply_game_offset_via_lcg() {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let result = apply_game_offset(seed, RomVersion::Black, &config);
-        assert!(result.is_ok());
+        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let mut lcg = Lcg64::new(seed);
+        lcg.jump(u64::from(offset));
+        let result_seed = lcg.current_seed();
         // オフセット適用後の seed は元と異なる
-        assert_ne!(result.unwrap(), seed);
+        assert_ne!(result_seed, seed);
     }
 }
