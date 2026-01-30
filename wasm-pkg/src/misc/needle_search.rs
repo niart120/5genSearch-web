@@ -46,7 +46,7 @@ pub fn search_needle_pattern(
         let seed = origin.base_seed();
 
         // game_offset 計算
-        let game_offset = calculate_game_offset(seed, config.version, &config.game_start)?;
+        let game_offset = calculate_game_offset(seed, config.version, config.game_start)?;
 
         // 検索範囲: user_offset ～ max_advance
         let start = config.user_offset;
@@ -144,7 +144,7 @@ mod tests {
         let config = make_config();
 
         // game_offset を計算
-        let game_offset = calculate_game_offset(seed, config.version, &config.game_start).unwrap();
+        let game_offset = calculate_game_offset(seed, config.version, config.game_start).unwrap();
 
         // game_offset を考慮した位置で針パターンを取得
         // advance=10 は game_offset からの相対なので、実際の LCG 位置は game_offset + 10

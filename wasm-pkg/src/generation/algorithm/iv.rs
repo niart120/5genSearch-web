@@ -1,5 +1,4 @@
 //! IV 生成・遺伝アルゴリズム
-#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::mt::Mt19937;
 use crate::types::{InheritanceSlot, Ivs, MtSeed};
@@ -61,12 +60,12 @@ pub fn generate_rng_ivs_with_offset(seed: MtSeed, offset: u32, is_roamer: bool) 
 
 /// 遺伝適用
 pub fn apply_inheritance(
-    rng_ivs: &Ivs,
-    parent_male: &Ivs,
-    parent_female: &Ivs,
-    slots: &[InheritanceSlot; 3],
+    rng_ivs: Ivs,
+    parent_male: Ivs,
+    parent_female: Ivs,
+    slots: [InheritanceSlot; 3],
 ) -> Ivs {
-    let mut result = *rng_ivs;
+    let mut result = rng_ivs;
 
     for slot in slots {
         let parent_iv = if slot.parent == 0 {
@@ -130,7 +129,7 @@ mod tests {
             InheritanceSlot::new(1, 1), // Atk from female
             InheritanceSlot::new(2, 0), // Def from male
         ];
-        let result = apply_inheritance(&rng_ivs, &male, &female, &slots);
+        let result = apply_inheritance(rng_ivs, male, female, slots);
         assert_eq!(result.hp, 31);
         assert_eq!(result.atk, 31);
         assert_eq!(result.def, 0);

@@ -1,5 +1,4 @@
 //! エンカウント処理アルゴリズム
-#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
 use crate::types::{
@@ -256,7 +255,7 @@ pub fn fishing_success(rand_value: u32) -> bool {
 pub fn determine_held_item_slot(
     version: RomVersion,
     rand_value: u32,
-    lead_ability: &LeadAbilityEffect,
+    lead_ability: LeadAbilityEffect,
     has_rare_item: bool,
 ) -> HeldItemSlot {
     let percent = rand_to_percent(version, rand_value);

@@ -50,7 +50,7 @@ impl PokemonGenerator {
         params: &PokemonGenerationParams,
         config: &GenerationConfig,
     ) -> Result<Self, String> {
-        let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
+        let game_offset = calculate_game_offset(base_seed, config.version, config.game_start)?;
         let mt_offset = calculate_mt_offset(config.version, params.encounter_type);
         let mt_seed = base_seed.derive_mt_seed();
         let is_roamer = params.encounter_type == crate::types::EncounterType::Roamer;

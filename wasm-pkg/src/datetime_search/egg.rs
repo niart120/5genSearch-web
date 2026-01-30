@@ -126,9 +126,6 @@ impl EggDatetimeSearcher {
         if self.generator.is_exhausted() {
             return 1.0;
         }
-        if self.total_count == 0 {
-            return 1.0;
-        }
         self.processed_count as f64 / self.total_count as f64
     }
 

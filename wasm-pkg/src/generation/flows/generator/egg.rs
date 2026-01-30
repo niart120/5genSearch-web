@@ -42,7 +42,7 @@ impl EggGenerator {
         params: &EggGenerationParams,
         config: &GenerationConfig,
     ) -> Result<Self, String> {
-        let game_offset = calculate_game_offset(base_seed, config.version, &config.game_start)?;
+        let game_offset = calculate_game_offset(base_seed, config.version, config.game_start)?;
         let mt_offset = calculate_mt_offset(config.version, EncounterType::Egg);
         let mt_seed = base_seed.derive_mt_seed();
         let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset, false);
@@ -97,10 +97,10 @@ impl EggGenerator {
 
         // 遺伝適用
         let final_ivs = apply_inheritance(
-            &self.rng_ivs,
-            &self.params.parent_male,
-            &self.params.parent_female,
-            &raw.inheritance,
+            self.rng_ivs,
+            self.params.parent_male,
+            self.params.parent_female,
+            raw.inheritance,
         );
 
         // 次の消費位置へ移動

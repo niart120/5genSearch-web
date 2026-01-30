@@ -4,7 +4,6 @@
 //! - `MtOffset`: MT19937 で IV 生成を開始する位置
 //!
 //! 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/wasm-pkg/src/offset_calculator.rs>
-#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
 use crate::types::{EncounterType, GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
@@ -212,7 +211,7 @@ fn bw2_continue_no_memory_link(lcg: &mut Lcg64) -> u32 {
 pub fn calculate_game_offset(
     seed: LcgSeed,
     version: RomVersion,
-    config: &GameStartConfig,
+    config: GameStartConfig,
 ) -> Result<u32, String> {
     config.validate(version)?;
 
@@ -284,7 +283,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 71, "BW1 最初から（セーブなし）のオフセット");
     }
 
@@ -296,7 +295,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 59, "BW1 最初から（セーブあり）のオフセット");
     }
 
@@ -308,7 +307,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 49, "BW1 続きからのオフセット");
     }
 
@@ -322,7 +321,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 44, "BW2 最初から（セーブなし）のオフセット");
     }
 
@@ -334,7 +333,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(
             offset, 29,
             "BW2 最初から（セーブあり、思い出リンクなし）のオフセット"
@@ -349,7 +348,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 29, "BW2 最初から（思い出リンクあり）のオフセット");
     }
 
@@ -361,7 +360,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクなし）のオフセット");
     }
 
@@ -373,7 +372,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithMemoryLink,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクあり）のオフセット");
     }
 
@@ -386,7 +385,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::NoSave,
         };
-        let result = calculate_game_offset(seed, RomVersion::Black, &config);
+        let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
     }
 
@@ -398,7 +397,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
         };
-        let result = calculate_game_offset(seed, RomVersion::Black, &config);
+        let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
     }
 
@@ -411,7 +410,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         let mut lcg = Lcg64::new(seed);
         lcg.jump(u64::from(offset));
         let result_seed = lcg.current_seed();
