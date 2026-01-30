@@ -148,11 +148,10 @@ impl KeyInput {
 /// - 上下同時押し (Up + Down)
 /// - 左右同時押し (Left + Right)
 /// - L+R+Start+Select 同時押し (ソフトリセットコマンド)
-#[wasm_bindgen]
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-#[allow(clippy::unsafe_derive_deserialize)] // wasm_bindgen によるunsafe fn あり
+#[derive(Tsify, Clone, Debug, Default, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct KeySpec {
-    available_buttons: Vec<DsButton>,
+    pub available_buttons: Vec<DsButton>,
 }
 
 /// マスク値が無効な組み合わせかを判定
@@ -182,10 +181,8 @@ fn is_invalid_button_combination(mask: u32) -> bool {
     has_up_down || has_left_right || has_soft_reset
 }
 
-#[wasm_bindgen]
 impl KeySpec {
     /// ボタンリストから作成
-    #[wasm_bindgen(constructor)]
     pub fn from_buttons(available_buttons: Vec<DsButton>) -> Self {
         Self { available_buttons }
     }
@@ -193,41 +190,39 @@ impl KeySpec {
     /// 有効な組み合わせ総数を取得
     ///
     /// 無効パターン (上下/左右同時押し、ソフトリセット) を除外した数
-    #[wasm_bindgen(getter)]
     #[allow(clippy::cast_possible_truncation)]
     pub fn combination_count(&self) -> u32 {
         // ボタン数は最大 12 なので u32 に収まる
         self.combinations().len() as u32
     }
-}
 
-impl KeySpec {
-    /// 利用可能ボタンリストを取得 (Rust 内部用)
-    pub fn available_buttons(&self) -> &[DsButton] {
-        &self.available_buttons
-    }
-
-    /// 有効な全組み合わせの `KeyCode` を生成
+    /// 有効な全組み合わせの `KeyCode` を生成 (crate 内部用)
     ///
     /// 無効パターン (上下/左右同時押し、ソフトリセット) は除外される
-    pub fn combinations(&self) -> Vec<KeyCode> {
-        let n = self.available_buttons.len();
-        let mut result = Vec::with_capacity(1 << n);
-
-        for bits in 0..(1u32 << n) {
-            let mask = self
-                .available_buttons
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| bits & (1 << i) != 0)
-                .fold(0u32, |acc, (_, b)| acc | b.bit_mask());
-
-            if !is_invalid_button_combination(mask) {
-                result.push(KeyCode::from_mask(KeyMask::new(mask)));
-            }
-        }
-        result
+    pub(crate) fn combinations(&self) -> Vec<KeyCode> {
+        generate_key_combinations(&self.available_buttons)
     }
+}
+
+/// ボタンリストから有効な全組み合わせの `KeyCode` を生成
+///
+/// 無効パターン (上下/左右同時押し、ソフトリセット) は除外される
+fn generate_key_combinations(buttons: &[DsButton]) -> Vec<KeyCode> {
+    let n = buttons.len();
+    let mut result = Vec::with_capacity(1 << n);
+
+    for bits in 0..(1u32 << n) {
+        let mask = buttons
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| bits & (1 << i) != 0)
+            .fold(0u32, |acc, (_, b)| acc | b.bit_mask());
+
+        if !is_invalid_button_combination(mask) {
+            result.push(KeyCode::from_mask(KeyMask::new(mask)));
+        }
+    }
+    result
 }
 
 // ===== ハードウェア列挙型 =====

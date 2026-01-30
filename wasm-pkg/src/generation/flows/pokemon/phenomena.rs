@@ -66,7 +66,7 @@ pub fn generate_phenomena_pokemon(
     let sync_success = if is_compound_eyes {
         false
     } else {
-        perform_sync_check(lcg, enc_type, &params.lead_ability)
+        perform_sync_check(lcg, enc_type, params.lead_ability)
     };
 
     // 2. スロット決定
@@ -83,12 +83,12 @@ pub fn generate_phenomena_pokemon(
         generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
 
     // 5. 性格決定
-    let (nature, sync_applied) = determine_nature(lcg, sync_success, &params.lead_ability);
+    let (nature, sync_applied) = determine_nature(lcg, sync_success, params.lead_ability);
 
     // 6. 持ち物判定
     let held_item_slot = if slot_config.has_held_item {
         let item_rand = lcg.next().unwrap_or(0);
-        determine_held_item_slot(version, item_rand, &params.lead_ability, false)
+        determine_held_item_slot(version, item_rand, params.lead_ability, false)
     } else {
         HeldItemSlot::None
     };

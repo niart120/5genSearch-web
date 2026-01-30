@@ -4,7 +4,6 @@
 //! - `MtOffset`: MT19937 で IV 生成を開始する位置
 //!
 //! 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/wasm-pkg/src/offset_calculator.rs>
-#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
 use crate::types::{EncounterType, GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
@@ -212,7 +211,7 @@ fn bw2_continue_no_memory_link(lcg: &mut Lcg64) -> u32 {
 pub fn calculate_game_offset(
     seed: LcgSeed,
     version: RomVersion,
-    config: &GameStartConfig,
+    config: GameStartConfig,
 ) -> Result<u32, String> {
     config.validate(version)?;
 
@@ -241,40 +240,6 @@ pub fn calculate_game_offset(
     };
 
     Ok(advances)
-}
-
-/// 初期 Seed に Game Offset を適用し、オフセット適用後の Seed を返す
-///
-/// # Errors
-/// 無効な起動設定の組み合わせの場合にエラーを返す。
-#[allow(dead_code)]
-pub fn apply_game_offset(
-    seed: LcgSeed,
-    version: RomVersion,
-    config: &GameStartConfig,
-) -> Result<LcgSeed, String> {
-    let offset = calculate_game_offset(seed, version, config)?;
-    let mut lcg = Lcg64::new(seed);
-    lcg.jump(u64::from(offset));
-    Ok(lcg.current_seed())
-}
-
-/// 初期 Seed に Game Offset を適用し、オフセット適用済みの Lcg64 を返す
-///
-/// 呼び出し側はそのまま乱数生成を続けられる。
-///
-/// # Errors
-/// 無効な起動設定の組み合わせの場合にエラーを返す。
-#[allow(dead_code)]
-pub fn create_offset_lcg(
-    seed: LcgSeed,
-    version: RomVersion,
-    config: &GameStartConfig,
-) -> Result<Lcg64, String> {
-    let offset = calculate_game_offset(seed, version, config)?;
-    let mut lcg = Lcg64::new(seed);
-    lcg.jump(u64::from(offset));
-    Ok(lcg)
 }
 
 // ===== MT オフセット計算 =====
@@ -318,7 +283,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 71, "BW1 最初から（セーブなし）のオフセット");
     }
 
@@ -330,7 +295,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 59, "BW1 最初から（セーブあり）のオフセット");
     }
 
@@ -342,7 +307,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 49, "BW1 続きからのオフセット");
     }
 
@@ -356,7 +321,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 44, "BW2 最初から（セーブなし）のオフセット");
     }
 
@@ -368,7 +333,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(
             offset, 29,
             "BW2 最初から（セーブあり、思い出リンクなし）のオフセット"
@@ -383,7 +348,7 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 29, "BW2 最初から（思い出リンクあり）のオフセット");
     }
 
@@ -395,7 +360,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクなし）のオフセット");
     }
 
@@ -407,7 +372,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithMemoryLink,
         };
-        let offset = calculate_game_offset(seed, RomVersion::Black2, &config).unwrap();
+        let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクあり）のオフセット");
     }
 
@@ -420,7 +385,7 @@ mod tests {
             start_mode: StartMode::Continue,
             save_state: SaveState::NoSave,
         };
-        let result = calculate_game_offset(seed, RomVersion::Black, &config);
+        let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
     }
 
@@ -432,22 +397,24 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
         };
-        let result = calculate_game_offset(seed, RomVersion::Black, &config);
+        let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
     }
 
-    // ===== apply_game_offset テスト =====
+    // ===== オフセット適用テスト =====
 
     #[test]
-    fn test_apply_game_offset() {
+    fn test_apply_game_offset_via_lcg() {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
         };
-        let result = apply_game_offset(seed, RomVersion::Black, &config);
-        assert!(result.is_ok());
+        let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
+        let mut lcg = Lcg64::new(seed);
+        lcg.jump(u64::from(offset));
+        let result_seed = lcg.current_seed();
         // オフセット適用後の seed は元と異なる
-        assert_ne!(result.unwrap(), seed);
+        assert_ne!(result_seed, seed);
     }
 }

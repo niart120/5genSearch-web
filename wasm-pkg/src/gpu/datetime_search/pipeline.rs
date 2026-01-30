@@ -88,7 +88,6 @@ struct MatchRecord {
 
 impl SearchPipeline {
     /// パイプラインを作成
-    #[allow(clippy::too_many_lines)]
     pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) -> Self {
         let device = ctx.device().clone();
         let queue = ctx.queue().clone();
@@ -101,6 +100,50 @@ impl SearchPipeline {
             source: wgpu::ShaderSource::Wgsl(shader_source.into()),
         });
 
+        // パイプライン作成
+        let (pipeline, bind_group_layout) = Self::create_pipeline(&device, &module, &limits);
+
+        // 検索定数を構築
+        let search_constants = Self::build_constants(params);
+
+        // バッファ作成
+        let target_buffer = Self::create_target_buffer(&device, &params.target_seeds);
+        let constants_buffer = Self::create_constants_buffer(&device, &search_constants);
+        let dispatch_state_buffer = Self::create_dispatch_state_buffer(&device);
+        let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity);
+        let staging_buffer = Self::create_staging_buffer(&device, limits.candidate_capacity);
+
+        // バインドグループ作成
+        let bind_group = Self::create_bind_group(
+            &device,
+            &bind_group_layout,
+            &dispatch_state_buffer,
+            &constants_buffer,
+            &target_buffer,
+            &output_buffer,
+        );
+
+        Self {
+            device,
+            queue,
+            pipeline,
+            bind_group,
+            dispatch_state_buffer,
+            output_buffer,
+            staging_buffer,
+            workgroup_size: limits.workgroup_size,
+            limits,
+            search_constants,
+            condition: params.condition,
+        }
+    }
+
+    /// コンピュートパイプラインとバインドグループレイアウトを作成
+    fn create_pipeline(
+        device: &wgpu::Device,
+        module: &wgpu::ShaderModule,
+        limits: &SearchJobLimits,
+    ) -> (wgpu::ComputePipeline, wgpu::BindGroupLayout) {
         // バインドグループレイアウト
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("mtseed-datetime-search-layout"),
@@ -152,17 +195,18 @@ impl SearchPipeline {
             ],
         });
 
-        // パイプライン作成
+        // パイプラインレイアウト
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("mtseed-datetime-search-pipeline-layout"),
             bind_group_layouts: &[&bind_group_layout],
             push_constant_ranges: &[],
         });
 
+        // コンピュートパイプライン
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("mtseed-datetime-search-pipeline"),
             layout: Some(&pipeline_layout),
-            module: &module,
+            module,
             entry_point: Some("sha1_generate"),
             compilation_options: wgpu::PipelineCompilationOptions {
                 constants: &[(
@@ -176,20 +220,21 @@ impl SearchPipeline {
             cache: None,
         });
 
-        // 検索定数を構築
-        let search_constants = Self::build_constants(params);
+        (pipeline, bind_group_layout)
+    }
 
-        // バッファ作成
-        let target_buffer = Self::create_target_buffer(&device, &params.target_seeds);
-        let constants_buffer = Self::create_constants_buffer(&device, &search_constants);
-        let dispatch_state_buffer = Self::create_dispatch_state_buffer(&device);
-        let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity);
-        let staging_buffer = Self::create_staging_buffer(&device, limits.candidate_capacity);
-
-        // バインドグループ作成
-        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+    /// バインドグループを作成
+    fn create_bind_group(
+        device: &wgpu::Device,
+        layout: &wgpu::BindGroupLayout,
+        dispatch_state_buffer: &wgpu::Buffer,
+        constants_buffer: &wgpu::Buffer,
+        target_buffer: &wgpu::Buffer,
+        output_buffer: &wgpu::Buffer,
+    ) -> wgpu::BindGroup {
+        device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("mtseed-datetime-search-bind-group"),
-            layout: &bind_group_layout,
+            layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
@@ -208,21 +253,7 @@ impl SearchPipeline {
                     resource: output_buffer.as_entire_binding(),
                 },
             ],
-        });
-
-        Self {
-            device,
-            queue,
-            pipeline,
-            bind_group,
-            dispatch_state_buffer,
-            output_buffer,
-            staging_buffer,
-            workgroup_size: limits.workgroup_size,
-            limits,
-            search_constants,
-            condition: params.condition,
-        }
+        })
     }
 
     /// 検索定数を構築

@@ -1,5 +1,4 @@
 //! 性格決定・シンクロアルゴリズム
-#![allow(clippy::trivially_copy_pass_by_ref)]
 
 use crate::core::lcg::Lcg64;
 use crate::types::{EncounterType, EverstonePlan, LeadAbilityEffect, Nature};
@@ -39,7 +38,7 @@ pub fn supports_sync(encounter_type: EncounterType) -> bool {
 pub fn perform_sync_check(
     lcg: &mut Lcg64,
     encounter_type: EncounterType,
-    lead_ability: &LeadAbilityEffect,
+    lead_ability: LeadAbilityEffect,
 ) -> bool {
     if !supports_sync(encounter_type) {
         return false; // 乱数消費なし
@@ -54,12 +53,12 @@ pub fn perform_sync_check(
 pub fn determine_nature(
     lcg: &mut Lcg64,
     sync_success: bool,
-    lead_ability: &LeadAbilityEffect,
+    lead_ability: LeadAbilityEffect,
 ) -> (Nature, bool) {
     let rng_nature = nature_roll(lcg.next().unwrap_or(0)); // 常に消費
 
     if sync_success && let LeadAbilityEffect::Synchronize(nature) = lead_ability {
-        return (*nature, true);
+        return (nature, true);
     }
     (Nature::from_u8(rng_nature), false)
 }

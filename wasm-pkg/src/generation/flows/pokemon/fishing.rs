@@ -41,7 +41,7 @@ pub fn generate_fishing_pokemon(
     let sync_success = if is_compound_eyes {
         false
     } else {
-        perform_sync_check(lcg, enc_type, &params.lead_ability)
+        perform_sync_check(lcg, enc_type, params.lead_ability)
     };
 
     // 2. 釣り成功判定 (50%) - 通常釣りのみ (泡釣りはスキップ)
@@ -72,14 +72,14 @@ pub fn generate_fishing_pokemon(
         generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
 
     // 6. 性格決定
-    let (nature, sync_applied) = determine_nature(lcg, sync_success, &params.lead_ability);
+    let (nature, sync_applied) = determine_nature(lcg, sync_success, params.lead_ability);
 
     // 7. 持ち物判定
     let held_item_slot = if encounter_type_supports_held_item(enc_type) && slot_config.has_held_item
     {
         let item_rand = lcg.next().unwrap_or(0);
         let has_very_rare = enc_type == EncounterType::FishingBubble;
-        determine_held_item_slot(version, item_rand, &params.lead_ability, has_very_rare)
+        determine_held_item_slot(version, item_rand, params.lead_ability, has_very_rare)
     } else {
         HeldItemSlot::None
     };

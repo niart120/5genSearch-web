@@ -23,7 +23,7 @@ pub fn generate_static_pokemon(
 
     // シンクロ判定 (StaticSymbol のみ)
     let sync_success = if enc_type == EncounterType::StaticSymbol && !is_compound_eyes {
-        perform_sync_check(lcg, enc_type, &params.lead_ability)
+        perform_sync_check(lcg, enc_type, params.lead_ability)
     } else {
         false
     };
@@ -130,7 +130,7 @@ pub fn generate_hidden_grotto_pokemon(
     );
 
     // 2. シンクロ判定
-    let sync_success = perform_sync_check(lcg, EncounterType::HiddenGrotto, &params.lead_ability);
+    let sync_success = perform_sync_check(lcg, EncounterType::HiddenGrotto, params.lead_ability);
 
     // 3. 性格値生成 (色違い無効、ID補正なし)
     // 通常の PID 生成と同じだが、色違い判定は無効
@@ -154,7 +154,7 @@ pub fn generate_hidden_grotto_pokemon(
     // 6. 持ち物判定
     let held_item_slot = if slot.has_held_item {
         let item_rand = lcg.next().unwrap_or(0);
-        determine_held_item_slot(RomVersion::Black2, item_rand, &params.lead_ability, false)
+        determine_held_item_slot(RomVersion::Black2, item_rand, params.lead_ability, false)
     } else {
         HeldItemSlot::None
     };

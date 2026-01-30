@@ -100,52 +100,6 @@ pub const fn left_rotate(value: u32, amount: u32) -> u32 {
     value.rotate_left(amount)
 }
 
-// ===== 内部ヘルパー関数 =====
-
-/// 単一 SHA-1 計算 (crate 内部用)
-///
-/// # Panics
-/// `message` の長さが 16 の場合は panic しない。
-/// 16 以外の場合はゼロベクトルを返す。
-#[allow(dead_code)]
-pub(crate) fn sha1_hash_single(message: &[u32]) -> Option<HashValues> {
-    if message.len() != 16 {
-        return None;
-    }
-    let msg: [u32; 16] = message.try_into().expect("length checked");
-    Some(calculate_pokemon_sha1(&msg))
-}
-
-/// バッチ SHA-1 計算 (crate 内部用)
-#[allow(dead_code)]
-pub(crate) fn sha1_hash_batch_internal(messages: &[u32]) -> Vec<HashValues> {
-    let count = messages.len() / 16;
-    let mut results = Vec::with_capacity(count);
-
-    for i in 0..count {
-        let msg: [u32; 16] = messages[i * 16..(i + 1) * 16]
-            .try_into()
-            .expect("slice length is 16");
-        results.push(calculate_pokemon_sha1(&msg));
-    }
-
-    results
-}
-
-/// ハッシュから MT Seed を計算 (crate 内部用)
-#[allow(dead_code)]
-pub(crate) fn hash_to_mt_seed(h0: u32, h1: u32) -> MtSeed {
-    let hash = HashValues::new(h0, h1, 0, 0, 0);
-    hash.to_mt_seed()
-}
-
-/// ハッシュから LCG Seed を計算 (crate 内部用)
-#[allow(dead_code)]
-pub(crate) fn hash_to_lcg_seed(h0: u32, h1: u32) -> LcgSeed {
-    let hash = HashValues::new(h0, h1, 0, 0, 0);
-    hash.to_lcg_seed()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -204,10 +158,11 @@ mod tests {
     }
 
     #[test]
-    fn test_hash_to_mt_seed_internal() {
+    fn test_hash_values_to_mt_seed() {
         let h0 = 0x1234_5678;
         let h1 = 0xABCD_EF01;
-        let mt = hash_to_mt_seed(h0, h1);
+        let hash = HashValues::new(h0, h1, 0, 0, 0);
+        let mt = hash.to_mt_seed();
         assert_ne!(mt.value(), 0);
     }
 }
