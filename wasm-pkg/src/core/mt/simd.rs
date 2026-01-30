@@ -1,6 +1,6 @@
 //! MT19937 SIMD 実装 (4系統並列)
 
-use std::simd::{cmp::SimdPartialEq, u32x4};
+use std::simd::{Select, cmp::SimdPartialEq, u32x4};
 
 use super::{INIT_MULTIPLIER, LOWER_MASK, M, MATRIX_A, N, UPPER_MASK};
 use crate::types::MtSeed;
