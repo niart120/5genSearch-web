@@ -160,13 +160,14 @@ impl GpuDatetimeSearchIterator {
 ```rust
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 use crate::datetime_search::MtseedDatetimeSearchParams;
 use crate::types::SeedOrigin;
 
-use super::context::GpuDeviceContext;
-use super::limits::SearchJobLimits;
+use crate::gpu::context::GpuDeviceContext;
+use crate::gpu::limits::SearchJobLimits;
 use super::pipeline::SearchPipeline;
 
 /// GPU 検索バッチ結果
@@ -185,32 +186,33 @@ pub struct GpuSearchBatch {
 /// AsyncIterator パターンで GPU 検索を実行する。
 /// `next()` を呼び出すたびに最適バッチサイズで GPU ディスパッチを実行し、
 /// 結果・進捗・スループットを返す。
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct GpuDatetimeSearchIterator {
-    // GPU リソース
+    /// GPU パイプライン
     pipeline: SearchPipeline,
+    /// 検索制限
     limits: SearchJobLimits,
-    
-    // 進捗管理
+
+    /// 現在のオフセット
     current_offset: u32,
+    /// 総処理数
     total_count: u64,
+    /// 処理済み数
     processed_count: u64,
-    
-    // スループット計測
+
+    /// スループット計測: 前回の処理済み数
     last_processed: u64,
-    last_time: f64,
+    /// スループット計測: 前回の時刻 (秒)
+    last_time_secs: f64,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl GpuDatetimeSearchIterator {
     /// イテレータを作成
-    ///
-    /// # Errors
-    ///
-    /// - GPU デバイスが利用不可の場合
-    /// - `target_seeds` が空の場合
-    #[wasm_bindgen(constructor)]
-    pub async fn new(params: MtseedDatetimeSearchParams) -> Result<GpuDatetimeSearchIterator, String> {
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
+    pub async fn new(
+        params: MtseedDatetimeSearchParams,
+    ) -> Result<GpuDatetimeSearchIterator, String> {
         if params.target_seeds.is_empty() {
             return Err("target_seeds is empty".into());
         }
@@ -220,7 +222,6 @@ impl GpuDatetimeSearchIterator {
         let pipeline = SearchPipeline::new(&ctx, &params);
         let total_count = calculate_total_count(&params);
 
-        let now = web_time::Instant::now();
         Ok(Self {
             pipeline,
             limits,
@@ -228,36 +229,38 @@ impl GpuDatetimeSearchIterator {
             total_count,
             processed_count: 0,
             last_processed: 0,
-            last_time: now.elapsed().as_secs_f64(),
+            last_time_secs: current_time_secs(),
         })
     }
 
     /// 次のバッチを取得
-    ///
-    /// 検索完了時は `None` を返す。
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn next(&mut self) -> Option<GpuSearchBatch> {
         if self.is_done() {
             return None;
         }
 
-        // 最適バッチサイズで GPU ディスパッチ
-        let chunk_count = self.limits.max_messages_per_dispatch;
+        // 残りの処理数を計算
         let remaining = (self.total_count - self.processed_count) as u32;
-        let to_process = chunk_count.min(remaining);
+        let to_process = self.limits.max_messages_per_dispatch.min(remaining);
 
-        if to_process == 0 {
-            return None;
-        }
+        // GPU ディスパッチ実行
+        let (matches, processed) = self
+            .pipeline
+            .dispatch(to_process, self.current_offset)
+            .await;
 
-        // GPU 実行
-        let (matches, processed) = self.pipeline.dispatch(to_process, self.current_offset).await;
-        
-        self.processed_count += u64::from(processed);
         self.current_offset += processed;
+        self.processed_count += u64::from(processed);
 
+        Some(self.build_batch_result(matches))
+    }
+
+    /// バッチ結果を構築
+    fn build_batch_result(&mut self, matches: Vec<MatchResult>) -> GpuSearchBatch {
         // スループット計算
-        let now = web_time::Instant::now().elapsed().as_secs_f64();
-        let elapsed = now - self.last_time;
+        let now = current_time_secs();
+        let elapsed = now - self.last_time_secs;
         let processed_delta = self.processed_count - self.last_processed;
         let throughput = if elapsed > 0.001 {
             processed_delta as f64 / elapsed
@@ -265,7 +268,7 @@ impl GpuDatetimeSearchIterator {
             0.0
         };
         self.last_processed = self.processed_count;
-        self.last_time = now;
+        self.last_time_secs = now;
 
         // 結果変換
         let condition = self.pipeline.condition();
@@ -274,24 +277,23 @@ impl GpuDatetimeSearchIterator {
             .map(|m| SeedOrigin::startup(m.lcg_seed, m.datetime, condition))
             .collect();
 
-        Some(GpuSearchBatch {
+        GpuSearchBatch {
             results,
             progress: self.progress(),
             throughput,
             processed_count: self.processed_count,
             total_count: self.total_count,
-        })
+        }
     }
 
     /// 検索が完了したか
-    #[wasm_bindgen(getter)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
     pub fn is_done(&self) -> bool {
         self.processed_count >= self.total_count
     }
 
     /// 進捗率 (0.0 - 1.0)
-    #[wasm_bindgen(getter)]
-    #[allow(clippy::cast_precision_loss)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
     pub fn progress(&self) -> f64 {
         if self.total_count == 0 {
             1.0
@@ -299,6 +301,21 @@ impl GpuDatetimeSearchIterator {
             self.processed_count as f64 / self.total_count as f64
         }
     }
+}
+
+/// 現在時刻を秒で取得 (WASM / ネイティブ共通)
+#[cfg(target_arch = "wasm32")]
+fn current_time_secs() -> f64 {
+    js_sys::Date::now() / 1000.0
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn current_time_secs() -> f64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or(0.0)
 }
 
 // Drop trait は SearchPipeline が wgpu リソースを保持しているため自動実装
@@ -549,7 +566,7 @@ function GpuSearchButton({ params }: { params: MtseedDatetimeSearchParams }) {
 
 ### 6.3 依存関係
 
-- [x] 時刻計測: WASM では `js_sys::Date::now()`, ネイティブでは `std::time` を使用 (`web-time` は不要)
+- [x] 時刻計測: WASM では `js_sys::Date::now()`, ネイティブでは `std::time` を使用
 
 ---
 
