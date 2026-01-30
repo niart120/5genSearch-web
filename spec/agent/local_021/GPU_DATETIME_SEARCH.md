@@ -1133,7 +1133,6 @@ wasm-pack test --headless --chrome --features gpu
 | ドキュメント | 概要 |
 |-------------|------|
 | [local_007 (DEPRECATED)](../local_007/GPU_COMPUTE.md) | 旧 GPU 計算基盤仕様 (欠番) |
-| [mig_002/gpu/device-context.md](../mig_002/gpu/device-context.md) | GPU デバイスコンテキスト設計 |
 | [datetime_search/mtseed.rs](../../../wasm-pkg/src/datetime_search/mtseed.rs) | CPU 版実装 |
 | [types/seeds.rs](../../../wasm-pkg/src/types/seeds.rs) | `SeedOrigin` 定義 |
 
