@@ -166,7 +166,7 @@ mod tests {
     use crate::generation::algorithm::calculate_mt_offset;
     use crate::types::{
         EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
-        LeadAbilityEffect, Nature, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+        LeadAbilityEffect, Nature, Pid, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
     };
 
     fn make_source(seed: LcgSeed) -> SeedOrigin {
@@ -218,7 +218,7 @@ mod tests {
         let initial_seed = LcgSeed::new(0x1C40_524D_87E8_0030);
         let tid = 0_u16;
         let sid = 0_u16;
-        let expected_pid = 0xDF8F_ECE9_u32;
+        let expected_pid = Pid(0xDF8F_ECE9_u32);
         let expected_nature = 14_u8; // むじゃき (Naive)
 
         let game_start = GameStartConfig {
@@ -257,14 +257,14 @@ mod tests {
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
-            pokemon.pid, expected_pid,
+            pokemon.core.pid, expected_pid,
             "PID が期待値と一致しません: calculated=0x{:08X}, expected=0x{:08X}",
-            pokemon.pid, expected_pid
+            pokemon.core.pid.0, expected_pid.0
         );
         assert_eq!(
-            pokemon.nature as u8, expected_nature,
+            pokemon.core.nature as u8, expected_nature,
             "性格が期待値と一致しません: calculated={}, expected={} (むじゃき)",
-            pokemon.nature as u8, expected_nature
+            pokemon.core.nature as u8, expected_nature
         );
         assert!(
             !pokemon.sync_applied,
@@ -278,7 +278,7 @@ mod tests {
         let initial_seed = LcgSeed::new(0x11111);
         let tid = 54321_u16;
         let sid = 12345_u16;
-        let expected_pid = 0x5642_E610_u32;
+        let expected_pid = Pid(0x5642_E610);
         let expected_nature = 1_u8; // さみしがり (Lonely)
 
         let game_start = GameStartConfig {
@@ -317,14 +317,14 @@ mod tests {
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
-            pokemon.pid, expected_pid,
+            pokemon.core.pid, expected_pid,
             "PID mismatch: 0x{:08X} vs expected 0x{:08X}",
-            pokemon.pid, expected_pid
+            pokemon.core.pid.0, expected_pid.0
         );
         assert_eq!(
-            pokemon.nature as u8, expected_nature,
+            pokemon.core.nature as u8, expected_nature,
             "Nature mismatch: {} vs expected {} (さみしがり)",
-            pokemon.nature as u8, expected_nature
+            pokemon.core.nature as u8, expected_nature
         );
     }
 
@@ -334,7 +334,7 @@ mod tests {
         let initial_seed = LcgSeed::new(0x77777);
         let tid = 54321_u16;
         let sid = 12345_u16;
-        let expected_pid = 0x8E0F_06F1_u32;
+        let expected_pid = Pid(0x8E0F_06F1);
         let expected_nature = 17_u8; // れいせい (Quiet)
 
         let game_start = GameStartConfig {
@@ -373,14 +373,14 @@ mod tests {
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
-            pokemon.pid, expected_pid,
+            pokemon.core.pid, expected_pid,
             "Pattern2 PID mismatch: 0x{:08X} vs expected 0x{:08X}",
-            pokemon.pid, expected_pid
+            pokemon.core.pid.0, expected_pid.0
         );
         assert_eq!(
-            pokemon.nature as u8, expected_nature,
+            pokemon.core.nature as u8, expected_nature,
             "Pattern2 Nature mismatch: {} vs expected {} (れいせい)",
-            pokemon.nature as u8, expected_nature
+            pokemon.core.nature as u8, expected_nature
         );
     }
 
@@ -390,7 +390,7 @@ mod tests {
         let initial_seed = LcgSeed::new(0x99999);
         let tid = 54321_u16;
         let sid = 12345_u16;
-        let expected_pid = 0x59E0_C098_u32;
+        let expected_pid = Pid(0x59E0_C098);
         let expected_nature = 15_u8; // ひかえめ (Modest)
 
         let game_start = GameStartConfig {
@@ -429,14 +429,14 @@ mod tests {
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
-            pokemon.pid, expected_pid,
+            pokemon.core.pid, expected_pid,
             "Pattern3 PID mismatch: 0x{:08X} vs expected 0x{:08X}",
-            pokemon.pid, expected_pid
+            pokemon.core.pid.0, expected_pid.0
         );
         assert_eq!(
-            pokemon.nature as u8, expected_nature,
+            pokemon.core.nature as u8, expected_nature,
             "Pattern3 Nature mismatch: {} vs expected {} (ひかえめ)",
-            pokemon.nature as u8, expected_nature
+            pokemon.core.nature as u8, expected_nature
         );
     }
 
@@ -446,7 +446,7 @@ mod tests {
         let initial_seed = LcgSeed::new(0xBBBBB);
         let tid = 54321_u16;
         let sid = 12345_u16;
-        let expected_pid = 0xC423_5DBE_u32;
+        let expected_pid = Pid(0xC423_5DBE);
         let expected_nature = 9_u8; // のうてんき (Lax)
 
         let game_start = GameStartConfig {
@@ -485,14 +485,14 @@ mod tests {
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
-            pokemon.pid, expected_pid,
+            pokemon.core.pid, expected_pid,
             "Pattern4 PID mismatch: 0x{:08X} vs expected 0x{:08X}",
-            pokemon.pid, expected_pid
+            pokemon.core.pid.0, expected_pid.0
         );
         assert_eq!(
-            pokemon.nature as u8, expected_nature,
+            pokemon.core.nature as u8, expected_nature,
             "Pattern4 Nature mismatch: {} vs expected {} (のうてんき)",
-            pokemon.nature as u8, expected_nature
+            pokemon.core.nature as u8, expected_nature
         );
     }
 }

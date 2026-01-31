@@ -182,7 +182,7 @@ mod tests {
 
         let mut g = generator.unwrap();
         let egg = g.generate_next();
-        assert!(egg.ivs.hp <= 31);
+        assert!(egg.core.ivs.hp <= 31);
         assert_eq!(g.current_advance(), 1);
         assert!(egg.margin_frames.is_none());
     }
@@ -211,7 +211,7 @@ mod tests {
 
         let mut g = generator.unwrap();
         let egg = g.generate_next();
-        assert!(egg.ivs.hp <= 31);
+        assert!(egg.core.ivs.hp <= 31);
         assert!(egg.margin_frames.is_some());
     }
 }

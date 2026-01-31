@@ -23,6 +23,6 @@ pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, per
 pub(crate) use npc::resolve_egg_npc_advance;
 pub(crate) use offset::{calculate_game_offset, calculate_mt_offset};
 pub(crate) use pid::{
-    apply_shiny_lock, calculate_shiny_type, generate_egg_pid_with_reroll, generate_event_pid,
+    apply_shiny_lock, generate_egg_pid_with_reroll, generate_event_pid,
     generate_wild_pid_with_reroll,
 };

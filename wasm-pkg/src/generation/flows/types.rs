@@ -4,8 +4,9 @@
 //! TS 公開型は `crate::types` に配置。
 
 use crate::types::{
-    EncounterResult, Gender, GeneratedEggData, GeneratedPokemonData, HeldItemSlot, InheritanceSlot,
-    Ivs, MovingEncounterInfo, Nature, NeedleDirection, SeedOrigin, ShinyType, SpecialEncounterInfo,
+    AbilitySlot, CorePokemonData, EncounterResult, Gender, GeneratedEggData, GeneratedPokemonData,
+    HeldItemSlot, InheritanceSlot, Ivs, MovingEncounterInfo, Nature, NeedleDirection, Pid,
+    SeedOrigin, ShinyType, SpecialEncounterInfo,
 };
 
 // Re-export for internal use
@@ -25,12 +26,12 @@ pub enum GenerationError {
 /// 生の個体データ (IV なし)
 #[derive(Clone, Debug)]
 pub struct RawPokemonData {
-    pub pid: u32,
+    pub pid: Pid,
     pub species_id: u16,
     pub level: u8,
     pub nature: Nature,
     pub sync_applied: bool,
-    pub ability_slot: u8,
+    pub ability_slot: AbilitySlot,
     pub gender: Gender,
     pub shiny_type: ShinyType,
     pub held_item_slot: HeldItemSlot,
@@ -43,12 +44,12 @@ impl RawPokemonData {
     /// Item 取得、釣り失敗など、ポケモンが生成されない場合に使用。
     pub fn not_pokemon(encounter_result: EncounterResult) -> Self {
         Self {
-            pid: 0,
+            pid: Pid::ZERO,
             species_id: 0,
             level: 0,
             nature: Nature::Hardy,
             sync_applied: false,
-            ability_slot: 0,
+            ability_slot: AbilitySlot::First,
             gender: Gender::Genderless,
             shiny_type: ShinyType::None,
             held_item_slot: HeldItemSlot::None,
@@ -60,10 +61,10 @@ impl RawPokemonData {
 /// 生の卵データ (IV なし)
 #[derive(Clone, Debug)]
 pub struct RawEggData {
-    pub pid: u32,
+    pub pid: Pid,
     pub nature: Nature,
     pub gender: Gender,
-    pub ability_slot: u8,
+    pub ability_slot: AbilitySlot,
     pub shiny_type: ShinyType,
     pub inheritance: [InheritanceSlot; 3],
 }
@@ -85,16 +86,18 @@ impl GeneratedPokemonData {
             advance,
             needle_direction,
             source,
-            pid: raw.pid,
+            core: CorePokemonData {
+                pid: raw.pid,
+                nature: raw.nature,
+                ability_slot: raw.ability_slot,
+                gender: raw.gender,
+                shiny_type: raw.shiny_type,
+                ivs,
+            },
             species_id: raw.species_id,
             level: raw.level,
-            nature: raw.nature,
             sync_applied: raw.sync_applied,
-            ability_slot: raw.ability_slot,
-            gender: raw.gender,
-            shiny_type: raw.shiny_type,
             held_item_slot: raw.held_item_slot,
-            ivs,
             moving_encounter,
             special_encounter,
             encounter_result: raw.encounter_result,
@@ -115,13 +118,15 @@ impl GeneratedEggData {
             advance,
             needle_direction,
             source,
-            pid: raw.pid,
-            nature: raw.nature,
-            gender: raw.gender,
-            ability_slot: raw.ability_slot,
-            shiny_type: raw.shiny_type,
+            core: CorePokemonData {
+                pid: raw.pid,
+                nature: raw.nature,
+                ability_slot: raw.ability_slot,
+                gender: raw.gender,
+                shiny_type: raw.shiny_type,
+                ivs,
+            },
             inheritance: raw.inheritance,
-            ivs,
             margin_frames,
         }
     }

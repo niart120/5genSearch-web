@@ -191,7 +191,38 @@ pub enum AbilitySlot {
 }
 ```
 
-### 3.3 GenderRatio の変更
+### 3.3 PID 関連関数の TrainerInfo 統一
+
+PID 決定に関連する内部関数は、一貫性のため `TrainerInfo` を受け取るように統一する。
+
+```rust
+/// ID 補正処理
+/// TrainerInfo を受け取るように変更 (tid/sid 個別ではなく)
+#[inline]
+fn apply_id_correction(pid: Pid, trainer: TrainerInfo) -> Pid {
+    let pid_low = (pid.raw() & 0xFFFF) as u16;
+    let xor_value = pid_low ^ trainer.tid ^ trainer.sid;
+
+    if xor_value & 1 == 1 {
+        Pid(pid.raw() | 0x8000_0000)
+    } else {
+        Pid(pid.raw() & 0x7FFF_FFFF)
+    }
+}
+
+/// 野生/固定/徘徊 PID 生成 (ID補正あり)
+#[inline]
+fn generate_wild_pid(r: u32, trainer: TrainerInfo) -> Pid {
+    apply_id_correction(generate_base_pid(r), trainer)
+}
+```
+
+**設計理由**:
+- `TrainerInfo` は TID/SID のペアとして常にセットで使用される
+- 引数の一貫性を保つことでコード可読性が向上
+- 公開 API (`generate_wild_pid_with_reroll`, `generate_egg_pid_with_reroll`) は既に `TrainerInfo` を使用
+
+### 3.4 GenderRatio の変更
 
 ```rust
 impl GenderRatio {
@@ -220,7 +251,7 @@ impl GenderRatio {
 }
 ```
 
-### 3.4 CorePokemonData 共通構造体
+### 3.5 CorePokemonData 共通構造体
 
 ```rust
 /// ポケモン/卵の共通個体情報
@@ -236,7 +267,7 @@ pub struct CorePokemonData {
 }
 ```
 
-### 3.5 GeneratedPokemonData / GeneratedEggData への適用
+### 3.6 GeneratedPokemonData / GeneratedEggData への適用
 
 後方互換性不要のため、ネスト構造を採用する。
 
@@ -272,7 +303,7 @@ pub struct GeneratedEggData {
 }
 ```
 
-### 3.6 CoreDataFilter (旧 ResultFilter)
+### 3.7 CoreDataFilter (旧 ResultFilter)
 
 ```rust
 /// 生成結果の共通フィルター条件
@@ -353,7 +384,7 @@ impl CoreDataFilter {
 }
 ```
 
-### 3.7 PokemonFilter / EggFilter の更新
+### 3.8 PokemonFilter / EggFilter の更新
 
 ```rust
 pub struct PokemonFilter {

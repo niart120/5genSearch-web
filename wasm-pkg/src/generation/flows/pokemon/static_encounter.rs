@@ -2,12 +2,12 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    apply_shiny_lock, calculate_level, calculate_shiny_type, determine_held_item_slot,
-    generate_event_pid, generate_wild_pid_with_reroll, nature_roll, perform_sync_check,
+    apply_shiny_lock, calculate_level, determine_held_item_slot, generate_event_pid,
+    generate_wild_pid_with_reroll, nature_roll, perform_sync_check,
 };
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
-    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, Nature,
+    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, Nature, Pid,
     PokemonGenerationParams, RomVersion, ShinyType,
 };
 
@@ -32,17 +32,9 @@ pub fn generate_static_pokemon(
     let (pid, shiny_type) = match enc_type {
         EncounterType::StaticSymbol | EncounterType::Roamer => {
             let reroll_count = if params.shiny_charm { 2 } else { 0 };
-            let (pid, shiny) = generate_wild_pid_with_reroll(
-                lcg,
-                params.trainer.tid,
-                params.trainer.sid,
-                reroll_count,
-            );
+            let (pid, shiny) = generate_wild_pid_with_reroll(lcg, params.trainer, reroll_count);
             if slot.shiny_locked {
-                (
-                    apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid),
-                    ShinyType::None,
-                )
+                (apply_shiny_lock(pid, params.trainer), ShinyType::None)
             } else {
                 (pid, shiny)
             }
@@ -50,17 +42,18 @@ pub fn generate_static_pokemon(
         EncounterType::StaticStarter | EncounterType::StaticFossil | EncounterType::StaticEvent => {
             let pid = generate_event_pid(lcg.next().unwrap_or(0));
             let pid = if slot.shiny_locked {
-                apply_shiny_lock(pid, params.trainer.tid, params.trainer.sid)
+                apply_shiny_lock(pid, params.trainer)
             } else {
                 pid
             };
-            let shiny = calculate_shiny_type(pid, params.trainer.tid, params.trainer.sid);
+            let shiny = pid.shiny_type(params.trainer);
             (pid, shiny)
         }
         _ => {
             let r = lcg.next().unwrap_or(0);
-            let shiny = calculate_shiny_type(r, params.trainer.tid, params.trainer.sid);
-            (r, shiny)
+            let pid = Pid(r);
+            let shiny = pid.shiny_type(params.trainer);
+            (pid, shiny)
         }
     };
 
@@ -87,8 +80,8 @@ pub fn generate_static_pokemon(
     }
 
     // === Resolve ===
-    let ability_slot = ((pid >> 16) & 1) as u8;
-    let gender = slot.gender_ratio.determine_gender(pid);
+    let ability_slot = pid.ability_slot();
+    let gender = pid.gender(slot.gender_ratio);
 
     RawPokemonData {
         pid,
@@ -134,7 +127,7 @@ pub fn generate_hidden_grotto_pokemon(
 
     // 3. 性格値生成 (色違い無効、ID補正なし)
     // 通常の PID 生成と同じだが、色違い判定は無効
-    let pid = lcg.next().unwrap_or(0);
+    let pid = Pid(lcg.next().unwrap_or(0));
 
     // 4. 性別値決定 (別途消費)
     let gender_rand = lcg.next().unwrap_or(0);
@@ -162,7 +155,7 @@ pub fn generate_hidden_grotto_pokemon(
     // === Resolve (乱数消費なし) ===
     // 性別は別途消費した gender_rand から決定
     let gender = slot.gender_ratio.determine_gender_from_rand(gender_rand);
-    let ability_slot = ((pid >> 16) & 1) as u8;
+    let ability_slot = pid.ability_slot();
 
     RawPokemonData {
         pid,
