@@ -5,6 +5,82 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
+// ===== PID =====
+
+/// ポケモンの性格値 (Personality ID)
+///
+/// TypeScript では `export type Pid = number` として公開される。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(transparent)]
+#[repr(transparent)]
+pub struct Pid(pub u32);
+
+impl Pid {
+    /// ゼロ値
+    pub const ZERO: Self = Self(0);
+
+    /// 生の値を取得
+    #[inline]
+    pub const fn raw(self) -> u32 {
+        self.0
+    }
+
+    /// 通常特性スロット判定 (PID bit16)
+    ///
+    /// 夢特性は別途乱数ロールで決定されるため、ここでは First/Second のみ返す。
+    /// 夢特性が確定した場合は呼び出し側で `AbilitySlot::Hidden` に上書きする。
+    #[inline]
+    pub const fn ability_slot(self) -> AbilitySlot {
+        if (self.0 >> 16) & 1 == 0 {
+            AbilitySlot::First
+        } else {
+            AbilitySlot::Second
+        }
+    }
+
+    /// 性別を判定
+    ///
+    /// PID 下位 8bit (性別値) と `GenderRatio` の閾値を比較して性別を決定。
+    #[inline]
+    pub fn gender(self, ratio: GenderRatio) -> Gender {
+        ratio.determine_gender_from_pid(self)
+    }
+
+    /// 色違い判定
+    ///
+    /// PID と `TrainerInfo` (TID/SID) から色違いタイプを判定。
+    /// - xor == 0: Square (ひし形)
+    /// - 1 <= xor < 8: Star (星型)
+    /// - 8 <= xor: None (通常)
+    #[inline]
+    pub fn shiny_type(self, trainer: TrainerInfo) -> ShinyType {
+        let pid_high = (self.0 >> 16) as u16;
+        let pid_low = (self.0 & 0xFFFF) as u16;
+        let xor = pid_high ^ pid_low ^ trainer.tid ^ trainer.sid;
+
+        if xor == 0 {
+            ShinyType::Square
+        } else if xor < 8 {
+            ShinyType::Star
+        } else {
+            ShinyType::None
+        }
+    }
+}
+
+// ===== トレーナー情報 =====
+
+/// トレーナー情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct TrainerInfo {
+    /// トレーナー ID
+    pub tid: u16,
+    /// 裏 ID
+    pub sid: u16,
+}
+
 // ===== 性格 =====
 
 /// 性格
@@ -110,14 +186,14 @@ impl GenderRatio {
     ///
     /// 性別値 (PID 下位 8bit) が閾値未満なら Female、以上なら Male。
     #[inline]
-    pub fn determine_gender(self, pid: u32) -> Gender {
+    pub fn determine_gender_from_pid(self, pid: Pid) -> Gender {
         let threshold = self.to_threshold();
         match threshold {
             0 => Gender::Male,
             254 => Gender::Female,
             255 => Gender::Genderless,
             t => {
-                let gender_value = (pid & 0xFF) as u8;
+                let gender_value = (pid.raw() & 0xFF) as u8;
                 if gender_value < t {
                     Gender::Female
                 } else {
@@ -168,11 +244,15 @@ impl GenderRatio {
 // ===== 特性・色違い =====
 
 /// 特性スロット
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum AbilitySlot {
+    /// 通常特性1
+    #[default]
     First,
+    /// 通常特性2
     Second,
+    /// 夢特性 (Hidden Ability)
     Hidden,
 }
 

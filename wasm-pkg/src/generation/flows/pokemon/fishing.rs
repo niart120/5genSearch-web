@@ -68,8 +68,7 @@ pub fn generate_fishing_pokemon(
 
     // 5. PID 生成
     let reroll_count = if params.shiny_charm { 2 } else { 0 };
-    let (pid, shiny_type) =
-        generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
+    let (pid, shiny_type) = generate_wild_pid_with_reroll(lcg, params.trainer, reroll_count);
 
     // 6. 性格決定
     let (nature, sync_applied) = determine_nature(lcg, sync_success, params.lead_ability);
@@ -90,8 +89,8 @@ pub fn generate_fishing_pokemon(
     }
 
     // === Resolve (乱数消費なし) ===
-    let gender = slot_config.gender_ratio.determine_gender(pid);
-    let ability_slot = ((pid >> 16) & 1) as u8;
+    let gender = pid.gender(slot_config.gender_ratio);
+    let ability_slot = pid.ability_slot();
 
     RawPokemonData {
         pid,

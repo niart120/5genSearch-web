@@ -50,8 +50,7 @@ pub fn generate_normal_pokemon(
 
     // 4. PID 生成
     let reroll_count = if params.shiny_charm { 2 } else { 0 };
-    let (pid, shiny_type) =
-        generate_wild_pid_with_reroll(lcg, params.trainer.tid, params.trainer.sid, reroll_count);
+    let (pid, shiny_type) = generate_wild_pid_with_reroll(lcg, params.trainer, reroll_count);
 
     // 5. 性格決定
     let (nature, sync_applied) = determine_nature(lcg, sync_success, params.lead_ability);
@@ -72,8 +71,8 @@ pub fn generate_normal_pokemon(
     }
 
     // === Resolve (乱数消費なし) ===
-    let gender = slot_config.gender_ratio.determine_gender(pid);
-    let ability_slot = ((pid >> 16) & 1) as u8;
+    let gender = pid.gender(slot_config.gender_ratio);
+    let ability_slot = pid.ability_slot();
 
     RawPokemonData {
         pid,
@@ -168,32 +167,23 @@ mod tests {
 
     #[test]
     fn test_determine_gender() {
-        use crate::types::Gender;
+        use crate::types::{Gender, Pid};
 
         // Male only
-        assert_eq!(
-            GenderRatio::MaleOnly.determine_gender(0x1234_5678),
-            Gender::Male
-        );
+        assert_eq!(Pid(0x1234_5678).gender(GenderRatio::MaleOnly), Gender::Male);
         // Female only
         assert_eq!(
-            GenderRatio::FemaleOnly.determine_gender(0x1234_5678),
+            Pid(0x1234_5678).gender(GenderRatio::FemaleOnly),
             Gender::Female
         );
         // Genderless
         assert_eq!(
-            GenderRatio::Genderless.determine_gender(0x1234_5678),
+            Pid(0x1234_5678).gender(GenderRatio::Genderless),
             Gender::Genderless
         );
         // 1:1 ratio: PID & 0xFF = 0x78 = 120 < 127 → Female
-        assert_eq!(
-            GenderRatio::F1M1.determine_gender(0x1234_5678),
-            Gender::Female
-        );
+        assert_eq!(Pid(0x1234_5678).gender(GenderRatio::F1M1), Gender::Female);
         // PID & 0xFF = 0x80 = 128 >= 127 → Male
-        assert_eq!(
-            GenderRatio::F1M1.determine_gender(0x1234_5680),
-            Gender::Male
-        );
+        assert_eq!(Pid(0x1234_5680).gender(GenderRatio::F1M1), Gender::Male);
     }
 }

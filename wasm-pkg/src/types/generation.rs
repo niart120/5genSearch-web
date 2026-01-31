@@ -8,7 +8,8 @@ use tsify::Tsify;
 use super::config::RomVersion;
 use super::needle::NeedleDirection;
 use super::pokemon::{
-    Gender, GenderRatio, HeldItemSlot, InheritanceSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
+    AbilitySlot, Gender, GenderRatio, HeldItemSlot, InheritanceSlot, Ivs, LeadAbilityEffect,
+    Nature, Pid, ShinyType, TrainerInfo,
 };
 use super::seeds::SeedOrigin;
 
@@ -80,18 +81,6 @@ pub enum EncounterMethod {
     Stationary,
     /// 移動エンカウント (エンカウント判定あり)
     Moving,
-}
-
-// ===== トレーナー情報 =====
-
-/// トレーナー情報
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct TrainerInfo {
-    /// トレーナー ID
-    pub tid: u16,
-    /// 裏 ID
-    pub sid: u16,
 }
 
 // ===== 起動設定 =====
@@ -220,6 +209,24 @@ pub struct GenerationConfig {
 
 // ===== 生成結果 =====
 
+/// ポケモン/卵の共通個体情報
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct CorePokemonData {
+    /// 性格値
+    pub pid: Pid,
+    /// 性格
+    pub nature: Nature,
+    /// 特性スロット
+    pub ability_slot: AbilitySlot,
+    /// 性別
+    pub gender: Gender,
+    /// 色違い種別
+    pub shiny_type: ShinyType,
+    /// 個体値
+    pub ivs: Ivs,
+}
+
 /// 完全な個体データ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -229,19 +236,13 @@ pub struct GeneratedPokemonData {
     pub needle_direction: NeedleDirection,
     /// 生成元情報
     pub source: SeedOrigin,
-    // 基本情報
-    pub pid: u32,
+    // 共通個体情報 (ネスト)
+    pub core: CorePokemonData,
+    // ポケモン固有
     pub species_id: u16,
     pub level: u8,
-    // 個体情報
-    pub nature: Nature,
     pub sync_applied: bool,
-    pub ability_slot: u8,
-    pub gender: Gender,
-    pub shiny_type: ShinyType,
     pub held_item_slot: HeldItemSlot,
-    // IV (既存 Ivs 型を使用)
-    pub ivs: Ivs,
     // === エンカウント付加情報 (排反) ===
     /// 移動エンカウント情報 (Normal/Surfing + Moving 時のみ Some)
     pub moving_encounter: Option<MovingEncounterInfo>,
@@ -260,22 +261,16 @@ pub struct GeneratedEggData {
     pub needle_direction: NeedleDirection,
     /// 生成元情報
     pub source: SeedOrigin,
-    // 基本情報
-    pub pid: u32,
-    // 個体情報
-    pub nature: Nature,
-    pub gender: Gender,
-    pub ability_slot: u8,
-    pub shiny_type: ShinyType,
-    // 遺伝情報 (配列化)
+    // 共通個体情報 (ネスト)
+    pub core: CorePokemonData,
+    // 卵固有
+    /// 遺伝情報 (配列化)
     pub inheritance: [InheritanceSlot; 3],
-    // IV (遺伝適用後)
-    pub ivs: Ivs,
-    // NPC消費による猶予フレーム (consider_npc = false 時は None)
+    /// NPC消費による猶予フレーム (`consider_npc` = false 時は None)
     pub margin_frames: Option<u32>,
 }
 
-// ===== 生成パラメータ (WASM 公開用) =====
+// ===== 生成パラメータ (WASM 公開用) =======
 
 /// かわらずのいし効果
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]

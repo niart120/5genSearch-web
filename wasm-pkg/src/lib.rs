@@ -24,14 +24,15 @@ pub use datetime_search::{
 
 // Re-export common types
 pub use types::{
-    Datetime, DatetimeSearchContext, DsButton, DsConfig, EggFilter, EggGenerationParams,
-    EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType, EverstonePlan,
-    GameStartConfig, GenderRatio, GeneratedEggData, GeneratedPokemonData, GenerationConfig,
-    HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput,
-    KeySpec, LcgSeed, LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed,
-    NeedleDirection, NeedlePattern, PokemonFilter, PokemonGenerationParams, ResultFilter,
-    SaveState, SearchRangeParams, SeedInput, SeedOrigin, ShinyFilter, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, TimeRangeParams, Timer0VCountRange, TrainerInfo,
+    AbilitySlot, CoreDataFilter, CorePokemonData, Datetime, DatetimeSearchContext, DsButton,
+    DsConfig, EggFilter, EggGenerationParams, EncounterMethod, EncounterResult,
+    EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
+    GeneratedEggData, GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType,
+    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed,
+    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
+    NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, SaveState, SearchRangeParams,
+    SeedInput, SeedOrigin, ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
+    TimeRangeParams, Timer0VCountRange, TrainerInfo,
 };
 
 // Re-export core functions

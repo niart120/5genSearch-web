@@ -5,8 +5,8 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::generation::{GeneratedEggData, GeneratedPokemonData};
-use super::pokemon::{Gender, HiddenPowerType, Ivs, Nature, ShinyType};
+use super::generation::{CorePokemonData, GeneratedEggData, GeneratedPokemonData};
+use super::pokemon::{AbilitySlot, Gender, HiddenPowerType, Ivs, Nature, ShinyType};
 
 // ===== IvFilter =====
 
@@ -130,28 +130,28 @@ impl ShinyFilter {
     }
 }
 
-// ===== ResultFilter =====
+// ===== CoreDataFilter =====
 
 /// 生成結果の共通フィルター条件
 ///
-/// Pokemon / Egg 共通の属性をフィルタリング。
+/// `CorePokemonData` に対応するフィルター。
 /// 各フィールドが `None` の場合は条件なし (全件通過)。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ResultFilter {
+pub struct CoreDataFilter {
     /// IV フィルター
     pub iv: Option<IvFilter>,
     /// 性格 (複数指定可、いずれかに一致)
     pub natures: Option<Vec<Nature>>,
     /// 性別
     pub gender: Option<Gender>,
-    /// 特性スロット (0, 1, 2)
-    pub ability_slot: Option<u8>,
+    /// 特性スロット
+    pub ability_slot: Option<AbilitySlot>,
     /// 色違い
     pub shiny: Option<ShinyFilter>,
 }
 
-impl ResultFilter {
+impl CoreDataFilter {
     /// 条件なしフィルター (全件通過)
     pub const fn any() -> Self {
         Self {
@@ -163,40 +163,11 @@ impl ResultFilter {
         }
     }
 
-    /// `GeneratedPokemonData` が条件に一致するか判定
-    pub fn matches_pokemon(&self, data: &GeneratedPokemonData) -> bool {
-        self.matches_core(
-            data.ivs,
-            data.nature,
-            data.gender,
-            data.ability_slot,
-            data.shiny_type,
-        )
-    }
-
-    /// `GeneratedEggData` が条件に一致するか判定
-    pub fn matches_egg(&self, data: &GeneratedEggData) -> bool {
-        self.matches_core(
-            data.ivs,
-            data.nature,
-            data.gender,
-            data.ability_slot,
-            data.shiny_type,
-        )
-    }
-
-    /// 共通の判定ロジック
-    fn matches_core(
-        &self,
-        ivs: Ivs,
-        nature: Nature,
-        gender: Gender,
-        ability_slot: u8,
-        shiny_type: ShinyType,
-    ) -> bool {
+    /// `CorePokemonData` が条件に一致するか判定
+    pub fn matches(&self, core: &CorePokemonData) -> bool {
         // IV フィルター
         if let Some(ref iv_filter) = self.iv
-            && !iv_filter.matches(&ivs)
+            && !iv_filter.matches(&core.ivs)
         {
             return false;
         }
@@ -204,33 +175,43 @@ impl ResultFilter {
         // 性格 (複数指定のいずれかに一致)
         if let Some(ref required_natures) = self.natures
             && !required_natures.is_empty()
-            && !required_natures.contains(&nature)
+            && !required_natures.contains(&core.nature)
         {
             return false;
         }
 
         // 性別
         if let Some(required_gender) = self.gender
-            && gender != required_gender
+            && core.gender != required_gender
         {
             return false;
         }
 
         // 特性スロット
         if let Some(required_slot) = self.ability_slot
-            && ability_slot != required_slot
+            && core.ability_slot != required_slot
         {
             return false;
         }
 
         // 色違い
         if let Some(ref shiny_filter) = self.shiny
-            && !shiny_filter.matches(shiny_type)
+            && !shiny_filter.matches(core.shiny_type)
         {
             return false;
         }
 
         true
+    }
+
+    /// `GeneratedPokemonData` が条件に一致するか判定
+    pub fn matches_pokemon(&self, data: &GeneratedPokemonData) -> bool {
+        self.matches(&data.core)
+    }
+
+    /// `GeneratedEggData` が条件に一致するか判定
+    pub fn matches_egg(&self, data: &GeneratedEggData) -> bool {
+        self.matches(&data.core)
     }
 }
 
@@ -238,13 +219,13 @@ impl ResultFilter {
 
 /// ポケモンフィルター (野生/固定用)
 ///
-/// `ResultFilter` に加え、種族・レベル条件をサポート。
+/// `CoreDataFilter` に加え、種族・レベル条件をサポート。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonFilter {
     /// 共通条件
     #[serde(flatten)]
-    pub base: ResultFilter,
+    pub base: CoreDataFilter,
     /// 種族 ID (複数指定可、いずれかに一致)
     pub species_ids: Option<Vec<u16>>,
     /// レベル範囲 (min, max)
@@ -255,7 +236,7 @@ impl PokemonFilter {
     /// 条件なしフィルター
     pub const fn any() -> Self {
         Self {
-            base: ResultFilter::any(),
+            base: CoreDataFilter::any(),
             species_ids: None,
             level_range: None,
         }
@@ -291,13 +272,13 @@ impl PokemonFilter {
 
 /// 孵化フィルター
 ///
-/// `ResultFilter` に加え、猶予フレーム条件をサポート。
+/// `CoreDataFilter` に加え、猶予フレーム条件をサポート。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct EggFilter {
     /// 共通条件
     #[serde(flatten)]
-    pub base: ResultFilter,
+    pub base: CoreDataFilter,
     /// 猶予フレーム最小値 (NPC消費考慮時)
     pub min_margin_frames: Option<u32>,
 }
@@ -306,7 +287,7 @@ impl EggFilter {
     /// 条件なしフィルター
     pub const fn any() -> Self {
         Self {
-            base: ResultFilter::any(),
+            base: CoreDataFilter::any(),
             min_margin_frames: None,
         }
     }
@@ -335,14 +316,14 @@ impl EggFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{HiddenPowerType, InheritanceSlot, Ivs, NeedleDirection, SeedOrigin};
+    use crate::types::{HiddenPowerType, InheritanceSlot, Ivs, NeedleDirection, Pid, SeedOrigin};
 
     // テスト用ヘルパー: GeneratedPokemonData を生成
     fn make_pokemon(
         ivs: Ivs,
         nature: Nature,
         gender: Gender,
-        ability_slot: u8,
+        ability_slot: AbilitySlot,
         shiny_type: ShinyType,
         species_id: u16,
         level: u8,
@@ -351,16 +332,18 @@ mod tests {
             advance: 0,
             needle_direction: NeedleDirection::E,
             source: SeedOrigin::seed(0.into()),
-            pid: 0,
+            core: CorePokemonData {
+                pid: Pid::ZERO,
+                nature,
+                ability_slot,
+                gender,
+                shiny_type,
+                ivs,
+            },
             species_id,
             level,
-            nature,
             sync_applied: false,
-            ability_slot,
-            gender,
-            shiny_type,
             held_item_slot: crate::types::HeldItemSlot::None,
-            ivs,
             moving_encounter: None,
             special_encounter: None,
             encounter_result: crate::types::EncounterResult::Pokemon,
@@ -372,7 +355,7 @@ mod tests {
         ivs: Ivs,
         nature: Nature,
         gender: Gender,
-        ability_slot: u8,
+        ability_slot: AbilitySlot,
         shiny_type: ShinyType,
         margin_frames: Option<u32>,
     ) -> GeneratedEggData {
@@ -380,13 +363,15 @@ mod tests {
             advance: 0,
             needle_direction: NeedleDirection::E,
             source: SeedOrigin::seed(0.into()),
-            pid: 0,
-            nature,
-            gender,
-            ability_slot,
-            shiny_type,
+            core: CorePokemonData {
+                pid: Pid::ZERO,
+                nature,
+                ability_slot,
+                gender,
+                shiny_type,
+                ivs,
+            },
             inheritance: [InheritanceSlot::default(); 3],
-            ivs,
             margin_frames,
         }
     }
@@ -417,16 +402,16 @@ mod tests {
         assert!(filter.matches(ShinyType::Square));
     }
 
-    // === ResultFilter Tests ===
+    // === CoreDataFilter Tests ===
 
     #[test]
     fn test_result_filter_any_passes_all() {
-        let filter = ResultFilter::any();
+        let filter = CoreDataFilter::any();
         let pokemon = make_pokemon(
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -436,7 +421,7 @@ mod tests {
 
     #[test]
     fn test_result_filter_iv() {
-        let filter = ResultFilter {
+        let filter = CoreDataFilter {
             iv: Some(IvFilter::six_v()),
             ..Default::default()
         };
@@ -445,7 +430,7 @@ mod tests {
             Ivs::uniform(31),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -456,7 +441,7 @@ mod tests {
             Ivs::new(31, 31, 31, 31, 31, 30),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -466,7 +451,7 @@ mod tests {
 
     #[test]
     fn test_result_filter_nature() {
-        let filter = ResultFilter {
+        let filter = CoreDataFilter {
             natures: Some(vec![Nature::Adamant]),
             ..Default::default()
         };
@@ -474,7 +459,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -483,7 +468,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Timid,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -495,7 +480,7 @@ mod tests {
     #[test]
     fn test_result_filter_nature_multiple() {
         // 複数性格指定: Adamant or Jolly
-        let filter = ResultFilter {
+        let filter = CoreDataFilter {
             natures: Some(vec![Nature::Adamant, Nature::Jolly]),
             ..Default::default()
         };
@@ -503,7 +488,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -512,7 +497,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Jolly,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -521,7 +506,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Timid,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -533,7 +518,7 @@ mod tests {
 
     #[test]
     fn test_result_filter_gender() {
-        let filter = ResultFilter {
+        let filter = CoreDataFilter {
             gender: Some(Gender::Female),
             ..Default::default()
         };
@@ -541,7 +526,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Female,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -550,7 +535,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -561,15 +546,15 @@ mod tests {
 
     #[test]
     fn test_result_filter_ability() {
-        let filter = ResultFilter {
-            ability_slot: Some(2),
+        let filter = CoreDataFilter {
+            ability_slot: Some(AbilitySlot::Hidden),
             ..Default::default()
         };
         let pokemon_slot2 = make_pokemon(
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            2,
+            AbilitySlot::Hidden,
             ShinyType::None,
             1,
             50,
@@ -578,7 +563,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -589,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_result_filter_shiny() {
-        let filter = ResultFilter {
+        let filter = CoreDataFilter {
             shiny: Some(ShinyFilter::Shiny),
             ..Default::default()
         };
@@ -597,7 +582,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::Star,
             1,
             50,
@@ -606,7 +591,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -618,7 +603,7 @@ mod tests {
     #[test]
     fn test_result_filter_combined() {
         // 複合条件: 6V + Adamant + Female + Shiny
-        let filter = ResultFilter {
+        let filter = CoreDataFilter {
             iv: Some(IvFilter::six_v()),
             natures: Some(vec![Nature::Adamant]),
             gender: Some(Gender::Female),
@@ -630,7 +615,7 @@ mod tests {
             Ivs::uniform(31),
             Nature::Adamant,
             Gender::Female,
-            0,
+            AbilitySlot::First,
             ShinyType::Star,
             1,
             50,
@@ -641,7 +626,7 @@ mod tests {
             Ivs::uniform(31),
             Nature::Timid,
             Gender::Female,
-            0,
+            AbilitySlot::First,
             ShinyType::Star,
             1,
             50,
@@ -661,7 +646,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             25,
             50,
@@ -670,7 +655,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             50,
@@ -689,7 +674,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             55,
@@ -698,7 +683,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             49,
@@ -707,7 +692,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             1,
             61,
@@ -729,7 +714,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             Some(15),
         );
@@ -737,7 +722,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             Some(5),
         );
@@ -745,7 +730,7 @@ mod tests {
             Ivs::uniform(15),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::None,
             None,
         );
@@ -757,7 +742,7 @@ mod tests {
     #[test]
     fn test_egg_filter_combined() {
         let filter = EggFilter {
-            base: ResultFilter {
+            base: CoreDataFilter {
                 natures: Some(vec![Nature::Jolly]),
                 shiny: Some(ShinyFilter::Shiny),
                 ..Default::default()
@@ -768,7 +753,7 @@ mod tests {
             Ivs::uniform(31),
             Nature::Jolly,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::Square,
             Some(10),
         );
@@ -776,7 +761,7 @@ mod tests {
             Ivs::uniform(31),
             Nature::Adamant,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::Square,
             Some(10),
         );
@@ -784,7 +769,7 @@ mod tests {
             Ivs::uniform(31),
             Nature::Jolly,
             Gender::Male,
-            0,
+            AbilitySlot::First,
             ShinyType::Square,
             Some(3),
         );

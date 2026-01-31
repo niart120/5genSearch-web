@@ -17,16 +17,16 @@ pub use config::{
     RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition, TimeRangeParams,
     Timer0VCountRange,
 };
-pub use filter::{EggFilter, IvFilter, PokemonFilter, ResultFilter, ShinyFilter};
+pub use filter::{CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter};
 pub use generation::{
-    EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig, EncounterType,
-    EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData, GenerationConfig,
-    ItemContent, MovingEncounterInfo, MovingEncounterLikelihood, PokemonGenerationParams,
-    SaveState, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TrainerInfo,
+    CorePokemonData, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
+    EncounterType, EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
+    GenerationConfig, ItemContent, MovingEncounterInfo, MovingEncounterLikelihood,
+    PokemonGenerationParams, SaveState, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
 };
 pub use needle::{NeedleDirection, NeedlePattern, NeedleSearchResult};
 pub use pokemon::{
     AbilitySlot, Gender, GenderRatio, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
-    InheritanceSlot, Ivs, LeadAbilityEffect, Nature, ShinyType,
+    InheritanceSlot, Ivs, LeadAbilityEffect, Nature, Pid, ShinyType, TrainerInfo,
 };
 pub use seeds::{LcgSeed, MtSeed, SeedOrigin};
