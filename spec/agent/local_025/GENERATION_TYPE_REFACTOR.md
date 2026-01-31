@@ -407,16 +407,26 @@ pub struct EggFilter {
 
 ### 4.4 algorithm/pid.rs の変更
 
-既存の `calculate_shiny_type(pid, tid, sid)` 関数は `Pid::shiny_type(TrainerInfo)` に移行。
-ただし、PID 生成ループ内で使用される箇所があるため、内部ヘルパーとして残すか `Pid` メソッドを直接使用するかは実装時に判断。
+既存の関数は `Pid` メソッドに移行し、旧実装は完全に削除する。ヘルパー関数としても残さない。
+
+| 削除対象 | 移行先 |
+|----------|--------|
+| `calculate_shiny_type(pid: u32, tid: u16, sid: u16)` | `Pid::shiny_type(TrainerInfo)` |
+| `GenderRatio::determine_gender(pid: u32)` | `Pid::gender(GenderRatio)` |
 
 ```rust
 // 移行前
 let shiny = calculate_shiny_type(pid, tid, sid);
+let gender = slot_config.gender_ratio.determine_gender(pid);
+let ability_slot = ((pid >> 16) & 1) as u8;
 
 // 移行後
 let shiny = pid.shiny_type(params.trainer);
+let gender = pid.gender(slot_config.gender_ratio);
+let ability_slot = pid.ability_slot();
 ```
+
+PID 生成関数 (`generate_wild_pid`, `generate_egg_pid` 等) 内でリロールループ中に色違い判定を行う箇所も、`Pid::shiny_type` を直接使用する形に統一する。
 
 ## 5. テスト方針
 
@@ -446,27 +456,46 @@ let shiny = pid.shiny_type(params.trainer);
 
 ## 6. 実装チェックリスト
 
+### 6.1 型定義
+
 - [ ] `Pid` NewType を `types/pokemon.rs` に追加
 - [ ] `AbilitySlot` enum を `types/pokemon.rs` に追加
 - [ ] `Pid::ability_slot()` メソッド実装
 - [ ] `Pid::gender(GenderRatio)` メソッド実装
 - [ ] `Pid::shiny_type(TrainerInfo)` メソッド実装
-- [ ] `GenderRatio::determine_gender_from_pid(Pid)` を追加
-- [ ] 既存 `GenderRatio::determine_gender(u32)` を削除
-- [ ] `algorithm/pid.rs` の `calculate_shiny_type` を `Pid::shiny_type` に移行
+- [ ] `GenderRatio::determine_gender_from_pid(Pid)` を追加 (内部実装用)
 - [ ] `CorePokemonData` を `types/generation.rs` に追加
 - [ ] `GeneratedPokemonData` を `core` フィールド使用に変更 (ネスト構造)
 - [ ] `GeneratedEggData` を `core` フィールド使用に変更 (ネスト構造)
+
+### 6.2 旧実装の削除
+
+- [ ] `GenderRatio::determine_gender(pid: u32)` を削除
+- [ ] `algorithm/pid.rs` の `calculate_shiny_type(pid: u32, tid: u16, sid: u16)` を削除
+- [ ] `((pid >> 16) & 1) as u8` パターンを全て `pid.ability_slot()` に置換
+- [ ] `ratio.determine_gender(pid)` パターンを全て `pid.gender(ratio)` に置換
+
+### 6.3 生成フロー更新
+
 - [ ] `algorithm/pid.rs` の戻り値型を `Pid` に変更
 - [ ] 各 flows の ability_slot 計算を `pid.ability_slot()` に変更
 - [ ] 各 flows の gender 計算を `pid.gender(ratio)` に変更
 - [ ] 各 flows の shiny_type 取得を `pid.shiny_type(trainer)` に変更
 - [ ] `RawPokemonData` / `RawEggData` のフィールド型更新
+
+### 6.4 フィルター更新
+
 - [ ] `ResultFilter` → `CoreDataFilter` にリネーム
 - [ ] `CoreDataFilter::ability_slot` を `Option<AbilitySlot>` に変更
 - [ ] `PokemonFilter` / `EggFilter` の `base` フィールド型を `CoreDataFilter` に変更
+
+### 6.5 re-export 更新
+
 - [ ] `types/mod.rs` の re-export 更新
 - [ ] `lib.rs` の re-export 更新
+
+### 6.6 検証
+
 - [ ] ユニットテスト追加・修正
 - [ ] `cargo test` 通過確認
 - [ ] `cargo clippy` 通過確認
