@@ -150,6 +150,27 @@ impl Pid {
     pub fn gender(self, ratio: GenderRatio) -> Gender {
         ratio.determine_gender_from_pid(self)
     }
+
+    /// 色違い判定
+    ///
+    /// PID と TrainerInfo (TID/SID) から色違いタイプを判定。
+    /// - xor == 0: Square (ひし形)
+    /// - 1 <= xor < 8: Star (星型)
+    /// - 8 <= xor: None (通常)
+    #[inline]
+    pub fn shiny_type(self, trainer: TrainerInfo) -> ShinyType {
+        let pid_high = (self.0 >> 16) as u16;
+        let pid_low = (self.0 & 0xFFFF) as u16;
+        let xor = pid_high ^ pid_low ^ trainer.tid ^ trainer.sid;
+
+        if xor == 0 {
+            ShinyType::Square
+        } else if xor < 8 {
+            ShinyType::Star
+        } else {
+            ShinyType::None
+        }
+    }
 }
 ```
 
@@ -375,13 +396,27 @@ pub struct EggFilter {
 
 ### 4.3 Pid メソッド設計の方針
 
-| メソッド | 戻り値 | 説明 |
-|----------|--------|------|
-| `raw()` | `u32` | 生の値を取得 |
-| `ability_slot()` | `AbilitySlot` | First/Second を返す。Hidden は呼び出し側で上書き |
-| `gender(GenderRatio)` | `Gender` | 性別比を受け取って性別を導出 |
+| メソッド | 引数 | 戻り値 | 説明 |
+|----------|------|--------|------|
+| `raw()` | なし | `u32` | 生の値を取得 |
+| `ability_slot()` | なし | `AbilitySlot` | First/Second を返す。Hidden は呼び出し側で上書き |
+| `gender(ratio)` | `GenderRatio` | `Gender` | 性別比を受け取って性別を導出 |
+| `shiny_type(trainer)` | `TrainerInfo` | `ShinyType` | TID/SID を受け取って色違いタイプを導出 |
 
 夢特性判定は PID からは導出不可能 (別途乱数ロールで決定) のため、`ability_slot()` は通常特性のみを返す設計とする。
+
+### 4.4 algorithm/pid.rs の変更
+
+既存の `calculate_shiny_type(pid, tid, sid)` 関数は `Pid::shiny_type(TrainerInfo)` に移行。
+ただし、PID 生成ループ内で使用される箇所があるため、内部ヘルパーとして残すか `Pid` メソッドを直接使用するかは実装時に判断。
+
+```rust
+// 移行前
+let shiny = calculate_shiny_type(pid, tid, sid);
+
+// 移行後
+let shiny = pid.shiny_type(params.trainer);
+```
 
 ## 5. テスト方針
 
@@ -391,6 +426,7 @@ pub struct EggFilter {
 |------------|----------|
 | `Pid::ability_slot` | bit16 が 0 → First、1 → Second を返すこと |
 | `Pid::gender` | GenderRatio と組み合わせて正しい Gender を返すこと |
+| `Pid::shiny_type` | TrainerInfo と組み合わせて正しい ShinyType を返すこと (Square/Star/None) |
 | `GenderRatio::determine_gender_from_pid` | 既存テストと同等の動作 |
 
 ### 5.2 統合テスト
@@ -412,15 +448,19 @@ pub struct EggFilter {
 
 - [ ] `Pid` NewType を `types/pokemon.rs` に追加
 - [ ] `AbilitySlot` enum を `types/pokemon.rs` に追加
-- [ ] `Pid::ability_slot()` / `Pid::gender(GenderRatio)` メソッド実装
+- [ ] `Pid::ability_slot()` メソッド実装
+- [ ] `Pid::gender(GenderRatio)` メソッド実装
+- [ ] `Pid::shiny_type(TrainerInfo)` メソッド実装
 - [ ] `GenderRatio::determine_gender_from_pid(Pid)` を追加
 - [ ] 既存 `GenderRatio::determine_gender(u32)` を削除
+- [ ] `algorithm/pid.rs` の `calculate_shiny_type` を `Pid::shiny_type` に移行
 - [ ] `CorePokemonData` を `types/generation.rs` に追加
 - [ ] `GeneratedPokemonData` を `core` フィールド使用に変更 (ネスト構造)
 - [ ] `GeneratedEggData` を `core` フィールド使用に変更 (ネスト構造)
 - [ ] `algorithm/pid.rs` の戻り値型を `Pid` に変更
 - [ ] 各 flows の ability_slot 計算を `pid.ability_slot()` に変更
 - [ ] 各 flows の gender 計算を `pid.gender(ratio)` に変更
+- [ ] 各 flows の shiny_type 取得を `pid.shiny_type(trainer)` に変更
 - [ ] `RawPokemonData` / `RawEggData` のフィールド型更新
 - [ ] `ResultFilter` → `CoreDataFilter` にリネーム
 - [ ] `CoreDataFilter::ability_slot` を `Option<AbilitySlot>` に変更
