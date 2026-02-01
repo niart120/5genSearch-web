@@ -127,6 +127,17 @@ impl DateTimeCodeEnumerator {
     }
 }
 
+/// 経過秒数から日時に変換
+///
+/// 2000年1月1日 00:00:00 からの経過秒数を (year, month, day, hour, minute, second) に変換。
+#[allow(clippy::cast_possible_truncation)]
+pub fn seconds_to_datetime(total_seconds: u64) -> (u16, u8, u8, u8, u8, u8) {
+    // DS の探索範囲 (2000-2099) では u32 への truncation は発生しない
+    let days = (total_seconds / 86400) as u32;
+    let secs = (total_seconds % 86400) as u32;
+    seconds_to_datetime_parts(days, secs)
+}
+
 /// 日数と秒数から日時パーツに変換
 #[allow(clippy::cast_possible_truncation)]
 fn seconds_to_datetime_parts(days: u32, secs: u32) -> (u16, u8, u8, u8, u8, u8) {

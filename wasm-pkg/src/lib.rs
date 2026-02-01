@@ -19,7 +19,9 @@ pub mod gpu;
 pub use datetime_search::{
     EggDatetimeSearchBatch, EggDatetimeSearchParams, EggDatetimeSearchResult, EggDatetimeSearcher,
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
-    generate_egg_search_tasks, generate_mtseed_search_tasks,
+    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult, TrainerInfoSearcher,
+    generate_egg_search_tasks, generate_mtseed_search_tasks, generate_trainer_info_search_tasks,
+    split_search_range,
 };
 
 // Re-export common types
@@ -32,7 +34,7 @@ pub use types::{
     LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
     NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, SaveState, SearchRangeParams,
     SeedInput, SeedOrigin, ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
-    TimeRangeParams, Timer0VCountRange, TrainerInfo,
+    TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter,
 };
 
 // Re-export core functions

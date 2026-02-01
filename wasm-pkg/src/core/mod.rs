@@ -7,6 +7,7 @@ pub mod datetime_codes;
 pub mod lcg;
 pub mod mt;
 pub mod needle;
+pub mod offset;
 pub mod seed_resolver;
 pub mod sha1;
 
@@ -19,4 +20,5 @@ pub use datetime_codes::{
 pub use lcg::{LCG_INCREMENT, LCG_MULTIPLIER, Lcg64, roll_fraction};
 pub use mt::{Mt19937, Mt19937x4};
 pub use needle::{calc_report_needle_direction, calculate_needle_direction};
+pub use offset::{calculate_game_offset, calculate_mt_offset, calculate_trainer_info};
 pub use sha1::{HashValues, calculate_pokemon_sha1, calculate_pokemon_sha1_simd};

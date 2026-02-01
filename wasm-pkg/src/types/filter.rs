@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use super::generation::{CorePokemonData, GeneratedEggData, GeneratedPokemonData};
-use super::pokemon::{AbilitySlot, Gender, HiddenPowerType, Ivs, Nature, ShinyType};
+use super::pokemon::{
+    AbilitySlot, Gender, HiddenPowerType, Ivs, Nature, Pid, ShinyType, TrainerInfo,
+};
 
 // ===== IvFilter =====
 
@@ -127,6 +129,49 @@ impl ShinyFilter {
             Self::Star => shiny_type == ShinyType::Star,
             Self::Square => shiny_type == ShinyType::Square,
         }
+    }
+}
+
+// ===== TrainerInfoFilter =====
+
+/// `TrainerInfo` 検索フィルタ
+///
+/// TID/SID の完全一致、または `ShinyPID` による色違い判定を行う。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct TrainerInfoFilter {
+    /// 検索対象の TID (None で条件なし)
+    pub tid: Option<u16>,
+    /// 検索対象の SID (None で条件なし)
+    pub sid: Option<u16>,
+    /// 色違いにしたい個体の PID (None で条件なし)
+    pub shiny_pid: Option<Pid>,
+}
+
+impl TrainerInfoFilter {
+    /// フィルタ条件に一致するか判定
+    ///
+    /// - TID/SID は完全一致
+    /// - `ShinyPID` 指定時は色違いであることを要求
+    #[inline]
+    pub fn matches(&self, trainer: &TrainerInfo, shiny_type: ShinyType) -> bool {
+        // TID フィルタ
+        if let Some(tid) = self.tid
+            && trainer.tid != tid
+        {
+            return false;
+        }
+        // SID フィルタ
+        if let Some(sid) = self.sid
+            && trainer.sid != sid
+        {
+            return false;
+        }
+        // ShinyPID フィルタ (指定時は色違いであることを要求)
+        if self.shiny_pid.is_some() && shiny_type == ShinyType::None {
+            return false;
+        }
+        true
     }
 }
 

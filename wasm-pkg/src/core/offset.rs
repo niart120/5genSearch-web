@@ -5,8 +5,10 @@
 //!
 //! 元実装: <https://github.com/niart120/pokemon-gen5-initseed/blob/main/wasm-pkg/src/offset_calculator.rs>
 
-use crate::core::lcg::Lcg64;
-use crate::types::{EncounterType, GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode};
+use super::lcg::Lcg64;
+use crate::types::{
+    EncounterType, GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode, TrainerInfo,
+};
 
 /// PT操作の6段階テーブル定義（元実装準拠）
 /// 各レベルで最大5つの閾値をチェックする
@@ -267,6 +269,100 @@ pub const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterT
     }
 }
 
+// ===== TrainerInfo 算出 =====
+
+/// TID/SID 決定直前まで LCG を進める (BW)
+fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save_state: SaveState) {
+    match save_state {
+        SaveState::WithSave => {
+            // PT×2 + チラーミィPID + チラーミィID
+            probability_table_multiple(lcg, 2);
+            consume_random(lcg, 2);
+        }
+        SaveState::NoSave => {
+            // PT×3 + チラーミィPID + チラーミィID
+            probability_table_multiple(lcg, 3);
+            consume_random(lcg, 2);
+        }
+        SaveState::WithMemoryLink => {
+            // BW では MemoryLink は使用不可 (validate で弾かれる)
+        }
+    }
+}
+
+/// TID/SID 決定直前まで LCG を進める (BW2)
+fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save_state: SaveState) {
+    match save_state {
+        SaveState::WithMemoryLink => {
+            // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
+            consume_random(lcg, 1);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 2);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 2);
+            consume_random(lcg, 2);
+        }
+        SaveState::WithSave => {
+            // Rand×1 + PT×1 + Rand×3 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
+            consume_random(lcg, 1);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 3);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 2);
+            consume_random(lcg, 2);
+        }
+        SaveState::NoSave => {
+            // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×4 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
+            consume_random(lcg, 1);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 2);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 4);
+            probability_table_multiple(lcg, 1);
+            consume_random(lcg, 2);
+            consume_random(lcg, 2);
+        }
+    }
+}
+
+/// `LcgSeed` から `TrainerInfo` を算出
+///
+/// ゲーム初期化処理を経て TID/SID が決定されるポイントまで LCG を進め、
+/// その時点の乱数値から TID/SID を計算する。
+///
+/// # Errors
+/// - `StartMode::Continue` の場合 (ID 調整対象外)
+/// - 無効な `GameStartConfig` の組み合わせ
+pub fn calculate_trainer_info(
+    seed: LcgSeed,
+    version: RomVersion,
+    config: GameStartConfig,
+) -> Result<TrainerInfo, String> {
+    // Continue モードは ID 調整不可
+    if config.start_mode == StartMode::Continue {
+        return Err("TrainerInfo search requires NewGame mode".into());
+    }
+
+    config.validate(version)?;
+
+    let mut lcg = Lcg64::new(seed);
+
+    // TID/SID 決定直前まで進める
+    if version.is_bw2() {
+        advance_to_tid_sid_point_bw2(&mut lcg, config.save_state);
+    } else {
+        advance_to_tid_sid_point_bw(&mut lcg, config.save_state);
+    }
+
+    // TID/SID 算出 (元実装準拠)
+    let rand_value = lcg.next().unwrap_or(0);
+    let tid_sid_combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
+    let tid = (tid_sid_combined & 0xFFFF) as u16;
+    let sid = ((tid_sid_combined >> 16) & 0xFFFF) as u16;
+
+    Ok(TrainerInfo { tid, sid })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -416,5 +512,56 @@ mod tests {
         let result_seed = lcg.current_seed();
         // オフセット適用後の seed は元と異なる
         assert_ne!(result_seed, seed);
+    }
+
+    // ===== TrainerInfo テスト =====
+
+    #[test]
+    fn test_calculate_trainer_info_continue_mode_error() {
+        let seed = LcgSeed::new(0x1234_5678);
+        let config = GameStartConfig {
+            start_mode: StartMode::Continue,
+            save_state: SaveState::WithSave,
+        };
+        let result = calculate_trainer_info(seed, RomVersion::Black, config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("NewGame"));
+    }
+
+    #[test]
+    fn test_calculate_trainer_info_bw_memory_link_error() {
+        let seed = LcgSeed::new(0x1234_5678);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save_state: SaveState::WithMemoryLink,
+        };
+        let result = calculate_trainer_info(seed, RomVersion::Black, config);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_bw_new_game_no_save_tid_sid() {
+        // 元実装互換性テスト
+        let seed = LcgSeed::new(0x96FD_2CBD_8A22_63A3);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save_state: SaveState::NoSave,
+        };
+        let trainer = calculate_trainer_info(seed, RomVersion::Black, config).unwrap();
+        assert_eq!(trainer.tid, 42267);
+        assert_eq!(trainer.sid, 29515);
+    }
+
+    #[test]
+    fn test_bw2_new_game_no_save_tid_sid() {
+        // 元実装互換性テスト
+        let seed = LcgSeed::new(0x90AB_CDEF);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save_state: SaveState::NoSave,
+        };
+        let trainer = calculate_trainer_info(seed, RomVersion::Black2, config).unwrap();
+        assert_eq!(trainer.tid, 910);
+        assert_eq!(trainer.sid, 42056);
     }
 }
