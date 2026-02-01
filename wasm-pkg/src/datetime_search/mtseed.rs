@@ -533,12 +533,7 @@ mod tests {
         };
 
         // 4 Worker で時間分割 (組み合わせ数 = 1 なので 4 チャンク)
-        let tasks = generate_mtseed_search_tasks(
-            context,
-            vec![expected_mt_seed],
-            date_range,
-            4,
-        );
+        let tasks = generate_mtseed_search_tasks(context, vec![expected_mt_seed], date_range, 4);
 
         assert_eq!(tasks.len(), 4);
 
@@ -552,7 +547,11 @@ mod tests {
             let mut searcher = MtseedDatetimeSearcher::new(task).unwrap();
             while !searcher.is_done() {
                 let batch = searcher.next_batch(10000);
-                if batch.results.iter().any(|r| r.mt_seed() == expected_mt_seed) {
+                if batch
+                    .results
+                    .iter()
+                    .any(|r| r.mt_seed() == expected_mt_seed)
+                {
                     found = true;
                     break;
                 }
@@ -562,6 +561,9 @@ mod tests {
             }
         }
 
-        assert!(found, "Expected MT Seed should be found in one of the split tasks");
+        assert!(
+            found,
+            "Expected MT Seed should be found in one of the split tasks"
+        );
     }
 }

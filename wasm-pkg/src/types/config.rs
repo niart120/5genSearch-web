@@ -522,22 +522,10 @@ impl DateRangeParams {
     /// `SearchRangeParams` を生成する。
     #[allow(clippy::cast_possible_truncation)]
     pub fn to_search_range(&self) -> SearchRangeParams {
-        let start_seconds = datetime_to_seconds(
-            self.start_year,
-            self.start_month,
-            self.start_day,
-            0,
-            0,
-            0,
-        );
-        let end_seconds = datetime_to_seconds(
-            self.end_year,
-            self.end_month,
-            self.end_day,
-            23,
-            59,
-            59,
-        );
+        let start_seconds =
+            datetime_to_seconds(self.start_year, self.start_month, self.start_day, 0, 0, 0);
+        let end_seconds =
+            datetime_to_seconds(self.end_year, self.end_month, self.end_day, 23, 59, 59);
         // 範囲秒数 = 終了 - 開始 + 1
         // DS 探索範囲 (2000-2099) では u32 に収まる
         let range_seconds = (end_seconds - start_seconds + 1) as u32;

@@ -420,8 +420,7 @@ mod tests {
             end_day: 1,
         };
 
-        let tasks =
-            generate_trainer_info_search_tasks(context, filter, game_start, date_range, 2);
+        let tasks = generate_trainer_info_search_tasks(context, filter, game_start, date_range, 2);
 
         // Timer0: 2パターン × VCount: 1パターン × KeyCode: 1パターン × time_chunks: 1 = 2タスク
         // (worker_count = 2, combo_count = 2 → time_chunks = 1)
