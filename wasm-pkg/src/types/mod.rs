@@ -13,9 +13,9 @@ mod seeds;
 // ===== Re-exports =====
 
 pub use config::{
-    Datetime, DatetimeSearchContext, DsButton, DsConfig, Hardware, KeyCode, KeyInput, KeySpec,
-    RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition, TimeRangeParams,
-    Timer0VCountRange,
+    DateRangeParams, Datetime, DatetimeSearchContext, DsButton, DsConfig, Hardware, KeyCode,
+    KeyInput, KeySpec, RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition,
+    TimeRangeParams, Timer0VCountRange,
 };
 pub use filter::{
     CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter, TrainerInfoFilter,

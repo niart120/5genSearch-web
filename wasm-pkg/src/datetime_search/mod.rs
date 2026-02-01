@@ -43,6 +43,22 @@ pub(crate) fn expand_combinations(context: &DatetimeSearchContext) -> Vec<Startu
     combinations
 }
 
+/// 組み合わせ数と Worker 数から時間分割数を計算
+///
+/// # Arguments
+/// - `combo_count`: 組み合わせ数 (`Timer0` × `VCount` × `KeyCode`)
+/// - `worker_count`: Worker 数
+///
+/// # Returns
+/// 時間分割数 (最低 1)
+pub(crate) fn calculate_time_chunks(combo_count: u32, worker_count: u32) -> u32 {
+    if combo_count == 0 {
+        1
+    } else {
+        worker_count.div_ceil(combo_count)
+    }
+}
+
 /// 日時範囲分割 (共通関数)
 ///
 /// 検索範囲を `n` 分割して、各 Worker に渡すための `SearchRangeParams` リストを生成する。
@@ -282,5 +298,38 @@ mod tests {
 
         // 2番目のチャンクは翌日になる
         assert_eq!(chunks[1].start_day, 2);
+    }
+
+    // ===== calculate_time_chunks のテスト =====
+
+    #[test]
+    fn test_calculate_time_chunks_zero_combo() {
+        // 組み合わせ数が0の場合、分割数は1
+        assert_eq!(calculate_time_chunks(0, 4), 1);
+    }
+
+    #[test]
+    fn test_calculate_time_chunks_equal() {
+        // 組み合わせ数 == Worker 数の場合、分割数は1
+        assert_eq!(calculate_time_chunks(4, 4), 1);
+    }
+
+    #[test]
+    fn test_calculate_time_chunks_more_combos() {
+        // 組み合わせ数 > Worker 数の場合、分割数は1
+        assert_eq!(calculate_time_chunks(8, 4), 1);
+    }
+
+    #[test]
+    fn test_calculate_time_chunks_fewer_combos() {
+        // 組み合わせ数 < Worker 数の場合、分割で補う
+        assert_eq!(calculate_time_chunks(2, 8), 4); // 8 / 2 = 4
+        assert_eq!(calculate_time_chunks(1, 8), 8); // 8 / 1 = 8
+    }
+
+    #[test]
+    fn test_calculate_time_chunks_not_divisible() {
+        // 割り切れない場合、切り上げ
+        assert_eq!(calculate_time_chunks(3, 10), 4); // ceil(10 / 3) = 4
     }
 }

@@ -291,31 +291,31 @@ pub(crate) fn calculate_time_chunks(combo_count: u32, worker_count: u32) -> u32 
 
 ### Phase 1: 型定義
 
-- [ ] `DateRangeParams` を `types/config.rs` に追加
-- [ ] `validate()` メソッド実装
-- [ ] `to_search_range()` メソッド実装
-- [ ] `types/mod.rs` で re-export
-- [ ] `lib.rs` で re-export
+- [x] `DateRangeParams` を `types/config.rs` に追加
+- [x] `validate()` メソッド実装
+- [x] `to_search_range()` メソッド実装
+- [x] `types/mod.rs` で re-export
+- [x] `lib.rs` で re-export
 
 ### Phase 2: ヘルパー関数
 
-- [ ] `calculate_time_chunks()` を `datetime_search/mod.rs` に追加
+- [x] `calculate_time_chunks()` を `datetime_search/mod.rs` に追加
 
 ### Phase 3: タスク生成関数の更新
 
-- [ ] `generate_mtseed_search_tasks` 引数変更・ロジック更新
-- [ ] `generate_egg_search_tasks` 引数変更・ロジック更新
-- [ ] `generate_trainer_info_search_tasks` 引数変更・ロジック更新
+- [x] `generate_mtseed_search_tasks` 引数変更・ロジック更新
+- [x] `generate_egg_search_tasks` 引数変更・ロジック更新
+- [x] `generate_trainer_info_search_tasks` 引数変更・ロジック更新
 
 ### Phase 4: テスト
 
-- [ ] `DateRangeParams` のユニットテスト
-- [ ] 各タスク生成関数のテスト更新
-- [ ] 統合テスト追加
+- [x] `DateRangeParams` のユニットテスト
+- [x] 各タスク生成関数のテスト更新
+- [x] 統合テスト追加
 
 ### Phase 5: 検証
 
-- [ ] `cargo test` 全パス
-- [ ] `cargo clippy` 警告なし
-- [ ] `pnpm build:wasm` 成功
-- [ ] TypeScript 型定義に `DateRangeParams` が含まれる
+- [x] `cargo test` 全パス
+- [x] `cargo clippy` 警告なし
+- [x] `pnpm build:wasm` 成功
+- [x] TypeScript 型定義に `DateRangeParams` が含まれる

@@ -7,10 +7,12 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::types::{
-    DatetimeSearchContext, MtSeed, SearchRangeParams, SeedOrigin, StartupCondition, TimeRangeParams,
+    DateRangeParams, DatetimeSearchContext, MtSeed, SearchRangeParams, SeedOrigin,
+    StartupCondition, TimeRangeParams,
 };
 
 use super::base::DatetimeHashGenerator;
+use super::{calculate_time_chunks, expand_combinations, split_search_range};
 
 // Re-export DsConfig from types for API convenience
 pub use crate::types::DsConfig;
@@ -144,27 +146,46 @@ impl MtseedDatetimeSearcher {
 
 /// タスク生成関数
 ///
-/// `DatetimeSearchContext` から組み合わせを展開し、
-/// 各 Worker に渡すパラメータを生成する。
+/// `DatetimeSearchContext` と `DateRangeParams` から、
+/// 組み合わせ × 時間チャンク のクロス積でタスクを生成する。
+/// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
+///
+/// # Arguments
+/// - `context`: 検索コンテキスト (Timer0/VCount/KeyCode 範囲)
+/// - `target_seeds`: 検索対象の MT Seed
+/// - `date_range`: 日付範囲 (開始日〜終了日)
+/// - `worker_count`: Worker 数
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::cast_possible_truncation)]
 pub fn generate_mtseed_search_tasks(
     context: DatetimeSearchContext,
     target_seeds: Vec<MtSeed>,
-    search_range: SearchRangeParams,
+    date_range: DateRangeParams,
+    worker_count: u32,
 ) -> Vec<MtseedDatetimeSearchParams> {
-    // 1. 組み合わせ展開 (共通関数を使用)
-    let combinations = super::expand_combinations(&context);
+    let search_range = date_range.to_search_range();
+    let combinations = expand_combinations(&context);
+    let combo_count = combinations.len() as u32;
 
-    // 2. タスク生成 (各組み合わせにつき1タスク)
+    // 時間分割数を計算
+    let time_chunks = calculate_time_chunks(combo_count, worker_count);
+    let ranges = split_search_range(search_range, time_chunks);
+
+    // 組み合わせ × 時間チャンク のクロス積でタスク生成
     combinations
         .into_iter()
-        .map(|condition| MtseedDatetimeSearchParams {
-            target_seeds: target_seeds.clone(),
-            ds: context.ds.clone(),
-            time_range: context.time_range.clone(),
-            search_range: search_range.clone(),
-            condition,
+        .flat_map(|condition| {
+            let target_seeds = target_seeds.clone();
+            let ds = context.ds.clone();
+            let time_range = context.time_range.clone();
+            ranges.iter().map(move |range| MtseedDatetimeSearchParams {
+                target_seeds: target_seeds.clone(),
+                ds: ds.clone(),
+                time_range: time_range.clone(),
+                search_range: range.clone(),
+                condition,
+            })
         })
         .collect()
 }
@@ -172,8 +193,8 @@ pub fn generate_mtseed_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        Datetime, DsButton, Hardware, KeyCode, KeySpec, LcgSeed, RomRegion, RomVersion,
-        Timer0VCountRange,
+        DateRangeParams, Datetime, DsButton, Hardware, KeyCode, KeySpec, LcgSeed, RomRegion,
+        RomVersion, Timer0VCountRange,
     };
 
     use super::*;
@@ -360,19 +381,63 @@ mod tests {
             key_spec: KeySpec::from_buttons(vec![DsButton::A, DsButton::B]), // 4 combinations
         };
 
-        let search_range = SearchRangeParams {
+        let date_range = DateRangeParams {
             start_year: 2023,
             start_month: 1,
             start_day: 1,
-            start_second_offset: 0,
-            range_seconds: 1,
+            end_year: 2023,
+            end_month: 1,
+            end_day: 1,
         };
 
         let tasks =
-            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], search_range);
+            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], date_range, 4);
 
-        // 1 range * 1 timer0 * 1 vcount * 4 key_codes = 4 combinations
+        // 4 combinations * 1 time chunk = 4 tasks
+        // (worker_count = 4, combo_count = 4 → time_chunks = 1)
         assert_eq!(tasks.len(), 4);
+    }
+
+    #[test]
+    fn test_generate_mtseed_search_tasks_with_time_split() {
+        let context = DatetimeSearchContext {
+            ds: DsConfig {
+                mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+                hardware: Hardware::DsLite,
+                version: RomVersion::Black,
+                region: RomRegion::Jpn,
+            },
+            time_range: TimeRangeParams {
+                hour_start: 0,
+                hour_end: 23,
+                minute_start: 0,
+                minute_end: 59,
+                second_start: 0,
+                second_end: 59,
+            },
+            ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x5A)],
+            key_spec: KeySpec::from_buttons(vec![]), // 1 combination (no buttons)
+        };
+
+        let date_range = DateRangeParams {
+            start_year: 2023,
+            start_month: 1,
+            start_day: 1,
+            end_year: 2023,
+            end_month: 1,
+            end_day: 1,
+        };
+
+        let tasks =
+            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], date_range, 4);
+
+        // 1 combination * 4 time chunks = 4 tasks
+        // (worker_count = 4, combo_count = 1 → time_chunks = 4)
+        assert_eq!(tasks.len(), 4);
+
+        // 各タスクの合計秒数が元の範囲と一致
+        let total_seconds: u32 = tasks.iter().map(|t| t.search_range.range_seconds).sum();
+        assert_eq!(total_seconds, 86400);
     }
 
     #[test]
@@ -427,5 +492,78 @@ mod tests {
             StartupCondition::new(0x0C79, 0x60, KeyCode::NONE),
         );
         assert_eq!(origin_startup.mt_seed(), expected_mt_seed);
+    }
+
+    /// 統合テスト: 分割されたタスクのいずれかで既知 Seed が見つかること
+    ///
+    /// 時間分割を行った場合でも、検索対象の Seed が
+    /// いずれかのタスクで見つかることを確認する。
+    #[test]
+    fn test_mtseed_tasks_find_known_seed_in_split() {
+        // 期待される LCG Seed から MT Seed を計算
+        let expected_lcg_seed = LcgSeed::new(0x7683_6078_1D1C_E6DD);
+        let expected_mt_seed = expected_lcg_seed.derive_mt_seed();
+
+        let context = DatetimeSearchContext {
+            ds: DsConfig {
+                mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
+                hardware: Hardware::DsLite,
+                version: RomVersion::Black,
+                region: RomRegion::Jpn,
+            },
+            time_range: TimeRangeParams {
+                hour_start: 0,
+                hour_end: 23,
+                minute_start: 0,
+                minute_end: 59,
+                second_start: 0,
+                second_end: 59,
+            },
+            ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x60)],
+            key_spec: KeySpec::from_buttons(vec![]), // 1 combination
+        };
+
+        let date_range = DateRangeParams {
+            start_year: 2010,
+            start_month: 9,
+            start_day: 18,
+            end_year: 2010,
+            end_month: 9,
+            end_day: 18,
+        };
+
+        // 4 Worker で時間分割 (組み合わせ数 = 1 なので 4 チャンク)
+        let tasks = generate_mtseed_search_tasks(context, vec![expected_mt_seed], date_range, 4);
+
+        assert_eq!(tasks.len(), 4);
+
+        // 各タスクの合計秒数が元の範囲と一致
+        let total_seconds: u32 = tasks.iter().map(|t| t.search_range.range_seconds).sum();
+        assert_eq!(total_seconds, 86400);
+
+        // いずれかのタスクで Seed が見つかることを確認
+        let mut found = false;
+        for task in tasks {
+            let mut searcher = MtseedDatetimeSearcher::new(task).unwrap();
+            while !searcher.is_done() {
+                let batch = searcher.next_batch(10000);
+                if batch
+                    .results
+                    .iter()
+                    .any(|r| r.mt_seed() == expected_mt_seed)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if found {
+                break;
+            }
+        }
+
+        assert!(
+            found,
+            "Expected MT Seed should be found in one of the split tasks"
+        );
     }
 }
