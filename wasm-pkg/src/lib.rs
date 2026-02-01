@@ -26,8 +26,8 @@ pub use datetime_search::{
 
 // Re-export common types
 pub use types::{
-    AbilitySlot, CoreDataFilter, CorePokemonData, Datetime, DatetimeSearchContext, DsButton,
-    DsConfig, EggFilter, EggGenerationParams, EncounterMethod, EncounterResult,
+    AbilitySlot, CoreDataFilter, CorePokemonData, DateRangeParams, Datetime, DatetimeSearchContext,
+    DsButton, DsConfig, EggFilter, EggGenerationParams, EncounterMethod, EncounterResult,
     EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
     GeneratedEggData, GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType,
     IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed,

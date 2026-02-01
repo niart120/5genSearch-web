@@ -8,12 +8,13 @@ use wasm_bindgen::prelude::*;
 
 use crate::core::offset::calculate_trainer_info;
 use crate::types::{
-    DatetimeSearchContext, DsConfig, GameStartConfig, SearchRangeParams, SeedOrigin, ShinyType,
-    StartMode, StartupCondition, TimeRangeParams, TrainerInfo, TrainerInfoFilter,
+    DateRangeParams, DatetimeSearchContext, DsConfig, GameStartConfig, SearchRangeParams,
+    SeedOrigin, ShinyType, StartMode, StartupCondition, TimeRangeParams, TrainerInfo,
+    TrainerInfoFilter,
 };
 
 use super::base::DatetimeHashGenerator;
-use super::expand_combinations;
+use super::{calculate_time_chunks, expand_combinations, split_search_range};
 
 // ===== 型定義 =====
 
@@ -187,29 +188,49 @@ impl TrainerInfoSearcher {
 
 /// 検索タスクを生成
 ///
-/// `DatetimeSearchContext` から `Timer0 × VCount × KeyCode` の全組み合わせを展開し、
-/// 各組み合わせに対する `TrainerInfoSearchParams` を生成する。
+/// `DatetimeSearchContext` と `DateRangeParams` から、
+/// 組み合わせ × 時間チャンク のクロス積でタスクを生成する。
+/// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
+///
+/// # Arguments
+/// - `context`: 検索コンテキスト (Timer0/VCount/KeyCode 範囲)
+/// - `filter`: 検索フィルタ
+/// - `game_start`: 起動設定
+/// - `date_range`: 日付範囲 (開始日〜終了日)
+/// - `worker_count`: Worker 数
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::cast_possible_truncation)]
 pub fn generate_trainer_info_search_tasks(
-    filter: TrainerInfoFilter,
-    ds: DsConfig,
-    time_range: TimeRangeParams,
-    search_range: SearchRangeParams,
     context: DatetimeSearchContext,
+    filter: TrainerInfoFilter,
     game_start: GameStartConfig,
+    date_range: DateRangeParams,
+    worker_count: u32,
 ) -> Vec<TrainerInfoSearchParams> {
+    let search_range = date_range.to_search_range();
     let combinations = expand_combinations(&context);
+    let combo_count = combinations.len() as u32;
 
+    // 時間分割数を計算
+    let time_chunks = calculate_time_chunks(combo_count, worker_count);
+    let ranges = split_search_range(search_range, time_chunks);
+
+    // 組み合わせ × 時間チャンク のクロス積でタスク生成
     combinations
         .into_iter()
-        .map(|condition| TrainerInfoSearchParams {
-            filter: filter.clone(),
-            ds: ds.clone(),
-            time_range: time_range.clone(),
-            search_range: search_range.clone(),
-            condition,
-            game_start,
+        .flat_map(|condition| {
+            let filter = filter.clone();
+            let ds = context.ds.clone();
+            let time_range = context.time_range.clone();
+            ranges.iter().map(move |range| TrainerInfoSearchParams {
+                filter: filter.clone(),
+                ds: ds.clone(),
+                time_range: time_range.clone(),
+                search_range: range.clone(),
+                condition,
+                game_start,
+            })
         })
         .collect()
 }
@@ -217,7 +238,8 @@ pub fn generate_trainer_info_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        Hardware, KeyCode, KeySpec, Pid, RomRegion, RomVersion, SaveState, Timer0VCountRange,
+        DateRangeParams, Hardware, KeyCode, KeySpec, Pid, RomRegion, RomVersion, SaveState,
+        Timer0VCountRange,
     };
 
     use super::*;
@@ -374,13 +396,6 @@ mod tests {
             second_start: 0,
             second_end: 59,
         };
-        let search_range = SearchRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            start_second_offset: 0,
-            range_seconds: 86400,
-        };
         let context = DatetimeSearchContext {
             ds: ds.clone(),
             time_range: time_range.clone(),
@@ -396,17 +411,20 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
         };
+        let date_range = DateRangeParams {
+            start_year: 2023,
+            start_month: 1,
+            start_day: 1,
+            end_year: 2023,
+            end_month: 1,
+            end_day: 1,
+        };
 
-        let tasks = generate_trainer_info_search_tasks(
-            filter,
-            ds,
-            time_range,
-            search_range,
-            context,
-            game_start,
-        );
+        let tasks =
+            generate_trainer_info_search_tasks(context, filter, game_start, date_range, 2);
 
-        // Timer0: 2パターン × VCount: 1パターン × KeyCode: 1パターン = 2タスク
+        // Timer0: 2パターン × VCount: 1パターン × KeyCode: 1パターン × time_chunks: 1 = 2タスク
+        // (worker_count = 2, combo_count = 2 → time_chunks = 1)
         assert_eq!(tasks.len(), 2);
     }
 }
