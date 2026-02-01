@@ -21,6 +21,7 @@ pub use datetime_search::{
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
     TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult, TrainerInfoSearcher,
     generate_egg_search_tasks, generate_mtseed_search_tasks, generate_trainer_info_search_tasks,
+    split_search_range,
 };
 
 // Re-export common types
