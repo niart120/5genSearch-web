@@ -4,11 +4,13 @@ mod encounter;
 mod iv;
 mod nature;
 mod npc;
-mod offset;
 mod pid;
 
 // needle は core/needle.rs に移動済み
 pub use crate::core::needle::{calc_report_needle_direction, calculate_needle_direction};
+
+// offset は core/offset.rs に移動済み
+pub(crate) use crate::core::offset::{calculate_game_offset, calculate_mt_offset};
 
 // その他のアルゴリズムは crate 内部のみ (使用されている関数のみ re-export)
 pub(crate) use encounter::{
@@ -21,7 +23,6 @@ pub(crate) use encounter::{
 pub(crate) use iv::{apply_inheritance, generate_rng_ivs_with_offset};
 pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, perform_sync_check};
 pub(crate) use npc::resolve_egg_npc_advance;
-pub(crate) use offset::{calculate_game_offset, calculate_mt_offset};
 pub(crate) use pid::{
     apply_shiny_lock, generate_egg_pid_with_reroll, generate_event_pid,
     generate_wild_pid_with_reroll,

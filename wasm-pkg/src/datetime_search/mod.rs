@@ -3,6 +3,7 @@
 pub mod base;
 pub mod egg;
 pub mod mtseed;
+pub mod trainer_info;
 
 use crate::types::{DatetimeSearchContext, StartupCondition};
 
@@ -13,6 +14,10 @@ pub use egg::{
 pub use mtseed::{
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
     generate_mtseed_search_tasks,
+};
+pub use trainer_info::{
+    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult, TrainerInfoSearcher,
+    generate_trainer_info_search_tasks,
 };
 
 /// 組み合わせ展開 (共通関数)

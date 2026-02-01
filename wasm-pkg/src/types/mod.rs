@@ -17,7 +17,9 @@ pub use config::{
     RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition, TimeRangeParams,
     Timer0VCountRange,
 };
-pub use filter::{CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter};
+pub use filter::{
+    CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter, TrainerInfoFilter,
+};
 pub use generation::{
     CorePokemonData, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
     EncounterType, EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
