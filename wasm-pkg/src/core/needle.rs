@@ -51,12 +51,14 @@ mod tests {
     #[test]
     fn test_calc_report_needle_direction() {
         // 既知の Seed から期待される針方向を検証
-        // LCG: next = 0x1DB90D64B7ACC50E, upper * 8 >> 32 = 0
+        // seed1: LCG next = 0x1DB90D64B7ACC50E
+        //        upper32 = 0x1DB90D64, upper32 * 8 >> 32 = 0 → N
         let seed1 = LcgSeed::new(0x0123_4567_89AB_CDEF);
         let dir1 = calc_report_needle_direction(seed1);
         assert_eq!(dir1, NeedleDirection::N); // 方向 0 = N
 
-        // LCG: next = 0x84EE6735DC98EF13, upper * 8 >> 32 = 4
+        // seed2: LCG next = 0x84EE6735DC98EF13
+        //        upper32 = 0x84EE6735, upper32 * 8 >> 32 = 4 → S
         let seed2 = LcgSeed::new(0xFEDC_BA98_7654_3210);
         let dir2 = calc_report_needle_direction(seed2);
         assert_eq!(dir2, NeedleDirection::S); // 方向 4 = S
