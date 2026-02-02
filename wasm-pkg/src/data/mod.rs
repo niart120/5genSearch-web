@@ -8,7 +8,9 @@
 pub mod abilities;
 pub mod names;
 pub mod species;
+pub mod stats;
 
 pub use abilities::get_ability_name;
 pub use names::{get_nature_name, get_species_name};
 pub use species::{get_species_entry, BaseStats, SpeciesEntry};
+pub use stats::{calculate_stats, Stats};
