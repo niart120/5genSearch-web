@@ -5,7 +5,8 @@
 use std::time::Duration;
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use wasm_pkg::misc::{MtseedSearchParams, MtseedSearcher};
+use wasm_pkg::MtseedSearchParams;
+use wasm_pkg::misc::MtseedSearcher;
 use wasm_pkg::types::IvFilter;
 
 // ===== テスト用パラメータ生成 =====

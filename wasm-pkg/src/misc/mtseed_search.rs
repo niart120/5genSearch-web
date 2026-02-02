@@ -3,50 +3,10 @@
 //! 指定オフセットから検索条件を満たす IV が生成される MT Seed を全探索する機能。
 //! pokemon-gen5-initseed の実装を参照。
 
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::generation::algorithm::generate_rng_ivs_with_offset;
-use crate::types::{IvFilter, Ivs, MtSeed};
-
-// ===== MT Seed 検索 =====
-
-/// MT Seed 検索パラメータ
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedSearchParams {
-    /// IV フィルタ条件
-    pub iv_filter: IvFilter,
-    /// MT オフセット (IV 生成開始位置、通常 7)
-    pub mt_offset: u32,
-    /// 徘徊ポケモンモード
-    pub is_roamer: bool,
-}
-
-/// MT Seed 検索結果
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedResult {
-    /// 一致した MT Seed
-    pub seed: MtSeed,
-    /// 生成された IV
-    pub ivs: Ivs,
-}
-
-/// MT Seed 検索バッチ結果
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedSearchBatch {
-    /// 条件を満たした候補
-    pub candidates: Vec<MtseedResult>,
-    /// 処理済み Seed 数
-    #[tsify(type = "bigint")]
-    pub processed: u64,
-    /// 総 Seed 数 (0x100000000)
-    #[tsify(type = "bigint")]
-    pub total: u64,
-}
+use crate::types::{IvFilter, MtSeed, MtseedResult, MtseedSearchBatch, MtseedSearchParams};
 
 /// MT Seed 検索器
 #[wasm_bindgen]
@@ -112,6 +72,7 @@ impl MtseedSearcher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::Ivs;
 
     #[test]
     fn test_iv_filter_matches() {

@@ -1,69 +1,16 @@
 //! 孵化起動時刻検索
 
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::generation::flows::generator::EggGenerator;
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, DsConfig, EggFilter, EggGenerationParams,
-    GeneratedEggData, GenerationConfig, SearchRangeParams, SeedOrigin, StartupCondition,
-    TimeRangeParams,
+    DateRangeParams, DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
+    EggDatetimeSearchResult, EggFilter, EggGenerationParams, GenerationConfig, SeedOrigin,
+    StartupCondition,
 };
 
 use super::base::DatetimeHashGenerator;
 use super::{calculate_time_chunks, expand_combinations, split_search_range};
-
-/// 孵化起動時刻検索パラメータ
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct EggDatetimeSearchParams {
-    // === 起動時刻検索 ===
-    /// DS 設定
-    pub ds: DsConfig,
-    /// 1日内の時刻範囲
-    pub time_range: TimeRangeParams,
-    /// 検索範囲 (秒単位)
-    pub search_range: SearchRangeParams,
-    /// 起動条件 (単一)
-    pub condition: StartupCondition,
-
-    // === 個体生成 ===
-    /// 孵化生成パラメータ
-    pub egg_params: EggGenerationParams,
-    /// 生成共通設定
-    pub gen_config: GenerationConfig,
-
-    // === フィルタリング ===
-    /// フィルター (None の場合は全件返却)
-    pub filter: Option<EggFilter>,
-}
-
-/// 孵化検索結果
-///
-/// `GeneratedEggData` に起動条件 (`SeedOrigin::Startup`) が含まれるため、
-/// 追加フィールドは不要。
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct EggDatetimeSearchResult {
-    /// 生成された孵化個体データ
-    ///
-    /// `source` フィールドに `SeedOrigin::Startup` が格納されており、
-    /// 起動日時・条件を取得可能。
-    pub egg: GeneratedEggData,
-}
-
-/// バッチ結果
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct EggDatetimeSearchBatch {
-    /// 見つかった結果
-    pub results: Vec<EggDatetimeSearchResult>,
-    /// 処理済み件数
-    pub processed_count: u64,
-    /// 総件数
-    pub total_count: u64,
-}
 
 /// 孵化起動時刻検索器
 #[wasm_bindgen]
@@ -253,8 +200,10 @@ pub fn generate_egg_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, EverstonePlan, GameStartConfig, GenderRatio, Hardware, KeyCode, KeySpec,
-        RomRegion, RomVersion, SaveState, StartMode, Timer0VCountRange, TrainerInfo,
+        DateRangeParams, DsConfig, EggDatetimeSearchParams, EverstonePlan, GameStartConfig,
+        GenderRatio, Hardware, KeyCode, KeySpec, RomRegion, RomVersion, SaveState,
+        SearchRangeParams, StartMode, StartupCondition, TimeRangeParams, Timer0VCountRange,
+        TrainerInfo,
     };
 
     use super::*;

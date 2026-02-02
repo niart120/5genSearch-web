@@ -1,6 +1,6 @@
 //! Seed 解決ヘルパー
 //!
-//! `SeedInput` から `SeedOrigin` リストを解決する。
+//! `SeedSpec` から `SeedOrigin` リストを解決する。
 
 use wasm_bindgen::prelude::*;
 
@@ -8,11 +8,11 @@ use crate::core::sha1::{
     BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1, get_frame,
     get_nazo_values,
 };
-use crate::types::{LcgSeed, SeedInput, SeedOrigin, StartupCondition};
+use crate::types::{LcgSeed, SeedOrigin, SeedSpec, StartupCondition};
 
 /// Seed 解決 (公開 API)
 ///
-/// `SeedInput` から `SeedOrigin` のリストを生成。
+/// `SeedSpec` から `SeedOrigin` のリストを生成。
 /// UI/Worker 側で事前に呼び出す。
 ///
 /// # Errors
@@ -20,12 +20,12 @@ use crate::types::{LcgSeed, SeedInput, SeedOrigin, StartupCondition};
 /// - `Startup` で `ranges` が空の場合
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
-pub fn resolve_seeds(input: SeedInput) -> Result<Vec<SeedOrigin>, String> {
+pub fn resolve_seeds(input: SeedSpec) -> Result<Vec<SeedOrigin>, String> {
     let results = resolve_all_seeds(&input)?;
     Ok(results.into_iter().map(|(_, origin)| origin).collect())
 }
 
-/// `SeedInput` から単一の `LcgSeed` を解決
+/// `SeedSpec` から単一の `LcgSeed` を解決
 ///
 /// - `Seeds`: 最初の Seed を返す (単一解決用)
 /// - `Startup`: SHA-1 計算で導出 (最初の range の min 値を使用)
@@ -33,13 +33,13 @@ pub fn resolve_seeds(input: SeedInput) -> Result<Vec<SeedOrigin>, String> {
 /// # Errors
 /// - `Seeds` が空の場合
 /// - `Startup` で `ranges` が空の場合
-pub fn resolve_single_seed(input: &SeedInput) -> Result<(LcgSeed, SeedOrigin), String> {
+pub fn resolve_single_seed(input: &SeedSpec) -> Result<(LcgSeed, SeedOrigin), String> {
     match input {
-        SeedInput::Seeds { seeds } => {
+        SeedSpec::Seeds { seeds } => {
             let seed = seeds.first().ok_or("Seeds is empty")?;
             Ok((*seed, SeedOrigin::seed(*seed)))
         }
-        SeedInput::Startup {
+        SeedSpec::Startup {
             ds,
             datetime,
             ranges,
@@ -84,7 +84,7 @@ pub fn resolve_single_seed(input: &SeedInput) -> Result<(LcgSeed, SeedOrigin), S
     }
 }
 
-/// `SeedInput` から複数の `(LcgSeed, SeedOrigin)` を解決
+/// `SeedSpec` から複数の `(LcgSeed, SeedOrigin)` を解決
 ///
 /// - `Seeds`: 全 Seed を返す
 /// - `Startup`: 全 range × `key_input` 組み合わせを返す
@@ -92,9 +92,9 @@ pub fn resolve_single_seed(input: &SeedInput) -> Result<(LcgSeed, SeedOrigin), S
 /// # Errors
 /// - `Seeds` が空の場合
 /// - 起動設定が無効な場合
-pub fn resolve_all_seeds(input: &SeedInput) -> Result<Vec<(LcgSeed, SeedOrigin)>, String> {
+pub fn resolve_all_seeds(input: &SeedSpec) -> Result<Vec<(LcgSeed, SeedOrigin)>, String> {
     match input {
-        SeedInput::Seeds { seeds } => {
+        SeedSpec::Seeds { seeds } => {
             if seeds.is_empty() {
                 return Err("Seeds is empty".into());
             }
@@ -103,7 +103,7 @@ pub fn resolve_all_seeds(input: &SeedInput) -> Result<Vec<(LcgSeed, SeedOrigin)>
                 .map(|seed| (*seed, SeedOrigin::seed(*seed)))
                 .collect())
         }
-        SeedInput::Startup {
+        SeedSpec::Startup {
             ds,
             datetime,
             ranges,
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_resolve_single_seed_from_seeds() {
-        let input = SeedInput::Seeds {
+        let input = SeedSpec::Seeds {
             seeds: vec![LcgSeed::new(0x1111), LcgSeed::new(0x2222)],
         };
         let (seed, origin) = resolve_single_seed(&input).unwrap();
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_resolve_single_seed_from_startup() {
-        let input = SeedInput::Startup {
+        let input = SeedSpec::Startup {
             ds: DsConfig {
                 mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
                 hardware: Hardware::DsLite,
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn test_resolve_all_seeds() {
-        let input = SeedInput::Seeds {
+        let input = SeedSpec::Seeds {
             seeds: vec![
                 LcgSeed::new(0x1111),
                 LcgSeed::new(0x2222),
