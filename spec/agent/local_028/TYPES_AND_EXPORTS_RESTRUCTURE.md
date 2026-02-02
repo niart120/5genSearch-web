@@ -64,9 +64,8 @@ wasm-pkg 内の型定義を役割に応じて再配置し、tsify/wasm_bindgen �
 |----------|------|
 | `types/keyinput.rs` | キー入力系型 (DsButton, KeyCode, KeyMask, KeyInput, KeySpec) |
 | `types/search.rs` | 検索パラメータ・結果型 |
-| `datetime_search/types.rs` | datetime_search 内部専用型 |
-| `misc/types.rs` | misc 内部専用型 |
-| `gpu/types.rs` | GPU 内部専用型 |
+
+> **Note**: 機能モジュール内の内部専用型 (`datetime_search/types.rs` 等) は、現時点で移動対象となる型が存在しないため作成不要。将来、内部専用型が増加した場合に `types.rs` を作成する。
 
 ### 2.2 変更
 
@@ -79,10 +78,8 @@ wasm-pkg 内の型定義を役割に応じて再配置し、tsify/wasm_bindgen �
 | `datetime_search/mtseed.rs` | 縮小 | Params/Batch を `types/search.rs` へ移動 |
 | `datetime_search/trainer_info.rs` | 縮小 | Params/Result/Batch を移動 |
 | `datetime_search/egg.rs` | 縮小 | Params/Result/Batch を移動 |
-| `datetime_search/base.rs` | 変更 | 内部型を `datetime_search/types.rs` へ移動 |
 | `misc/mtseed_search.rs` | 縮小 | Params/Result/Batch を移動 |
 | `core/seed_resolver.rs` | 変更 | `SeedInput` → `SeedSpec` にリネーム |
-| `gpu/*.rs` | 変更 | 内部型を `gpu/types.rs` へ移動 |
 
 ## 3. 設計方針
 
@@ -162,17 +159,21 @@ DS 本体設定・起動条件に関する型のみ:
 
 ### 3.3 機能モジュール内の内部専用型
 
-各機能モジュールに `types.rs` を作成し、WASM API として公開しない内部専用型を配置:
+各機能モジュールに内部専用型が必要な場合は `types.rs` を作成し、WASM API として公開しない型を配置する:
 
 ```
 wasm-pkg/src/
 ├── datetime_search/
-│   └── types.rs     # HashValues, DatetimeHashEntry など
+│   └── types.rs     # 内部専用型 (必要に応じて作成)
 ├── misc/
-│   └── types.rs     # 内部専用型があれば
+│   └── types.rs     # 内部専用型 (必要に応じて作成)
 └── gpu/
-    └── types.rs     # ShaderParams, GpuBuffers など
+    └── types.rs     # 内部専用型 (必要に応じて作成)
 ```
+
+> **現状**: 現時点では移動対象となる内部専用型は存在しない。
+> - `HashValues` は `core/sha1/mod.rs` に配置されており、SHA-1 計算ロジックと密結合のためそのままでよい
+> - 将来、内部専用型が増加した場合にこのパターンを適用する
 
 ### 3.4 tsify / wasm_bindgen アノテーションルール
 
@@ -435,44 +436,44 @@ pnpm build:wasm
 
 ### Phase 1: types モジュール分割
 
-- [ ] `types/keyinput.rs` 作成 (config.rs からキー入力系を移動)
-- [ ] `types/search.rs` 作成 (config.rs から検索パラメータを移動)
-- [ ] `types/config.rs` 縮小 (DS 設定系のみ残す)
-- [ ] `types/mod.rs` 更新 (新規サブモジュール宣言・re-export)
+- [x] `types/keyinput.rs` 作成 (config.rs からキー入力系を移動)
+- [x] `types/search.rs` 作成 (config.rs から検索パラメータを移動)
+- [x] `types/config.rs` 縮小 (DS 設定系のみ残す)
+- [x] `types/mod.rs` 更新 (新規サブモジュール宣言・re-export)
 
 ### Phase 2: SeedSpec リネーム
 
-- [ ] `SeedInput` → `SeedSpec` リネーム (types/generation.rs)
-- [ ] `core/seed_resolver.rs` 更新
-- [ ] 関連テスト更新
+- [x] `SeedInput` → `SeedSpec` リネーム (types/generation.rs)
+- [x] `core/seed_resolver.rs` 更新
+- [x] 関連テスト更新
 
 ### Phase 3: 検索パラメータ移動
 
-- [ ] `datetime_search/mtseed.rs` から Params/Batch を `types/search.rs` へ移動
-- [ ] `datetime_search/trainer_info.rs` から Params/Result/Batch を移動
-- [ ] `datetime_search/egg.rs` から Params/Result/Batch を移動
-- [ ] `misc/mtseed_search.rs` から Params/Result/Batch を移動
-- [ ] 各 Searcher の import パス更新
+- [x] `datetime_search/mtseed.rs` から Params/Batch を `types/search.rs` へ移動
+- [x] `datetime_search/trainer_info.rs` から Params/Result/Batch を移動
+- [x] `datetime_search/egg.rs` から Params/Result/Batch を移動
+- [x] `misc/mtseed_search.rs` から Params/Result/Batch を移動
+- [x] 各 Searcher の import パス更新
 
-### Phase 4: 内部専用型の整理
+### Phase 4: 内部専用型の整理 (将来対応)
 
-- [ ] `datetime_search/types.rs` 作成 (HashValues 等)
-- [ ] `datetime_search/base.rs` から内部型を移動
-- [ ] `gpu/types.rs` 作成 (GPU 内部型)
-- [ ] `misc/types.rs` 作成 (必要に応じて)
+> **現状**: 現時点では移動対象となる内部専用型は存在しないため、スキップ可能。
+> 将来、内部専用型が増加した場合に以下のパターンを適用:
+
+- [x] スキップ (対象型なし)
 
 ### Phase 5: lib.rs re-export 整理
 
-- [ ] lib.rs を tsify 型のみ re-export に変更
-- [ ] wasm_bindgen 付き関数・構造体の re-export 整理
-- [ ] 不要な re-export 削除
+- [x] lib.rs を tsify 型のみ re-export に変更
+- [x] wasm_bindgen 付き関数・構造体の re-export 整理
+- [x] 不要な re-export 削除
 
 ### Phase 6: 検証
 
-- [ ] `cargo test` 通過
-- [ ] `cargo test --features gpu` 通過
-- [ ] `cargo clippy --all-targets -- -D warnings` 通過
-- [ ] `cargo clippy --all-targets --features gpu -- -D warnings` 通過
-- [ ] `pnpm build:wasm` 成功
+- [x] `cargo test` 通過
+- [x] `cargo test --features gpu` 通過 (242 tests)
+- [x] `cargo clippy --all-targets -- -D warnings` 通過
+- [x] `cargo clippy --all-targets --features gpu -- -D warnings` 通過
+- [x] `pnpm build:wasm` 成功
 - [ ] `pnpm test:run` 通過
 - [ ] TypeScript 型定義の確認 (`wasm-pkg/pkg/*.d.ts`)
