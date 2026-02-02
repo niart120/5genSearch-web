@@ -7,6 +7,7 @@
 use wasm_bindgen::prelude::*;
 
 pub mod core;
+pub mod data;
 pub mod datetime_search;
 pub mod generation;
 pub mod misc;
