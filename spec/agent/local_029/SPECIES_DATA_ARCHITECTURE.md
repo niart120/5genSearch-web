@@ -19,6 +19,7 @@
 | UiEggData | 表示用に解決済みの卵データ |
 | BaseStats | 種族値 (HP/Atk/Def/SpA/SpD/Spe) |
 | Stats | 計算済み実数値 (レベル・IV・性格補正適用後) |
+| KeyCode | キー入力コード (KeyMask XOR 0x2FFF で変換された値、SHA-1 計算用) |
 
 ### 1.3 背景・問題
 
@@ -333,15 +334,24 @@ pub struct UiPokemonData {
     /// - 通常: "70" など
     /// - 不明時: "?"
     pub hidden_power_power: String,
-    pub pid: u32,
+    /// 性格値 (prefix無し16進数)
+    /// - e.g., "12345678"
+    pub pid: String,
     
     // === エンカウント情報 ===
     pub sync_applied: bool,
     pub held_item_name: Option<String>,
     
     // === 移動/特殊エンカウント情報 ===
-    pub moving_encounter_guaranteed: Option<bool>,
-    pub special_encounter_triggered: Option<bool>,
+    /// 移動エンカウント確定状態 (表示用文字列)
+    /// - "〇": 確定エンカウント (Guaranteed)
+    /// - "?": 歩数次第 (Possible, BW2 のみ)
+    /// - "×": エンカウント無し (NoEncounter)
+    pub moving_encounter_guaranteed: Option<String>,
+    /// 特殊エンカウント発生 (表示用文字列)
+    /// - "〇": 発生する (triggered = true)
+    /// - "×": 発生しない (triggered = false)
+    pub special_encounter_triggered: Option<String>,
     pub special_encounter_direction: Option<String>,
     pub encounter_result: String, // "Pokemon" / "Item:EvolutionStone" / etc.
 }
@@ -370,7 +380,10 @@ pub struct UiEggData {
     /// 種族名 (species_id が指定された場合のみ)
     pub species_name: Option<String>,
     pub nature_name: String,
-    pub ability_name: String,   // "特性1" / "特性2" / "夢特性"
+    /// 特性名
+    /// - species_id 指定時: 種族データから解決した確定特性名 (e.g., "しぜんかいふく", "Natural Cure")
+    /// - species_id 未指定時: スロット名 ("特性1" / "特性2" / "夢特性")
+    pub ability_name: String,
     pub gender_symbol: String,
     pub shiny_symbol: String,
     
@@ -388,12 +401,12 @@ pub struct UiEggData {
     pub hidden_power_type: String,
     /// めざパ威力 (表示用文字列)
     pub hidden_power_power: String,
-    pub pid: u32,
+    /// 性格値 (prefix無し16進数)
+    /// - e.g., "12345678"
+    pub pid: String,
     
     // === 卵固有情報 ===
-    pub inheritance: [[u8; 2]; 3], // [[stat, parent], [stat, parent], [stat, parent]]
     pub margin_frames: Option<u32>,
-    pub is_stable: bool,
 }
 ```
 
@@ -642,10 +655,72 @@ impl SeedOrigin {
             _ => None,
         }
     }
+    
+    /// key_input を表示用文字列で取得 (Startup のみ)
+    ///
+    /// KeyCode からボタン名を復元し、`[A]+[B]+[Start]` 形式で結合。
+    /// ボタンなしの場合は空文字列を返す。
+    pub fn key_input_display(&self) -> Option<String> {
+        match self {
+            Self::Startup { key_code, .. } => Some(format_key_code(*key_code)),
+            _ => None,
+        }
+    }
+}
+
+/// KeyCode を表示用文字列に変換
+///
+/// ボタンの順序は以下の固定順:
+/// A, B, X, Y, L, R, Start, Select, Up, Down, Left, Right
+///
+/// # Example
+/// - `KeyCode(0x2FFF)` (ボタンなし) → `""`
+/// - `KeyCode(0x2FFE)` (A) → `"[A]"`
+/// - `KeyCode(0x2FF6)` (A+Start) → `"[A]+[Start]"`
+fn format_key_code(key_code: KeyCode) -> String {
+    // KeyCode から KeyMask を復元: mask = key_code XOR 0x2FFF
+    let mask = key_code.value() ^ 0x2FFF;
+    
+    // ボタン定義 (表示順序)
+    const BUTTONS: [(u32, &str); 12] = [
+        (0x0001, "A"),
+        (0x0002, "B"),
+        (0x0400, "X"),
+        (0x0800, "Y"),
+        (0x0200, "L"),
+        (0x0100, "R"),
+        (0x0008, "Start"),
+        (0x0004, "Select"),
+        (0x0040, "Up"),
+        (0x0080, "Down"),
+        (0x0020, "Left"),
+        (0x0010, "Right"),
+    ];
+    
+    let pressed: Vec<&str> = BUTTONS
+        .iter()
+        .filter(|(bit, _)| mask & bit != 0)
+        .map(|(_, name)| *name)
+        .collect();
+    
+    if pressed.is_empty() {
+        String::new()
+    } else {
+        pressed.iter().map(|s| format!("[{}]", s)).collect::<Vec<_>>().join("+")
+    }
 }
 ```
 
-#### 4.4.2 シンボル解決
+#### 4.4.2 PID 変換
+
+```rust
+/// PID を prefix無し16進数文字列に変換
+fn pid_hex(pid: Pid) -> String {
+    format!("{:08X}", pid.raw())
+}
+```
+
+#### 4.4.3 シンボル解決
 
 ```rust
 /// 性別シンボルを取得
@@ -666,7 +741,7 @@ fn shiny_symbol(shiny_type: ShinyType) -> &'static str {
     }
 }
 
-/// 特性スロット名を取得 (卵用)
+/// 特性スロット名を取得 (卵用、species_id 未指定時)
 fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
     match (slot, locale) {
         (AbilitySlot::First, "ja") => "特性1",
@@ -676,6 +751,20 @@ fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
         (AbilitySlot::Second, _) => "Ability 2",
         (AbilitySlot::Hidden, _) => "Hidden",
     }
+}
+
+/// 移動エンカウント確定状態を表示用文字列に変換
+fn moving_encounter_symbol(likelihood: MovingEncounterLikelihood) -> &'static str {
+    match likelihood {
+        MovingEncounterLikelihood::Guaranteed => "〇",
+        MovingEncounterLikelihood::Possible => "?",
+        MovingEncounterLikelihood::NoEncounter => "×",
+    }
+}
+
+/// 特殊エンカウント発生を表示用文字列に変換
+fn special_encounter_symbol(triggered: bool) -> &'static str {
+    if triggered { "〇" } else { "×" }
 }
 ```
 
@@ -696,8 +785,14 @@ fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
 | `test_resolve_pokemon_seed_origin` | SeedOrigin の16進数展開 |
 | `test_resolve_pokemon_ja` | 日本語ロケールでの解決 |
 | `test_resolve_pokemon_en` | 英語ロケールでの解決 |
-| `test_resolve_egg_with_species` | 種族ID指定ありの卵解決 |
-| `test_resolve_egg_without_species` | 種族ID指定なしの卵解決 |
+| `test_resolve_egg_with_species` | 種族ID指定ありの卵解決 (特性名確定) |
+| `test_resolve_egg_without_species` | 種族ID指定なしの卵解決 (スロット名) |
+| `test_format_key_code_none` | キー入力なし → 空文字列 |
+| `test_format_key_code_single` | 単一ボタン → `"[A]"` |
+| `test_format_key_code_multi` | 複数ボタン → `"[A]+[Start]"` |
+| `test_pid_hex` | PID → prefix無し16進数 (`"12345678"`) |
+| `test_moving_encounter_symbol` | MovingEncounterLikelihood → `"〇"` / `"?"` / `"×"` |
+| `test_special_encounter_symbol` | triggered → `"〇"` / `"×"` |
 
 ### 5.2 統合テスト
 
