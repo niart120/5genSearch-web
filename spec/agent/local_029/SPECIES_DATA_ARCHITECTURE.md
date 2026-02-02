@@ -123,6 +123,42 @@ HP  = floor((2 * base + iv) * level / 100) + level + 10
 - バッチ変換 API: `resolve_pokemon_data_batch(data[], locale) -> UiPokemonData[]`
 - ロケールは引数で指定 (`"ja"` / `"en"`)
 
+### 3.5 番兵値とデフォルト値
+
+#### 3.5.1 IV の番兵値
+
+既存の `IV_VALUE_UNKNOWN` (32) を番兵値として使用。
+
+```rust
+/// 不明な個体値を示す番兵値
+pub const IV_VALUE_UNKNOWN: u8 = 32;
+```
+
+UI 解決時の変換:
+- `iv == IV_VALUE_UNKNOWN` → `"?"`
+- それ以外 → 数値文字列 (`"31"`, `"0"` など)
+
+#### 3.5.2 Stats の番兵値
+
+IV が不明な場合、Stats は計算不可。UI 表示では `"?"` を使用。
+
+#### 3.5.3 めざパの番兵値
+
+IV が1つでも不明な場合、めざパは計算不可。
+- `hidden_power_type` → `"?"`
+- `hidden_power_power` → `"?"`
+
+#### 3.5.4 種族データ参照のデフォルト値
+
+不正な `species_id` が渡された場合の挙動:
+
+| フィールド | デフォルト値 |
+|-----------|-------------|
+| `species_name` | `"???"` |
+| `ability_name` | `"???"` |
+| `base_stats` | 全て 0 |
+| `gender_ratio` | `Genderless` |
+
 ---
 
 ## 4. 実装仕様
@@ -279,12 +315,24 @@ pub struct UiPokemonData {
     pub gender_symbol: String,  // "♂" / "♀" / "-"
     pub shiny_symbol: String,   // "" / "◇" / "☆"
     
-    // === 個体情報 (数値) ===
+    // === 個体情報 (数値/文字列) ===
     pub level: u8,
-    pub ivs: [u8; 6],           // [H, A, B, C, D, S]
-    pub stats: [u16; 6],        // [H, A, B, C, D, S]
-    pub hidden_power_type: u8,
-    pub hidden_power_power: u8,
+    /// 個体値 (表示用文字列)
+    /// - 通常: "31", "0" など
+    /// - 不明時: "?" (卵の遺伝未確定など)
+    pub ivs: [String; 6],       // [H, A, B, C, D, S]
+    /// ステータス (表示用文字列)
+    /// - 通常: "187", "100" など
+    /// - 不明時: "?" (IV不明または species_id 未指定)
+    pub stats: [String; 6],     // [H, A, B, C, D, S]
+    /// めざパタイプ (表示用文字列)
+    /// - 通常: "ドラゴン" / "Dragon" など
+    /// - 不明時: "?"
+    pub hidden_power_type: String,
+    /// めざパ威力 (表示用文字列)
+    /// - 通常: "70" など
+    /// - 不明時: "?"
+    pub hidden_power_power: String,
     pub pid: u32,
     
     // === エンカウント情報 ===
@@ -326,13 +374,20 @@ pub struct UiEggData {
     pub gender_symbol: String,
     pub shiny_symbol: String,
     
-    // === 個体情報 (数値) ===
+    // === 個体情報 (数値/文字列) ===
     pub level: u8,              // 常に 1
-    pub ivs: [u8; 6],
-    /// ステータス (species_id が指定された場合のみ)
-    pub stats: Option<[u16; 6]>,
-    pub hidden_power_type: u8,
-    pub hidden_power_power: u8,
+    /// 個体値 (表示用文字列)
+    /// - 確定時: "31", "0" など
+    /// - 遺伝未確定時: "?" (IV_VALUE_UNKNOWN の場合)
+    pub ivs: [String; 6],
+    /// ステータス (表示用文字列)
+    /// - 計算可能時: "12", "8" など (Lv.1 時点)
+    /// - 計算不可時: "?" (IV不明 or species_id 未指定)
+    pub stats: [String; 6],
+    /// めざパタイプ (表示用文字列)
+    pub hidden_power_type: String,
+    /// めざパ威力 (表示用文字列)
+    pub hidden_power_power: String,
     pub pid: u32,
     
     // === 卵固有情報 ===
@@ -378,17 +433,56 @@ pub static SPECIES_NAMES_JA: [&str; 649] = [
 pub static SPECIES_NAMES_EN: [&str; 649] = [
     "Bulbasaur", "Ivysaur", "Venusaur", // ...
 ];
+```
 
+#### 4.2.3 特性テーブル
+
+特性名は ID ベースで管理。種族データの `ability_ids` から特性 ID を取得し、名前テーブルから引く。
+
+```rust
 /// 特性名 (日本語)
+/// インデックス 0 は「なし」を表す空文字列
 pub static ABILITY_NAMES_JA: [&str; 165] = [
-    "", "あくしゅう", "あめふらし", // ...
+    "",           // 0: なし
+    "あくしゅう",  // 1: Stench
+    "あめふらし",  // 2: Drizzle
+    // ...
 ];
 
 /// 特性名 (英語)
 pub static ABILITY_NAMES_EN: [&str; 165] = [
-    "", "Stench", "Drizzle", // ...
+    "",           // 0: なし
+    "Stench",     // 1
+    "Drizzle",    // 2
+    // ...
 ];
 
+/// 特性名を取得
+pub fn get_ability_name(species_id: u16, slot: AbilitySlot, locale: &str) -> &'static str {
+    let entry = get_species_entry(species_id);
+    let ability_id = match slot {
+        AbilitySlot::First => entry.ability_ids[0],
+        AbilitySlot::Second => entry.ability_ids[1],
+        AbilitySlot::Hidden => entry.ability_ids[2],
+    } as usize;
+    
+    // 特性2がない場合は特性1にフォールバック
+    let ability_id = if ability_id == 0 && matches!(slot, AbilitySlot::Second) {
+        entry.ability_ids[0] as usize
+    } else {
+        ability_id
+    };
+    
+    match locale {
+        "ja" => ABILITY_NAMES_JA.get(ability_id).unwrap_or(&"???"),
+        _ => ABILITY_NAMES_EN.get(ability_id).unwrap_or(&"???"),
+    }
+}
+```
+
+#### 4.2.4 性格テーブル
+
+```rust
 /// 性格名 (日本語)
 pub static NATURE_NAMES_JA: [&str; 25] = [
     "がんばりや", "さみしがり", "ゆうかん", // ...
@@ -400,7 +494,7 @@ pub static NATURE_NAMES_EN: [&str; 25] = [
 ];
 ```
 
-#### 4.2.3 持ち物テーブル
+#### 4.2.5 持ち物テーブル
 
 ```rust
 /// 持ち物エントリ
