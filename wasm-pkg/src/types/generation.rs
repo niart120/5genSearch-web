@@ -349,3 +349,36 @@ pub struct EggGenerationParams {
     /// NPC消費を考慮するか
     pub consider_npc: bool,
 }
+
+// ===== Seed 指定仕様 =====
+
+use super::config::{Datetime, DsConfig, Timer0VCountRange};
+use super::keyinput::KeyInput;
+use super::seeds::LcgSeed;
+
+/// Seed 指定仕様
+///
+/// Generator 系 API 用の Seed 指定方法。
+/// `KeySpec` と同様に、仕様から `SeedOrigin` リストに展開される。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
+pub enum SeedSpec {
+    /// 複数の LCG Seed を指定
+    Seeds {
+        /// LCG Seed のリスト
+        seeds: Vec<LcgSeed>,
+    },
+
+    /// 起動条件から Seed を導出
+    Startup {
+        /// DS 設定
+        ds: DsConfig,
+        /// 起動日時
+        datetime: Datetime,
+        /// `Timer0` / `VCount` 範囲 (複数指定可能)
+        ranges: Vec<Timer0VCountRange>,
+        /// キー入力
+        key_input: KeyInput,
+    },
+}

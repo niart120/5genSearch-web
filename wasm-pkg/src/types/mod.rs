@@ -16,8 +16,7 @@ mod seeds;
 
 // config
 pub use config::{
-    Datetime, DsConfig, Hardware, RomRegion, RomVersion, SeedSpec, StartupCondition,
-    Timer0VCountRange,
+    Datetime, DsConfig, Hardware, RomRegion, RomVersion, StartupCondition, Timer0VCountRange,
 };
 
 // keyinput
@@ -41,7 +40,8 @@ pub use generation::{
     CorePokemonData, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
     EncounterType, EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
     GenerationConfig, ItemContent, MovingEncounterInfo, MovingEncounterLikelihood,
-    PokemonGenerationParams, SaveState, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
+    PokemonGenerationParams, SaveState, SeedSpec, SpecialEncounterDirection, SpecialEncounterInfo,
+    StartMode,
 };
 
 // needle
