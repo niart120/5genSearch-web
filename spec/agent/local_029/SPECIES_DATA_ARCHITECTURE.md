@@ -814,24 +814,25 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 ### 6.1 データ準備
 
-- [ ] `scripts/generate-species-data.js` 作成
-- [ ] `gen5-species.json` から Rust コード生成
-- [ ] 生成コードの動作検証
+- [x] `scripts/generate-species-data.js` 作成
+- [x] `gen5-species.json` から Rust コード生成
+- [x] 生成コードの動作検証
 
 ### 6.2 型定義
 
-- [ ] `wasm-pkg/src/types/stats.rs` 作成 (BaseStats, Stats)
+- [x] `wasm-pkg/src/data/stats.rs` 作成 (Stats, calculate_stats)
 - [ ] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
 - [ ] `CorePokemonData` に species_id, level, stats 追加
 - [ ] `wasm-pkg/src/types/mod.rs` に re-export 追加
+- [x] `Nature::stat_modifiers()` 追加 (性格補正の10倍表現)
 
 ### 6.3 データモジュール
 
-- [ ] `wasm-pkg/src/data/mod.rs` 作成
-- [ ] `wasm-pkg/src/data/species.rs` 作成
-- [ ] `wasm-pkg/src/data/abilities.rs` 作成
+- [x] `wasm-pkg/src/data/mod.rs` 作成
+- [x] `wasm-pkg/src/data/species.rs` 作成
+- [x] `wasm-pkg/src/data/abilities.rs` 作成
 - [ ] `wasm-pkg/src/data/items.rs` 作成
-- [ ] `wasm-pkg/src/data/names.rs` 作成
+- [x] `wasm-pkg/src/data/names.rs` 作成
 
 ### 6.4 解決モジュール
 
@@ -847,7 +848,7 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 ### 6.6 テスト
 
-- [ ] ユニットテスト実装
+- [x] ユニットテスト実装
 - [ ] 統合テスト実装
 - [ ] WASM テスト実装
 
