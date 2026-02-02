@@ -161,24 +161,25 @@ impl Nature {
 
     /// 性格補正を10倍表現で取得
     ///
-    /// 配列順序: `[HP, Atk, Def, SpA, SpD, Spe]`
-    /// - HP は常に 10 (無補正)
+    /// 配列順序: `[Atk, Def, SpA, SpD, Spe]`
     /// - 上昇補正: 11 (1.1倍)
     /// - 下降補正: 9 (0.9倍)
     /// - 無補正: 10 (1.0倍)
     ///
+    /// HP には性格補正がかからないため、配列には含まれない。
+    ///
     /// # Examples
-    /// - `Adamant`: `[10, 11, 10, 9, 10, 10]` (攻撃上昇, 特攻下降)
-    /// - `Jolly`: `[10, 10, 10, 9, 10, 11]` (素早さ上昇, 特攻下降)
-    /// - `Hardy`: `[10, 10, 10, 10, 10, 10]` (無補正)
+    /// - `Adamant`: `[11, 10, 9, 10, 10]` (攻撃上昇, 特攻下降)
+    /// - `Jolly`: `[10, 10, 9, 10, 11]` (素早さ上昇, 特攻下降)
+    /// - `Hardy`: `[10, 10, 10, 10, 10]` (無補正)
     #[inline]
-    pub const fn stat_modifiers(self) -> [u8; 6] {
-        // 基本値: 無補正
-        const BASE: [u8; 6] = [10, 10, 10, 10, 10, 10];
+    pub const fn stat_modifiers(self) -> [u8; 5] {
+        // 基本値: 無補正 [Atk, Def, SpA, SpD, Spe]
+        const BASE: [u8; 5] = [10, 10, 10, 10, 10];
 
         // 性格ごとの上昇/下降ステータス
         // 性格値 = (上昇ステータス * 5) + 下降ステータス
-        // ステータスインデックス: 0=Atk, 1=Def, 2=Spe, 3=SpA, 4=SpD
+        // ステータスインデックス: 0=Atk, 1=Def, 2=SpA, 3=SpD, 4=Spe
         // 同一ステータス上昇下降 = 無補正 (Hardy, Docile, Serious, Bashful, Quirky)
 
         match self {
@@ -186,34 +187,34 @@ impl Nature {
             Self::Hardy | Self::Docile | Self::Serious | Self::Bashful | Self::Quirky => BASE,
 
             // Atk↑ (攻撃上昇)
-            Self::Lonely => [10, 11, 9, 10, 10, 10],  // Atk↑ Def↓
-            Self::Brave => [10, 11, 10, 10, 10, 9],   // Atk↑ Spe↓
-            Self::Adamant => [10, 11, 10, 9, 10, 10], // Atk↑ SpA↓
-            Self::Naughty => [10, 11, 10, 10, 9, 10], // Atk↑ SpD↓
+            Self::Lonely => [11, 9, 10, 10, 10],  // Atk↑ Def↓
+            Self::Brave => [11, 10, 10, 10, 9],   // Atk↑ Spe↓
+            Self::Adamant => [11, 10, 9, 10, 10], // Atk↑ SpA↓
+            Self::Naughty => [11, 10, 10, 9, 10], // Atk↑ SpD↓
 
             // Def↑ (防御上昇)
-            Self::Bold => [10, 9, 11, 10, 10, 10],    // Def↑ Atk↓
-            Self::Relaxed => [10, 10, 11, 10, 10, 9], // Def↑ Spe↓
-            Self::Impish => [10, 10, 11, 9, 10, 10],  // Def↑ SpA↓
-            Self::Lax => [10, 10, 11, 10, 9, 10],     // Def↑ SpD↓
+            Self::Bold => [9, 11, 10, 10, 10],    // Def↑ Atk↓
+            Self::Relaxed => [10, 11, 10, 10, 9], // Def↑ Spe↓
+            Self::Impish => [10, 11, 9, 10, 10],  // Def↑ SpA↓
+            Self::Lax => [10, 11, 10, 9, 10],     // Def↑ SpD↓
 
             // Spe↑ (素早さ上昇)
-            Self::Timid => [10, 9, 10, 10, 10, 11],   // Spe↑ Atk↓
-            Self::Hasty => [10, 10, 9, 10, 10, 11],   // Spe↑ Def↓
-            Self::Jolly => [10, 10, 10, 9, 10, 11],   // Spe↑ SpA↓
-            Self::Naive => [10, 10, 10, 10, 9, 11],   // Spe↑ SpD↓
+            Self::Timid => [9, 10, 10, 10, 11],   // Spe↑ Atk↓
+            Self::Hasty => [10, 9, 10, 10, 11],   // Spe↑ Def↓
+            Self::Jolly => [10, 10, 9, 10, 11],   // Spe↑ SpA↓
+            Self::Naive => [10, 10, 10, 9, 11],   // Spe↑ SpD↓
 
             // SpA↑ (特攻上昇)
-            Self::Modest => [10, 9, 10, 11, 10, 10],  // SpA↑ Atk↓
-            Self::Mild => [10, 10, 9, 11, 10, 10],    // SpA↑ Def↓
-            Self::Quiet => [10, 10, 10, 11, 10, 9],   // SpA↑ Spe↓
-            Self::Rash => [10, 10, 10, 11, 9, 10],    // SpA↑ SpD↓
+            Self::Modest => [9, 10, 11, 10, 10],  // SpA↑ Atk↓
+            Self::Mild => [10, 9, 11, 10, 10],    // SpA↑ Def↓
+            Self::Quiet => [10, 10, 11, 10, 9],   // SpA↑ Spe↓
+            Self::Rash => [10, 10, 11, 9, 10],    // SpA↑ SpD↓
 
             // SpD↑ (特防上昇)
-            Self::Calm => [10, 9, 10, 10, 11, 10],    // SpD↑ Atk↓
-            Self::Gentle => [10, 10, 9, 10, 11, 10],  // SpD↑ Def↓
-            Self::Sassy => [10, 10, 10, 10, 11, 9],   // SpD↑ Spe↓
-            Self::Careful => [10, 10, 10, 9, 11, 10], // SpD↑ SpA↓
+            Self::Calm => [9, 10, 10, 11, 10],    // SpD↑ Atk↓
+            Self::Gentle => [10, 9, 10, 11, 10],  // SpD↑ Def↓
+            Self::Sassy => [10, 10, 10, 11, 9],   // SpD↑ Spe↓
+            Self::Careful => [10, 10, 9, 11, 10], // SpD↑ SpA↓
         }
     }
 }
@@ -726,51 +727,51 @@ mod tests {
     fn test_nature_stat_modifiers_adamant() {
         // いじっぱり: Atk↑ SpA↓
         let mods = Nature::Adamant.stat_modifiers();
-        assert_eq!(mods, [10, 11, 10, 9, 10, 10]);
+        assert_eq!(mods, [11, 10, 9, 10, 10]);
     }
 
     #[test]
     fn test_nature_stat_modifiers_jolly() {
         // ようき: Spe↑ SpA↓
         let mods = Nature::Jolly.stat_modifiers();
-        assert_eq!(mods, [10, 10, 10, 9, 10, 11]);
+        assert_eq!(mods, [10, 10, 9, 10, 11]);
     }
 
     #[test]
     fn test_nature_stat_modifiers_modest() {
         // ひかえめ: SpA↑ Atk↓
         let mods = Nature::Modest.stat_modifiers();
-        assert_eq!(mods, [10, 9, 10, 11, 10, 10]);
+        assert_eq!(mods, [9, 10, 11, 10, 10]);
     }
 
     #[test]
     fn test_nature_stat_modifiers_timid() {
         // おくびょう: Spe↑ Atk↓
         let mods = Nature::Timid.stat_modifiers();
-        assert_eq!(mods, [10, 9, 10, 10, 10, 11]);
+        assert_eq!(mods, [9, 10, 10, 10, 11]);
     }
 
     #[test]
     fn test_nature_stat_modifiers_neutral() {
         // 無補正性格
-        assert_eq!(Nature::Hardy.stat_modifiers(), [10, 10, 10, 10, 10, 10]);
-        assert_eq!(Nature::Docile.stat_modifiers(), [10, 10, 10, 10, 10, 10]);
-        assert_eq!(Nature::Serious.stat_modifiers(), [10, 10, 10, 10, 10, 10]);
-        assert_eq!(Nature::Bashful.stat_modifiers(), [10, 10, 10, 10, 10, 10]);
-        assert_eq!(Nature::Quirky.stat_modifiers(), [10, 10, 10, 10, 10, 10]);
+        assert_eq!(Nature::Hardy.stat_modifiers(), [10, 10, 10, 10, 10]);
+        assert_eq!(Nature::Docile.stat_modifiers(), [10, 10, 10, 10, 10]);
+        assert_eq!(Nature::Serious.stat_modifiers(), [10, 10, 10, 10, 10]);
+        assert_eq!(Nature::Bashful.stat_modifiers(), [10, 10, 10, 10, 10]);
+        assert_eq!(Nature::Quirky.stat_modifiers(), [10, 10, 10, 10, 10]);
     }
 
     #[test]
     fn test_nature_stat_modifiers_brave() {
         // ゆうかん: Atk↑ Spe↓
         let mods = Nature::Brave.stat_modifiers();
-        assert_eq!(mods, [10, 11, 10, 10, 10, 9]);
+        assert_eq!(mods, [11, 10, 10, 10, 9]);
     }
 
     #[test]
     fn test_nature_stat_modifiers_quiet() {
         // れいせい: SpA↑ Spe↓
         let mods = Nature::Quiet.stat_modifiers();
-        assert_eq!(mods, [10, 10, 10, 11, 10, 9]);
+        assert_eq!(mods, [10, 10, 11, 10, 9]);
     }
 }

@@ -69,11 +69,11 @@ pub fn calculate_stats(base: BaseStats, ivs: Ivs, nature: Nature, level: u8) -> 
 
     Stats {
         hp: calc_hp_stat(base.hp, ivs.hp, level),
-        attack: calc_stat(base.attack, ivs.atk, level, mods[1]),
-        defense: calc_stat(base.defense, ivs.def, level, mods[2]),
-        special_attack: calc_stat(base.special_attack, ivs.spa, level, mods[3]),
-        special_defense: calc_stat(base.special_defense, ivs.spd, level, mods[4]),
-        speed: calc_stat(base.speed, ivs.spe, level, mods[5]),
+        attack: calc_stat(base.attack, ivs.atk, level, mods[0]),
+        defense: calc_stat(base.defense, ivs.def, level, mods[1]),
+        special_attack: calc_stat(base.special_attack, ivs.spa, level, mods[2]),
+        special_defense: calc_stat(base.special_defense, ivs.spd, level, mods[3]),
+        speed: calc_stat(base.speed, ivs.spe, level, mods[4]),
     }
 }
 
