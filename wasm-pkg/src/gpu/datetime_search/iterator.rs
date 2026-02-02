@@ -7,8 +7,7 @@ use tsify::Tsify;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-use crate::datetime_search::MtseedDatetimeSearchParams;
-use crate::types::SeedOrigin;
+use crate::types::{MtseedDatetimeSearchParams, SeedOrigin};
 
 use super::pipeline::SearchPipeline;
 use crate::gpu::context::GpuDeviceContext;

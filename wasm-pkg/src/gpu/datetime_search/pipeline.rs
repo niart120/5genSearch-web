@@ -9,8 +9,9 @@ use wasm_bindgen::JsValue;
 
 use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
 use crate::core::sha1::{get_frame, get_nazo_values};
-use crate::datetime_search::MtseedDatetimeSearchParams;
-use crate::types::{Datetime, Hardware, LcgSeed, MtSeed, StartupCondition};
+use crate::types::{
+    Datetime, Hardware, LcgSeed, MtSeed, MtseedDatetimeSearchParams, StartupCondition,
+};
 
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;

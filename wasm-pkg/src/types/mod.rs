@@ -6,29 +6,52 @@
 mod config;
 mod filter;
 mod generation;
+mod keyinput;
 mod needle;
 mod pokemon;
+mod search;
 mod seeds;
 
 // ===== Re-exports =====
 
+// config
 pub use config::{
-    DateRangeParams, Datetime, DatetimeSearchContext, DsButton, DsConfig, Hardware, KeyCode,
-    KeyInput, KeySpec, RomRegion, RomVersion, SearchRangeParams, SeedInput, StartupCondition,
-    TimeRangeParams, Timer0VCountRange,
+    Datetime, DsConfig, Hardware, RomRegion, RomVersion, SeedSpec, StartupCondition,
+    Timer0VCountRange,
 };
+
+// keyinput
+pub use keyinput::{DsButton, KeyCode, KeyInput, KeySpec};
+
+// search
+pub use search::{
+    DateRangeParams, DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
+    EggDatetimeSearchResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult,
+    MtseedSearchBatch, MtseedSearchParams, SearchRangeParams, TimeRangeParams,
+    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
+};
+
+// filter
 pub use filter::{
     CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter, TrainerInfoFilter,
 };
+
+// generation
 pub use generation::{
     CorePokemonData, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
     EncounterType, EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
     GenerationConfig, ItemContent, MovingEncounterInfo, MovingEncounterLikelihood,
     PokemonGenerationParams, SaveState, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
 };
+
+// needle
 pub use needle::{NeedleDirection, NeedlePattern, NeedleSearchResult};
+
+// pokemon
 pub use pokemon::{
     AbilitySlot, Gender, GenderRatio, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
     InheritanceSlot, Ivs, LeadAbilityEffect, Nature, Pid, ShinyType, TrainerInfo,
 };
+
+// seeds
 pub use seeds::{LcgSeed, MtSeed, SeedOrigin};

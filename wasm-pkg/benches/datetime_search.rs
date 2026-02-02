@@ -5,15 +5,13 @@
 use std::time::Duration;
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use wasm_pkg::datetime_search::{
-    EggDatetimeSearchParams, EggDatetimeSearcher, MtseedDatetimeSearchParams,
-    MtseedDatetimeSearcher,
-};
+use wasm_pkg::datetime_search::{EggDatetimeSearcher, MtseedDatetimeSearcher};
 use wasm_pkg::types::{
     DsConfig, EggGenerationParams, EverstonePlan, GameStartConfig, GenderRatio, GenerationConfig,
     Hardware, Ivs, KeyCode, MtSeed, RomRegion, RomVersion, SaveState, SearchRangeParams, StartMode,
     StartupCondition, TimeRangeParams, TrainerInfo,
 };
+use wasm_pkg::{EggDatetimeSearchParams, MtseedDatetimeSearchParams};
 
 // ===== テスト用パラメータ生成 =====
 

@@ -5,5 +5,6 @@
 pub mod mtseed_search;
 pub mod needle_search;
 
-pub use mtseed_search::{MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher};
+// Searcher のみ re-export (型は types モジュールから)
+pub use mtseed_search::MtseedSearcher;
 pub use needle_search::{get_needle_pattern_at, search_needle_pattern};

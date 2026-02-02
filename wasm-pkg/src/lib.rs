@@ -15,26 +15,26 @@ pub mod types;
 #[cfg(feature = "gpu")]
 pub mod gpu;
 
-// Re-export datetime_search types
+// Re-export datetime_search (Searcher と関数のみ)
 pub use datetime_search::{
-    EggDatetimeSearchBatch, EggDatetimeSearchParams, EggDatetimeSearchResult, EggDatetimeSearcher,
-    MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedDatetimeSearcher,
-    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult, TrainerInfoSearcher,
-    generate_egg_search_tasks, generate_mtseed_search_tasks, generate_trainer_info_search_tasks,
-    split_search_range,
+    EggDatetimeSearcher, MtseedDatetimeSearcher, TrainerInfoSearcher, generate_egg_search_tasks,
+    generate_mtseed_search_tasks, generate_trainer_info_search_tasks, split_search_range,
 };
 
 // Re-export common types
 pub use types::{
     AbilitySlot, CoreDataFilter, CorePokemonData, DateRangeParams, Datetime, DatetimeSearchContext,
-    DsButton, DsConfig, EggFilter, EggGenerationParams, EncounterMethod, EncounterResult,
-    EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
-    GeneratedEggData, GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType,
-    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed,
-    LeadAbilityEffect, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, NeedleDirection,
-    NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, SaveState, SearchRangeParams,
-    SeedInput, SeedOrigin, ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
-    TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter,
+    DsButton, DsConfig, EggDatetimeSearchBatch, EggDatetimeSearchParams, EggDatetimeSearchResult,
+    EggFilter, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
+    EncounterType, EverstonePlan, GameStartConfig, GenderRatio, GeneratedEggData,
+    GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
+    ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed, LeadAbilityEffect,
+    MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, MtseedDatetimeSearchBatch,
+    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchParams,
+    NeedleDirection, NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, SaveState,
+    SearchRangeParams, SeedOrigin, SeedSpec, ShinyFilter, SpecialEncounterDirection,
+    SpecialEncounterInfo, StartMode, TimeRangeParams, Timer0VCountRange, TrainerInfo,
+    TrainerInfoFilter, TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
 };
 
 // Re-export core functions
@@ -44,11 +44,8 @@ pub use core::seed_resolver::resolve_seeds;
 // Re-export generation public API
 pub use generation::{generate_egg_list, generate_pokemon_list};
 
-// Re-export misc module
-pub use misc::{
-    MtseedResult, MtseedSearchBatch, MtseedSearchParams, MtseedSearcher, get_needle_pattern_at,
-    search_needle_pattern,
-};
+// Re-export misc module (Searcher のみ)
+pub use misc::{MtseedSearcher, get_needle_pattern_at, search_needle_pattern};
 
 // Re-export needle search types
 pub use types::NeedleSearchResult;

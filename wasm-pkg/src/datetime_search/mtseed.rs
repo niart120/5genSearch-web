@@ -2,48 +2,15 @@
 
 use std::collections::BTreeSet;
 
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, MtSeed, SearchRangeParams, SeedOrigin,
-    StartupCondition, TimeRangeParams,
+    DateRangeParams, DatetimeSearchContext, MtSeed, MtseedDatetimeSearchBatch,
+    MtseedDatetimeSearchParams, SeedOrigin, StartupCondition,
 };
 
 use super::base::DatetimeHashGenerator;
 use super::{calculate_time_chunks, expand_combinations, split_search_range};
-
-// Re-export DsConfig from types for API convenience
-pub use crate::types::DsConfig;
-
-/// MT Seed 検索パラメータ (単一組み合わせ)
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedDatetimeSearchParams {
-    /// 検索対象の MT Seed セット
-    pub target_seeds: Vec<MtSeed>,
-    /// DS 設定
-    pub ds: DsConfig,
-    /// 1日内の時刻範囲
-    pub time_range: TimeRangeParams,
-    /// 検索範囲 (秒単位)
-    pub search_range: SearchRangeParams,
-    /// 起動条件 (単一)
-    pub condition: StartupCondition,
-}
-
-/// バッチ結果
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedDatetimeSearchBatch {
-    /// 見つかった結果 (`SeedOrigin::Startup` 形式)
-    pub results: Vec<SeedOrigin>,
-    /// 処理済み件数
-    pub processed_count: u64,
-    /// 総件数
-    pub total_count: u64,
-}
 
 /// MT Seed 起動時刻検索器
 #[wasm_bindgen]
@@ -193,8 +160,9 @@ pub fn generate_mtseed_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, Datetime, DsButton, Hardware, KeyCode, KeySpec, LcgSeed, RomRegion,
-        RomVersion, Timer0VCountRange,
+        DateRangeParams, Datetime, DsButton, DsConfig, Hardware, KeyCode, KeySpec, LcgSeed,
+        MtseedDatetimeSearchParams, RomRegion, RomVersion, SearchRangeParams, StartupCondition,
+        TimeRangeParams, Timer0VCountRange,
     };
 
     use super::*;

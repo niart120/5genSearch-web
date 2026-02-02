@@ -2,63 +2,17 @@
 //!
 //! 指定した TID/SID/`ShinyPID` 条件を満たす起動時刻を検索する。
 
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::core::offset::calculate_trainer_info;
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, DsConfig, GameStartConfig, SearchRangeParams,
-    SeedOrigin, ShinyType, StartMode, StartupCondition, TimeRangeParams, TrainerInfo,
-    TrainerInfoFilter,
+    DateRangeParams, DatetimeSearchContext, DsConfig, GameStartConfig, SeedOrigin, ShinyType,
+    StartMode, StartupCondition, TrainerInfoFilter, TrainerInfoSearchBatch,
+    TrainerInfoSearchParams, TrainerInfoSearchResult,
 };
 
 use super::base::DatetimeHashGenerator;
 use super::{calculate_time_chunks, expand_combinations, split_search_range};
-
-// ===== 型定義 =====
-
-/// `TrainerInfo` 検索パラメータ (単一組み合わせ)
-#[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct TrainerInfoSearchParams {
-    /// 検索フィルタ
-    pub filter: TrainerInfoFilter,
-    /// DS 設定 (`RomVersion` を含む)
-    pub ds: DsConfig,
-    /// 1日内の時刻範囲
-    pub time_range: TimeRangeParams,
-    /// 検索範囲 (秒単位)
-    pub search_range: SearchRangeParams,
-    /// 起動条件 (単一: Timer0/VCount/KeyCode)
-    pub condition: StartupCondition,
-    /// 起動設定
-    pub game_start: GameStartConfig,
-}
-
-/// `TrainerInfo` 検索結果
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct TrainerInfoSearchResult {
-    /// TID + SID
-    pub trainer: TrainerInfo,
-    /// 生成元情報 (`Datetime` + `StartupCondition`)
-    pub seed_origin: SeedOrigin,
-    /// 色違いタイプ (`shiny_pid` 指定時のみ有効)
-    pub shiny_type: Option<ShinyType>,
-}
-
-/// バッチ結果
-#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct TrainerInfoSearchBatch {
-    /// 見つかった結果
-    pub results: Vec<TrainerInfoSearchResult>,
-    /// 処理済み件数
-    pub processed_count: u64,
-    /// 総件数
-    pub total_count: u64,
-}
 
 // ===== TrainerInfoSearcher =====
 
@@ -238,8 +192,9 @@ pub fn generate_trainer_info_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, Hardware, KeyCode, KeySpec, Pid, RomRegion, RomVersion, SaveState,
-        Timer0VCountRange,
+        DateRangeParams, DsConfig, GameStartConfig, Hardware, KeyCode, KeySpec, Pid, RomRegion,
+        RomVersion, SaveState, SearchRangeParams, StartMode, StartupCondition, TimeRangeParams,
+        Timer0VCountRange, TrainerInfo, TrainerInfoSearchParams,
     };
 
     use super::*;

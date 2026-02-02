@@ -9,7 +9,7 @@
 use std::time::{Duration, Instant};
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use wasm_pkg::datetime_search::MtseedDatetimeSearchParams;
+use wasm_pkg::MtseedDatetimeSearchParams;
 use wasm_pkg::gpu::GpuDatetimeSearchIterator;
 use wasm_pkg::types::{
     DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
