@@ -152,6 +152,21 @@ pub enum MovingEncounterLikelihood {
     NoEncounter,
 }
 
+impl MovingEncounterLikelihood {
+    /// 表示用シンボルに変換
+    ///
+    /// - `Guaranteed` → "〇"
+    /// - `Possible` → "?"
+    /// - `NoEncounter` → "×"
+    pub const fn to_display_symbol(self) -> &'static str {
+        match self {
+            Self::Guaranteed => "〇",
+            Self::Possible => "?",
+            Self::NoEncounter => "×",
+        }
+    }
+}
+
 /// 移動エンカウント情報
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -187,6 +202,16 @@ pub struct SpecialEncounterInfo {
     pub trigger_rand: u32,
     /// 方向決定に使用した乱数値
     pub direction_rand: u32,
+}
+
+impl SpecialEncounterInfo {
+    /// 発生状態を表示用シンボルに変換
+    ///
+    /// - triggered = true → "〇"
+    /// - triggered = false → "×"
+    pub const fn triggered_symbol(&self) -> &'static str {
+        if self.triggered { "〇" } else { "×" }
+    }
 }
 
 // ===== 生成共通設定 =====
@@ -381,4 +406,46 @@ pub enum SeedSpec {
         /// キー入力
         key_input: KeyInput,
     },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_moving_encounter_likelihood_to_display_symbol_guaranteed() {
+        assert_eq!(MovingEncounterLikelihood::Guaranteed.to_display_symbol(), "〇");
+    }
+
+    #[test]
+    fn test_moving_encounter_likelihood_to_display_symbol_possible() {
+        assert_eq!(MovingEncounterLikelihood::Possible.to_display_symbol(), "?");
+    }
+
+    #[test]
+    fn test_moving_encounter_likelihood_to_display_symbol_no_encounter() {
+        assert_eq!(MovingEncounterLikelihood::NoEncounter.to_display_symbol(), "×");
+    }
+
+    #[test]
+    fn test_special_encounter_info_triggered_symbol_true() {
+        let info = SpecialEncounterInfo {
+            triggered: true,
+            direction: SpecialEncounterDirection::Right,
+            trigger_rand: 0,
+            direction_rand: 0,
+        };
+        assert_eq!(info.triggered_symbol(), "〇");
+    }
+
+    #[test]
+    fn test_special_encounter_info_triggered_symbol_false() {
+        let info = SpecialEncounterInfo {
+            triggered: false,
+            direction: SpecialEncounterDirection::Right,
+            trigger_rand: 0,
+            direction_rand: 0,
+        };
+        assert_eq!(info.triggered_symbol(), "×");
+    }
 }

@@ -77,6 +77,52 @@ impl KeyCode {
     pub(crate) const fn from_mask(mask: KeyMask) -> Self {
         Self(mask.0 ^ 0x2FFF)
     }
+
+    /// 表示用文字列に変換
+    ///
+    /// ボタンの順序は以下の固定順:
+    /// A, B, X, Y, L, R, Start, Select, Up, Down, Left, Right
+    ///
+    /// # Examples
+    /// - `KeyCode::NONE` (ボタンなし) → `""`
+    /// - `KeyCode(0x2FFE)` (A) → `"[A]"`
+    /// - `KeyCode(0x2FF6)` (A+Start) → `"[A]+[Start]"`
+    pub fn to_display_string(self) -> String {
+        /// ボタン定義 (表示順序)
+        const BUTTONS: [(u32, &str); 12] = [
+            (0x0001, "A"),
+            (0x0002, "B"),
+            (0x0400, "X"),
+            (0x0800, "Y"),
+            (0x0200, "L"),
+            (0x0100, "R"),
+            (0x0008, "Start"),
+            (0x0004, "Select"),
+            (0x0040, "Up"),
+            (0x0080, "Down"),
+            (0x0020, "Left"),
+            (0x0010, "Right"),
+        ];
+
+        // KeyCode から KeyMask を復元: mask = key_code XOR 0x2FFF
+        let mask = self.0 ^ 0x2FFF;
+
+        let pressed: Vec<&str> = BUTTONS
+            .iter()
+            .filter(|(bit, _)| mask & bit != 0)
+            .map(|(_, name)| *name)
+            .collect();
+
+        if pressed.is_empty() {
+            String::new()
+        } else {
+            pressed
+                .iter()
+                .map(|s| format!("[{s}]"))
+                .collect::<Vec<_>>()
+                .join("+")
+        }
+    }
 }
 
 // ===== KeyMask (内部使用) =====
@@ -348,5 +394,37 @@ mod tests {
         // 空のボタンリスト → キー入力なしの1パターンのみ
         assert_eq!(combos.len(), 1);
         assert_eq!(combos[0], KeyCode::NONE);
+    }
+
+    // === KeyCode::to_display_string tests ===
+
+    #[test]
+    fn key_code_to_display_string_none() {
+        // ボタンなし → 空文字列
+        assert_eq!(KeyCode::NONE.to_display_string(), "");
+    }
+
+    #[test]
+    fn key_code_to_display_string_single() {
+        // A ボタンのみ: mask = 0x0001 → key_code = 0x2FFE
+        let key_code = KeyCode::new(0x2FFF ^ 0x0001);
+        assert_eq!(key_code.to_display_string(), "[A]");
+    }
+
+    #[test]
+    fn key_code_to_display_string_multi() {
+        // A + Start: mask = 0x0001 | 0x0008 = 0x0009 → key_code = 0x2FF6
+        let key_code = KeyCode::new(0x2FFF ^ 0x0009);
+        assert_eq!(key_code.to_display_string(), "[A]+[Start]");
+    }
+
+    #[test]
+    fn key_code_to_display_string_all_buttons() {
+        // 全ボタン押し: mask = 0x0FFF → key_code = 0x2000
+        let key_code = KeyCode::new(0x2FFF ^ 0x0FFF);
+        assert_eq!(
+            key_code.to_display_string(),
+            "[A]+[B]+[X]+[Y]+[L]+[R]+[Start]+[Select]+[Up]+[Down]+[Left]+[Right]"
+        );
     }
 }

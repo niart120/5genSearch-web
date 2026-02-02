@@ -67,6 +67,15 @@ impl Pid {
             ShinyType::None
         }
     }
+
+    /// prefix無し16進数文字列に変換
+    ///
+    /// # Examples
+    /// - `Pid(0x12345678)` → `"12345678"`
+    /// - `Pid(0x00000001)` → `"00000001"`
+    pub fn to_hex_string(self) -> String {
+        format!("{:08X}", self.0)
+    }
 }
 
 // ===== トレーナー情報 =====
@@ -631,5 +640,25 @@ mod tests {
 
         let ivs_unknown = Ivs::new(31, IV_VALUE_UNKNOWN, 31, 31, 31, 31);
         assert!(!ivs_unknown.is_valid());
+    }
+
+    // === Pid::to_hex_string tests ===
+
+    #[test]
+    fn test_pid_to_hex_string() {
+        let pid = Pid(0x1234_5678);
+        assert_eq!(pid.to_hex_string(), "12345678");
+    }
+
+    #[test]
+    fn test_pid_to_hex_string_zero_padding() {
+        let pid = Pid(0x0000_0001);
+        assert_eq!(pid.to_hex_string(), "00000001");
+    }
+
+    #[test]
+    fn test_pid_to_hex_string_zero() {
+        let pid = Pid::ZERO;
+        assert_eq!(pid.to_hex_string(), "00000000");
     }
 }
