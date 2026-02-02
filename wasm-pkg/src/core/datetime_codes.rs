@@ -294,19 +294,19 @@ mod tests {
 
     #[test]
     fn test_date_code_boundary() {
-        // 元実装: test_date_code_boundary_values
-        // うるう年 2/29
+        // 境界日付の date_code を既知値で検証
+        // うるう年 2/29 (日曜日)
         let days_feb29_2004 = calc_days_since_2000(2004, 2, 29);
-        assert_ne!(get_date_code(days_feb29_2004), 0);
+        assert_eq!(get_date_code(days_feb29_2004), 0x0402_2900);
 
-        // 非うるう年 2/28
+        // 非うるう年 2/28 (水曜日)
         let days_feb28_2001 = calc_days_since_2000(2001, 2, 28);
-        assert_ne!(get_date_code(days_feb28_2001), 0);
+        assert_eq!(get_date_code(days_feb28_2001), 0x0102_2803);
 
-        // 年末年始
+        // 年末年始 (連続性検証)
         let days_dec31_2020 = calc_days_since_2000(2020, 12, 31);
         let days_jan01_2021 = calc_days_since_2000(2021, 1, 1);
-        assert_ne!(get_date_code(days_dec31_2020), 0);
-        assert_ne!(get_date_code(days_jan01_2021), 0);
+        assert_eq!(get_date_code(days_dec31_2020), 0x2012_3104); // 木曜日
+        assert_eq!(get_date_code(days_jan01_2021), 0x2101_0105); // 金曜日
     }
 }

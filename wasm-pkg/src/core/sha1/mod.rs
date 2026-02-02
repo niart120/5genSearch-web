@@ -159,10 +159,16 @@ mod tests {
 
     #[test]
     fn test_hash_values_to_mt_seed() {
+        // 既知のハッシュ値から MT Seed を計算
+        // h0=0x12345678 → swap=0x78563412
+        // h1=0xABCDEF01 → swap=0x01EFCDAB
+        // LCG raw = 0x01EFCDAB78563412
+        // LCG next = raw * 0x5d588b656c078965 + 0x269ec3 = 0xC799E179A084CBDD
+        // MT Seed = 上位32bit = 0xC799E179
         let h0 = 0x1234_5678;
         let h1 = 0xABCD_EF01;
         let hash = HashValues::new(h0, h1, 0, 0, 0);
         let mt = hash.to_mt_seed();
-        assert_ne!(mt.value(), 0);
+        assert_eq!(mt.value(), 0xC799_E179);
     }
 }
