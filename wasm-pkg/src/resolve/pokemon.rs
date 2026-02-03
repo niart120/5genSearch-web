@@ -5,7 +5,7 @@
 #![allow(clippy::too_many_lines)]
 
 use super::format_hidden_power_type;
-use crate::data::{calculate_stats, get_ability_name, get_nature_name, get_species_entry, get_species_name};
+use crate::data::{calculate_stats, get_ability_name, get_held_item_name, get_nature_name, get_species_entry, get_species_name};
 use crate::types::{
     GeneratedPokemonData, IV_VALUE_UNKNOWN, RomVersion, SeedOrigin, UiPokemonData,
 };
@@ -19,7 +19,7 @@ use crate::types::{
 #[allow(clippy::needless_pass_by_value)]
 pub fn resolve_pokemon_data(
     data: GeneratedPokemonData,
-    _version: RomVersion,
+    version: RomVersion,
     locale: &str,
 ) -> UiPokemonData {
     let species_entry = get_species_entry(data.species_id);
@@ -141,7 +141,12 @@ pub fn resolve_pokemon_data(
         hidden_power_power,
         pid,
         sync_applied: data.sync_applied,
-        held_item_name: None, // TODO: 持ち物解決
+        held_item_name: get_held_item_name(
+            data.species_id,
+            version.held_item_index(),
+            data.held_item_slot,
+            locale,
+        ).map(ToString::to_string),
         moving_encounter_guaranteed,
         special_encounter_triggered,
         special_encounter_direction,

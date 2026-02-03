@@ -822,7 +822,7 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 - [x] `wasm-pkg/src/data/stats.rs` 作成 (Stats, calculate_stats)
 - [x] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
-- [ ] `CorePokemonData` に species_id, level, stats 追加
+- [ ] `CorePokemonData` に species_id, level, stats 追加 (※破壊的変更のため保留)
 - [x] `wasm-pkg/src/types/mod.rs` に re-export 追加
 - [x] `Nature::stat_modifiers()` 追加 (性格補正の10倍表現、`[u8; 5]`)
 
@@ -831,7 +831,7 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 - [x] `wasm-pkg/src/data/mod.rs` 作成
 - [x] `wasm-pkg/src/data/species.rs` 作成
 - [x] `wasm-pkg/src/data/abilities.rs` 作成
-- [ ] `wasm-pkg/src/data/items.rs` 作成
+- [x] `wasm-pkg/src/data/items.rs` 作成
 - [x] `wasm-pkg/src/data/names.rs` 作成
 
 ### 6.4 解決モジュール
@@ -843,13 +843,13 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 ### 6.5 WASM API
 
 - [x] `wasm-pkg/src/lib.rs` に解決API追加
-- [ ] バッチ解決API追加
+- [x] バッチ解決API追加
 
 ### 6.6 テスト
 
 - [x] ユニットテスト実装
-- [ ] 統合テスト実装
-- [ ] WASM テスト実装
+- [x] 統合テスト実装
+- [ ] WASM テスト実装 (wasm-pack test 環境のセットアップが必要)
 
 ### 6.7 TypeScript 連携
 
