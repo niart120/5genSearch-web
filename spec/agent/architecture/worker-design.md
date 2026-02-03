@@ -51,16 +51,70 @@ const workerCount = navigator.hardwareConcurrency ?? 4;
 
 - `navigator.hardwareConcurrency` で論理コア数を取得
 - 取得不可の場合はフォールバック (4)
-- ユーザー設定は提供しない (設計判断)
+- 上限は設けない (モジュール共有によりメモリ効率を確保)
 
-## 4. メッセージプロトコル
+## 4. WASM モジュール共有
 
-### 4.1 メッセージ型定義
+### 4.1 背景
+
+各 Worker で独立に WASM をコンパイルすると、コンパイル済みコードがメモリ上で重複する。
+32 Worker の場合、数十 MB の無駄が発生する可能性がある。
+
+### 4.2 解決策
+
+`WebAssembly.Module` をメインスレッドで1回だけコンパイルし、各 Worker に転送する：
+
+```typescript
+// Main Thread (services/worker-pool.ts)
+async function createWorkerPool(): Promise<WorkerPool> {
+  // 1. WASM モジュールを1回だけコンパイル
+  const wasmBytes = await fetch('/wasm_pkg_bg.wasm').then(r => r.arrayBuffer());
+  const module = await WebAssembly.compile(wasmBytes);
+
+  // 2. Worker を生成し、コンパイル済みモジュールを転送
+  const workers = Array.from({ length: workerCount }, () => {
+    const worker = new Worker(new URL('./search.worker.ts', import.meta.url));
+    worker.postMessage({ type: 'init', module });
+    return worker;
+  });
+
+  // ...
+}
+```
+
+```typescript
+// Worker 内部 (workers/search.worker.ts)
+let wasmExports: WasmExports;
+
+self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
+  if (e.data.type === 'init') {
+    // コンパイル済みモジュールからインスタンス化 (高速)
+    const instance = await WebAssembly.instantiate(e.data.module, imports);
+    wasmExports = instance.exports as WasmExports;
+    postMessage({ type: 'ready' });
+  }
+  // ...
+};
+```
+
+### 4.3 メモリ効率
+
+| 項目 | モジュール共有なし | モジュール共有あり |
+|-----|------------------|------------------|
+| コンパイル済みコード | ~3 MB × N | ~3 MB (共有) |
+| インスタンスメモリ | ~2 MB × N | ~2 MB × N |
+| 32 Worker 合計 | ~160 MB | ~67 MB |
+
+`WebAssembly.Module` は Structured Clone 対応のため、`postMessage` で効率的に転送される。
+
+## 5. メッセージプロトコル
+
+### 5.1 メッセージ型定義
 
 ```typescript
 // Main → Worker
 type WorkerRequest =
-  | { type: 'init' }
+  | { type: 'init'; module: WebAssembly.Module }
   | { type: 'start'; taskId: string; task: SearchTask }
   | { type: 'cancel' };
 
@@ -82,7 +136,7 @@ interface ProgressInfo {
 }
 ```
 
-### 4.2 タスク型
+### 5.2 タスク型
 
 ```typescript
 type SearchTask =
@@ -92,9 +146,9 @@ type SearchTask =
   | { kind: 'trainer-info'; params: TrainerInfoSearchParams };
 ```
 
-## 5. WorkerPool 実装
+## 6. WorkerPool 実装
 
-### 5.1 責務
+### 6.1 責務
 
 - Worker の生成・破棄
 - タスクのディスパッチ
@@ -102,7 +156,7 @@ type SearchTask =
 - 結果の収集
 - キャンセル制御
 
-### 5.2 インターフェース
+### 6.2 インターフェース
 
 ```typescript
 interface WorkerPool {
@@ -118,7 +172,7 @@ interface WorkerPool {
   /** 進捗を購読 */
   onProgress(callback: (progress: AggregatedProgress) => void): () => void;
 
-  /** 結果を購読 */
+  /** 結果を購読 (完了時に一括通知) */
   onResult(callback: (results: SearchResult[]) => void): () => void;
 
   /** 完了を購読 */
@@ -150,9 +204,9 @@ interface AggregatedProgress {
 }
 ```
 
-## 6. Worker 内部実装
+## 7. Worker 内部実装
 
-### 6.1 ライフサイクル
+### 7.1 ライフサイクル
 
 ```
 [Created] → init → [Ready] → start → [Running] → done → [Ready]
@@ -160,15 +214,19 @@ interface AggregatedProgress {
                                cancel → [Ready]
 ```
 
-### 6.2 バッチ処理
+### 7.2 バッチ処理
 
 ```typescript
 // Worker 内部
 async function runSearch(task: SearchTask) {
   const searcher = createSearcher(task);
+  const results: SearchResult[] = [];
   
   while (!searcher.is_done && !cancelled) {
     const batch = searcher.next_batch(BATCH_SIZE);
+    
+    // 結果を蓄積 (完了時に一括送信)
+    results.push(...batch.results);
     
     // 進捗報告
     postMessage({
@@ -177,24 +235,17 @@ async function runSearch(task: SearchTask) {
       progress: calculateProgress(batch, startTime),
     });
     
-    // 結果報告 (バッチごと)
-    if (batch.results.length > 0) {
-      postMessage({
-        type: 'result',
-        taskId,
-        results: batch.results,
-      });
-    }
-    
     // UI スレッドへ制御を戻す
     await yieldToMain();
   }
   
+  // 完了 or キャンセル時に結果を一括送信
+  postMessage({ type: 'result', taskId, results });
   postMessage({ type: 'done', taskId });
 }
 ```
 
-### 6.3 バッチサイズ
+### 7.3 バッチサイズ
 
 | 検索種別 | バッチサイズ | 備考 |
 |---------|-------------|------|
@@ -203,12 +254,12 @@ async function runSearch(task: SearchTask) {
 | `MtseedSearcher` | 0x10000 | Seed 空間探索 |
 | `TrainerInfoSearcher` | 1000 | 日時ごとの探索 |
 
-## 7. タスク分割
+## 8. タスク分割
 
 WASM 側で提供される `generate_*_search_tasks()` 関数を使用：
 
 ```typescript
-import { generate_egg_search_tasks } from 'wasm-pkg';
+import { generate_egg_search_tasks } from '@wasm';
 
 const tasks = generate_egg_search_tasks(
   context,
@@ -223,9 +274,9 @@ const tasks = generate_egg_search_tasks(
 - 組み合わせ × 時間チャンクでタスクを生成
 - Worker 数を考慮した分割
 
-## 8. 進捗表示仕様
+## 9. 進捗表示仕様
 
-### 8.1 表示項目
+### 9.1 表示項目
 
 | 項目 | 表示例 | 計算方法 |
 |-----|-------|---------|
@@ -235,28 +286,54 @@ const tasks = generate_egg_search_tasks(
 | 残り時間 | `約 00:01:45` | `(total - processed) / throughput` |
 | スループット | `18,500 件/秒` | `processed / elapsedSec` |
 
-### 8.2 更新頻度
+### 9.2 更新頻度
 
 - 進捗報告: バッチ処理ごと
 - UI 更新: 最大 10 回/秒 (100ms throttle)
 
-## 9. キャンセル処理
+## 10. キャンセル処理
 
-### 9.1 フロー
+### 10.1 フロー
 
 1. ユーザーがキャンセルボタン押下
 2. `WorkerPool.cancel()` 呼び出し
 3. 各 Worker に `{ type: 'cancel' }` 送信
 4. Worker は次のバッチ処理前にフラグをチェック
-5. キャンセル時は `done` を送信してループ終了
+5. キャンセル時は途中結果を送信してループ終了
 
-### 9.2 注意点
+### 10.2 注意点
 
 - WASM 処理中は即時停止不可 (バッチ単位)
-- キャンセル後も結果は保持 (途中結果を破棄しない)
+- キャンセル後も途中結果は保持・表示
 
-## 10. 検討事項
+## 11. エラー処理
 
-- [ ] Worker の事前初期化 vs 遅延初期化
-- [ ] 結果のストリーミング vs 完了時一括
-- [ ] エラー時のリトライ戦略
+### 11.1 方針
+
+- リトライは行わない
+- エラー発生時は即座に失敗通知
+- 途中結果があれば表示
+
+### 11.2 フロー
+
+1. Worker 内でエラー発生 (WASM パニック等)
+2. `{ type: 'error', taskId, message }` を送信
+3. WorkerPool は他の Worker をキャンセル
+4. `onError` コールバックを呼び出し
+5. 途中結果を `onResult` で通知
+
+## 12. 初期化タイミング
+
+### 12.1 方針
+
+**事前初期化**を採用：
+
+- アプリ起動時に WorkerPool を生成
+- WASM モジュールをコンパイルし、全 Worker に配布
+- 全 Worker が `ready` を返すまで待機
+
+### 12.2 理由
+
+- 検索開始時のレイテンシを最小化
+- ユーザーは設定入力後すぐに検索を期待する
+- 初期化コスト (~数秒) はアプリ起動時に吸収
