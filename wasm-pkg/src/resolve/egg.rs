@@ -5,10 +5,10 @@
 #![allow(clippy::too_many_lines)]
 
 use super::format_hidden_power_type;
-use crate::data::{calculate_stats, get_ability_name, get_nature_name, get_species_entry, get_species_name};
-use crate::types::{
-    AbilitySlot, GeneratedEggData, IV_VALUE_UNKNOWN, SeedOrigin, UiEggData,
+use crate::data::{
+    calculate_stats, get_ability_name, get_nature_name, get_species_entry, get_species_name,
 };
+use crate::types::{AbilitySlot, GeneratedEggData, IV_VALUE_UNKNOWN, SeedOrigin, UiEggData};
 
 /// 卵データを表示用に解決
 ///
@@ -27,7 +27,11 @@ pub fn resolve_egg_data(
     let mt_seed = format!("{:08X}", data.source.mt_seed().value());
 
     let (datetime_iso, timer0, vcount, key_input) = match &data.source {
-        SeedOrigin::Startup { datetime, condition, .. } => {
+        SeedOrigin::Startup {
+            datetime,
+            condition,
+            ..
+        } => {
             let datetime_str = format!(
                 "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
                 datetime.year,
@@ -95,9 +99,7 @@ pub fn resolve_egg_data(
             level,
         );
         let stats_arr = stats_result.to_array();
-        std::array::from_fn(|i| {
-            stats_arr[i].map_or("?".to_string(), |v| v.to_string())
-        })
+        std::array::from_fn(|i| stats_arr[i].map_or("?".to_string(), |v| v.to_string()))
     } else {
         std::array::from_fn(|_| "?".to_string())
     };
@@ -162,8 +164,8 @@ fn format_ability_slot_name(slot: AbilitySlot, locale: &str) -> String {
 mod tests {
     use super::*;
     use crate::types::{
-        CorePokemonData, Datetime, Gender, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed,
-        NeedleDirection, Nature, Pid, ShinyType, StartupCondition,
+        CorePokemonData, Datetime, Gender, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed, Nature,
+        NeedleDirection, Pid, ShinyType, StartupCondition,
     };
 
     fn make_test_egg_data() -> GeneratedEggData {
@@ -194,11 +196,13 @@ mod tests {
                 gender: Gender::Female,
                 shiny_type: ShinyType::Star,
                 ivs: Ivs::new(31, 31, 31, 31, 31, 31),
+                species_id: 0, // 卵は種族ID未定義
+                level: 1,
             },
             inheritance: [
-                InheritanceSlot::new(0, 1),  // HP from Female
-                InheritanceSlot::new(1, 0),  // Atk from Male
-                InheritanceSlot::new(2, 1),  // Def from Female
+                InheritanceSlot::new(0, 1), // HP from Female
+                InheritanceSlot::new(1, 0), // Atk from Male
+                InheritanceSlot::new(2, 1), // Def from Female
             ],
             margin_frames: Some(10),
         }

@@ -297,14 +297,14 @@ impl PokemonFilter {
         // 種族 ID
         if let Some(ref ids) = self.species_ids
             && !ids.is_empty()
-            && !ids.contains(&data.species_id)
+            && !ids.contains(&data.core.species_id)
         {
             return false;
         }
 
         // レベル範囲
         if let Some((min, max)) = self.level_range
-            && (data.level < min || data.level > max)
+            && (data.core.level < min || data.core.level > max)
         {
             return false;
         }
@@ -384,9 +384,9 @@ mod tests {
                 gender,
                 shiny_type,
                 ivs,
+                species_id,
+                level,
             },
-            species_id,
-            level,
             sync_applied: false,
             held_item_slot: crate::types::HeldItemSlot::None,
             moving_encounter: None,
@@ -415,6 +415,8 @@ mod tests {
                 gender,
                 shiny_type,
                 ivs,
+                species_id: 0, // 卵は種族ID未定義
+                level: 1,
             },
             inheritance: [InheritanceSlot::default(); 3],
             margin_frames,

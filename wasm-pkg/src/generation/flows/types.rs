@@ -93,9 +93,9 @@ impl GeneratedPokemonData {
                 gender: raw.gender,
                 shiny_type: raw.shiny_type,
                 ivs,
+                species_id: raw.species_id,
+                level: raw.level,
             },
-            species_id: raw.species_id,
-            level: raw.level,
             sync_applied: raw.sync_applied,
             held_item_slot: raw.held_item_slot,
             moving_encounter,
@@ -125,6 +125,8 @@ impl GeneratedEggData {
                 gender: raw.gender,
                 shiny_type: raw.shiny_type,
                 ivs,
+                species_id: 0, // 卵は種族ID未定義
+                level: 1,      // 卵は常にLv.1
             },
             inheritance: raw.inheritance,
             margin_frames,

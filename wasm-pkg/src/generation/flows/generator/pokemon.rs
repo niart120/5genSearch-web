@@ -316,7 +316,7 @@ mod tests {
         let mut g = generator.unwrap();
         let pokemon = g.generate_next();
         assert!(pokemon.is_some());
-        assert_eq!(pokemon.unwrap().species_id, 150);
+        assert_eq!(pokemon.unwrap().core.species_id, 150);
         assert_eq!(g.current_advance(), 1);
     }
 }

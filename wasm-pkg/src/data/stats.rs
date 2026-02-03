@@ -3,7 +3,7 @@
 //! 種族値、個体値、性格、レベルからステータス実数値を計算。
 
 use super::species::BaseStats;
-use crate::types::{Ivs, Nature, IV_VALUE_UNKNOWN};
+use crate::types::{IV_VALUE_UNKNOWN, Ivs, Nature};
 
 /// 計算済みステータス
 ///

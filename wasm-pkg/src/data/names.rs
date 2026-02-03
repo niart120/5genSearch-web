@@ -1330,19 +1330,37 @@ pub fn get_species_name(species_id: u16, locale: &str) -> &'static str {
 
 /// 性格名 (日本語)
 pub static NATURE_NAMES_JA: [&str; 25] = [
-    "がんばりや", "さみしがり", "ゆうかん", "いじっぱり", "やんちゃ",
-    "ずぶとい", "すなお", "のんき", "わんぱく", "のうてんき",
-    "おくびょう", "せっかち", "まじめ", "ようき", "むじゃき",
-    "ひかえめ", "おっとり", "れいせい", "てれや", "うっかりや",
-    "おだやか", "おとなしい", "なまいき", "しんちょう", "きまぐれ",
+    "がんばりや",
+    "さみしがり",
+    "ゆうかん",
+    "いじっぱり",
+    "やんちゃ",
+    "ずぶとい",
+    "すなお",
+    "のんき",
+    "わんぱく",
+    "のうてんき",
+    "おくびょう",
+    "せっかち",
+    "まじめ",
+    "ようき",
+    "むじゃき",
+    "ひかえめ",
+    "おっとり",
+    "れいせい",
+    "てれや",
+    "うっかりや",
+    "おだやか",
+    "おとなしい",
+    "なまいき",
+    "しんちょう",
+    "きまぐれ",
 ];
 
 /// 性格名 (英語)
 pub static NATURE_NAMES_EN: [&str; 25] = [
-    "Hardy", "Lonely", "Brave", "Adamant", "Naughty",
-    "Bold", "Docile", "Relaxed", "Impish", "Lax",
-    "Timid", "Hasty", "Serious", "Jolly", "Naive",
-    "Modest", "Mild", "Quiet", "Bashful", "Rash",
+    "Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish", "Lax",
+    "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful", "Rash",
     "Calm", "Gentle", "Sassy", "Careful", "Quirky",
 ];
 

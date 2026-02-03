@@ -250,6 +250,14 @@ pub struct CorePokemonData {
     pub shiny_type: ShinyType,
     /// 個体値
     pub ivs: Ivs,
+    /// 種族 ID
+    /// - ポケモン: 常に設定
+    /// - 卵: 常に 0 (外部指定が必要)
+    pub species_id: u16,
+    /// レベル
+    /// - ポケモン: 生成時に決定
+    /// - 卵: 常に 1
+    pub level: u8,
 }
 
 /// 完全な個体データ
@@ -262,10 +270,9 @@ pub struct GeneratedPokemonData {
     /// 生成元情報
     pub source: SeedOrigin,
     // 共通個体情報 (ネスト)
+    // ※ species_id, level は core 内に含まれる
     pub core: CorePokemonData,
     // ポケモン固有
-    pub species_id: u16,
-    pub level: u8,
     pub sync_applied: bool,
     pub held_item_slot: HeldItemSlot,
     // === エンカウント付加情報 (排反) ===
@@ -414,7 +421,10 @@ mod tests {
 
     #[test]
     fn test_moving_encounter_likelihood_to_display_symbol_guaranteed() {
-        assert_eq!(MovingEncounterLikelihood::Guaranteed.to_display_symbol(), "〇");
+        assert_eq!(
+            MovingEncounterLikelihood::Guaranteed.to_display_symbol(),
+            "〇"
+        );
     }
 
     #[test]
@@ -424,7 +434,10 @@ mod tests {
 
     #[test]
     fn test_moving_encounter_likelihood_to_display_symbol_no_encounter() {
-        assert_eq!(MovingEncounterLikelihood::NoEncounter.to_display_symbol(), "×");
+        assert_eq!(
+            MovingEncounterLikelihood::NoEncounter.to_display_symbol(),
+            "×"
+        );
     }
 
     #[test]

@@ -5,8 +5,8 @@
 use wasm_pkg::resolve::{resolve_egg_data, resolve_pokemon_data};
 use wasm_pkg::types::{
     AbilitySlot, CorePokemonData, Datetime, EncounterResult, Gender, GeneratedEggData,
-    GeneratedPokemonData, HeldItemSlot, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed,
-    NeedleDirection, Nature, Pid, RomVersion, SeedOrigin, ShinyType, StartupCondition,
+    GeneratedPokemonData, HeldItemSlot, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed, Nature,
+    NeedleDirection, Pid, RomVersion, SeedOrigin, ShinyType, StartupCondition,
 };
 
 /// テスト用のポケモンデータを生成
@@ -38,9 +38,9 @@ fn create_test_pokemon_data() -> GeneratedPokemonData {
             gender: Gender::Male,
             shiny_type: ShinyType::None,
             ivs: Ivs::new(31, 31, 31, 31, 31, 31),
+            species_id: 25, // ピカチュウ
+            level: 50,
         },
-        species_id: 25, // ピカチュウ
-        level: 50,
         sync_applied: false,
         held_item_slot: HeldItemSlot::Common, // オレンのみ
         moving_encounter: None,
@@ -78,6 +78,8 @@ fn create_test_egg_data() -> GeneratedEggData {
             gender: Gender::Female,
             shiny_type: ShinyType::Star,
             ivs: Ivs::new(31, 31, 31, 31, 31, 31),
+            species_id: 0, // 卵は種族ID未定義
+            level: 1,
         },
         inheritance: [
             InheritanceSlot::new(0, 1), // HP from Female
@@ -161,14 +163,10 @@ fn test_resolve_egg_without_species() {
 fn test_batch_resolve_pokemon() {
     let data1 = create_test_pokemon_data();
     let mut data2 = create_test_pokemon_data();
-    data2.species_id = 6; // リザードン
-    data2.level = 36;
+    data2.core.species_id = 6; // リザードン
+    data2.core.level = 36;
 
-    let results = wasm_pkg::resolve_pokemon_data_batch(
-        vec![data1, data2],
-        RomVersion::Black,
-        "ja",
-    );
+    let results = wasm_pkg::resolve_pokemon_data_batch(vec![data1, data2], RomVersion::Black, "ja");
 
     assert_eq!(results.len(), 2);
     assert_eq!(results[0].species_name, "ピカチュウ");

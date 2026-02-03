@@ -12,7 +12,7 @@ pub mod species;
 pub mod stats;
 
 pub use abilities::get_ability_name;
-pub use items::{get_held_item_entry, get_held_item_name, get_item_name, HeldItemEntry};
+pub use items::{HeldItemEntry, get_held_item_entry, get_held_item_name, get_item_name};
 pub use names::{get_nature_name, get_species_name};
-pub use species::{get_species_entry, BaseStats, SpeciesEntry};
-pub use stats::{calculate_stats, Stats};
+pub use species::{BaseStats, SpeciesEntry, get_species_entry};
+pub use stats::{Stats, calculate_stats};

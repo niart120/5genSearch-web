@@ -3,8 +3,8 @@
 //! このファイルは自動生成されています。直接編集しないでください。
 //! 生成コマンド: node scripts/generate-species-data.js
 
-use crate::types::AbilitySlot;
 use super::species::get_species_entry;
+use crate::types::AbilitySlot;
 
 /// 特性名テーブル: (日本語名, 英語名)
 /// インデックス 0 は「なし」を表す空文字列

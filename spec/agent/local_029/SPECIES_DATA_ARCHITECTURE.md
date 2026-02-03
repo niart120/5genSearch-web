@@ -822,7 +822,7 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 - [x] `wasm-pkg/src/data/stats.rs` 作成 (Stats, calculate_stats)
 - [x] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
-- [ ] `CorePokemonData` に species_id, level, stats 追加 (※破壊的変更のため保留)
+- [x] `CorePokemonData` に species_id, level 追加、`GeneratedPokemonData` から削除
 - [x] `wasm-pkg/src/types/mod.rs` に re-export 追加
 - [x] `Nature::stat_modifiers()` 追加 (性格補正の10倍表現、`[u8; 5]`)
 
@@ -853,5 +853,5 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 ### 6.7 TypeScript 連携
 
-- [ ] 型定義の自動生成確認
+- [x] 型定義の自動生成確認
 - [ ] 既存 Resolver 層との互換性確認

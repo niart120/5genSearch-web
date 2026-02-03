@@ -5,10 +5,11 @@
 #![allow(clippy::too_many_lines)]
 
 use super::format_hidden_power_type;
-use crate::data::{calculate_stats, get_ability_name, get_held_item_name, get_nature_name, get_species_entry, get_species_name};
-use crate::types::{
-    GeneratedPokemonData, IV_VALUE_UNKNOWN, RomVersion, SeedOrigin, UiPokemonData,
+use crate::data::{
+    calculate_stats, get_ability_name, get_held_item_name, get_nature_name, get_species_entry,
+    get_species_name,
 };
+use crate::types::{GeneratedPokemonData, IV_VALUE_UNKNOWN, RomVersion, SeedOrigin, UiPokemonData};
 
 /// ポケモンデータを表示用に解決
 ///
@@ -22,14 +23,18 @@ pub fn resolve_pokemon_data(
     version: RomVersion,
     locale: &str,
 ) -> UiPokemonData {
-    let species_entry = get_species_entry(data.species_id);
+    let species_entry = get_species_entry(data.core.species_id);
 
     // Seed情報展開
     let base_seed = format!("{:016X}", data.source.base_seed().value());
     let mt_seed = format!("{:08X}", data.source.mt_seed().value());
 
     let (datetime_iso, timer0, vcount, key_input) = match &data.source {
-        SeedOrigin::Startup { datetime, condition, .. } => {
+        SeedOrigin::Startup {
+            datetime,
+            condition,
+            ..
+        } => {
             let datetime_str = format!(
                 "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
                 datetime.year,
@@ -50,9 +55,10 @@ pub fn resolve_pokemon_data(
     };
 
     // 個体情報解決
-    let species_name = get_species_name(data.species_id, locale).to_string();
+    let species_name = get_species_name(data.core.species_id, locale).to_string();
     let nature_name = get_nature_name(data.core.nature as u8, locale).to_string();
-    let ability_name = get_ability_name(data.species_id, data.core.ability_slot, locale).to_string();
+    let ability_name =
+        get_ability_name(data.core.species_id, data.core.ability_slot, locale).to_string();
 
     let gender_symbol = match data.core.gender {
         crate::types::Gender::Male => "♂".to_string(),
@@ -82,12 +88,11 @@ pub fn resolve_pokemon_data(
         species_entry.base_stats,
         data.core.ivs,
         data.core.nature,
-        data.level,
+        data.core.level,
     );
     let stats_arr = stats_result.to_array();
-    let stats: [String; 6] = std::array::from_fn(|i| {
-        stats_arr[i].map_or("?".to_string(), |v| v.to_string())
-    });
+    let stats: [String; 6] =
+        std::array::from_fn(|i| stats_arr[i].map_or("?".to_string(), |v| v.to_string()));
 
     // めざパ
     let has_unknown_iv = data.core.ivs.has_unknown();
@@ -106,17 +111,20 @@ pub fn resolve_pokemon_data(
     let pid = data.core.pid.to_hex_string();
 
     // エンカウント情報
-    let moving_encounter_guaranteed = data.moving_encounter.as_ref().map(|info| {
-        info.likelihood.to_display_symbol().to_string()
-    });
+    let moving_encounter_guaranteed = data
+        .moving_encounter
+        .as_ref()
+        .map(|info| info.likelihood.to_display_symbol().to_string());
 
-    let special_encounter_triggered = data.special_encounter.as_ref().map(|info| {
-        info.triggered_symbol().to_string()
-    });
+    let special_encounter_triggered = data
+        .special_encounter
+        .as_ref()
+        .map(|info| info.triggered_symbol().to_string());
 
-    let special_encounter_direction = data.special_encounter.as_ref().map(|info| {
-        format_direction(info.direction, locale)
-    });
+    let special_encounter_direction = data
+        .special_encounter
+        .as_ref()
+        .map(|info| format_direction(info.direction, locale));
 
     let encounter_result = format_encounter_result(data.encounter_result, locale);
 
@@ -134,7 +142,7 @@ pub fn resolve_pokemon_data(
         ability_name,
         gender_symbol,
         shiny_symbol,
-        level: data.level,
+        level: data.core.level,
         ivs,
         stats,
         hidden_power_type,
@@ -142,11 +150,12 @@ pub fn resolve_pokemon_data(
         pid,
         sync_applied: data.sync_applied,
         held_item_name: get_held_item_name(
-            data.species_id,
+            data.core.species_id,
             version.held_item_index(),
             data.held_item_slot,
             locale,
-        ).map(ToString::to_string),
+        )
+        .map(ToString::to_string),
         moving_encounter_guaranteed,
         special_encounter_triggered,
         special_encounter_direction,
@@ -154,10 +163,7 @@ pub fn resolve_pokemon_data(
     }
 }
 
-fn format_direction(
-    direction: crate::types::SpecialEncounterDirection,
-    locale: &str,
-) -> String {
+fn format_direction(direction: crate::types::SpecialEncounterDirection, locale: &str) -> String {
     match locale {
         "ja" => match direction {
             crate::types::SpecialEncounterDirection::Right => "右",
@@ -175,10 +181,7 @@ fn format_direction(
     .to_string()
 }
 
-fn format_encounter_result(
-    result: crate::types::EncounterResult,
-    _locale: &str,
-) -> String {
+fn format_encounter_result(result: crate::types::EncounterResult, _locale: &str) -> String {
     match result {
         crate::types::EncounterResult::Pokemon => "Pokemon".to_string(),
         crate::types::EncounterResult::Item(item) => {
@@ -199,7 +202,7 @@ mod tests {
     use super::*;
     use crate::types::{
         AbilitySlot, CorePokemonData, Datetime, EncounterResult, Gender, HeldItemSlot, Ivs,
-        KeyCode, LcgSeed, MtSeed, NeedleDirection, Nature, Pid, ShinyType, StartupCondition,
+        KeyCode, LcgSeed, MtSeed, Nature, NeedleDirection, Pid, ShinyType, StartupCondition,
     };
 
     fn make_test_data() -> GeneratedPokemonData {
@@ -230,9 +233,9 @@ mod tests {
                 gender: Gender::Male,
                 shiny_type: ShinyType::None,
                 ivs: Ivs::new(31, 31, 31, 31, 31, 31),
+                species_id: 25, // ピカチュウ
+                level: 50,
             },
-            species_id: 25, // ピカチュウ
-            level: 50,
             sync_applied: false,
             held_item_slot: HeldItemSlot::None,
             moving_encounter: None,

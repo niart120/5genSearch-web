@@ -199,16 +199,16 @@ impl Nature {
             Self::Lax => [10, 11, 10, 9, 10],     // Def↑ SpD↓
 
             // Spe↑ (素早さ上昇)
-            Self::Timid => [9, 10, 10, 10, 11],   // Spe↑ Atk↓
-            Self::Hasty => [10, 9, 10, 10, 11],   // Spe↑ Def↓
-            Self::Jolly => [10, 10, 9, 10, 11],   // Spe↑ SpA↓
-            Self::Naive => [10, 10, 10, 9, 11],   // Spe↑ SpD↓
+            Self::Timid => [9, 10, 10, 10, 11], // Spe↑ Atk↓
+            Self::Hasty => [10, 9, 10, 10, 11], // Spe↑ Def↓
+            Self::Jolly => [10, 10, 9, 10, 11], // Spe↑ SpA↓
+            Self::Naive => [10, 10, 10, 9, 11], // Spe↑ SpD↓
 
             // SpA↑ (特攻上昇)
-            Self::Modest => [9, 10, 11, 10, 10],  // SpA↑ Atk↓
-            Self::Mild => [10, 9, 11, 10, 10],    // SpA↑ Def↓
-            Self::Quiet => [10, 10, 11, 10, 9],   // SpA↑ Spe↓
-            Self::Rash => [10, 10, 11, 9, 10],    // SpA↑ SpD↓
+            Self::Modest => [9, 10, 11, 10, 10], // SpA↑ Atk↓
+            Self::Mild => [10, 9, 11, 10, 10],   // SpA↑ Def↓
+            Self::Quiet => [10, 10, 11, 10, 9],  // SpA↑ Spe↓
+            Self::Rash => [10, 10, 11, 9, 10],   // SpA↑ SpD↓
 
             // SpD↑ (特防上昇)
             Self::Calm => [9, 10, 10, 11, 10],    // SpD↑ Atk↓
