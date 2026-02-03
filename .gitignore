@@ -27,7 +27,6 @@ dist-ssr
 target/
 wasm-pkg/pkg/
 Cargo.lock
-*.wasm
 
 # ローカル開発用設定
 wasm-pkg/.cargo/
