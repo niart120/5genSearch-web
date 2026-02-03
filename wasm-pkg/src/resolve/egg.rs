@@ -4,9 +4,10 @@
 
 #![allow(clippy::too_many_lines)]
 
+use super::format_hidden_power_type;
 use crate::data::{calculate_stats, get_ability_name, get_nature_name, get_species_entry, get_species_name};
 use crate::types::{
-    AbilitySlot, GeneratedEggData, HiddenPowerType, IV_VALUE_UNKNOWN, SeedOrigin, UiEggData,
+    AbilitySlot, GeneratedEggData, IV_VALUE_UNKNOWN, SeedOrigin, UiEggData,
 };
 
 /// 卵データを表示用に解決
@@ -152,48 +153,6 @@ fn format_ability_slot_name(slot: AbilitySlot, locale: &str) -> String {
             AbilitySlot::First => "Ability 1",
             AbilitySlot::Second => "Ability 2",
             AbilitySlot::Hidden => "Hidden Ability",
-        },
-    }
-    .to_string()
-}
-
-fn format_hidden_power_type(hp_type: HiddenPowerType, locale: &str) -> String {
-    match locale {
-        "ja" => match hp_type {
-            HiddenPowerType::Fighting => "かくとう",
-            HiddenPowerType::Flying => "ひこう",
-            HiddenPowerType::Poison => "どく",
-            HiddenPowerType::Ground => "じめん",
-            HiddenPowerType::Rock => "いわ",
-            HiddenPowerType::Bug => "むし",
-            HiddenPowerType::Ghost => "ゴースト",
-            HiddenPowerType::Steel => "はがね",
-            HiddenPowerType::Fire => "ほのお",
-            HiddenPowerType::Water => "みず",
-            HiddenPowerType::Grass => "くさ",
-            HiddenPowerType::Electric => "でんき",
-            HiddenPowerType::Psychic => "エスパー",
-            HiddenPowerType::Ice => "こおり",
-            HiddenPowerType::Dragon => "ドラゴン",
-            HiddenPowerType::Dark => "あく",
-        },
-        _ => match hp_type {
-            HiddenPowerType::Fighting => "Fighting",
-            HiddenPowerType::Flying => "Flying",
-            HiddenPowerType::Poison => "Poison",
-            HiddenPowerType::Ground => "Ground",
-            HiddenPowerType::Rock => "Rock",
-            HiddenPowerType::Bug => "Bug",
-            HiddenPowerType::Ghost => "Ghost",
-            HiddenPowerType::Steel => "Steel",
-            HiddenPowerType::Fire => "Fire",
-            HiddenPowerType::Water => "Water",
-            HiddenPowerType::Grass => "Grass",
-            HiddenPowerType::Electric => "Electric",
-            HiddenPowerType::Psychic => "Psychic",
-            HiddenPowerType::Ice => "Ice",
-            HiddenPowerType::Dragon => "Dragon",
-            HiddenPowerType::Dark => "Dark",
         },
     }
     .to_string()

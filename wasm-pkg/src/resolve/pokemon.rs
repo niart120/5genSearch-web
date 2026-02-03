@@ -4,9 +4,10 @@
 
 #![allow(clippy::too_many_lines)]
 
+use super::format_hidden_power_type;
 use crate::data::{calculate_stats, get_ability_name, get_nature_name, get_species_entry, get_species_name};
 use crate::types::{
-    GeneratedPokemonData, HiddenPowerType, IV_VALUE_UNKNOWN, RomVersion, SeedOrigin, UiPokemonData,
+    GeneratedPokemonData, IV_VALUE_UNKNOWN, RomVersion, SeedOrigin, UiPokemonData,
 };
 
 /// ポケモンデータを表示用に解決
@@ -146,48 +147,6 @@ pub fn resolve_pokemon_data(
         special_encounter_direction,
         encounter_result,
     }
-}
-
-fn format_hidden_power_type(hp_type: HiddenPowerType, locale: &str) -> String {
-    match locale {
-        "ja" => match hp_type {
-            HiddenPowerType::Fighting => "かくとう",
-            HiddenPowerType::Flying => "ひこう",
-            HiddenPowerType::Poison => "どく",
-            HiddenPowerType::Ground => "じめん",
-            HiddenPowerType::Rock => "いわ",
-            HiddenPowerType::Bug => "むし",
-            HiddenPowerType::Ghost => "ゴースト",
-            HiddenPowerType::Steel => "はがね",
-            HiddenPowerType::Fire => "ほのお",
-            HiddenPowerType::Water => "みず",
-            HiddenPowerType::Grass => "くさ",
-            HiddenPowerType::Electric => "でんき",
-            HiddenPowerType::Psychic => "エスパー",
-            HiddenPowerType::Ice => "こおり",
-            HiddenPowerType::Dragon => "ドラゴン",
-            HiddenPowerType::Dark => "あく",
-        },
-        _ => match hp_type {
-            HiddenPowerType::Fighting => "Fighting",
-            HiddenPowerType::Flying => "Flying",
-            HiddenPowerType::Poison => "Poison",
-            HiddenPowerType::Ground => "Ground",
-            HiddenPowerType::Rock => "Rock",
-            HiddenPowerType::Bug => "Bug",
-            HiddenPowerType::Ghost => "Ghost",
-            HiddenPowerType::Steel => "Steel",
-            HiddenPowerType::Fire => "Fire",
-            HiddenPowerType::Water => "Water",
-            HiddenPowerType::Grass => "Grass",
-            HiddenPowerType::Electric => "Electric",
-            HiddenPowerType::Psychic => "Psychic",
-            HiddenPowerType::Ice => "Ice",
-            HiddenPowerType::Dragon => "Dragon",
-            HiddenPowerType::Dark => "Dark",
-        },
-    }
-    .to_string()
 }
 
 fn format_direction(
