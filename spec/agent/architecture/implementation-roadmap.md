@@ -54,7 +54,8 @@ Phase 4: 仕上げ
 
 | タスク | 説明 | 成果物 |
 |-------|------|--------|
-| Worker エントリポイント | `search.worker.ts` | 実装 |
+| CPU Worker エントリポイント | `search.worker.ts` | 実装 |
+| GPU Worker エントリポイント | `gpu.worker.ts` | 実装 |
 | WASM 初期化 | Worker 内での init | 実装 |
 | メッセージ型定義 | Request/Response 型 | `workers/types.ts` |
 | WorkerPool 実装 | spawn/dispatch/collect | `services/worker-pool.ts` |
@@ -69,6 +70,15 @@ Phase 4: 仕上げ
 | Store 分割設計 | 永続化/非永続化分類 | 設計ドキュメント |
 | 永続化実装 | localStorage 連携 | 実装 |
 | カスタムフック | Store 隠蔽フック | `hooks/` |
+
+### 3.4 i18n 基盤
+
+| タスク | 説明 | 成果物 |
+|-------|------|--------|
+| ライブラリ選定 | react-i18next / lingui 比較 | 選定結果 |
+| リソース形式決定 | JSON vs TypeScript | 設計ドキュメント |
+| 翻訳キー命名規則 | 機能別プレフィックス等 | 規約ドキュメント |
+| 初期リソース作成 | ja.ts / en.ts | 実装 |
 
 ## 4. Phase 2: 共通コンポーネント
 
@@ -103,6 +113,15 @@ Phase 4: 仕上げ
 | Sidebar | 設定サイドバー (PC) |
 | ResponsiveContainer | レスポンシブレイアウト |
 | ProgressOverlay | 進捗表示オーバーレイ |
+
+### 4.4 データ表示部品
+
+| コンポーネント | 説明 |
+|--------------|------|
+| ResultTable | PC 向けテーブル表示 |
+| ResultCard | モバイル向けカード表示 |
+| ProgressBar | 進捗バー |
+| Pagination | ページネーション |
 
 ## 5. Phase 3: 機能実装
 
