@@ -11,6 +11,7 @@ pub mod data;
 pub mod datetime_search;
 pub mod generation;
 pub mod misc;
+pub mod resolve;
 pub mod types;
 
 #[cfg(feature = "gpu")]
@@ -32,10 +33,11 @@ pub use types::{
     ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed, LeadAbilityEffect,
     MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, MtseedDatetimeSearchBatch,
     MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchParams,
-    NeedleDirection, NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, SaveState,
-    SearchRangeParams, SeedOrigin, SeedSpec, ShinyFilter, SpecialEncounterDirection,
+    NeedleDirection, NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, RomVersion,
+    SaveState, SearchRangeParams, SeedOrigin, SeedSpec, ShinyFilter, SpecialEncounterDirection,
     SpecialEncounterInfo, StartMode, TimeRangeParams, Timer0VCountRange, TrainerInfo,
     TrainerInfoFilter, TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
+    UiEggData, UiPokemonData,
 };
 
 // Re-export core functions
@@ -50,6 +52,9 @@ pub use misc::{MtseedSearcher, get_needle_pattern_at, search_needle_pattern};
 
 // Re-export needle search types
 pub use types::NeedleSearchResult;
+
+// Re-export resolve module
+pub use resolve::{resolve_egg_data, resolve_pokemon_data};
 
 // Re-export GPU module (when enabled)
 #[cfg(feature = "gpu")]

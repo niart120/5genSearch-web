@@ -821,10 +821,10 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 ### 6.2 型定義
 
 - [x] `wasm-pkg/src/data/stats.rs` 作成 (Stats, calculate_stats)
-- [ ] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
+- [x] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
 - [ ] `CorePokemonData` に species_id, level, stats 追加
-- [ ] `wasm-pkg/src/types/mod.rs` に re-export 追加
-- [x] `Nature::stat_modifiers()` 追加 (性格補正の10倍表現)
+- [x] `wasm-pkg/src/types/mod.rs` に re-export 追加
+- [x] `Nature::stat_modifiers()` 追加 (性格補正の10倍表現、`[u8; 5]`)
 
 ### 6.3 データモジュール
 
@@ -836,14 +836,13 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 ### 6.4 解決モジュール
 
-- [ ] `wasm-pkg/src/resolve/mod.rs` 作成
-- [ ] `wasm-pkg/src/resolve/stats.rs` 作成
-- [ ] `wasm-pkg/src/resolve/pokemon.rs` 作成
-- [ ] `wasm-pkg/src/resolve/egg.rs` 作成
+- [x] `wasm-pkg/src/resolve/mod.rs` 作成
+- [x] `wasm-pkg/src/resolve/pokemon.rs` 作成
+- [x] `wasm-pkg/src/resolve/egg.rs` 作成
 
 ### 6.5 WASM API
 
-- [ ] `wasm-pkg/src/lib.rs` に解決API追加
+- [x] `wasm-pkg/src/lib.rs` に解決API追加
 - [ ] バッチ解決API追加
 
 ### 6.6 テスト
