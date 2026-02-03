@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "pnpm build:wasm && tsc -b && vite build",
-    "build:wasm": "wasm-pack build wasm-pkg --target web --out-dir pkg",
-    "build:wasm:dev": "wasm-pack build wasm-pkg --target web --out-dir pkg --dev",
+    "build:wasm": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm",
+    "build:wasm:dev": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm --dev",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -41,6 +41,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "npm:rolldown-vite@7.2.5",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.17"
   },
   "pnpm": {
