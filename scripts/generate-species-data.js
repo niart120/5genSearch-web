@@ -11,65 +11,62 @@
  *   wasm-pkg/src/data/names.rs
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const ROOT_DIR = join(__dirname, "..");
+const ROOT_DIR = join(__dirname, '..');
 
 // 入力ファイル
-const SPECIES_JSON_PATH = join(
-  ROOT_DIR,
-  "spec/agent/local_029/gen5-species.json"
-);
+const SPECIES_JSON_PATH = join(ROOT_DIR, 'spec/agent/local_029/gen5-species.json');
 
 // 出力ディレクトリ
-const DATA_DIR = join(ROOT_DIR, "wasm-pkg/src/data");
+const DATA_DIR = join(ROOT_DIR, 'wasm-pkg/src/data');
 
 // 性別比を GenderRatio 列挙型にマッピング
 function mapGenderRatio(gender) {
-  if (gender.type === "genderless") {
-    return "GenderRatio::Genderless";
+  if (gender.type === 'genderless') {
+    return 'GenderRatio::Genderless';
   }
-  if (gender.type === "fixed") {
-    if (gender.fixed === "male") {
-      return "GenderRatio::MaleOnly";
+  if (gender.type === 'fixed') {
+    if (gender.fixed === 'male') {
+      return 'GenderRatio::MaleOnly';
     }
-    if (gender.fixed === "female") {
-      return "GenderRatio::FemaleOnly";
+    if (gender.fixed === 'female') {
+      return 'GenderRatio::FemaleOnly';
     }
   }
-  if (gender.type === "male-only") {
-    return "GenderRatio::MaleOnly";
+  if (gender.type === 'male-only') {
+    return 'GenderRatio::MaleOnly';
   }
-  if (gender.type === "female-only") {
-    return "GenderRatio::FemaleOnly";
+  if (gender.type === 'female-only') {
+    return 'GenderRatio::FemaleOnly';
   }
   // ratio type
   const threshold = gender.femaleThreshold;
   if (threshold === 32 || threshold === 31) {
-    return "GenderRatio::F1M7";
+    return 'GenderRatio::F1M7';
   }
   if (threshold === 64 || threshold === 63) {
-    return "GenderRatio::F1M3";
+    return 'GenderRatio::F1M3';
   }
   if (threshold === 128 || threshold === 127) {
-    return "GenderRatio::F1M1";
+    return 'GenderRatio::F1M1';
   }
   if (threshold === 192 || threshold === 191) {
-    return "GenderRatio::F3M1";
+    return 'GenderRatio::F3M1';
   }
   // フォールバック
   console.warn(`Unknown gender threshold: ${threshold}, defaulting to F1M1`);
-  return "GenderRatio::F1M1";
+  return 'GenderRatio::F1M1';
 }
 
 // メイン処理
 function main() {
-  console.log("Reading species data...");
-  const speciesData = JSON.parse(readFileSync(SPECIES_JSON_PATH, "utf-8"));
+  console.log('Reading species data...');
+  const speciesData = JSON.parse(readFileSync(SPECIES_JSON_PATH, 'utf-8'));
 
   // 出力ディレクトリ作成
   if (!existsSync(DATA_DIR)) {
@@ -78,14 +75,14 @@ function main() {
 
   // 特性を収集 (重複排除)
   const abilityMap = new Map(); // key -> { id, names: { en, ja } }
-  abilityMap.set("", { id: 0, names: { en: "", ja: "" } }); // 0番は空
+  abilityMap.set('', { id: 0, names: { en: '', ja: '' } }); // 0番は空
 
   let nextAbilityId = 1;
   for (const id of Object.keys(speciesData).sort((a, b) => Number(a) - Number(b))) {
     const species = speciesData[id];
     const abilities = species.abilities;
 
-    for (const slot of ["ability1", "ability2", "hidden"]) {
+    for (const slot of ['ability1', 'ability2', 'hidden']) {
       const ability = abilities[slot];
       if (ability && ability.key && !abilityMap.has(ability.key)) {
         abilityMap.set(ability.key, {
@@ -107,7 +104,7 @@ function main() {
     const species = speciesData[String(i)];
     if (!species) {
       // 欠番の場合はダミーデータ
-      speciesEntries.push(`    // #${String(i).padStart(3, "0")} (missing)
+      speciesEntries.push(`    // #${String(i).padStart(3, '0')} (missing)
     SpeciesEntry {
         base_stats: BaseStats { hp: 0, attack: 0, defense: 0, special_attack: 0, special_defense: 0, speed: 0 },
         gender_ratio: GenderRatio::Genderless,
@@ -135,7 +132,7 @@ function main() {
         ? abilityMap.get(species.abilities.hidden.key).id
         : 0;
 
-    speciesEntries.push(`    // #${String(i).padStart(3, "0")} ${species.names.en}
+    speciesEntries.push(`    // #${String(i).padStart(3, '0')} ${species.names.en}
     SpeciesEntry {
         base_stats: BaseStats { hp: ${bs.hp}, attack: ${bs.attack}, defense: ${bs.defense}, special_attack: ${bs.specialAttack}, special_defense: ${bs.specialDefense}, speed: ${bs.speed} },
         gender_ratio: ${genderRatio},
@@ -176,7 +173,7 @@ pub struct SpeciesEntry {
 
 /// 種族テーブル (649件)
 pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
-${speciesEntries.join(",\n")},
+${speciesEntries.join(',\n')},
 ];
 
 /// 種族エントリを取得
@@ -232,9 +229,9 @@ mod tests {
   const abilityEntries = Array.from(abilityMap.entries())
     .sort((a, b) => a[1].id - b[1].id)
     .map(([key, val]) => {
-      const jaName = val.names.ja || "";
-      const enName = val.names.en || "";
-      return `    // ${val.id}: ${key || "(none)"}
+      const jaName = val.names.ja || '';
+      const enName = val.names.en || '';
+      return `    // ${val.id}: ${key || '(none)'}
     ("${jaName}", "${enName}")`;
     });
 
@@ -249,7 +246,7 @@ use super::species::get_species_entry;
 /// 特性名テーブル: (日本語名, 英語名)
 /// インデックス 0 は「なし」を表す空文字列
 pub static ABILITY_NAMES: [(&str, &str); ${abilityMap.size}] = [
-${abilityEntries.join(",\n")},
+${abilityEntries.join(',\n')},
 ];
 
 /// 特性名を取得
@@ -339,12 +336,12 @@ mod tests {
 
 /// 種族名 (日本語)
 pub static SPECIES_NAMES_JA: [&str; 649] = [
-    ${speciesNamesJa.join(",\n    ")},
+    ${speciesNamesJa.join(',\n    ')},
 ];
 
 /// 種族名 (英語)
 pub static SPECIES_NAMES_EN: [&str; 649] = [
-    ${speciesNamesEn.join(",\n    ")},
+    ${speciesNamesEn.join(',\n    ')},
 ];
 
 /// 種族名を取得
@@ -459,19 +456,19 @@ pub use species::{get_species_entry, BaseStats, SpeciesEntry};
 `;
 
   // ファイル書き出し
-  writeFileSync(join(DATA_DIR, "species.rs"), speciesRs, "utf-8");
-  console.log("Generated: wasm-pkg/src/data/species.rs");
+  writeFileSync(join(DATA_DIR, 'species.rs'), speciesRs, 'utf-8');
+  console.log('Generated: wasm-pkg/src/data/species.rs');
 
-  writeFileSync(join(DATA_DIR, "abilities.rs"), abilitiesRs, "utf-8");
-  console.log("Generated: wasm-pkg/src/data/abilities.rs");
+  writeFileSync(join(DATA_DIR, 'abilities.rs'), abilitiesRs, 'utf-8');
+  console.log('Generated: wasm-pkg/src/data/abilities.rs');
 
-  writeFileSync(join(DATA_DIR, "names.rs"), namesRs, "utf-8");
-  console.log("Generated: wasm-pkg/src/data/names.rs");
+  writeFileSync(join(DATA_DIR, 'names.rs'), namesRs, 'utf-8');
+  console.log('Generated: wasm-pkg/src/data/names.rs');
 
-  writeFileSync(join(DATA_DIR, "mod.rs"), modRs, "utf-8");
-  console.log("Generated: wasm-pkg/src/data/mod.rs");
+  writeFileSync(join(DATA_DIR, 'mod.rs'), modRs, 'utf-8');
+  console.log('Generated: wasm-pkg/src/data/mod.rs');
 
-  console.log("\nDone! Generated 4 files in wasm-pkg/src/data/");
+  console.log('\nDone! Generated 4 files in wasm-pkg/src/data/');
 }
 
 main();
