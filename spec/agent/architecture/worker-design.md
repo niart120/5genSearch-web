@@ -10,7 +10,57 @@ Web Worker による並列処理の設計を定義する。
 4. **キャンセル対応**: ユーザー操作による中断
 5. **WASM 独立インスタンス**: 各 Worker で独立した WASM を初期化
 
-## 2. アーキテクチャ
+## 2. WASM 実行モデル
+
+### 2.1 Module と Instance
+
+```
+┌─────────────────┐      compile       ┌─────────────────┐
+│  .wasm バイナリ  │  ───────────────►  │ WebAssembly.Module │
+│   (静的ファイル)  │                    │  (コンパイル済み)   │
+└─────────────────┘                    └─────────────────┘
+                                              │
+                         ┌────────────────────┼────────────────────┐
+                         ▼                    ▼                    ▼
+                 ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+                 │  Instance   │      │  Instance   │      │  Instance   │
+                 │  (Main)     │      │  (Worker 1) │      │  (Worker N) │
+                 └─────────────┘      └─────────────┘      └─────────────┘
+```
+
+- **Module**: コンパイル済みコード (共有可能、ステートレス)
+- **Instance**: 実行環境 (メモリ空間を持つ、ステートフル)
+
+WASM の Memory はスレッドセーフではないため、Worker ごとに独立した Instance が必要。
+
+### 2.2 wasm-bindgen の初期化関数
+
+| 関数 | 処理 | 用途 |
+|-----|------|------|
+| `init()` | fetch + compile + instantiate | メインスレッド初回 |
+| `initSync(module)` | instantiate のみ | Worker (Module 受け取り後) |
+
+wasm-bindgen 生成コードはモジュールスコープに Instance を保持するため、
+`init()` / `initSync()` を1回呼べば以降の関数呼び出しは追加コストなし。
+
+### 2.3 実行場所の使い分け
+
+| 関数 | 実行場所 | 理由 |
+|-----|---------|------|
+| `search_needle_pattern` | メインスレッド | 軽量・同期的 |
+| `resolve_pokemon_data_batch` | メインスレッド | 軽量・同期的 |
+| `resolve_egg_data_batch` | メインスレッド | 軽量・同期的 |
+| `resolve_seeds` | メインスレッド | 軽量・同期的 |
+| `get_needle_pattern_at` | メインスレッド | 軽量・同期的 |
+| `generate_*_search_tasks` | メインスレッド | タスク生成のみ |
+| `EggDatetimeSearcher` | Worker | 重い計算 |
+| `MtseedDatetimeSearcher` | Worker | 重い計算 |
+| `MtseedSearcher` | Worker | 重い計算 |
+| `TrainerInfoSearcher` | Worker | 重い計算 |
+
+**原則**: Searcher クラスは Worker、それ以外はメインスレッド。
+
+## 3. アーキテクチャ
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -21,6 +71,11 @@ Web Worker による並列処理の設計を定義する。
 │  │             │  │ - progress  │  │   - dispatch tasks  │  │
 │  │             │  │ - results   │  │   - collect results │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  WASM Instance (Main)                                    ││
+│  │  - search_needle_pattern, resolve_*, generate_*_tasks   ││
+│  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
                               │
           ┌───────────────────┼───────────────────┐
@@ -31,10 +86,11 @@ Web Worker による並列処理の設計を定義する。
 │  │   WASM    │  │ │  │   WASM    │  │ │  │   WASM    │  │
 │  │  (SIMD)   │  │ │  │  (SIMD)   │  │ │  │  (wgpu)   │  │
 │  └───────────┘  │ │  └───────────┘  │ │  └───────────┘  │
+│  Searcher 実行  │ │  Searcher 実行  │ │  Searcher 実行  │
 └─────────────────┘ └─────────────────┘ └─────────────────┘
 ```
 
-### 2.1 CPU/GPU 経路の選択
+### 3.1 CPU/GPU 経路の選択
 
 | 条件 | 使用 Worker |
 |-----|------------|
@@ -43,7 +99,7 @@ Web Worker による並列処理の設計を定義する。
 
 GPU Worker は単一インスタンスで動作 (GPU リソースの排他制御のため)。
 
-## 3. Worker 数決定
+## 4. Worker 数決定
 
 ```typescript
 const workerCount = navigator.hardwareConcurrency ?? 4;
@@ -53,7 +109,7 @@ const workerCount = navigator.hardwareConcurrency ?? 4;
 - 取得不可の場合はフォールバック (4)
 - 上限は設けない (モジュール共有によりメモリ効率を確保)
 
-## 4. WASM モジュール共有
+## 5. WASM モジュール共有
 
 ### 4.1 背景
 
@@ -107,9 +163,9 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
 
 `WebAssembly.Module` は Structured Clone 対応のため、`postMessage` で効率的に転送される。
 
-## 5. メッセージプロトコル
+## 6. メッセージプロトコル
 
-### 5.1 メッセージ型定義
+### 6.1 メッセージ型定義
 
 ```typescript
 // Main → Worker
@@ -136,7 +192,7 @@ interface ProgressInfo {
 }
 ```
 
-### 5.2 タスク型
+### 6.2 タスク型
 
 ```typescript
 type SearchTask =
@@ -146,9 +202,9 @@ type SearchTask =
   | { kind: 'trainer-info'; params: TrainerInfoSearchParams };
 ```
 
-## 6. WorkerPool 実装
+## 7. WorkerPool 実装
 
-### 6.1 責務
+### 7.1 責務
 
 - Worker の生成・破棄
 - タスクのディスパッチ
@@ -156,7 +212,7 @@ type SearchTask =
 - 結果の収集
 - キャンセル制御
 
-### 6.2 インターフェース
+### 7.2 インターフェース
 
 ```typescript
 interface WorkerPool {
@@ -204,9 +260,9 @@ interface AggregatedProgress {
 }
 ```
 
-## 7. Worker 内部実装
+## 8. Worker 内部実装
 
-### 7.1 ライフサイクル
+### 8.1 ライフサイクル
 
 ```
 [Created] → init → [Ready] → start → [Running] → done → [Ready]
@@ -245,7 +301,38 @@ async function runSearch(task: SearchTask) {
 }
 ```
 
-### 7.3 バッチサイズ
+### 8.2 バッチ処理
+
+```typescript
+// Worker 内部
+async function runSearch(task: SearchTask) {
+  const searcher = createSearcher(task);
+  const results: SearchResult[] = [];
+  
+  while (!searcher.is_done && !cancelled) {
+    const batch = searcher.next_batch(BATCH_SIZE);
+    
+    // 結果を蓄積 (完了時に一括送信)
+    results.push(...batch.results);
+    
+    // 進捗報告
+    postMessage({
+      type: 'progress',
+      taskId,
+      progress: calculateProgress(batch, startTime),
+    });
+    
+    // UI スレッドへ制御を戻す
+    await yieldToMain();
+  }
+  
+  // 完了 or キャンセル時に結果を一括送信
+  postMessage({ type: 'result', taskId, results });
+  postMessage({ type: 'done', taskId });
+}
+```
+
+### 8.3 バッチサイズ
 
 | 検索種別 | バッチサイズ | 備考 |
 |---------|-------------|------|
@@ -254,7 +341,7 @@ async function runSearch(task: SearchTask) {
 | `MtseedSearcher` | 0x10000 | Seed 空間探索 |
 | `TrainerInfoSearcher` | 1000 | 日時ごとの探索 |
 
-## 8. タスク分割
+## 9. タスク分割
 
 WASM 側で提供される `generate_*_search_tasks()` 関数を使用：
 
@@ -274,9 +361,9 @@ const tasks = generate_egg_search_tasks(
 - 組み合わせ × 時間チャンクでタスクを生成
 - Worker 数を考慮した分割
 
-## 9. 進捗表示仕様
+## 10. 進捗表示仕様
 
-### 9.1 表示項目
+### 10.1 表示項目
 
 | 項目 | 表示例 | 計算方法 |
 |-----|-------|---------|
@@ -286,14 +373,14 @@ const tasks = generate_egg_search_tasks(
 | 残り時間 | `約 00:01:45` | `(total - processed) / throughput` |
 | スループット | `18,500 件/秒` | `processed / elapsedSec` |
 
-### 9.2 更新頻度
+### 10.2 更新頻度
 
 - 進捗報告: バッチ処理ごと
 - UI 更新: 最大 10 回/秒 (100ms throttle)
 
-## 10. キャンセル処理
+## 11. キャンセル処理
 
-### 10.1 フロー
+### 11.1 フロー
 
 1. ユーザーがキャンセルボタン押下
 2. `WorkerPool.cancel()` 呼び出し
@@ -301,20 +388,20 @@ const tasks = generate_egg_search_tasks(
 4. Worker は次のバッチ処理前にフラグをチェック
 5. キャンセル時は途中結果を送信してループ終了
 
-### 10.2 注意点
+### 11.2 注意点
 
 - WASM 処理中は即時停止不可 (バッチ単位)
 - キャンセル後も途中結果は保持・表示
 
-## 11. エラー処理
+## 12. エラー処理
 
-### 11.1 方針
+### 12.1 方針
 
 - リトライは行わない
 - エラー発生時は即座に失敗通知
 - 途中結果があれば表示
 
-### 11.2 フロー
+### 12.2 フロー
 
 1. Worker 内でエラー発生 (WASM パニック等)
 2. `{ type: 'error', taskId, message }` を送信
@@ -322,9 +409,9 @@ const tasks = generate_egg_search_tasks(
 4. `onError` コールバックを呼び出し
 5. 途中結果を `onResult` で通知
 
-## 12. 初期化タイミング
+## 13. 初期化タイミング
 
-### 12.1 方針
+### 13.1 方針
 
 **事前初期化**を採用：
 
@@ -332,7 +419,7 @@ const tasks = generate_egg_search_tasks(
 - WASM モジュールをコンパイルし、全 Worker に配布
 - 全 Worker が `ready` を返すまで待機
 
-### 12.2 理由
+### 13.2 理由
 
 - 検索開始時のレイテンシを最小化
 - ユーザーは設定入力後すぐに検索を期待する
