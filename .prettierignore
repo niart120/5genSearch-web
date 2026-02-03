@@ -3,5 +3,6 @@ node_modules
 pnpm-lock.yaml
 *.wasm
 wasm-pkg/pkg
+packages/wasm
 *.md
 spec/**/*.json
