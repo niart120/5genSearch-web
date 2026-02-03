@@ -84,6 +84,7 @@ fn create_egg_searcher() -> EggDatetimeSearcher {
             parent_male: Ivs::default(),
             parent_female: Ivs::default(),
             consider_npc: false,
+            species_id: None,
         },
         gen_config: GenerationConfig {
             version: RomVersion::Black,

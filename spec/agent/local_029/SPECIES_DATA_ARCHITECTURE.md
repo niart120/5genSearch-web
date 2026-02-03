@@ -160,6 +160,102 @@ IV が1つでも不明な場合、めざパは計算不可。
 | `base_stats` | 全て 0 |
 | `gender_ratio` | `Genderless` |
 
+### 3.6 卵生成時の種族 ID 指定
+
+#### 3.6.1 目的
+
+孵化乱数調整において、生成時点で対象種族を指定可能にすることで:
+
+1. **Stats 計算**: 生成時にステータス実数値を計算可能
+2. **特性名解決**: 卵データ解決時に具体的な特性名を表示可能
+3. **UI 統合**: ポケモン生成と同様に resolve 関数のみで表示データを取得可能
+
+#### 3.6.2 パラメータ追加
+
+`EggGenerationParams` に `species_id: Option<u16>` を追加:
+
+```rust
+pub struct EggGenerationParams {
+    // ... 既存フィールド ...
+    
+    /// 孵化対象の種族 ID (オプション)
+    /// - Some(id): 指定した種族として core.species_id を設定
+    /// - None: 従来通り species_id = 0 (未指定)
+    pub species_id: Option<u16>,
+}
+```
+
+#### 3.6.3 例外種の処理
+
+##### 3.6.3.1 ニドラン♀/♂
+
+ニドラン♀ (#29) を親とする孵化では、nidoran_flag が true となり乱数消費で性別が決定される:
+
+| 条件 | 結果 |
+|------|------|
+| nidoran_roll == 0 | ニドラン♀ (#29) が孵化 |
+| nidoran_roll != 0 | ニドラン♂ (#32) が孵化 |
+
+**生成時の変換ルール**:
+- `species_id = Some(29)` かつ `gender == Male` → `core.species_id = 32` (ニドラン♂に変換)
+- `species_id = Some(29)` かつ `gender == Female` → `core.species_id = 29` (そのまま)
+
+##### 3.6.3.2 イルミーゼ/バルビート
+
+イルミーゼ (#314) を親とする孵化では、nidoran_flag が true となり乱数消費で性別が決定される:
+
+| 条件 | 結果 |
+|------|------|
+| nidoran_roll == 0 | イルミーゼ (#314) が孵化 (♀のみ) |
+| nidoran_roll != 0 | バルビート (#313) が孵化 (♂のみ) |
+
+**生成時の変換ルール**:
+- `species_id = Some(314)` かつ `gender == Male` → `core.species_id = 313` (バルビートに変換)
+- `species_id = Some(314)` かつ `gender == Female` → `core.species_id = 314` (そのまま)
+
+##### 3.6.3.3 変換処理の配置
+
+変換は `GeneratedEggData::from_raw` で実行:
+
+```rust
+impl GeneratedEggData {
+    pub fn from_raw(
+        raw: &RawEggData,
+        ivs: Ivs,
+        advance: u32,
+        needle_direction: NeedleDirection,
+        source: SeedOrigin,
+        margin_frames: Option<u32>,
+        species_id: Option<u16>,  // パラメータから受け取り
+    ) -> Self {
+        // 例外種の変換
+        let resolved_species_id = match species_id {
+            Some(29) if raw.gender == Gender::Male => 32,   // ニドラン♀→♂
+            Some(314) if raw.gender == Gender::Male => 313, // イルミーゼ→バルビート
+            Some(id) => id,
+            None => 0,
+        };
+        
+        Self {
+            // ...
+            core: CorePokemonData {
+                // ...
+                species_id: resolved_species_id,
+                level: 1,
+            },
+            // ...
+        }
+    }
+}
+```
+
+#### 3.6.4 UI 解決時の挙動
+
+| `core.species_id` | `species_name` | `ability_name` |
+|-------------------|----------------|----------------|
+| 0 (未指定) | `None` | スロット名 ("特性1"/"特性2"/"夢特性") |
+| 有効な種族 ID | `Some("ピカチュウ")` 等 | 確定した特性名 |
+
 ---
 
 ## 4. 実装仕様
@@ -855,3 +951,13 @@ fn special_encounter_symbol(triggered: bool) -> &'static str {
 
 - [x] 型定義の自動生成確認
 - [ ] 既存 Resolver 層との互換性確認
+
+
+### 6.8 卵生成の種族 ID 指定
+
+- [ ] `EggGenerationParams` に `species_id: Option<u16>` 追加
+- [ ] `GeneratedEggData::from_raw` で species_id パラメータ受け取り
+- [ ] 例外種変換ロジック実装 (ニドラン♀→♂、イルミーゼ→バルビート)
+- [ ] `EggGenerator` で species_id をパラメータから `from_raw` に渡す
+- [ ] `datetime_search/egg.rs` で species_id をパラメータから `from_raw` に渡す
+- [ ] テスト・ベンチマークの `EggGenerationParams` 更新

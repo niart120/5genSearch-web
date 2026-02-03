@@ -106,6 +106,11 @@ impl GeneratedPokemonData {
 }
 
 impl GeneratedEggData {
+    /// `RawEggData` から `GeneratedEggData` を構築
+    ///
+    /// # `species_id` の例外種変換
+    /// - ニドラン♀ (#29) + ♂ → ニドラン♂ (#32)
+    /// - イルミーゼ (#314) + ♂ → バルビート (#313)
     pub fn from_raw(
         raw: &RawEggData,
         ivs: Ivs,
@@ -113,7 +118,16 @@ impl GeneratedEggData {
         needle_direction: NeedleDirection,
         source: SeedOrigin,
         margin_frames: Option<u32>,
+        species_id: Option<u16>,
     ) -> Self {
+        // 例外種の変換
+        let resolved_species_id = match species_id {
+            Some(29) if raw.gender == Gender::Male => 32, // ニドラン♀ → ニドラン♂
+            Some(314) if raw.gender == Gender::Male => 313, // イルミーゼ → バルビート
+            Some(id) => id,
+            None => 0,
+        };
+
         Self {
             advance,
             needle_direction,
@@ -125,8 +139,8 @@ impl GeneratedEggData {
                 gender: raw.gender,
                 shiny_type: raw.shiny_type,
                 ivs,
-                species_id: 0, // 卵は種族ID未定義
-                level: 1,      // 卵は常にLv.1
+                species_id: resolved_species_id,
+                level: 1, // 卵は常にLv.1
             },
             inheritance: raw.inheritance,
             margin_frames,

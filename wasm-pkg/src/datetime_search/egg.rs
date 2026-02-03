@@ -246,6 +246,7 @@ mod tests {
                 parent_male: [31, 31, 31, 31, 31, 31].into(),
                 parent_female: [31, 31, 31, 31, 31, 31].into(),
                 consider_npc: false,
+                species_id: None,
             },
             gen_config: GenerationConfig {
                 version: RomVersion::Black,
@@ -325,6 +326,7 @@ mod tests {
             parent_male: [31, 31, 31, 31, 31, 31].into(),
             parent_female: [31, 31, 31, 31, 31, 31].into(),
             consider_npc: false,
+            species_id: None,
         };
 
         let gen_config = GenerationConfig {

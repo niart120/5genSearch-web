@@ -380,6 +380,14 @@ pub struct EggGenerationParams {
     pub parent_female: Ivs,
     /// NPC消費を考慮するか
     pub consider_npc: bool,
+    /// 孵化対象の種族 ID (オプション)
+    ///
+    /// - `Some(id)`: 指定した種族として `core.species_id` を設定
+    /// - `None`: 従来通り `species_id = 0` (未指定)
+    ///
+    /// ニドラン♀ (#29) / イルミーゼ (#314) を指定した場合、
+    /// 性別に応じて自動的に ニドラン♂ (#32) / バルビート (#313) に変換される。
+    pub species_id: Option<u16>,
 }
 
 // ===== Seed 指定仕様 =====

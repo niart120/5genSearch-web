@@ -114,6 +114,7 @@ impl EggGenerator {
             needle,
             self.source.clone(),
             margin_frames,
+            self.params.species_id,
         )
     }
 
@@ -173,6 +174,7 @@ mod tests {
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
             parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
             consider_npc: false,
+            species_id: None,
         };
         let config = make_config();
 
@@ -202,6 +204,7 @@ mod tests {
             parent_male: Ivs::new(31, 31, 31, 0, 0, 0),
             parent_female: Ivs::new(0, 0, 0, 31, 31, 31),
             consider_npc: true,
+            species_id: None,
         };
         let config = make_config();
 
