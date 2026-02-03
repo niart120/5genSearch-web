@@ -11,6 +11,7 @@ mod needle;
 mod pokemon;
 mod search;
 mod seeds;
+mod ui;
 
 // ===== Re-exports =====
 
@@ -55,3 +56,6 @@ pub use pokemon::{
 
 // seeds
 pub use seeds::{LcgSeed, MtSeed, SeedOrigin};
+
+// ui
+pub use ui::{UiEggData, UiPokemonData};

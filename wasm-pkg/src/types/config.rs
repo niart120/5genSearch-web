@@ -41,6 +41,19 @@ impl RomVersion {
     pub const fn is_bw2(self) -> bool {
         matches!(self, Self::Black2 | Self::White2)
     }
+
+    /// 持ち物テーブル用のバージョンインデックスを取得
+    ///
+    /// 0=Black, 1=White, 2=Black2, 3=White2
+    #[inline]
+    pub const fn held_item_index(self) -> u8 {
+        match self {
+            Self::Black => 0,
+            Self::White => 1,
+            Self::Black2 => 2,
+            Self::White2 => 3,
+        }
+    }
 }
 
 /// ROM リージョン

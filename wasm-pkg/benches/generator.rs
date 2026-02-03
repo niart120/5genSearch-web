@@ -71,6 +71,7 @@ fn create_egg_params() -> EggGenerationParams {
         parent_male: Ivs::default(),
         parent_female: Ivs::default(),
         consider_npc: false,
+        species_id: None,
     }
 }
 

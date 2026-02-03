@@ -152,6 +152,21 @@ pub enum MovingEncounterLikelihood {
     NoEncounter,
 }
 
+impl MovingEncounterLikelihood {
+    /// 表示用シンボルに変換
+    ///
+    /// - `Guaranteed` → "〇"
+    /// - `Possible` → "?"
+    /// - `NoEncounter` → "×"
+    pub const fn to_display_symbol(self) -> &'static str {
+        match self {
+            Self::Guaranteed => "〇",
+            Self::Possible => "?",
+            Self::NoEncounter => "×",
+        }
+    }
+}
+
 /// 移動エンカウント情報
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -187,6 +202,16 @@ pub struct SpecialEncounterInfo {
     pub trigger_rand: u32,
     /// 方向決定に使用した乱数値
     pub direction_rand: u32,
+}
+
+impl SpecialEncounterInfo {
+    /// 発生状態を表示用シンボルに変換
+    ///
+    /// - triggered = true → "〇"
+    /// - triggered = false → "×"
+    pub const fn triggered_symbol(&self) -> &'static str {
+        if self.triggered { "〇" } else { "×" }
+    }
 }
 
 // ===== 生成共通設定 =====
@@ -225,6 +250,14 @@ pub struct CorePokemonData {
     pub shiny_type: ShinyType,
     /// 個体値
     pub ivs: Ivs,
+    /// 種族 ID
+    /// - ポケモン: 常に設定
+    /// - 卵: 常に 0 (外部指定が必要)
+    pub species_id: u16,
+    /// レベル
+    /// - ポケモン: 生成時に決定
+    /// - 卵: 常に 1
+    pub level: u8,
 }
 
 /// 完全な個体データ
@@ -237,10 +270,9 @@ pub struct GeneratedPokemonData {
     /// 生成元情報
     pub source: SeedOrigin,
     // 共通個体情報 (ネスト)
+    // ※ species_id, level は core 内に含まれる
     pub core: CorePokemonData,
     // ポケモン固有
-    pub species_id: u16,
-    pub level: u8,
     pub sync_applied: bool,
     pub held_item_slot: HeldItemSlot,
     // === エンカウント付加情報 (排反) ===
@@ -348,6 +380,14 @@ pub struct EggGenerationParams {
     pub parent_female: Ivs,
     /// NPC消費を考慮するか
     pub consider_npc: bool,
+    /// 孵化対象の種族 ID (オプション)
+    ///
+    /// - `Some(id)`: 指定した種族として `core.species_id` を設定
+    /// - `None`: 従来通り `species_id = 0` (未指定)
+    ///
+    /// ニドラン♀ (#29) / イルミーゼ (#314) を指定した場合、
+    /// 性別に応じて自動的に ニドラン♂ (#32) / バルビート (#313) に変換される。
+    pub species_id: Option<u16>,
 }
 
 // ===== Seed 指定仕様 =====
@@ -381,4 +421,52 @@ pub enum SeedSpec {
         /// キー入力
         key_input: KeyInput,
     },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_moving_encounter_likelihood_to_display_symbol_guaranteed() {
+        assert_eq!(
+            MovingEncounterLikelihood::Guaranteed.to_display_symbol(),
+            "〇"
+        );
+    }
+
+    #[test]
+    fn test_moving_encounter_likelihood_to_display_symbol_possible() {
+        assert_eq!(MovingEncounterLikelihood::Possible.to_display_symbol(), "?");
+    }
+
+    #[test]
+    fn test_moving_encounter_likelihood_to_display_symbol_no_encounter() {
+        assert_eq!(
+            MovingEncounterLikelihood::NoEncounter.to_display_symbol(),
+            "×"
+        );
+    }
+
+    #[test]
+    fn test_special_encounter_info_triggered_symbol_true() {
+        let info = SpecialEncounterInfo {
+            triggered: true,
+            direction: SpecialEncounterDirection::Right,
+            trigger_rand: 0,
+            direction_rand: 0,
+        };
+        assert_eq!(info.triggered_symbol(), "〇");
+    }
+
+    #[test]
+    fn test_special_encounter_info_triggered_symbol_false() {
+        let info = SpecialEncounterInfo {
+            triggered: false,
+            direction: SpecialEncounterDirection::Right,
+            trigger_rand: 0,
+            direction_rand: 0,
+        };
+        assert_eq!(info.triggered_symbol(), "×");
+    }
 }

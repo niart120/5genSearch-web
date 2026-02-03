@@ -19,6 +19,7 @@
 | UiEggData | 表示用に解決済みの卵データ |
 | BaseStats | 種族値 (HP/Atk/Def/SpA/SpD/Spe) |
 | Stats | 計算済み実数値 (レベル・IV・性格補正適用後) |
+| KeyCode | キー入力コード (KeyMask XOR 0x2FFF で変換された値、SHA-1 計算用) |
 
 ### 1.3 背景・問題
 
@@ -158,6 +159,102 @@ IV が1つでも不明な場合、めざパは計算不可。
 | `ability_name` | `"???"` |
 | `base_stats` | 全て 0 |
 | `gender_ratio` | `Genderless` |
+
+### 3.6 卵生成時の種族 ID 指定
+
+#### 3.6.1 目的
+
+孵化乱数調整において、生成時点で対象種族を指定可能にすることで:
+
+1. **Stats 計算**: 生成時にステータス実数値を計算可能
+2. **特性名解決**: 卵データ解決時に具体的な特性名を表示可能
+3. **UI 統合**: ポケモン生成と同様に resolve 関数のみで表示データを取得可能
+
+#### 3.6.2 パラメータ追加
+
+`EggGenerationParams` に `species_id: Option<u16>` を追加:
+
+```rust
+pub struct EggGenerationParams {
+    // ... 既存フィールド ...
+    
+    /// 孵化対象の種族 ID (オプション)
+    /// - Some(id): 指定した種族として core.species_id を設定
+    /// - None: 従来通り species_id = 0 (未指定)
+    pub species_id: Option<u16>,
+}
+```
+
+#### 3.6.3 例外種の処理
+
+##### 3.6.3.1 ニドラン♀/♂
+
+ニドラン♀ (#29) を親とする孵化では、nidoran_flag が true となり乱数消費で性別が決定される:
+
+| 条件 | 結果 |
+|------|------|
+| nidoran_roll == 0 | ニドラン♀ (#29) が孵化 |
+| nidoran_roll != 0 | ニドラン♂ (#32) が孵化 |
+
+**生成時の変換ルール**:
+- `species_id = Some(29)` かつ `gender == Male` → `core.species_id = 32` (ニドラン♂に変換)
+- `species_id = Some(29)` かつ `gender == Female` → `core.species_id = 29` (そのまま)
+
+##### 3.6.3.2 イルミーゼ/バルビート
+
+イルミーゼ (#314) を親とする孵化では、nidoran_flag が true となり乱数消費で性別が決定される:
+
+| 条件 | 結果 |
+|------|------|
+| nidoran_roll == 0 | イルミーゼ (#314) が孵化 (♀のみ) |
+| nidoran_roll != 0 | バルビート (#313) が孵化 (♂のみ) |
+
+**生成時の変換ルール**:
+- `species_id = Some(314)` かつ `gender == Male` → `core.species_id = 313` (バルビートに変換)
+- `species_id = Some(314)` かつ `gender == Female` → `core.species_id = 314` (そのまま)
+
+##### 3.6.3.3 変換処理の配置
+
+変換は `GeneratedEggData::from_raw` で実行:
+
+```rust
+impl GeneratedEggData {
+    pub fn from_raw(
+        raw: &RawEggData,
+        ivs: Ivs,
+        advance: u32,
+        needle_direction: NeedleDirection,
+        source: SeedOrigin,
+        margin_frames: Option<u32>,
+        species_id: Option<u16>,  // パラメータから受け取り
+    ) -> Self {
+        // 例外種の変換
+        let resolved_species_id = match species_id {
+            Some(29) if raw.gender == Gender::Male => 32,   // ニドラン♀→♂
+            Some(314) if raw.gender == Gender::Male => 313, // イルミーゼ→バルビート
+            Some(id) => id,
+            None => 0,
+        };
+        
+        Self {
+            // ...
+            core: CorePokemonData {
+                // ...
+                species_id: resolved_species_id,
+                level: 1,
+            },
+            // ...
+        }
+    }
+}
+```
+
+#### 3.6.4 UI 解決時の挙動
+
+| `core.species_id` | `species_name` | `ability_name` |
+|-------------------|----------------|----------------|
+| 0 (未指定) | `None` | スロット名 ("特性1"/"特性2"/"夢特性") |
+| 有効な種族 ID | `Some("ピカチュウ")` 等 | 確定した特性名 |
 
 ---
 
@@ -333,15 +430,24 @@ pub struct UiPokemonData {
     /// - 通常: "70" など
     /// - 不明時: "?"
     pub hidden_power_power: String,
-    pub pid: u32,
+    /// 性格値 (prefix無し16進数)
+    /// - e.g., "12345678"
+    pub pid: String,
     
     // === エンカウント情報 ===
     pub sync_applied: bool,
     pub held_item_name: Option<String>,
     
     // === 移動/特殊エンカウント情報 ===
-    pub moving_encounter_guaranteed: Option<bool>,
-    pub special_encounter_triggered: Option<bool>,
+    /// 移動エンカウント確定状態 (表示用文字列)
+    /// - "〇": 確定エンカウント (Guaranteed)
+    /// - "?": 歩数次第 (Possible, BW2 のみ)
+    /// - "×": エンカウント無し (NoEncounter)
+    pub moving_encounter_guaranteed: Option<String>,
+    /// 特殊エンカウント発生 (表示用文字列)
+    /// - "〇": 発生する (triggered = true)
+    /// - "×": 発生しない (triggered = false)
+    pub special_encounter_triggered: Option<String>,
     pub special_encounter_direction: Option<String>,
     pub encounter_result: String, // "Pokemon" / "Item:EvolutionStone" / etc.
 }
@@ -370,7 +476,10 @@ pub struct UiEggData {
     /// 種族名 (species_id が指定された場合のみ)
     pub species_name: Option<String>,
     pub nature_name: String,
-    pub ability_name: String,   // "特性1" / "特性2" / "夢特性"
+    /// 特性名
+    /// - species_id 指定時: 種族データから解決した確定特性名 (e.g., "しぜんかいふく", "Natural Cure")
+    /// - species_id 未指定時: スロット名 ("特性1" / "特性2" / "夢特性")
+    pub ability_name: String,
     pub gender_symbol: String,
     pub shiny_symbol: String,
     
@@ -388,12 +497,12 @@ pub struct UiEggData {
     pub hidden_power_type: String,
     /// めざパ威力 (表示用文字列)
     pub hidden_power_power: String,
-    pub pid: u32,
+    /// 性格値 (prefix無し16進数)
+    /// - e.g., "12345678"
+    pub pid: String,
     
     // === 卵固有情報 ===
-    pub inheritance: [[u8; 2]; 3], // [[stat, parent], [stat, parent], [stat, parent]]
     pub margin_frames: Option<u32>,
-    pub is_stable: bool,
 }
 ```
 
@@ -642,10 +751,72 @@ impl SeedOrigin {
             _ => None,
         }
     }
+    
+    /// key_input を表示用文字列で取得 (Startup のみ)
+    ///
+    /// KeyCode からボタン名を復元し、`[A]+[B]+[Start]` 形式で結合。
+    /// ボタンなしの場合は空文字列を返す。
+    pub fn key_input_display(&self) -> Option<String> {
+        match self {
+            Self::Startup { key_code, .. } => Some(format_key_code(*key_code)),
+            _ => None,
+        }
+    }
+}
+
+/// KeyCode を表示用文字列に変換
+///
+/// ボタンの順序は以下の固定順:
+/// A, B, X, Y, L, R, Start, Select, Up, Down, Left, Right
+///
+/// # Example
+/// - `KeyCode(0x2FFF)` (ボタンなし) → `""`
+/// - `KeyCode(0x2FFE)` (A) → `"[A]"`
+/// - `KeyCode(0x2FF6)` (A+Start) → `"[A]+[Start]"`
+fn format_key_code(key_code: KeyCode) -> String {
+    // KeyCode から KeyMask を復元: mask = key_code XOR 0x2FFF
+    let mask = key_code.value() ^ 0x2FFF;
+    
+    // ボタン定義 (表示順序)
+    const BUTTONS: [(u32, &str); 12] = [
+        (0x0001, "A"),
+        (0x0002, "B"),
+        (0x0400, "X"),
+        (0x0800, "Y"),
+        (0x0200, "L"),
+        (0x0100, "R"),
+        (0x0008, "Start"),
+        (0x0004, "Select"),
+        (0x0040, "Up"),
+        (0x0080, "Down"),
+        (0x0020, "Left"),
+        (0x0010, "Right"),
+    ];
+    
+    let pressed: Vec<&str> = BUTTONS
+        .iter()
+        .filter(|(bit, _)| mask & bit != 0)
+        .map(|(_, name)| *name)
+        .collect();
+    
+    if pressed.is_empty() {
+        String::new()
+    } else {
+        pressed.iter().map(|s| format!("[{}]", s)).collect::<Vec<_>>().join("+")
+    }
 }
 ```
 
-#### 4.4.2 シンボル解決
+#### 4.4.2 PID 変換
+
+```rust
+/// PID を prefix無し16進数文字列に変換
+fn pid_hex(pid: Pid) -> String {
+    format!("{:08X}", pid.raw())
+}
+```
+
+#### 4.4.3 シンボル解決
 
 ```rust
 /// 性別シンボルを取得
@@ -666,7 +837,7 @@ fn shiny_symbol(shiny_type: ShinyType) -> &'static str {
     }
 }
 
-/// 特性スロット名を取得 (卵用)
+/// 特性スロット名を取得 (卵用、species_id 未指定時)
 fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
     match (slot, locale) {
         (AbilitySlot::First, "ja") => "特性1",
@@ -676,6 +847,20 @@ fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
         (AbilitySlot::Second, _) => "Ability 2",
         (AbilitySlot::Hidden, _) => "Hidden",
     }
+}
+
+/// 移動エンカウント確定状態を表示用文字列に変換
+fn moving_encounter_symbol(likelihood: MovingEncounterLikelihood) -> &'static str {
+    match likelihood {
+        MovingEncounterLikelihood::Guaranteed => "〇",
+        MovingEncounterLikelihood::Possible => "?",
+        MovingEncounterLikelihood::NoEncounter => "×",
+    }
+}
+
+/// 特殊エンカウント発生を表示用文字列に変換
+fn special_encounter_symbol(triggered: bool) -> &'static str {
+    if triggered { "〇" } else { "×" }
 }
 ```
 
@@ -696,8 +881,14 @@ fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
 | `test_resolve_pokemon_seed_origin` | SeedOrigin の16進数展開 |
 | `test_resolve_pokemon_ja` | 日本語ロケールでの解決 |
 | `test_resolve_pokemon_en` | 英語ロケールでの解決 |
-| `test_resolve_egg_with_species` | 種族ID指定ありの卵解決 |
-| `test_resolve_egg_without_species` | 種族ID指定なしの卵解決 |
+| `test_resolve_egg_with_species` | 種族ID指定ありの卵解決 (特性名確定) |
+| `test_resolve_egg_without_species` | 種族ID指定なしの卵解決 (スロット名) |
+| `test_format_key_code_none` | キー入力なし → 空文字列 |
+| `test_format_key_code_single` | 単一ボタン → `"[A]"` |
+| `test_format_key_code_multi` | 複数ボタン → `"[A]+[Start]"` |
+| `test_pid_hex` | PID → prefix無し16進数 (`"12345678"`) |
+| `test_moving_encounter_symbol` | MovingEncounterLikelihood → `"〇"` / `"?"` / `"×"` |
+| `test_special_encounter_symbol` | triggered → `"〇"` / `"×"` |
 
 ### 5.2 統合テスト
 
@@ -719,44 +910,54 @@ fn ability_slot_name(slot: AbilitySlot, locale: &str) -> &'static str {
 
 ### 6.1 データ準備
 
-- [ ] `scripts/generate-species-data.js` 作成
-- [ ] `gen5-species.json` から Rust コード生成
-- [ ] 生成コードの動作検証
+- [x] `scripts/generate-species-data.js` 作成
+- [x] `gen5-species.json` から Rust コード生成
+- [x] 生成コードの動作検証
 
 ### 6.2 型定義
 
-- [ ] `wasm-pkg/src/types/stats.rs` 作成 (BaseStats, Stats)
-- [ ] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
-- [ ] `CorePokemonData` に species_id, level, stats 追加
-- [ ] `wasm-pkg/src/types/mod.rs` に re-export 追加
+- [x] `wasm-pkg/src/data/stats.rs` 作成 (Stats, calculate_stats)
+- [x] `wasm-pkg/src/types/ui.rs` 作成 (UiPokemonData, UiEggData)
+- [x] `CorePokemonData` に species_id, level 追加、`GeneratedPokemonData` から削除
+- [x] `wasm-pkg/src/types/mod.rs` に re-export 追加
+- [x] `Nature::stat_modifiers()` 追加 (性格補正の10倍表現、`[u8; 5]`)
 
 ### 6.3 データモジュール
 
-- [ ] `wasm-pkg/src/data/mod.rs` 作成
-- [ ] `wasm-pkg/src/data/species.rs` 作成
-- [ ] `wasm-pkg/src/data/abilities.rs` 作成
-- [ ] `wasm-pkg/src/data/items.rs` 作成
-- [ ] `wasm-pkg/src/data/names.rs` 作成
+- [x] `wasm-pkg/src/data/mod.rs` 作成
+- [x] `wasm-pkg/src/data/species.rs` 作成
+- [x] `wasm-pkg/src/data/abilities.rs` 作成
+- [x] `wasm-pkg/src/data/items.rs` 作成
+- [x] `wasm-pkg/src/data/names.rs` 作成
 
 ### 6.4 解決モジュール
 
-- [ ] `wasm-pkg/src/resolve/mod.rs` 作成
-- [ ] `wasm-pkg/src/resolve/stats.rs` 作成
-- [ ] `wasm-pkg/src/resolve/pokemon.rs` 作成
-- [ ] `wasm-pkg/src/resolve/egg.rs` 作成
+- [x] `wasm-pkg/src/resolve/mod.rs` 作成
+- [x] `wasm-pkg/src/resolve/pokemon.rs` 作成
+- [x] `wasm-pkg/src/resolve/egg.rs` 作成
 
 ### 6.5 WASM API
 
-- [ ] `wasm-pkg/src/lib.rs` に解決API追加
-- [ ] バッチ解決API追加
+- [x] `wasm-pkg/src/lib.rs` に解決API追加
+- [x] バッチ解決API追加
 
 ### 6.6 テスト
 
-- [ ] ユニットテスト実装
-- [ ] 統合テスト実装
-- [ ] WASM テスト実装
+- [x] ユニットテスト実装
+- [x] 統合テスト実装
+- [ ] WASM テスト実装 (wasm-pack test 環境のセットアップが必要)
 
 ### 6.7 TypeScript 連携
 
-- [ ] 型定義の自動生成確認
+- [x] 型定義の自動生成確認
 - [ ] 既存 Resolver 層との互換性確認
+
+
+### 6.8 卵生成の種族 ID 指定
+
+- [ ] `EggGenerationParams` に `species_id: Option<u16>` 追加
+- [ ] `GeneratedEggData::from_raw` で species_id パラメータ受け取り
+- [ ] 例外種変換ロジック実装 (ニドラン♀→♂、イルミーゼ→バルビート)
+- [ ] `EggGenerator` で species_id をパラメータから `from_raw` に渡す
+- [ ] `datetime_search/egg.rs` で species_id をパラメータから `from_raw` に渡す
+- [ ] テスト・ベンチマークの `EggGenerationParams` 更新
