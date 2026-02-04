@@ -62,12 +62,34 @@
 - 開発サーバ: `pnpm dev`
 - ビルド: `pnpm build` / `pnpm build:wasm` / `pnpm build:wasm:gpu` / `pnpm build:wasm:dev`
 - テスト: `pnpm test` / `pnpm test:run` / `pnpm test:coverage` / `pnpm test:wasm` / `cargo test`
+- テスト (プロジェクト指定): `pnpm test -- --project unit` / `pnpm test -- --project integration`
 - テスト (GPU含む): `cargo test --features gpu`
 - Lint: `pnpm lint` / `cargo clippy --all-targets -- -D warnings`
 - Lint (GPU含む): `cargo clippy --all-targets --features gpu -- -D warnings`
 - フォーマット: `pnpm format` / `pnpm format:check` / `cargo fmt --check`
 - 型チェック: `pnpm exec tsc --noEmit`
 - ベンチマーク: `cargo bench --package wasm-pkg` / `cargo bench --package wasm-pkg --features gpu`
+
+## TypeScript テスト方針
+
+### テスト分類
+
+| 分類 | 対象 | 実行環境 | ディレクトリ |
+|------|------|----------|--------------|
+| ユニットテスト | 純粋な TS ロジック | jsdom | `src/test/unit/` |
+| 統合テスト | WASM / Web Worker | Browser Mode (headless Chromium) | `src/test/integration/` |
+| コンポーネントテスト | React コンポーネント | jsdom | `src/test/components/` |
+
+### 配置ルール
+
+- **unit/**: 外部依存なし、モック最小限、高速実行
+- **integration/**: WASM / Worker / ブラウザ API を使用するテスト
+- **components/**: React コンポーネントの描画・操作テスト
+
+### CI 環境での制約
+
+- GPU なし環境でのテスト
+- WebGPU 関連テストは `describe.skipIf(!navigator.gpu)` でスキップ
 
 ## シェルの前提
 

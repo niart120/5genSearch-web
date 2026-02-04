@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
 import init, {
   health_check,
   resolve_seeds,
@@ -12,9 +10,8 @@ import init, {
 
 describe('WASM Binding Verification', () => {
   beforeAll(async () => {
-    const wasmPath = join(__dirname, '../../packages/wasm/wasm_pkg_bg.wasm');
-    const wasmBuffer = await readFile(wasmPath);
-    await init({ module_or_path: wasmBuffer });
+    // Browser Mode では fetch ベースで WASM を読み込む
+    await init();
   });
 
   describe('health_check', () => {
