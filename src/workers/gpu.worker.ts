@@ -103,6 +103,8 @@ async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams):
 
     // 結果を収集
     let batch: GpuSearchBatch | undefined;
+    const startTime = performance.now();
+    let lastProgressTime = startTime;
 
     while (!cancelRequested && !currentIterator.is_done) {
       batch = await currentIterator.next();
@@ -111,22 +113,40 @@ async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams):
         break;
       }
 
+      const now = performance.now();
+      const elapsedMs = now - startTime;
+
       // 進捗報告
       postResponse({
         type: 'progress',
         taskId,
-        progress: batch.progress,
-        currentResults: batch.results,
+        progress: {
+          processed: Number(batch.processed_count),
+          total: Number(batch.total_count),
+          percentage: batch.progress * 100,
+          elapsedMs,
+          estimatedRemainingMs:
+            batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
+          throughput: batch.throughput,
+        },
       });
+
+      // 中間結果を報告
+      if (batch.results.length > 0) {
+        postResponse({
+          type: 'result',
+          taskId,
+          resultType: 'seed-origin',
+          results: batch.results,
+        });
+      }
+
+      lastProgressTime = now;
     }
 
-    if (cancelRequested) {
-      postResponse({
-        type: 'cancelled',
-        taskId,
-      });
-      return;
-    }
+    // キャンセルされた場合もエラーではなく完了として扱う
+    // (void to suppress unused variable warning)
+    void lastProgressTime;
 
     // 完了
     postResponse({

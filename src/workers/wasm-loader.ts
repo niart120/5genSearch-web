@@ -5,12 +5,9 @@
  * メインスレッドで実行し、取得した ArrayBuffer を Worker に転送する。
  */
 
-/**
- * WASM バイナリの URL を取得
- *
- * Vite の `?url` サフィックスを使用して、ビルド時に正しいパスが解決される。
- */
-const wasmUrl = new URL('@wasm/wasm_pkg_bg.wasm', import.meta.url).href;
+// Vite の import.meta.url を使用して WASM バイナリを直接 import
+// ?url サフィックスでビルド時に正しいパスが解決される
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
 
 /**
  * WASM バイナリを ArrayBuffer として取得

@@ -41,6 +41,8 @@ export interface TestSearchOptions {
 // WASM Loader
 // =============================================================================
 
+import { fetchWasmBytes as fetchWasmBytesFromLoader } from '../../../workers/wasm-loader';
+
 let wasmBytesCache: ArrayBuffer | null = null;
 
 /**
@@ -51,14 +53,7 @@ export async function getWasmBytes(): Promise<ArrayBuffer> {
     return wasmBytesCache.slice(0);
   }
 
-  // Vite が解決するパスを使用
-  const wasmUrl = new URL('@wasm/wasm_pkg_bg.wasm', import.meta.url).href;
-  const response = await fetch(wasmUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch WASM: ${response.status}`);
-  }
-
-  wasmBytesCache = await response.arrayBuffer();
+  wasmBytesCache = await fetchWasmBytesFromLoader();
   return wasmBytesCache.slice(0);
 }
 

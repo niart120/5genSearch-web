@@ -212,7 +212,7 @@ describe('TrainerInfoSearcher', () => {
     const task: TrainerInfoSearchTask = {
       kind: 'trainer-info',
       params: {
-        filter: {},
+        filter: { tid: undefined, sid: undefined, shiny_pid: undefined },
         ds: createTestDsConfig(),
         time_range: createTestTimeRange(0, 0, 0, 0),
         search_range: createTestSearchRange(2023, 1, 1, 60),
@@ -228,7 +228,7 @@ describe('TrainerInfoSearcher', () => {
     const task: TrainerInfoSearchTask = {
       kind: 'trainer-info',
       params: {
-        filter: {},
+        filter: { tid: undefined, sid: undefined, shiny_pid: undefined },
         ds: createTestDsConfig(),
         time_range: createTestTimeRange(0, 0, 0, 0),
         search_range: createTestSearchRange(2023, 1, 1, 60),
