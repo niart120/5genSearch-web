@@ -647,16 +647,388 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
 
 ## 5. テスト方針
 
+### 5.1 テスト分類
+
 | 分類 | テスト内容 | ファイル |
 |------|------------|----------|
 | ユニット | メッセージ型のシリアライズ/デシリアライズ | `src/test/unit/workers/types.test.ts` |
 | ユニット | 進捗計算ロジック | `src/test/unit/services/progress.test.ts` |
 | 統合 | Worker 初期化と WASM ロード | `src/test/integration/workers/init.test.ts` |
+| 統合 | 各 Searcher の定数期待値検証 | `src/test/integration/workers/searcher.test.ts` |
 | 統合 | WorkerPool の検索実行とキャンセル | `src/test/integration/services/worker-pool.test.ts` |
 
 統合テストは Browser Mode (headless Chromium) で実行する。
 
+### 5.2 統合テスト: 各 Searcher の定数期待値検証
+
+Worker 経由で WASM モジュールを呼び出し、Rust 側テストと同一の期待値を検証する。
+
+#### 5.2.1 MtseedDatetimeSearcher テスト
+
+既知の条件で MT Seed が正しく検索できることを検証。
+
+| 項目 | 値 |
+|------|-----|
+| 日時 | 2010/09/18 18:13:11 |
+| ROM | Black (JPN) |
+| Hardware | DS Lite |
+| MAC | `8C:56:C5:86:15:28` |
+| Timer0 | `0x0C79` |
+| VCount | `0x60` |
+| KeyCode | `0x2FFF` (入力なし) |
+| 期待 LCG Seed | `0x768360781D1CE6DD` |
+
+```typescript
+// src/test/integration/workers/searcher.test.ts
+describe('MtseedDatetimeSearcher', () => {
+  it('should find known MT Seed with correct datetime', async () => {
+    const expectedLcgSeed = 0x768360781D1CE6DDn;
+    const expectedMtSeed = deriveMtSeed(expectedLcgSeed); // WASM 関数で算出
+
+    const params: MtseedDatetimeSearchParams = {
+      target_seeds: [expectedMtSeed],
+      ds: {
+        mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 23,
+        minute_start: 0, minute_end: 59,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2010,
+        start_month: 9,
+        start_day: 18,
+        start_second_offset: 0,
+        range_seconds: 86400, // 1日分
+      },
+      condition: { timer0: 0x0C79, vcount: 0x60, key_code: 0x2FFF },
+    };
+
+    const results = await runSearchInWorker('mtseed-datetime', params);
+
+    // 期待する MT Seed が見つかること
+    const found = results.find((r) => r.mt_seed === expectedMtSeed);
+    expect(found).toBeDefined();
+
+    // 日時が 18:13:11 であること
+    expect(found!.datetime.year).toBe(2010);
+    expect(found!.datetime.month).toBe(9);
+    expect(found!.datetime.day).toBe(18);
+    expect(found!.datetime.hour).toBe(18);
+    expect(found!.datetime.minute).toBe(13);
+    expect(found!.datetime.second).toBe(11);
+
+    // Timer0, VCount, KeyCode
+    expect(found!.condition.timer0).toBe(0x0C79);
+    expect(found!.condition.vcount).toBe(0x60);
+    expect(found!.condition.key_code).toBe(0x2FFF);
+  });
+});
+```
+
+#### 5.2.2 MtseedSearcher テスト
+
+IV フィルタによる MT Seed 検索を検証。
+
+| テストケース | フィルタ条件 | 期待結果 |
+|-------------|-------------|----------|
+| 全範囲フィルタ | `IvFilter.any()` | バッチサイズ分全件マッチ |
+| 6V フィルタ | HP/Atk/Def/SpA/SpD/Spe = 31 | ほぼ 0 件 (確率的に極小) |
+
+```typescript
+describe('MtseedSearcher', () => {
+  it('should match all with any filter', async () => {
+    const params: MtseedSearchParams = {
+      iv_filter: {
+        hp: [0, 31], atk: [0, 31], def: [0, 31],
+        spa: [0, 31], spd: [0, 31], spe: [0, 31],
+      },
+      mt_offset: 7,
+      is_roamer: false,
+    };
+
+    const batch = await runSearchInWorker('mtseed', params, { batchSize: 100 });
+    expect(batch.candidates.length).toBe(100);
+  });
+
+  it('should find very few with 6V filter', async () => {
+    const params: MtseedSearchParams = {
+      iv_filter: {
+        hp: [31, 31], atk: [31, 31], def: [31, 31],
+        spa: [31, 31], spd: [31, 31], spe: [31, 31],
+      },
+      mt_offset: 7,
+      is_roamer: false,
+    };
+
+    const batch = await runSearchInWorker('mtseed', params, { batchSize: 10000 });
+    expect(batch.candidates.length).toBeLessThanOrEqual(1);
+  });
+});
+```
+
+#### 5.2.3 EggDatetimeSearcher テスト
+
+卵検索の基本動作を検証。
+
+```typescript
+describe('EggDatetimeSearcher', () => {
+  it('should create searcher and process batches', async () => {
+    const params: EggDatetimeSearchParams = {
+      ds: {
+        mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 23,
+        minute_start: 0, minute_end: 59,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2023,
+        start_month: 1,
+        start_day: 1,
+        start_second_offset: 0,
+        range_seconds: 60,
+      },
+      condition: { timer0: 0x0C79, vcount: 0x5A, key_code: 0x2FFF },
+      egg_params: {
+        trainer: { tid: 12345, sid: 54321 },
+        everstone: 'None',
+        female_has_hidden: false,
+        uses_ditto: false,
+        gender_ratio: 'F1M1',
+        nidoran_flag: false,
+        masuda_method: false,
+        parent_male: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+        parent_female: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+        consider_npc: false,
+        species_id: null,
+      },
+      gen_config: {
+        version: 'Black',
+        game_start: { start_mode: 'NewGame', save_state: 'NoSave' },
+        user_offset: 0,
+        max_advance: 100,
+      },
+      filter: null,
+    };
+
+    const result = await runSearchInWorker('egg-datetime', params);
+
+    // バッチ処理が正常に動作すること
+    expect(result.processed_count).toBeGreaterThan(0);
+    expect(result.total_count).toBeGreaterThan(0);
+  });
+});
+```
+
+#### 5.2.4 TrainerInfoSearcher テスト
+
+トレーナー情報検索の基本動作と制約を検証。
+
+```typescript
+describe('TrainerInfoSearcher', () => {
+  it('should reject Continue mode', async () => {
+    const params: TrainerInfoSearchParams = {
+      filter: {},
+      ds: {
+        mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 0,
+        minute_start: 0, minute_end: 0,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2023,
+        start_month: 1,
+        start_day: 1,
+        start_second_offset: 0,
+        range_seconds: 60,
+      },
+      condition: { timer0: 0x0C79, vcount: 0x5F, key_code: 0x2FFF },
+      game_start: { start_mode: 'Continue', save_state: 'WithSave' },
+    };
+
+    await expect(runSearchInWorker('trainer-info', params)).rejects.toThrow(/NewGame/);
+  });
+
+  it('should process batches with default filter', async () => {
+    const params: TrainerInfoSearchParams = {
+      filter: {},
+      ds: {
+        mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 0,
+        minute_start: 0, minute_end: 0,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2023,
+        start_month: 1,
+        start_day: 1,
+        start_second_offset: 0,
+        range_seconds: 60,
+      },
+      condition: { timer0: 0x0C79, vcount: 0x5F, key_code: 0x2FFF },
+      game_start: { start_mode: 'NewGame', save_state: 'NoSave' },
+    };
+
+    const result = await runSearchInWorker('trainer-info', params);
+    expect(result.processed_count).toBeGreaterThan(0);
+  });
+});
+```
+
+### 5.3 統合テスト: WorkerPool 動作検証
+
+```typescript
+// src/test/integration/services/worker-pool.test.ts
+describe('WorkerPool', () => {
+  it('should initialize all workers', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 2 });
+    await pool.initialize();
+
+    expect(pool.size).toBe(2);
+    pool.dispose();
+  });
+
+  it('should execute search tasks and collect results', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 2 });
+    await pool.initialize();
+
+    const tasks = generateMtseedSearchTasks(context, targetSeeds, dateRange, 2);
+    const results: SeedOrigin[] = [];
+
+    pool.onResult((r) => results.push(...r));
+
+    await new Promise<void>((resolve) => {
+      pool.onComplete(() => resolve());
+      pool.start(tasks);
+    });
+
+    expect(results.length).toBeGreaterThanOrEqual(0);
+    pool.dispose();
+  });
+
+  it('should cancel ongoing search', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 2 });
+    await pool.initialize();
+
+    const tasks = generateLongRunningTasks();
+    let progressCount = 0;
+
+    pool.onProgress(() => {
+      progressCount++;
+      if (progressCount >= 3) {
+        pool.cancel();
+      }
+    });
+
+    await new Promise<void>((resolve) => {
+      pool.onComplete(() => resolve());
+      pool.start(tasks);
+    });
+
+    // キャンセルにより早期終了
+    expect(progressCount).toBeGreaterThanOrEqual(3);
+    pool.dispose();
+  });
+
+  it('should aggregate progress from multiple workers', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 4 });
+    await pool.initialize();
+
+    const tasks = generateMtseedSearchTasks(context, targetSeeds, dateRange, 4);
+    const progressHistory: AggregatedProgress[] = [];
+
+    pool.onProgress((p) => progressHistory.push(p));
+
+    await new Promise<void>((resolve) => {
+      pool.onComplete(() => resolve());
+      pool.start(tasks);
+    });
+
+    // 進捗が複数回報告されること
+    expect(progressHistory.length).toBeGreaterThan(0);
+
+    // 最終進捗が 100% に近いこと
+    const lastProgress = progressHistory[progressHistory.length - 1];
+    expect(lastProgress.percentage).toBeGreaterThan(95);
+
+    pool.dispose();
+  });
+});
+```
+
+### 5.4 テストヘルパー関数
+
+```typescript
+// src/test/integration/helpers/worker-test-utils.ts
+
+/**
+ * Worker 経由で検索を実行するヘルパー
+ */
+async function runSearchInWorker<T extends SearchTask['kind']>(
+  kind: T,
+  params: SearchParamsFor<T>,
+  options?: { batchSize?: number }
+): Promise<SearchResultFor<T>> {
+  const worker = new Worker(
+    new URL('../../../workers/search.worker.ts', import.meta.url),
+    { type: 'module' }
+  );
+
+  const wasmBytes = await fetchWasmBytes();
+
+  return new Promise((resolve, reject) => {
+    const results: unknown[] = [];
+
+    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      switch (e.data.type) {
+        case 'ready':
+          worker.postMessage({
+            type: 'start',
+            taskId: 'test-task',
+            task: { kind, params },
+          });
+          break;
+        case 'result':
+          results.push(...e.data.results);
+          break;
+        case 'done':
+          worker.terminate();
+          resolve(results as SearchResultFor<T>);
+          break;
+        case 'error':
+          worker.terminate();
+          reject(new Error(e.data.message));
+          break;
+      }
+    };
+
+    worker.postMessage({ type: 'init', wasmBytes }, [wasmBytes]);
+  });
+}
+```
+
 ## 6. 実装チェックリスト
+
+### 6.1 Worker 基盤
 
 - [ ] `src/workers/types.ts` 作成
 - [ ] `src/workers/wasm-loader.ts` 作成
@@ -665,6 +1037,27 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
 - [ ] `src/services/worker-pool.ts` 作成
 - [ ] `src/services/progress.ts` 作成
 - [ ] `src/hooks/use-search.ts` 作成
-- [ ] ユニットテスト作成
-- [ ] 統合テスト作成
+
+### 6.2 ユニットテスト
+
+- [ ] `src/test/unit/workers/types.test.ts` 作成
+- [ ] `src/test/unit/services/progress.test.ts` 作成
+
+### 6.3 統合テスト
+
+- [ ] `src/test/integration/helpers/worker-test-utils.ts` 作成
+- [ ] `src/test/integration/workers/init.test.ts` 作成
+- [ ] `src/test/integration/workers/searcher.test.ts` 作成
+  - [ ] MtseedDatetimeSearcher: 既知 LCG Seed `0x768360781D1CE6DD` の検索
+  - [ ] MtseedSearcher: 全範囲フィルタ / 6V フィルタ
+  - [ ] EggDatetimeSearcher: バッチ処理動作
+  - [ ] TrainerInfoSearcher: Continue モード拒否 / バッチ処理動作
+- [ ] `src/test/integration/services/worker-pool.test.ts` 作成
+  - [ ] Worker 初期化
+  - [ ] 検索タスク実行と結果収集
+  - [ ] キャンセル処理
+  - [ ] 進捗集約
+
+### 6.4 ドキュメント
+
 - [ ] `spec/agent/architecture/worker-design.md` 修正
