@@ -677,13 +677,15 @@ Worker 経由で WASM モジュールを呼び出し、Rust 側テストと同�
 | VCount | `0x60` |
 | KeyCode | `0x2FFF` (入力なし) |
 | 期待 LCG Seed | `0x768360781D1CE6DD` |
+| 期待 MT Seed | `0x32BF6858` |
 
 ```typescript
 // src/test/integration/workers/searcher.test.ts
 describe('MtseedDatetimeSearcher', () => {
   it('should find known MT Seed with correct datetime', async () => {
+    // 既知の期待値 (ウェブツールにて検証済み)
     const expectedLcgSeed = 0x768360781D1CE6DDn;
-    const expectedMtSeed = deriveMtSeed(expectedLcgSeed); // WASM 関数で算出
+    const expectedMtSeed = 0x32BF6858; // deriveMtSeed(expectedLcgSeed) の結果
 
     const params: MtseedDatetimeSearchParams = {
       target_seeds: [expectedMtSeed],
@@ -714,6 +716,9 @@ describe('MtseedDatetimeSearcher', () => {
     const found = results.find((r) => r.mt_seed === expectedMtSeed);
     expect(found).toBeDefined();
 
+    // LCG Seed が期待値と一致
+    expect(found!.lcg_seed).toBe(expectedLcgSeed);
+
     // 日時が 18:13:11 であること
     expect(found!.datetime.year).toBe(2010);
     expect(found!.datetime.month).toBe(9);
@@ -737,7 +742,17 @@ IV フィルタによる MT Seed 検索を検証。
 | テストケース | フィルタ条件 | 期待結果 |
 |-------------|-------------|----------|
 | 全範囲フィルタ | `IvFilter.any()` | バッチサイズ分全件マッチ |
-| 6V フィルタ | HP/Atk/Def/SpA/SpD/Spe = 31 | ほぼ 0 件 (確率的に極小) |
+| 6V フィルタ | HP/Atk/Def/SpA/SpD/Spe = 31 | 5 件 (既知の期待値) |
+
+**6V 検索の既知の期待値 (ウェブツールにて検証済み):**
+
+| MT Seed |
+|---------|
+| `0x14B11BA6` |
+| `0x8A30480D` |
+| `0x9E02B0AE` |
+| `0xADFA2178` |
+| `0xFC4AA3AC` |
 
 ```typescript
 describe('MtseedSearcher', () => {
@@ -747,7 +762,7 @@ describe('MtseedSearcher', () => {
         hp: [0, 31], atk: [0, 31], def: [0, 31],
         spa: [0, 31], spd: [0, 31], spe: [0, 31],
       },
-      mt_offset: 7,
+      mt_offset: 0,
       is_roamer: false,
     };
 
@@ -755,51 +770,83 @@ describe('MtseedSearcher', () => {
     expect(batch.candidates.length).toBe(100);
   });
 
-  it('should find very few with 6V filter', async () => {
+  it('should find exactly 5 6V MT Seeds', async () => {
+    // 6V フィルタで全探索すると 5 件見つかる (ウェブツールにて検証済み)
+    const expected6vSeeds = [
+      0x14B11BA6,
+      0x8A30480D,
+      0x9E02B0AE,
+      0xADFA2178,
+      0xFC4AA3AC,
+    ];
+
     const params: MtseedSearchParams = {
       iv_filter: {
         hp: [31, 31], atk: [31, 31], def: [31, 31],
         spa: [31, 31], spd: [31, 31], spe: [31, 31],
       },
-      mt_offset: 7,
+      mt_offset: 0,
       is_roamer: false,
     };
 
-    const batch = await runSearchInWorker('mtseed', params, { batchSize: 10000 });
-    expect(batch.candidates.length).toBeLessThanOrEqual(1);
+    // 全探索 (0x00000000 〜 0xFFFFFFFF)
+    const allResults = await runFullSearchInWorker('mtseed', params);
+
+    expect(allResults.candidates.length).toBe(5);
+    expect(allResults.candidates.map((c) => c.mt_seed).sort()).toEqual(
+      expected6vSeeds.sort()
+    );
   });
 });
 ```
 
 #### 5.2.3 EggDatetimeSearcher テスト
 
-卵検索の基本動作を検証。
+卵検索の基本動作を検証 (ウェブツールにて検証済みの既知の期待値)。
+
+**テストデータ (2010/09/18 00:00:00, Adv=0):**
+
+| 項目 | 値 |
+|------|-----|
+| LCG Seed | `0xA3099B3B0196AAA1` |
+| MT Seed | `0x2D9429C0` |
+| Timer0 | `0x0C79` |
+| VCount | `0x60` |
+| 特性 | 特性1 |
+| 性別 | ♀ |
+| 性格 | むじゃき (Naive) |
+| IVs | H31/A14/B0/C22/D31/S31 |
+| めざパ | でんき 67 |
 
 ```typescript
 describe('EggDatetimeSearcher', () => {
-  it('should create searcher and process batches', async () => {
+  it('should find known egg result at specific datetime', async () => {
+    // 2010/09/18 00:00:00 における既知の卵検索結果 (Adv=0)
+    const expectedLcgSeed = 0xA3099B3B0196AAA1n;
+    const expectedMtSeed = 0x2D9429C0;
+
     const params: EggDatetimeSearchParams = {
       ds: {
-        mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+        mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
         hardware: 'DsLite',
         version: 'Black',
         region: 'Jpn',
       },
       time_range: {
-        hour_start: 0, hour_end: 23,
-        minute_start: 0, minute_end: 59,
-        second_start: 0, second_end: 59,
+        hour_start: 0, hour_end: 0,
+        minute_start: 0, minute_end: 0,
+        second_start: 0, second_end: 0,
       },
       search_range: {
-        start_year: 2023,
-        start_month: 1,
-        start_day: 1,
+        start_year: 2010,
+        start_month: 9,
+        start_day: 18,
         start_second_offset: 0,
-        range_seconds: 60,
+        range_seconds: 1,
       },
-      condition: { timer0: 0x0C79, vcount: 0x5A, key_code: 0x2FFF },
+      condition: { timer0: 0x0C79, vcount: 0x60, key_code: 0x2FFF },
       egg_params: {
-        trainer: { tid: 12345, sid: 54321 },
+        trainer: { tid: 1, sid: 2 },
         everstone: 'None',
         female_has_hidden: false,
         uses_ditto: false,
@@ -813,18 +860,36 @@ describe('EggDatetimeSearcher', () => {
       },
       gen_config: {
         version: 'Black',
-        game_start: { start_mode: 'NewGame', save_state: 'NoSave' },
+        game_start: { start_mode: 'Continue', save_state: 'WithSave' },
         user_offset: 0,
-        max_advance: 100,
+        max_advance: 10,
       },
       filter: null,
     };
 
     const result = await runSearchInWorker('egg-datetime', params);
 
-    // バッチ処理が正常に動作すること
-    expect(result.processed_count).toBeGreaterThan(0);
-    expect(result.total_count).toBeGreaterThan(0);
+    // Adv=0 の結果を検証
+    const adv0 = result.results.find((r) => r.advance === 0);
+    expect(adv0).toBeDefined();
+
+    // LCG Seed と MT Seed が期待値と一致
+    expect(adv0!.origin.lcg_seed).toBe(expectedLcgSeed);
+    expect(adv0!.origin.mt_seed).toBe(expectedMtSeed);
+
+    // 卵の性格が "むじゃき" (Naive) であること
+    expect(adv0!.egg.nature).toBe('Naive');
+
+    // 卵の性別が ♀ であること
+    expect(adv0!.egg.gender).toBe('Female');
+
+    // 卵の特性が 特性1 であること
+    expect(adv0!.egg.ability).toBe('Ability1');
+
+    // 卵の個体値を検証
+    expect(adv0!.egg.ivs).toEqual({
+      hp: 31, atk: 14, def: 0, spa: 22, spd: 31, spe: 31,
+    });
   });
 });
 ```
