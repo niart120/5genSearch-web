@@ -1243,6 +1243,25 @@ export class TrainerInfoSearcher {
 }
 
 /**
+ * タマゴ一括生成 (公開 API)
+ *
+ * - 解決済み Seed 対応: `Vec<SeedOrigin>` を受け取る
+ * - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
+ *
+ * # Arguments
+ *
+ * * `origins` - 解決済み Seed リスト
+ * * `params` - 生成パラメータ
+ * * `config` - 共通設定 (バージョン、オフセット、検索範囲)
+ * * `filter` - 孵化フィルタ (None の場合は全件返却)
+ *
+ * # Errors
+ *
+ * - 起動設定が無効な場合
+ */
+export function generate_egg_list(origins: SeedOrigin[], params: EggGenerationParams, config: GenerationConfig, filter?: EggFilter | null): GeneratedEggData[];
+
+/**
  * タスク生成関数
  *
  * `DatetimeSearchContext` と `DateRangeParams` から、
@@ -1273,6 +1292,26 @@ export function generate_egg_search_tasks(context: DatetimeSearchContext, date_r
  * - `worker_count`: Worker 数
  */
 export function generate_mtseed_search_tasks(context: DatetimeSearchContext, target_seeds: MtSeed[], date_range: DateRangeParams, worker_count: number): MtseedDatetimeSearchParams[];
+
+/**
+ * ポケモン一括生成 (公開 API)
+ *
+ * - 解決済み Seed 対応: `Vec<SeedOrigin>` を受け取る
+ * - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
+ *
+ * # Arguments
+ *
+ * * `origins` - 解決済み Seed リスト
+ * * `params` - 生成パラメータ (Wild / Static 統合)
+ * * `config` - 共通設定 (バージョン、オフセット、検索範囲)
+ * * `filter` - ポケモンフィルタ (None の場合は全件返却)
+ *
+ * # Errors
+ *
+ * - 起動設定が無効な場合
+ * - エンカウントスロットが空の場合
+ */
+export function generate_pokemon_list(origins: SeedOrigin[], params: PokemonGenerationParams, config: GenerationConfig, filter?: PokemonFilter | null): GeneratedPokemonData[];
 
 /**
  * 検索タスクを生成
@@ -1395,8 +1434,10 @@ export interface InitOutput {
     readonly eggdatetimesearcher_new: (a: any) => [number, number, number];
     readonly eggdatetimesearcher_next_batch: (a: number, b: number) => any;
     readonly eggdatetimesearcher_progress: (a: number) => number;
+    readonly generate_egg_list: (a: number, b: number, c: any, d: any, e: number) => [number, number, number, number];
     readonly generate_egg_search_tasks: (a: any, b: any, c: any, d: any, e: number, f: number) => [number, number];
     readonly generate_mtseed_search_tasks: (a: any, b: number, c: number, d: any, e: number) => [number, number];
+    readonly generate_pokemon_list: (a: number, b: number, c: any, d: any, e: number) => [number, number, number, number];
     readonly generate_trainer_info_search_tasks: (a: any, b: any, c: any, d: any, e: number) => [number, number];
     readonly get_key_combination_count: (a: any) => number;
     readonly get_needle_pattern_at: (a: bigint, b: number, c: number) => [number, number];

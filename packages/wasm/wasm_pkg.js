@@ -222,6 +222,40 @@ export class TrainerInfoSearcher {
 if (Symbol.dispose) TrainerInfoSearcher.prototype[Symbol.dispose] = TrainerInfoSearcher.prototype.free;
 
 /**
+ * タマゴ一括生成 (公開 API)
+ *
+ * - 解決済み Seed 対応: `Vec<SeedOrigin>` を受け取る
+ * - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
+ *
+ * # Arguments
+ *
+ * * `origins` - 解決済み Seed リスト
+ * * `params` - 生成パラメータ
+ * * `config` - 共通設定 (バージョン、オフセット、検索範囲)
+ * * `filter` - 孵化フィルタ (None の場合は全件返却)
+ *
+ * # Errors
+ *
+ * - 起動設定が無効な場合
+ * @param {SeedOrigin[]} origins
+ * @param {EggGenerationParams} params
+ * @param {GenerationConfig} config
+ * @param {EggFilter | null} [filter]
+ * @returns {GeneratedEggData[]}
+ */
+export function generate_egg_list(origins, params, config, filter) {
+    const ptr0 = passArrayJsValueToWasm0(origins, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.generate_egg_list(ptr0, len0, params, config, isLikeNone(filter) ? 0 : addToExternrefTable0(filter));
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v2;
+}
+
+/**
  * タスク生成関数
  *
  * `DatetimeSearchContext` と `DateRangeParams` から、
@@ -272,6 +306,41 @@ export function generate_mtseed_search_tasks(context, target_seeds, date_range, 
     const ptr0 = passArrayJsValueToWasm0(target_seeds, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.generate_mtseed_search_tasks(context, ptr0, len0, date_range, worker_count);
+    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v2;
+}
+
+/**
+ * ポケモン一括生成 (公開 API)
+ *
+ * - 解決済み Seed 対応: `Vec<SeedOrigin>` を受け取る
+ * - フィルタ対応: `filter` が Some の場合、条件に合致する個体のみ返却
+ *
+ * # Arguments
+ *
+ * * `origins` - 解決済み Seed リスト
+ * * `params` - 生成パラメータ (Wild / Static 統合)
+ * * `config` - 共通設定 (バージョン、オフセット、検索範囲)
+ * * `filter` - ポケモンフィルタ (None の場合は全件返却)
+ *
+ * # Errors
+ *
+ * - 起動設定が無効な場合
+ * - エンカウントスロットが空の場合
+ * @param {SeedOrigin[]} origins
+ * @param {PokemonGenerationParams} params
+ * @param {GenerationConfig} config
+ * @param {PokemonFilter | null} [filter]
+ * @returns {GeneratedPokemonData[]}
+ */
+export function generate_pokemon_list(origins, params, config, filter) {
+    const ptr0 = passArrayJsValueToWasm0(origins, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.generate_pokemon_list(ptr0, len0, params, config, isLikeNone(filter) ? 0 : addToExternrefTable0(filter));
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
     var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;

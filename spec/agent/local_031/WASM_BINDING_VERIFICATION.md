@@ -104,8 +104,7 @@ GPU API は `gpu` feature flag で有効化される条件付きコンパイル:
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/generation/flows/generator/mod.rs` | 変更 | `wasm_bindgen` 属性追加 |
-| `wasm-pkg/src/lib.rs` | 変更 | 公開 API として re-export |
+| `wasm-pkg/src/generation/flows/generator/mod.rs` | 変更 | 値渡しに変更し `wasm_bindgen` 属性追加 |
 | `src/test/wasm-binding.test.ts` | 新規 | API 動作確認テスト |
 
 ## 4. 設計方針
@@ -125,8 +124,9 @@ GPU API は `gpu` feature flag で有効化される条件付きコンパイル:
 ### 4.3 API シグネチャ設計
 
 ```rust
-// generate_pokemon_list の公開シグネチャ
+// generate_pokemon_list のシグネチャ (値渡しに変更して直接 wasm_bindgen 付与)
 #[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
 pub fn generate_pokemon_list(
     origins: Vec<SeedOrigin>,
     params: PokemonGenerationParams,
@@ -134,8 +134,9 @@ pub fn generate_pokemon_list(
     filter: Option<PokemonFilter>,
 ) -> Result<Vec<GeneratedPokemonData>, JsValue>;
 
-// generate_egg_list の公開シグネチャ
+// generate_egg_list のシグネチャ (値渡しに変更して直接 wasm_bindgen 付与)
 #[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
 pub fn generate_egg_list(
     origins: Vec<SeedOrigin>,
     params: EggGenerationParams,
@@ -146,56 +147,37 @@ pub fn generate_egg_list(
 
 ## 5. 実装仕様
 
-### 5.1 wasm_bindgen ラッパー関数
+### 5.1 wasm_bindgen 属性付与
 
-`wasm-pkg/src/lib.rs` に追加:
+`wasm-pkg/src/generation/flows/generator/mod.rs` の関数を値渡しに変更し、直接 `wasm_bindgen` を付与:
 
 ```rust
 use wasm_bindgen::prelude::*;
 
 /// ポケモン一括生成 (公開 API)
-///
-/// # Arguments
-/// * `origins` - 解決済み Seed リスト
-/// * `params` - 生成パラメータ
-/// * `config` - 共通設定
-/// * `filter` - フィルタ条件 (None の場合は全件返却)
-///
-/// # Errors
-/// - 起動設定が無効な場合
-/// - エンカウントスロットが空の場合
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
-pub fn generate_pokemon_list_js(
+pub fn generate_pokemon_list(
     origins: Vec<SeedOrigin>,
     params: PokemonGenerationParams,
     config: GenerationConfig,
     filter: Option<PokemonFilter>,
 ) -> Result<Vec<GeneratedPokemonData>, JsValue> {
-    generation::generate_pokemon_list(origins, &params, &config, filter.as_ref())
-        .map_err(|e| JsValue::from_str(&e))
+    // 内部処理では参照として使用
+    // ...
 }
 
 /// タマゴ一括生成 (公開 API)
-///
-/// # Arguments
-/// * `origins` - 解決済み Seed リスト
-/// * `params` - 生成パラメータ
-/// * `config` - 共通設定
-/// * `filter` - フィルタ条件 (None の場合は全件返却)
-///
-/// # Errors
-/// - 起動設定が無効な場合
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
-pub fn generate_egg_list_js(
+pub fn generate_egg_list(
     origins: Vec<SeedOrigin>,
     params: EggGenerationParams,
     config: GenerationConfig,
     filter: Option<EggFilter>,
 ) -> Result<Vec<GeneratedEggData>, JsValue> {
-    generation::generate_egg_list(origins, &params, &config, filter.as_ref())
-        .map_err(|e| JsValue::from_str(&e))
+    // 内部処理では参照として使用
+    // ...
 }
 ```
 
@@ -208,8 +190,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import init, {
   health_check,
   resolve_seeds,
-  generate_pokemon_list_js,
-  generate_egg_list_js,
+  generate_pokemon_list,
+  generate_egg_list,
   resolve_pokemon_data_batch,
   resolve_egg_data_batch,
 } from '@5gen-search/wasm';
@@ -238,15 +220,15 @@ describe('WASM Binding Verification', () => {
     });
   });
 
-  describe('generate_pokemon_list_js', () => {
+  describe('generate_pokemon_list', () => {
     it('should be callable', () => {
-      expect(typeof generate_pokemon_list_js).toBe('function');
+      expect(typeof generate_pokemon_list).toBe('function');
     });
   });
 
-  describe('generate_egg_list_js', () => {
+  describe('generate_egg_list', () => {
     it('should be callable', () => {
-      expect(typeof generate_egg_list_js).toBe('function');
+      expect(typeof generate_egg_list).toBe('function');
     });
   });
 });
@@ -260,8 +242,8 @@ describe('WASM Binding Verification', () => {
 |------------|----------|
 | `health_check` | `"wasm-pkg is ready"` が返却されること |
 | `resolve_seeds` | `Seeds` / `Startup` 両方の形式で正常動作 |
-| `generate_pokemon_list_js` | 関数が存在し呼び出し可能であること |
-| `generate_egg_list_js` | 関数が存在し呼び出し可能であること |
+| `generate_pokemon_list` | 関数が存在し呼び出し可能であること |
+| `generate_egg_list` | 関数が存在し呼び出し可能であること |
 | `resolve_pokemon_data_batch` | 解決結果が正しい形式であること |
 | `resolve_egg_data_batch` | 解決結果が正しい形式であること |
 
@@ -269,15 +251,15 @@ describe('WASM Binding Verification', () => {
 
 | テスト対象 | 検証内容 |
 |------------|----------|
-| 個体生成フロー | `resolve_seeds` → `generate_pokemon_list_js` → `resolve_pokemon_data_batch` |
-| 孵化生成フロー | `resolve_seeds` → `generate_egg_list_js` → `resolve_egg_data_batch` |
+| 個体生成フロー | `resolve_seeds` → `generate_pokemon_list` → `resolve_pokemon_data_batch` |
+| 孵化生成フロー | `resolve_seeds` → `generate_egg_list` → `resolve_egg_data_batch` |
 
 ### 6.3 d.ts 検証
 
 | 検証項目 | 方法 |
 |----------|------|
 | 型定義の網羅性 | ビルド後に `wasm_pkg.d.ts` を確認 |
-| 新規 API の追加 | `generate_pokemon_list_js` / `generate_egg_list_js` が型定義に含まれること |
+| 新規 API の追加 | `generate_pokemon_list` / `generate_egg_list` が型定義に含まれること |
 
 ## 7. 実装チェックリスト
 
@@ -288,10 +270,10 @@ describe('WASM Binding Verification', () => {
 
 ### 7.2 bindgen 付与修正
 
-- [ ] `generate_pokemon_list` の wasm_bindgen ラッパー追加
-- [ ] `generate_egg_list` の wasm_bindgen ラッパー追加
-- [ ] WASM ビルド確認 (`pnpm build:wasm`)
-- [ ] d.ts に新規 API が含まれることを確認
+- [x] `generate_pokemon_list` に wasm_bindgen 付与（値渡しに変更）
+- [x] `generate_egg_list` に wasm_bindgen 付与（値渡しに変更）
+- [x] WASM ビルド確認 (`pnpm build:wasm`)
+- [x] d.ts に新規 API が含まれることを確認
 
 ### 7.3 GPU API 確認
 
@@ -301,20 +283,26 @@ describe('WASM Binding Verification', () => {
 
 ### 7.4 ヘルスチェック
 
-- [ ] `health_check()` テスト作成
-- [ ] Vitest による動作確認
+- [x] `health_check()` テスト作成
+- [x] Vitest による動作確認
 
 ### 7.5 テスト
 
-- [ ] `src/test/wasm-binding.test.ts` 作成
-- [ ] 全テストパス確認
+- [x] `src/test/wasm-binding.test.ts` 作成
+- [x] 全テストパス確認
+
+### 7.6 bigint 変換問題
+
+- [x] `SeedSpec` に `large_number_types_as_bigints` 追加
+- [x] `SeedOrigin` に `large_number_types_as_bigints` 追加
+- [x] `resolve_seeds` テストがパスすることを確認
 
 ## 8. 備考
 
 ### 8.1 命名規則
 
-- Rust 内部関数: `generate_pokemon_list` (スネークケース)
-- wasm_bindgen 公開関数: `generate_pokemon_list_js` (接尾辞 `_js` で区別)
+- Rust 関数: `generate_pokemon_list` (スネークケース)
+- wasm_bindgen 公開関数: 同名（値渡しに変更して直接公開）
 - TypeScript 型: 自動生成 (tsify による PascalCase)
 
 ### 8.2 型変換の注意点

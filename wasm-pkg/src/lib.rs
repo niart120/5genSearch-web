@@ -44,9 +44,6 @@ pub use types::{
 pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
 pub use core::seed_resolver::resolve_seeds;
 
-// Re-export generation public API
-pub use generation::{generate_egg_list, generate_pokemon_list};
-
 // Re-export misc module (Searcher のみ)
 pub use misc::{MtseedSearcher, get_needle_pattern_at, search_needle_pattern};
 

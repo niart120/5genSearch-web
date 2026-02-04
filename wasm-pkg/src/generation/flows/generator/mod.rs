@@ -18,6 +18,8 @@ mod pokemon;
 pub use egg::EggGenerator;
 pub use pokemon::PokemonGenerator;
 
+use wasm_bindgen::prelude::*;
+
 use crate::types::{
     EggFilter, EggGenerationParams, EncounterType, GeneratedEggData, GeneratedPokemonData,
     GenerationConfig, PokemonFilter, PokemonGenerationParams, SeedOrigin,
@@ -41,29 +43,35 @@ use crate::types::{
 ///
 /// - 起動設定が無効な場合
 /// - エンカウントスロットが空の場合
+#[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
 pub fn generate_pokemon_list(
     origins: Vec<SeedOrigin>,
-    params: &PokemonGenerationParams,
-    config: &GenerationConfig,
-    filter: Option<&PokemonFilter>,
-) -> Result<Vec<GeneratedPokemonData>, String> {
+    params: PokemonGenerationParams,
+    config: GenerationConfig,
+    filter: Option<PokemonFilter>,
+) -> Result<Vec<GeneratedPokemonData>, JsValue> {
     // バリデーション
     if params.slots.is_empty() {
-        return Err("Encounter slots is empty".into());
+        return Err(JsValue::from_str("Encounter slots is empty"));
     }
 
     // Static の場合はスロットが1件のみ許容
     if is_static_encounter(params.encounter_type) && params.slots.len() > 1 {
-        return Err("Static encounter requires exactly one slot".into());
+        return Err(JsValue::from_str(
+            "Static encounter requires exactly one slot",
+        ));
     }
 
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = origins
         .into_iter()
-        .map(|origin| generate_pokemon_for_seed(origin, params, config, filter))
+        .map(|origin| generate_pokemon_for_seed(origin, &params, &config, filter.as_ref()))
         .collect();
 
-    Ok(results?.into_iter().flatten().collect())
+    results
+        .map(|v| v.into_iter().flatten().collect())
+        .map_err(|e| JsValue::from_str(&e))
 }
 
 /// タマゴ一括生成 (公開 API)
@@ -81,19 +89,23 @@ pub fn generate_pokemon_list(
 /// # Errors
 ///
 /// - 起動設定が無効な場合
+#[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
 pub fn generate_egg_list(
     origins: Vec<SeedOrigin>,
-    params: &EggGenerationParams,
-    config: &GenerationConfig,
-    filter: Option<&EggFilter>,
-) -> Result<Vec<GeneratedEggData>, String> {
+    params: EggGenerationParams,
+    config: GenerationConfig,
+    filter: Option<EggFilter>,
+) -> Result<Vec<GeneratedEggData>, JsValue> {
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = origins
         .into_iter()
-        .map(|origin| generate_egg_for_seed(origin, params, config, filter))
+        .map(|origin| generate_egg_for_seed(origin, &params, &config, filter.as_ref()))
         .collect();
 
-    Ok(results?.into_iter().flatten().collect())
+    results
+        .map(|v| v.into_iter().flatten().collect())
+        .map_err(|e| JsValue::from_str(&e))
 }
 
 /// エンカウント種別が Static かどうか判定
