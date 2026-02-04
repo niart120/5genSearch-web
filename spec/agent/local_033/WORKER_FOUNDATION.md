@@ -649,15 +649,51 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
 
 ### 5.1 テスト分類
 
-| 分類 | テスト内容 | ファイル |
-|------|------------|----------|
-| ユニット | メッセージ型のシリアライズ/デシリアライズ | `src/test/unit/workers/types.test.ts` |
-| ユニット | 進捗計算ロジック | `src/test/unit/services/progress.test.ts` |
-| 統合 | Worker 初期化と WASM ロード | `src/test/integration/workers/init.test.ts` |
-| 統合 | 各 Searcher の定数期待値検証 | `src/test/integration/workers/searcher.test.ts` |
-| 統合 | WorkerPool の検索実行とキャンセル | `src/test/integration/services/worker-pool.test.ts` |
+| 分類 | テスト内容 | ファイル | CI 実行 |
+|------|------------|----------|---------|
+| ユニット | メッセージ型のシリアライズ/デシリアライズ | `src/test/unit/workers/types.test.ts` | ✅ |
+| ユニット | 進捗計算ロジック | `src/test/unit/services/progress.test.ts` | ✅ |
+| 統合 | Worker 初期化と WASM ロード | `src/test/integration/workers/init.test.ts` | ✅ |
+| 統合 | 各 Searcher の短時間検証 | `src/test/integration/workers/searcher.test.ts` | ✅ |
+| 統合 | WorkerPool の検索実行とキャンセル | `src/test/integration/services/worker-pool.test.ts` | ✅ |
+| 統合 (長時間) | MtseedSearcher 全探索 | `src/test/integration/workers/searcher-full.test.ts` | ❌ |
+| 統合 (長時間) | 長期間 Datetime 検索 | `src/test/integration/workers/searcher-full.test.ts` | ❌ |
 
 統合テストは Browser Mode (headless Chromium) で実行する。
+
+### 5.1.1 CI 環境での長時間テストのスキップ
+
+長時間テスト (全探索、長期間検索) は CI 環境ではスキップする。
+
+```typescript
+// 環境変数で CI を検出
+const isCI = process.env.CI === 'true';
+
+// 長時間テストは CI ではスキップ
+describe.skipIf(isCI)('MtseedSearcher Full Search (Long Running)', () => {
+  // ...
+});
+```
+
+**ローカル実行時のみ長時間テストを含める:**
+
+```bash
+# 短時間テストのみ (CI と同等)
+pnpm test -- --project integration
+
+# 長時間テストを含む (ローカル開発用)
+pnpm test:full
+```
+
+**テスト実行時間の目安:**
+
+| テスト | 概算時間 (ローカル) | 概算時間 (CI) |
+|--------|---------------------|---------------|
+| Worker 初期化 | < 1s | < 2s |
+| MtseedDatetimeSearcher (1日) | 1-3s | 2-5s |
+| EggDatetimeSearcher (1秒) | < 1s | < 1s |
+| MtseedSearcher 全探索 | 30-60s (GPU) | スキップ |
+| TrainerInfoSearcher (1分) | < 1s | < 1s |
 
 ### 5.2 統合テスト: 各 Searcher の定数期待値検証
 
@@ -678,6 +714,11 @@ Worker 経由で WASM モジュールを呼び出し、Rust 側テストと同�
 | KeyCode | `0x2FFF` (入力なし) |
 | 期待 LCG Seed | `0x768360781D1CE6DD` |
 | 期待 MT Seed | `0x32BF6858` |
+| 期待日時 | 18:13:11 |
+
+##### 短時間テスト (CI 対応)
+
+期待日時 18:13:11 を含む狭い範囲 (18:00〜18:30) のみ検索。
 
 ```typescript
 // src/test/integration/workers/searcher.test.ts
@@ -696,8 +737,9 @@ describe('MtseedDatetimeSearcher', () => {
         region: 'Jpn',
       },
       time_range: {
-        hour_start: 0, hour_end: 23,
-        minute_start: 0, minute_end: 59,
+        // 18:00〜18:30 の30分間のみ検索 (CI 対応)
+        hour_start: 18, hour_end: 18,
+        minute_start: 0, minute_end: 30,
         second_start: 0, second_end: 59,
       },
       search_range: {
@@ -705,7 +747,7 @@ describe('MtseedDatetimeSearcher', () => {
         start_month: 9,
         start_day: 18,
         start_second_offset: 0,
-        range_seconds: 86400, // 1日分
+        range_seconds: 86400, // 1日分 (time_range で絞られる)
       },
       condition: { timer0: 0x0C79, vcount: 0x60, key_code: 0x2FFF },
     };
@@ -739,10 +781,11 @@ describe('MtseedDatetimeSearcher', () => {
 
 IV フィルタによる MT Seed 検索を検証。
 
-| テストケース | フィルタ条件 | 期待結果 |
-|-------------|-------------|----------|
-| 全範囲フィルタ | `IvFilter.any()` | バッチサイズ分全件マッチ |
-| 6V フィルタ | HP/Atk/Def/SpA/SpD/Spe = 31 | 5 件 (既知の期待値) |
+| テストケース | フィルタ条件 | 期待結果 | CI 実行 |
+|-------------|-------------|----------|---------|
+| 全範囲フィルタ (バッチ) | `IvFilter.any()` | バッチサイズ分全件マッチ | ✅ |
+| 6V フィルタ (部分探索) | HP/Atk/Def/SpA/SpD/Spe = 31 | 既知 Seed 1件を含む | ✅ |
+| 6V フィルタ (全探索) | 同上 | 5 件 | ❌ (長時間) |
 
 **6V 検索の既知の期待値 (ウェブツールにて検証済み):**
 
@@ -754,7 +797,10 @@ IV フィルタによる MT Seed 検索を検証。
 | `0xADFA2178` |
 | `0xFC4AA3AC` |
 
+##### 短時間テスト (CI 対応)
+
 ```typescript
+// src/test/integration/workers/searcher.test.ts
 describe('MtseedSearcher', () => {
   it('should match all with any filter', async () => {
     const params: MtseedSearchParams = {
@@ -770,6 +816,39 @@ describe('MtseedSearcher', () => {
     expect(batch.candidates.length).toBe(100);
   });
 
+  it('should find known 6V seed in partial range', async () => {
+    // 既知の 6V MT Seed の1つ (0x14B11BA6) を含む範囲のみ探索
+    // 開始: 0x14B00000, 終了: 0x14C00000 (約100万件、数秒で完了)
+    const knownSeed = 0x14B11BA6;
+
+    const params: MtseedSearchParams = {
+      iv_filter: {
+        hp: [31, 31], atk: [31, 31], def: [31, 31],
+        spa: [31, 31], spd: [31, 31], spe: [31, 31],
+      },
+      mt_offset: 0,
+      is_roamer: false,
+    };
+
+    const results = await runPartialSearchInWorker('mtseed', params, {
+      startSeed: 0x14B00000,
+      endSeed: 0x14C00000,
+    });
+
+    expect(results.candidates).toContainEqual(
+      expect.objectContaining({ mt_seed: knownSeed })
+    );
+  });
+});
+```
+
+##### 長時間テスト (ローカル専用)
+
+```typescript
+// src/test/integration/workers/searcher-full.test.ts
+const isCI = process.env.CI === 'true';
+
+describe.skipIf(isCI)('MtseedSearcher Full Search (Long Running)', () => {
   it('should find exactly 5 6V MT Seeds', async () => {
     // 6V フィルタで全探索すると 5 件見つかる (ウェブツールにて検証済み)
     const expected6vSeeds = [
@@ -789,14 +868,14 @@ describe('MtseedSearcher', () => {
       is_roamer: false,
     };
 
-    // 全探索 (0x00000000 〜 0xFFFFFFFF)
+    // 全探索 (0x00000000 〜 0xFFFFFFFF) - 30-60秒かかる
     const allResults = await runFullSearchInWorker('mtseed', params);
 
     expect(allResults.candidates.length).toBe(5);
     expect(allResults.candidates.map((c) => c.mt_seed).sort()).toEqual(
       expected6vSeeds.sort()
     );
-  });
+  }, 120_000); // タイムアウト 2分
 });
 ```
 
