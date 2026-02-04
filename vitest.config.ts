@@ -1,8 +1,15 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
+  resolve: {
+    alias: {
+      '@wasm': path.resolve(__dirname, 'packages/wasm/wasm_pkg.js'),
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

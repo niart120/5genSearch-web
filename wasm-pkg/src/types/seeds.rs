@@ -85,7 +85,7 @@ impl From<MtSeed> for u32 {
 ///
 /// 生成結果のソース情報。各エントリがどの条件から生成されたかを示す。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub enum SeedOrigin {
     /// Seed 値から直接生成
     Seed {

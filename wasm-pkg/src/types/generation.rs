@@ -401,7 +401,7 @@ use super::seeds::LcgSeed;
 /// Generator 系 API 用の Seed 指定方法。
 /// `KeySpec` と同様に、仕様から `SeedOrigin` リストに展開される。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 #[serde(tag = "type")]
 pub enum SeedSpec {
     /// 複数の LCG Seed を指定
