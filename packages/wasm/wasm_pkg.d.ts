@@ -36,6 +36,61 @@ export interface DsConfig {
 }
 
 /**
+ * GPU デバイスの種類
+ */
+export type GpuKind = "Discrete" | "Integrated" | "Mobile" | "Unknown";
+
+/**
+ * GPU プロファイル
+ *
+ * デバイス情報と最適化パラメータを保持する。
+ */
+export interface GpuProfile {
+    /**
+     * GPU の種類
+     */
+    kind: GpuKind;
+    /**
+     * デバイス名
+     */
+    name: string;
+    /**
+     * ベンダー名
+     */
+    vendor: string;
+    /**
+     * ドライバー情報
+     */
+    driver: string;
+}
+
+/**
+ * GPU 検索バッチ結果
+ */
+export interface GpuSearchBatch {
+    /**
+     * 検索結果
+     */
+    results: SeedOrigin[];
+    /**
+     * 進捗率 (0.0 - 1.0)
+     */
+    progress: number;
+    /**
+     * スループット (messages/sec)
+     */
+    throughput: number;
+    /**
+     * 処理済み数
+     */
+    processed_count: bigint;
+    /**
+     * 総処理数
+     */
+    total_count: bigint;
+}
+
+/**
  * IV フィルタ条件
  *
  * 各ステータスの範囲指定に加え、めざめるパワーのタイプ・威力条件を指定可能。
@@ -102,11 +157,11 @@ export interface MtseedDatetimeSearchBatch {
     /**
      * 処理済み件数
      */
-    processed_count: number;
+    processed_count: bigint;
     /**
      * 総件数
      */
-    total_count: number;
+    total_count: bigint;
 }
 
 /**
@@ -227,11 +282,11 @@ export interface TrainerInfoSearchBatch {
     /**
      * 処理済み件数
      */
-    processed_count: number;
+    processed_count: bigint;
     /**
      * 総件数
      */
-    total_count: number;
+    total_count: bigint;
 }
 
 /**
@@ -640,11 +695,11 @@ export interface EggDatetimeSearchBatch {
     /**
      * 処理済み件数
      */
-    processed_count: number;
+    processed_count: bigint;
     /**
      * 総件数
      */
-    total_count: number;
+    total_count: bigint;
 }
 
 /**
@@ -1183,6 +1238,41 @@ export class EggDatetimeSearcher {
 }
 
 /**
+ * GPU 起動時刻検索イテレータ
+ *
+ * `AsyncIterator` パターンで GPU 検索を実行する。
+ * `next()` を呼び出すたびに最適バッチサイズで GPU ディスパッチを実行し、
+ * 結果・進捗・スループットを返す。
+ */
+export class GpuDatetimeSearchIterator {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * イテレータを作成
+     *
+     * # Errors
+     *
+     * - GPU デバイスが利用不可の場合
+     * - `target_seeds` が空の場合
+     */
+    constructor(params: MtseedDatetimeSearchParams);
+    /**
+     * 次のバッチを取得
+     *
+     * 検索完了時は `None` を返す。
+     */
+    next(): Promise<GpuSearchBatch | undefined>;
+    /**
+     * 検索が完了したか
+     */
+    readonly is_done: boolean;
+    /**
+     * 進捗率 (0.0 - 1.0)
+     */
+    readonly progress: number;
+}
+
+/**
  * MT Seed 起動時刻検索器
  */
 export class MtseedDatetimeSearcher {
@@ -1427,6 +1517,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_eggdatetimesearcher_free: (a: number, b: number) => void;
+    readonly __wbg_gpudatetimesearchiterator_free: (a: number, b: number) => void;
     readonly __wbg_mtseeddatetimesearcher_free: (a: number, b: number) => void;
     readonly __wbg_mtseedsearcher_free: (a: number, b: number) => void;
     readonly __wbg_trainerinfosearcher_free: (a: number, b: number) => void;
@@ -1441,6 +1532,10 @@ export interface InitOutput {
     readonly generate_trainer_info_search_tasks: (a: any, b: any, c: any, d: any, e: number) => [number, number];
     readonly get_key_combination_count: (a: any) => number;
     readonly get_needle_pattern_at: (a: bigint, b: number, c: number) => [number, number];
+    readonly gpudatetimesearchiterator_is_done: (a: number) => number;
+    readonly gpudatetimesearchiterator_new: (a: any) => any;
+    readonly gpudatetimesearchiterator_next: (a: number) => any;
+    readonly gpudatetimesearchiterator_progress: (a: number) => number;
     readonly health_check: () => [number, number];
     readonly init: () => void;
     readonly mtseeddatetimesearcher_is_done: (a: number) => number;
@@ -1460,6 +1555,9 @@ export interface InitOutput {
     readonly trainerinfosearcher_new: (a: any) => [number, number, number];
     readonly trainerinfosearcher_next_batch: (a: number, b: number) => any;
     readonly trainerinfosearcher_progress: (a: number) => number;
+    readonly wasm_bindgen_fe984bb8de369ec8___closure__destroy___dyn_core_679abc6d1f37082f___ops__function__FnMut__wasm_bindgen_fe984bb8de369ec8___JsValue____Output_______: (a: number, b: number) => void;
+    readonly wasm_bindgen_fe984bb8de369ec8___convert__closures_____invoke___wasm_bindgen_fe984bb8de369ec8___JsValue__wasm_bindgen_fe984bb8de369ec8___JsValue_____: (a: number, b: number, c: any, d: any) => void;
+    readonly wasm_bindgen_fe984bb8de369ec8___convert__closures_____invoke___wasm_bindgen_fe984bb8de369ec8___JsValue_____: (a: number, b: number, c: any) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;

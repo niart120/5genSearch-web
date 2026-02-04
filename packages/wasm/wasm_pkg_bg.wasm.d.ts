@@ -2,6 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_eggdatetimesearcher_free: (a: number, b: number) => void;
+export const __wbg_gpudatetimesearchiterator_free: (a: number, b: number) => void;
 export const __wbg_mtseeddatetimesearcher_free: (a: number, b: number) => void;
 export const __wbg_mtseedsearcher_free: (a: number, b: number) => void;
 export const __wbg_trainerinfosearcher_free: (a: number, b: number) => void;
@@ -16,6 +17,10 @@ export const generate_pokemon_list: (a: number, b: number, c: any, d: any, e: nu
 export const generate_trainer_info_search_tasks: (a: any, b: any, c: any, d: any, e: number) => [number, number];
 export const get_key_combination_count: (a: any) => number;
 export const get_needle_pattern_at: (a: bigint, b: number, c: number) => [number, number];
+export const gpudatetimesearchiterator_is_done: (a: number) => number;
+export const gpudatetimesearchiterator_new: (a: any) => any;
+export const gpudatetimesearchiterator_next: (a: number) => any;
+export const gpudatetimesearchiterator_progress: (a: number) => number;
 export const health_check: () => [number, number];
 export const init: () => void;
 export const mtseeddatetimesearcher_is_done: (a: number) => number;
@@ -35,6 +40,9 @@ export const trainerinfosearcher_is_done: (a: number) => number;
 export const trainerinfosearcher_new: (a: any) => [number, number, number];
 export const trainerinfosearcher_next_batch: (a: number, b: number) => any;
 export const trainerinfosearcher_progress: (a: number) => number;
+export const wasm_bindgen_fe984bb8de369ec8___closure__destroy___dyn_core_679abc6d1f37082f___ops__function__FnMut__wasm_bindgen_fe984bb8de369ec8___JsValue____Output_______: (a: number, b: number) => void;
+export const wasm_bindgen_fe984bb8de369ec8___convert__closures_____invoke___wasm_bindgen_fe984bb8de369ec8___JsValue__wasm_bindgen_fe984bb8de369ec8___JsValue_____: (a: number, b: number, c: any, d: any) => void;
+export const wasm_bindgen_fe984bb8de369ec8___convert__closures_____invoke___wasm_bindgen_fe984bb8de369ec8___JsValue_____: (a: number, b: number, c: any) => void;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
 export const __wbindgen_exn_store: (a: number) => void;

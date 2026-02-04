@@ -35,13 +35,16 @@ WASM の Memory はスレッドセーフではないため、Worker ごとに独
 
 ### 2.2 wasm-bindgen の初期化関数
 
-| 関数 | 処理 | 用途 |
-|-----|------|------|
-| `init()` | fetch + compile + instantiate | メインスレッド初回 |
-| `initSync(module)` | instantiate のみ | Worker (Module 受け取り後) |
+| 関数 | 入力 | 処理 | 用途 |
+|-----|------|------|------|
+| `default` (async) | `URL`, `Response`, `BufferSource`, `WebAssembly.Module` | fetch + compile + instantiate | メインスレッド/GPU Worker |
+| `initSync` | `BufferSource`, `WebAssembly.Module` | compile + instantiate (同期) | CPU Worker |
 
 wasm-bindgen 生成コードはモジュールスコープに Instance を保持するため、
-`init()` / `initSync()` を1回呼べば以降の関数呼び出しは追加コストなし。
+`default()` / `initSync()` を1回呼べば以降の関数呼び出しは追加コストなし。
+
+**注意**: `initSync` は wasm-bindgen が生成する内部インポート (`__wbg_get_imports()`) を自動的に使用する。
+外部から `imports` を注入することはできない。
 
 ### 2.3 実行場所の使い分け
 
@@ -109,59 +112,54 @@ const workerCount = navigator.hardwareConcurrency ?? 4;
 - 取得不可の場合はフォールバック (4)
 - 上限は設けない (モジュール共有によりメモリ効率を確保)
 
-## 5. WASM モジュール共有
+## 5. WASM 初期化戦略
 
-### 4.1 背景
+### 5.1 採用方式: Worker 独自初期化
 
-各 Worker で独立に WASM をコンパイルすると、コンパイル済みコードがメモリ上で重複する。
-32 Worker の場合、数十 MB の無駄が発生する可能性がある。
-
-### 4.2 解決策
-
-`WebAssembly.Module` をメインスレッドで1回だけコンパイルし、各 Worker に転送する：
-
-```typescript
-// Main Thread (services/worker-pool.ts)
-async function createWorkerPool(): Promise<WorkerPool> {
-  // 1. WASM モジュールを1回だけコンパイル
-  const wasmBytes = await fetch('/wasm_pkg_bg.wasm').then(r => r.arrayBuffer());
-  const module = await WebAssembly.compile(wasmBytes);
-
-  // 2. Worker を生成し、コンパイル済みモジュールを転送
-  const workers = Array.from({ length: workerCount }, () => {
-    const worker = new Worker(new URL('./search.worker.ts', import.meta.url));
-    worker.postMessage({ type: 'init', module });
-    return worker;
-  });
-
-  // ...
-}
-```
+各 Worker が独立して WASM を fetch/初期化する方式を採用。
 
 ```typescript
 // Worker 内部 (workers/search.worker.ts)
-let wasmExports: WasmExports;
+import initWasm from '@wasm';
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
 
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   if (e.data.type === 'init') {
-    // コンパイル済みモジュールからインスタンス化 (高速)
-    const instance = await WebAssembly.instantiate(e.data.module, imports);
-    wasmExports = instance.exports as WasmExports;
+    // Worker が独自に WASM を fetch/初期化
+    await initWasm(wasmUrl);
     postMessage({ type: 'ready' });
   }
   // ...
 };
 ```
 
-### 4.3 メモリ効率
+**利点**:
+- Worker のコードがシンプル
+- Vite のビルド時最適化が効く
+- ArrayBuffer の複製・転送が不要
 
-| 項目 | モジュール共有なし | モジュール共有あり |
-|-----|------------------|------------------|
-| コンパイル済みコード | ~3 MB × N | ~3 MB (共有) |
-| インスタンスメモリ | ~2 MB × N | ~2 MB × N |
-| 32 Worker 合計 | ~160 MB | ~67 MB |
+**Vite 環境での注意点**:
+- Worker 作成時は `new URL('./worker.ts', import.meta.url)` でパスを解決
+- `{ type: 'module' }` オプションで ES Module Worker として動作
+- Vite がビルド時に Worker を自動バンドル
 
-`WebAssembly.Module` は Structured Clone 対応のため、`postMessage` で効率的に転送される。
+### 5.2 初期化フロー
+
+```
+┌─────────────────┐                    ┌─────────────────┐
+│   WorkerPool    │                    │     Worker      │
+└────────┬────────┘                    └────────┬────────┘
+         │                                      │
+         │  { type: 'init' }                    │
+         ├──────────────────────────────────────►
+         │                                      │
+         │                          fetch(wasmUrl)
+         │                          initWasm()
+         │                                      │
+         │  { type: 'ready' }                   │
+         ◄──────────────────────────────────────┤
+         │                                      │
+```
 
 ## 6. メッセージプロトコル
 
@@ -170,15 +168,18 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
 ```typescript
 // Main → Worker
 type WorkerRequest =
-  | { type: 'init'; module: WebAssembly.Module }
+  | { type: 'init' }  // Worker が独自に WASM を fetch/初期化
   | { type: 'start'; taskId: string; task: SearchTask }
   | { type: 'cancel' };
 
-// Worker → Main
+// Worker → Main (結果タイプ別)
 type WorkerResponse =
   | { type: 'ready' }
   | { type: 'progress'; taskId: string; progress: ProgressInfo }
-  | { type: 'result'; taskId: string; results: SearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'seed-origin'; results: SeedOrigin[] }
+  | { type: 'result'; taskId: string; resultType: 'mtseed'; results: MtseedResult[] }
+  | { type: 'result'; taskId: string; resultType: 'egg'; results: EggDatetimeSearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'trainer-info'; results: TrainerInfoSearchResult[] }
   | { type: 'done'; taskId: string }
   | { type: 'error'; taskId: string; message: string };
 
@@ -270,50 +271,35 @@ interface AggregatedProgress {
                                cancel → [Ready]
 ```
 
-### 7.2 バッチ処理
-
-```typescript
-// Worker 内部
-async function runSearch(task: SearchTask) {
-  const searcher = createSearcher(task);
-  const results: SearchResult[] = [];
-  
-  while (!searcher.is_done && !cancelled) {
-    const batch = searcher.next_batch(BATCH_SIZE);
-    
-    // 結果を蓄積 (完了時に一括送信)
-    results.push(...batch.results);
-    
-    // 進捗報告
-    postMessage({
-      type: 'progress',
-      taskId,
-      progress: calculateProgress(batch, startTime),
-    });
-    
-    // UI スレッドへ制御を戻す
-    await yieldToMain();
-  }
-  
-  // 完了 or キャンセル時に結果を一括送信
-  postMessage({ type: 'result', taskId, results });
-  postMessage({ type: 'done', taskId });
-}
-```
-
 ### 8.2 バッチ処理
 
 ```typescript
 // Worker 内部
-async function runSearch(task: SearchTask) {
+import initWasm, { EggDatetimeSearcher, MtseedSearcher } from '@wasm';
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+import type { SearchTask } from './types';
+
+async function handleInit(): Promise<void> {
+  await initWasm(wasmUrl);
+  postMessage({ type: 'ready' });
+}
+
+async function runSearch(taskId: string, task: SearchTask) {
+  const startTime = performance.now();
   const searcher = createSearcher(task);
-  const results: SearchResult[] = [];
   
   while (!searcher.is_done && !cancelled) {
-    const batch = searcher.next_batch(BATCH_SIZE);
+    const batch = searcher.next_batch(getBatchSize(task.kind));
     
-    // 結果を蓄積 (完了時に一括送信)
-    results.push(...batch.results);
+    // 中間結果を即時送信
+    if (batch.results.length > 0) {
+      postMessage({
+        type: 'result',
+        taskId,
+        resultType: getResultType(task.kind),
+        results: batch.results,
+      });
+    }
     
     // 進捗報告
     postMessage({
@@ -326,9 +312,12 @@ async function runSearch(task: SearchTask) {
     await yieldToMain();
   }
   
-  // 完了 or キャンセル時に結果を一括送信
-  postMessage({ type: 'result', taskId, results });
   postMessage({ type: 'done', taskId });
+  searcher.free(); // WASM リソース解放
+}
+
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 ```
 

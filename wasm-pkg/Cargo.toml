@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["console_error_panic_hook"]
-gpu = ["dep:wgpu", "dep:web-sys", "dep:bytemuck", "dep:futures-channel"]
+gpu = ["dep:wgpu", "dep:web-sys", "dep:bytemuck", "dep:futures-channel", "dep:js-sys"]
 
 [dependencies]
 wasm-bindgen = "0.2.108"
@@ -29,6 +29,7 @@ wgpu = { version = "24", optional = true, default-features = false, features = [
 web-sys = { version = "0.3", optional = true, features = ["Window", "Navigator", "Gpu"] }
 bytemuck = { version = "1.21", optional = true, features = ["derive"] }
 futures-channel = { version = "0.3", optional = true }
+js-sys = { version = "0.3", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

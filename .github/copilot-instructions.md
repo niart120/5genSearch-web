@@ -60,9 +60,8 @@
 ## よく使うコマンド
 
 - 開発サーバ: `pnpm dev`
-- ビルド: `pnpm build` / `pnpm build:wasm` / `pnpm build:wasm:gpu` / `pnpm build:wasm:dev`
+- ビルド: `pnpm build` / `pnpm build:wasm` / `pnpm build:wasm:dev`
 - テスト: `pnpm test` / `pnpm test:run` / `pnpm test:coverage` / `pnpm test:wasm` / `cargo test`
-- テスト (プロジェクト指定): `pnpm test -- --project unit` / `pnpm test -- --project integration`
 - テスト (GPU含む): `cargo test --features gpu`
 - Lint: `pnpm lint` / `cargo clippy --all-targets -- -D warnings`
 - Lint (GPU含む): `cargo clippy --all-targets --features gpu -- -D warnings`

@@ -6,9 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "pnpm build:wasm && tsc -b && vite build",
-    "build:wasm": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm --release",
-    "build:wasm:gpu": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm --release -- --features gpu",
-    "build:wasm:dev": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm --dev",
+    "build:wasm": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm --release -- --features gpu",
+    "build:wasm:dev": "wasm-pack build wasm-pkg --target web --out-dir ../packages/wasm --dev -- --features gpu",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

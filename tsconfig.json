@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@wasm": ["./packages/wasm/wasm_pkg.js"],
+      "@wasm": ["./packages/wasm/wasm_pkg.d.ts"],
       "@wasm/*": ["./packages/wasm/*"]
     }
   },

@@ -1,0 +1,1286 @@
+# Worker 基盤 仕様書
+
+## 1. 概要
+
+### 1.1 目的
+
+Web Worker を使用した WASM 並列実行基盤を構築する。
+
+### 1.2 用語定義
+
+| 用語 | 定義 |
+|------|------|
+| WorkerPool | 複数の Worker を管理し、タスク分配・進捗集約を行うサービス |
+| CPU Worker | SIMD 最適化された WASM を実行する Worker |
+| GPU Worker | WebGPU を使用した WASM を実行する Worker (単一インスタンス) |
+| SearchTask | Worker に分配する検索タスク単位 |
+| Batch | Searcher の `next_batch()` 1回分の処理単位 |
+
+### 1.3 背景・問題
+
+- 現状: WASM 検索処理はメインスレッドをブロックする
+- 問題: UI が応答しなくなる、進捗表示ができない
+- 制約: SharedArrayBuffer は GitHub Pages + iOS で使用不可
+
+### 1.4 期待効果
+
+| 項目 | 効果 |
+|------|------|
+| UI 応答性 | メインスレッド非ブロック化により常時応答可能 |
+| CPU 活用率 | `navigator.hardwareConcurrency` 分の Worker で並列化 |
+| GPU 対応 | WebGPU 利用可能時に高速検索を提供 |
+| 進捗表示 | リアルタイムな進捗・スループット表示 |
+
+### 1.5 着手条件
+
+- WASM パッケージ (`packages/wasm/`) がビルド済み
+- Vite 開発サーバが動作する状態
+
+## 2. 対象ファイル
+
+| ファイル | 変更種別 | 変更内容 |
+|----------|----------|----------|
+| `src/workers/types.ts` | 新規作成 | Worker メッセージ型定義 |
+| `src/workers/search.worker.ts` | 新規作成 | CPU 検索 Worker 実装 |
+| `src/workers/gpu.worker.ts` | 新規作成 | GPU 検索 Worker 実装 |
+| `src/services/worker-pool.ts` | 新規作成 | WorkerPool 実装 |
+| `src/services/progress.ts` | 新規作成 | 進捗集約サービス |
+| `src/hooks/use-search.ts` | 新規作成 | 検索実行用カスタムフック |
+| `spec/agent/architecture/worker-design.md` | 修正 | 仕様修正 (Worker 独自初期化方式) |
+
+## 3. 設計方針
+
+### 3.1 WASM 初期化戦略
+
+wasm-bindgen が生成する初期化関数の仕様:
+
+| 関数 | 入力 | 処理 |
+|------|------|------|
+| `default` (async) | `URL`, `Response`, `BufferSource`, `WebAssembly.Module` | fetch + compile + instantiate |
+| `initSync` | `BufferSource`, `WebAssembly.Module` | compile + instantiate (同期) |
+
+**採用方式: Worker 独自初期化**
+
+各 Worker が独自に WASM を fetch/初期化する方式を採用:
+
+1. WorkerPool が Worker に `{ type: 'init' }` メッセージを送信
+2. Worker が `wasmUrl` を import し、`initWasm(wasmUrl)` で非同期初期化
+3. 初期化完了後、Worker が `{ type: 'ready' }` を返信
+
+この方式の利点:
+- Worker のコードがシンプル
+- Vite のビルド時最適化が効く
+- ArrayBuffer の複製・転送が不要
+
+### 3.2 Vite での Worker 作成
+
+Vite 推奨パターン:
+
+```typescript
+const worker = new Worker(
+  new URL('./workers/search.worker.ts', import.meta.url),
+  { type: 'module' }
+);
+```
+
+- `new URL()` で相対パスを解決
+- `{ type: 'module' }` で ES Module Worker として動作
+- Vite がビルド時に自動バンドル
+
+### 3.3 CPU/GPU 経路選択
+
+| 条件 | 使用 Worker |
+|------|-------------|
+| `navigator.gpu` 利用可能 + ユーザー設定 GPU | `gpu.worker.ts` (単一) |
+| それ以外 | `search.worker.ts` × N (並列) |
+
+GPU Worker は WebGPU リソースの排他制御のため単一インスタンス。
+
+### 3.4 Worker 数決定
+
+```typescript
+const workerCount = navigator.hardwareConcurrency ?? 4;
+```
+
+上限は設けない (WASM Module 共有によりメモリ効率を確保)。
+
+## 4. 実装仕様
+
+### 4.1 メッセージ型定義 (`src/workers/types.ts`)
+
+```typescript
+// Main → Worker
+export type WorkerRequest =
+  | { type: 'init' }  // Worker が独自に WASM を fetch/初期化
+  | { type: 'start'; taskId: string; task: SearchTask }
+  | { type: 'cancel' };
+
+// Worker → Main (結果タイプ別)
+export type WorkerResponse =
+  | { type: 'ready' }
+  | { type: 'progress'; taskId: string; progress: ProgressInfo }
+  | { type: 'result'; taskId: string; resultType: 'seed-origin'; results: SeedOrigin[] }
+  | { type: 'result'; taskId: string; resultType: 'mtseed'; results: MtseedResult[] }
+  | { type: 'result'; taskId: string; resultType: 'egg'; results: EggDatetimeSearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'trainer-info'; results: TrainerInfoSearchResult[] }
+  | { type: 'done'; taskId: string }
+  | { type: 'error'; taskId: string; message: string };
+
+export interface ProgressInfo {
+  processed: number;
+  total: number;
+  percentage: number;
+  elapsedMs: number;
+  estimatedRemainingMs: number;
+  throughput: number; // items/sec
+}
+
+export type SearchTask =
+  | { kind: 'egg-datetime'; params: EggDatetimeSearchParams }
+  | { kind: 'mtseed-datetime'; params: MtseedDatetimeSearchParams }
+  | { kind: 'mtseed'; params: MtseedSearchParams }
+  | { kind: 'trainer-info'; params: TrainerInfoSearchParams };
+```
+
+### 4.2 CPU Worker (`src/workers/search.worker.ts`)
+
+```typescript
+import initWasm, {
+  EggDatetimeSearcher,
+  MtseedDatetimeSearcher,
+  MtseedSearcher,
+  TrainerInfoSearcher,
+  health_check,
+} from '@wasm';
+import type { WorkerRequest, WorkerResponse, SearchTask } from './types';
+
+// WASM バイナリの URL を取得
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+
+let initialized = false;
+let cancelled = false;
+
+self.onmessage = (e: MessageEvent<WorkerRequest>) => {
+  const { data } = e;
+
+  switch (data.type) {
+    case 'init':
+      void handleInit();
+      break;
+
+    case 'start':
+      if (!initialized) {
+        postResponse({ type: 'error', taskId: data.taskId, message: 'WASM not initialized' });
+        return;
+      }
+      cancelled = false;
+      void runSearch(data.taskId, data.task);
+      break;
+
+    case 'cancel':
+      cancelled = true;
+      break;
+  }
+};
+
+async function handleInit(): Promise<void> {
+  try {
+    // Worker 内で独立して WASM を初期化
+    await initWasm(wasmUrl);
+
+    // WASM が正しく初期化されたか確認
+    const healthResult = health_check();
+    if (healthResult !== 'wasm-pkg is ready') {
+      throw new Error(`Health check failed: ${healthResult}`);
+    }
+
+    initialized = true;
+    postResponse({ type: 'ready' });
+  } catch (err) {
+    postResponse({
+      type: 'error',
+      taskId: '',
+      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+}
+
+async function runSearch(taskId: string, task: SearchTask): Promise<void> {
+  const startTime = performance.now();
+  const searcher = createSearcher(task);
+  const results: SeedOrigin[] = [];
+
+  while (!searcher.is_done && !cancelled) {
+    const batch = searcher.next_batch(getBatchSize(task.kind));
+    results.push(...batch.results);
+
+    postResponse({
+      type: 'progress',
+      taskId,
+      progress: {
+        processed: batch.processed_count,
+        total: batch.total_count,
+        percentage: (batch.processed_count / batch.total_count) * 100,
+        elapsedMs: performance.now() - startTime,
+        estimatedRemainingMs: estimateRemaining(batch, startTime),
+        throughput: calculateThroughput(batch, startTime),
+      },
+    });
+
+    // UI スレッドへ制御を戻す
+    await yieldToMain();
+  }
+
+  postResponse({ type: 'result', taskId, results });
+  postResponse({ type: 'done', taskId });
+  searcher.free();
+}
+
+function createSearcher(task: SearchTask) {
+  switch (task.kind) {
+    case 'egg-datetime':
+      return new EggDatetimeSearcher(task.params);
+    case 'mtseed-datetime':
+      return new MtseedDatetimeSearcher(task.params);
+    case 'mtseed':
+      return new MtseedSearcher(task.params);
+    case 'trainer-info':
+      return new TrainerInfoSearcher(task.params);
+  }
+}
+
+function getBatchSize(kind: SearchTask['kind']): number {
+  switch (kind) {
+    case 'egg-datetime':
+    case 'mtseed-datetime':
+    case 'trainer-info':
+      return 1000;
+    case 'mtseed':
+      return 0x10000;
+  }
+}
+
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function postResponse(response: WorkerResponse): void {
+  self.postMessage(response);
+}
+```
+
+### 4.3 GPU Worker (`src/workers/gpu.worker.ts`)
+
+```typescript
+import initWasm, { GpuDatetimeSearchIterator } from '@wasm';
+import type { WorkerRequest, WorkerResponse } from './types';
+import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '@wasm';
+
+// WASM バイナリの URL を取得
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+
+let initialized = false;
+let cancelRequested = false;
+let currentIterator: GpuDatetimeSearchIterator | null = null;
+
+self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
+  const { data } = e;
+
+  switch (data.type) {
+    case 'init':
+      await handleInit();
+      break;
+
+    case 'start':
+      if (!initialized) {
+        postResponse({ type: 'error', taskId: data.taskId, message: 'WASM not initialized' });
+        return;
+      }
+      if (data.task.kind !== 'mtseed-datetime') {
+        postResponse({ type: 'error', taskId: data.taskId, message: 'GPU only supports mtseed-datetime' });
+        return;
+      }
+      cancelRequested = false;
+      await runGpuSearch(data.taskId, data.task.params);
+      break;
+
+    case 'cancel':
+      cancelRequested = true;
+      // イテレータを破棄してリソースを解放
+      if (currentIterator) {
+        currentIterator.free();
+        currentIterator = null;
+      }
+      break;
+  }
+};
+
+async function handleInit(): Promise<void> {
+  try {
+    // Worker 内で独立して WASM を初期化
+    await initWasm(wasmUrl);
+    initialized = true;
+    postResponse({ type: 'ready' });
+  } catch (err) {
+    postResponse({
+      type: 'error',
+      taskId: '',
+      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+}
+
+async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams): Promise<void> {
+  cancelRequested = false;
+
+  try {
+    // GpuDatetimeSearchIterator は async constructor
+    currentIterator = await new GpuDatetimeSearchIterator(params);
+
+    const startTime = performance.now();
+    let batch: GpuSearchBatch | undefined;
+
+    while (!cancelRequested && !currentIterator.is_done) {
+      batch = await currentIterator.next();
+      if (!batch) break;
+
+      const elapsedMs = performance.now() - startTime;
+
+      // 進捗報告
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: {
+          processed: Number(batch.processed_count),
+          total: Number(batch.total_count),
+          percentage: batch.progress * 100,
+          elapsedMs,
+          estimatedRemainingMs:
+            batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
+          throughput: batch.throughput,
+        },
+      });
+
+      // 中間結果を報告
+      if (batch.results.length > 0) {
+        postResponse({
+          type: 'result',
+          taskId,
+          resultType: 'seed-origin',
+          results: batch.results,
+        });
+      }
+    }
+
+    postResponse({ type: 'done', taskId });
+  } catch (err) {
+    postResponse({
+      type: 'error',
+      taskId,
+      message: err instanceof Error ? err.message : String(err),
+    });
+  } finally {
+    if (currentIterator) {
+      currentIterator.free();
+      currentIterator = null;
+    }
+  }
+}
+
+function postResponse(response: WorkerResponse): void {
+  self.postMessage(response);
+}
+```
+
+### 4.4 WorkerPool (`src/services/worker-pool.ts`)
+
+WorkerPool は ProgressAggregator を使用して進捗を集約する。
+Worker への初期化は `{ type: 'init' }` メッセージのみを送信し、
+各 Worker が独自に WASM を fetch/初期化する。
+
+```typescript
+import { ProgressAggregator, type AggregatedProgress } from './progress';
+import type { WorkerRequest, WorkerResponse, SearchTask } from '../workers/types';
+
+export interface WorkerPoolConfig {
+  useGpu: boolean;
+  workerCount?: number;
+}
+
+export type SearchResult = SeedOrigin[] | MtseedResult[] | EggDatetimeSearchResult[] | TrainerInfoSearchResult[];
+
+type ProgressCallback = (progress: AggregatedProgress) => void;
+type ResultCallback = (results: SearchResult) => void;
+type CompleteCallback = () => void;
+type ErrorCallback = (error: Error) => void;
+
+export class WorkerPool {
+  private workers: Worker[] = [];
+  private readyCount = 0;
+  private initPromise: Promise<void> | null = null;
+
+  private taskQueue: Array<{ taskId: string; task: SearchTask }> = [];
+  private activeWorkers = new Map<Worker, string>();
+  private progressAggregator = new ProgressAggregator();
+
+  private progressCallbacks: ProgressCallback[] = [];
+  private resultCallbacks: ResultCallback[] = [];
+  private completeCallbacks: CompleteCallback[] = [];
+  private errorCallbacks: ErrorCallback[] = [];
+
+  constructor(private config: WorkerPoolConfig) {}
+
+  get size(): number {
+    return this.workers.length;
+  }
+
+  get isReady(): boolean {
+    return this.readyCount === this.workers.length && this.workers.length > 0;
+  }
+
+  async initialize(): Promise<void> {
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+    this.initPromise = this.doInitialize();
+    return this.initPromise;
+  }
+
+  private async doInitialize(): Promise<void> {
+    if (this.config.useGpu && 'gpu' in navigator) {
+      // GPU Worker は単一インスタンス
+      const gpuWorker = new Worker(
+        new URL('../workers/gpu.worker.ts', import.meta.url),
+        { type: 'module' }
+      );
+      this.setupWorker(gpuWorker);
+      this.workers.push(gpuWorker);
+    } else {
+      // CPU Workers
+      const count = this.config.workerCount ?? navigator.hardwareConcurrency ?? 4;
+      for (let i = 0; i < count; i++) {
+        const worker = new Worker(
+          new URL('../workers/search.worker.ts', import.meta.url),
+          { type: 'module' }
+        );
+        this.setupWorker(worker);
+        this.workers.push(worker);
+      }
+    }
+
+    // 全 Worker に WASM 初期化を指示
+    await this.initializeWorkers();
+  }
+
+  private setupWorker(worker: Worker): void {
+    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      this.handleWorkerMessage(worker, e.data);
+    };
+    worker.onerror = (e) => {
+      this.errorCallbacks.forEach((cb) => cb(new Error(e.message)));
+    };
+  }
+
+  private async initializeWorkers(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      for (const worker of this.workers) {
+        // Worker に初期化を指示 (Worker が独自に WASM を fetch する)
+        const request: WorkerRequest = { type: 'init' };
+        worker.postMessage(request);
+      }
+
+      const checkReadyInterval = setInterval(() => {
+        if (this.readyCount === this.workers.length) {
+          clearInterval(checkReadyInterval);
+          resolve();
+        }
+      }, 10);
+
+      // タイムアウト (10秒)
+      setTimeout(() => {
+        clearInterval(checkReadyInterval);
+        if (this.readyCount !== this.workers.length) {
+          this.errorCallbacks.forEach((cb) =>
+            cb(new Error(`Worker initialization timeout`))
+          );
+        }
+      }, 10000);
+    });
+  }
+
+  private handleWorkerMessage(worker: Worker, response: WorkerResponse): void {
+    switch (response.type) {
+      case 'ready':
+        this.readyCount++;
+        break;
+
+      case 'progress':
+        this.progressAggregator.updateProgress(response.taskId, response.progress);
+        this.emitAggregatedProgress();
+        break;
+
+      case 'result':
+        this.resultCallbacks.forEach((cb) => cb(response.results as SearchResult));
+        break;
+
+      case 'done':
+        this.progressAggregator.markCompleted(response.taskId);
+        this.activeWorkers.delete(worker);
+        this.dispatchNextTask(worker);
+        if (this.progressAggregator.isComplete() && this.taskQueue.length === 0) {
+          this.completeCallbacks.forEach((cb) => cb());
+        }
+        break;
+
+      case 'error':
+        this.cancel();
+        this.errorCallbacks.forEach((cb) => cb(new Error(response.message)));
+        break;
+    }
+  }
+
+  start(tasks: SearchTask[]): void {
+    this.progressAggregator.start(tasks.length);
+
+    // タスクをキューに追加
+    this.taskQueue = tasks.map((task, i) => ({
+      taskId: `task-${i}`,
+      task,
+    }));
+
+    // 各 Worker にタスクを配布
+    for (const worker of this.workers) {
+      this.dispatchNextTask(worker);
+    }
+  }
+
+  private dispatchNextTask(worker: Worker): void {
+    const next = this.taskQueue.shift();
+    if (!next) return;
+
+    this.activeWorkers.set(worker, next.taskId);
+    const request: WorkerRequest = {
+      type: 'start',
+      taskId: next.taskId,
+      task: next.task,
+    };
+    worker.postMessage(request);
+  }
+
+  cancel(): void {
+    for (const worker of this.workers) {
+      const request: WorkerRequest = { type: 'cancel' };
+      worker.postMessage(request);
+    }
+    this.taskQueue = [];
+  }
+
+  private emitAggregatedProgress(): void {
+    const aggregated = this.progressAggregator.getAggregatedProgress();
+    this.progressCallbacks.forEach((cb) => cb(aggregated));
+  }
+
+  onProgress(callback: ProgressCallback): () => void {
+    this.progressCallbacks.push(callback);
+    return () => {
+      this.progressCallbacks = this.progressCallbacks.filter((cb) => cb !== callback);
+    };
+  }
+
+  onResult(callback: ResultCallback): () => void {
+    this.resultCallbacks.push(callback);
+    return () => {
+      this.resultCallbacks = this.resultCallbacks.filter((cb) => cb !== callback);
+    };
+  }
+
+  onComplete(callback: CompleteCallback): () => void {
+    this.completeCallbacks.push(callback);
+    return () => {
+      this.completeCallbacks = this.completeCallbacks.filter((cb) => cb !== callback);
+    };
+  }
+
+  onError(callback: ErrorCallback): () => void {
+    this.errorCallbacks.push(callback);
+    return () => {
+      this.errorCallbacks = this.errorCallbacks.filter((cb) => cb !== callback);
+    };
+  }
+
+  dispose(): void {
+    for (const worker of this.workers) {
+      worker.terminate();
+    }
+    this.workers = [];
+  }
+}
+```
+
+### 4.5 検索フック (`src/hooks/use-search.ts`)
+
+```typescript
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { WorkerPool, type WorkerPoolConfig, type SearchResult } from '../services/worker-pool';
+import type { AggregatedProgress } from '../services/progress';
+import type { SearchTask } from '../workers/types';
+
+export interface UseSearchResult {
+  isLoading: boolean;
+  isInitialized: boolean;
+  progress: AggregatedProgress | null;
+  results: SearchResult[];  // 累積結果
+  error: Error | null;
+  start: (tasks: SearchTask[]) => void;
+  cancel: () => void;
+}
+
+export function useSearch(config: WorkerPoolConfig): UseSearchResult {
+  const poolRef = useRef<WorkerPool | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [progress, setProgress] = useState<AggregatedProgress | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const pool = new WorkerPool(config);
+    poolRef.current = pool;
+
+    pool.initialize().then(() => {
+      setIsInitialized(true);
+    }).catch((e) => {
+      setError(e instanceof Error ? e : new Error(String(e)));
+    });
+
+    const unsubProgress = pool.onProgress(setProgress);
+    const unsubResult = pool.onResult((r) => {
+      setResults((prev) => [...prev, r]);
+    });
+    const unsubComplete = pool.onComplete(() => setIsLoading(false));
+    const unsubError = pool.onError((e) => {
+      setError(e);
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubProgress();
+      unsubResult();
+      unsubComplete();
+      unsubError();
+      pool.dispose();
+    };
+  }, [config]);
+
+  const start = useCallback((tasks: SearchTask[]) => {
+    if (!poolRef.current || !isInitialized) return;
+    setIsLoading(true);
+    setProgress(null);
+    setResults([]);
+    setError(null);
+    poolRef.current.start(tasks);
+  }, [isInitialized]);
+
+  const cancel = useCallback(() => {
+    poolRef.current?.cancel();
+    setIsLoading(false);
+  }, []);
+
+  return {
+    isLoading,
+    isInitialized,
+    progress,
+    results,
+    error,
+    start,
+    cancel,
+  };
+}
+
+/**
+ * 安定した config オブジェクトを作成するヘルパー
+ */
+export function useSearchConfig(useGpu: boolean, workerCount?: number): WorkerPoolConfig {
+  return useMemo(() => ({ useGpu, workerCount }), [useGpu, workerCount]);
+}
+```
+
+## 5. テスト方針
+
+### 5.1 テスト分類
+
+| 分類 | テスト内容 | ファイル | CI 実行 |
+|------|------------|----------|---------|
+| ユニット | メッセージ型のシリアライズ/デシリアライズ | `src/test/unit/workers/types.test.ts` | ✅ |
+| ユニット | 進捗計算ロジック | `src/test/unit/services/progress.test.ts` | ✅ |
+| 統合 | Worker 初期化と WASM ロード | `src/test/integration/workers/init.test.ts` | ✅ |
+| 統合 | 各 Searcher の短時間検証 | `src/test/integration/workers/searcher.test.ts` | ✅ |
+| 統合 | WorkerPool の検索実行とキャンセル | `src/test/integration/services/worker-pool.test.ts` | ✅ |
+| 統合 (長時間) | MtseedSearcher 全探索 | `src/test/integration/workers/searcher-full.test.ts` | ❌ |
+| 統合 (長時間) | 長期間 Datetime 検索 | `src/test/integration/workers/searcher-full.test.ts` | ❌ |
+
+統合テストは Browser Mode (headless Chromium) で実行する。
+
+### 5.1.1 CI 環境での長時間テストのスキップ
+
+長時間テスト (全探索、長期間検索) は CI 環境ではスキップする。
+
+```typescript
+// 環境変数で CI を検出
+const isCI = process.env.CI === 'true';
+
+// 長時間テストは CI ではスキップ
+describe.skipIf(isCI)('MtseedSearcher Full Search (Long Running)', () => {
+  // ...
+});
+```
+
+**ローカル実行時のみ長時間テストを含める:**
+
+```bash
+# 短時間テストのみ (CI と同等)
+pnpm test -- --project integration
+
+# 長時間テストを含む (ローカル開発用)
+pnpm test:full
+```
+
+**テスト実行時間の目安:**
+
+| テスト | 概算時間 (ローカル) | 概算時間 (CI) |
+|--------|---------------------|---------------|
+| Worker 初期化 | < 1s | < 2s |
+| MtseedDatetimeSearcher (1日) | 1-3s | 2-5s |
+| EggDatetimeSearcher (1秒) | < 1s | < 1s |
+| MtseedSearcher 全探索 | 30-60s (GPU) | スキップ |
+| TrainerInfoSearcher (1分) | < 1s | < 1s |
+
+### 5.2 統合テスト: 各 Searcher の定数期待値検証
+
+Worker 経由で WASM モジュールを呼び出し、Rust 側テストと同一の期待値を検証する。
+
+#### 5.2.1 MtseedDatetimeSearcher テスト
+
+既知の条件で MT Seed が正しく検索できることを検証。
+
+| 項目 | 値 |
+|------|-----|
+| 日時 | 2010/09/18 18:13:11 |
+| ROM | Black (JPN) |
+| Hardware | DS Lite |
+| MAC | `8C:56:C5:86:15:28` |
+| Timer0 | `0x0C79` |
+| VCount | `0x60` |
+| KeyCode | `0x2FFF` (入力なし) |
+| 期待 LCG Seed | `0x768360781D1CE6DD` |
+| 期待 MT Seed | `0x32BF6858` |
+| 期待日時 | 18:13:11 |
+
+##### 短時間テスト (CI 対応)
+
+期待日時 18:13:11 を含む狭い範囲 (18:00〜18:30) のみ検索。
+
+```typescript
+// src/test/integration/workers/searcher.test.ts
+describe('MtseedDatetimeSearcher', () => {
+  it('should find known MT Seed with correct datetime', async () => {
+    // 既知の期待値 (ウェブツールにて検証済み)
+    const expectedLcgSeed = 0x768360781D1CE6DDn;
+    const expectedMtSeed = 0x32BF6858; // deriveMtSeed(expectedLcgSeed) の結果
+
+    const params: MtseedDatetimeSearchParams = {
+      target_seeds: [expectedMtSeed],
+      ds: {
+        mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        // 18:00〜18:30 の30分間のみ検索 (CI 対応)
+        hour_start: 18, hour_end: 18,
+        minute_start: 0, minute_end: 30,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2010,
+        start_month: 9,
+        start_day: 18,
+        start_second_offset: 0,
+        range_seconds: 86400, // 1日分 (time_range で絞られる)
+      },
+      condition: { timer0: 0x0C79, vcount: 0x60, key_code: 0x2FFF },
+    };
+
+    const results = await runSearchInWorker('mtseed-datetime', params);
+
+    // 期待する MT Seed が見つかること
+    const found = results.find((r) => r.mt_seed === expectedMtSeed);
+    expect(found).toBeDefined();
+
+    // LCG Seed が期待値と一致
+    expect(found!.lcg_seed).toBe(expectedLcgSeed);
+
+    // 日時が 18:13:11 であること
+    expect(found!.datetime.year).toBe(2010);
+    expect(found!.datetime.month).toBe(9);
+    expect(found!.datetime.day).toBe(18);
+    expect(found!.datetime.hour).toBe(18);
+    expect(found!.datetime.minute).toBe(13);
+    expect(found!.datetime.second).toBe(11);
+
+    // Timer0, VCount, KeyCode
+    expect(found!.condition.timer0).toBe(0x0C79);
+    expect(found!.condition.vcount).toBe(0x60);
+    expect(found!.condition.key_code).toBe(0x2FFF);
+  });
+});
+```
+
+#### 5.2.2 MtseedSearcher テスト
+
+IV フィルタによる MT Seed 検索を検証。
+
+| テストケース | フィルタ条件 | 期待結果 | CI 実行 |
+|-------------|-------------|----------|---------|
+| 全範囲フィルタ (バッチ) | `IvFilter.any()` | バッチサイズ分全件マッチ | ✅ |
+| 6V フィルタ (部分探索) | HP/Atk/Def/SpA/SpD/Spe = 31 | 既知 Seed 1件を含む | ✅ |
+| 6V フィルタ (全探索) | 同上 | 5 件 | ❌ (長時間) |
+
+**6V 検索の既知の期待値 (ウェブツールにて検証済み):**
+
+| MT Seed |
+|---------|
+| `0x14B11BA6` |
+| `0x8A30480D` |
+| `0x9E02B0AE` |
+| `0xADFA2178` |
+| `0xFC4AA3AC` |
+
+##### 短時間テスト (CI 対応)
+
+```typescript
+// src/test/integration/workers/searcher.test.ts
+describe('MtseedSearcher', () => {
+  it('should match all with any filter', async () => {
+    const params: MtseedSearchParams = {
+      iv_filter: {
+        hp: [0, 31], atk: [0, 31], def: [0, 31],
+        spa: [0, 31], spd: [0, 31], spe: [0, 31],
+      },
+      mt_offset: 0,
+      is_roamer: false,
+    };
+
+    const batch = await runSearchInWorker('mtseed', params, { batchSize: 100 });
+    expect(batch.candidates.length).toBe(100);
+  });
+
+  it('should find known 6V seed in partial range', async () => {
+    // 既知の 6V MT Seed の1つ (0x14B11BA6) を含む範囲のみ探索
+    // 開始: 0x14B00000, 終了: 0x14C00000 (約100万件、数秒で完了)
+    const knownSeed = 0x14B11BA6;
+
+    const params: MtseedSearchParams = {
+      iv_filter: {
+        hp: [31, 31], atk: [31, 31], def: [31, 31],
+        spa: [31, 31], spd: [31, 31], spe: [31, 31],
+      },
+      mt_offset: 0,
+      is_roamer: false,
+    };
+
+    const results = await runPartialSearchInWorker('mtseed', params, {
+      startSeed: 0x14B00000,
+      endSeed: 0x14C00000,
+    });
+
+    expect(results.candidates).toContainEqual(
+      expect.objectContaining({ mt_seed: knownSeed })
+    );
+  });
+});
+```
+
+##### 長時間テスト (ローカル専用)
+
+```typescript
+// src/test/integration/workers/searcher-full.test.ts
+const isCI = process.env.CI === 'true';
+
+describe.skipIf(isCI)('MtseedSearcher Full Search (Long Running)', () => {
+  it('should find exactly 5 6V MT Seeds', async () => {
+    // 6V フィルタで全探索すると 5 件見つかる (ウェブツールにて検証済み)
+    const expected6vSeeds = [
+      0x14B11BA6,
+      0x8A30480D,
+      0x9E02B0AE,
+      0xADFA2178,
+      0xFC4AA3AC,
+    ];
+
+    const params: MtseedSearchParams = {
+      iv_filter: {
+        hp: [31, 31], atk: [31, 31], def: [31, 31],
+        spa: [31, 31], spd: [31, 31], spe: [31, 31],
+      },
+      mt_offset: 0,
+      is_roamer: false,
+    };
+
+    // 全探索 (0x00000000 〜 0xFFFFFFFF) - 30-60秒かかる
+    const allResults = await runFullSearchInWorker('mtseed', params);
+
+    expect(allResults.candidates.length).toBe(5);
+    expect(allResults.candidates.map((c) => c.mt_seed).sort()).toEqual(
+      expected6vSeeds.sort()
+    );
+  }, 120_000); // タイムアウト 2分
+});
+```
+
+#### 5.2.3 EggDatetimeSearcher テスト
+
+卵検索の基本動作を検証 (ウェブツールにて検証済みの既知の期待値)。
+
+**テストデータ (2010/09/18 00:00:00, Adv=0):**
+
+| 項目 | 値 |
+|------|-----|
+| LCG Seed | `0xA3099B3B0196AAA1` |
+| MT Seed | `0x2D9429C0` |
+| Timer0 | `0x0C79` |
+| VCount | `0x60` |
+| 特性 | 特性1 |
+| 性別 | ♀ |
+| 性格 | むじゃき (Naive) |
+| IVs | H31/A14/B0/C22/D31/S31 |
+| めざパ | でんき 67 |
+
+```typescript
+describe('EggDatetimeSearcher', () => {
+  it('should find known egg result at specific datetime', async () => {
+    // 2010/09/18 00:00:00 における既知の卵検索結果 (Adv=0)
+    const expectedLcgSeed = 0xA3099B3B0196AAA1n;
+    const expectedMtSeed = 0x2D9429C0;
+
+    const params: EggDatetimeSearchParams = {
+      ds: {
+        mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 0,
+        minute_start: 0, minute_end: 0,
+        second_start: 0, second_end: 0,
+      },
+      search_range: {
+        start_year: 2010,
+        start_month: 9,
+        start_day: 18,
+        start_second_offset: 0,
+        range_seconds: 1,
+      },
+      condition: { timer0: 0x0C79, vcount: 0x60, key_code: 0x2FFF },
+      egg_params: {
+        trainer: { tid: 1, sid: 2 },
+        everstone: 'None',
+        female_has_hidden: false,
+        uses_ditto: false,
+        gender_ratio: 'F1M1',
+        nidoran_flag: false,
+        masuda_method: false,
+        parent_male: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+        parent_female: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+        consider_npc: false,
+        species_id: null,
+      },
+      gen_config: {
+        version: 'Black',
+        game_start: { start_mode: 'Continue', save_state: 'WithSave' },
+        user_offset: 0,
+        max_advance: 10,
+      },
+      filter: null,
+    };
+
+    const result = await runSearchInWorker('egg-datetime', params);
+
+    // Adv=0 の結果を検証
+    const adv0 = result.results.find((r) => r.advance === 0);
+    expect(adv0).toBeDefined();
+
+    // LCG Seed と MT Seed が期待値と一致
+    expect(adv0!.origin.lcg_seed).toBe(expectedLcgSeed);
+    expect(adv0!.origin.mt_seed).toBe(expectedMtSeed);
+
+    // 卵の性格が "むじゃき" (Naive) であること
+    expect(adv0!.egg.nature).toBe('Naive');
+
+    // 卵の性別が ♀ であること
+    expect(adv0!.egg.gender).toBe('Female');
+
+    // 卵の特性が 特性1 であること
+    expect(adv0!.egg.ability).toBe('Ability1');
+
+    // 卵の個体値を検証
+    expect(adv0!.egg.ivs).toEqual({
+      hp: 31, atk: 14, def: 0, spa: 22, spd: 31, spe: 31,
+    });
+  });
+});
+```
+
+#### 5.2.4 TrainerInfoSearcher テスト
+
+トレーナー情報検索の基本動作と制約を検証。
+
+```typescript
+describe('TrainerInfoSearcher', () => {
+  it('should reject Continue mode', async () => {
+    const params: TrainerInfoSearchParams = {
+      filter: {},
+      ds: {
+        mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 0,
+        minute_start: 0, minute_end: 0,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2023,
+        start_month: 1,
+        start_day: 1,
+        start_second_offset: 0,
+        range_seconds: 60,
+      },
+      condition: { timer0: 0x0C79, vcount: 0x5F, key_code: 0x2FFF },
+      game_start: { start_mode: 'Continue', save_state: 'WithSave' },
+    };
+
+    await expect(runSearchInWorker('trainer-info', params)).rejects.toThrow(/NewGame/);
+  });
+
+  it('should process batches with default filter', async () => {
+    const params: TrainerInfoSearchParams = {
+      filter: {},
+      ds: {
+        mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
+        hardware: 'DsLite',
+        version: 'Black',
+        region: 'Jpn',
+      },
+      time_range: {
+        hour_start: 0, hour_end: 0,
+        minute_start: 0, minute_end: 0,
+        second_start: 0, second_end: 59,
+      },
+      search_range: {
+        start_year: 2023,
+        start_month: 1,
+        start_day: 1,
+        start_second_offset: 0,
+        range_seconds: 60,
+      },
+      condition: { timer0: 0x0C79, vcount: 0x5F, key_code: 0x2FFF },
+      game_start: { start_mode: 'NewGame', save_state: 'NoSave' },
+    };
+
+    const result = await runSearchInWorker('trainer-info', params);
+    expect(result.processed_count).toBeGreaterThan(0);
+  });
+});
+```
+
+### 5.3 統合テスト: WorkerPool 動作検証
+
+```typescript
+// src/test/integration/services/worker-pool.test.ts
+describe('WorkerPool', () => {
+  it('should initialize all workers', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 2 });
+    await pool.initialize();
+
+    expect(pool.size).toBe(2);
+    pool.dispose();
+  });
+
+  it('should execute search tasks and collect results', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 2 });
+    await pool.initialize();
+
+    const tasks = generateMtseedSearchTasks(context, targetSeeds, dateRange, 2);
+    const results: SeedOrigin[] = [];
+
+    pool.onResult((r) => results.push(...r));
+
+    await new Promise<void>((resolve) => {
+      pool.onComplete(() => resolve());
+      pool.start(tasks);
+    });
+
+    expect(results.length).toBeGreaterThanOrEqual(0);
+    pool.dispose();
+  });
+
+  it('should cancel ongoing search', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 2 });
+    await pool.initialize();
+
+    const tasks = generateLongRunningTasks();
+    let progressCount = 0;
+
+    pool.onProgress(() => {
+      progressCount++;
+      if (progressCount >= 3) {
+        pool.cancel();
+      }
+    });
+
+    await new Promise<void>((resolve) => {
+      pool.onComplete(() => resolve());
+      pool.start(tasks);
+    });
+
+    // キャンセルにより早期終了
+    expect(progressCount).toBeGreaterThanOrEqual(3);
+    pool.dispose();
+  });
+
+  it('should aggregate progress from multiple workers', async () => {
+    const pool = new WorkerPool({ useGpu: false, workerCount: 4 });
+    await pool.initialize();
+
+    const tasks = generateMtseedSearchTasks(context, targetSeeds, dateRange, 4);
+    const progressHistory: AggregatedProgress[] = [];
+
+    pool.onProgress((p) => progressHistory.push(p));
+
+    await new Promise<void>((resolve) => {
+      pool.onComplete(() => resolve());
+      pool.start(tasks);
+    });
+
+    // 進捗が複数回報告されること
+    expect(progressHistory.length).toBeGreaterThan(0);
+
+    // 最終進捗が 100% に近いこと
+    const lastProgress = progressHistory[progressHistory.length - 1];
+    expect(lastProgress.percentage).toBeGreaterThan(95);
+
+    pool.dispose();
+  });
+});
+```
+
+### 5.4 テストヘルパー関数
+
+```typescript
+// src/test/integration/helpers/worker-test-utils.ts
+
+/**
+ * Worker 経由で検索を実行するヘルパー
+ * Worker は独自に WASM を fetch/初期化するため、
+ * メインスレッドからの ArrayBuffer 転送は不要
+ */
+export async function runSearchInWorker<T extends SearchTask['kind']>(
+  task: Extract<SearchTask, { kind: T }>,
+  options: TestSearchOptions = {}
+): Promise<SearchResults<T>> {
+  const { timeout = 30000, earlyReturn = false } = options;
+
+  const worker = new Worker(
+    new URL('../../../workers/search.worker.ts', import.meta.url),
+    { type: 'module' }
+  );
+
+  return new Promise<SearchResults<T>>((resolve, reject) => {
+    const results: unknown[] = [];
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      worker.terminate();
+    };
+
+    timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Search timeout after ${timeout}ms`));
+    }, timeout);
+
+    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      switch (e.data.type) {
+        case 'ready':
+          worker.postMessage({
+            type: 'start',
+            taskId: 'test-task',
+            task,
+          } as WorkerRequest);
+          break;
+
+        case 'result':
+          results.push(...e.data.results);
+          if (earlyReturn && results.length > 0) {
+            cleanup();
+            resolve(results as SearchResults<T>);
+          }
+          break;
+
+        case 'done':
+          cleanup();
+          resolve(results as SearchResults<T>);
+          break;
+
+        case 'error':
+          cleanup();
+          reject(new Error(e.data.message));
+          break;
+      }
+    };
+
+    // WASM 初期化を指示 (Worker が独自に fetch)
+    worker.postMessage({ type: 'init' } as WorkerRequest);
+  });
+}
+```
+
+## 6. 実装チェックリスト
+
+### 6.1 Worker 基盤
+
+- [x] `src/workers/types.ts` 作成
+- [x] `src/workers/search.worker.ts` 作成
+- [x] `src/workers/gpu.worker.ts` 作成
+- [x] `src/services/worker-pool.ts` 作成
+- [x] `src/services/progress.ts` 作成
+- [x] `src/hooks/use-search.ts` 作成
+
+### 6.2 ユニットテスト
+
+- [x] `src/test/unit/workers/types.test.ts` 作成
+- [x] `src/test/unit/services/progress.test.ts` 作成
+
+### 6.3 統合テスト
+
+- [x] `src/test/integration/helpers/worker-test-utils.ts` 作成
+- [x] `src/test/integration/workers/init.test.ts` 作成
+- [x] `src/test/integration/workers/searcher.test.ts` 作成
+  - [x] MtseedDatetimeSearcher: 既知 LCG Seed `0x768360781D1CE6DD` の検索
+  - [x] MtseedSearcher: 全範囲フィルタ / 6V フィルタ
+  - [x] EggDatetimeSearcher: バッチ処理動作
+  - [x] TrainerInfoSearcher: Continue モード拒否 / バッチ処理動作
+- [x] `src/test/integration/services/worker-pool.test.ts` 作成
+  - [x] Worker 初期化
+  - [x] 検索タスク実行と結果収集
+  - [x] キャンセル処理
+  - [x] 進捗集約
+
+### 6.4 ドキュメント
+
+- [x] `spec/agent/architecture/worker-design.md` 修正
