@@ -114,66 +114,52 @@ const workerCount = navigator.hardwareConcurrency ?? 4;
 
 ## 5. WASM 初期化戦略
 
-### 5.1 背景
+### 5.1 採用方式: Worker 独自初期化
 
-各 Worker で独立に WASM をコンパイルすると、コンパイル済みコードがメモリ上で重複する。
-32 Worker の場合、数十 MB の無駄が発生する可能性がある。
-
-### 5.2 解決策
-
-メインスレッドで WASM バイナリを取得し、`ArrayBuffer` を各 Worker に転送する：
-
-```typescript
-// Main Thread (services/worker-pool.ts)
-import wasmUrl from '@wasm/wasm_pkg_bg.wasm?url';
-
-async function createWorkerPool(): Promise<WorkerPool> {
-  // 1. WASM バイナリを取得
-  const wasmBytes = await fetch(wasmUrl).then(r => r.arrayBuffer());
-
-  // 2. Worker を生成し、バイナリを Transferable として転送
-  const workers = Array.from({ length: workerCount }, () => {
-    const worker = new Worker(
-      new URL('./search.worker.ts', import.meta.url),
-      { type: 'module' }
-    );
-    const bytes = wasmBytes.slice(0); // 複製 (Transferable は1回のみ転送可)
-    worker.postMessage({ type: 'init', wasmBytes: bytes }, [bytes]);
-    return worker;
-  });
-
-  // ...
-}
-```
+各 Worker が独立して WASM を fetch/初期化する方式を採用。
 
 ```typescript
 // Worker 内部 (workers/search.worker.ts)
-import { initSync } from '@wasm';
+import initWasm from '@wasm';
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
 
-self.onmessage = (e: MessageEvent<WorkerRequest>) => {
+self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   if (e.data.type === 'init') {
-    // wasm-bindgen の initSync を使用 (同期初期化)
-    initSync(e.data.wasmBytes);
+    // Worker が独自に WASM を fetch/初期化
+    await initWasm(wasmUrl);
     postMessage({ type: 'ready' });
   }
   // ...
 };
 ```
 
+**利点**:
+- Worker のコードがシンプル
+- Vite のビルド時最適化が効く
+- ArrayBuffer の複製・転送が不要
+
 **Vite 環境での注意点**:
 - Worker 作成時は `new URL('./worker.ts', import.meta.url)` でパスを解決
 - `{ type: 'module' }` オプションで ES Module Worker として動作
 - Vite がビルド時に Worker を自動バンドル
 
-### 5.3 メモリ効率
+### 5.2 初期化フロー
 
-| 項目 | モジュール共有なし | モジュール共有あり |
-|-----|------------------|------------------|
-| コンパイル済みコード | ~3 MB × N | ~3 MB (共有) |
-| インスタンスメモリ | ~2 MB × N | ~2 MB × N |
-| 32 Worker 合計 | ~160 MB | ~67 MB |
-
-`WebAssembly.Module` は Structured Clone 対応のため、`postMessage` で効率的に転送される。
+```
+┌─────────────────┐                    ┌─────────────────┐
+│   WorkerPool    │                    │     Worker      │
+└────────┬────────┘                    └────────┬────────┘
+         │                                      │
+         │  { type: 'init' }                    │
+         ├──────────────────────────────────────►
+         │                                      │
+         │                          fetch(wasmUrl)
+         │                          initWasm()
+         │                                      │
+         │  { type: 'ready' }                   │
+         ◄──────────────────────────────────────┤
+         │                                      │
+```
 
 ## 6. メッセージプロトコル
 
@@ -182,15 +168,18 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
 ```typescript
 // Main → Worker
 type WorkerRequest =
-  | { type: 'init'; wasmBytes: ArrayBuffer }
+  | { type: 'init' }  // Worker が独自に WASM を fetch/初期化
   | { type: 'start'; taskId: string; task: SearchTask }
   | { type: 'cancel' };
 
-// Worker → Main
+// Worker → Main (結果タイプ別)
 type WorkerResponse =
   | { type: 'ready' }
   | { type: 'progress'; taskId: string; progress: ProgressInfo }
-  | { type: 'result'; taskId: string; results: SearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'seed-origin'; results: SeedOrigin[] }
+  | { type: 'result'; taskId: string; resultType: 'mtseed'; results: MtseedResult[] }
+  | { type: 'result'; taskId: string; resultType: 'egg'; results: EggDatetimeSearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'trainer-info'; results: TrainerInfoSearchResult[] }
   | { type: 'done'; taskId: string }
   | { type: 'error'; taskId: string; message: string };
 
@@ -286,40 +275,43 @@ interface AggregatedProgress {
 
 ```typescript
 // Worker 内部
-import { EggDatetimeSearcher, MtseedSearcher } from '@wasm';
-import type { SearchTask, SeedOrigin } from './types';
+import initWasm, { EggDatetimeSearcher, MtseedSearcher } from '@wasm';
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+import type { SearchTask } from './types';
+
+async function handleInit(): Promise<void> {
+  await initWasm(wasmUrl);
+  postMessage({ type: 'ready' });
+}
 
 async function runSearch(taskId: string, task: SearchTask) {
   const startTime = performance.now();
   const searcher = createSearcher(task);
-  const results: SeedOrigin[] = [];
   
   while (!searcher.is_done && !cancelled) {
     const batch = searcher.next_batch(getBatchSize(task.kind));
     
-    // 結果を蓄積 (完了時に一括送信)
-    results.push(...batch.results);
+    // 中間結果を即時送信
+    if (batch.results.length > 0) {
+      postMessage({
+        type: 'result',
+        taskId,
+        resultType: getResultType(task.kind),
+        results: batch.results,
+      });
+    }
     
     // 進捗報告
     postMessage({
       type: 'progress',
       taskId,
-      progress: {
-        processed: batch.processed_count,
-        total: batch.total_count,
-        percentage: (batch.processed_count / batch.total_count) * 100,
-        elapsedMs: performance.now() - startTime,
-        estimatedRemainingMs: estimateRemaining(batch, startTime),
-        throughput: calculateThroughput(batch, startTime),
-      },
+      progress: calculateProgress(batch, startTime),
     });
     
     // UI スレッドへ制御を戻す
     await yieldToMain();
   }
   
-  // 完了 or キャンセル時に結果を一括送信
-  postMessage({ type: 'result', taskId, results });
   postMessage({ type: 'done', taskId });
   searcher.free(); // WASM リソース解放
 }

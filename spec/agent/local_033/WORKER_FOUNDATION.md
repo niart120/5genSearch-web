@@ -43,11 +43,10 @@ Web Worker を使用した WASM 並列実行基盤を構築する。
 | `src/workers/types.ts` | 新規作成 | Worker メッセージ型定義 |
 | `src/workers/search.worker.ts` | 新規作成 | CPU 検索 Worker 実装 |
 | `src/workers/gpu.worker.ts` | 新規作成 | GPU 検索 Worker 実装 |
-| `src/workers/wasm-loader.ts` | 新規作成 | WASM 初期化ユーティリティ |
 | `src/services/worker-pool.ts` | 新規作成 | WorkerPool 実装 |
 | `src/services/progress.ts` | 新規作成 | 進捗集約サービス |
 | `src/hooks/use-search.ts` | 新規作成 | 検索実行用カスタムフック |
-| `spec/agent/architecture/worker-design.md` | 修正 | 仕様修正 (wasm-bindgen 対応) |
+| `spec/agent/architecture/worker-design.md` | 修正 | 仕様修正 (Worker 独自初期化方式) |
 
 ## 3. 設計方針
 
@@ -58,15 +57,20 @@ wasm-bindgen が生成する初期化関数の仕様:
 | 関数 | 入力 | 処理 |
 |------|------|------|
 | `default` (async) | `URL`, `Response`, `BufferSource`, `WebAssembly.Module` | fetch + compile + instantiate |
-| `initSync` | `BufferSource`, `WebAssembly.Module` | instantiate のみ (同期) |
+| `initSync` | `BufferSource`, `WebAssembly.Module` | compile + instantiate (同期) |
 
-Worker での初期化手順:
+**採用方式: Worker 独自初期化**
 
-1. メインスレッド: `fetch()` で wasm バイナリを `ArrayBuffer` として取得
-2. メインスレッド: `postMessage()` で `ArrayBuffer` を Worker に転送 (Transferable)
-3. Worker: `initSync(arrayBuffer)` で同期初期化
+各 Worker が独自に WASM を fetch/初期化する方式を採用:
 
-`WebAssembly.Module` の共有は Worker 間でメモリ効率が良いが、wasm-bindgen の `initSync` は `BufferSource` を直接受け付けるため、`ArrayBuffer` 転送で十分。
+1. WorkerPool が Worker に `{ type: 'init' }` メッセージを送信
+2. Worker が `wasmUrl` を import し、`initWasm(wasmUrl)` で非同期初期化
+3. 初期化完了後、Worker が `{ type: 'ready' }` を返信
+
+この方式の利点:
+- Worker のコードがシンプル
+- Vite のビルド時最適化が効く
+- ArrayBuffer の複製・転送が不要
 
 ### 3.2 Vite での Worker 作成
 
@@ -107,15 +111,18 @@ const workerCount = navigator.hardwareConcurrency ?? 4;
 ```typescript
 // Main → Worker
 export type WorkerRequest =
-  | { type: 'init'; wasmBytes: ArrayBuffer }
+  | { type: 'init' }  // Worker が独自に WASM を fetch/初期化
   | { type: 'start'; taskId: string; task: SearchTask }
   | { type: 'cancel' };
 
-// Worker → Main
+// Worker → Main (結果タイプ別)
 export type WorkerResponse =
   | { type: 'ready' }
   | { type: 'progress'; taskId: string; progress: ProgressInfo }
-  | { type: 'result'; taskId: string; results: SeedOrigin[] }
+  | { type: 'result'; taskId: string; resultType: 'seed-origin'; results: SeedOrigin[] }
+  | { type: 'result'; taskId: string; resultType: 'mtseed'; results: MtseedResult[] }
+  | { type: 'result'; taskId: string; resultType: 'egg'; results: EggDatetimeSearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'trainer-info'; results: TrainerInfoSearchResult[] }
   | { type: 'done'; taskId: string }
   | { type: 'error'; taskId: string; message: string };
 
@@ -135,38 +142,30 @@ export type SearchTask =
   | { kind: 'trainer-info'; params: TrainerInfoSearchParams };
 ```
 
-### 4.2 WASM ローダー (`src/workers/wasm-loader.ts`)
+### 4.2 CPU Worker (`src/workers/search.worker.ts`)
 
 ```typescript
-import wasmUrl from '@wasm/wasm_pkg_bg.wasm?url';
-
-/**
- * WASM バイナリを取得
- * メインスレッドで実行し、結果を Worker に転送する
- */
-export async function fetchWasmBytes(): Promise<ArrayBuffer> {
-  const response = await fetch(wasmUrl);
-  return response.arrayBuffer();
-}
-```
-
-### 4.3 CPU Worker (`src/workers/search.worker.ts`)
-
-```typescript
-import { initSync } from '@wasm';
+import initWasm, {
+  EggDatetimeSearcher,
+  MtseedDatetimeSearcher,
+  MtseedSearcher,
+  TrainerInfoSearcher,
+  health_check,
+} from '@wasm';
 import type { WorkerRequest, WorkerResponse, SearchTask } from './types';
+
+// WASM バイナリの URL を取得
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
 
 let initialized = false;
 let cancelled = false;
 
-self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
+self.onmessage = (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
     case 'init':
-      initSync(data.wasmBytes);
-      initialized = true;
-      postResponse({ type: 'ready' });
+      void handleInit();
       break;
 
     case 'start':
@@ -175,7 +174,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
         return;
       }
       cancelled = false;
-      await runSearch(data.taskId, data.task);
+      void runSearch(data.taskId, data.task);
       break;
 
     case 'cancel':
@@ -183,6 +182,28 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       break;
   }
 };
+
+async function handleInit(): Promise<void> {
+  try {
+    // Worker 内で独立して WASM を初期化
+    await initWasm(wasmUrl);
+
+    // WASM が正しく初期化されたか確認
+    const healthResult = health_check();
+    if (healthResult !== 'wasm-pkg is ready') {
+      throw new Error(`Health check failed: ${healthResult}`);
+    }
+
+    initialized = true;
+    postResponse({ type: 'ready' });
+  } catch (err) {
+    postResponse({
+      type: 'error',
+      taskId: '',
+      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+}
 
 async function runSearch(taskId: string, task: SearchTask): Promise<void> {
   const startTime = performance.now();
@@ -248,24 +269,26 @@ function postResponse(response: WorkerResponse): void {
 }
 ```
 
-### 4.4 GPU Worker (`src/workers/gpu.worker.ts`)
+### 4.3 GPU Worker (`src/workers/gpu.worker.ts`)
 
 ```typescript
 import initWasm, { GpuDatetimeSearchIterator } from '@wasm';
 import type { WorkerRequest, WorkerResponse } from './types';
+import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '@wasm';
+
+// WASM バイナリの URL を取得
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
 
 let initialized = false;
-let cancelled = false;
+let cancelRequested = false;
+let currentIterator: GpuDatetimeSearchIterator | null = null;
 
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
     case 'init':
-      // GPU Worker は async 初期化が必要 (WebGPU adapter 取得)
-      await initWasm(new Blob([data.wasmBytes], { type: 'application/wasm' }));
-      initialized = true;
-      postResponse({ type: 'ready' });
+      await handleInit();
       break;
 
     case 'start':
@@ -277,43 +300,91 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
         postResponse({ type: 'error', taskId: data.taskId, message: 'GPU only supports mtseed-datetime' });
         return;
       }
-      cancelled = false;
+      cancelRequested = false;
       await runGpuSearch(data.taskId, data.task.params);
       break;
 
     case 'cancel':
-      cancelled = true;
+      cancelRequested = true;
+      // イテレータを破棄してリソースを解放
+      if (currentIterator) {
+        currentIterator.free();
+        currentIterator = null;
+      }
       break;
   }
 };
 
-async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams): Promise<void> {
-  const startTime = performance.now();
-  const iterator = await GpuDatetimeSearchIterator.new(params);
-  const results: SeedOrigin[] = [];
-
-  while (!iterator.is_done && !cancelled) {
-    const batch = await iterator.next();
-    if (!batch) break;
-
-    results.push(...batch.results);
-
+async function handleInit(): Promise<void> {
+  try {
+    // Worker 内で独立して WASM を初期化
+    await initWasm(wasmUrl);
+    initialized = true;
+    postResponse({ type: 'ready' });
+  } catch (err) {
     postResponse({
-      type: 'progress',
-      taskId,
-      progress: {
-        processed: Number(batch.processed_count),
-        total: Number(batch.total_count),
-        percentage: batch.progress * 100,
-        elapsedMs: performance.now() - startTime,
-        estimatedRemainingMs: estimateRemaining(batch, startTime),
-        throughput: batch.throughput,
-      },
+      type: 'error',
+      taskId: '',
+      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
     });
   }
+}
 
-  postResponse({ type: 'result', taskId, results });
-  postResponse({ type: 'done', taskId });
+async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams): Promise<void> {
+  cancelRequested = false;
+
+  try {
+    // GpuDatetimeSearchIterator は async constructor
+    currentIterator = await new GpuDatetimeSearchIterator(params);
+
+    const startTime = performance.now();
+    let batch: GpuSearchBatch | undefined;
+
+    while (!cancelRequested && !currentIterator.is_done) {
+      batch = await currentIterator.next();
+      if (!batch) break;
+
+      const elapsedMs = performance.now() - startTime;
+
+      // 進捗報告
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: {
+          processed: Number(batch.processed_count),
+          total: Number(batch.total_count),
+          percentage: batch.progress * 100,
+          elapsedMs,
+          estimatedRemainingMs:
+            batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
+          throughput: batch.throughput,
+        },
+      });
+
+      // 中間結果を報告
+      if (batch.results.length > 0) {
+        postResponse({
+          type: 'result',
+          taskId,
+          resultType: 'seed-origin',
+          results: batch.results,
+        });
+      }
+    }
+
+    postResponse({ type: 'done', taskId });
+  } catch (err) {
+    postResponse({
+      type: 'error',
+      taskId,
+      message: err instanceof Error ? err.message : String(err),
+    });
+  } finally {
+    if (currentIterator) {
+      currentIterator.free();
+      currentIterator = null;
+    }
+  }
 }
 
 function postResponse(response: WorkerResponse): void {
@@ -321,45 +392,36 @@ function postResponse(response: WorkerResponse): void {
 }
 ```
 
-### 4.5 WorkerPool (`src/services/worker-pool.ts`)
+### 4.4 WorkerPool (`src/services/worker-pool.ts`)
+
+WorkerPool は ProgressAggregator を使用して進捗を集約する。
+Worker への初期化は `{ type: 'init' }` メッセージのみを送信し、
+各 Worker が独自に WASM を fetch/初期化する。
 
 ```typescript
-import { fetchWasmBytes } from '../workers/wasm-loader';
-import type { WorkerRequest, WorkerResponse, SearchTask, ProgressInfo } from '../workers/types';
+import { ProgressAggregator, type AggregatedProgress } from './progress';
+import type { WorkerRequest, WorkerResponse, SearchTask } from '../workers/types';
 
 export interface WorkerPoolConfig {
   useGpu: boolean;
   workerCount?: number;
 }
 
-export interface AggregatedProgress {
-  totalProcessed: number;
-  totalCount: number;
-  percentage: number;
-  elapsedMs: number;
-  estimatedRemainingMs: number;
-  throughput: number;
-  tasksCompleted: number;
-  tasksTotal: number;
-}
+export type SearchResult = SeedOrigin[] | MtseedResult[] | EggDatetimeSearchResult[] | TrainerInfoSearchResult[];
 
 type ProgressCallback = (progress: AggregatedProgress) => void;
-type ResultCallback = (results: SeedOrigin[]) => void;
+type ResultCallback = (results: SearchResult) => void;
 type CompleteCallback = () => void;
 type ErrorCallback = (error: Error) => void;
 
 export class WorkerPool {
   private workers: Worker[] = [];
-  private wasmBytes: ArrayBuffer | null = null;
   private readyCount = 0;
-  private startTime = 0;
+  private initPromise: Promise<void> | null = null;
 
   private taskQueue: Array<{ taskId: string; task: SearchTask }> = [];
   private activeWorkers = new Map<Worker, string>();
-  private taskProgress = new Map<string, ProgressInfo>();
-  private allResults: SeedOrigin[] = [];
-  private tasksCompleted = 0;
-  private tasksTotal = 0;
+  private progressAggregator = new ProgressAggregator();
 
   private progressCallbacks: ProgressCallback[] = [];
   private resultCallbacks: ResultCallback[] = [];
@@ -372,9 +434,19 @@ export class WorkerPool {
     return this.workers.length;
   }
 
-  async initialize(): Promise<void> {
-    this.wasmBytes = await fetchWasmBytes();
+  get isReady(): boolean {
+    return this.readyCount === this.workers.length && this.workers.length > 0;
+  }
 
+  async initialize(): Promise<void> {
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+    this.initPromise = this.doInitialize();
+    return this.initPromise;
+  }
+
+  private async doInitialize(): Promise<void> {
     if (this.config.useGpu && 'gpu' in navigator) {
       // GPU Worker は単一インスタンス
       const gpuWorker = new Worker(
@@ -396,7 +468,7 @@ export class WorkerPool {
       }
     }
 
-    // 全 Worker に WASM 転送
+    // 全 Worker に WASM 初期化を指示
     await this.initializeWorkers();
   }
 
@@ -410,51 +482,52 @@ export class WorkerPool {
   }
 
   private async initializeWorkers(): Promise<void> {
-    return new Promise((resolve) => {
-      const checkReady = () => {
-        if (this.readyCount === this.workers.length) {
-          resolve();
-        }
-      };
-
+    return new Promise<void>((resolve) => {
       for (const worker of this.workers) {
-        // ArrayBuffer は Transferable として転送 (コピーなし)
-        const bytes = this.wasmBytes!.slice(0);
-        worker.postMessage({ type: 'init', wasmBytes: bytes } as WorkerRequest, [bytes]);
+        // Worker に初期化を指示 (Worker が独自に WASM を fetch する)
+        const request: WorkerRequest = { type: 'init' };
+        worker.postMessage(request);
       }
 
-      // ready メッセージで readyCount を更新
-      const originalHandler = this.workers[0].onmessage;
-      this.workers.forEach((worker) => {
-        const handler = worker.onmessage;
-        worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
-          if (e.data.type === 'ready') {
-            this.readyCount++;
-            checkReady();
-          }
-          handler?.call(worker, e);
-        };
-      });
+      const checkReadyInterval = setInterval(() => {
+        if (this.readyCount === this.workers.length) {
+          clearInterval(checkReadyInterval);
+          resolve();
+        }
+      }, 10);
+
+      // タイムアウト (10秒)
+      setTimeout(() => {
+        clearInterval(checkReadyInterval);
+        if (this.readyCount !== this.workers.length) {
+          this.errorCallbacks.forEach((cb) =>
+            cb(new Error(`Worker initialization timeout`))
+          );
+        }
+      }, 10000);
     });
   }
 
   private handleWorkerMessage(worker: Worker, response: WorkerResponse): void {
     switch (response.type) {
+      case 'ready':
+        this.readyCount++;
+        break;
+
       case 'progress':
-        this.taskProgress.set(response.taskId, response.progress);
+        this.progressAggregator.updateProgress(response.taskId, response.progress);
         this.emitAggregatedProgress();
         break;
 
       case 'result':
-        this.allResults.push(...response.results);
+        this.resultCallbacks.forEach((cb) => cb(response.results as SearchResult));
         break;
 
       case 'done':
-        this.tasksCompleted++;
+        this.progressAggregator.markCompleted(response.taskId);
         this.activeWorkers.delete(worker);
         this.dispatchNextTask(worker);
-        if (this.tasksCompleted === this.tasksTotal && this.taskQueue.length === 0) {
-          this.resultCallbacks.forEach((cb) => cb(this.allResults));
+        if (this.progressAggregator.isComplete() && this.taskQueue.length === 0) {
           this.completeCallbacks.forEach((cb) => cb());
         }
         break;
@@ -467,11 +540,7 @@ export class WorkerPool {
   }
 
   start(tasks: SearchTask[]): void {
-    this.startTime = performance.now();
-    this.tasksTotal = tasks.length;
-    this.tasksCompleted = 0;
-    this.allResults = [];
-    this.taskProgress.clear();
+    this.progressAggregator.start(tasks.length);
 
     // タスクをキューに追加
     this.taskQueue = tasks.map((task, i) => ({
@@ -490,46 +559,24 @@ export class WorkerPool {
     if (!next) return;
 
     this.activeWorkers.set(worker, next.taskId);
-    worker.postMessage({
+    const request: WorkerRequest = {
       type: 'start',
       taskId: next.taskId,
       task: next.task,
-    } as WorkerRequest);
+    };
+    worker.postMessage(request);
   }
 
   cancel(): void {
     for (const worker of this.workers) {
-      worker.postMessage({ type: 'cancel' } as WorkerRequest);
+      const request: WorkerRequest = { type: 'cancel' };
+      worker.postMessage(request);
     }
     this.taskQueue = [];
   }
 
   private emitAggregatedProgress(): void {
-    let totalProcessed = 0;
-    let totalCount = 0;
-
-    for (const progress of this.taskProgress.values()) {
-      totalProcessed += progress.processed;
-      totalCount += progress.total;
-    }
-
-    const elapsedMs = performance.now() - this.startTime;
-    const percentage = totalCount > 0 ? (totalProcessed / totalCount) * 100 : 0;
-    const throughput = elapsedMs > 0 ? (totalProcessed / elapsedMs) * 1000 : 0;
-    const remaining = totalCount - totalProcessed;
-    const estimatedRemainingMs = throughput > 0 ? (remaining / throughput) * 1000 : 0;
-
-    const aggregated: AggregatedProgress = {
-      totalProcessed,
-      totalCount,
-      percentage,
-      elapsedMs,
-      estimatedRemainingMs,
-      throughput,
-      tasksCompleted: this.tasksCompleted,
-      tasksTotal: this.tasksTotal,
-    };
-
+    const aggregated = this.progressAggregator.getAggregatedProgress();
     this.progressCallbacks.forEach((cb) => cb(aggregated));
   }
 
@@ -570,19 +617,19 @@ export class WorkerPool {
 }
 ```
 
-### 4.6 検索フック (`src/hooks/use-search.ts`)
+### 4.5 検索フック (`src/hooks/use-search.ts`)
 
 ```typescript
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { WorkerPool, type AggregatedProgress, type WorkerPoolConfig } from '../services/worker-pool';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { WorkerPool, type WorkerPoolConfig, type SearchResult } from '../services/worker-pool';
+import type { AggregatedProgress } from '../services/progress';
 import type { SearchTask } from '../workers/types';
-import type { SeedOrigin } from '@wasm';
 
 export interface UseSearchResult {
   isLoading: boolean;
   isInitialized: boolean;
   progress: AggregatedProgress | null;
-  results: SeedOrigin[] | null;
+  results: SearchResult[];  // 累積結果
   error: Error | null;
   start: (tasks: SearchTask[]) => void;
   cancel: () => void;
@@ -593,7 +640,7 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [progress, setProgress] = useState<AggregatedProgress | null>(null);
-  const [results, setResults] = useState<SeedOrigin[] | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -606,24 +653,30 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
       setError(e instanceof Error ? e : new Error(String(e)));
     });
 
-    pool.onProgress(setProgress);
-    pool.onResult(setResults);
-    pool.onComplete(() => setIsLoading(false));
-    pool.onError((e) => {
+    const unsubProgress = pool.onProgress(setProgress);
+    const unsubResult = pool.onResult((r) => {
+      setResults((prev) => [...prev, r]);
+    });
+    const unsubComplete = pool.onComplete(() => setIsLoading(false));
+    const unsubError = pool.onError((e) => {
       setError(e);
       setIsLoading(false);
     });
 
     return () => {
+      unsubProgress();
+      unsubResult();
+      unsubComplete();
+      unsubError();
       pool.dispose();
     };
-  }, [config.useGpu, config.workerCount]);
+  }, [config]);
 
   const start = useCallback((tasks: SearchTask[]) => {
     if (!poolRef.current || !isInitialized) return;
     setIsLoading(true);
     setProgress(null);
-    setResults(null);
+    setResults([]);
     setError(null);
     poolRef.current.start(tasks);
   }, [isInitialized]);
@@ -642,6 +695,13 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
     start,
     cancel,
   };
+}
+
+/**
+ * 安定した config オブジェクトを作成するヘルパー
+ */
+export function useSearchConfig(useGpu: boolean, workerCount?: number): WorkerPoolConfig {
+  return useMemo(() => ({ useGpu, workerCount }), [useGpu, workerCount]);
 }
 ```
 
@@ -1126,21 +1186,33 @@ describe('WorkerPool', () => {
 
 /**
  * Worker 経由で検索を実行するヘルパー
+ * Worker は独自に WASM を fetch/初期化するため、
+ * メインスレッドからの ArrayBuffer 転送は不要
  */
-async function runSearchInWorker<T extends SearchTask['kind']>(
-  kind: T,
-  params: SearchParamsFor<T>,
-  options?: { batchSize?: number }
-): Promise<SearchResultFor<T>> {
+export async function runSearchInWorker<T extends SearchTask['kind']>(
+  task: Extract<SearchTask, { kind: T }>,
+  options: TestSearchOptions = {}
+): Promise<SearchResults<T>> {
+  const { timeout = 30000, earlyReturn = false } = options;
+
   const worker = new Worker(
     new URL('../../../workers/search.worker.ts', import.meta.url),
     { type: 'module' }
   );
 
-  const wasmBytes = await fetchWasmBytes();
-
-  return new Promise((resolve, reject) => {
+  return new Promise<SearchResults<T>>((resolve, reject) => {
     const results: unknown[] = [];
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      worker.terminate();
+    };
+
+    timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Search timeout after ${timeout}ms`));
+    }, timeout);
 
     worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
       switch (e.data.type) {
@@ -1148,24 +1220,32 @@ async function runSearchInWorker<T extends SearchTask['kind']>(
           worker.postMessage({
             type: 'start',
             taskId: 'test-task',
-            task: { kind, params },
-          });
+            task,
+          } as WorkerRequest);
           break;
+
         case 'result':
           results.push(...e.data.results);
+          if (earlyReturn && results.length > 0) {
+            cleanup();
+            resolve(results as SearchResults<T>);
+          }
           break;
+
         case 'done':
-          worker.terminate();
-          resolve(results as SearchResultFor<T>);
+          cleanup();
+          resolve(results as SearchResults<T>);
           break;
+
         case 'error':
-          worker.terminate();
+          cleanup();
           reject(new Error(e.data.message));
           break;
       }
     };
 
-    worker.postMessage({ type: 'init', wasmBytes }, [wasmBytes]);
+    // WASM 初期化を指示 (Worker が独自に fetch)
+    worker.postMessage({ type: 'init' } as WorkerRequest);
   });
 }
 ```
@@ -1175,7 +1255,6 @@ async function runSearchInWorker<T extends SearchTask['kind']>(
 ### 6.1 Worker 基盤
 
 - [x] `src/workers/types.ts` 作成
-- [x] `src/workers/wasm-loader.ts` 作成
 - [x] `src/workers/search.worker.ts` 作成
 - [x] `src/workers/gpu.worker.ts` 作成
 - [x] `src/services/worker-pool.ts` 作成
@@ -1204,4 +1283,4 @@ async function runSearchInWorker<T extends SearchTask['kind']>(
 
 ### 6.4 ドキュメント
 
-- [ ] `spec/agent/architecture/worker-design.md` 修正
+- [x] `spec/agent/architecture/worker-design.md` 修正
