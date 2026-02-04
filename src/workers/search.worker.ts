@@ -11,17 +11,17 @@ import initWasm, {
   MtseedSearcher,
   TrainerInfoSearcher,
   health_check,
-} from '@wasm';
+} from '../wasm/wasm_pkg.js';
 import type {
   EggDatetimeSearchParams,
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
   TrainerInfoSearchParams,
-} from '@wasm';
+} from '../wasm/wasm_pkg.js';
 import type { WorkerRequest, WorkerResponse, SearchTask, ProgressInfo } from './types';
 
-// WASM バイナリの URL を取得
-import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+// WASM バイナリの絶対パス（public/wasm/ から配信）
+const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
 // =============================================================================
 // State
@@ -68,8 +68,8 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
 async function handleInit(): Promise<void> {
   try {
     // Worker 内で独立して WASM を初期化
-    // wasmUrl を使って直接 fetch することで、独立した WASM インスタンスを取得
-    await initWasm(wasmUrl);
+    // 絶対パスで public/wasm/ から WASM バイナリを取得
+    await initWasm(WASM_URL);
 
     // WASM が正しく初期化されたか確認
     const healthResult = health_check();

@@ -44,7 +44,8 @@ wasm-pack の出力先を `packages/wasm/` から `public/wasm/` + `src/wasm/` �
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `package.json` | 変更 | `build:wasm` の `--out-dir` を変更 |
-| `tsconfig.json` | 変更 | `@wasm` パスを `./src/wasm/` に変更 |
+| `tsconfig.json` | 変更 | `baseUrl` のみ残し `paths` を削除 |
+| `vitest.config.ts` | 変更 | `@wasm` alias を削除 |
 | `.gitignore` | 変更 | `src/wasm/`、`public/wasm/` を追加 |
 | `src/wasm/.gitignore` | 新規 | WASM 以外を Git 管理対象に |
 | `public/wasm/.gitignore` | 新規 | WASM バイナリを除外 |
@@ -52,6 +53,12 @@ wasm-pack の出力先を `packages/wasm/` から `public/wasm/` + `src/wasm/` �
 | `src/workers/search.worker.ts` | 変更 | WASM URL を `/wasm/wasm_pkg_bg.wasm` に変更 |
 | `src/workers/gpu.worker.ts` | 変更 | 同上 |
 | `packages/wasm/` | 削除 | 旧出力ディレクトリを削除 |
+| `eslint.config.js` | 変更 | `globalIgnores` の `packages/wasm` を `src/wasm` に変更 |
+| `.prettierignore` | 変更 | `packages/wasm` を `src/wasm` に変更 |
+| `.github/workflows/ci.yml` | 変更 | WASM アーティファクトパスを `src/wasm/` + `public/wasm/` に変更 |
+| `src/workers/*.ts` | 変更 | `@wasm` を相対パス `../wasm/wasm_pkg.js` に変更 |
+| `src/services/worker-pool.ts` | 変更 | 同上 |
+| `src/test/integration/**/*.ts` | 変更 | 同上 |
 
 ### 仕様書の更新
 
@@ -60,7 +67,6 @@ wasm-pack の出力先を `packages/wasm/` から `public/wasm/` + `src/wasm/` �
 | `spec/agent/local_030/WASM_BUILD_CONFIG.md` | 出力先を `src/wasm/` に修正 |
 | `spec/agent/local_031/WASM_BINDING_VERIFICATION.md` | パス参照を修正 |
 | `spec/agent/local_033/WORKER_FOUNDATION.md` | WASM パス前提を修正 |
-| `spec/agent/architecture/frontend-structure.md` | `@wasm` エイリアスを修正 |
 
 ## 3. 設計方針
 
@@ -124,11 +130,12 @@ await initWasm('/wasm/wasm_pkg_bg.wasm');
 ```json
 {
   "compilerOptions": {
-    "paths": {
-      "@wasm": ["./src/wasm/wasm_pkg.d.ts"],
-      "@wasm/*": ["./src/wasm/*"]
-    }
+    "baseUrl": "."
   }
+}
+```
+
+**注**: `@wasm` エイリアスは削除。相対パスで直接 `src/wasm/wasm_pkg.js` を参照する。
 }
 ```
 
@@ -185,14 +192,19 @@ async function handleInit(): Promise<void> {
 
 ### 6.1 実装タスク
 
-- [ ] `scripts/copy-wasm.js` を作成
-- [ ] `package.json` の `build:wasm` スクリプトを更新
-- [ ] `tsconfig.json` の `paths` を更新
-- [ ] `.gitignore` に `src/wasm/wasm_pkg_bg.wasm`、`public/wasm/` を追加
-- [ ] `src/workers/search.worker.ts` の WASM URL を変更
-- [ ] `src/workers/gpu.worker.ts` の WASM URL を変更
-- [ ] `pnpm build:wasm` を実行して動作確認
-- [ ] `packages/wasm/` ディレクトリを削除
+- [x] `scripts/copy-wasm.js` を作成
+- [x] `package.json` の `build:wasm` スクリプトを更新
+- [x] `tsconfig.json` の `paths` を削除（`baseUrl` のみ残す）
+- [x] `vitest.config.ts` の `@wasm` alias を削除
+- [x] `.gitignore` に `src/wasm/`、`public/wasm/` を追加
+- [x] `eslint.config.js` の `globalIgnores` を更新
+- [x] `.prettierignore` を更新
+- [x] `.github/workflows/ci.yml` のアーティファクトパスを更新
+- [x] `src/workers/*.ts` の `@wasm` を相対パスに変更
+- [x] `src/services/worker-pool.ts` の `@wasm` を相対パスに変更
+- [x] `src/test/integration/**/*.ts` の `@wasm` を相対パスに変更
+- [x] `pnpm build:wasm` を実行して動作確認
+- [x] `packages/wasm/` ディレクトリを削除
 
 ### 6.2 仕様書更新タスク
 

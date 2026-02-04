@@ -7,8 +7,8 @@ import init, {
   resolve_pokemon_data_batch,
   resolve_egg_data_batch,
   MtseedDatetimeSearcher,
-} from '@wasm';
-import type { MtseedDatetimeSearchParams } from '@wasm';
+} from '../../wasm/wasm_pkg.js';
+import type { MtseedDatetimeSearchParams } from '../../wasm/wasm_pkg.js';
 
 describe('WASM Binding Verification', () => {
   beforeAll(async () => {
@@ -31,7 +31,8 @@ describe('WASM Binding Verification', () => {
       };
       const origins = resolve_seeds(spec);
       expect(origins.length).toBe(1);
-      expect(origins[0].Seed).toBeDefined();
+      // SeedOrigin は { Seed: ... } | { Startup: ... } の discriminated union
+      expect('Seed' in origins[0]).toBe(true);
     });
   });
 

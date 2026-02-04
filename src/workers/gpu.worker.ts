@@ -5,12 +5,12 @@
  * WebGPU リソースの排他制御のため、単一インスタンスで運用する。
  */
 
-import initWasm, { GpuDatetimeSearchIterator } from '@wasm';
+import initWasm, { GpuDatetimeSearchIterator } from '../wasm/wasm_pkg.js';
 import type { WorkerRequest, WorkerResponse } from './types';
-import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '@wasm';
+import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '../wasm/wasm_pkg.js';
 
-// WASM バイナリの URL を取得
-import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+// WASM バイナリの絶対パス（public/wasm/ から配信）
+const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
 // =============================================================================
 // State
@@ -73,7 +73,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
 async function handleInit(): Promise<void> {
   try {
     // Worker 内で独立して WASM を初期化
-    await initWasm(wasmUrl);
+    await initWasm(WASM_URL);
     initialized = true;
     postResponse({ type: 'ready' });
   } catch (err) {
