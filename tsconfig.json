@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@wasm": ["./packages/wasm/wasm_pkg.d.ts"],
-      "@wasm/*": ["./packages/wasm/*"]
-    }
+    "baseUrl": "."
   },
   "files": [],
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]

@@ -11,7 +11,7 @@ import type {
   MtseedResult,
   EggDatetimeSearchResult,
   TrainerInfoSearchResult,
-} from '@wasm';
+} from '../wasm/wasm_pkg.js';
 
 // =============================================================================
 // Types

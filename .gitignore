@@ -28,5 +28,9 @@ target/
 wasm-pkg/pkg/
 Cargo.lock
 
+# WASM build output
+src/wasm/
+public/wasm/
+
 # ローカル開発用設定
 wasm-pkg/.cargo/

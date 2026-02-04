@@ -58,7 +58,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-pkg
-          path: packages/wasm/
+          path: |
+            src/wasm/
+            public/wasm/
           retention-days: 1
 
   lint-ts:
@@ -86,7 +88,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-pkg
-          path: packages/wasm/
 
       - name: ESLint
         run: pnpm lint
@@ -154,7 +155,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-pkg
-          path: packages/wasm/
 
       - name: Run tests
         run: pnpm test:run
