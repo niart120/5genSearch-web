@@ -252,7 +252,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
   // 4.1.2 検索実行テスト
   // ---------------------------------------------------------------------------
   // TODO: GPU 検索の結果が返らない問題を調査 (進捗は正常に報告される)
-  it.skip('should execute mtseed-datetime search and return results', async (ctx) => {
+  it('should execute mtseed-datetime search and return results', async (ctx) => {
     if (!gpuDeviceAvailable) {
       ctx.skip();
       return;
@@ -352,6 +352,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
 
     // 長時間かかるタスクを開始
     const progressHistory: ProgressInfo[] = [];
+    let searchCompleted = false;
 
     const searchPromise = new Promise<void>((resolve) => {
       worker!.onmessage = (e: MessageEvent<WorkerResponse>) => {
@@ -410,6 +411,9 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
 
     // タイムアウト付きで待機
     await Promise.race([searchPromise, new Promise((resolve) => setTimeout(resolve, 10000))]);
+
+    // キャンセルにより完了せず早期終了したこと
+    expect(searchCompleted).toBe(false);
 
     // キャンセルにより早期終了したこと (100年分すべて処理していないこと)
     if (progressHistory.length > 0) {

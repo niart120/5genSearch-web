@@ -29,20 +29,12 @@ export default defineConfig({
           browser: {
             enabled: true,
             provider: playwright({
-              // WebGPU を headless モードで有効にするためのフラグ
+              // WebGPU を有効にするためのフラグ
               launchOptions: {
-                args: [
-                  '--headless=new',
-                  '--no-sandbox',
-                  '--enable-unsafe-webgpu',
-                  '--enable-features=WebGPU,UnsafeWebGPU',
-                  '--disable-gpu-blocklist',
-                  '--ignore-gpu-blocklist',
-                  '--enable-gpu',
-                ],
+                args: ['--enable-unsafe-webgpu'],
               },
             }),
-            headless: true,
+            headless: false, // GPU テスト用に headful で実行
             instances: [{ browser: 'chromium' }],
           },
           include: ['src/test/integration/**/*.test.ts'],

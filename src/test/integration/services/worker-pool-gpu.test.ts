@@ -93,7 +93,7 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
   // 4.2.2 GPU 検索実行テスト
   // ---------------------------------------------------------------------------
   // TODO: GPU 検索の結果が返らない問題を調査 (進捗は正常に報告される)
-  it.skip('should execute search with GPU Worker', async (ctx) => {
+  it('should execute search with GPU Worker', async (ctx) => {
     if (!gpuDeviceAvailable) {
       ctx.skip();
       return;
