@@ -37,6 +37,8 @@ export type SearchResults<T extends SearchTask['kind']> = T extends 'egg-datetim
 export interface TestSearchOptions {
   /** タイムアウト (ms) */
   timeout?: number;
+  /** 最初の結果で終了するか (デフォルト: false) */
+  earlyReturn?: boolean;
 }
 
 // =============================================================================
@@ -54,7 +56,7 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
   task: Extract<SearchTask, { kind: T }>,
   options: TestSearchOptions = {}
 ): Promise<SearchResults<T>> {
-  const { timeout = 30000 } = options;
+  const { timeout = 30000, earlyReturn = false } = options;
 
   const worker = new Worker(new URL('../../../workers/search.worker.ts', import.meta.url), {
     type: 'module',
@@ -88,6 +90,11 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
 
         case 'result':
           results.push(...e.data.results);
+          // 早期終了オプションが有効で結果があれば終了
+          if (earlyReturn && results.length > 0) {
+            cleanup();
+            resolve(results as SearchResults<T>);
+          }
           break;
 
         case 'done':

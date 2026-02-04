@@ -186,6 +186,7 @@ export class WorkerPool {
 
       case 'done':
         this.progressAggregator.markCompleted(response.taskId);
+        this.emitAggregatedProgress(); // 完了時に進捗を通知
         this.activeWorkers.delete(worker);
         this.dispatchNextTask(worker);
 
