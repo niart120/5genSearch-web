@@ -165,19 +165,19 @@ describe('WorkerPool GPU fallback', () => {
 
 | テスト項目 | 検証内容 | 優先度 |
 |------------|----------|--------|
-| CPU フォールバック | `navigator.gpu` なし時に CPU Worker が生成される | 高 |
+| CPU フォールバック | `useGpu: false` 時に CPU Worker が生成される | 高 |
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/test/integration/workers/gpu.worker.test.ts` 作成
-  - [ ] GPU Worker 初期化テスト
-  - [ ] GPU 検索実行テスト
-  - [ ] 進捗報告テスト
-  - [ ] キャンセルテスト
-  - [ ] エラーハンドリングテスト
-- [ ] `src/test/integration/services/worker-pool-gpu.test.ts` 作成
-  - [ ] WorkerPool GPU 初期化テスト
-  - [ ] WorkerPool GPU 検索実行テスト
-  - [ ] フォールバックテスト
-- [ ] ローカル環境での GPU テスト実行確認
-- [ ] CI 環境でスキップされることの確認
+- [x] `src/test/integration/workers/gpu.worker.test.ts` 作成
+  - [x] GPU Worker 初期化テスト
+  - [x] GPU 検索実行テスト
+  - [x] 進捗報告テスト
+  - [x] キャンセルテスト
+  - [x] エラーハンドリングテスト
+- [x] `src/test/integration/services/worker-pool-gpu.test.ts` 作成
+  - [x] WorkerPool GPU 初期化テスト
+  - [x] WorkerPool GPU 検索実行テスト
+  - [x] フォールバックテスト
+- [x] ローカル環境での GPU テスト実行確認
+- [x] CI 環境でスキップされることの確認

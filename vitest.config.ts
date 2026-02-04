@@ -28,7 +28,12 @@ export default defineConfig({
           name: 'integration',
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright({
+              // WebGPU を headless モードで有効にするためのフラグ
+              launchOptions: {
+                args: ['--enable-unsafe-webgpu'],
+              },
+            }),
             headless: true,
             instances: [{ browser: 'chromium' }],
           },
