@@ -31,7 +31,15 @@ export default defineConfig({
             provider: playwright({
               // WebGPU を headless モードで有効にするためのフラグ
               launchOptions: {
-                args: ['--enable-unsafe-webgpu'],
+                args: [
+                  '--headless=new',
+                  '--no-sandbox',
+                  '--enable-unsafe-webgpu',
+                  '--enable-features=Vulkan,UseSkiaRenderer',
+                  '--use-angle=vulkan',
+                  '--disable-vulkan-surface',
+                  '--use-vulkan=swiftshader',
+                ],
               },
             }),
             headless: true,
