@@ -4,9 +4,6 @@
 
 use wgpu::util::DeviceExt;
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::JsValue;
-
 use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
 use crate::core::sha1::{get_frame, get_nazo_values};
 use crate::types::{
@@ -459,45 +456,26 @@ impl SearchPipeline {
 
     /// 結果を読み出し（非同期ポーリング）
     #[allow(clippy::cast_possible_truncation)] // match_count は capacity 以下
-    #[allow(clippy::unused_async)] // Native では await がないが、API 一貫性のため async を維持
     async fn read_results(&self, base_offset: u32) -> Vec<MatchResult> {
         let buffer_slice = self.staging_buffer.slice(..);
 
-        #[allow(unused_mut)] // WASM では mutable が必要
-        let (tx, mut rx) = futures_channel::oneshot::channel();
+        let (tx, rx) = futures_channel::oneshot::channel();
 
         buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
             let _ = tx.send(result);
         });
 
-        // WASM: 非ブロッキングポーリングでイベントループをブロックしない
-        // Native: 同期的に Wait でブロック
+        // WASM: Poll で定期的にチェック + await で制御をイベントループに戻す
+        // Native: Wait でブロッキング待機
         #[cfg(target_arch = "wasm32")]
-        {
-            loop {
-                self.device.poll(wgpu::Maintain::Poll);
-
-                match rx.try_recv() {
-                    Ok(Some(Ok(()))) => break,
-                    Ok(Some(Err(_)) | None) => return vec![],
-                    Err(_) => {
-                        // yield してイベントループに制御を戻す
-                        wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(
-                            &JsValue::NULL,
-                        ))
-                        .await
-                        .ok();
-                    }
-                }
-            }
-        }
+        self.device.poll(wgpu::Maintain::Poll);
 
         #[cfg(not(target_arch = "wasm32"))]
-        {
-            self.device.poll(wgpu::Maintain::Wait);
-            if rx.await.ok().and_then(Result::ok).is_none() {
-                return vec![];
-            }
+        self.device.poll(wgpu::Maintain::Wait);
+
+        // rx.await: WASM では wasm_bindgen_futures が適切にポーリングする
+        if rx.await.ok().and_then(Result::ok).is_none() {
+            return vec![];
         }
 
         let data = buffer_slice.get_mapped_range();

@@ -56,13 +56,13 @@ pub struct GpuDatetimeSearchIterator {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl GpuDatetimeSearchIterator {
-    /// イテレータを作成
+    /// イテレータを作成 (async factory method)
     ///
     /// # Errors
     ///
     /// - GPU デバイスが利用不可の場合
     /// - `target_seeds` が空の場合
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = "create"))]
     pub async fn new(
         params: MtseedDatetimeSearchParams,
     ) -> Result<GpuDatetimeSearchIterator, String> {
@@ -193,7 +193,7 @@ fn current_time_secs() -> f64 {
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
+        DsConfig, Hardware, KeyCode, LcgSeed, MtSeed, RomRegion, RomVersion, SearchRangeParams,
         StartupCondition, TimeRangeParams,
     };
 
@@ -280,5 +280,100 @@ mod tests {
         let result = pollster::block_on(GpuDatetimeSearchIterator::new(params));
         assert!(result.is_err());
         assert_eq!(result.err().unwrap(), "target_seeds is empty");
+    }
+
+    /// GPU 検索で既知の MT Seed を検索し、期待する結果が得られることを確認
+    ///
+    /// CPU 検索テスト (TypeScript 側) で使用している同じ期待値:
+    /// - MT Seed: `0x32bf6858`
+    /// - 日時: 2010/09/18 18:13:11
+    /// - LCG Seed: `0x768360781d1ce6dd`
+    ///
+    /// DS 設定:
+    /// - MAC: `8C:56:C5:86:15:28`
+    /// - Hardware: DS Lite
+    /// - Version: Black
+    /// - Region: JPN
+    /// - Timer0: `0x0C79`
+    /// - `VCount`: `0x60`
+    /// - `KeyCode`: `0x2FFF`
+    #[test]
+    fn test_gpu_search_finds_known_mtseed() {
+        // CPU テストと同じパラメータ
+        let params = MtseedDatetimeSearchParams {
+            ds: DsConfig {
+                mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
+                hardware: Hardware::DsLite,
+                version: RomVersion::Black,
+                region: RomRegion::Jpn,
+            },
+            condition: StartupCondition {
+                timer0: 0x0C79,
+                vcount: 0x60,
+                key_code: KeyCode::new(0x2FFF),
+            },
+            target_seeds: vec![MtSeed::new(0x32bf_6858)],
+            time_range: TimeRangeParams {
+                hour_start: 18,
+                hour_end: 18,
+                minute_start: 0,
+                minute_end: 30,
+                second_start: 0,
+                second_end: 59,
+            },
+            search_range: SearchRangeParams {
+                start_year: 2010,
+                start_month: 9,
+                start_day: 18,
+                start_second_offset: 0,
+                range_seconds: 86400, // 1日
+            },
+        };
+
+        // GPU 検索イテレータ作成
+        let result = pollster::block_on(GpuDatetimeSearchIterator::new(params));
+        let Ok(mut iterator) = result else {
+            eprintln!("GPU not available, skipping test");
+            return;
+        };
+
+        // 全バッチを実行して結果を収集
+        let mut all_results = Vec::new();
+        while let Some(batch) = pollster::block_on(iterator.next()) {
+            all_results.extend(batch.results);
+        }
+
+        // 結果があることを確認
+        assert!(
+            !all_results.is_empty(),
+            "Expected to find MT Seed 0x32bf6858 but got no results"
+        );
+
+        // 期待する MT Seed が見つかることを確認
+        let found = all_results
+            .iter()
+            .find(|r| r.mt_seed() == MtSeed::new(0x32bf_6858));
+        assert!(found.is_some(), "Expected MT Seed 0x32bf6858 not found");
+
+        let seed_origin = found.unwrap();
+
+        // LCG Seed の確認
+        assert_eq!(
+            seed_origin.base_seed(),
+            LcgSeed::new(0x7683_6078_1d1c_e6dd),
+            "LCG Seed mismatch"
+        );
+
+        // 日時の確認 (Startup バリアントから取得)
+        if let crate::types::SeedOrigin::Startup { datetime, .. } = seed_origin {
+            assert_eq!(datetime.year, 2010, "Year mismatch");
+            assert_eq!(datetime.month, 9, "Month mismatch");
+            assert_eq!(datetime.day, 18, "Day mismatch");
+            assert_eq!(datetime.hour, 18, "Hour mismatch");
+            assert_eq!(datetime.minute, 13, "Minute mismatch");
+            assert_eq!(datetime.second, 11, "Second mismatch");
+        } else {
+            panic!("Expected Startup variant");
+        }
     }
 }

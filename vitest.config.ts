@@ -28,8 +28,14 @@ export default defineConfig({
           name: 'integration',
           browser: {
             enabled: true,
-            provider: playwright(),
-            headless: true,
+            provider: playwright({
+              // WebGPU を有効にするためのフラグ
+              launchOptions: {
+                channel: 'chromium', // new headless mode (real Chrome)
+                args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan'],
+              },
+            }),
+            headless: true, // new headless mode で試行
             instances: [{ browser: 'chromium' }],
           },
           include: ['src/test/integration/**/*.test.ts'],

@@ -7,6 +7,7 @@ import init, {
   resolve_pokemon_data_batch,
   resolve_egg_data_batch,
   MtseedDatetimeSearcher,
+  GpuDatetimeSearchIterator,
 } from '../../wasm/wasm_pkg.js';
 import type { MtseedDatetimeSearchParams } from '../../wasm/wasm_pkg.js';
 
@@ -113,5 +114,98 @@ describe('WASM Binding Verification', () => {
 
       searcher.free();
     });
+  });
+
+  describe('GpuDatetimeSearchIterator', () => {
+    /**
+     * GPU adapter およびデバイスが利用可能かチェック
+     */
+    async function checkGpuDeviceAvailable(): Promise<boolean> {
+      if (!('gpu' in navigator)) {
+        return false;
+      }
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) {
+          return false;
+        }
+        const device = await adapter.requestDevice();
+        device.destroy();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    it('should find known MT Seed via GPU search (direct WASM call)', async (ctx) => {
+      const gpuDeviceAvailable = await checkGpuDeviceAvailable();
+      if (!gpuDeviceAvailable) {
+        console.log('GPU device is not available, skipping GPU test');
+        ctx.skip();
+        return;
+      }
+
+      const params: MtseedDatetimeSearchParams = {
+        target_seeds: [0x32bf6858],
+        ds: {
+          mac: [0x8c, 0x56, 0xc5, 0x86, 0x15, 0x28] as [
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+          ],
+          hardware: 'DsLite',
+          version: 'Black',
+          region: 'Jpn',
+        },
+        time_range: {
+          hour_start: 18,
+          hour_end: 18,
+          minute_start: 0,
+          minute_end: 30,
+          second_start: 0,
+          second_end: 59,
+        },
+        search_range: {
+          start_year: 2010,
+          start_month: 9,
+          start_day: 18,
+          start_second_offset: 0,
+          range_seconds: 86400,
+        },
+        condition: {
+          timer0: 0x0c79,
+          vcount: 0x60,
+          key_code: 0x2fff,
+        },
+      };
+
+      // GPU 検索イテレータを直接作成
+      const iterator = await GpuDatetimeSearchIterator.create(params);
+      expect(iterator.is_done).toBe(false);
+
+      // 全バッチを実行して結果を収集
+      const allResults: unknown[] = [];
+      let batchCount = 0;
+      while (!iterator.is_done) {
+        const batch = await iterator.next();
+        if (batch) {
+          console.log(
+            `Batch ${batchCount}: progress=${batch.progress}, results=${batch.results.length}`
+          );
+          allResults.push(...batch.results);
+        }
+        batchCount++;
+      }
+
+      console.log(`Total batches: ${batchCount}, Total results: ${allResults.length}`);
+
+      // 結果があることを確認
+      expect(allResults.length).toBeGreaterThan(0);
+
+      iterator.free();
+    }, 60000);
   });
 });

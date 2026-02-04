@@ -99,8 +99,8 @@ async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams):
   cancelRequested = false;
 
   try {
-    // GpuDatetimeSearchIterator は async constructor
-    currentIterator = await new GpuDatetimeSearchIterator(params);
+    // GpuDatetimeSearchIterator.create() は async factory method
+    currentIterator = await GpuDatetimeSearchIterator.create(params);
 
     // 結果を収集
     let batch: GpuSearchBatch | undefined;
