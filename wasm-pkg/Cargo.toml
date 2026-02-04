@@ -55,3 +55,8 @@ required-features = ["gpu"]
 [lints.rust]
 # Enable nightly features for Portable SIMD
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(feature, values())"] }
+
+[profile.release]
+lto = "fat"
+opt-level = 3
+codegen-units = 1
