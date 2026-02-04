@@ -184,15 +184,25 @@ async function runGpuSearch(
 }
 
 /**
- * GPU adapter が利用可能かチェック
+ * GPU adapter およびデバイスが利用可能かチェック
+ *
+ * adapter の取得だけでなく、device の取得まで成功するか確認する。
+ * headless 環境では adapter は取得できても device 取得に失敗する場合がある
+ * (例: dxil.dll が見つからない等)
  */
-async function checkGpuAdapterAvailable(): Promise<boolean> {
+async function checkGpuDeviceAvailable(): Promise<boolean> {
   if (!('gpu' in navigator)) {
     return false;
   }
   try {
     const adapter = await navigator.gpu.requestAdapter();
-    return adapter !== null;
+    if (!adapter) {
+      return false;
+    }
+    // device 取得を試みて成功するか確認
+    const device = await adapter.requestDevice();
+    device.destroy();
+    return true;
   } catch {
     return false;
   }
@@ -207,13 +217,13 @@ const hasWebGpuApi = typeof navigator !== 'undefined' && 'gpu' in navigator;
 
 describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
   let worker: Worker | null = null;
-  let gpuAdapterAvailable = false;
+  let gpuDeviceAvailable = false;
 
   beforeAll(async () => {
-    // テスト開始前に GPU adapter が利用可能か確認
-    gpuAdapterAvailable = await checkGpuAdapterAvailable();
-    if (!gpuAdapterAvailable) {
-      console.log('GPU adapter is not available, GPU-dependent tests will be skipped');
+    // テスト開始前に GPU device が利用可能か確認
+    gpuDeviceAvailable = await checkGpuDeviceAvailable();
+    if (!gpuDeviceAvailable) {
+      console.log('GPU device is not available, GPU-dependent tests will be skipped');
     }
   });
 
@@ -243,7 +253,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
   // ---------------------------------------------------------------------------
   // TODO: GPU 検索の結果が返らない問題を調査 (進捗は正常に報告される)
   it.skip('should execute mtseed-datetime search and return results', async (ctx) => {
-    if (!gpuAdapterAvailable) {
+    if (!gpuDeviceAvailable) {
       ctx.skip();
       return;
     }
@@ -294,7 +304,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
   // 4.1.3 進捗報告テスト
   // ---------------------------------------------------------------------------
   it('should report progress during search', async (ctx) => {
-    if (!gpuAdapterAvailable) {
+    if (!gpuDeviceAvailable) {
       ctx.skip();
       return;
     }
@@ -332,7 +342,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
   // 4.1.4 キャンセルテスト
   // ---------------------------------------------------------------------------
   it('should handle cancel request', async (ctx) => {
-    if (!gpuAdapterAvailable) {
+    if (!gpuDeviceAvailable) {
       ctx.skip();
       return;
     }
