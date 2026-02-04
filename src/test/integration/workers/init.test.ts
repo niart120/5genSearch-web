@@ -6,24 +6,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { testWorkerInitialization, getWasmBytes } from '../helpers/worker-test-utils';
+import { testWorkerInitialization } from '../helpers/worker-test-utils';
 
 describe('Worker Initialization', () => {
-  it('should fetch WASM bytes successfully', async () => {
-    const bytes = await getWasmBytes();
-
-    expect(bytes).toBeInstanceOf(ArrayBuffer);
-    expect(bytes.byteLength).toBeGreaterThan(0);
-  });
-
-  it('should initialize CPU worker with WASM', async () => {
-    const result = await testWorkerInitialization();
-
-    expect(result).toBe(true);
-  });
-
-  it('should handle multiple worker initializations', async () => {
-    // 複数の Worker を同時に初期化
+  it('should initialize multiple workers in parallel', async () => {
     const results = await Promise.all([
       testWorkerInitialization(),
       testWorkerInitialization(),

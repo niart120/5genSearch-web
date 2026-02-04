@@ -23,12 +23,11 @@ import type {
 /**
  * WASM 初期化リクエスト
  *
- * メインスレッドで取得した WASM バイナリを Worker に転送する。
- * ArrayBuffer は Transferable として転送され、コピーが発生しない。
+ * Worker に WASM 初期化を指示する。
+ * Worker は内部で wasmUrl を使って独自に WASM を fetch/初期化する。
  */
 export interface InitRequest {
   type: 'init';
-  wasmBytes: ArrayBuffer;
 }
 
 /**

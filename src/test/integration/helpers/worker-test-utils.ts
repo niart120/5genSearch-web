@@ -2,6 +2,8 @@
  * Worker 統合テスト用ヘルパー
  *
  * Browser Mode で実行される統合テストで使用するユーティリティ関数。
+ * Worker は独自に WASM を fetch/初期化するため、メインスレッドからの
+ * ArrayBuffer 転送は不要。
  */
 
 import type { WorkerRequest, WorkerResponse, SearchTask } from '../../../workers/types';
@@ -38,26 +40,6 @@ export interface TestSearchOptions {
 }
 
 // =============================================================================
-// WASM Loader
-// =============================================================================
-
-import { fetchWasmBytes as fetchWasmBytesFromLoader } from '../../../workers/wasm-loader';
-
-let wasmBytesCache: ArrayBuffer | null = null;
-
-/**
- * WASM バイナリを取得 (キャッシュあり)
- */
-export async function getWasmBytes(): Promise<ArrayBuffer> {
-  if (wasmBytesCache) {
-    return wasmBytesCache.slice(0);
-  }
-
-  wasmBytesCache = await fetchWasmBytesFromLoader();
-  return wasmBytesCache.slice(0);
-}
-
-// =============================================================================
 // Worker Test Runner
 // =============================================================================
 
@@ -77,8 +59,6 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
   const worker = new Worker(new URL('../../../workers/search.worker.ts', import.meta.url), {
     type: 'module',
   });
-
-  const wasmBytes = await getWasmBytes();
 
   return new Promise<SearchResults<T>>((resolve, reject) => {
     const results: unknown[] = [];
@@ -127,9 +107,8 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
       reject(new Error(e.message));
     };
 
-    // WASM 初期化
-    const bytes = wasmBytes.slice(0);
-    worker.postMessage({ type: 'init', wasmBytes: bytes } as WorkerRequest, [bytes]);
+    // WASM 初期化を指示 (Worker が独自に fetch)
+    worker.postMessage({ type: 'init' } as WorkerRequest);
   });
 }
 
@@ -142,8 +121,6 @@ export async function testWorkerInitialization(): Promise<boolean> {
   const worker = new Worker(new URL('../../../workers/search.worker.ts', import.meta.url), {
     type: 'module',
   });
-
-  const wasmBytes = await getWasmBytes();
 
   return new Promise<boolean>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -169,8 +146,8 @@ export async function testWorkerInitialization(): Promise<boolean> {
       reject(new Error(e.message));
     };
 
-    const bytes = wasmBytes.slice(0);
-    worker.postMessage({ type: 'init', wasmBytes: bytes } as WorkerRequest, [bytes]);
+    // WASM 初期化を指示 (Worker が独自に fetch)
+    worker.postMessage({ type: 'init' } as WorkerRequest);
   });
 }
 

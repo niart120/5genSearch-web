@@ -5,12 +5,12 @@
  * 各 Worker インスタンスは独立した WASM インスタンスを持つ。
  */
 
-import { initSync } from '@wasm';
-import {
+import initWasm, {
   EggDatetimeSearcher,
   MtseedDatetimeSearcher,
   MtseedSearcher,
   TrainerInfoSearcher,
+  health_check,
 } from '@wasm';
 import type {
   EggDatetimeSearchParams,
@@ -19,6 +19,9 @@ import type {
   TrainerInfoSearchParams,
 } from '@wasm';
 import type { WorkerRequest, WorkerResponse, SearchTask, ProgressInfo } from './types';
+
+// WASM バイナリの URL を取得
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
 
 // =============================================================================
 // State
@@ -36,7 +39,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
 
   switch (data.type) {
     case 'init':
-      handleInit(data.wasmBytes);
+      void handleInit();
       break;
 
     case 'start':
@@ -62,9 +65,18 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
 // Init Handler
 // =============================================================================
 
-function handleInit(wasmBytes: ArrayBuffer): void {
+async function handleInit(): Promise<void> {
   try {
-    initSync(wasmBytes);
+    // Worker 内で独立して WASM を初期化
+    // wasmUrl を使って直接 fetch することで、独立した WASM インスタンスを取得
+    await initWasm(wasmUrl);
+
+    // WASM が正しく初期化されたか確認
+    const healthResult = health_check();
+    if (healthResult !== 'wasm-pkg is ready') {
+      throw new Error(`Health check failed: ${healthResult}`);
+    }
+
     initialized = true;
     postResponse({ type: 'ready' });
   } catch (err) {
@@ -99,10 +111,14 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
         break;
     }
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const taskInfo = JSON.stringify(task, (_key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    );
     postResponse({
       type: 'error',
       taskId,
-      message: err instanceof Error ? err.message : String(err),
+      message: `${errMsg} | task: ${taskInfo}`,
     });
   }
 }
@@ -267,16 +283,24 @@ async function runTrainerInfoSearch(
 // Utilities
 // =============================================================================
 
-function calculateProgress(processed: number, total: number, startTime: number): ProgressInfo {
+function calculateProgress(
+  processed: number | bigint,
+  total: number | bigint,
+  startTime: number
+): ProgressInfo {
+  // bigint を number に変換 (precision loss は許容)
+  const processedNum = typeof processed === 'bigint' ? Number(processed) : processed;
+  const totalNum = typeof total === 'bigint' ? Number(total) : total;
+
   const elapsedMs = performance.now() - startTime;
-  const percentage = total > 0 ? (processed / total) * 100 : 0;
-  const throughput = elapsedMs > 0 ? (processed / elapsedMs) * 1000 : 0;
-  const remaining = total - processed;
+  const percentage = totalNum > 0 ? (processedNum / totalNum) * 100 : 0;
+  const throughput = elapsedMs > 0 ? (processedNum / elapsedMs) * 1000 : 0;
+  const remaining = totalNum - processedNum;
   const estimatedRemainingMs = throughput > 0 ? (remaining / throughput) * 1000 : 0;
 
   return {
-    processed,
-    total,
+    processed: processedNum,
+    total: totalNum,
     percentage,
     elapsedMs,
     estimatedRemainingMs,

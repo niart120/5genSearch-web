@@ -15,11 +15,9 @@ describe('Worker Types', () => {
     it('should type init request correctly', () => {
       const request: WorkerRequest = {
         type: 'init',
-        wasmBytes: new ArrayBuffer(0),
       };
 
       expect(request.type).toBe('init');
-      expect(request.wasmBytes).toBeInstanceOf(ArrayBuffer);
     });
 
     it('should type start request correctly', () => {

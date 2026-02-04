@@ -202,7 +202,7 @@ pub struct MtseedDatetimeSearchParams {
 
 /// MT Seed 検索バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct MtseedDatetimeSearchBatch {
     /// 見つかった結果 (`SeedOrigin::Startup` 形式)
     pub results: Vec<SeedOrigin>,
@@ -248,7 +248,7 @@ pub struct TrainerInfoSearchResult {
 
 /// `TrainerInfo` 検索バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct TrainerInfoSearchBatch {
     /// 見つかった結果
     pub results: Vec<TrainerInfoSearchResult>,
@@ -301,7 +301,7 @@ pub struct EggDatetimeSearchResult {
 
 /// 孵化検索バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct EggDatetimeSearchBatch {
     /// 見つかった結果
     pub results: Vec<EggDatetimeSearchResult>,
@@ -337,15 +337,13 @@ pub struct MtseedResult {
 
 /// MT Seed 検索バッチ結果
 #[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct MtseedSearchBatch {
     /// 条件を満たした候補
     pub candidates: Vec<MtseedResult>,
     /// 処理済み Seed 数
-    #[tsify(type = "bigint")]
     pub processed: u64,
     /// 総 Seed 数 (0x100000000)
-    #[tsify(type = "bigint")]
     pub total: u64,
 }
 

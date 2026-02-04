@@ -4,7 +4,6 @@
  * 複数の Worker を管理し、タスク分配・進捗集約を行うサービス。
  */
 
-import { fetchWasmBytes } from '../workers/wasm-loader';
 import { ProgressAggregator, type AggregatedProgress } from './progress';
 import type { WorkerRequest, WorkerResponse, SearchTask } from '../workers/types';
 import type {
@@ -56,7 +55,6 @@ type ErrorCallback = (error: Error) => void;
  */
 export class WorkerPool {
   private workers: Worker[] = [];
-  private wasmBytes: ArrayBuffer | null = null;
   private readyCount = 0;
   private initPromise: Promise<void> | null = null;
 
@@ -104,9 +102,6 @@ export class WorkerPool {
   }
 
   private async doInitialize(): Promise<void> {
-    // WASM バイナリを取得
-    this.wasmBytes = await fetchWasmBytes();
-
     // Worker を作成
     if (this.config.useGpu && 'gpu' in navigator) {
       // GPU Worker は単一インスタンス
@@ -127,7 +122,7 @@ export class WorkerPool {
       }
     }
 
-    // 全 Worker に WASM 転送
+    // 全 Worker に WASM 初期化を指示
     await this.initializeWorkers();
   }
 
@@ -143,11 +138,9 @@ export class WorkerPool {
   private async initializeWorkers(): Promise<void> {
     return new Promise<void>((resolve) => {
       for (const worker of this.workers) {
-        // ArrayBuffer は Transferable として転送 (コピーなし)
-        // 各 Worker に独自のコピーを渡す
-        const bytes = this.wasmBytes!.slice(0);
-        const request: WorkerRequest = { type: 'init', wasmBytes: bytes };
-        worker.postMessage(request, [bytes]);
+        // Worker に初期化を指示 (Worker が独自に WASM を fetch する)
+        const request: WorkerRequest = { type: 'init' };
+        worker.postMessage(request);
       }
 
       // ready イベントのハンドリングは handleWorkerMessage で行う

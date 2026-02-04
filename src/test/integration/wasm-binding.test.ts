@@ -101,10 +101,14 @@ describe('WASM Binding Verification', () => {
       const searcher = new MtseedDatetimeSearcher(params);
       expect(searcher.is_done).toBe(false);
 
-      // 1 バッチ実行
-      const batch = searcher.next_batch(100);
-      expect(batch).toBeDefined();
-      expect(batch.processed_count).toBeGreaterThan(0n);
+      // 複数バッチ実行して Worker と同じ条件にする
+      let totalProcessed = 0n;
+      while (!searcher.is_done) {
+        const batch = searcher.next_batch(100);
+        expect(batch).toBeDefined();
+        totalProcessed = batch.processed_count;
+      }
+      expect(totalProcessed).toBeGreaterThan(0n);
 
       searcher.free();
     });

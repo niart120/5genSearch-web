@@ -157,11 +157,11 @@ export interface MtseedDatetimeSearchBatch {
     /**
      * 処理済み件数
      */
-    processed_count: number;
+    processed_count: bigint;
     /**
      * 総件数
      */
-    total_count: number;
+    total_count: bigint;
 }
 
 /**
@@ -282,11 +282,11 @@ export interface TrainerInfoSearchBatch {
     /**
      * 処理済み件数
      */
-    processed_count: number;
+    processed_count: bigint;
     /**
      * 総件数
      */
-    total_count: number;
+    total_count: bigint;
 }
 
 /**
@@ -695,11 +695,11 @@ export interface EggDatetimeSearchBatch {
     /**
      * 処理済み件数
      */
-    processed_count: number;
+    processed_count: bigint;
     /**
      * 総件数
      */
-    total_count: number;
+    total_count: bigint;
 }
 
 /**

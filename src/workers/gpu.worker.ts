@@ -9,6 +9,9 @@ import initWasm, { GpuDatetimeSearchIterator } from '@wasm';
 import type { WorkerRequest, WorkerResponse } from './types';
 import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '@wasm';
 
+// WASM バイナリの URL を取得
+import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+
 // =============================================================================
 // State
 // =============================================================================
@@ -26,7 +29,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
 
   switch (data.type) {
     case 'init':
-      await handleInit(data.wasmBytes);
+      await handleInit();
       break;
 
     case 'start':
@@ -67,12 +70,10 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
 // Init Handler
 // =============================================================================
 
-async function handleInit(wasmBytes: ArrayBuffer): Promise<void> {
+async function handleInit(): Promise<void> {
   try {
-    // GPU Worker は async 初期化が必要 (WebGPU adapter 取得)
-    // Blob を経由して wasm を読み込む
-    const blob = new Blob([wasmBytes], { type: 'application/wasm' });
-    await initWasm(blob);
+    // Worker 内で独立して WASM を初期化
+    await initWasm(wasmUrl);
     initialized = true;
     postResponse({ type: 'ready' });
   } catch (err) {
