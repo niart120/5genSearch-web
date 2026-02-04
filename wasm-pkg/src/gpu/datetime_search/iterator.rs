@@ -56,13 +56,13 @@ pub struct GpuDatetimeSearchIterator {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl GpuDatetimeSearchIterator {
-    /// イテレータを作成
+    /// イテレータを作成 (async factory method)
     ///
     /// # Errors
     ///
     /// - GPU デバイスが利用不可の場合
     /// - `target_seeds` が空の場合
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = "create"))]
     pub async fn new(
         params: MtseedDatetimeSearchParams,
     ) -> Result<GpuDatetimeSearchIterator, String> {

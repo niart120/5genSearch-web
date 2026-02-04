@@ -31,10 +31,11 @@ export default defineConfig({
             provider: playwright({
               // WebGPU を有効にするためのフラグ
               launchOptions: {
-                args: ['--enable-unsafe-webgpu'],
+                channel: 'chromium', // new headless mode (real Chrome)
+                args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan'],
               },
             }),
-            headless: false, // GPU テスト用に headful で実行
+            headless: true, // new headless mode で試行
             instances: [{ browser: 'chromium' }],
           },
           include: ['src/test/integration/**/*.test.ts'],

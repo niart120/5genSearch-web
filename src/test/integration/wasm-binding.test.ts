@@ -183,7 +183,7 @@ describe('WASM Binding Verification', () => {
       };
 
       // GPU 検索イテレータを直接作成
-      const iterator = await new GpuDatetimeSearchIterator(params);
+      const iterator = await GpuDatetimeSearchIterator.create(params);
       expect(iterator.is_done).toBe(false);
 
       // 全バッチを実行して結果を収集
