@@ -1174,33 +1174,33 @@ async function runSearchInWorker<T extends SearchTask['kind']>(
 
 ### 6.1 Worker 基盤
 
-- [ ] `src/workers/types.ts` 作成
-- [ ] `src/workers/wasm-loader.ts` 作成
-- [ ] `src/workers/search.worker.ts` 作成
-- [ ] `src/workers/gpu.worker.ts` 作成
-- [ ] `src/services/worker-pool.ts` 作成
-- [ ] `src/services/progress.ts` 作成
-- [ ] `src/hooks/use-search.ts` 作成
+- [x] `src/workers/types.ts` 作成
+- [x] `src/workers/wasm-loader.ts` 作成
+- [x] `src/workers/search.worker.ts` 作成
+- [x] `src/workers/gpu.worker.ts` 作成
+- [x] `src/services/worker-pool.ts` 作成
+- [x] `src/services/progress.ts` 作成
+- [x] `src/hooks/use-search.ts` 作成
 
 ### 6.2 ユニットテスト
 
-- [ ] `src/test/unit/workers/types.test.ts` 作成
-- [ ] `src/test/unit/services/progress.test.ts` 作成
+- [x] `src/test/unit/workers/types.test.ts` 作成
+- [x] `src/test/unit/services/progress.test.ts` 作成
 
 ### 6.3 統合テスト
 
-- [ ] `src/test/integration/helpers/worker-test-utils.ts` 作成
-- [ ] `src/test/integration/workers/init.test.ts` 作成
-- [ ] `src/test/integration/workers/searcher.test.ts` 作成
-  - [ ] MtseedDatetimeSearcher: 既知 LCG Seed `0x768360781D1CE6DD` の検索
-  - [ ] MtseedSearcher: 全範囲フィルタ / 6V フィルタ
-  - [ ] EggDatetimeSearcher: バッチ処理動作
-  - [ ] TrainerInfoSearcher: Continue モード拒否 / バッチ処理動作
-- [ ] `src/test/integration/services/worker-pool.test.ts` 作成
-  - [ ] Worker 初期化
-  - [ ] 検索タスク実行と結果収集
-  - [ ] キャンセル処理
-  - [ ] 進捗集約
+- [x] `src/test/integration/helpers/worker-test-utils.ts` 作成
+- [x] `src/test/integration/workers/init.test.ts` 作成
+- [x] `src/test/integration/workers/searcher.test.ts` 作成
+  - [x] MtseedDatetimeSearcher: 既知 LCG Seed `0x768360781D1CE6DD` の検索
+  - [x] MtseedSearcher: 全範囲フィルタ / 6V フィルタ
+  - [x] EggDatetimeSearcher: バッチ処理動作
+  - [x] TrainerInfoSearcher: Continue モード拒否 / バッチ処理動作
+- [x] `src/test/integration/services/worker-pool.test.ts` 作成
+  - [x] Worker 初期化
+  - [x] 検索タスク実行と結果収集
+  - [x] キャンセル処理
+  - [x] 進捗集約
 
 ### 6.4 ドキュメント
 

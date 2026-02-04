@@ -279,7 +279,7 @@ describe('WASM Binding Verification', () => {
 
 - [x] `gpu` feature flag によるビルド分岐確認
 - [x] `GpuDatetimeSearchIterator` の公開状態確認
-- [ ] GPU 有効時の d.ts 差分確認 (別途実施)
+- [x] GPU 有効時の d.ts 差分確認
 
 ### 7.4 ヘルスチェック
 
