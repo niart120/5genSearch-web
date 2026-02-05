@@ -6,9 +6,7 @@ use wgpu::util::DeviceExt;
 
 use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
 use crate::core::sha1::{get_frame, get_nazo_values};
-use crate::types::{
-    Datetime, Hardware, LcgSeed, MtSeed, MtseedDatetimeSearchParams, StartupCondition,
-};
+use crate::types::{Datetime, Hardware, LcgSeed, MtSeed, MtseedDatetimeSearchParams};
 
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;
@@ -34,9 +32,6 @@ pub struct SearchPipeline {
     limits: SearchJobLimits,
     /// 検索定数 (シェーダー用)
     search_constants: SearchConstants,
-    /// 起動条件 (結果復元用) - 後方互換性のため維持
-    #[allow(dead_code)]
-    condition: StartupCondition,
 }
 
 /// シェーダー定数 (GPU バッファにコピー)
@@ -133,7 +128,6 @@ impl SearchPipeline {
             workgroup_size: limits.workgroup_size,
             limits,
             search_constants,
-            condition: params.condition,
         }
     }
 
@@ -537,12 +531,6 @@ impl SearchPipeline {
             minute,
             second,
         }
-    }
-
-    /// 起動条件を取得 - 後方互換性のため維持
-    #[allow(dead_code)]
-    pub fn condition(&self) -> StartupCondition {
-        self.condition
     }
 }
 
