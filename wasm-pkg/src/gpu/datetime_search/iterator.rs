@@ -20,6 +20,8 @@ use crate::gpu::context::GpuDeviceContext;
 use crate::gpu::limits::SearchJobLimits;
 
 /// GPU 検索バッチ結果
+///
+/// CPU 側と同様に処理件数のみを返し、スループット計算は TS 側の責務とする。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, large_number_types_as_bigints)]
 pub struct GpuSearchBatch {
@@ -27,8 +29,6 @@ pub struct GpuSearchBatch {
     pub results: Vec<SeedOrigin>,
     /// 進捗率 (0.0 - 1.0)
     pub progress: f64,
-    /// スループット (messages/sec)
-    pub throughput: f64,
     /// 処理済み数
     pub processed_count: u64,
     /// 総処理数
@@ -73,11 +73,6 @@ pub struct GpuDatetimeSearchIterator {
     total_count: u64,
     /// 進捗管理: 処理済み数 (全組み合わせ通算)
     processed_count: u64,
-
-    /// スループット計測: 前回の処理済み数
-    last_processed: u64,
-    /// スループット計測: 前回の時刻 (秒)
-    last_time_secs: f64,
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
@@ -140,8 +135,6 @@ impl GpuDatetimeSearchIterator {
             pipeline_offset: 0,
             total_count,
             processed_count: 0,
-            last_processed: 0,
-            last_time_secs: current_time_secs(),
         })
     }
 
@@ -176,8 +169,6 @@ impl GpuDatetimeSearchIterator {
             pipeline_offset: 0,
             total_count,
             processed_count: 0,
-            last_processed: 0,
-            last_time_secs: current_time_secs(),
         })
     }
 
@@ -245,20 +236,7 @@ impl GpuDatetimeSearchIterator {
     }
 
     /// バッチ結果を構築
-    fn build_batch_result(&mut self, matches: Vec<super::pipeline::MatchResult>) -> GpuSearchBatch {
-        // スループット計算
-        let now = current_time_secs();
-        let elapsed = now - self.last_time_secs;
-        let processed_delta = self.processed_count - self.last_processed;
-        #[allow(clippy::cast_precision_loss)]
-        let throughput = if elapsed > 0.001 {
-            processed_delta as f64 / elapsed
-        } else {
-            0.0
-        };
-        self.last_processed = self.processed_count;
-        self.last_time_secs = now;
-
+    fn build_batch_result(&self, matches: Vec<super::pipeline::MatchResult>) -> GpuSearchBatch {
         // 結果変換 (現在の組み合わせを使用)
         let condition = self.combinations[self.current_combo_idx];
         let results: Vec<SeedOrigin> = matches
@@ -269,7 +247,6 @@ impl GpuDatetimeSearchIterator {
         GpuSearchBatch {
             results,
             progress: self.progress(),
-            throughput,
             processed_count: self.processed_count,
             total_count: self.total_count,
         }
@@ -327,21 +304,6 @@ fn build_params(
         search_range: search_range.clone(),
         condition,
     }
-}
-
-/// 現在時刻を秒で取得 (WASM / ネイティブ共通)
-#[cfg(target_arch = "wasm32")]
-fn current_time_secs() -> f64 {
-    // WASM 環境では performance.now() を使用 (ミリ秒 → 秒)
-    js_sys::Date::now() / 1000.0
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn current_time_secs() -> f64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0.0, |d| d.as_secs_f64())
 }
 
 #[cfg(test)]
