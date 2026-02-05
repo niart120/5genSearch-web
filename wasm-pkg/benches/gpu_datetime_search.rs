@@ -91,8 +91,10 @@ fn run_full_search() -> (u64, Duration) {
 
 fn bench_gpu_full_search(c: &mut Criterion) {
     // GPU 初期化テスト (ベンチマーク外)
-    let test_iterator =
-        pollster::block_on(async { GpuDatetimeSearchIterator::new(create_params()).await });
+    let test_iterator = pollster::block_on(GpuDatetimeSearchIterator::create(
+        create_context(),
+        create_target_seeds(),
+    ));
 
     if let Err(e) = test_iterator {
         eprintln!("GPU unavailable: {e}, skipping GPU benchmark");
