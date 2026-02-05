@@ -6,16 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "pnpm build:wasm && tsc -b && vite build",
-    "build:wasm": "wasm-pack build wasm-pkg --target web --out-dir ../src/wasm --release -- --features gpu && node scripts/copy-wasm.js",
+    "build:wasm": "wasm-pack build wasm-pkg --target web --out-dir ../src/wasm --release -- --features gpu && node scripts/optimize-wasm.js && node scripts/copy-wasm.js",
     "build:wasm:dev": "wasm-pack build wasm-pkg --target web --out-dir ../src/wasm --dev -- --features gpu && node scripts/copy-wasm.js",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint": "eslint . && cargo clippy -p wasm-pkg --all-targets -- -D warnings",
+    "format": "prettier --write . && cargo fmt",
+    "format:check": "prettier --check . && cargo fmt --check",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:wasm": "cd wasm-pkg && cargo test"
+    "test:wasm": "cargo test -p wasm-pkg"
   },
   "dependencies": {
     "react": "^19.2.0",
