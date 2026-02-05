@@ -78,6 +78,9 @@ importers:
       prettier:
         specifier: ^3.8.0
         version: 3.8.0
+      skills:
+        specifier: ^1.3.6
+        version: 1.3.6
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
@@ -1334,6 +1337,11 @@ packages:
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
+
+  skills@1.3.6:
+    resolution: {integrity: sha512-3YQbCLbRx5OyAxBDiyQ6GoVjyaSmYML1FObuisyxnqws+1ewEwvajpbySUNgD7s3cZKdLMjAQ/9LgTZ3yMVhTw==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -2780,6 +2788,8 @@ snapshots:
       '@polka/url': 1.0.0-next.29
       mrmime: 2.0.1
       totalist: 3.0.1
+
+  skills@1.3.6: {}
 
   source-map-js@1.2.1: {}
 
