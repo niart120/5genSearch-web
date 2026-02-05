@@ -50,11 +50,16 @@ GPU 検索経路を `DatetimeSearchContext` ベースの API に統一し、CPU/
 |----------|----------|----------|
 | `wasm-pkg/src/gpu/datetime_search/iterator.rs` | 変更 | `create()` のシグネチャ変更、組み合わせ展開ロジック追加 |
 | `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 変更 | 必要に応じて再初期化対応 |
-| `wasm-pkg/src/types/search.rs` | 変更 | `MtseedDatetimeSearchParams` を内部用に降格 |
 | `src/workers/gpu.worker.ts` | 変更 | 新 API に対応 |
-| `src/workers/types.ts` | 変更 | タスク型の更新 |
+| `src/workers/types.ts` | 変更 | GPU タスク型の追加 |
 | `src/test/integration/wasm-binding.test.ts` | 変更 | テスト更新 |
 | `src/test/integration/workers/gpu.worker.test.ts` | 変更 | テスト更新 |
+
+**変更しないファイル:**
+
+| ファイル | 理由 |
+|----------|------|
+| `wasm-pkg/src/types/search.rs` | `MtseedDatetimeSearchParams` は CPU 経路の Worker 間通信で使用されるため、公開 API として維持 |
 
 ## 3. 設計方針
 
@@ -148,7 +153,7 @@ combinations[0] で最初の Pipeline 作成
 
 ### 3.5 進捗計算
 
-全組み合わせにわたる統合進捗:
+全組み合わせにわたる統合進捗（組み合わせ別進捗は報告しない）:
 
 ```rust
 // 総処理数 = 検索範囲の秒数 × 組み合わせ数
@@ -160,6 +165,16 @@ processed_count = completed_combos * seconds_per_combo + current_pipeline.proces
 // 進捗率
 progress = processed_count as f64 / total_count as f64
 ```
+
+### 3.6 設計決定事項
+
+| 項目 | 決定内容 | 理由 |
+|------|----------|------|
+| 結果への組み合わせ情報付与 | `combinations[current_combo_idx]` を使用して `SeedOrigin` に付与 | 既存の `pipeline.condition()` と同等の動作 |
+| `time_range` フィルタ | シェーダー側で実装済み（`SearchConstants` に時刻範囲を渡す） | 追加実装不要 |
+| `MtseedDatetimeSearchParams` | 公開 API として維持 | CPU 経路の Main→Worker 間通信で必要 |
+| 進捗報告粒度 | 全体進捗のみ | UI 側の要件として十分 |
+| キャンセル後の再開 | 非サポート（キャンセル = 破棄） | リランは新規検索として実行 |
 
 ## 4. 実装仕様
 
@@ -340,13 +355,20 @@ async function runGpuSearch(
 
 ## 6. 実装チェックリスト
 
+### 6.1 Rust 側
+
 - [ ] `GpuDatetimeSearchIterator` 構造体に組み合わせ管理フィールド追加
 - [ ] `create()` のシグネチャ変更 (`DatetimeSearchContext` ベース)
 - [ ] `create()` 内で `expand_combinations()` 呼び出し
 - [ ] `next()` で組み合わせ切り替えロジック実装
+- [ ] `build_current_params()` ヘルパー関数追加
 - [ ] 進捗計算を全組み合わせ対応に修正
-- [ ] `gpu.worker.ts` を新 API に対応
-- [ ] `workers/types.ts` のタスク型更新
+- [ ] `combinations[current_combo_idx]` を使用した結果への条件付与
 - [ ] Rust ユニットテスト追加
+
+### 6.2 TypeScript 側
+
+- [ ] `gpu.worker.ts` を新 API に対応
+- [ ] `workers/types.ts` に GPU 用タスク型追加
 - [ ] TypeScript 統合テスト更新
 - [ ] 既存テストの互換性確認
