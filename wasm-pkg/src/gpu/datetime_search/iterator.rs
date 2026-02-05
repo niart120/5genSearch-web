@@ -11,8 +11,8 @@ use wasm_bindgen::prelude::*;
 
 use crate::datetime_search::expand_combinations;
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, DsConfig, MtSeed, MtseedDatetimeSearchParams,
-    SearchRangeParams, SeedOrigin, StartupCondition, TimeRangeParams,
+    DatetimeSearchContext, DsConfig, MtSeed, MtseedDatetimeSearchParams, SearchRangeParams,
+    SeedOrigin, StartupCondition, TimeRangeParams,
 };
 
 use super::pipeline::SearchPipeline;
@@ -77,7 +77,7 @@ pub struct GpuDatetimeSearchIterator {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl GpuDatetimeSearchIterator {
-    /// イテレータを作成 (async factory method) - 新 API
+    /// イテレータを作成 (複数組み合わせ対応、WASM 公開 API)
     ///
     /// `DatetimeSearchContext` から組み合わせを展開し、順次処理する。
     ///
@@ -90,7 +90,6 @@ impl GpuDatetimeSearchIterator {
     pub async fn create(
         context: DatetimeSearchContext,
         target_seeds: Vec<MtSeed>,
-        date_range: DateRangeParams,
     ) -> Result<GpuDatetimeSearchIterator, String> {
         if target_seeds.is_empty() {
             return Err("target_seeds is empty".into());
@@ -107,7 +106,7 @@ impl GpuDatetimeSearchIterator {
         let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
 
         // 検索範囲計算
-        let search_range = date_range.to_search_range();
+        let search_range = context.date_range.to_search_range();
         let seconds_per_combo = calculate_seconds_in_range(&search_range, &context.time_range);
         #[allow(clippy::cast_possible_truncation)]
         let total_count = seconds_per_combo * combinations.len() as u64;
@@ -130,40 +129,6 @@ impl GpuDatetimeSearchIterator {
             time_range: context.time_range,
             search_range,
             combinations,
-            current_combo_idx: 0,
-            pipeline: Some(pipeline),
-            pipeline_offset: 0,
-            total_count,
-            processed_count: 0,
-        })
-    }
-
-    /// イテレータを作成 (async factory method) - 旧 API (互換用)
-    ///
-    /// # Errors
-    ///
-    /// - GPU デバイスが利用不可の場合
-    /// - `target_seeds` が空の場合
-    pub async fn new(
-        params: MtseedDatetimeSearchParams,
-    ) -> Result<GpuDatetimeSearchIterator, String> {
-        if params.target_seeds.is_empty() {
-            return Err("target_seeds is empty".into());
-        }
-
-        let gpu_ctx = GpuDeviceContext::new().await?;
-        let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
-        let pipeline = SearchPipeline::new(&gpu_ctx, &params);
-        let total_count = calculate_total_count(&params);
-
-        Ok(Self {
-            gpu_ctx,
-            limits,
-            target_seeds: params.target_seeds,
-            ds: params.ds,
-            time_range: params.time_range,
-            search_range: params.search_range,
-            combinations: vec![params.condition],
             current_combo_idx: 0,
             pipeline: Some(pipeline),
             pipeline_offset: 0,
@@ -270,11 +235,6 @@ impl GpuDatetimeSearchIterator {
     }
 }
 
-/// 総処理数を計算 (単一組み合わせ用、旧 API 互換)
-fn calculate_total_count(params: &MtseedDatetimeSearchParams) -> u64 {
-    calculate_seconds_in_range(&params.search_range, &params.time_range)
-}
-
 /// 検索範囲内の有効秒数を計算
 fn calculate_seconds_in_range(
     search_range: &SearchRangeParams,
@@ -309,44 +269,11 @@ fn build_params(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, DatetimeSearchContext, DsConfig, Hardware, KeyCode, KeySpec, LcgSeed,
-        MtSeed, RomRegion, RomVersion, SearchRangeParams, StartupCondition, TimeRangeParams,
-        Timer0VCountRange,
+        DateRangeParams, DatetimeSearchContext, DsConfig, Hardware, KeySpec, LcgSeed, MtSeed,
+        RomRegion, RomVersion, TimeRangeParams, Timer0VCountRange,
     };
 
     use super::*;
-
-    fn create_test_params() -> MtseedDatetimeSearchParams {
-        MtseedDatetimeSearchParams {
-            ds: DsConfig {
-                mac: [0x00, 0x09, 0xBF, 0x12, 0x34, 0x56],
-                hardware: Hardware::DsLite,
-                version: RomVersion::Black,
-                region: RomRegion::Jpn,
-            },
-            condition: StartupCondition {
-                timer0: 0x10ED,
-                vcount: 0x5B,
-                key_code: KeyCode::NONE,
-            },
-            target_seeds: vec![MtSeed::new(0x1234_5678)],
-            time_range: TimeRangeParams {
-                hour_start: 0,
-                hour_end: 23,
-                minute_start: 0,
-                minute_end: 59,
-                second_start: 0,
-                second_end: 59,
-            },
-            search_range: SearchRangeParams {
-                start_year: 2011,
-                start_month: 1,
-                start_day: 1,
-                start_second_offset: 0,
-                range_seconds: 365 * 86400, // 1年
-            },
-        }
-    }
 
     fn create_test_context() -> DatetimeSearchContext {
         DatetimeSearchContext {
@@ -355,6 +282,14 @@ mod tests {
                 hardware: Hardware::DsLite,
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
+            },
+            date_range: DateRangeParams {
+                start_year: 2011,
+                start_month: 1,
+                start_day: 1,
+                end_year: 2011,
+                end_month: 1,
+                end_day: 1,
             },
             time_range: TimeRangeParams {
                 hour_start: 0,
@@ -375,18 +310,19 @@ mod tests {
     }
 
     #[test]
-    fn test_calculate_total_count() {
-        let params = create_test_params();
-        let total = calculate_total_count(&params);
+    fn test_calculate_seconds_in_range() {
+        let context = create_test_context();
+        let search_range = context.date_range.to_search_range();
+        let total = calculate_seconds_in_range(&search_range, &context.time_range);
 
-        // 1年 = 365日、1日あたり 86400秒
-        assert_eq!(total, 365 * 86400);
+        // 1日、1日あたり 86400秒
+        assert_eq!(total, 86400);
     }
 
     #[test]
-    fn test_calculate_total_count_with_time_range() {
-        let mut params = create_test_params();
-        params.time_range = TimeRangeParams {
+    fn test_calculate_seconds_in_range_with_time_range() {
+        let mut context = create_test_context();
+        context.time_range = TimeRangeParams {
             hour_start: 10,
             hour_end: 12, // 3時間
             minute_start: 0,
@@ -394,16 +330,19 @@ mod tests {
             second_start: 0,
             second_end: 59,
         };
-        let total = calculate_total_count(&params);
+        let search_range = context.date_range.to_search_range();
+        let total = calculate_seconds_in_range(&search_range, &context.time_range);
 
-        // 1年 = 365日、1日あたり 3時間 * 60分 * 60秒 = 10800秒
-        assert_eq!(total, 365 * 10800);
+        // 1日、1日あたり 3時間 * 60分 * 60秒 = 10800秒
+        assert_eq!(total, 10800);
     }
 
     #[test]
     fn test_iterator_creation() {
-        let params = create_test_params();
-        let result = pollster::block_on(GpuDatetimeSearchIterator::new(params));
+        let context = create_test_context();
+        let target_seeds = vec![MtSeed::new(0x1234_5678)];
+
+        let result = pollster::block_on(GpuDatetimeSearchIterator::create(context, target_seeds));
 
         // GPU が利用可能な環境でのみ成功する
         if let Ok(iter) = result {
@@ -417,10 +356,10 @@ mod tests {
 
     #[test]
     fn test_empty_target_seeds_rejected() {
-        let mut params = create_test_params();
-        params.target_seeds = vec![];
+        let context = create_test_context();
+        let target_seeds = vec![];
 
-        let result = pollster::block_on(GpuDatetimeSearchIterator::new(params));
+        let result = pollster::block_on(GpuDatetimeSearchIterator::create(context, target_seeds));
         assert!(result.is_err());
         assert_eq!(result.err().unwrap(), "target_seeds is empty");
     }
@@ -443,19 +382,21 @@ mod tests {
     #[test]
     fn test_gpu_search_finds_known_mtseed() {
         // CPU テストと同じパラメータ
-        let params = MtseedDatetimeSearchParams {
+        let context = DatetimeSearchContext {
             ds: DsConfig {
                 mac: [0x8C, 0x56, 0xC5, 0x86, 0x15, 0x28],
                 hardware: Hardware::DsLite,
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
-            condition: StartupCondition {
-                timer0: 0x0C79,
-                vcount: 0x60,
-                key_code: KeyCode::new(0x2FFF),
+            date_range: DateRangeParams {
+                start_year: 2010,
+                start_month: 9,
+                start_day: 18,
+                end_year: 2010,
+                end_month: 9,
+                end_day: 18,
             },
-            target_seeds: vec![MtSeed::new(0x32bf_6858)],
             time_range: TimeRangeParams {
                 hour_start: 18,
                 hour_end: 18,
@@ -464,24 +405,25 @@ mod tests {
                 second_start: 0,
                 second_end: 59,
             },
-            search_range: SearchRangeParams {
-                start_year: 2010,
-                start_month: 9,
-                start_day: 18,
-                start_second_offset: 0,
-                range_seconds: 86400, // 1日
-            },
+            ranges: vec![Timer0VCountRange {
+                timer0_min: 0x0C79,
+                timer0_max: 0x0C79,
+                vcount_min: 0x60,
+                vcount_max: 0x60,
+            }],
+            key_spec: KeySpec::from_buttons(vec![]),
         };
+        let target_seeds = vec![MtSeed::new(0x32bf_6858)];
 
         // GPU 検索イテレータ作成
-        let result = pollster::block_on(GpuDatetimeSearchIterator::new(params));
+        let result = pollster::block_on(GpuDatetimeSearchIterator::create(context, target_seeds));
         let Ok(mut iterator) = result else {
             eprintln!("GPU not available, skipping test");
             return;
         };
 
         // 全バッチを実行して結果を収集
-        let mut all_results = Vec::new();
+        let mut all_results: Vec<SeedOrigin> = Vec::new();
         while let Some(batch) = pollster::block_on(iterator.next()) {
             all_results.extend(batch.results);
         }
@@ -520,38 +462,6 @@ mod tests {
         }
     }
 
-    /// 新 API (`DatetimeSearchContext`) でイテレータを作成できることを確認
-    #[test]
-    fn test_create_with_context() {
-        let context = create_test_context();
-        let target_seeds = vec![MtSeed::new(0x1234_5678)];
-        let date_range = DateRangeParams {
-            start_year: 2011,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2011,
-            end_month: 1,
-            end_day: 1,
-        };
-
-        let result = pollster::block_on(GpuDatetimeSearchIterator::create(
-            context,
-            target_seeds,
-            date_range,
-        ));
-
-        // GPU が利用可能な環境でのみ成功する
-        if let Ok(iter) = result {
-            assert!(!iter.is_done());
-            #[allow(clippy::float_cmp)]
-            {
-                assert_eq!(iter.progress(), 0.0);
-            }
-            // 組み合わせは 1 つ (Timer0=0x10ED, VCount=0x5B, KeyCode=NONE)
-            assert_eq!(iter.combinations.len(), 1);
-        }
-    }
-
     /// 空の組み合わせでエラーになることを確認
     #[test]
     fn test_empty_combinations_rejected() {
@@ -559,20 +469,8 @@ mod tests {
         context.ranges = vec![]; // 空の範囲
 
         let target_seeds = vec![MtSeed::new(0x1234_5678)];
-        let date_range = DateRangeParams {
-            start_year: 2011,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2011,
-            end_month: 1,
-            end_day: 1,
-        };
 
-        let result = pollster::block_on(GpuDatetimeSearchIterator::create(
-            context,
-            target_seeds,
-            date_range,
-        ));
+        let result = pollster::block_on(GpuDatetimeSearchIterator::create(context, target_seeds));
         assert!(result.is_err());
         assert_eq!(result.err().unwrap(), "no valid combinations");
     }
@@ -590,20 +488,8 @@ mod tests {
         }];
 
         let target_seeds = vec![MtSeed::new(0x1234_5678)];
-        let date_range = DateRangeParams {
-            start_year: 2011,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2011,
-            end_month: 1,
-            end_day: 1, // 1日
-        };
 
-        let result = pollster::block_on(GpuDatetimeSearchIterator::create(
-            context,
-            target_seeds,
-            date_range,
-        ));
+        let result = pollster::block_on(GpuDatetimeSearchIterator::create(context, target_seeds));
 
         if let Ok(iter) = result {
             // 2つの組み合わせ

@@ -6,8 +6,8 @@
  */
 
 import initWasm, { GpuDatetimeSearchIterator } from '../wasm/wasm_pkg.js';
-import type { WorkerRequest, WorkerResponse } from './types';
-import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '../wasm/wasm_pkg.js';
+import type { WorkerRequest, WorkerResponse, GpuMtseedSearchTask } from './types';
+import type { GpuSearchBatch } from '../wasm/wasm_pkg.js';
 
 // WASM バイナリの絶対パス（public/wasm/ から配信）
 const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
@@ -42,14 +42,14 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
         return;
       }
 
-      // GPU Worker は mtseed-datetime のみサポート
-      if (data.task.kind === 'mtseed-datetime') {
-        await runGpuSearch(data.taskId, data.task.params);
+      // GPU Worker は gpu-mtseed のみサポート
+      if (data.task.kind === 'gpu-mtseed') {
+        await runGpuSearch(data.taskId, data.task);
       } else {
         postResponse({
           type: 'error',
           taskId: data.taskId,
-          message: `GPU Worker only supports mtseed-datetime, got: ${data.task.kind}`,
+          message: `GPU Worker only supports gpu-mtseed, got: ${data.task.kind}`,
         });
         return;
       }
@@ -95,14 +95,11 @@ async function handleInit(): Promise<void> {
  * GpuDatetimeSearchIterator を使用して AsyncIterator パターンで検索を実行。
  * 各バッチ完了時に進捗を報告し、結果を収集して返却する。
  */
-async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams): Promise<void> {
+async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<void> {
   cancelRequested = false;
 
   try {
-    // 旧 API: MtseedDatetimeSearchParams を直接渡す
-    // Note: Rust 側では new() として定義されているが、wasm_bindgen は create として export している
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new() は TypeScript 型定義に含まれていない後方互換 API
-    currentIterator = await (GpuDatetimeSearchIterator as any).new(params);
+    currentIterator = await GpuDatetimeSearchIterator.create(task.context, task.targetSeeds);
 
     await executeSearchLoop(taskId);
   } catch (err) {
@@ -136,7 +133,6 @@ async function executeSearchLoop(taskId: string): Promise<void> {
 
   let batch: GpuSearchBatch | undefined;
   const startTime = performance.now();
-  let lastProgressTime = startTime;
 
   while (!cancelRequested && !currentIterator.is_done) {
     batch = await currentIterator.next();
@@ -147,19 +143,23 @@ async function executeSearchLoop(taskId: string): Promise<void> {
 
     const now = performance.now();
     const elapsedMs = now - startTime;
+    const processedCount = Number(batch.processed_count);
+
+    // スループット計算 (items/sec)
+    const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
 
     // 進捗報告
     postResponse({
       type: 'progress',
       taskId,
       progress: {
-        processed: Number(batch.processed_count),
+        processed: processedCount,
         total: Number(batch.total_count),
         percentage: batch.progress * 100,
         elapsedMs,
         estimatedRemainingMs:
           batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
-        throughput: batch.throughput,
+        throughput,
       },
     });
 
@@ -172,13 +172,7 @@ async function executeSearchLoop(taskId: string): Promise<void> {
         results: batch.results,
       });
     }
-
-    lastProgressTime = now;
   }
-
-  // キャンセルされた場合もエラーではなく完了として扱う
-  // (void to suppress unused variable warning)
-  void lastProgressTime;
 
   // 完了
   postResponse({

@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 use wasm_bindgen::prelude::*;
 
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, MtSeed, MtseedDatetimeSearchBatch,
-    MtseedDatetimeSearchParams, SeedOrigin, StartupCondition,
+    DatetimeSearchContext, MtSeed, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams,
+    SeedOrigin, StartupCondition,
 };
 
 use super::base::DatetimeHashGenerator;
@@ -113,14 +113,13 @@ impl MtseedDatetimeSearcher {
 
 /// タスク生成関数
 ///
-/// `DatetimeSearchContext` と `DateRangeParams` から、
+/// `DatetimeSearchContext` から、
 /// 組み合わせ × 時間チャンク のクロス積でタスクを生成する。
 /// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
 ///
 /// # Arguments
-/// - `context`: 検索コンテキスト (Timer0/VCount/KeyCode 範囲)
+/// - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyCode 範囲)
 /// - `target_seeds`: 検索対象の MT Seed
-/// - `date_range`: 日付範囲 (開始日〜終了日)
 /// - `worker_count`: Worker 数
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
@@ -128,10 +127,9 @@ impl MtseedDatetimeSearcher {
 pub fn generate_mtseed_search_tasks(
     context: DatetimeSearchContext,
     target_seeds: Vec<MtSeed>,
-    date_range: DateRangeParams,
     worker_count: u32,
 ) -> Vec<MtseedDatetimeSearchParams> {
-    let search_range = date_range.to_search_range();
+    let search_range = context.date_range.to_search_range();
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
 
@@ -337,6 +335,14 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
+            date_range: DateRangeParams {
+                start_year: 2023,
+                start_month: 1,
+                start_day: 1,
+                end_year: 2023,
+                end_month: 1,
+                end_day: 1,
+            },
             time_range: TimeRangeParams {
                 hour_start: 0,
                 hour_end: 0,
@@ -349,17 +355,7 @@ mod tests {
             key_spec: KeySpec::from_buttons(vec![DsButton::A, DsButton::B]), // 4 combinations
         };
 
-        let date_range = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 1,
-            end_day: 1,
-        };
-
-        let tasks =
-            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], date_range, 4);
+        let tasks = generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], 4);
 
         // 4 combinations * 1 time chunk = 4 tasks
         // (worker_count = 4, combo_count = 4 → time_chunks = 1)
@@ -375,6 +371,14 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
+            date_range: DateRangeParams {
+                start_year: 2023,
+                start_month: 1,
+                start_day: 1,
+                end_year: 2023,
+                end_month: 1,
+                end_day: 1,
+            },
             time_range: TimeRangeParams {
                 hour_start: 0,
                 hour_end: 23,
@@ -387,17 +391,7 @@ mod tests {
             key_spec: KeySpec::from_buttons(vec![]), // 1 combination (no buttons)
         };
 
-        let date_range = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 1,
-            end_day: 1,
-        };
-
-        let tasks =
-            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], date_range, 4);
+        let tasks = generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], 4);
 
         // 1 combination * 4 time chunks = 4 tasks
         // (worker_count = 4, combo_count = 1 → time_chunks = 4)
@@ -479,6 +473,14 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
+            date_range: DateRangeParams {
+                start_year: 2010,
+                start_month: 9,
+                start_day: 18,
+                end_year: 2010,
+                end_month: 9,
+                end_day: 18,
+            },
             time_range: TimeRangeParams {
                 hour_start: 0,
                 hour_end: 23,
@@ -491,17 +493,8 @@ mod tests {
             key_spec: KeySpec::from_buttons(vec![]), // 1 combination
         };
 
-        let date_range = DateRangeParams {
-            start_year: 2010,
-            start_month: 9,
-            start_day: 18,
-            end_year: 2010,
-            end_month: 9,
-            end_day: 18,
-        };
-
         // 4 Worker で時間分割 (組み合わせ数 = 1 なので 4 チャンク)
-        let tasks = generate_mtseed_search_tasks(context, vec![expected_mt_seed], date_range, 4);
+        let tasks = generate_mtseed_search_tasks(context, vec![expected_mt_seed], 4);
 
         assert_eq!(tasks.len(), 4);
 

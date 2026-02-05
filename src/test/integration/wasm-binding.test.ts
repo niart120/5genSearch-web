@@ -12,7 +12,6 @@ import init, {
 import type {
   MtseedDatetimeSearchParams,
   DatetimeSearchContext,
-  DateRangeParams,
   MtSeed,
 } from '../../wasm/wasm_pkg.js';
 
@@ -150,7 +149,7 @@ describe('WASM Binding Verification', () => {
         return;
       }
 
-      // 新 API: DatetimeSearchContext + targetSeeds + DateRangeParams
+      // 新 API: DatetimeSearchContext + targetSeeds
       const context: DatetimeSearchContext = {
         ds: {
           mac: [0x8c, 0x56, 0xc5, 0x86, 0x15, 0x28] as [
@@ -165,6 +164,22 @@ describe('WASM Binding Verification', () => {
           version: 'Black',
           region: 'Jpn',
         },
+        date_range: {
+          start_year: 2010,
+          start_month: 9,
+          start_day: 18,
+          end_year: 2010,
+          end_month: 9,
+          end_day: 18,
+        },
+        time_range: {
+          hour_start: 18,
+          hour_end: 18,
+          minute_start: 0,
+          minute_end: 30,
+          second_start: 0,
+          second_end: 59,
+        },
         ranges: [
           {
             timer0_min: 0x0c79,
@@ -174,29 +189,12 @@ describe('WASM Binding Verification', () => {
           },
         ],
         key_spec: { available_buttons: [] },
-        time_range: {
-          hour_start: 18,
-          hour_end: 18,
-          minute_start: 0,
-          minute_end: 30,
-          second_start: 0,
-          second_end: 59,
-        },
       };
 
       const targetSeeds: MtSeed[] = [0x32bf6858];
 
-      const dateRange: DateRangeParams = {
-        start_year: 2010,
-        start_month: 9,
-        start_day: 18,
-        end_year: 2010,
-        end_month: 9,
-        end_day: 18,
-      };
-
       // GPU 検索イテレータを直接作成（新 API）
-      const iterator = await GpuDatetimeSearchIterator.create(context, targetSeeds, dateRange);
+      const iterator = await GpuDatetimeSearchIterator.create(context, targetSeeds);
       expect(iterator.is_done).toBe(false);
 
       // 全バッチを実行して結果を収集

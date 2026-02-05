@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::generation::flows::generator::EggGenerator;
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
+    DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
     EggDatetimeSearchResult, EggFilter, EggGenerationParams, GenerationConfig, SeedOrigin,
     StartupCondition,
 };
@@ -161,13 +161,12 @@ impl EggDatetimeSearcher {
 #[allow(clippy::cast_possible_truncation)]
 pub fn generate_egg_search_tasks(
     context: DatetimeSearchContext,
-    date_range: DateRangeParams,
     egg_params: EggGenerationParams,
     gen_config: GenerationConfig,
     filter: Option<EggFilter>,
     worker_count: u32,
 ) -> Vec<EggDatetimeSearchParams> {
-    let search_range = date_range.to_search_range();
+    let search_range = context.date_range.to_search_range();
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
 
@@ -286,6 +285,14 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
+            date_range: DateRangeParams {
+                start_year: 2023,
+                start_month: 1,
+                start_day: 1,
+                end_year: 2023,
+                end_month: 1,
+                end_day: 1,
+            },
             time_range: TimeRangeParams {
                 hour_start: 0,
                 hour_end: 23,
@@ -301,15 +308,6 @@ mod tests {
                 vcount_max: 0x5A,
             }],
             key_spec: KeySpec::from_buttons(vec![]),
-        };
-
-        let date_range = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 1,
-            end_day: 1,
         };
 
         let egg_params = EggGenerationParams {
@@ -340,7 +338,7 @@ mod tests {
         };
 
         // worker_count = 1, combo_count = 1 → 1 task
-        let tasks = generate_egg_search_tasks(context, date_range, egg_params, gen_config, None, 1);
+        let tasks = generate_egg_search_tasks(context, egg_params, gen_config, None, 1);
 
         // 1 timer0 × 1 vcount × 1 key × 1 time chunk = 1 task
         assert_eq!(tasks.len(), 1);

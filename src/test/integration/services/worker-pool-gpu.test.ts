@@ -105,10 +105,17 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
     // 2025年8月20日を含む範囲で検索 (期待値の1つ目がヒットするはず)
     const tasks: SearchTask[] = [
       {
-        kind: 'mtseed-datetime',
-        params: {
-          target_seeds: [TARGET_SEED],
+        kind: 'gpu-mtseed',
+        context: {
           ds: createTestDsConfig(),
+          date_range: {
+            start_year: 2025,
+            start_month: 8,
+            start_day: 20,
+            end_year: 2025,
+            end_month: 8,
+            end_day: 20,
+          },
           time_range: {
             hour_start: 0,
             hour_end: 23,
@@ -117,15 +124,17 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
             second_start: 0,
             second_end: 59,
           },
-          search_range: {
-            start_year: 2025,
-            start_month: 8,
-            start_day: 20,
-            start_second_offset: 0,
-            range_seconds: 86400, // 1日
-          },
-          condition: createTestStartupCondition(),
+          ranges: [
+            {
+              timer0_min: 0x0c79,
+              timer0_max: 0x0c79,
+              vcount_min: 0x60,
+              vcount_max: 0x60,
+            },
+          ],
+          key_spec: { available_buttons: [] },
         },
+        targetSeeds: [TARGET_SEED],
       },
     ];
 
@@ -182,10 +191,17 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
 
     const tasks: SearchTask[] = [
       {
-        kind: 'mtseed-datetime',
-        params: {
-          target_seeds: [TARGET_SEED],
+        kind: 'gpu-mtseed',
+        context: {
           ds: createTestDsConfig(),
+          date_range: {
+            start_year: 2025,
+            start_month: 8,
+            start_day: 20,
+            end_year: 2025,
+            end_month: 8,
+            end_day: 26,
+          },
           time_range: {
             hour_start: 0,
             hour_end: 23,
@@ -194,15 +210,17 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
             second_start: 0,
             second_end: 59,
           },
-          search_range: {
-            start_year: 2025,
-            start_month: 8,
-            start_day: 20,
-            start_second_offset: 0,
-            range_seconds: 86400 * 7, // 1週間
-          },
-          condition: createTestStartupCondition(),
+          ranges: [
+            {
+              timer0_min: 0x0c79,
+              timer0_max: 0x0c79,
+              vcount_min: 0x60,
+              vcount_max: 0x60,
+            },
+          ],
+          key_spec: { available_buttons: [] },
         },
+        targetSeeds: [TARGET_SEED],
       },
     ];
 
