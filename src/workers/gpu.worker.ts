@@ -7,7 +7,13 @@
 
 import initWasm, { GpuDatetimeSearchIterator } from '../wasm/wasm_pkg.js';
 import type { WorkerRequest, WorkerResponse } from './types';
-import type { MtseedDatetimeSearchParams, GpuSearchBatch } from '../wasm/wasm_pkg.js';
+import type {
+  MtseedDatetimeSearchParams,
+  GpuSearchBatch,
+  DatetimeSearchContext,
+  DateRangeParams,
+  MtSeed,
+} from '../wasm/wasm_pkg.js';
 
 // WASM バイナリの絶対パス（public/wasm/ から配信）
 const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
@@ -42,17 +48,26 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
         return;
       }
 
-      // GPU Worker は mtseed-datetime のみサポート
-      if (data.task.kind !== 'mtseed-datetime') {
+      // GPU Worker は mtseed-datetime または gpu-mtseed-datetime のみサポート
+      if (data.task.kind === 'gpu-mtseed-datetime') {
+        // 新 API: DatetimeSearchContext ベース
+        await runGpuSearchWithContext(
+          data.taskId,
+          data.task.context,
+          data.task.targetSeeds,
+          data.task.dateRange
+        );
+      } else if (data.task.kind === 'mtseed-datetime') {
+        // 旧 API: MtseedDatetimeSearchParams ベース (互換性維持)
+        await runGpuSearch(data.taskId, data.task.params);
+      } else {
         postResponse({
           type: 'error',
           taskId: data.taskId,
-          message: `GPU Worker only supports mtseed-datetime, got: ${data.task.kind}`,
+          message: `GPU Worker only supports mtseed-datetime or gpu-mtseed-datetime, got: ${data.task.kind}`,
         });
         return;
       }
-
-      await runGpuSearch(data.taskId, data.task.params);
       break;
 
     case 'cancel':
@@ -90,70 +105,24 @@ async function handleInit(): Promise<void> {
 // =============================================================================
 
 /**
- * GPU 検索実行
+ * GPU 検索実行 (新 API)
  *
- * GpuDatetimeSearchIterator を使用して AsyncIterator パターンで検索を実行。
- * 各バッチ完了時に進捗を報告し、結果を収集して返却する。
+ * DatetimeSearchContext ベースの API を使用。
+ * 複数の組み合わせ (Timer0 × VCount × KeyCode) を GPU 側で順次処理する。
  */
-async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams): Promise<void> {
+async function runGpuSearchWithContext(
+  taskId: string,
+  context: DatetimeSearchContext,
+  targetSeeds: MtSeed[],
+  dateRange: DateRangeParams
+): Promise<void> {
   cancelRequested = false;
 
   try {
-    // GpuDatetimeSearchIterator.create() は async factory method
-    currentIterator = await GpuDatetimeSearchIterator.create(params);
+    // GpuDatetimeSearchIterator.create() は新 API
+    currentIterator = await GpuDatetimeSearchIterator.create(context, targetSeeds, dateRange);
 
-    // 結果を収集
-    let batch: GpuSearchBatch | undefined;
-    const startTime = performance.now();
-    let lastProgressTime = startTime;
-
-    while (!cancelRequested && !currentIterator.is_done) {
-      batch = await currentIterator.next();
-
-      if (!batch) {
-        break;
-      }
-
-      const now = performance.now();
-      const elapsedMs = now - startTime;
-
-      // 進捗報告
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: {
-          processed: Number(batch.processed_count),
-          total: Number(batch.total_count),
-          percentage: batch.progress * 100,
-          elapsedMs,
-          estimatedRemainingMs:
-            batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
-          throughput: batch.throughput,
-        },
-      });
-
-      // 中間結果を報告
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'seed-origin',
-          results: batch.results,
-        });
-      }
-
-      lastProgressTime = now;
-    }
-
-    // キャンセルされた場合もエラーではなく完了として扱う
-    // (void to suppress unused variable warning)
-    void lastProgressTime;
-
-    // 完了
-    postResponse({
-      type: 'done',
-      taskId,
-    });
+    await executeSearchLoop(taskId);
   } catch (err) {
     postResponse({
       type: 'error',
@@ -167,6 +136,99 @@ async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams):
       currentIterator = null;
     }
   }
+}
+
+/**
+ * GPU 検索実行 (旧 API - 互換性維持)
+ *
+ * GpuDatetimeSearchIterator を使用して AsyncIterator パターンで検索を実行。
+ * 各バッチ完了時に進捗を報告し、結果を収集して返却する。
+ */
+async function runGpuSearch(taskId: string, params: MtseedDatetimeSearchParams): Promise<void> {
+  cancelRequested = false;
+
+  try {
+    // 旧 API: MtseedDatetimeSearchParams を直接渡す
+    // wasm_bindgen の create(params) は JS からは引数1つで呼ばれる (旧シグネチャ)
+    // Note: Rust 側では new() として定義されているが、wasm_bindgen は create として export している
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new() は TypeScript 型定義に含まれていない後方互換 API
+    currentIterator = await (GpuDatetimeSearchIterator as any).new(params);
+
+    await executeSearchLoop(taskId);
+  } catch (err) {
+    postResponse({
+      type: 'error',
+      taskId,
+      message: err instanceof Error ? err.message : String(err),
+    });
+  } finally {
+    // リソースを確実に解放
+    if (currentIterator) {
+      currentIterator.free();
+      currentIterator = null;
+    }
+  }
+}
+
+/**
+ * 検索ループ実行 (共通処理)
+ */
+async function executeSearchLoop(taskId: string): Promise<void> {
+  if (!currentIterator) {
+    return;
+  }
+
+  let batch: GpuSearchBatch | undefined;
+  const startTime = performance.now();
+  let lastProgressTime = startTime;
+
+  while (!cancelRequested && !currentIterator.is_done) {
+    batch = await currentIterator.next();
+
+    if (!batch) {
+      break;
+    }
+
+    const now = performance.now();
+    const elapsedMs = now - startTime;
+
+    // 進捗報告
+    postResponse({
+      type: 'progress',
+      taskId,
+      progress: {
+        processed: Number(batch.processed_count),
+        total: Number(batch.total_count),
+        percentage: batch.progress * 100,
+        elapsedMs,
+        estimatedRemainingMs:
+          batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
+        throughput: batch.throughput,
+      },
+    });
+
+    // 中間結果を報告
+    if (batch.results.length > 0) {
+      postResponse({
+        type: 'result',
+        taskId,
+        resultType: 'seed-origin',
+        results: batch.results,
+      });
+    }
+
+    lastProgressTime = now;
+  }
+
+  // キャンセルされた場合もエラーではなく完了として扱う
+  // (void to suppress unused variable warning)
+  void lastProgressTime;
+
+  // 完了
+  postResponse({
+    type: 'done',
+    taskId,
+  });
 }
 
 function postResponse(response: WorkerResponse): void {

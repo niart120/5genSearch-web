@@ -216,3 +216,45 @@ export function createTestStartupCondition() {
     key_code: 0x2fff,
   };
 }
+
+/**
+ * テスト用の DatetimeSearchContext を作成
+ */
+export function createTestDatetimeSearchContext() {
+  return {
+    ds: createTestDsConfig(),
+    time_range: createTestTimeRange(),
+    ranges: [
+      {
+        timer0_min: 0x0c79,
+        timer0_max: 0x0c79,
+        vcount_min: 0x60,
+        vcount_max: 0x60,
+      },
+    ],
+    key_spec: {
+      available_buttons: [],
+    },
+  };
+}
+
+/**
+ * テスト用の DateRangeParams を作成
+ */
+export function createTestDateRange(
+  startYear: number,
+  startMonth: number,
+  startDay: number,
+  endYear: number,
+  endMonth: number,
+  endDay: number
+) {
+  return {
+    start_year: startYear,
+    start_month: startMonth,
+    start_day: startDay,
+    end_year: endYear,
+    end_month: endMonth,
+    end_day: endDay,
+  };
+}

@@ -10,7 +10,12 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import type { WorkerRequest, WorkerResponse, ProgressInfo } from '../../../workers/types';
 import type { SeedOrigin } from '../../../wasm/wasm_pkg.js';
-import { createTestDsConfig, createTestStartupCondition } from '../helpers/worker-test-utils';
+import {
+  createTestDsConfig,
+  createTestStartupCondition,
+  createTestDatetimeSearchContext,
+  createTestDateRange,
+} from '../helpers/worker-test-utils';
 
 // =============================================================================
 // Test Constants
@@ -520,4 +525,79 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     const errorMessage = await errorPromise;
     expect(errorMessage).toContain('not initialized');
   });
+
+  // ---------------------------------------------------------------------------
+  // 4.2.1 新 API (DatetimeSearchContext) テスト
+  // ---------------------------------------------------------------------------
+  it('should execute search with new DatetimeSearchContext API', async (ctx) => {
+    if (!gpuDeviceAvailable) {
+      ctx.skip();
+      return;
+    }
+
+    worker = createGpuWorker();
+    await initializeGpuWorker(worker);
+
+    // CPU テストと同じ期待値を使用 (2010/09/18 18:13:11)
+    const expectedMtSeed = 0x32bf6858;
+
+    const results: SeedOrigin[] = [];
+    const progressHistory: ProgressInfo[] = [];
+
+    await new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Search timeout'));
+      }, 60000);
+
+      worker!.onmessage = (e: MessageEvent<WorkerResponse>) => {
+        switch (e.data.type) {
+          case 'progress':
+            progressHistory.push(e.data.progress);
+            break;
+
+          case 'result':
+            if (e.data.resultType === 'seed-origin') {
+              results.push(...e.data.results);
+            }
+            break;
+
+          case 'done':
+            clearTimeout(timeoutId);
+            resolve();
+            break;
+
+          case 'error':
+            clearTimeout(timeoutId);
+            reject(new Error(e.data.message));
+            break;
+        }
+      };
+
+      const request: WorkerRequest = {
+        type: 'start',
+        taskId: 'test-new-api',
+        task: {
+          kind: 'gpu-mtseed-datetime',
+          context: createTestDatetimeSearchContext(),
+          targetSeeds: [expectedMtSeed],
+          dateRange: createTestDateRange(2010, 9, 18, 2010, 9, 18),
+        },
+      };
+
+      worker!.postMessage(request);
+    });
+
+    // 結果が見つかること
+    expect(results.length).toBeGreaterThan(0);
+
+    // 期待する MT Seed が含まれること
+    const found = results.find((r) => {
+      if ('Startup' in r) {
+        return r.Startup.mt_seed === expectedMtSeed;
+      }
+      return false;
+    });
+
+    expect(found).toBeDefined();
+  }, 60000);
 });

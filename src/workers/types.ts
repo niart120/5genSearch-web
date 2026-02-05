@@ -10,6 +10,9 @@ import type {
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
   TrainerInfoSearchParams,
+  DatetimeSearchContext,
+  DateRangeParams,
+  MtSeed,
   SeedOrigin,
   MtseedResult,
   EggDatetimeSearchResult,
@@ -200,13 +203,27 @@ export interface TrainerInfoSearchTask {
 }
 
 /**
+ * GPU MT Seed 起動時刻検索タスク (新 API)
+ *
+ * DatetimeSearchContext ベースの API を使用。
+ * 複数の組み合わせ (Timer0 × VCount × KeyCode) を GPU 側で順次処理する。
+ */
+export interface GpuMtseedDatetimeSearchTask {
+  kind: 'gpu-mtseed-datetime';
+  context: DatetimeSearchContext;
+  targetSeeds: MtSeed[];
+  dateRange: DateRangeParams;
+}
+
+/**
  * 検索タスク (Union)
  */
 export type SearchTask =
   | EggDatetimeSearchTask
   | MtseedDatetimeSearchTask
   | MtseedSearchTask
-  | TrainerInfoSearchTask;
+  | TrainerInfoSearchTask
+  | GpuMtseedDatetimeSearchTask;
 
 // =============================================================================
 // Search Result Type Mapping

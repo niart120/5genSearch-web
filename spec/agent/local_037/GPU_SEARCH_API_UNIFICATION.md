@@ -357,18 +357,18 @@ async function runGpuSearch(
 
 ### 6.1 Rust 側
 
-- [ ] `GpuDatetimeSearchIterator` 構造体に組み合わせ管理フィールド追加
-- [ ] `create()` のシグネチャ変更 (`DatetimeSearchContext` ベース)
-- [ ] `create()` 内で `expand_combinations()` 呼び出し
-- [ ] `next()` で組み合わせ切り替えロジック実装
-- [ ] `build_current_params()` ヘルパー関数追加
-- [ ] 進捗計算を全組み合わせ対応に修正
-- [ ] `combinations[current_combo_idx]` を使用した結果への条件付与
-- [ ] Rust ユニットテスト追加
+- [x] `GpuDatetimeSearchIterator` 構造体に組み合わせ管理フィールド追加
+- [x] `create()` のシグネチャ変更 (`DatetimeSearchContext` ベース)
+- [x] `create()` 内で `expand_combinations()` 呼び出し
+- [x] `next()` で組み合わせ切り替えロジック実装
+- [x] `build_current_params()` ヘルパー関数追加
+- [x] 進捗計算を全組み合わせ対応に修正
+- [x] `combinations[current_combo_idx]` を使用した結果への条件付与
+- [x] Rust ユニットテスト追加
 
 ### 6.2 TypeScript 側
 
-- [ ] `gpu.worker.ts` を新 API に対応
-- [ ] `workers/types.ts` に GPU 用タスク型追加
-- [ ] TypeScript 統合テスト更新
-- [ ] 既存テストの互換性確認
+- [x] `gpu.worker.ts` を新 API に対応
+- [x] `workers/types.ts` に GPU 用タスク型追加
+- [x] TypeScript 統合テスト更新
+- [x] 既存テストの互換性確認
