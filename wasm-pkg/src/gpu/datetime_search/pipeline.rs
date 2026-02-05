@@ -34,7 +34,8 @@ pub struct SearchPipeline {
     limits: SearchJobLimits,
     /// 検索定数 (シェーダー用)
     search_constants: SearchConstants,
-    /// 起動条件 (結果復元用)
+    /// 起動条件 (結果復元用) - 後方互換性のため維持
+    #[allow(dead_code)]
     condition: StartupCondition,
 }
 
@@ -538,7 +539,8 @@ impl SearchPipeline {
         }
     }
 
-    /// 起動条件を取得
+    /// 起動条件を取得 - 後方互換性のため維持
+    #[allow(dead_code)]
     pub fn condition(&self) -> StartupCondition {
         self.condition
     }

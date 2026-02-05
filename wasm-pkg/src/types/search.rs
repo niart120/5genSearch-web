@@ -145,6 +145,8 @@ impl DateRangeParams {
 pub struct DatetimeSearchContext {
     /// DS 設定
     pub ds: DsConfig,
+    /// 日付範囲 (開始日〜終了日)
+    pub date_range: DateRangeParams,
     /// 1日内の時刻範囲
     pub time_range: TimeRangeParams,
     /// Timer0/VCount 範囲 (複数指定可能)

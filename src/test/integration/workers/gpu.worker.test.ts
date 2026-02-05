@@ -99,7 +99,9 @@ async function runGpuSearch(
     startYear: number;
     startMonth: number;
     startDay: number;
-    rangeSeconds: number;
+    endYear: number;
+    endMonth: number;
+    endDay: number;
   },
   timeout = 120000
 ): Promise<{
@@ -155,10 +157,17 @@ async function runGpuSearch(
       type: 'start',
       taskId: 'test-gpu-search',
       task: {
-        kind: 'mtseed-datetime',
-        params: {
-          target_seeds: params.target_seeds,
+        kind: 'gpu-mtseed',
+        context: {
           ds: createTestDsConfig(),
+          date_range: {
+            start_year: params.startYear,
+            start_month: params.startMonth,
+            start_day: params.startDay,
+            end_year: params.endYear,
+            end_month: params.endMonth,
+            end_day: params.endDay,
+          },
           time_range: {
             hour_start: 0,
             hour_end: 23,
@@ -167,15 +176,17 @@ async function runGpuSearch(
             second_start: 0,
             second_end: 59,
           },
-          search_range: {
-            start_year: params.startYear,
-            start_month: params.startMonth,
-            start_day: params.startDay,
-            start_second_offset: 0,
-            range_seconds: params.rangeSeconds,
-          },
-          condition: createTestStartupCondition(),
+          ranges: [
+            {
+              timer0_min: 0x0c79,
+              timer0_max: 0x0c79,
+              vcount_min: 0x60,
+              vcount_max: 0x60,
+            },
+          ],
+          key_spec: { available_buttons: [] },
         },
+        targetSeeds: params.target_seeds,
       },
     };
 
@@ -270,7 +281,9 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
       startYear: 2010,
       startMonth: 9,
       startDay: 18,
-      rangeSeconds: 86400, // 1日
+      endYear: 2010,
+      endMonth: 9,
+      endDay: 18,
     });
 
     // 結果が見つかること
@@ -317,7 +330,9 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
       startYear: 2025,
       startMonth: 8,
       startDay: 20,
-      rangeSeconds: 86400 * 7, // 1週間
+      endYear: 2025,
+      endMonth: 8,
+      endDay: 26,
     });
 
     // 進捗が報告されること
@@ -467,7 +482,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     worker.postMessage(request);
 
     const errorMessage = await errorPromise;
-    expect(errorMessage).toContain('mtseed-datetime');
+    expect(errorMessage).toContain('gpu-mtseed');
   });
 
   it('should return error when WASM is not initialized', async () => {
@@ -520,4 +535,6 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     const errorMessage = await errorPromise;
     expect(errorMessage).toContain('not initialized');
   });
+
+  // ---------------------------------------------------------------------------
 });

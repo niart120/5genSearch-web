@@ -6,9 +6,9 @@ use wasm_bindgen::prelude::*;
 
 use crate::core::offset::calculate_trainer_info;
 use crate::types::{
-    DateRangeParams, DatetimeSearchContext, DsConfig, GameStartConfig, SeedOrigin, ShinyType,
-    StartMode, StartupCondition, TrainerInfoFilter, TrainerInfoSearchBatch,
-    TrainerInfoSearchParams, TrainerInfoSearchResult,
+    DatetimeSearchContext, DsConfig, GameStartConfig, SeedOrigin, ShinyType, StartMode,
+    StartupCondition, TrainerInfoFilter, TrainerInfoSearchBatch, TrainerInfoSearchParams,
+    TrainerInfoSearchResult,
 };
 
 use super::base::DatetimeHashGenerator;
@@ -142,15 +142,14 @@ impl TrainerInfoSearcher {
 
 /// 検索タスクを生成
 ///
-/// `DatetimeSearchContext` と `DateRangeParams` から、
+/// `DatetimeSearchContext` から、
 /// 組み合わせ × 時間チャンク のクロス積でタスクを生成する。
 /// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
 ///
 /// # Arguments
-/// - `context`: 検索コンテキスト (Timer0/VCount/KeyCode 範囲)
+/// - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyCode 範囲)
 /// - `filter`: 検索フィルタ
 /// - `game_start`: 起動設定
-/// - `date_range`: 日付範囲 (開始日〜終了日)
 /// - `worker_count`: Worker 数
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
@@ -159,10 +158,9 @@ pub fn generate_trainer_info_search_tasks(
     context: DatetimeSearchContext,
     filter: TrainerInfoFilter,
     game_start: GameStartConfig,
-    date_range: DateRangeParams,
     worker_count: u32,
 ) -> Vec<TrainerInfoSearchParams> {
-    let search_range = date_range.to_search_range();
+    let search_range = context.date_range.to_search_range();
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
 
@@ -351,8 +349,17 @@ mod tests {
             second_start: 0,
             second_end: 59,
         };
+        let date_range = DateRangeParams {
+            start_year: 2023,
+            start_month: 1,
+            start_day: 1,
+            end_year: 2023,
+            end_month: 1,
+            end_day: 1,
+        };
         let context = DatetimeSearchContext {
             ds: ds.clone(),
+            date_range,
             time_range: time_range.clone(),
             ranges: vec![Timer0VCountRange {
                 timer0_min: 0x0C79,
@@ -366,16 +373,8 @@ mod tests {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
         };
-        let date_range = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 1,
-            end_day: 1,
-        };
 
-        let tasks = generate_trainer_info_search_tasks(context, filter, game_start, date_range, 2);
+        let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2);
 
         // Timer0: 2パターン × VCount: 1パターン × KeyCode: 1パターン × time_chunks: 1 = 2タスク
         // (worker_count = 2, combo_count = 2 → time_chunks = 1)

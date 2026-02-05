@@ -6,11 +6,13 @@
  */
 
 import type {
+  DatetimeSearchContext,
   EggDatetimeSearchParams,
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
   TrainerInfoSearchParams,
   SeedOrigin,
+  MtSeed,
   MtseedResult,
   EggDatetimeSearchResult,
   TrainerInfoSearchResult,
@@ -184,6 +186,17 @@ export interface MtseedDatetimeSearchTask {
 }
 
 /**
+ * GPU MT Seed 起動時刻検索タスク
+ *
+ * GPU Worker で使用する。DatetimeSearchContext と target_seeds を直接受け取る。
+ */
+export interface GpuMtseedSearchTask {
+  kind: 'gpu-mtseed';
+  context: DatetimeSearchContext;
+  targetSeeds: MtSeed[];
+}
+
+/**
  * MT Seed 検索タスク (IV フィルタ)
  */
 export interface MtseedSearchTask {
@@ -205,6 +218,7 @@ export interface TrainerInfoSearchTask {
 export type SearchTask =
   | EggDatetimeSearchTask
   | MtseedDatetimeSearchTask
+  | GpuMtseedSearchTask
   | MtseedSearchTask
   | TrainerInfoSearchTask;
 
@@ -219,8 +233,10 @@ export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-date
   ? EggDatetimeSearchResult[]
   : T extends 'mtseed-datetime'
     ? SeedOrigin[]
-    : T extends 'mtseed'
-      ? MtseedResult[]
-      : T extends 'trainer-info'
-        ? TrainerInfoSearchResult[]
-        : never;
+    : T extends 'gpu-mtseed'
+      ? SeedOrigin[]
+      : T extends 'mtseed'
+        ? MtseedResult[]
+        : T extends 'trainer-info'
+          ? TrainerInfoSearchResult[]
+          : never;

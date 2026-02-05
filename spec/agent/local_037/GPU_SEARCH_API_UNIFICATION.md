@@ -10,7 +10,8 @@ GPU 検索経路を `DatetimeSearchContext` ベースの API に統一し、CPU/
 
 | 用語 | 説明 |
 |------|------|
-| `DatetimeSearchContext` | UI からの検索パラメータ (DS設定、時刻範囲、Timer0/VCount範囲、KeySpec) |
+| `DatetimeSearchContext` | UI からの検索パラメータ (DS設定、日付範囲、時刻範囲、Timer0/VCount範囲、KeySpec) |
+| `DateRangeParams` | 開始日〜終了日を指定する日付範囲 (`DatetimeSearchContext` 内に統合) |
 | `KeySpec` | 利用可能なボタンを指定し、全組み合わせを探索するための仕様 |
 | `StartupCondition` | 単一の起動条件 (Timer0, VCount, KeyCode) |
 | `MtseedDatetimeSearchParams` | 単一組み合わせの検索パラメータ (現在の GPU 入力型) |
@@ -48,30 +49,26 @@ GPU 検索経路を `DatetimeSearchContext` ベースの API に統一し、CPU/
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/gpu/datetime_search/iterator.rs` | 変更 | `create()` のシグネチャ変更、組み合わせ展開ロジック追加 |
-| `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 変更 | 必要に応じて再初期化対応 |
-| `wasm-pkg/src/types/search.rs` | 変更 | `MtseedDatetimeSearchParams` を内部用に降格 |
-| `src/workers/gpu.worker.ts` | 変更 | 新 API に対応 |
-| `src/workers/types.ts` | 変更 | タスク型の更新 |
+| `wasm-pkg/src/types/search.rs` | 変更 | `DatetimeSearchContext` に `date_range` フィールドを追加 |
+| `wasm-pkg/src/datetime_search/mtseed.rs` | 変更 | `generate_mtseed_search_tasks()` から `date_range` パラメータを削除 |
+| `wasm-pkg/src/datetime_search/egg.rs` | 変更 | `generate_egg_search_tasks()` から `date_range` パラメータを削除 |
+| `wasm-pkg/src/datetime_search/trainer_info.rs` | 変更 | `generate_trainer_info_search_tasks()` から `date_range` パラメータを削除 |
+| `wasm-pkg/src/gpu/datetime_search/iterator.rs` | 変更 | `create()` のシグネチャ変更、`new()` API 削除、組み合わせ展開ロジック追加 |
+| `wasm-pkg/benches/gpu_datetime_search.rs` | 変更 | ベンチマークを `create()` API に更新 |
+| `src/workers/gpu.worker.ts` | 変更 | `gpu-mtseed` タスクに対応、スループット計算をローカル化 |
+| `src/workers/types.ts` | 変更 | `GpuMtseedSearchTask` 型の追加 |
 | `src/test/integration/wasm-binding.test.ts` | 変更 | テスト更新 |
 | `src/test/integration/workers/gpu.worker.test.ts` | 変更 | テスト更新 |
+| `src/test/integration/services/worker-pool-gpu.test.ts` | 変更 | テスト更新 |
 
 ## 3. 設計方針
 
 ### 3.1 API 変更
 
-**現在:**
+**変更前:**
 ```rust
 impl GpuDatetimeSearchIterator {
-    pub async fn create(
-        params: MtseedDatetimeSearchParams
-    ) -> Result<Self, String>
-}
-```
-
-**変更後:**
-```rust
-impl GpuDatetimeSearchIterator {
+    pub async fn new(params: MtseedDatetimeSearchParams) -> Result<Self, String>
     pub async fn create(
         context: DatetimeSearchContext,
         target_seeds: Vec<MtSeed>,
@@ -80,23 +77,60 @@ impl GpuDatetimeSearchIterator {
 }
 ```
 
-### 3.2 CPU/GPU 経路の統一
+**変更後:**
+```rust
+impl GpuDatetimeSearchIterator {
+    // new() は削除、create() のみ
+    pub async fn create(
+        context: DatetimeSearchContext,  // date_range を含む
+        target_seeds: Vec<MtSeed>,
+    ) -> Result<Self, String>
+}
+```
 
-両経路で同じ3つの引数を取る形に統一:
+### 3.2 DatetimeSearchContext への date_range 統合
+
+`date_range` を別引数ではなく `DatetimeSearchContext` のフィールドとして統合:
+
+```rust
+pub struct DatetimeSearchContext {
+    pub ds: DsConfig,
+    pub date_range: DateRangeParams,  // ← 追加
+    pub time_range: TimeRangeParams,
+    pub ranges: Vec<Timer0VCountRange>,
+    pub key_spec: KeySpec,
+}
+```
+
+**理由:**
+- UI は常に `date_range` と `time_range` を一緒に指定する
+- 引数を減らしてシンプルな API を提供
+- CPU/GPU 両方で同じ型を使用可能
+
+### 3.3 CPU/GPU 経路の統一
+
+両経路で同じ引数構成に統一:
 
 | 関数 | 引数 |
 |------|------|
-| `generate_mtseed_search_tasks()` | `context`, `target_seeds`, `date_range`, `worker_count` |
-| `GpuDatetimeSearchIterator::create()` | `context`, `target_seeds`, `date_range` |
+| `generate_mtseed_search_tasks()` | `context`, `target_seeds`, `worker_count` |
+| `generate_egg_search_tasks()` | `context`, `egg_params`, `gen_config`, `filter`, `worker_count` |
+| `generate_trainer_info_search_tasks()` | `context`, `filter`, `game_start`, `worker_count` |
+| `GpuDatetimeSearchIterator::create()` | `context`, `target_seeds` |
 
-### 3.3 内部構造
+### 3.4 内部構造
 
 ```rust
 pub struct GpuDatetimeSearchIterator {
-    // 共通パラメータ (保持)
-    context: DatetimeSearchContext,
+    // GPU コンテキスト
+    gpu_ctx: GpuDeviceContext,
+    limits: SearchJobLimits,
+    
+    // 共通パラメータ
     target_seeds: Vec<MtSeed>,
-    search_range: SearchRangeParams,
+    ds: DsConfig,
+    time_range: TimeRangeParams,
+    search_range: SearchRangeParams,  // date_range から変換
     
     // 組み合わせ管理
     combinations: Vec<StartupCondition>,
@@ -104,8 +138,7 @@ pub struct GpuDatetimeSearchIterator {
     
     // 現在の Pipeline
     pipeline: Option<SearchPipeline>,
-    gpu_ctx: GpuDeviceContext,
-    limits: SearchJobLimits,
+    pipeline_offset: u32,
     
     // 進捗管理 (全組み合わせにわたる)
     total_count: u64,
@@ -113,10 +146,13 @@ pub struct GpuDatetimeSearchIterator {
 }
 ```
 
-### 3.4 動作フロー
+### 3.5 動作フロー
 
 ```
-create(context, target_seeds, date_range)
+create(context, target_seeds)
+    │
+    ▼
+context.date_range.to_search_range() → SearchRangeParams
     │
     ▼
 expand_combinations(context) → Vec<StartupCondition>
@@ -146,9 +182,9 @@ combinations[0] で最初の Pipeline 作成
 └───────────────────────────────────────────
 ```
 
-### 3.5 進捗計算
+### 3.6 進捗計算
 
-全組み合わせにわたる統合進捗:
+全組み合わせにわたる統合進捗（組み合わせ別進捗は報告しない）:
 
 ```rust
 // 総処理数 = 検索範囲の秒数 × 組み合わせ数
@@ -161,6 +197,28 @@ processed_count = completed_combos * seconds_per_combo + current_pipeline.proces
 progress = processed_count as f64 / total_count as f64
 ```
 
+**スループット計算:**
+
+CPU Worker と同様に、TypeScript 側で経過時間と処理数から計算:
+
+```typescript
+// GPU Worker 内で計算
+const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
+```
+
+### 3.7 設計決定事項
+
+| 項目 | 決定内容 | 理由 |
+|------|----------|------|
+| `date_range` の配置 | `DatetimeSearchContext` 内に統合 | UI が常に一緒に指定、引数削減 |
+| `new()` API | 削除、`create()` のみ | API の統一、二重定義の解消 |
+| スループット計算 | TypeScript 側で計算 | CPU Worker との一貫性、WASM バインディング簡素化 |
+| 結果への組み合わせ情報付与 | `combinations[current_combo_idx]` を使用して `SeedOrigin` に付与 | 既存の `pipeline.condition()` と同等の動作 |
+| `time_range` フィルタ | シェーダー側で実装済み（`SearchConstants` に時刻範囲を渡す） | 追加実装不要 |
+| `MtseedDatetimeSearchParams` | 公開 API として維持 | CPU 経路の Main→Worker 間通信で必要 |
+| 進捗報告粒度 | 全体進捗のみ | UI 側の要件として十分 |
+| キャンセル後の再開 | 非サポート（キャンセル = 破棄） | リランは新規検索として実行 |
+
 ## 4. 実装仕様
 
 ### 4.1 GpuDatetimeSearchIterator 構造体
@@ -168,7 +226,7 @@ progress = processed_count as f64 / total_count as f64
 ```rust
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct GpuDatetimeSearchIterator {
-    /// GPU デバイスコンテキスト (共有)
+    /// GPU デバイスコンテキスト
     gpu_ctx: GpuDeviceContext,
     
     /// 検索制限
@@ -178,7 +236,7 @@ pub struct GpuDatetimeSearchIterator {
     target_seeds: Vec<MtSeed>,
     ds: DsConfig,
     time_range: TimeRangeParams,
-    search_range: SearchRangeParams,
+    search_range: SearchRangeParams,  // context.date_range から変換
     
     /// 組み合わせ管理
     combinations: Vec<StartupCondition>,
@@ -191,8 +249,6 @@ pub struct GpuDatetimeSearchIterator {
     /// 進捗管理
     total_count: u64,
     processed_count: u64,
-    last_processed: u64,
-    last_time_secs: f64,
 }
 ```
 
@@ -203,7 +259,6 @@ pub struct GpuDatetimeSearchIterator {
 pub async fn create(
     context: DatetimeSearchContext,
     target_seeds: Vec<MtSeed>,
-    date_range: DateRangeParams,
 ) -> Result<GpuDatetimeSearchIterator, String> {
     if target_seeds.is_empty() {
         return Err("target_seeds is empty".into());
@@ -219,8 +274,8 @@ pub async fn create(
     let gpu_ctx = GpuDeviceContext::new().await?;
     let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
     
-    // 検索範囲計算
-    let search_range = date_range.to_search_range();
+    // 検索範囲計算 (context 内の date_range を使用)
+    let search_range = context.date_range.to_search_range();
     let seconds_per_combo = calculate_seconds_in_range(&search_range, &context.time_range);
     let total_count = seconds_per_combo * combinations.len() as u64;
     
@@ -241,8 +296,6 @@ pub async fn create(
         pipeline_offset: 0,
         total_count,
         processed_count: 0,
-        last_processed: 0,
-        last_time_secs: current_time_secs(),
     })
 }
 ```
@@ -287,36 +340,63 @@ pub async fn next(&mut self) -> Option<GpuSearchBatch> {
 
 ### 4.4 TypeScript 側変更
 
+**タスク型定義 (`workers/types.ts`)**:
+
 ```typescript
-// gpu.worker.ts
-async function runGpuSearch(
-  taskId: string, 
-  context: DatetimeSearchContext,
-  targetSeeds: number[],
-  dateRange: DateRangeParams
-): Promise<void> {
+export type GpuMtseedSearchTask = {
+  kind: 'gpu-mtseed';
+  context: DatetimeSearchContext;
+  targetSeeds: MtSeed[];
+};
+
+export type SearchTask =
+  | MtseedDatetimeSearchTask
+  | EggDatetimeSearchTask
+  | GpuMtseedSearchTask;  // GPU 用タスク追加
+```
+
+**GPU Worker (`gpu.worker.ts`)**:
+
+```typescript
+async function runGpuSearch(task: GpuMtseedSearchTask): Promise<void> {
   cancelRequested = false;
+  const startTime = Date.now();
+  let processedCount = 0;
   
   try {
+    // create() は context と targetSeeds の 2 引数のみ
     currentIterator = await GpuDatetimeSearchIterator.create(
-      context,
-      targetSeeds,
-      dateRange
+      task.context,
+      task.targetSeeds
     );
     
     while (!cancelRequested && !currentIterator.is_done) {
       const batch = await currentIterator.next();
-      // ... 進捗報告、結果報告
+      processedCount = currentIterator.processed_count;
+      
+      // スループットは TypeScript 側で計算
+      const elapsedMs = Date.now() - startTime;
+      const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
+      
+      postResponse({ 
+        type: 'progress', 
+        processed: processedCount,
+        total: currentIterator.total_count,
+        throughput 
+      });
+      
+      // 結果処理...
     }
     
-    postResponse({ type: 'done', taskId });
+    postResponse({ type: 'done' });
   } catch (err) {
-    postResponse({ type: 'error', taskId, message: String(err) });
+    postResponse({ type: 'error', message: String(err) });
   } finally {
     currentIterator?.free();
     currentIterator = null;
   }
 }
+```
 ```
 
 ## 5. テスト方針
@@ -325,28 +405,35 @@ async function runGpuSearch(
 
 | テスト | 検証内容 |
 |--------|----------|
-| `test_create_with_context` | `DatetimeSearchContext` から正常に作成できること |
+| `test_create_with_date_range_in_context` | `DatetimeSearchContext.date_range` から正常に作成できること |
 | `test_multiple_combinations` | 複数組み合わせが順次処理されること |
 | `test_progress_across_combinations` | 全組み合わせにわたる進捗が正しく計算されること |
-| `test_empty_combinations_rejected` | 空の組み合わせでエラーになること |
+| `test_empty_target_seeds_rejected` | 空の `target_seeds` でエラーになること |
 
 ### 5.2 統合テスト (TypeScript)
 
 | テスト | 検証内容 |
 |--------|----------|
-| `should search with DatetimeSearchContext` | 新 API で検索が動作すること |
-| `should handle multiple KeyCodes` | 複数 KeyCode の探索が動作すること |
-| `should report progress across all combinations` | 統合進捗が正しく報告されること |
+| `should create iterator with DatetimeSearchContext` | 新 API でイテレータ作成が動作すること |
+| `should report progress with processed_count and total_count` | 進捗情報が正しく報告されること |
+| `should handle GpuMtseedSearchTask type` | GPU 用タスク型が正しく処理されること |
 
 ## 6. 実装チェックリスト
 
-- [ ] `GpuDatetimeSearchIterator` 構造体に組み合わせ管理フィールド追加
-- [ ] `create()` のシグネチャ変更 (`DatetimeSearchContext` ベース)
-- [ ] `create()` 内で `expand_combinations()` 呼び出し
-- [ ] `next()` で組み合わせ切り替えロジック実装
-- [ ] 進捗計算を全組み合わせ対応に修正
-- [ ] `gpu.worker.ts` を新 API に対応
-- [ ] `workers/types.ts` のタスク型更新
-- [ ] Rust ユニットテスト追加
-- [ ] TypeScript 統合テスト更新
-- [ ] 既存テストの互換性確認
+### 6.1 Rust 側
+
+- [x] `GpuDatetimeSearchIterator` 構造体に組み合わせ管理フィールド追加
+- [x] `create()` のシグネチャ変更 (`DatetimeSearchContext` ベース)
+- [x] `create()` 内で `expand_combinations()` 呼び出し
+- [x] `next()` で組み合わせ切り替えロジック実装
+- [x] `build_current_params()` ヘルパー関数追加
+- [x] 進捗計算を全組み合わせ対応に修正
+- [x] `combinations[current_combo_idx]` を使用した結果への条件付与
+- [x] Rust ユニットテスト追加
+
+### 6.2 TypeScript 側
+
+- [x] `gpu.worker.ts` を新 API に対応
+- [x] `workers/types.ts` に GPU 用タスク型追加
+- [x] TypeScript 統合テスト更新
+- [x] 既存テストの互換性確認

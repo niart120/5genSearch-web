@@ -9,11 +9,10 @@
 use std::time::{Duration, Instant};
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use wasm_pkg::MtseedDatetimeSearchParams;
 use wasm_pkg::gpu::GpuDatetimeSearchIterator;
 use wasm_pkg::types::{
-    DsConfig, Hardware, KeyCode, MtSeed, RomRegion, RomVersion, SearchRangeParams,
-    StartupCondition, TimeRangeParams,
+    DateRangeParams, DatetimeSearchContext, DsConfig, Hardware, KeySpec, MtSeed, RomRegion,
+    RomVersion, TimeRangeParams, Timer0VCountRange,
 };
 
 // ===== テスト用パラメータ生成 =====
@@ -38,33 +37,41 @@ fn create_time_range() -> TimeRangeParams {
     }
 }
 
-fn create_search_range() -> SearchRangeParams {
-    SearchRangeParams {
+fn create_date_range() -> DateRangeParams {
+    DateRangeParams {
         start_year: 2000,
         start_month: 1,
         start_day: 1,
-        start_second_offset: 0,
-        range_seconds: 86400 * 365 * 100, // 100年間 (~3.15G秒)
+        end_year: 2099,
+        end_month: 12,
+        end_day: 31,
     }
 }
 
-fn create_params() -> MtseedDatetimeSearchParams {
-    MtseedDatetimeSearchParams {
-        target_seeds: vec![
-            MtSeed::new(0x12345678),
-            MtSeed::new(0x87654321),
-            MtSeed::new(0xABCDEF01),
-        ],
+fn create_context() -> DatetimeSearchContext {
+    DatetimeSearchContext {
         ds: create_ds_config(),
+        date_range: create_date_range(),
         time_range: create_time_range(),
-        search_range: create_search_range(),
-        condition: StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
+        ranges: vec![Timer0VCountRange::fixed(0x0C79, 0x5F)],
+        key_spec: KeySpec::from_buttons(vec![]),
     }
+}
+
+fn create_target_seeds() -> Vec<MtSeed> {
+    vec![
+        MtSeed::new(0x12345678),
+        MtSeed::new(0x87654321),
+        MtSeed::new(0xABCDEF01),
+    ]
 }
 
 fn create_gpu_iterator() -> GpuDatetimeSearchIterator {
-    pollster::block_on(GpuDatetimeSearchIterator::new(create_params()))
-        .expect("Failed to create GpuDatetimeSearchIterator")
+    pollster::block_on(GpuDatetimeSearchIterator::create(
+        create_context(),
+        create_target_seeds(),
+    ))
+    .expect("Failed to create GpuDatetimeSearchIterator")
 }
 
 /// 100年分全探索を実行し、処理数と経過時間を返す
@@ -84,8 +91,10 @@ fn run_full_search() -> (u64, Duration) {
 
 fn bench_gpu_full_search(c: &mut Criterion) {
     // GPU 初期化テスト (ベンチマーク外)
-    let test_iterator =
-        pollster::block_on(async { GpuDatetimeSearchIterator::new(create_params()).await });
+    let test_iterator = pollster::block_on(GpuDatetimeSearchIterator::create(
+        create_context(),
+        create_target_seeds(),
+    ));
 
     if let Err(e) = test_iterator {
         eprintln!("GPU unavailable: {e}, skipping GPU benchmark");
