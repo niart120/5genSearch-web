@@ -66,4 +66,28 @@ describe('ds-config store', () => {
     const { config } = useDsConfigStore.getState();
     expect(config.mac).toEqual([...mac]);
   });
+
+  it('should have default gameStart', () => {
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.start_mode).toBe('Continue');
+    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.shiny_charm).toBe(false);
+  });
+
+  it('should partially update gameStart via setGameStart', () => {
+    useDsConfigStore.getState().setGameStart({ shiny_charm: true });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.shiny_charm).toBe(true);
+    expect(gameStart.start_mode).toBe('Continue');
+    expect(gameStart.save_state).toBe('WithSave');
+  });
+
+  it('should reset gameStart to default', () => {
+    useDsConfigStore.getState().setGameStart({ shiny_charm: true, start_mode: 'NewGame' });
+    useDsConfigStore.getState().reset();
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.start_mode).toBe('Continue');
+    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.shiny_charm).toBe(false);
+  });
 });

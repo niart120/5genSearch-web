@@ -136,6 +136,7 @@ mod tests {
         GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         }
     }
 

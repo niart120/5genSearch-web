@@ -130,6 +130,7 @@ mod tests {
             game_start: GameStartConfig {
                 start_mode: StartMode::Continue,
                 save_state: SaveState::WithSave,
+                shiny_charm: false,
             },
             user_offset: 0,
             max_advance: 100,

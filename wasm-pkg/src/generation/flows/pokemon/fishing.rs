@@ -10,8 +10,8 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
-    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, PokemonGenerationParams,
-    RomVersion,
+    EncounterResult, EncounterType, GenerationConfig, HeldItemSlot, LeadAbilityEffect,
+    PokemonGenerationParams,
 };
 
 /// 釣り野生ポケモン生成
@@ -32,7 +32,7 @@ use crate::types::{
 pub fn generate_fishing_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
-    version: RomVersion,
+    config: &GenerationConfig,
 ) -> RawPokemonData {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -54,20 +54,20 @@ pub fn generate_fishing_pokemon(
 
     // 3. スロット決定
     let slot_rand = lcg.next().unwrap_or(0);
-    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, version) as usize;
+    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, config.version) as usize;
     let slot_config = &params.slots[slot_idx.min(params.slots.len() - 1)];
 
     // 4. レベル決定 (Range パターン: 乱数値からレベルを計算)
     let level_rand = lcg.next().unwrap_or(0);
     let level = calculate_level(
-        version,
+        config.version,
         level_rand,
         slot_config.level_min,
         slot_config.level_max,
     );
 
     // 5. PID 生成
-    let reroll_count = if params.shiny_charm { 2 } else { 0 };
+    let reroll_count = if config.game_start.shiny_charm { 2 } else { 0 };
     let (pid, shiny_type) = generate_wild_pid_with_reroll(lcg, params.trainer, reroll_count);
 
     // 6. 性格決定
@@ -78,13 +78,18 @@ pub fn generate_fishing_pokemon(
     {
         let item_rand = lcg.next().unwrap_or(0);
         let has_very_rare = enc_type == EncounterType::FishingBubble;
-        determine_held_item_slot(version, item_rand, params.lead_ability, has_very_rare)
+        determine_held_item_slot(
+            config.version,
+            item_rand,
+            params.lead_ability,
+            has_very_rare,
+        )
     } else {
         HeldItemSlot::None
     };
 
     // 8. BW のみ: 最後の消費
-    if version.is_bw() {
+    if config.version.is_bw() {
         lcg.next();
     }
 
@@ -109,7 +114,10 @@ pub fn generate_fishing_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo};
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GenderRatio, GenerationConfig,
+        RomVersion, SaveState, StartMode, TrainerInfo,
+    };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
@@ -131,8 +139,21 @@ mod tests {
             encounter_type,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: make_slots(),
+        }
+    }
+
+    fn make_config(version: RomVersion) -> GenerationConfig {
+        GenerationConfig {
+            version,
+            game_start: GameStartConfig {
+                start_mode: StartMode::Continue,
+                save_state: SaveState::WithSave,
+                shiny_charm: false,
+            },
+            user_offset: 0,
+            max_advance: 1000,
         }
     }
 
@@ -144,7 +165,7 @@ mod tests {
         let params = make_params(EncounterType::Fishing);
 
         // LCG の状態によって成功/失敗が変わる
-        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         // 成功または失敗のどちらかになる
         match pokemon.encounter_result {
@@ -172,7 +193,7 @@ mod tests {
         let params = make_params(EncounterType::Fishing);
 
         // この seed では失敗する可能性が高い
-        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         // 失敗または成功のどちらかになる
         assert!(matches!(
@@ -189,7 +210,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(EncounterType::Fishing);
 
-        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black));
 
         // 成功/失敗に関わらず、消費は発生している
         assert!(matches!(
@@ -205,7 +226,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0);
         let params = make_params(EncounterType::FishingBubble);
 
-        let pokemon = generate_fishing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_fishing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         assert_eq!(
             pokemon.encounter_result,

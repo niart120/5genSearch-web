@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { DsConfig, Timer0VCountRange } from '../../wasm/wasm_pkg.js';
+import type { DsConfig, GameStartConfig, Timer0VCountRange } from '../../wasm/wasm_pkg.js';
 
 interface DsConfigState {
   config: DsConfig;
   ranges: Timer0VCountRange[];
+  gameStart: GameStartConfig;
 }
 
 interface DsConfigActions {
   setConfig: (partial: Partial<DsConfig>) => void;
   replaceConfig: (config: DsConfig) => void;
   setRanges: (ranges: Timer0VCountRange[]) => void;
+  setGameStart: (partial: Partial<GameStartConfig>) => void;
   reset: () => void;
 }
 
@@ -30,9 +32,16 @@ const DEFAULT_RANGES: Timer0VCountRange[] = [
   },
 ];
 
+const DEFAULT_GAME_START: GameStartConfig = {
+  start_mode: 'Continue',
+  save_state: 'WithSave',
+  shiny_charm: false,
+};
+
 const DEFAULT_STATE: DsConfigState = {
   config: DEFAULT_DS_CONFIG,
   ranges: DEFAULT_RANGES,
+  gameStart: DEFAULT_GAME_START,
 };
 
 export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
@@ -45,6 +54,10 @@ export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
         })),
       replaceConfig: (config) => set({ config }),
       setRanges: (ranges) => set({ ranges }),
+      setGameStart: (partial) =>
+        set((state) => ({
+          gameStart: { ...state.gameStart, ...partial },
+        })),
       reset: () => set(DEFAULT_STATE),
     }),
     {
