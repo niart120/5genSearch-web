@@ -119,8 +119,8 @@ pub fn generate_phenomena_pokemon(
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, EncounterSlotConfig, GenderRatio, ItemContent, TrainerInfo,
-        GameStartConfig, GenerationConfig, RomVersion, SaveState, StartMode,
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GenderRatio, GenerationConfig,
+        ItemContent, RomVersion, SaveState, StartMode, TrainerInfo,
     };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
@@ -167,7 +167,8 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0001);
         let params = make_params(EncounterType::DustCloud);
 
-        let pokemon = generate_phenomena_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
+        let pokemon =
+            generate_phenomena_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         assert_eq!(pokemon.encounter_result, EncounterResult::Pokemon);
         assert_eq!(pokemon.species_id, 1);
@@ -180,7 +181,8 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::DustCloud);
 
-        let pokemon = generate_phenomena_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
+        let pokemon =
+            generate_phenomena_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         assert!(matches!(pokemon.encounter_result, EncounterResult::Item(_)));
         assert_eq!(pokemon.species_id, 0);
@@ -199,7 +201,8 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::PokemonShadow);
 
-        let pokemon = generate_phenomena_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
+        let pokemon =
+            generate_phenomena_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         assert_eq!(
             pokemon.encounter_result,
@@ -214,6 +217,3 @@ mod tests {
         assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 }
-
-
-

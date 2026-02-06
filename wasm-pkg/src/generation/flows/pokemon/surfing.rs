@@ -72,7 +72,12 @@ pub fn generate_surfing_pokemon(
     {
         let item_rand = lcg.next().unwrap_or(0);
         let has_very_rare = enc_type == EncounterType::SurfingBubble;
-        determine_held_item_slot(config.version, item_rand, params.lead_ability, has_very_rare)
+        determine_held_item_slot(
+            config.version,
+            item_rand,
+            params.lead_ability,
+            has_very_rare,
+        )
     } else {
         HeldItemSlot::None
     };
@@ -103,7 +108,10 @@ pub fn generate_surfing_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo, GameStartConfig, GenerationConfig, RomVersion, SaveState, StartMode};
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GenderRatio, GenerationConfig,
+        RomVersion, SaveState, StartMode, TrainerInfo,
+    };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
@@ -203,13 +211,11 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::SurfingBubble);
 
-        let _pokemon = generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
+        let _pokemon =
+            generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         let mut expected_lcg = Lcg64::new(initial_seed);
         expected_lcg.advance(6); // 泡空消費分 +1
         assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 }
-
-
-

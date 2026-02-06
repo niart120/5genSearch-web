@@ -60,7 +60,12 @@ pub fn generate_normal_pokemon(
     {
         let item_rand = lcg.next().unwrap_or(0);
         let has_very_rare = enc_type == EncounterType::ShakingGrass;
-        determine_held_item_slot(config.version, item_rand, params.lead_ability, has_very_rare)
+        determine_held_item_slot(
+            config.version,
+            item_rand,
+            params.lead_ability,
+            has_very_rare,
+        )
     } else {
         HeldItemSlot::None
     };
@@ -91,7 +96,10 @@ pub fn generate_normal_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo, GameStartConfig, GenerationConfig, RomVersion, SaveState, StartMode};
+    use crate::types::{
+        EncounterMethod, EncounterSlotConfig, GameStartConfig, GenderRatio, GenerationConfig,
+        RomVersion, SaveState, StartMode, TrainerInfo,
+    };
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
@@ -200,6 +208,3 @@ mod tests {
         assert_eq!(Pid(0x1234_5680).gender(GenderRatio::F1M1), Gender::Male);
     }
 }
-
-
-

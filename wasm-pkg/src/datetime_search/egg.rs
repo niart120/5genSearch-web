@@ -252,7 +252,7 @@ mod tests {
                 game_start: GameStartConfig {
                     start_mode: StartMode::NewGame,
                     save_state: SaveState::NoSave,
-            shiny_charm: false,
+                    shiny_charm: false,
                 },
                 user_offset: 0,
                 max_advance: 100,
@@ -333,7 +333,7 @@ mod tests {
             game_start: GameStartConfig {
                 start_mode: StartMode::NewGame,
                 save_state: SaveState::NoSave,
-            shiny_charm: false,
+                shiny_charm: false,
             },
             user_offset: 0,
             max_advance: 100,

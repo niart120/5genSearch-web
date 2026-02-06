@@ -174,7 +174,10 @@ pub fn generate_hidden_grotto_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, GenderRatio, TrainerInfo, GameStartConfig, GenerationConfig, RomVersion, SaveState, StartMode};
+    use crate::types::{
+        EncounterMethod, GameStartConfig, GenderRatio, GenerationConfig, RomVersion, SaveState,
+        StartMode, TrainerInfo,
+    };
 
     fn make_params(encounter_type: EncounterType) -> PokemonGenerationParams {
         PokemonGenerationParams {
@@ -226,7 +229,8 @@ mod tests {
         let params = make_params(EncounterType::StaticSymbol);
         let slot = make_slot(150, 70, GenderRatio::Genderless, false, false);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, &make_config(RomVersion::Black));
+        let pokemon =
+            generate_static_pokemon(&mut lcg, &params, &slot, &make_config(RomVersion::Black));
 
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
@@ -239,7 +243,8 @@ mod tests {
         let params = make_params(EncounterType::StaticStarter);
         let slot = make_slot(495, 5, GenderRatio::F1M7, true, false);
 
-        let pokemon = generate_static_pokemon(&mut lcg, &params, &slot, &make_config(RomVersion::Black));
+        let pokemon =
+            generate_static_pokemon(&mut lcg, &params, &slot, &make_config(RomVersion::Black));
 
         assert_eq!(pokemon.species_id, 495);
         assert_eq!(pokemon.level, 5);
@@ -321,6 +326,3 @@ mod tests {
         assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 }
-
-
-

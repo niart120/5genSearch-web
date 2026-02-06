@@ -225,7 +225,7 @@ mod tests {
             game_start: GameStartConfig {
                 start_mode: StartMode::NewGame,
                 save_state: SaveState::NoSave,
-            shiny_charm: false,
+                shiny_charm: false,
             },
         }
     }

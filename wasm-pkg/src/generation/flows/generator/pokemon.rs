@@ -101,8 +101,7 @@ impl PokemonGenerator {
         if is_static_encounter(self.params.encounter_type) {
             // Static: スロットは1件、常に成功
             let slot = &self.params.slots[0];
-            let raw =
-                generate_static_pokemon(&mut gen_lcg, &self.params, slot, &self.config);
+            let raw = generate_static_pokemon(&mut gen_lcg, &self.params, slot, &self.config);
 
             self.lcg.next();
             self.current_advance += 1;
@@ -121,8 +120,7 @@ impl PokemonGenerator {
             let (moving_encounter, special_encounter) =
                 self.calculate_encounter_info(current_seed, &mut gen_lcg);
 
-            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, &self.config)
-            {
+            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, &self.config) {
                 self.lcg.next();
                 self.current_advance += 1;
 
