@@ -113,6 +113,8 @@ pub enum SaveState {
 pub struct GameStartConfig {
     pub start_mode: StartMode,
     pub save_state: SaveState,
+    /// ひかるおまもり所持 (BW2 のみ有効)
+    pub shiny_charm: bool,
 }
 
 impl GameStartConfig {
@@ -131,6 +133,11 @@ impl GameStartConfig {
         // 続きからはセーブ必須
         if self.start_mode == StartMode::Continue && self.save_state == SaveState::NoSave {
             return Err("Continue requires a save file".to_string());
+        }
+
+        // ひかるおまもりは BW2 のみ
+        if self.shiny_charm && !is_bw2 {
+            return Err("Shiny Charm is only available in BW2".to_string());
         }
 
         Ok(())
@@ -347,8 +354,6 @@ pub struct PokemonGenerationParams {
     pub encounter_method: EncounterMethod,
     /// 先頭特性効果
     pub lead_ability: LeadAbilityEffect,
-    /// ひかるおまもり所持
-    pub shiny_charm: bool,
     /// エンカウントスロット (Wild: 複数、Static: 1件)
     pub slots: Vec<EncounterSlotConfig>,
 }

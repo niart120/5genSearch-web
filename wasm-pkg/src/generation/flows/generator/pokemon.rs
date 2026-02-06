@@ -102,7 +102,7 @@ impl PokemonGenerator {
             // Static: スロットは1件、常に成功
             let slot = &self.params.slots[0];
             let raw =
-                generate_static_pokemon(&mut gen_lcg, &self.params, slot, self.config.version);
+                generate_static_pokemon(&mut gen_lcg, &self.params, slot, &self.config);
 
             self.lcg.next();
             self.current_advance += 1;
@@ -121,7 +121,7 @@ impl PokemonGenerator {
             let (moving_encounter, special_encounter) =
                 self.calculate_encounter_info(current_seed, &mut gen_lcg);
 
-            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, self.config.version)
+            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, &self.config)
             {
                 self.lcg.next();
                 self.current_advance += 1;
@@ -194,6 +194,7 @@ mod tests {
         GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         }
     }
 
@@ -219,7 +220,7 @@ mod tests {
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: vec![],
         }
     }

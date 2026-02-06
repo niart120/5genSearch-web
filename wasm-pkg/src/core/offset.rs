@@ -378,6 +378,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 71, "BW1 最初から（セーブなし）のオフセット");
@@ -390,6 +391,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 59, "BW1 最初から（セーブあり）のオフセット");
@@ -402,6 +404,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 49, "BW1 続きからのオフセット");
@@ -416,6 +419,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 44, "BW2 最初から（セーブなし）のオフセット");
@@ -428,6 +432,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(
@@ -443,6 +448,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 29, "BW2 最初から（思い出リンクあり）のオフセット");
@@ -455,6 +461,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクなし）のオフセット");
@@ -467,6 +474,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithMemoryLink,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクあり）のオフセット");
@@ -480,6 +488,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::NoSave,
+            shiny_charm: false,
         };
         let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -492,6 +501,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
+            shiny_charm: false,
         };
         let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -505,6 +515,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         let mut lcg = Lcg64::new(seed);
@@ -522,6 +533,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
         let result = calculate_trainer_info(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -534,6 +546,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::WithMemoryLink,
+            shiny_charm: false,
         };
         let result = calculate_trainer_info(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -546,6 +559,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
+            shiny_charm: false,
         };
         let trainer = calculate_trainer_info(seed, RomVersion::Black, config).unwrap();
         assert_eq!(trainer.tid, 42267);
@@ -559,6 +573,7 @@ mod tests {
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
+            shiny_charm: false,
         };
         let trainer = calculate_trainer_info(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(trainer.tid, 910);

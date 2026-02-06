@@ -236,6 +236,7 @@ mod tests {
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
 
         let config = GenerationConfig {
@@ -259,7 +260,7 @@ mod tests {
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::Synchronize(Nature::Adamant),
-            shiny_charm: false,
+
             slots: slots.clone(),
         };
 
@@ -296,6 +297,7 @@ mod tests {
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
 
         let config = GenerationConfig {
@@ -319,7 +321,7 @@ mod tests {
             encounter_type: EncounterType::Normal,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: slots.clone(),
         };
 
@@ -352,6 +354,7 @@ mod tests {
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
 
         let config = GenerationConfig {
@@ -375,7 +378,7 @@ mod tests {
             encounter_type: EncounterType::Surfing,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: slots.clone(),
         };
 
@@ -408,6 +411,7 @@ mod tests {
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithMemoryLink,
+            shiny_charm: false,
         };
 
         let config = GenerationConfig {
@@ -431,7 +435,7 @@ mod tests {
             encounter_type: EncounterType::StaticSymbol,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: slots.clone(),
         };
 
@@ -464,6 +468,7 @@ mod tests {
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         };
 
         let config = GenerationConfig {
@@ -487,7 +492,7 @@ mod tests {
             encounter_type: EncounterType::StaticStarter,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: slots.clone(),
         };
 
@@ -508,3 +513,4 @@ mod tests {
         );
     }
 }
+

@@ -9,8 +9,8 @@ use crate::generation::algorithm::{
 };
 use crate::generation::flows::types::RawPokemonData;
 use crate::types::{
-    EncounterResult, EncounterType, HeldItemSlot, LeadAbilityEffect, PokemonGenerationParams,
-    RomVersion,
+    EncounterResult, EncounterType, GenerationConfig, HeldItemSlot, LeadAbilityEffect,
+    PokemonGenerationParams,
 };
 
 /// 波乗り野生ポケモン生成
@@ -29,7 +29,7 @@ use crate::types::{
 pub fn generate_surfing_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
-    version: RomVersion,
+    config: &GenerationConfig,
 ) -> RawPokemonData {
     let enc_type = params.encounter_type;
     let is_compound_eyes = matches!(params.lead_ability, LeadAbilityEffect::CompoundEyes);
@@ -48,20 +48,20 @@ pub fn generate_surfing_pokemon(
 
     // 2. スロット決定
     let slot_rand = lcg.next().unwrap_or(0);
-    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, version) as usize;
+    let slot_idx = calculate_encounter_slot(enc_type, slot_rand, config.version) as usize;
     let slot_config = &params.slots[slot_idx.min(params.slots.len() - 1)];
 
     // 3. レベル決定 (Range パターン: 乱数値からレベルを計算)
     let level_rand = lcg.next().unwrap_or(0);
     let level = calculate_level(
-        version,
+        config.version,
         level_rand,
         slot_config.level_min,
         slot_config.level_max,
     );
 
     // 4. PID 生成
-    let reroll_count = if params.shiny_charm { 2 } else { 0 };
+    let reroll_count = if config.game_start.shiny_charm { 2 } else { 0 };
     let (pid, shiny_type) = generate_wild_pid_with_reroll(lcg, params.trainer, reroll_count);
 
     // 5. 性格決定
@@ -72,13 +72,13 @@ pub fn generate_surfing_pokemon(
     {
         let item_rand = lcg.next().unwrap_or(0);
         let has_very_rare = enc_type == EncounterType::SurfingBubble;
-        determine_held_item_slot(version, item_rand, params.lead_ability, has_very_rare)
+        determine_held_item_slot(config.version, item_rand, params.lead_ability, has_very_rare)
     } else {
         HeldItemSlot::None
     };
 
     // 7. BW のみ: 最後の消費
-    if version.is_bw() {
+    if config.version.is_bw() {
         lcg.next();
     }
 
@@ -103,7 +103,7 @@ pub fn generate_surfing_pokemon(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo};
+    use crate::types::{EncounterMethod, EncounterSlotConfig, GenderRatio, TrainerInfo, GameStartConfig, GenerationConfig, RomVersion, SaveState, StartMode};
 
     fn make_slots() -> Vec<EncounterSlotConfig> {
         vec![EncounterSlotConfig {
@@ -125,7 +125,7 @@ mod tests {
             encounter_type,
             encounter_method: EncounterMethod::Stationary,
             lead_ability: LeadAbilityEffect::None,
-            shiny_charm: false,
+
             slots: make_slots(),
         }
     }
@@ -135,7 +135,7 @@ mod tests {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
         let params = make_params(EncounterType::Surfing);
 
-        let pokemon = generate_surfing_pokemon(&mut lcg, &params, RomVersion::Black);
+        let pokemon = generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black));
         assert_eq!(pokemon.species_id, 118);
         // レベルは 10-25 の範囲内
         assert!((10..=25).contains(&pokemon.level));
@@ -151,7 +151,7 @@ mod tests {
         let params = make_params(EncounterType::Surfing);
 
         // 特定の乱数値でレベルが計算される
-        let pokemon = generate_surfing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let pokemon = generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
         assert!((10..=25).contains(&pokemon.level));
     }
 
@@ -162,7 +162,7 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::Surfing);
 
-        let _ = generate_surfing_pokemon(&mut lcg, &params, RomVersion::Black);
+        let _ = generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black));
 
         let mut expected_lcg = Lcg64::new(initial_seed);
         expected_lcg.advance(6);
@@ -176,7 +176,7 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::Surfing);
 
-        let _ = generate_surfing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let _ = generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         let mut expected_lcg = Lcg64::new(initial_seed);
         expected_lcg.advance(5);
@@ -190,10 +190,13 @@ mod tests {
         let initial_seed = lcg.current_seed();
         let params = make_params(EncounterType::SurfingBubble);
 
-        let _pokemon = generate_surfing_pokemon(&mut lcg, &params, RomVersion::Black2);
+        let _pokemon = generate_surfing_pokemon(&mut lcg, &params, &make_config(RomVersion::Black2));
 
         let mut expected_lcg = Lcg64::new(initial_seed);
         expected_lcg.advance(6); // 泡空消費分 +1
         assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 }
+
+
+

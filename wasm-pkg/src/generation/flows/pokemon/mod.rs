@@ -10,7 +10,7 @@ mod surfing;
 
 use crate::core::lcg::Lcg64;
 use crate::generation::flows::types::{GenerationError, RawPokemonData};
-use crate::types::{EncounterType, PokemonGenerationParams, RomVersion};
+use crate::types::{EncounterType, GenerationConfig, PokemonGenerationParams};
 
 pub use static_encounter::{generate_hidden_grotto_pokemon, generate_static_pokemon};
 
@@ -30,23 +30,23 @@ pub use static_encounter::{generate_hidden_grotto_pokemon, generate_static_pokem
 pub fn generate_wild_pokemon(
     lcg: &mut Lcg64,
     params: &PokemonGenerationParams,
-    version: RomVersion,
+    config: &GenerationConfig,
 ) -> Result<RawPokemonData, GenerationError> {
     match params.encounter_type {
         EncounterType::Normal | EncounterType::ShakingGrass => {
-            Ok(normal::generate_normal_pokemon(lcg, params, version))
+            Ok(normal::generate_normal_pokemon(lcg, params, config))
         }
 
         EncounterType::DustCloud | EncounterType::PokemonShadow => {
-            Ok(phenomena::generate_phenomena_pokemon(lcg, params, version))
+            Ok(phenomena::generate_phenomena_pokemon(lcg, params, config))
         }
 
         EncounterType::Surfing | EncounterType::SurfingBubble => {
-            Ok(surfing::generate_surfing_pokemon(lcg, params, version))
+            Ok(surfing::generate_surfing_pokemon(lcg, params, config))
         }
 
         EncounterType::Fishing | EncounterType::FishingBubble => {
-            Ok(fishing::generate_fishing_pokemon(lcg, params, version))
+            Ok(fishing::generate_fishing_pokemon(lcg, params, config))
         }
 
         _ => Err(GenerationError::UnsupportedEncounterType),

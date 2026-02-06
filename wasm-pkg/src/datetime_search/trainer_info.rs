@@ -225,6 +225,7 @@ mod tests {
             game_start: GameStartConfig {
                 start_mode: StartMode::NewGame,
                 save_state: SaveState::NoSave,
+            shiny_charm: false,
             },
         }
     }
@@ -372,6 +373,7 @@ mod tests {
         let game_start = GameStartConfig {
             start_mode: StartMode::NewGame,
             save_state: SaveState::NoSave,
+            shiny_charm: false,
         };
 
         let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2);
