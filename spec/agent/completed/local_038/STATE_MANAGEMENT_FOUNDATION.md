@@ -673,25 +673,25 @@ describe('ds-config store', () => {
 
 ## 6. 実装チェックリスト
 
-- [ ] `zustand` を dependencies に追加 (`pnpm add zustand`)
-- [ ] `src/stores/settings/ds-config.ts` — DS 設定 Store
-- [ ] `src/stores/settings/trainer.ts` — トレーナー情報 Store
-- [ ] `src/stores/settings/ui.ts` — UI 設定 Store
-- [ ] `src/stores/settings/index.ts` — settings re-export
-- [ ] `src/stores/search/results.ts` — 検索結果 Store
-- [ ] `src/stores/search/index.ts` — search re-export
-- [ ] `src/stores/index.ts` — stores re-export
-- [ ] `src/stores/sync.ts` — Store 間同期 (スケルトン)
-- [ ] `src/hooks/use-ds-config.ts` — DS 設定フック
-- [ ] `src/hooks/use-trainer.ts` — トレーナー情報フック
-- [ ] `src/hooks/use-ui-settings.ts` — UI 設定フック
-- [ ] `src/hooks/use-search-results.ts` — 検索結果フック
-- [ ] `src/main.tsx` — 同期セットアップ呼び出し追加
-- [ ] `src/test/unit/stores/ds-config.test.ts` — DS 設定 Store テスト
-- [ ] `src/test/unit/stores/trainer.test.ts` — トレーナー情報 Store テスト
-- [ ] `src/test/unit/stores/ui.test.ts` — UI 設定 Store テスト
-- [ ] `src/test/unit/stores/results.test.ts` — 検索結果 Store テスト
-- [ ] `src/test/unit/stores/sync.test.ts` — Store 間同期テスト
-- [ ] `spec/agent/architecture/frontend-structure.md` — stores 構成を更新
-- [ ] `pnpm lint` / `pnpm format:check` パス
-- [ ] `pnpm test:run` 全テストパス
+- [x] `zustand` を dependencies に追加 (`pnpm add zustand`)
+- [x] `src/stores/settings/ds-config.ts` — DS 設定 Store
+- [x] `src/stores/settings/trainer.ts` — トレーナー情報 Store
+- [x] `src/stores/settings/ui.ts` — UI 設定 Store
+- [x] `src/stores/settings/index.ts` — settings re-export
+- [x] `src/stores/search/results.ts` — 検索結果 Store
+- [x] `src/stores/search/index.ts` — search re-export
+- [x] `src/stores/index.ts` — stores re-export
+- [x] `src/stores/sync.ts` — Store 間同期 (スケルトン)
+- [x] `src/hooks/use-ds-config.ts` — DS 設定フック
+- [x] `src/hooks/use-trainer.ts` — トレーナー情報フック
+- [x] `src/hooks/use-ui-settings.ts` — UI 設定フック
+- [x] `src/hooks/use-search-results.ts` — 検索結果フック
+- [x] `src/main.tsx` — 同期セットアップ呼び出し追加
+- [x] `src/test/unit/stores/ds-config.test.ts` — DS 設定 Store テスト
+- [x] `src/test/unit/stores/trainer.test.ts` — トレーナー情報 Store テスト
+- [x] `src/test/unit/stores/ui.test.ts` — UI 設定 Store テスト
+- [x] `src/test/unit/stores/results.test.ts` — 検索結果 Store テスト
+- [x] `src/test/unit/stores/sync.test.ts` — Store 間同期テスト
+- [x] `spec/agent/architecture/frontend-structure.md` — stores 構成を更新
+- [x] `pnpm lint` / `pnpm format:check` パス
+- [x] `pnpm test:run` 全テストパス
