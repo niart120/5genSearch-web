@@ -131,6 +131,16 @@ interface DsConfigActions {
   // ... 既存 ...
   setGameStart: (gameStart: Partial<GameStartConfig>) => void;
 }
+
+### 3.6 persist 運用方針
+
+本プロジェクトは公開前のため、当面は migrate を実装しない。破壊的変更が続く間は以下の運用で統一する。
+
+| 状況 | 方針 |
+|------|------|
+| 追加のみ (後方互換) | persist の `version` は据え置き。`merge` により初期値が補完される前提で対応する |
+| 破壊的変更 | `name` を変更してストレージを切り替える。必要に応じて `reset` を案内する |
+| 安定化後 | 影響の大きい変更に限り `migrate` を導入する |
 ```
 
 ## 4. 実装仕様
@@ -226,24 +236,6 @@ const DEFAULT_STATE: DsConfigState = {
 };
 ```
 
-persist の `version` を `2` に更新し、`migrate` で v1 → v2 のマイグレーションを追加:
-
-```typescript
-{
-  name: 'ds-config',
-  version: 2,
-  migrate: (persistedState: unknown, version: number) => {
-    if (version < 2) {
-      return {
-        ...(persistedState as DsConfigState & DsConfigActions),
-        gameStart: DEFAULT_GAME_START,
-      };
-    }
-    return persistedState as DsConfigState & DsConfigActions;
-  },
-}
-```
-
 ### 4.5 TS: カスタムフック拡張
 
 ```typescript
@@ -278,7 +270,6 @@ export function useDsConfig() {
 | `gameStart` 初期値 | デフォルト値が正しい |
 | `setGameStart` 部分更新 | `shiny_charm` のみ変更し、他フィールドが保持される |
 | `reset` | `gameStart` がデフォルトに戻る |
-| persist migration | v1 のデータに `gameStart` が補完される |
 
 ## 6. 実装チェックリスト
 
@@ -301,7 +292,7 @@ export function useDsConfig() {
 
 ### TypeScript
 
-- [ ] `src/stores/settings/ds-config.ts` — `gameStart` フィールド・アクション追加、persist v2 migration
+- [ ] `src/stores/settings/ds-config.ts` — `gameStart` フィールド・アクション追加
 - [ ] `src/hooks/use-ds-config.ts` — `gameStart` / `setGameStart` 追加
 - [ ] `src/test/unit/stores/ds-config.test.ts` — `gameStart` テスト追加
 - [ ] `src/test/integration/workers/searcher.test.ts` — `GameStartConfig` リテラル更新
