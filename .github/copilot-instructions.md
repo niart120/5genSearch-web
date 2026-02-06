@@ -15,7 +15,7 @@
 ### フロントエンド
 
 - **フレームワーク**: React 19 + TypeScript + Vite
-- **状態管理**: Zustand
+- **状態管理**: Zustand or Jotai (机上比較中)
 - **UIコンポーネント**: Radix UI + Tailwind CSS
 - **テスト**: Vitest + Playwright
 - **Linter/Formatter**: ESLint + Prettier

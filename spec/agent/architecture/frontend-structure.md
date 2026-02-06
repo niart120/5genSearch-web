@@ -8,7 +8,7 @@
 |---------|-----------|
 | UI コンポーネント | Radix UI |
 | スタイリング | Tailwind CSS |
-| 状態管理 | Jotai or Zustand (選定中) |
+| 状態管理 | Zustand or Jotai (机上比較中) |
 | ビルド | Vite |
 | テスト | Vitest + Playwright |
 
@@ -42,14 +42,15 @@ src/
 │
 ├── services/               # 機能横断インフラサービス
 │   ├── worker-pool.ts      # Worker プール管理
-│   └── progress.ts         # 進捗管理
+│   ├── progress.ts         # 進捗管理
+│   └── search-tasks.ts     # 検索タスク生成 (WASM タスク分割関数のラッパー)
 │
 ├── stores/                 # 状態管理
 │   ├── settings.ts         # DS設定・アプリ設定
 │   └── search.ts           # 検索状態
 │
 ├── hooks/                  # カスタムフック
-│   ├── use-worker-search.ts
+│   ├── use-search.ts       # 検索実行 (WorkerPool ラッパー)
 │   └── use-local-storage.ts
 │
 ├── io/                     # 入出力処理
@@ -80,7 +81,7 @@ src/
 | `components/data-display/` | データ表示に特化した部品 (ResultTable, ResultCard, ProgressBar など) |
 | `features/` | 機能単位のまとまり。機能固有の UI + ロジックを内包 |
 | `workers/` | Web Worker エントリポイント。WASM 呼び出しを担当 (CPU/GPU 別) |
-| `services/` | 機能横断のインフラサービス (Worker 管理、進捗管理など) |
+| `services/` | 機能横断のインフラサービス (Worker 管理、進捗管理、タスク生成など) |
 | `stores/` | 状態管理。永続化対象の設定を含む |
 | `hooks/` | React カスタムフック |
 | `io/` | 入出力処理 (エクスポート、クリップボード操作) |
@@ -145,7 +146,7 @@ stores/
 |-----|------|-----|
 | ディレクトリ | kebab-case | `datetime-search/` |
 | コンポーネントファイル | PascalCase | `DatetimeSearchPage.tsx` |
-| フック/ユーティリティ | kebab-case | `use-worker-search.ts` |
+| フック/ユーティリティ | kebab-case | `use-search.ts` |
 | 型定義ファイル | kebab-case | `types.ts`, `index.ts` |
 | コンポーネント名 | PascalCase | `DatetimeSearchPage` |
 | 関数名 | camelCase | `startSearch` |
@@ -153,27 +154,17 @@ stores/
 
 ## WASM 型のインポート
 
-WASM パッケージの型は `@wasm` エイリアスから直接インポートする：
+WASM パッケージの型は `src/wasm/wasm_pkg.js` から直接インポートする:
 
 ```typescript
 // OK: 直接インポート
-import type { DsConfig, IvFilter } from '@wasm';
+import type { DsConfig, IvFilter } from '../wasm/wasm_pkg.js';
 
 // NG: re-export 層を経由しない
 import type { DsConfig } from '../types';
 ```
 
-エイリアス設定 (`tsconfig.json`):
-
-```json
-{
-  "compilerOptions": {
-    "paths": {
-      "@wasm": ["./packages/wasm"]
-    }
-  }
-}
-```
+WASM バイナリ (`wasm_pkg_bg.wasm`) は `public/wasm/` から配信され、Worker 内で絶対パス `/wasm/wasm_pkg_bg.wasm` で参照する。
 
 ## 国際化 (i18n)
 

@@ -21,7 +21,7 @@ applyTo: '**/wasm-pkg/**/*.rs'
 - Rust Edition 2024
 - `rustfmt` / `clippy` 設定に準拠
 - `#[wasm_bindgen]` エクスポートは `lib.rs` に集約
-- 型定義は `tsify-next` + `serde` で TypeScript 型を自動生成
+- 型定義は `tsify` + `serde` で TypeScript 型を自動生成
 
 ## 禁止事項
 
