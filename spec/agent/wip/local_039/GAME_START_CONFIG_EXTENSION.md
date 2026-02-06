@@ -88,7 +88,7 @@ local_038 で構築した状態管理基盤には、ゲーム起動条件 (`Game
 
 ### 3.3 卵生成における `shiny_charm`
 
-Gen5 の孵化処理では「ひかるおまもり」の効果がない (リロールは `masuda_method` のみ)。`EggGenerationParams` への追加は不要。`GameStartConfig` にフィールドが存在するが、卵生成フローでは参照しない。
+Gen5 の孵化処理では「ひかるおまもり」の効果がない (現行実装はBWのみを対象としており、リロールは `masuda_method` のみ)。`EggGenerationParams` への追加は不要。`GameStartConfig` にフィールドが存在するが、卵生成フローでは参照しない。
 
 ### 3.4 バリデーション拡張
 
