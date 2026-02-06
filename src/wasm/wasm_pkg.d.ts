@@ -1495,16 +1495,6 @@ export function health_check(): string;
 export function init(): void;
 
 /**
- * 卵データを表示用に解決
- *
- * # Arguments
- * * `data` - 生成された卵データ
- * * `locale` - ロケール (`"ja"` または `"en"`)
- * * `species_id` - 種族 ID (任意。指定時は種族名や特性名を解決)
- */
-export function resolve_egg_data(data: GeneratedEggData, locale: string, species_id?: number | null): UiEggData;
-
-/**
  * 卵データをバッチ解決
  *
  * # Arguments
@@ -1516,16 +1506,6 @@ export function resolve_egg_data(data: GeneratedEggData, locale: string, species
  * 解決済み表示用卵データの配列
  */
 export function resolve_egg_data_batch(data: GeneratedEggData[], locale: string, species_id?: number | null): UiEggData[];
-
-/**
- * ポケモンデータを表示用に解決
- *
- * # Arguments
- * * `data` - 生成されたポケモンデータ
- * * `version` - ROMバージョン (持ち物解決に使用)
- * * `locale` - ロケール (`"ja"` または `"en"`)
- */
-export function resolve_pokemon_data(data: GeneratedPokemonData, version: RomVersion, locale: string): UiPokemonData;
 
 /**
  * ポケモンデータをバッチ解決
@@ -1618,9 +1598,7 @@ export interface InitOutput {
     readonly mtseedsearcher_new: (a: any) => number;
     readonly mtseedsearcher_next_batch: (a: number, b: number) => any;
     readonly mtseedsearcher_progress: (a: number) => number;
-    readonly resolve_egg_data: (a: any, b: number, c: number, d: number) => any;
     readonly resolve_egg_data_batch: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly resolve_pokemon_data: (a: any, b: any, c: number, d: number) => any;
     readonly resolve_pokemon_data_batch: (a: number, b: number, c: any, d: number, e: number) => [number, number];
     readonly resolve_seeds: (a: any) => [number, number, number, number];
     readonly search_needle_pattern: (a: number, b: number, c: any, d: any) => [number, number, number, number];
