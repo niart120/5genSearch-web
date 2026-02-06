@@ -315,7 +315,25 @@ pub struct EggDatetimeSearchBatch {
 
 // ===== MT Seed 検索 (misc) =====
 
-/// MT Seed 検索パラメータ
+/// MT Seed 検索コンテキスト (ユーザー入力用)
+///
+/// TS 側が組み立てる入力型。検索範囲は含まない。
+/// `generate_mtseed_iv_search_tasks` に渡すと、範囲付きの `MtseedSearchParams` に変換される。
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct MtseedSearchContext {
+    /// IV フィルタ条件
+    pub iv_filter: IvFilter,
+    /// MT オフセット (IV 生成開始位置、通常 7)
+    pub mt_offset: u32,
+    /// 徘徊ポケモンモード
+    pub is_roamer: bool,
+}
+
+/// MT Seed 検索パラメータ (タスク用)
+///
+/// タスク分割後の各 Worker に渡されるパラメータ。
+/// `start_seed` / `end_seed` は閉区間 `[start_seed, end_seed]` を表す。
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedSearchParams {
@@ -325,6 +343,10 @@ pub struct MtseedSearchParams {
     pub mt_offset: u32,
     /// 徘徊ポケモンモード
     pub is_roamer: bool,
+    /// 検索開始 Seed (inclusive)
+    pub start_seed: u32,
+    /// 検索終了 Seed (inclusive)
+    pub end_seed: u32,
 }
 
 /// MT Seed 検索結果

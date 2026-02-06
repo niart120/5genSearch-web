@@ -32,20 +32,22 @@ pub use types::{
     GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
     ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed, LeadAbilityEffect,
     MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, MtseedDatetimeSearchBatch,
-    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchParams,
-    NeedleDirection, NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, RomVersion,
-    SaveState, SearchRangeParams, SeedOrigin, SeedSpec, ShinyFilter, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, TimeRangeParams, Timer0VCountRange, TrainerInfo,
-    TrainerInfoFilter, TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
-    UiEggData, UiPokemonData,
+    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchContext,
+    MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,
+    PokemonGenerationParams, RomVersion, SaveState, SearchRangeParams, SeedOrigin, SeedSpec,
+    ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TimeRangeParams,
+    Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
+    TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData, UiPokemonData,
 };
 
 // Re-export core functions
 pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
 pub use core::seed_resolver::resolve_seeds;
 
-// Re-export misc module (Searcher のみ)
-pub use misc::{MtseedSearcher, get_needle_pattern_at, search_needle_pattern};
+// Re-export misc module (Searcher と関数)
+pub use misc::{
+    MtseedSearcher, generate_mtseed_iv_search_tasks, get_needle_pattern_at, search_needle_pattern,
+};
 
 // Re-export needle search types
 pub use types::NeedleSearchResult;

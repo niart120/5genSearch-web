@@ -92,6 +92,8 @@ describe('MtseedSearcher', () => {
         },
         mt_offset: 7,
         is_roamer: false,
+        start_seed: 0,
+        end_seed: 0xffff_ffff,
       },
     };
 
@@ -119,6 +121,8 @@ describe('MtseedSearcher', () => {
         },
         mt_offset: 7,
         is_roamer: false,
+        start_seed: 0,
+        end_seed: 0xffff_ffff,
       },
     };
 
@@ -137,6 +141,47 @@ describe('MtseedSearcher', () => {
     // 正確に 5 件であること
     expect(results.length).toBe(5);
   }, 600000);
+
+  it('should find results in parallel', async () => {
+    // 小さい範囲を直接 MtseedSearchTask として分割し並列実行
+    const totalRange = 1024; // 0..1023
+    const numWorkers = 4;
+    const chunkSize = totalRange / numWorkers; // 256
+
+    const tasks: MtseedSearchTask[] = Array.from({ length: numWorkers }, (_, i) => ({
+      kind: 'mtseed' as const,
+      params: {
+        iv_filter: {
+          hp: [0, 31] as [number, number],
+          atk: [0, 31] as [number, number],
+          def: [0, 31] as [number, number],
+          spa: [0, 31] as [number, number],
+          spd: [0, 31] as [number, number],
+          spe: [0, 31] as [number, number],
+        },
+        mt_offset: 7,
+        is_roamer: false,
+        start_seed: i * chunkSize,
+        end_seed: (i + 1) * chunkSize - 1, // closed interval
+      },
+    }));
+
+    // 各タスクを並列実行
+    const searchPromises = tasks.map((task) => runSearchInWorker(task, { timeout: 30000 }));
+
+    const allResults = await Promise.all(searchPromises);
+
+    // 結果を集約
+    const mergedResults = allResults.flat();
+
+    // any フィルタなので 1024 件すべて見つかるはず
+    expect(mergedResults.length).toBe(1024);
+
+    // 重複がないことを確認
+    const seeds = mergedResults.map((r) => r.seed);
+    const uniqueSeeds = new Set(seeds);
+    expect(uniqueSeeds.size).toBe(1024);
+  });
 });
 
 describe('EggDatetimeSearcher', () => {

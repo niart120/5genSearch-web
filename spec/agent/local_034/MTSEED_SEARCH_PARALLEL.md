@@ -5,6 +5,7 @@
 ### 1.1 目的
 
 `MtseedSearcher`（IV フィルタによる MT Seed 全探索）を Worker による並列実行に対応させる。
+合わせて、WASM の `generate_*_search_tasks` 関数を呼び出し `SearchTask[]` を返す TS 側オーケストレーション層を実装する。
 
 ### 1.2 用語定義
 
@@ -14,6 +15,9 @@
 | MtseedSearcher | 指定 IV フィルタを満たす MT Seed を全探索する Searcher |
 | IV フィルタ | 個体値 (HP/攻撃/防御/特攻/特防/素早さ) の範囲条件 |
 | タスク分割 | 検索範囲を複数タスクに分割し、Worker で並列実行する仕組み |
+| SearchTask | Worker に配信する検索タスクの型 (`kind` + `params`) |
+| タスク生成関数 | WASM 側の `generate_*_search_tasks` 関数群 |
+| オーケストレーション層 | WASM タスク生成関数を呼び出し、タスク配列を構築する TS サービス |
 
 ### 1.3 背景・問題
 
@@ -57,25 +61,41 @@ pub struct MtseedSearcher {
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/types/search.rs` | 修正 | `MtseedSearchParams` に `start_seed`, `end_seed` 追加 |
-| `wasm-pkg/src/misc/mtseed_search.rs` | 修正 | 範囲指定に対応、`generate_mtseed_iv_search_tasks` 追加 |
-| `wasm-pkg/src/lib.rs` | 修正 | `generate_mtseed_iv_search_tasks` をエクスポート |
+| `wasm-pkg/src/types/search.rs` | 修正 | `MtseedSearchContext`（ユーザー入力用）新設、`MtseedSearchParams`（タスク用）に `start_seed`/`end_seed` 追加 |
+| `wasm-pkg/src/misc/mtseed_search.rs` | 修正 | 範囲指定に対応、`generate_mtseed_iv_search_tasks` の入力を `MtseedSearchContext` に変更 |
+| `wasm-pkg/src/lib.rs` | 修正 | `MtseedSearchContext`, `generate_mtseed_iv_search_tasks` をエクスポート |
 | `src/workers/types.ts` | 確認 | TypeScript 型定義の自動更新確認 |
 | `src/test/integration/workers/searcher.test.ts` | 修正 | 並列化テスト追加 |
+| `src/services/search-tasks.ts` | 新規作成 | WASM タスク生成関数のラッパー |
+| `src/test/integration/wasm-binding.test.ts` | 修正 | 分割ロジックテスト追加 |
+| `src/test/integration/services/search-tasks.test.ts` | 新規作成 | search-tasks.ts の統合テスト |
 
 ## 3. 設計方針
 
-### 3.1 検索範囲の指定
+### 3.1 型分離: ユーザー入力型とタスク型
 
-`MtseedSearchParams` に検索範囲を追加:
+Datetime 系 Searcher との一貫性を保つため、入力型とタスク型を分離する:
+
+| | ユーザー入力型 | タスク型（WASM が生成） | 分割の表現 |
+|---|---|---|---|
+| Datetime 系 | `DatetimeSearchContext` | `*SearchParams` | `start_offset` + `range_seconds` |
+| MtseedSearcher | `MtseedSearchContext` | `MtseedSearchParams` | `start_seed` + `end_seed`（閉区間） |
+
+`MtseedSearchContext`（`iv_filter` + `mt_offset` + `is_roamer`）は TS 側が組み立てる入力型。
+`MtseedSearchParams`（`start_seed` + `end_seed` 付き）は `generate_mtseed_iv_search_tasks` が生成するタスク型。
+TS 側は範囲指定フィールドを直接触らない。
+
+### 3.2 検索範囲の表現
+
+`MtseedSearchParams` は閉区間 `[start_seed, end_seed]` で範囲を表現:
 
 ```rust
 pub struct MtseedSearchParams {
     pub iv_filter: IvFilter,
     pub mt_offset: u32,
     pub is_roamer: bool,
-    pub start_seed: u32,  // 追加: 検索開始 Seed (inclusive)
-    pub end_seed: u32,    // 追加: 検索終了 Seed (inclusive)
+    pub start_seed: u32,  // 検索開始 Seed (inclusive)
+    pub end_seed: u32,    // 検索終了 Seed (inclusive)
 }
 ```
 
@@ -83,7 +103,7 @@ pub struct MtseedSearchParams {
 - 半開区間 `[start, end)` では `end = 0x1_0000_0000` が `u32` に収まらない
 - 閉区間 `[start, end]` なら `end = 0xFFFF_FFFF` で全範囲を表現可能
 
-### 3.2 タスク分割関数
+### 3.3 タスク分割関数
 
 ```rust
 /// MT Seed IV 検索タスクを生成
@@ -91,21 +111,21 @@ pub struct MtseedSearchParams {
 /// 0〜2^32 の範囲を `worker_count` 個のタスクに分割する。
 ///
 /// # Arguments
-/// - `base_params`: 基本パラメータ (iv_filter, mt_offset, is_roamer)
+/// - `context`: 検索コンテキスト (iv_filter, mt_offset, is_roamer)
 /// - `worker_count`: Worker 数
 ///
 /// # Returns
-/// 分割されたタスクのリスト
+/// 分割されたタスクのリスト（各タスクは閉区間 `[start_seed, end_seed]`）
 #[wasm_bindgen]
 pub fn generate_mtseed_iv_search_tasks(
-    base_params: MtseedSearchParams,
+    context: MtseedSearchContext,
     worker_count: u32,
 ) -> Vec<MtseedSearchParams>;
 ```
 
-### 3.3 分割アルゴリズム
+### 3.4 分割アルゴリズム
 
-閉区間 `[start_seed, end_seed]` を使用:
+全 Seed 空間 (0〜2^32-1) を均等分割:
 
 ```
 total_seeds = 0x1_0000_0000 (2^32)
@@ -118,40 +138,43 @@ Task 1: [end of Task 0 + 1, ...]
 Task N-1: [..., 0xFFFF_FFFF]
 ```
 
-### 3.4 デフォルト値
+### 3.5 内部実装
 
-- `start_seed = 0`, `end_seed = 0xFFFF_FFFF` をデフォルト値とする
-- 既存のテストは変更なしで動作する
+`MtseedSearcher` は内部で `end_seed + 1` を保持し半開区間として処理するが、これは実装詳細であり外部からは閉区間 API のみが見える。
 
 ## 4. 実装仕様
 
-### 4.1 MtseedSearchParams (Rust)
+### 4.1 MtseedSearchContext (Rust)
 
 ```rust
-/// MT Seed 検索パラメータ
+/// MT Seed 検索コンテキスト (ユーザー入力用)
 #[derive(Tsify, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct MtseedSearchParams {
-    /// IV フィルタ条件
+pub struct MtseedSearchContext {
     pub iv_filter: IvFilter,
-    /// MT オフセット (IV 生成開始位置、通常 7)
     pub mt_offset: u32,
-    /// 徘徊ポケモンモード
     pub is_roamer: bool,
-    /// 検索開始 Seed (inclusive, デフォルト 0)
-    #[serde(default)]
-    pub start_seed: u32,
-    /// 検索終了 Seed (inclusive, デフォルト 0xFFFF_FFFF)
-    #[serde(default = "default_end_seed")]
-    pub end_seed: u32,
-}
-
-fn default_end_seed() -> u32 {
-    0xFFFF_FFFF  // 全範囲 (閉区間)
 }
 ```
 
-### 4.2 MtseedSearcher 修正
+### 4.2 MtseedSearchParams (Rust)
+
+```rust
+/// MT Seed 検索パラメータ (タスク用)
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct MtseedSearchParams {
+    pub iv_filter: IvFilter,
+    pub mt_offset: u32,
+    pub is_roamer: bool,
+    /// 検索開始 Seed (inclusive)
+    pub start_seed: u32,
+    /// 検索終了 Seed (inclusive)
+    pub end_seed: u32,
+}
+```
+
+### 4.3 MtseedSearcher 修正
 
 ```rust
 impl MtseedSearcher {
@@ -174,39 +197,37 @@ impl MtseedSearcher {
 
 **注**: 内部実装では `end_seed + 1` を保持して半開区間として処理し、オーバーフローを回避。
 
-### 4.3 generate_mtseed_iv_search_tasks
+### 4.4 generate_mtseed_iv_search_tasks
 
 ```rust
 #[wasm_bindgen]
 pub fn generate_mtseed_iv_search_tasks(
-    base_params: MtseedSearchParams,
+    context: MtseedSearchContext,
     worker_count: u32,
 ) -> Vec<MtseedSearchParams> {
-    let start = u64::from(base_params.start_seed);
-    let end = u64::from(base_params.end_seed);
-    let total = end - start + 1;  // 閉区間
+    let total: u64 = 0x1_0000_0000; // 2^32
     let chunk_size = total / u64::from(worker_count);
     let remainder = total % u64::from(worker_count);
     
     let mut tasks = Vec::with_capacity(worker_count as usize);
-    let mut current = start;
+    let mut current: u64 = 0;
     
     for i in 0..worker_count {
-        let extra = if u64::from(i) < remainder { 1 } else { 0 };
+        let extra = u64::from(u64::from(i) < remainder);
         let size = chunk_size + extra;
         
         if size == 0 {
-            break;  // worker_count > total の場合
+            break;
         }
         
         let task_end = current + size - 1;  // 閉区間の終端
         
         tasks.push(MtseedSearchParams {
-            iv_filter: base_params.iv_filter.clone(),
-            mt_offset: base_params.mt_offset,
-            is_roamer: base_params.is_roamer,
+            iv_filter: context.iv_filter.clone(),
+            mt_offset: context.mt_offset,
+            is_roamer: context.is_roamer,
             start_seed: current as u32,
-            end_seed: task_end as u32,  // 閉区間
+            end_seed: task_end as u32,
         });
         
         current = task_end + 1;
@@ -216,17 +237,93 @@ pub fn generate_mtseed_iv_search_tasks(
 }
 ```
 
-### 4.4 TypeScript 型 (自動生成)
+### 4.5 TypeScript 型 (自動生成)
 
 ```typescript
+// ユーザー入力型（TS 側が組み立てる）
+export interface MtseedSearchContext {
+  iv_filter: IvFilter;
+  mt_offset: number;
+  is_roamer: boolean;
+}
+
+// タスク型（generate_mtseed_iv_search_tasks が生成、Worker に渡す）
 export interface MtseedSearchParams {
   iv_filter: IvFilter;
   mt_offset: number;
   is_roamer: boolean;
-  start_seed?: number;  // optional (default: 0, inclusive)
-  end_seed?: number;    // optional (default: 0xFFFF_FFFF, inclusive)
+  start_seed: number;   // required (inclusive)
+  end_seed: number;     // required (inclusive)
+}
+
+export function generate_mtseed_iv_search_tasks(
+  context: MtseedSearchContext,
+  worker_count: number
+): MtseedSearchParams[];
+```
+
+### 4.6 TS オーケストレーション層 (`src/services/search-tasks.ts`)
+
+設計方針:
+- 各関数は WASM の `generate_*` を呼び出し、返されたパラメータ配列を `SearchTask[]` にマッピングする
+- `services/` 配下に置き、`features/` → `services/` の依存方向を維持
+- class は使わず関数として実装（コーディング規約: 関数型プログラミング推奨）
+- WASM 型は `@wasm` から直接 import
+- WASM 初期化済みのコンテキストで呼ばれる前提（初期化責務は持たない）
+
+```typescript
+import {
+  generate_mtseed_iv_search_tasks,
+  generate_mtseed_search_tasks,
+  generate_egg_search_tasks,
+  generate_trainer_info_search_tasks,
+} from '../wasm/wasm_pkg.js';
+import type { SearchTask } from '../workers/types';
+
+export function createMtseedIvSearchTasks(
+  context: MtseedSearchContext,
+  workerCount: number,
+): MtseedSearchTask[] {
+  const paramsList = generate_mtseed_iv_search_tasks(context, workerCount);
+  return paramsList.map((params) => ({ kind: 'mtseed' as const, params }));
+}
+
+export function createMtseedDatetimeSearchTasks(
+  context: DatetimeSearchContext,
+  targetSeeds: MtSeed[],
+  workerCount: number,
+): MtseedDatetimeSearchTask[] {
+  const paramsList = generate_mtseed_search_tasks(context, targetSeeds, workerCount);
+  return paramsList.map((params) => ({ kind: 'mtseed-datetime' as const, params }));
+}
+
+export function createEggSearchTasks(
+  context: DatetimeSearchContext,
+  eggParams: EggGenerationParams,
+  genConfig: GenerationConfig,
+  filter: EggFilter | null,
+  workerCount: number,
+): EggDatetimeSearchTask[] {
+  const paramsList = generate_egg_search_tasks(context, eggParams, genConfig, filter, workerCount);
+  return paramsList.map((params) => ({ kind: 'egg-datetime' as const, params }));
+}
+
+export function createTrainerInfoSearchTasks(
+  context: DatetimeSearchContext,
+  filter: TrainerInfoFilter,
+  gameStart: GameStartConfig,
+  workerCount: number,
+): TrainerInfoSearchTask[] {
+  const paramsList = generate_trainer_info_search_tasks(context, filter, gameStart, workerCount);
+  return paramsList.map((params) => ({ kind: 'trainer-info' as const, params }));
 }
 ```
+
+### 4.7 WASM メインスレッド初期化
+
+`search-tasks.ts` の関数は WASM 関数を直接呼ぶため、メインスレッドで WASM が初期化済みである必要がある。
+仕様書 (`worker-design.md` セクション 2.3) に「`generate_*_search_tasks` はメインスレッドで実行」と明記されている。
+`search-tasks.ts` は「WASM 初期化済みのコンテキストで呼ばれる」前提で実装する（初期化責務は持たない）。
 
 ## 5. テスト方針
 
@@ -245,15 +342,37 @@ export interface MtseedSearchParams {
 | `should split search range correctly` | タスク分割後の範囲が正しいことを確認 |
 | `should find results in parallel` | 複数 Worker で並列実行し、結果が正しく集約されることを確認 |
 
+### 5.3 テスト整理
+
+| テスト | 移動先 | 理由 |
+|--------|--------|------|
+| `should split search range correctly` | `wasm-binding.test.ts` | WASM バインディングテスト |
+| `should find results in parallel` | `searcher.test.ts`（残留） | Worker 並列実行テスト |
+
+- `MtseedSearcher` describe の `beforeAll(init())` を削除し、並列テスト内のローカル初期化に移行
+
+### 5.4 search-tasks.ts 統合テスト
+
+`src/test/integration/services/search-tasks.test.ts`:
+- WASM を初期化して `createMtseedIvSearchTasks` を呼び出し、正しいタスク配列が返ることを検証
+- 他の `create*SearchTasks` 関数も同様にテスト
+- 結果を `runSearchInWorker` に渡して Worker 経由で実行可能なことを確認
+
 ## 6. 実装チェックリスト
 
-- [ ] `MtseedSearchParams` に `start_seed`, `end_seed` フィールド追加
-- [ ] `MtseedSearcher::new` で範囲指定に対応
-- [ ] `MtseedSearcher::next_batch` で `end_seed` を考慮
-- [ ] `MtseedSearcher::is_done` で `end_seed` を考慮
-- [ ] `generate_mtseed_iv_search_tasks` 関数実装
-- [ ] `lib.rs` でエクスポート
-- [ ] Rust ユニットテスト追加
-- [ ] WASM リビルド・TypeScript 型確認
-- [ ] 統合テスト追加
-- [ ] 既存テスト (`should match all with any filter`) が動作することを確認
+- [x] `MtseedSearchContext` 型新設（ユーザー入力用）
+- [x] `MtseedSearchParams` に `start_seed`, `end_seed` フィールド追加（タスク用、必須フィールド）
+- [x] `MtseedSearcher::new` で範囲指定に対応
+- [x] `MtseedSearcher::next_batch` で `end_seed` を考慮
+- [x] `MtseedSearcher::is_done` で `end_seed` を考慮
+- [x] `generate_mtseed_iv_search_tasks` 関数実装（入力: `MtseedSearchContext`）
+- [x] `lib.rs` でエクスポート
+- [x] Rust ユニットテスト追加
+- [x] WASM リビルド・TypeScript 型確認
+- [x] 統合テスト追加
+- [x] 既存テスト (`should match all with any filter`) が動作することを確認
+- [x] `src/services/search-tasks.ts` 新規作成（`MtseedSearchContext` を受け取る）
+- [ ] `searcher.test.ts` から WASM 直接テストを `wasm-binding.test.ts` へ移動
+- [ ] `searcher.test.ts` の `beforeAll(init())` 整理
+- [x] `src/test/integration/services/search-tasks.test.ts` 新規作成
+- [ ] 全テスト通過確認
