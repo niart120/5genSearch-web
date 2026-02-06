@@ -19,8 +19,6 @@ import type {
   EggDatetimeSearchTask,
   TrainerInfoSearchTask,
 } from '../../../workers/types';
-import init from '../../../wasm/wasm_pkg.js';
-import { createMtseedIvSearchTasks } from '../../../services/search-tasks';
 
 describe('MtseedDatetimeSearcher', () => {
   it('should find known MT Seed with correct datetime', async () => {
@@ -94,6 +92,8 @@ describe('MtseedSearcher', () => {
         },
         mt_offset: 7,
         is_roamer: false,
+        start_seed: 0,
+        end_seed: 0xffff_ffff,
       },
     };
 
@@ -121,6 +121,8 @@ describe('MtseedSearcher', () => {
         },
         mt_offset: 7,
         is_roamer: false,
+        start_seed: 0,
+        end_seed: 0xffff_ffff,
       },
     };
 
@@ -141,27 +143,28 @@ describe('MtseedSearcher', () => {
   }, 600000);
 
   it('should find results in parallel', async () => {
-    // createMtseedIvSearchTasks は WASM 関数を呼ぶためメインスレッドの初期化が必要
-    await init();
+    // 小さい範囲を直接 MtseedSearchTask として分割し並列実行
+    const totalRange = 1024; // 0..1023
+    const numWorkers = 4;
+    const chunkSize = totalRange / numWorkers; // 256
 
-    // 小さい範囲に分割して並列検索
-    const tasks = createMtseedIvSearchTasks(
-      {
+    const tasks: MtseedSearchTask[] = Array.from({ length: numWorkers }, (_, i) => ({
+      kind: 'mtseed' as const,
+      params: {
         iv_filter: {
-          hp: [0, 31],
-          atk: [0, 31],
-          def: [0, 31],
-          spa: [0, 31],
-          spd: [0, 31],
-          spe: [0, 31],
+          hp: [0, 31] as [number, number],
+          atk: [0, 31] as [number, number],
+          def: [0, 31] as [number, number],
+          spa: [0, 31] as [number, number],
+          spd: [0, 31] as [number, number],
+          spe: [0, 31] as [number, number],
         },
         mt_offset: 7,
         is_roamer: false,
-        start_seed: 0,
-        end_seed: 0x3ff, // 1024 件のみ
+        start_seed: i * chunkSize,
+        end_seed: (i + 1) * chunkSize - 1, // closed interval
       },
-      4
-    );
+    }));
 
     // 各タスクを並列実行
     const searchPromises = tasks.map((task) => runSearchInWorker(task, { timeout: 30000 }));
