@@ -8,7 +8,7 @@
 |---------|-----------|
 | UI コンポーネント | Radix UI |
 | スタイリング | Tailwind CSS |
-| 状態管理 | Zustand or Jotai (机上比較中) |
+| 状態管理 | Zustand |
 | ビルド | Vite |
 | テスト | Vitest + Playwright |
 
