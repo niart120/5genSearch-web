@@ -6,7 +6,7 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client", "@webgpu/types"],
+    "types": ["vite/client", "@webgpu/types", "@lingui/vite-plugin/macros"],
     "skipLibCheck": true,
 
     /* Bundler mode */

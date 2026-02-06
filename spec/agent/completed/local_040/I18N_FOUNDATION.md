@@ -401,21 +401,21 @@ applyTo: src/i18n/locales/**
 
 ## 6. 実装チェックリスト
 
-- [ ] Lingui パッケージのインストール (`@lingui/core`, `@lingui/react`, `@lingui/cli`, `@lingui/vite-plugin`, `@lingui/babel-plugin-lingui-macro`)
-- [ ] `lingui.config.ts` 作成
-- [ ] `vite.config.ts` に Lingui プラグイン追加
-- [ ] `tsconfig.app.json` に型定義追加
-- [ ] `src/i18n/index.ts` 作成
-- [ ] `src/main.tsx` を `I18nProvider` でラップ (非同期ブートストラップ化)
-- [ ] `src/stores/settings/ui.ts` の `Language` 型を `SupportedLocale` に統一
-- [ ] `src/stores/sync.ts` に language → i18n 同期を追加
-- [ ] `src/App.tsx` に動作確認用 `<Trans>` 追加
-- [ ] `lingui extract` で初期カタログ生成
-- [ ] `lingui compile --typescript` でコンパイル確認
-- [ ] `src/test/helpers/i18n.tsx` 作成
-- [ ] `src/test/unit/i18n/i18n.test.ts` 作成・テスト通過
-- [ ] `src/test/unit/stores/ui.test.ts` の型整合性確認
+- [x] Lingui パッケージのインストール (`@lingui/core`, `@lingui/react`, `@lingui/cli`, `@lingui/vite-plugin`, `@lingui/babel-plugin-lingui-macro`)
+- [x] `lingui.config.ts` 作成
+- [x] `vite.config.ts` に Lingui プラグイン追加
+- [x] `tsconfig.app.json` に型定義追加
+- [x] `src/i18n/index.ts` 作成
+- [x] `src/main.tsx` を `I18nProvider` でラップ (非同期ブートストラップ化)
+- [x] `src/stores/settings/ui.ts` の `Language` 型を `SupportedLocale` に統一
+- [x] `src/stores/sync.ts` に language → i18n 同期を追加
+- [x] `src/App.tsx` に動作確認用 `<Trans>` 追加
+- [x] `lingui extract` で初期カタログ生成
+- [x] `lingui compile --typescript` でコンパイル確認
+- [x] `src/test/helpers/i18n.tsx` 作成
+- [x] `src/test/unit/i18n/i18n.test.ts` 作成・テスト通過
+- [x] `src/test/unit/stores/ui.test.ts` の型整合性確認
 - [ ] `pnpm dev` で動作確認
-- [ ] `pnpm test:run` で全テスト通過
-- [ ] `.github/instructions/i18n.instructions.md` 作成
-- [ ] `pnpm lint` 通過
+- [x] `pnpm test:run` で全テスト通過
+- [x] `.github/instructions/i18n.instructions.md` 作成
+- [x] `pnpm lint` 通過
