@@ -41,35 +41,37 @@ Phase 4: 仕上げ
 
 ## 3. Phase 1: 基盤整備
 
-### 3.1 WASM バインディング検証
+### 3.1 WASM バインディング検証 (完了)
 
-| タスク | 説明 | 成果物 |
-|-------|------|--------|
-| API 網羅性確認 | d.ts と実装の差異確認 | 不足 API リスト |
-| bindgen 付与漏れ修正 | `generate_pokemon_list` 等 | 修正 PR |
-| GPU API 確認 | ビルドオプション確認 | 対応方針 |
-| ヘルスチェック | `health_check()` 動作確認 | テストコード |
+| タスク | 説明 | 成果物 | 状態 |
+|-------|------|--------|------|
+| API 網羅性確認 | d.ts と実装の差異確認 | 不足 API リスト | ✅ |
+| bindgen 付与漏れ修正 | `generate_pokemon_list` 等 | 修正 PR | ✅ |
+| GPU API 確認 | ビルドオプション確認 | 対応方針 | ✅ |
+| ヘルスチェック | `health_check()` 動作確認 | テストコード | ✅ |
 
-### 3.2 Worker 基盤
+### 3.2 Worker 基盤 (完了)
 
-| タスク | 説明 | 成果物 |
-|-------|------|--------|
-| CPU Worker エントリポイント | `search.worker.ts` | 実装 |
-| GPU Worker エントリポイント | `gpu.worker.ts` | 実装 |
-| WASM 初期化 | Worker 内での init | 実装 |
-| メッセージ型定義 | Request/Response 型 | `workers/types.ts` |
-| WorkerPool 実装 | spawn/dispatch/collect | `services/worker-pool.ts` |
-| 進捗集約 | AggregatedProgress | `services/progress.ts` |
-| キャンセル処理 | 中断フロー | 実装 |
+| タスク | 説明 | 成果物 | 状態 |
+|-------|------|--------|------|
+| CPU Worker エントリポイント | `search.worker.ts` | 実装 | ✅ |
+| GPU Worker エントリポイント | `gpu.worker.ts` | 実装 | ✅ |
+| WASM 初期化 | Worker 内での init | 実装 | ✅ |
+| メッセージ型定義 | Request/Response 型 | `workers/types.ts` | ✅ |
+| WorkerPool 実装 | spawn/dispatch/collect | `services/worker-pool.ts` | ✅ |
+| 進捗集約 | AggregatedProgress | `services/progress.ts` | ✅ |
+| キャンセル処理 | 中断フロー | 実装 | ✅ |
+| 検索タスク生成 | WASM タスク分割関数 | `services/search-tasks.ts` | ✅ |
+| 検索実行フック | WorkerPool ラッパー | `hooks/use-search.ts` | ✅ |
 
 ### 3.3 状態管理基盤
 
-| タスク | 説明 | 成果物 |
-|-------|------|--------|
-| ライブラリ PoC | Jotai vs Zustand 検証 | 選定結果 |
-| Store 分割設計 | 永続化/非永続化分類 | 設計ドキュメント |
-| 永続化実装 | localStorage 連携 | 実装 |
-| カスタムフック | Store 隠蔽フック | `hooks/` |
+| タスク | 説明 | 成果物 | 状態 |
+|-------|------|--------|------|
+| ライブラリ選定 | Jotai vs Zustand 机上比較 | 選定結果 | ✅ |
+| Store 分割設計 | 永続化/非永続化分類 | 設計ドキュメント | 未着手 |
+| 永続化実装 | localStorage 連携 | 実装 | 未着手 |
+| カスタムフック | Store 隠蔽フック | `hooks/` | 未着手 |
 
 ### 3.4 i18n 基盤
 
@@ -205,6 +207,6 @@ features/{feature}/
 
 ## 9. 検討事項
 
-- [ ] WASM API の不足分洗い出し
-- [ ] 状態管理ライブラリの選定
+- [x] WASM API の不足分洗い出し
+- [x] 状態管理ライブラリの選定 (Zustand 採用)
 - [ ] 現行アプリからの UI 資産流用可否

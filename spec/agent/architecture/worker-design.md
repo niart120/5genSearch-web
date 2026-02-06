@@ -120,13 +120,15 @@ const workerCount = navigator.hardwareConcurrency ?? 4;
 
 ```typescript
 // Worker 内部 (workers/search.worker.ts)
-import initWasm from '@wasm';
-import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+import initWasm from '../wasm/wasm_pkg.js';
+
+// WASM バイナリの絶対パス (public/wasm/ から配信)
+const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   if (e.data.type === 'init') {
     // Worker が独自に WASM を fetch/初期化
-    await initWasm(wasmUrl);
+    await initWasm(WASM_URL);
     postMessage({ type: 'ready' });
   }
   // ...
@@ -199,6 +201,7 @@ interface ProgressInfo {
 type SearchTask =
   | { kind: 'egg-datetime'; params: EggDatetimeSearchParams }
   | { kind: 'mtseed-datetime'; params: MtseedDatetimeSearchParams }
+  | { kind: 'gpu-mtseed'; context: DatetimeSearchContext; targetSeeds: MtSeed[] }
   | { kind: 'mtseed'; params: MtseedSearchParams }
   | { kind: 'trainer-info'; params: TrainerInfoSearchParams };
 ```
@@ -275,12 +278,11 @@ interface AggregatedProgress {
 
 ```typescript
 // Worker 内部
-import initWasm, { EggDatetimeSearcher, MtseedSearcher } from '@wasm';
-import wasmUrl from '../../packages/wasm/wasm_pkg_bg.wasm?url';
+import initWasm, { EggDatetimeSearcher, MtseedSearcher } from '../wasm/wasm_pkg.js';
 import type { SearchTask } from './types';
 
 async function handleInit(): Promise<void> {
-  await initWasm(wasmUrl);
+  await initWasm('/wasm/wasm_pkg_bg.wasm');
   postMessage({ type: 'ready' });
 }
 
@@ -335,7 +337,7 @@ function yieldToMain(): Promise<void> {
 WASM 側で提供される `generate_*_search_tasks()` 関数を使用：
 
 ```typescript
-import { generate_egg_search_tasks } from '@wasm';
+import { generate_egg_search_tasks } from '../wasm/wasm_pkg.js';
 
 const tasks = generate_egg_search_tasks(
   context,
