@@ -60,7 +60,7 @@ mod tests {
         BaseMessageBuilder, build_date_code, build_time_code, get_frame,
     };
     use crate::core::sha1::nazo::get_nazo_values;
-    use crate::types::{Hardware, KeyCode, RomRegion, RomVersion};
+    use crate::types::{DsConfig, Hardware, KeyCode, RomRegion, RomVersion};
 
     /// 実計算値に基づくテストケース
     ///
@@ -80,16 +80,20 @@ mod tests {
     #[test]
     fn test_sha1_with_real_case() {
         // パラメータ
-        let nazo = get_nazo_values(RomVersion::White2, RomRegion::Jpn);
-        let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
-        let hardware = Hardware::Ds;
-        let frame = get_frame(hardware);
+        let ds = DsConfig {
+            mac: [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F],
+            hardware: Hardware::Ds,
+            version: RomVersion::White2,
+            region: RomRegion::Jpn,
+        };
+        let nazo = get_nazo_values(&ds);
+        let frame = get_frame(ds.hardware);
         let timer0: u16 = 0x10F8;
         let vcount: u8 = 0x82;
         let key_code = KeyCode::NONE;
 
         // メッセージ構築
-        let mut builder = BaseMessageBuilder::new(&nazo, mac, vcount, timer0, key_code, frame);
+        let mut builder = BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, key_code, frame);
 
         // 日時コード: 2006/03/11 18:53:27
         let date_code = build_date_code(2006, 3, 11);
@@ -147,11 +151,17 @@ mod tests {
     /// SHA-1 計算の決定性テスト
     #[test]
     fn test_sha1_deterministic() {
-        let nazo = get_nazo_values(RomVersion::White2, RomRegion::Jpn);
-        let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
-        let frame = get_frame(Hardware::Ds);
+        let ds = DsConfig {
+            mac: [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F],
+            hardware: Hardware::Ds,
+            version: RomVersion::White2,
+            region: RomRegion::Jpn,
+        };
+        let nazo = get_nazo_values(&ds);
+        let frame = get_frame(ds.hardware);
 
-        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, KeyCode::NONE, frame);
+        let mut builder =
+            BaseMessageBuilder::new(&nazo, ds.mac, 0x82, 0x10F8, KeyCode::NONE, frame);
         builder.set_datetime(
             build_date_code(2006, 3, 11),
             build_time_code(18, 53, 27, true),
@@ -166,11 +176,17 @@ mod tests {
     /// `HashValues` の整合性テスト
     #[test]
     fn test_hash_values_consistency() {
-        let nazo = get_nazo_values(RomVersion::White2, RomRegion::Jpn);
-        let mac: [u8; 6] = [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F];
-        let frame = get_frame(Hardware::Ds);
+        let ds = DsConfig {
+            mac: [0x00, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F],
+            hardware: Hardware::Ds,
+            version: RomVersion::White2,
+            region: RomRegion::Jpn,
+        };
+        let nazo = get_nazo_values(&ds);
+        let frame = get_frame(ds.hardware);
 
-        let mut builder = BaseMessageBuilder::new(&nazo, mac, 0x82, 0x10F8, KeyCode::NONE, frame);
+        let mut builder =
+            BaseMessageBuilder::new(&nazo, ds.mac, 0x82, 0x10F8, KeyCode::NONE, frame);
         builder.set_datetime(
             build_date_code(2006, 3, 11),
             build_time_code(18, 53, 27, true),

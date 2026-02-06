@@ -35,9 +35,10 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/core/sha1/nazo.rs` | 修正 | DSi 用テーブル追加、API 変更 |
-| `wasm-pkg/src/datetime_search/base.rs` | 修正 | `Hardware` 引数追加 |
-| `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 修正 | `Hardware` 引数追加 |
+| `wasm-pkg/src/core/sha1/nazo.rs` | 修正 | DSi 用テーブル追加、引数を `&DsConfig` に変更 |
+| `wasm-pkg/src/datetime_search/base.rs` | 修正 | 呼び出しを `get_nazo_values(ds)` に変更 |
+| `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 修正 | 呼び出しを `get_nazo_values(ds)` に変更 |
+| `wasm-pkg/src/core/seed_resolver.rs` | 修正 | 呼び出しを `get_nazo_values(ds)` に変更 |
 
 ## 3. 設計方針
 
@@ -106,25 +107,25 @@ DS 用と DSi 用は完全に別の定数テーブルとして定義する。単
 pub const fn get_nazo_values(version: RomVersion, region: RomRegion) -> NazoValues;
 
 // 変更後
-pub const fn get_nazo_values(
-    version: RomVersion,
-    region: RomRegion,
-    hardware: Hardware,
-) -> NazoValues;
+pub const fn get_nazo_values(ds: &DsConfig) -> NazoValues;
 ```
 
-### 4.2 定数定義例
+`DsConfig` は `version`, `region`, `hardware` を全て保持しており、呼び出し元は既に `DsConfig` を持っている。個別フィールドを展開して渡す必要がなくなり、API が簡潔になる。
+
+### 4.2 実装方針
+
+`DsConfig` の `hardware` フィールドで DS 系 / DSi 系を判別し、`version` × `region` でテーブルを引く。
 
 ```rust
-// DSi/3DS 用 Black JPN
-(RomVersion::Black, RomRegion::Jpn, Hardware::Dsi | Hardware::ThreeDs) => NazoValues::new([
-    0x0276_1150,
-    0x0276_124C,
-    0x0276_124C,
-    0x0276_1298,
-    0x0276_1298,
-]),
+pub const fn get_nazo_values(ds: &DsConfig) -> NazoValues {
+    match ds.hardware {
+        Hardware::Ds | Hardware::DsLite => get_nazo_values_ds(ds.version, ds.region),
+        Hardware::Dsi | Hardware::Dsi3ds => get_nazo_values_dsi(ds.version, ds.region),
+    }
+}
 ```
+
+内部関数 `get_nazo_values_ds` / `get_nazo_values_dsi` で DS 用・DSi 用テーブルをそれぞれ保持する。
 
 ## 5. テスト方針
 
@@ -135,9 +136,10 @@ pub const fn get_nazo_values(
 
 ## 6. 実装チェックリスト
 
-- [ ] DSi 用 NAZO 値テーブルを nazo.rs に追加
-- [ ] `get_nazo_values` の引数に `Hardware` を追加
-- [ ] `datetime_search::base` の呼び出し箇所を更新
-- [ ] `gpu::datetime_search::pipeline` の呼び出し箇所を更新
-- [ ] ユニットテスト追加
-- [ ] clippy / rustfmt 確認
+- [x] `get_nazo_values` の引数を `&DsConfig` に変更
+- [x] DSi 用 NAZO 値テーブルを nazo.rs に追加
+- [x] `datetime_search::base` の呼び出し箇所を更新
+- [x] `gpu::datetime_search::pipeline` の呼び出し箇所を更新
+- [x] `core::seed_resolver` の呼び出し箇所を更新
+- [x] ユニットテスト追加（DS 回帰 + DSi/3DS 新規）
+- [x] clippy / rustfmt 確認

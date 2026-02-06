@@ -234,7 +234,7 @@ impl DatetimeHashGenerator {
     ) -> Result<Self, String> {
         time_range.validate()?;
 
-        let nazo = get_nazo_values(ds.version, ds.region);
+        let nazo = get_nazo_values(ds);
         let frame = get_frame(ds.hardware);
 
         let builder = BaseMessageBuilder::new(

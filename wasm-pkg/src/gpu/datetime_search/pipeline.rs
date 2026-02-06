@@ -295,8 +295,8 @@ impl SearchPipeline {
             u32::from(search_range.start_day),
         );
 
-        // NAZO 値 (ROM バージョン・リージョン依存)
-        let nazo = get_nazo_values(ds.version, ds.region);
+        // NAZO 値 (ROM バージョン・リージョン・ハードウェア依存)
+        let nazo = get_nazo_values(ds);
 
         // 時刻範囲
         let hour_range_start = u32::from(time_range.hour_start);
