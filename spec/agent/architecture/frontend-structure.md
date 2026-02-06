@@ -59,6 +59,10 @@ src/
 │
 ├── hooks/                  # カスタムフック
 │   ├── use-search.ts       # 検索実行 (WorkerPool ラッパー)
+│   ├── use-ds-config.ts    # DS設定フック
+│   ├── use-trainer.ts      # トレーナー情報フック
+│   ├── use-ui-settings.ts  # UI設定フック
+│   ├── use-search-results.ts # 検索結果フック
 │   └── use-local-storage.ts
 │
 ├── io/                     # 入出力処理

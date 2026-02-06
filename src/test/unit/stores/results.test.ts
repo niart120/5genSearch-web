@@ -6,7 +6,7 @@ import {
 } from '../../../stores/search/results';
 
 const resetStore = () => {
-  useSearchResultsStore.setState(getSearchResultsInitialState(), true);
+  useSearchResultsStore.setState(getSearchResultsInitialState());
 };
 
 describe('search results store', () => {

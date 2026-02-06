@@ -3,7 +3,7 @@ import { useUiStore, getUiInitialState } from '../../../stores/settings/ui';
 
 const resetStore = () => {
   localStorage.clear();
-  useUiStore.setState(getUiInitialState(), true);
+  useUiStore.setState(getUiInitialState());
 };
 
 describe('ui store', () => {

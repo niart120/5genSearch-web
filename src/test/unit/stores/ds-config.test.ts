@@ -3,7 +3,7 @@ import { useDsConfigStore, getDsConfigInitialState } from '../../../stores/setti
 
 const resetStore = () => {
   localStorage.clear();
-  useDsConfigStore.setState(getDsConfigInitialState(), true);
+  useDsConfigStore.setState(getDsConfigInitialState());
 };
 
 describe('ds-config store', () => {
@@ -61,9 +61,9 @@ describe('ds-config store', () => {
   });
 
   it('should store mac address array', () => {
-    const mac = [10, 11, 12, 13, 14, 15];
-    useDsConfigStore.getState().setConfig({ mac });
+    const mac = [10, 11, 12, 13, 14, 15] as const;
+    useDsConfigStore.getState().setConfig({ mac: [...mac] });
     const { config } = useDsConfigStore.getState();
-    expect(config.mac).toEqual(mac);
+    expect(config.mac).toEqual([...mac]);
   });
 });

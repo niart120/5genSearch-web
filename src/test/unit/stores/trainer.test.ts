@@ -3,7 +3,7 @@ import { useTrainerStore, getTrainerInitialState } from '../../../stores/setting
 
 const resetStore = () => {
   localStorage.clear();
-  useTrainerStore.setState(getTrainerInitialState(), true);
+  useTrainerStore.setState(getTrainerInitialState());
 };
 
 describe('trainer store', () => {
