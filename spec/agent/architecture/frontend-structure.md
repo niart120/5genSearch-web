@@ -46,8 +46,16 @@ src/
 │   └── search-tasks.ts     # 検索タスク生成 (WASM タスク分割関数のラッパー)
 │
 ├── stores/                 # 状態管理
-│   ├── settings.ts         # DS設定・アプリ設定
-│   └── search.ts           # 検索状態
+│   ├── settings/
+│   │   ├── ds-config.ts    # DS設定 (永続化)
+│   │   ├── trainer.ts      # トレーナー情報 (永続化)
+│   │   ├── ui.ts           # UI設定 (永続化)
+│   │   └── index.ts        # re-export
+│   ├── search/
+│   │   ├── results.ts      # 検索結果 (非永続化)
+│   │   └── index.ts        # re-export
+│   ├── sync.ts             # Store 間同期
+│   └── index.ts            # re-export
 │
 ├── hooks/                  # カスタムフック
 │   ├── use-search.ts       # 検索実行 (WorkerPool ラッパー)
