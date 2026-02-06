@@ -29,7 +29,16 @@ wasm-pkg/pkg/
 Cargo.lock
 
 # WASM build output
-src/wasm/
+src/wasm/*
+!src/wasm/.gitignore
+!src/wasm/core.ts
+!src/wasm/ui.ts
+!src/wasm/core/
+!src/wasm/ui/
+src/wasm/core/*
+src/wasm/ui/*
+!src/wasm/core/*.d.ts
+!src/wasm/ui/*.d.ts
 public/wasm/
 
 # ローカル開発用設定
