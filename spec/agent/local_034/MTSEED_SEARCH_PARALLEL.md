@@ -5,6 +5,7 @@
 ### 1.1 目的
 
 `MtseedSearcher`（IV フィルタによる MT Seed 全探索）を Worker による並列実行に対応させる。
+合わせて、WASM の `generate_*_search_tasks` 関数を呼び出し `SearchTask[]` を返す TS 側オーケストレーション層を実装する。
 
 ### 1.2 用語定義
 
@@ -14,6 +15,9 @@
 | MtseedSearcher | 指定 IV フィルタを満たす MT Seed を全探索する Searcher |
 | IV フィルタ | 個体値 (HP/攻撃/防御/特攻/特防/素早さ) の範囲条件 |
 | タスク分割 | 検索範囲を複数タスクに分割し、Worker で並列実行する仕組み |
+| SearchTask | Worker に配信する検索タスクの型 (`kind` + `params`) |
+| タスク生成関数 | WASM 側の `generate_*_search_tasks` 関数群 |
+| オーケストレーション層 | WASM タスク生成関数を呼び出し、タスク配列を構築する TS サービス |
 
 ### 1.3 背景・問題
 
@@ -62,6 +66,9 @@ pub struct MtseedSearcher {
 | `wasm-pkg/src/lib.rs` | 修正 | `generate_mtseed_iv_search_tasks` をエクスポート |
 | `src/workers/types.ts` | 確認 | TypeScript 型定義の自動更新確認 |
 | `src/test/integration/workers/searcher.test.ts` | 修正 | 並列化テスト追加 |
+| `src/services/search-tasks.ts` | 新規作成 | WASM タスク生成関数のラッパー |
+| `src/test/integration/wasm-binding.test.ts` | 修正 | 分割ロジックテスト追加 |
+| `src/test/integration/services/search-tasks.test.ts` | 新規作成 | search-tasks.ts の統合テスト |
 
 ## 3. 設計方針
 
@@ -228,6 +235,69 @@ export interface MtseedSearchParams {
 }
 ```
 
+### 4.5 TS オーケストレーション層 (`src/services/search-tasks.ts`)
+
+設計方針:
+- 各関数は WASM の `generate_*` を呼び出し、返されたパラメータ配列を `SearchTask[]` にマッピングする
+- `services/` 配下に置き、`features/` → `services/` の依存方向を維持
+- class は使わず関数として実装（コーディング規約: 関数型プログラミング推奨）
+- WASM 型は `@wasm` から直接 import
+- WASM 初期化済みのコンテキストで呼ばれる前提（初期化責務は持たない）
+
+```typescript
+import {
+  generate_mtseed_iv_search_tasks,
+  generate_mtseed_search_tasks,
+  generate_egg_search_tasks,
+  generate_trainer_info_search_tasks,
+} from '../wasm/wasm_pkg.js';
+import type { SearchTask } from '../workers/types';
+
+export function createMtseedIvSearchTasks(
+  baseParams: MtseedSearchParams,
+  workerCount: number,
+): MtseedSearchTask[] {
+  const paramsList = generate_mtseed_iv_search_tasks(baseParams, workerCount);
+  return paramsList.map((params) => ({ kind: 'mtseed' as const, params }));
+}
+
+export function createMtseedDatetimeSearchTasks(
+  context: DatetimeSearchContext,
+  targetSeeds: MtSeed[],
+  workerCount: number,
+): MtseedDatetimeSearchTask[] {
+  const paramsList = generate_mtseed_search_tasks(context, targetSeeds, workerCount);
+  return paramsList.map((params) => ({ kind: 'mtseed-datetime' as const, params }));
+}
+
+export function createEggSearchTasks(
+  context: DatetimeSearchContext,
+  eggParams: EggGenerationParams,
+  genConfig: GenerationConfig,
+  filter: EggFilter | null,
+  workerCount: number,
+): EggDatetimeSearchTask[] {
+  const paramsList = generate_egg_search_tasks(context, eggParams, genConfig, filter, workerCount);
+  return paramsList.map((params) => ({ kind: 'egg-datetime' as const, params }));
+}
+
+export function createTrainerInfoSearchTasks(
+  context: DatetimeSearchContext,
+  filter: TrainerInfoFilter,
+  gameStart: GameStartConfig,
+  workerCount: number,
+): TrainerInfoSearchTask[] {
+  const paramsList = generate_trainer_info_search_tasks(context, filter, gameStart, workerCount);
+  return paramsList.map((params) => ({ kind: 'trainer-info' as const, params }));
+}
+```
+
+### 4.6 WASM メインスレッド初期化
+
+`search-tasks.ts` の関数は WASM 関数を直接呼ぶため、メインスレッドで WASM が初期化済みである必要がある。
+仕様書 (`worker-design.md` セクション 2.3) に「`generate_*_search_tasks` はメインスレッドで実行」と明記されている。
+`search-tasks.ts` は「WASM 初期化済みのコンテキストで呼ばれる」前提で実装する（初期化責務は持たない）。
+
 ## 5. テスト方針
 
 ### 5.1 Rust ユニットテスト
@@ -245,6 +315,22 @@ export interface MtseedSearchParams {
 | `should split search range correctly` | タスク分割後の範囲が正しいことを確認 |
 | `should find results in parallel` | 複数 Worker で並列実行し、結果が正しく集約されることを確認 |
 
+### 5.3 テスト整理
+
+| テスト | 移動先 | 理由 |
+|--------|--------|------|
+| `should split search range correctly` | `wasm-binding.test.ts` | WASM バインディングテスト |
+| `should find results in parallel` | `searcher.test.ts`（残留） | Worker 並列実行テスト |
+
+- `MtseedSearcher` describe の `beforeAll(init())` を削除し、並列テスト内のローカル初期化に移行
+
+### 5.4 search-tasks.ts 統合テスト
+
+`src/test/integration/services/search-tasks.test.ts`:
+- WASM を初期化して `createMtseedIvSearchTasks` を呼び出し、正しいタスク配列が返ることを検証
+- 他の `create*SearchTasks` 関数も同様にテスト
+- 結果を `runSearchInWorker` に渡して Worker 経由で実行可能なことを確認
+
 ## 6. 実装チェックリスト
 
 - [ ] `MtseedSearchParams` に `start_seed`, `end_seed` フィールド追加
@@ -257,3 +343,8 @@ export interface MtseedSearchParams {
 - [ ] WASM リビルド・TypeScript 型確認
 - [ ] 統合テスト追加
 - [ ] 既存テスト (`should match all with any filter`) が動作することを確認
+- [ ] `src/services/search-tasks.ts` 新規作成
+- [ ] `searcher.test.ts` から WASM 直接テストを `wasm-binding.test.ts` へ移動
+- [ ] `searcher.test.ts` の `beforeAll(init())` 整理
+- [ ] `src/test/integration/services/search-tasks.test.ts` 新規作成
+- [ ] 全テスト通過確認
