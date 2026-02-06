@@ -37,6 +37,8 @@ describe('Worker Types', () => {
             },
             mt_offset: 7,
             is_roamer: false,
+            start_seed: 0,
+            end_seed: 0xffffffff,
           },
         },
       };
@@ -150,6 +152,8 @@ describe('Worker Types', () => {
           },
           mt_offset: 7,
           is_roamer: false,
+          start_seed: 0,
+          end_seed: 0xffffffff,
         },
       };
 
