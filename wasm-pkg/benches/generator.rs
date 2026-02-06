@@ -35,6 +35,7 @@ fn create_generation_config() -> GenerationConfig {
         game_start: GameStartConfig {
             start_mode: StartMode::Continue,
             save_state: SaveState::WithSave,
+            shiny_charm: false,
         },
         user_offset: 0,
         max_advance: 10000,
@@ -47,7 +48,6 @@ fn create_pokemon_params() -> PokemonGenerationParams {
         encounter_type: EncounterType::Normal,
         encounter_method: EncounterMethod::Stationary,
         lead_ability: LeadAbilityEffect::None,
-        shiny_charm: false,
         slots: vec![EncounterSlotConfig {
             species_id: 1,
             level_min: 5,

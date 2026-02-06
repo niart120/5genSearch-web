@@ -8,7 +8,7 @@ use crate::generation::algorithm::{
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
     EncounterResult, EncounterType, GenerationConfig, HeldItemSlot, LeadAbilityEffect, Nature, Pid,
-    PokemonGenerationParams, ShinyType,
+    PokemonGenerationParams, RomVersion, ShinyType,
 };
 
 /// 固定ポケモン生成 (IV なし)
@@ -187,6 +187,19 @@ mod tests {
             lead_ability: LeadAbilityEffect::None,
 
             slots: vec![],
+        }
+    }
+
+    fn make_config(version: RomVersion) -> GenerationConfig {
+        GenerationConfig {
+            version,
+            game_start: GameStartConfig {
+                start_mode: StartMode::Continue,
+                save_state: SaveState::WithSave,
+                shiny_charm: false,
+            },
+            user_offset: 0,
+            max_advance: 1000,
         }
     }
 

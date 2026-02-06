@@ -130,6 +130,19 @@ mod tests {
         }
     }
 
+    fn make_config(version: RomVersion) -> GenerationConfig {
+        GenerationConfig {
+            version,
+            game_start: GameStartConfig {
+                start_mode: StartMode::Continue,
+                save_state: SaveState::WithSave,
+                shiny_charm: false,
+            },
+            user_offset: 0,
+            max_advance: 1000,
+        }
+    }
+
     #[test]
     fn test_generate_surfing_pokemon() {
         let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
