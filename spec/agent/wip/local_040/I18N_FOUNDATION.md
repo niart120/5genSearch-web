@@ -54,6 +54,7 @@ Lingui (`@lingui/core` + `@lingui/react`) を導入し、フロントエンド�
 | `src/test/helpers/i18n.tsx` | 新規 | テスト用 i18n セットアップヘルパー |
 | `src/test/unit/i18n/i18n.test.ts` | 新規 | i18n 初期化・ロケール切替テスト |
 | `src/test/unit/stores/ui.test.ts` | 変更 | 言語切替時の i18n 連携テスト追加 |
+| `.github/instructions/i18n.instructions.md` | 新規 | 翻訳カタログ編集時のガイドライン (applyTo: `src/i18n/locales/**`) |
 
 ## 3. 設計方針
 
@@ -339,7 +340,28 @@ describe('i18n', () => {
 
 App.tsx に動作確認用の `<Trans>` を追加した状態で `lingui extract` を実行し、メッセージが抽出されることを確認する。
 
-### 4.11 `tsconfig.app.json`
+### 4.11 `.github/instructions/i18n.instructions.md`
+
+翻訳カタログ (`src/i18n/locales/**`) を編集・レビューする際に適用されるインストラクションファイル。翻訳の一貫性を担保する目的で配置する。
+
+```markdown
+---
+applyTo: src/i18n/locales/**
+---
+
+# 翻訳カタログ編集ガイド
+
+(具体的な内容は Phase 2 以降の翻訳作業開始時に策定する)
+```
+
+記載すべき内容の候補:
+
+- 用語集 (ポケモン関連の固有名詞・UI 用語の統一訳)
+- 文体ルール (敬体/常体、句読点)
+- PO ファイルの編集手順
+- レビュー時のチェック観点
+
+### 4.12 `tsconfig.app.json`
 
 `compilerOptions.types` に Lingui の型定義を追加:
 
@@ -395,4 +417,5 @@ App.tsx に動作確認用の `<Trans>` を追加した状態で `lingui extract
 - [ ] `src/test/unit/stores/ui.test.ts` の型整合性確認
 - [ ] `pnpm dev` で動作確認
 - [ ] `pnpm test:run` で全テスト通過
+- [ ] `.github/instructions/i18n.instructions.md` 作成
 - [ ] `pnpm lint` 通過
