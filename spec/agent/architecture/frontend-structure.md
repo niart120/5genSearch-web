@@ -194,4 +194,4 @@ Phase 2 (共通コンポーネント) 開始前に以下を決定：
 - [状態管理方針](./state-management.md)
 - [Worker 設計](./worker-design.md)
 - [レスポンシブ対応](./responsive-design.md)
-- [i18n 設計](./i18n-design.md) (TODO)
+- [i18n 設計](./i18n-design.md)

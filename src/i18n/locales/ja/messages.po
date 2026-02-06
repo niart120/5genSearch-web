@@ -1,0 +1,16 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-02-06 19:23+0900\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ja\n"
+
+#: src/App.tsx:30
+msgid "Vite と React のロゴをクリックして詳細を確認"
+msgstr "Vite と React のロゴをクリックして詳細を確認"
+
+#: src/App.tsx:21
+msgid "ポケモン乱数調整ツール"
+msgstr "ポケモン乱数調整ツール"

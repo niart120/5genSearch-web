@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default defineConfig([
-  globalIgnores(['dist', 'wasm-pkg/pkg', 'src/wasm', '**/*.md']),
+  globalIgnores(['dist', 'wasm-pkg/pkg', 'src/wasm', 'src/i18n/locales', '**/*.md']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

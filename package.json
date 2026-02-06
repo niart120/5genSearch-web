@@ -17,15 +17,22 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:wasm": "cargo test -p wasm-pkg"
+    "test:wasm": "cargo test -p wasm-pkg",
+    "lingui:extract": "lingui extract",
+    "lingui:compile": "lingui compile --typescript"
   },
   "dependencies": {
+    "@lingui/core": "^5.9.0",
+    "@lingui/react": "^5.9.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@lingui/babel-plugin-lingui-macro": "^5.9.0",
+    "@lingui/cli": "^5.9.0",
+    "@lingui/vite-plugin": "^5.9.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
