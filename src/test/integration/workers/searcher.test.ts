@@ -19,6 +19,8 @@ import type {
   EggDatetimeSearchTask,
   TrainerInfoSearchTask,
 } from '../../../workers/types';
+import init from '../../../wasm/wasm_pkg.js';
+import { createMtseedIvSearchTasks } from '../../../services/search-tasks';
 
 describe('MtseedDatetimeSearcher', () => {
   it('should find known MT Seed with correct datetime', async () => {
@@ -137,6 +139,46 @@ describe('MtseedSearcher', () => {
     // 正確に 5 件であること
     expect(results.length).toBe(5);
   }, 600000);
+
+  it('should find results in parallel', async () => {
+    // createMtseedIvSearchTasks は WASM 関数を呼ぶためメインスレッドの初期化が必要
+    await init();
+
+    // 小さい範囲に分割して並列検索
+    const tasks = createMtseedIvSearchTasks(
+      {
+        iv_filter: {
+          hp: [0, 31],
+          atk: [0, 31],
+          def: [0, 31],
+          spa: [0, 31],
+          spd: [0, 31],
+          spe: [0, 31],
+        },
+        mt_offset: 7,
+        is_roamer: false,
+        start_seed: 0,
+        end_seed: 0x3ff, // 1024 件のみ
+      },
+      4
+    );
+
+    // 各タスクを並列実行
+    const searchPromises = tasks.map((task) => runSearchInWorker(task, { timeout: 30000 }));
+
+    const allResults = await Promise.all(searchPromises);
+
+    // 結果を集約
+    const mergedResults = allResults.flat();
+
+    // any フィルタなので 1024 件すべて見つかるはず
+    expect(mergedResults.length).toBe(1024);
+
+    // 重複がないことを確認
+    const seeds = mergedResults.map((r) => r.seed);
+    const uniqueSeeds = new Set(seeds);
+    expect(uniqueSeeds.size).toBe(1024);
+  });
 });
 
 describe('EggDatetimeSearcher', () => {

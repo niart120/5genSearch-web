@@ -6,11 +6,13 @@ import init, {
   generate_egg_list,
   resolve_pokemon_data_batch,
   resolve_egg_data_batch,
+  generate_mtseed_iv_search_tasks,
   MtseedDatetimeSearcher,
   GpuDatetimeSearchIterator,
 } from '../../wasm/wasm_pkg.js';
 import type {
   MtseedDatetimeSearchParams,
+  MtseedSearchParams,
   DatetimeSearchContext,
   MtSeed,
 } from '../../wasm/wasm_pkg.js';
@@ -218,5 +220,38 @@ describe('WASM Binding Verification', () => {
 
       iterator.free();
     }, 60000);
+  });
+
+  describe('generate_mtseed_iv_search_tasks', () => {
+    it('should split full range into specified number of tasks', () => {
+      const baseParams: MtseedSearchParams = {
+        iv_filter: {
+          hp: [0, 31],
+          atk: [0, 31],
+          def: [0, 31],
+          spa: [0, 31],
+          spd: [0, 31],
+          spe: [0, 31],
+        },
+        mt_offset: 7,
+        is_roamer: false,
+      };
+
+      const tasks = generate_mtseed_iv_search_tasks(baseParams, 4);
+
+      // 4 タスクに分割されること
+      expect(tasks.length).toBe(4);
+
+      // 最初のタスクは 0 から開始
+      expect(tasks[0].start_seed).toBe(0);
+
+      // 最後のタスクは 0xFFFF_FFFF で終了
+      expect(tasks[tasks.length - 1].end_seed).toBe(0xffff_ffff);
+
+      // 各タスクの start_seed が前タスクの end_seed + 1 であること
+      for (let i = 1; i < tasks.length; i++) {
+        expect(tasks[i].start_seed).toBe(tasks[i - 1].end_seed! + 1);
+      }
+    });
   });
 });

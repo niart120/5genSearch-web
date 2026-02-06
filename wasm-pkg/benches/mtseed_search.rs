@@ -25,6 +25,8 @@ fn create_mtseed_searcher() -> MtseedSearcher {
         },
         mt_offset: 7,
         is_roamer: false,
+        start_seed: 0,
+        end_seed: 0xFFFF_FFFF,
     };
     MtseedSearcher::new(params)
 }

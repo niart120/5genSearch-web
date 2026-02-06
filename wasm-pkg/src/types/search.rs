@@ -325,6 +325,16 @@ pub struct MtseedSearchParams {
     pub mt_offset: u32,
     /// 徘徊ポケモンモード
     pub is_roamer: bool,
+    /// 検索開始 Seed (inclusive, デフォルト 0)
+    #[serde(default)]
+    pub start_seed: u32,
+    /// 検索終了 Seed (inclusive, デフォルト `0xFFFF_FFFF`)
+    #[serde(default = "default_end_seed")]
+    pub end_seed: u32,
+}
+
+fn default_end_seed() -> u32 {
+    0xFFFF_FFFF
 }
 
 /// MT Seed 検索結果
