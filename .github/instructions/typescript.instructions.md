@@ -25,6 +25,12 @@ applyTo: 'src/**/*.{ts,tsx}'
 - React Hooks 使用
 - ESLint/Prettier 設定に準拠
 
+## 永続化 (persist) 変更の運用
+
+- 公開前は migrate を実装しない
+- 破壊的変更時は persist の name を変更し、新ストレージに切り替える
+- 安定化後に限り migrate を導入する
+
 ## 禁止事項
 
 - `any` 型の安易な使用

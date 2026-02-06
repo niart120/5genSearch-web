@@ -1,10 +1,10 @@
 ---
-applyTo: spec/agent/local_*/*.md
+applyTo: spec/agent/*/local_*/*.md
 ---
 # 仕様書構成様式
 
 ## ファイル配置
-- `spec/agent/local_{連番}/` に配置
+- `spec/agent/wip/local_{連番}/` (新規執筆・着手中), `spec/agent/complete/local_{連番}/` (完了済み) に配置
 - ファイル名は `FEATURE_NAME.md` 形式（大文字スネークケース）
 
 ## 必須セクション構成

@@ -54,14 +54,19 @@ Zustand を選定した理由:
 | トレーナー情報 | TID/SID |
 | UI 設定 | 言語、テーマ (将来) |
 
-### 3.2 セッション状態 (非永続化)
+### 3.2 セッション状態 — Zustand Store (非永続化)
 
-| 状態 | 説明 |
-|-----|------|
-| 検索条件 | 各機能の入力パラメータ |
-| 検索結果 | 生成されたリスト |
-| 進捗情報 | 処理割合、残り時間 |
-| Worker 状態 | 実行中/待機中 |
+| 状態 | 説明 | 管理方式 |
+|-----|------|----------|
+| 検索結果 | 生成されたリスト。機能横断で参照するため Store 化 | `stores/search/results.ts` |
+
+### 3.2.1 セッション状態 — ローカル (useState)
+
+| 状態 | 説明 | 管理方式 |
+|-----|------|----------|
+| 検索条件 | 各機能の入力パラメータ | 各 feature のローカル state |
+| 進捗情報 | 処理割合、残り時間 | `use-search.ts` 内 useState |
+| Worker 状態 | 実行中/待機中 | `use-search.ts` 内 useState |
 
 ### 3.3 ローカル状態 (useState)
 
@@ -79,14 +84,18 @@ stores/
 ├── settings/
 │   ├── ds-config.ts      # DS設定 (永続化)
 │   ├── trainer.ts        # トレーナー情報 (永続化)
-│   └── ui.ts             # UI設定 (永続化)
+│   ├── ui.ts             # UI設定 (永続化)
+│   └── index.ts          # re-export
 │
 ├── search/
-│   ├── progress.ts       # 進捗状態 (非永続化)
-│   └── results.ts        # 検索結果 (非永続化)
+│   ├── results.ts        # 検索結果 (非永続化)
+│   └── index.ts          # re-export
 │
+├── sync.ts               # Store 間同期
 └── index.ts              # re-export
 ```
+
+**進捗 (progress) を Store 化しない理由**: 現時点で進捗を参照するのは `use-search.ts` を呼び出すコンポーネントのみ。ProgressOverlay 等でコンポーネントツリーを跨ぐ参照が必要になった段階で Store 化を検討する。
 
 ### 4.2 分割基準
 
@@ -209,27 +218,15 @@ export const useDsConfigStore = create<DsConfigState>()(
 | `partialize` | Store 内の全状態が永続化対象なら省略。Actions は自動除外される |
 | `merge` | ネストが浅い場合はデフォルト (shallow merge) で十分 |
 
-### 6.4 スキーマ変更時の対応
+### 6.4 スキーマ変更時の運用
 
-`persist` の `version` + `migrate` で対応する。localStorage 内の旧バージョンデータを新スキーマに変換する。
+公開前は破壊的変更が続くため、migrate を実装しない。運用は以下で統一する。
 
-```typescript
-persist(storeCreator, {
-  name: 'ds-config',
-  version: 2,
-  migrate: (persisted, version) => {
-    if (version === 1) {
-      // v1 → v2: timer0 (number) → timer0Range ({ min, max })
-      const old = persisted as { timer0?: number };
-      persisted.timer0Range = { min: old.timer0 ?? 0, max: old.timer0 ?? 0 };
-      delete old.timer0;
-    }
-    return persisted;
-  },
-});
-```
-
-本PJの永続化対象 (DS 設定、トレーナー情報、UI 設定) はスキーマが安定する見込みが高く、migrate が必要になる頻度は低い。
+| 状況 | 方針 |
+|------|------|
+| 追加のみ (後方互換) | `version` は据え置き。`merge` で初期値補完される前提で対応する |
+| 破壊的変更 | `name` を変更してストレージを切り替える。必要に応じて `reset` を案内する |
+| 安定化後 | 影響の大きい変更に限り `migrate` を導入する |
 
 ## 7. テスト方針
 
