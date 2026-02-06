@@ -218,27 +218,15 @@ export const useDsConfigStore = create<DsConfigState>()(
 | `partialize` | Store 内の全状態が永続化対象なら省略。Actions は自動除外される |
 | `merge` | ネストが浅い場合はデフォルト (shallow merge) で十分 |
 
-### 6.4 スキーマ変更時の対応
+### 6.4 スキーマ変更時の運用
 
-`persist` の `version` + `migrate` で対応する。localStorage 内の旧バージョンデータを新スキーマに変換する。
+公開前は破壊的変更が続くため、migrate を実装しない。運用は以下で統一する。
 
-```typescript
-persist(storeCreator, {
-  name: 'ds-config',
-  version: 2,
-  migrate: (persisted, version) => {
-    if (version === 1) {
-      // v1 → v2: timer0 (number) → timer0Range ({ min, max })
-      const old = persisted as { timer0?: number };
-      persisted.timer0Range = { min: old.timer0 ?? 0, max: old.timer0 ?? 0 };
-      delete old.timer0;
-    }
-    return persisted;
-  },
-});
-```
-
-本PJの永続化対象 (DS 設定、トレーナー情報、UI 設定) はスキーマが安定する見込みが高く、migrate が必要になる頻度は低い。
+| 状況 | 方針 |
+|------|------|
+| 追加のみ (後方互換) | `version` は据え置き。`merge` で初期値補完される前提で対応する |
+| 破壊的変更 | `name` を変更してストレージを切り替える。必要に応じて `reset` を案内する |
+| 安定化後 | 影響の大きい変更に限り `migrate` を導入する |
 
 ## 7. テスト方針
 
