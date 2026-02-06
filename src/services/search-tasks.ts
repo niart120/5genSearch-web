@@ -14,7 +14,7 @@ import {
   generate_trainer_info_search_tasks,
 } from '../wasm/wasm_pkg.js';
 import type {
-  MtseedSearchParams,
+  MtseedSearchContext,
   DatetimeSearchContext,
   MtSeed,
   EggGenerationParams,
@@ -33,14 +33,14 @@ import type {
 /**
  * MT Seed IV 検索タスクを生成
  *
- * Seed 空間 (start_seed〜end_seed) を workerCount 個に分割し、
+ * 全 Seed 空間 (0〜0xFFFF_FFFF) を workerCount 個に分割し、
  * 各 Worker に割り当てるタスクを返す。
  */
 export function createMtseedIvSearchTasks(
-  baseParams: MtseedSearchParams,
+  context: MtseedSearchContext,
   workerCount: number
 ): MtseedSearchTask[] {
-  const paramsList = generate_mtseed_iv_search_tasks(baseParams, workerCount);
+  const paramsList = generate_mtseed_iv_search_tasks(context, workerCount);
   return paramsList.map((params) => ({ kind: 'mtseed' as const, params }));
 }
 

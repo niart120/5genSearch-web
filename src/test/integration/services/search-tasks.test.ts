@@ -89,29 +89,5 @@ describe('search-tasks', () => {
         expect(task.params.is_roamer).toBe(true);
       }
     });
-
-    it('should respect custom seed range', () => {
-      const tasks = createMtseedIvSearchTasks(
-        {
-          iv_filter: {
-            hp: [0, 31],
-            atk: [0, 31],
-            def: [0, 31],
-            spa: [0, 31],
-            spd: [0, 31],
-            spe: [0, 31],
-          },
-          mt_offset: 7,
-          is_roamer: false,
-          start_seed: 100,
-          end_seed: 199,
-        },
-        2
-      );
-
-      expect(tasks.length).toBe(2);
-      expect(tasks[0].params.start_seed).toBe(100);
-      expect(tasks[tasks.length - 1].params.end_seed).toBe(199);
-    });
   });
 });

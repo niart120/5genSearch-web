@@ -27,7 +27,7 @@ pub use keyinput::{DsButton, KeyCode, KeyInput, KeySpec};
 pub use search::{
     DateRangeParams, DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
     EggDatetimeSearchResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult,
-    MtseedSearchBatch, MtseedSearchParams, SearchRangeParams, TimeRangeParams,
+    MtseedSearchBatch, MtseedSearchContext, MtseedSearchParams, SearchRangeParams, TimeRangeParams,
     TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
 };
 

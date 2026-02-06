@@ -6,7 +6,9 @@
 use wasm_bindgen::prelude::*;
 
 use crate::generation::algorithm::generate_rng_ivs_with_offset;
-use crate::types::{IvFilter, MtSeed, MtseedResult, MtseedSearchBatch, MtseedSearchParams};
+use crate::types::{
+    IvFilter, MtSeed, MtseedResult, MtseedSearchBatch, MtseedSearchContext, MtseedSearchParams,
+};
 
 /// MT Seed 検索器
 #[wasm_bindgen]
@@ -82,30 +84,27 @@ impl MtseedSearcher {
 
 /// MT Seed IV 検索タスクを生成
 ///
-/// 検索範囲を `worker_count` 個のタスクに分割する。
-/// `base_params` の `start_seed` / `end_seed` で指定された閉区間を均等分割する。
+/// 全 Seed 空間 (0〜2^32-1) を `worker_count` 個のタスクに均等分割する。
 ///
 /// # Arguments
-/// - `base_params`: 基本パラメータ (`iv_filter`, `mt_offset`, `is_roamer`, `start_seed`, `end_seed`)
+/// - `context`: 検索コンテキスト (`iv_filter`, `mt_offset`, `is_roamer`)
 /// - `worker_count`: Worker 数
 ///
 /// # Returns
-/// 分割されたタスクのリスト
+/// 分割されたタスクのリスト（各タスクは閉区間 `[start_seed, end_seed]`）
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::cast_possible_truncation)]
 pub fn generate_mtseed_iv_search_tasks(
-    base_params: MtseedSearchParams,
+    context: MtseedSearchContext,
     worker_count: u32,
 ) -> Vec<MtseedSearchParams> {
-    let start = u64::from(base_params.start_seed);
-    let end = u64::from(base_params.end_seed);
-    let total = end - start + 1; // 閉区間
+    let total: u64 = 0x1_0000_0000; // 2^32
     let chunk_size = total / u64::from(worker_count);
     let remainder = total % u64::from(worker_count);
 
     let mut tasks = Vec::with_capacity(worker_count as usize);
-    let mut current = start;
+    let mut current: u64 = 0;
 
     for i in 0..worker_count {
         let extra = u64::from(u64::from(i) < remainder);
@@ -118,9 +117,9 @@ pub fn generate_mtseed_iv_search_tasks(
         let task_end = current + size - 1; // 閉区間の終端
 
         tasks.push(MtseedSearchParams {
-            iv_filter: base_params.iv_filter.clone(),
-            mt_offset: base_params.mt_offset,
-            is_roamer: base_params.is_roamer,
+            iv_filter: context.iv_filter.clone(),
+            mt_offset: context.mt_offset,
+            is_roamer: context.is_roamer,
             start_seed: current as u32,
             end_seed: task_end as u32,
         });
@@ -144,6 +143,15 @@ mod tests {
             is_roamer: false,
             start_seed: 0,
             end_seed: 0xFFFF_FFFF,
+        }
+    }
+
+    /// デフォルト値の `MtseedSearchContext` を生成
+    fn make_default_context(iv_filter: IvFilter) -> MtseedSearchContext {
+        MtseedSearchContext {
+            iv_filter,
+            mt_offset: 7,
+            is_roamer: false,
         }
     }
 
@@ -218,8 +226,8 @@ mod tests {
 
     #[test]
     fn test_generate_mtseed_iv_search_tasks() {
-        let base = make_default_params(IvFilter::any());
-        let tasks = generate_mtseed_iv_search_tasks(base, 4);
+        let ctx = make_default_context(IvFilter::any());
+        let tasks = generate_mtseed_iv_search_tasks(ctx, 4);
 
         assert_eq!(tasks.len(), 4);
 
@@ -236,8 +244,8 @@ mod tests {
 
     #[test]
     fn test_generate_mtseed_iv_search_tasks_coverage() {
-        let base = make_default_params(IvFilter::any());
-        let tasks = generate_mtseed_iv_search_tasks(base, 4);
+        let ctx = make_default_context(IvFilter::any());
+        let tasks = generate_mtseed_iv_search_tasks(ctx, 4);
 
         // 全タスクの範囲で重複なく 0〜0xFFFF_FFFF をカバー
         let mut total_seeds: u64 = 0;
@@ -250,38 +258,16 @@ mod tests {
 
     #[test]
     fn test_generate_mtseed_iv_search_tasks_preserves_params() {
-        let base = MtseedSearchParams {
+        let ctx = MtseedSearchContext {
             iv_filter: IvFilter::six_v(),
             mt_offset: 10,
             is_roamer: true,
-            start_seed: 0,
-            end_seed: 0xFFFF_FFFF,
         };
-        let tasks = generate_mtseed_iv_search_tasks(base, 2);
+        let tasks = generate_mtseed_iv_search_tasks(ctx, 2);
 
         for task in &tasks {
             assert_eq!(task.mt_offset, 10);
             assert!(task.is_roamer);
         }
-    }
-
-    #[test]
-    fn test_generate_mtseed_iv_search_tasks_worker_count_exceeds_total() {
-        // 範囲が worker_count より小さい場合
-        let base = MtseedSearchParams {
-            iv_filter: IvFilter::any(),
-            mt_offset: 7,
-            is_roamer: false,
-            start_seed: 0,
-            end_seed: 1, // 2 件のみ
-        };
-        let tasks = generate_mtseed_iv_search_tasks(base, 8);
-
-        // worker_count > total なので 2 タスクのみ生成
-        assert_eq!(tasks.len(), 2);
-        assert_eq!(tasks[0].start_seed, 0);
-        assert_eq!(tasks[0].end_seed, 0);
-        assert_eq!(tasks[1].start_seed, 1);
-        assert_eq!(tasks[1].end_seed, 1);
     }
 }

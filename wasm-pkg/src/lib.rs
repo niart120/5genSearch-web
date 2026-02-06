@@ -32,12 +32,12 @@ pub use types::{
     GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
     ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed, LeadAbilityEffect,
     MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, MtseedDatetimeSearchBatch,
-    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchParams,
-    NeedleDirection, NeedlePattern, Pid, PokemonFilter, PokemonGenerationParams, RomVersion,
-    SaveState, SearchRangeParams, SeedOrigin, SeedSpec, ShinyFilter, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode, TimeRangeParams, Timer0VCountRange, TrainerInfo,
-    TrainerInfoFilter, TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
-    UiEggData, UiPokemonData,
+    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchContext,
+    MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,
+    PokemonGenerationParams, RomVersion, SaveState, SearchRangeParams, SeedOrigin, SeedSpec,
+    ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TimeRangeParams,
+    Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
+    TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData, UiPokemonData,
 };
 
 // Re-export core functions

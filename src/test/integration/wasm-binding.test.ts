@@ -12,7 +12,7 @@ import init, {
 } from '../../wasm/wasm_pkg.js';
 import type {
   MtseedDatetimeSearchParams,
-  MtseedSearchParams,
+  MtseedSearchContext,
   DatetimeSearchContext,
   MtSeed,
 } from '../../wasm/wasm_pkg.js';
@@ -224,7 +224,7 @@ describe('WASM Binding Verification', () => {
 
   describe('generate_mtseed_iv_search_tasks', () => {
     it('should split full range into specified number of tasks', () => {
-      const baseParams: MtseedSearchParams = {
+      const context: MtseedSearchContext = {
         iv_filter: {
           hp: [0, 31],
           atk: [0, 31],
@@ -237,7 +237,7 @@ describe('WASM Binding Verification', () => {
         is_roamer: false,
       };
 
-      const tasks = generate_mtseed_iv_search_tasks(baseParams, 4);
+      const tasks = generate_mtseed_iv_search_tasks(context, 4);
 
       // 4 タスクに分割されること
       expect(tasks.length).toBe(4);
@@ -250,7 +250,7 @@ describe('WASM Binding Verification', () => {
 
       // 各タスクの start_seed が前タスクの end_seed + 1 であること
       for (let i = 1; i < tasks.length; i++) {
-        expect(tasks[i].start_seed).toBe(tasks[i - 1].end_seed! + 1);
+        expect(tasks[i].start_seed).toBe(tasks[i - 1].end_seed + 1);
       }
     });
   });
