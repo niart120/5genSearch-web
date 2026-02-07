@@ -187,11 +187,11 @@ Store の `theme` 変更を `subscribe` で監視し、DOM に反映する。
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/App.css` を削除
-- [ ] `src/assets/react.svg` を削除
-- [ ] `src/App.tsx` をレイアウトシェルに置換
-- [ ] `src/components/layout/header.tsx` を作成
-- [ ] `src/components/layout/theme-toggle.tsx` を作成
-- [ ] `src/main.tsx` にテーマ初期化と subscribe を追加
-- [ ] `pnpm dev` で動作確認
-- [ ] `pnpm lint` / `pnpm format` を通過
+- [x] `src/App.css` を削除
+- [x] `src/assets/react.svg` を削除
+- [x] `src/App.tsx` をレイアウトシェルに置換
+- [x] `src/components/layout/header.tsx` を作成
+- [x] `src/components/layout/theme-toggle.tsx` を作成
+- [x] `src/main.tsx` にテーマ初期化と subscribe を追加
+- [x] `pnpm dev` で動作確認
+- [x] `pnpm lint` / `pnpm format` を通過

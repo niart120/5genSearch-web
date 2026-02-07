@@ -64,23 +64,44 @@ Phase 4: 仕上げ
 | 検索タスク生成 | WASM タスク分割関数 | `services/search-tasks.ts` | ✅ |
 | 検索実行フック | WorkerPool ラッパー | `hooks/use-search.ts` | ✅ |
 
-### 3.3 状態管理基盤
+### 3.3 状態管理基盤 (完了)
 
 | タスク | 説明 | 成果物 | 状態 |
 |-------|------|--------|------|
 | ライブラリ選定 | Jotai vs Zustand 机上比較 | 選定結果 | ✅ |
-| Store 分割設計 | 永続化/非永続化分類 | 設計ドキュメント | 未着手 |
-| 永続化実装 | localStorage 連携 | 実装 | 未着手 |
-| カスタムフック | Store 隠蔽フック | `hooks/` | 未着手 |
+| Store 分割設計 | 永続化/非永続化分類 | `stores/settings/`, `stores/search/` | ✅ |
+| 永続化実装 | localStorage 連携 | `persist` middleware 適用 | ✅ |
+| カスタムフック | Store 隠蔽フック | `hooks/use-*.ts` | ✅ |
+| Store 間同期 | 言語変更 → i18n 同期 | `stores/sync.ts` | ✅ |
 
-### 3.4 i18n 基盤
+### 3.4 i18n 基盤 (完了)
 
-| タスク | 説明 | 成果物 |
-|-------|------|--------|
-| ライブラリ選定 | react-i18next / lingui 比較 | 選定結果 |
-| リソース形式決定 | JSON vs TypeScript | 設計ドキュメント |
-| 翻訳キー命名規則 | 機能別プレフィックス等 | 規約ドキュメント |
-| 初期リソース作成 | ja.ts / en.ts | 実装 |
+| タスク | 説明 | 成果物 | 状態 |
+|-------|------|--------|------|
+| ライブラリ選定 | react-i18next / lingui 比較 | Lingui 5 採用 | ✅ |
+| リソース形式決定 | JSON vs TypeScript | TypeScript (Lingui compiled catalogs) | ✅ |
+| 翻訳キー命名規則 | `<Trans>` マクロによる自然文キー | `i18n-design.md` | ✅ |
+| 初期リソース作成 | ja / en カタログ | `i18n/locales/{ja,en}/messages.ts` | ✅ |
+
+### 3.5 デザインシステム基盤 (完了)
+
+| タスク | 説明 | 成果物 | 状態 |
+|-------|------|--------|------|
+| コンポーネント方針策定 | shadcn/ui スタイル (Radix + cva + Tailwind) | `design-system.md` | ✅ |
+| テーマ設計 | BW テーマ (Zekrom/Reshiram) | CSS カスタムプロパティ | ✅ |
+| Tailwind v4 設定 | `@tailwindcss/vite` + デザイントークン | `index.css`, `vite.config.ts` | ✅ |
+| ユーティリティ | `cn()` (clsx + tailwind-merge) | `lib/utils.ts` | ✅ |
+| 依存パッケージ導入 | Radix UI, cva, lucide-react, フォント等 | `package.json` | ✅ |
+
+### 3.6 レイアウト基盤 (完了)
+
+| タスク | 説明 | 成果物 | 状態 |
+|-------|------|--------|------|
+| Vite テンプレート撤去 | App.css, react.svg 削除 | 削除済み | ✅ |
+| アプリシェル | h-dvh 1 画面レイアウト | `App.tsx` | ✅ |
+| Header | タイトル + ThemeToggle | `components/layout/header.tsx` | ✅ |
+| ThemeToggle | light/dark/system サイクル | `components/layout/theme-toggle.tsx` | ✅ |
+| テーマ初期化 | pre-render 適用 + subscribe | `main.tsx` | ✅ |
 
 ## 4. Phase 2: 共通コンポーネント
 
@@ -109,12 +130,13 @@ Phase 4: 仕上げ
 
 ### 4.3 レイアウト部品
 
-| コンポーネント | 説明 |
-|--------------|------|
-| Header | アプリヘッダー |
-| Sidebar | 設定サイドバー (PC) |
-| ResponsiveContainer | レスポンシブレイアウト |
-| ProgressOverlay | 進捗表示オーバーレイ |
+| コンポーネント | 説明 | 状態 |
+|--------------|------|------|
+| Header | アプリヘッダー | ✅ |
+| ThemeToggle | テーマ切替ボタン | ✅ |
+| Sidebar | 設定サイドバー (PC) | 未着手 |
+| ResponsiveContainer | レスポンシブレイアウト | 未着手 |
+| ProgressOverlay | 進捗表示オーバーレイ | 未着手 |
 
 ### 4.4 データ表示部品
 
@@ -209,4 +231,6 @@ features/{feature}/
 
 - [x] WASM API の不足分洗い出し
 - [x] 状態管理ライブラリの選定 (Zustand 採用)
+- [x] i18n ライブラリ選定 (Lingui 5 採用)
+- [x] デザインシステム方針策定 (design-system.md)
 - [ ] 現行アプリからの UI 資産流用可否
