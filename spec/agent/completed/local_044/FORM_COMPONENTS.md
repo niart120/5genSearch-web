@@ -944,23 +944,23 @@ export type { HiddenPowerSelectProps } from './hidden-power-select';
 
 ## 8. 実装チェックリスト
 
-- [ ] `@radix-ui/react-popover` パッケージ追加
-- [ ] `src/components/forms/utils.ts` 共通ヘルパー作成
-- [ ] `src/components/forms/game-data-names.ts` ゲームデータ名称辞書作成
-- [ ] `src/components/forms/iv-range-input.tsx` 実装
-- [ ] `src/components/forms/date-range-picker.tsx` 実装
-- [ ] `src/components/forms/time-range-picker.tsx` 実装
-- [ ] `src/components/forms/mac-address-input.tsx` 実装
-- [ ] `src/components/forms/nature-select.tsx` 実装
-- [ ] `src/components/forms/hidden-power-select.tsx` 実装
-- [ ] `src/components/forms/index.ts` re-export 作成
-- [ ] `src/test/components/forms/iv-range-input.test.tsx` テスト作成
-- [ ] `src/test/components/forms/date-range-picker.test.tsx` テスト作成
-- [ ] `src/test/components/forms/time-range-picker.test.tsx` テスト作成
-- [ ] `src/test/components/forms/mac-address-input.test.tsx` テスト作成
-- [ ] `src/test/components/forms/nature-select.test.tsx` テスト作成
-- [ ] `src/test/components/forms/hidden-power-select.test.tsx` テスト作成
-- [ ] 翻訳カタログ更新 (`lingui extract`)
-- [ ] 型チェック通過 (`pnpm exec tsc --noEmit`)
-- [ ] テスト通過 (`pnpm test:run`)
-- [ ] Lint 通過 (`pnpm lint`)
+- [x] `@radix-ui/react-popover` パッケージ追加
+- [x] `src/components/forms/utils.ts` 共通ヘルパー作成
+- [x] `src/components/forms/game-data-names.ts` ゲームデータ名称辞書作成
+- [x] `src/components/forms/iv-range-input.tsx` 実装
+- [x] `src/components/forms/date-range-picker.tsx` 実装
+- [x] `src/components/forms/time-range-picker.tsx` 実装
+- [x] `src/components/forms/mac-address-input.tsx` 実装
+- [x] `src/components/forms/nature-select.tsx` 実装
+- [x] `src/components/forms/hidden-power-select.tsx` 実装
+- [x] `src/components/forms/index.ts` re-export 作成
+- [x] `src/test/components/forms/iv-range-input.test.tsx` テスト作成
+- [x] `src/test/components/forms/date-range-picker.test.tsx` テスト作成
+- [x] `src/test/components/forms/time-range-picker.test.tsx` テスト作成
+- [x] `src/test/components/forms/mac-address-input.test.tsx` テスト作成
+- [x] `src/test/components/forms/nature-select.test.tsx` テスト作成
+- [x] `src/test/components/forms/hidden-power-select.test.tsx` テスト作成
+- [x] 翻訳カタログ更新 (`lingui extract`)
+- [x] 型チェック通過 (`pnpm exec tsc --noEmit`)
+- [x] テスト通過 (`pnpm test:run`)
+- [x] Lint 通過 (`pnpm lint`)

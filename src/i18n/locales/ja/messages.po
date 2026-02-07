@@ -6,11 +6,74 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: ja\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. placeholder {0}: value.length
+#: src/components/forms/hidden-power-select.tsx:40
+#: src/components/forms/nature-select.tsx:40
+msgid "{0}件選択中"
+msgstr "{0}件選択中"
+
+#: src/components/layout/header.tsx:8
+msgid "5genSearch"
+msgstr "5genSearch"
 
 #: src/App.tsx:30
-msgid "Vite と React のロゴをクリックして詳細を確認"
-msgstr "Vite と React のロゴをクリックして詳細を確認"
+#~ msgid "Vite と React のロゴをクリックして詳細を確認"
+#~ msgstr "Vite と React のロゴをクリックして詳細を確認"
 
 #: src/App.tsx:21
-msgid "ポケモン乱数調整ツール"
-msgstr "ポケモン乱数調整ツール"
+#~ msgid "ポケモン乱数調整ツール"
+#~ msgstr "ポケモン乱数調整ツール"
+
+#: src/components/forms/hidden-power-select.tsx:52
+msgid "めざパ"
+msgstr "めざパ"
+
+#: src/components/forms/iv-range-input.tsx:158
+msgid "不明(任意)"
+msgstr "不明(任意)"
+
+#: src/components/forms/hidden-power-select.tsx:73
+#: src/components/forms/nature-select.tsx:73
+msgid "全解除"
+msgstr "全解除"
+
+#: src/components/forms/hidden-power-select.tsx:70
+#: src/components/forms/nature-select.tsx:70
+msgid "全選択"
+msgstr "全選択"
+
+#: src/components/forms/time-range-picker.tsx:111
+msgid "分"
+msgstr "分"
+
+#: src/components/forms/nature-select.tsx:52
+msgid "性格"
+msgstr "性格"
+
+#: src/components/forms/hidden-power-select.tsx:38
+#: src/components/forms/nature-select.tsx:38
+msgid "指定なし"
+msgstr "指定なし"
+
+#: src/components/forms/time-range-picker.tsx:97
+msgid "時"
+msgstr "時"
+
+#: src/components/forms/time-range-picker.tsx:125
+msgid "秒"
+msgstr "秒"
+
+#: src/components/forms/date-range-picker.tsx:130
+msgid "終了日"
+msgstr "終了日"
+
+#: src/components/forms/date-range-picker.tsx:111
+msgid "開始日"
+msgstr "開始日"
