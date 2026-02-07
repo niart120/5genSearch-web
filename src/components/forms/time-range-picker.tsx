@@ -3,7 +3,7 @@ import { Trans } from '@lingui/react/macro';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/utils';
+import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import type { TimeRangeParams } from '@/wasm/wasm_pkg';
 
 interface TimeRangePickerProps {

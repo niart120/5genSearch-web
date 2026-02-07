@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { HIDDEN_POWER_ORDER, getHiddenPowerName } from '@/components/forms/game-data-names';
+import { HIDDEN_POWER_ORDER, getHiddenPowerName } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import type { HiddenPowerType } from '@/wasm/wasm_pkg';
 

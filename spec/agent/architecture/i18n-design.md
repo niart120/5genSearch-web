@@ -221,7 +221,7 @@ Generated IDs を採用するため、開発者がキーを命名する必要は
 | 管理先 | 対象 | ファイル | 選定理由 |
 |-------|------|---------|---------|
 | **Lingui (.po)** | UI ラベル・ボタン文言・エラーメッセージ・バリデーションメッセージ | `src/i18n/locales/{locale}/messages.po` | ユーザ向けテキストで、翻訳者が自由に訳文を決められるもの |
-| **ゲームデータ辞書** | 性格名・タイプ名・ステータス略称など、ゲーム公式翻訳に一対一対応する固定語彙 | `src/components/forms/game-data-names.ts` | WASM 型 (`Nature`, `HiddenPowerType` 等) をキーとし、ロケール別の公式名称を `Record<SupportedLocale, string>` で保持する。翻訳者が訳を変える余地がなく、Lingui のメッセージ ID 体系と相性が悪いため独立管理 |
+| **ゲームデータ辞書** | 性格名・タイプ名・ステータス略称など、ゲーム公式翻訳に一対一対応する固定語彙 | `src/lib/game-data-names.ts` | WASM 型 (`Nature`, `HiddenPowerType` 等) をキーとし、ロケール別の公式名称を `Record<SupportedLocale, string>` で保持する。翻訳者が訳を変える余地がなく、Lingui のメッセージ ID 体系と相性が悪いため独立管理 |
 | **WASM resolve** | ポケモン名・特性名など、Rust 側データに含まれる語彙 | `wasm-pkg/src/resolve/` | データ量が大きく Rust 側でロケール分岐するほうが効率的 |
 
 #### 判断フローチャート

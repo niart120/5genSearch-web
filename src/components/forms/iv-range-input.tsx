@@ -4,9 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { getStatLabel, IV_STAT_KEYS } from '@/components/forms/game-data-names';
-import type { IvStatKey } from '@/components/forms/game-data-names';
-import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/utils';
+import { getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
+import type { IvStatKey } from '@/lib/game-data-names';
+import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { useUiStore } from '@/stores/settings/ui';
 import type { IvFilter } from '@/wasm/wasm_pkg';
 

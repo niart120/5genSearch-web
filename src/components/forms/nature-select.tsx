@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { NATURE_ORDER, getNatureName } from '@/components/forms/game-data-names';
+import { NATURE_ORDER, getNatureName } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import type { Nature } from '@/wasm/wasm_pkg';
 

@@ -1,12 +1,8 @@
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import {
-  parseHexByte,
-  toHexString,
-  parseMacAddress,
-  handleFocusSelectAll,
-} from '@/components/forms/utils';
+import { parseHexByte, toHexString, parseMacAddress } from '@/lib/hex';
+import { handleFocusSelectAll } from '@/components/forms/input-helpers';
 
 type MacAddress = [number, number, number, number, number, number];
 
