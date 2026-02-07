@@ -175,11 +175,11 @@ fn build_ranged_time_code_table(
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/types/search.rs`: `count_valid_seconds()` を直積に修正
-- [ ] `wasm-pkg/src/datetime_search/base.rs`: `build_ranged_time_code_table()` を直積に修正
-- [ ] `wasm-pkg/src/datetime_search/mtseed.rs`: `test_time_range_count_valid_seconds` に直積テストケース追加
-- [ ] `wasm-pkg/src/datetime_search/base.rs`: `test_time_code_table_*` に直積テストケース追加
-- [ ] テーブルエントリ数と `count_valid_seconds()` の一致テスト追加
-- [ ] `cargo test --package wasm-pkg` 全テスト通過
-- [ ] `cargo clippy --all-targets -- -D warnings` 通過
-- [ ] `cargo fmt --check` 通過
+- [x] `wasm-pkg/src/types/search.rs`: `count_valid_seconds()` を直積に修正
+- [x] `wasm-pkg/src/datetime_search/base.rs`: `build_ranged_time_code_table()` を直積に修正
+- [x] `wasm-pkg/src/datetime_search/mtseed.rs`: `test_time_range_count_valid_seconds` に直積テストケース追加
+- [x] `wasm-pkg/src/datetime_search/base.rs`: `test_time_code_table_*` に直積テストケース追加
+- [x] テーブルエントリ数と `count_valid_seconds()` の一致テスト追加
+- [x] `cargo test --package wasm-pkg` 全テスト通過
+- [x] `cargo clippy --all-targets -- -D warnings` 通過
+- [x] `cargo fmt --check` 通過
