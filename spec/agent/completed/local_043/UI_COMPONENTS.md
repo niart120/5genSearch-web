@@ -855,23 +855,23 @@ describe('Button', () => {
 
 ## 6. 実装チェックリスト
 
-- [ ] `@radix-ui/react-label` パッケージを追加
-- [ ] `tailwindcss-animate` 相当のユーティリティを `src/index.css` に追加
-- [ ] `prefers-reduced-motion` メディアクエリを `src/index.css` に追加
-- [ ] `src/components/ui/button.tsx` を作成
-- [ ] `src/components/ui/input.tsx` を作成
-- [ ] `src/components/ui/label.tsx` を作成
-- [ ] `src/components/ui/select.tsx` を作成
-- [ ] `src/components/ui/checkbox.tsx` を作成
-- [ ] `src/components/ui/tabs.tsx` を作成
-- [ ] `src/components/ui/dialog.tsx` を作成
-- [ ] `src/test/components/ui/button.test.tsx` を作成
-- [ ] `src/test/components/ui/input.test.tsx` を作成
-- [ ] `src/test/components/ui/label.test.tsx` を作成
-- [ ] `src/test/components/ui/select.test.tsx` を作成
-- [ ] `src/test/components/ui/checkbox.test.tsx` を作成
-- [ ] `src/test/components/ui/tabs.test.tsx` を作成
-- [ ] `src/test/components/ui/dialog.test.tsx` を作成
-- [ ] `pnpm lint` を通過
-- [ ] `pnpm format:check:ts` を通過
-- [ ] `pnpm test:run` を通過
+- [x] `@radix-ui/react-label` パッケージを追加
+- [x] `tailwindcss-animate` 相当のユーティリティを `src/index.css` に追加
+- [x] `prefers-reduced-motion` メディアクエリを `src/index.css` に追加
+- [x] `src/components/ui/button.tsx` を作成
+- [x] `src/components/ui/input.tsx` を作成
+- [x] `src/components/ui/label.tsx` を作成
+- [x] `src/components/ui/select.tsx` を作成
+- [x] `src/components/ui/checkbox.tsx` を作成
+- [x] `src/components/ui/tabs.tsx` を作成
+- [x] `src/components/ui/dialog.tsx` を作成
+- [x] `src/test/components/ui/button.test.tsx` を作成
+- [x] `src/test/components/ui/input.test.tsx` を作成
+- [x] `src/test/components/ui/label.test.tsx` を作成
+- [x] `src/test/components/ui/select.test.tsx` を作成
+- [x] `src/test/components/ui/checkbox.test.tsx` を作成
+- [x] `src/test/components/ui/tabs.test.tsx` を作成
+- [x] `src/test/components/ui/dialog.test.tsx` を作成
+- [x] `pnpm lint` を通過
+- [x] `pnpm format:check:ts` を通過
+- [x] `pnpm test:run` を通過
