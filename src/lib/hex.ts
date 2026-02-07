@@ -1,0 +1,28 @@
+/** 16 進数文字列を 1 バイト整数 (0–255) にパースする */
+function parseHexByte(raw: string, defaultValue: number = 0): number {
+  const trimmed = raw.trim();
+  if (trimmed === '') return defaultValue;
+  if (!/^[0-9a-fA-F]{1,2}$/.test(trimmed)) return defaultValue;
+  return parseInt(trimmed, 16);
+}
+
+/** 数値を 16 進数 2 桁の大文字文字列に変換する */
+function toHexString(value: number): string {
+  return value.toString(16).padStart(2, '0').toUpperCase();
+}
+
+/** MAC アドレス文字列をパースして 6 バイト配列を返す。不正な形式なら null */
+function parseMacAddress(input: string): [number, number, number, number, number, number] | null {
+  const cleaned = input.replace(/[-:]/g, '');
+  if (!/^[0-9a-fA-F]{12}$/.test(cleaned)) return null;
+  return [
+    parseInt(cleaned.slice(0, 2), 16),
+    parseInt(cleaned.slice(2, 4), 16),
+    parseInt(cleaned.slice(4, 6), 16),
+    parseInt(cleaned.slice(6, 8), 16),
+    parseInt(cleaned.slice(8, 10), 16),
+    parseInt(cleaned.slice(10, 12), 16),
+  ];
+}
+
+export { parseHexByte, toHexString, parseMacAddress };
