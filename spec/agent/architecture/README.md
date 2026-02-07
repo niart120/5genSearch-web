@@ -18,6 +18,7 @@
 | [state-management.md](state-management.md) | 状態管理方針 |
 | [worker-design.md](worker-design.md) | Web Worker 設計 |
 | [responsive-design.md](responsive-design.md) | レスポンシブ対応 |
+| [design-system.md](design-system.md) | デザインシステム (カラー・タイポグラフィ・コンポーネント規約) |
 | [implementation-roadmap.md](implementation-roadmap.md) | 実装ロードマップ |
 
 ## 関連
