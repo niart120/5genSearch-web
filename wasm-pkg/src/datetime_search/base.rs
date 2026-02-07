@@ -11,7 +11,7 @@ use crate::types::{
 /// 86,400 秒分の `time_code` テーブル
 type RangedTimeCodeTable = Box<[Option<u32>; 86400]>;
 
-/// `time_code` テーブルを構築
+/// `time_code` テーブルを構築 (独立軸の直積)
 #[allow(clippy::large_stack_arrays)]
 fn build_ranged_time_code_table(
     range: &TimeRangeParams,
@@ -20,31 +20,10 @@ fn build_ranged_time_code_table(
     let mut table: RangedTimeCodeTable = Box::new([None; 86400]);
     let is_ds_or_lite = matches!(hardware, Hardware::DsLite | Hardware::Ds);
 
+    // 各軸を独立にイテレーション (直積)
     for hour in range.hour_start..=range.hour_end {
-        let min_start = if hour == range.hour_start {
-            range.minute_start
-        } else {
-            0
-        };
-        let min_end = if hour == range.hour_end {
-            range.minute_end
-        } else {
-            59
-        };
-
-        for minute in min_start..=min_end {
-            let sec_start = if hour == range.hour_start && minute == range.minute_start {
-                range.second_start
-            } else {
-                0
-            };
-            let sec_end = if hour == range.hour_end && minute == range.minute_end {
-                range.second_end
-            } else {
-                59
-            };
-
-            for second in sec_start..=sec_end {
+        for minute in range.minute_start..=range.minute_end {
+            for second in range.second_start..=range.second_end {
                 let seconds_of_day =
                     u32::from(hour) * 3600 + u32::from(minute) * 60 + u32::from(second);
                 let idx = seconds_of_day as usize;
@@ -392,5 +371,108 @@ mod tests {
         // Only 60 entries (10:00:00 - 10:00:59)
         let count = table.iter().filter(|x| x.is_some()).count();
         assert_eq!(count, 60);
+    }
+
+    #[test]
+    fn test_time_code_table_cartesian_discontinuous() {
+        // 直積で不連続な範囲: hour: 10~12, min: 0~0, sec: 0~0
+        let range = TimeRangeParams {
+            hour_start: 10,
+            hour_end: 12,
+            minute_start: 0,
+            minute_end: 0,
+            second_start: 0,
+            second_end: 0,
+        };
+        let table = build_ranged_time_code_table(&range, Hardware::DsLite);
+
+        // count = 3 (10:00:00, 11:00:00, 12:00:00 のみ)
+        let count = table.iter().filter(|x| x.is_some()).count();
+        assert_eq!(count, 3);
+
+        // 具体的なエントリを確認
+        assert!(table[10 * 3600].is_some()); // 10:00:00
+        assert!(table[11 * 3600].is_some()); // 11:00:00
+        assert!(table[12 * 3600].is_some()); // 12:00:00
+        assert!(table[10 * 3600 + 1].is_none()); // 10:00:01 は None
+    }
+
+    #[test]
+    fn test_time_code_table_cartesian_expansion() {
+        // 直積展開の確認: hour: 10~11, min: 30~31, sec: 0~0
+        let range = TimeRangeParams {
+            hour_start: 10,
+            hour_end: 11,
+            minute_start: 30,
+            minute_end: 31,
+            second_start: 0,
+            second_end: 0,
+        };
+        let table = build_ranged_time_code_table(&range, Hardware::DsLite);
+
+        // count = 4 (10:30:00, 10:31:00, 11:30:00, 11:31:00)
+        let count = table.iter().filter(|x| x.is_some()).count();
+        assert_eq!(count, 4);
+
+        // 具体的なエントリを確認
+        assert!(table[10 * 3600 + 30 * 60].is_some()); // 10:30:00
+        assert!(table[10 * 3600 + 31 * 60].is_some()); // 10:31:00
+        assert!(table[11 * 3600 + 30 * 60].is_some()); // 11:30:00
+        assert!(table[11 * 3600 + 31 * 60].is_some()); // 11:31:00
+
+        // 連続区間なら含まれるはずの時刻が含まれないことを確認
+        assert!(table[10 * 3600 + 32 * 60].is_none()); // 10:32:00
+        assert!(table[10 * 3600 + 59 * 60].is_none()); // 10:59:00
+        assert!(table[11 * 3600].is_none()); // 11:00:00
+    }
+
+    #[test]
+    fn test_time_code_table_count_matches_valid_seconds() {
+        // テーブルエントリ数と count_valid_seconds() の一致テスト
+        let test_cases = vec![
+            TimeRangeParams {
+                hour_start: 10,
+                hour_end: 12,
+                minute_start: 20,
+                minute_end: 40,
+                second_start: 0,
+                second_end: 59,
+            },
+            TimeRangeParams {
+                hour_start: 0,
+                hour_end: 23,
+                minute_start: 0,
+                minute_end: 59,
+                second_start: 0,
+                second_end: 59,
+            },
+            TimeRangeParams {
+                hour_start: 5,
+                hour_end: 5,
+                minute_start: 30,
+                minute_end: 30,
+                second_start: 15,
+                second_end: 15,
+            },
+            TimeRangeParams {
+                hour_start: 10,
+                hour_end: 11,
+                minute_start: 30,
+                minute_end: 31,
+                second_start: 0,
+                second_end: 0,
+            },
+        ];
+
+        for range in test_cases {
+            let table = build_ranged_time_code_table(&range, Hardware::DsLite);
+            let table_count = table.iter().filter(|x| x.is_some()).count();
+            let expected_count = range.count_valid_seconds() as usize;
+
+            assert_eq!(
+                table_count, expected_count,
+                "Table entry count mismatch for range {range:?}. Expected {expected_count}, got {table_count}"
+            );
+        }
     }
 }

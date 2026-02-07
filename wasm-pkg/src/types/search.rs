@@ -45,15 +45,12 @@ impl TimeRangeParams {
         Ok(())
     }
 
-    /// 有効な秒数をカウント
+    /// 有効な秒数をカウント (独立軸の直積)
     pub fn count_valid_seconds(&self) -> u32 {
-        let start = u32::from(self.hour_start) * 3600
-            + u32::from(self.minute_start) * 60
-            + u32::from(self.second_start);
-        let end = u32::from(self.hour_end) * 3600
-            + u32::from(self.minute_end) * 60
-            + u32::from(self.second_end);
-        end - start + 1
+        let hours = u32::from(self.hour_end) - u32::from(self.hour_start) + 1;
+        let minutes = u32::from(self.minute_end) - u32::from(self.minute_start) + 1;
+        let seconds = u32::from(self.second_end) - u32::from(self.second_start) + 1;
+        hours * minutes * seconds
     }
 }
 
