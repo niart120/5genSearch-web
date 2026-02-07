@@ -1,35 +1,13 @@
-import { useState } from 'react';
-import { Trans } from '@lingui/react/macro';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
+import { Header } from '@/components/layout/header';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>
-        <Trans>ポケモン乱数調整ツール</Trans>
-      </h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        <Trans>Vite と React のロゴをクリックして詳細を確認</Trans>
-      </p>
-    </>
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <Header />
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-screen-xl px-4 py-4 lg:px-6">{/* content */}</div>
+      </main>
+    </div>
   );
 }
 

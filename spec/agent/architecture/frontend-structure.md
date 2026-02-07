@@ -57,13 +57,15 @@ src/
 │   ├── sync.ts             # Store 間同期
 │   └── index.ts            # re-export
 │
+├── lib/                    # ユーティリティ
+│   └── utils.ts            # cn() (clsx + tailwind-merge)
+│
 ├── hooks/                  # カスタムフック
 │   ├── use-search.ts       # 検索実行 (WorkerPool ラッパー)
 │   ├── use-ds-config.ts    # DS設定フック
 │   ├── use-trainer.ts      # トレーナー情報フック
 │   ├── use-ui-settings.ts  # UI設定フック
-│   ├── use-search-results.ts # 検索結果フック
-│   └── use-local-storage.ts
+│   └── use-search-results.ts # 検索結果フック
 │
 ├── io/                     # 入出力処理
 │   ├── export-csv.ts       # CSV エクスポート
@@ -97,6 +99,7 @@ src/
 | `stores/` | 状態管理。永続化対象の設定を含む |
 | `hooks/` | React カスタムフック |
 | `io/` | 入出力処理 (エクスポート、クリップボード操作) |
+| `lib/` | ユーティリティ関数 (`cn()` など) |
 | `i18n/` | 国際化リソースと設定 |
 | `validation/` | 共通バリデーションルール (必要に応じて) |
 
@@ -157,7 +160,7 @@ stores/
 | 対象 | 規則 | 例 |
 |-----|------|-----|
 | ディレクトリ | kebab-case | `datetime-search/` |
-| コンポーネントファイル | PascalCase | `DatetimeSearchPage.tsx` |
+| コンポーネントファイル | kebab-case | `header.tsx`, `theme-toggle.tsx` |
 | フック/ユーティリティ | kebab-case | `use-search.ts` |
 | 型定義ファイル | kebab-case | `types.ts`, `index.ts` |
 | コンポーネント名 | PascalCase | `DatetimeSearchPage` |
@@ -182,11 +185,11 @@ WASM バイナリ (`wasm_pkg_bg.wasm`) は `public/wasm/` から配信され、W
 
 多言語対応の方針は別途 [i18n 設計](./i18n-design.md) で定義する。
 
-Phase 2 (共通コンポーネント) 開始前に以下を決定：
+Lingui 5 を採用。詳細は [i18n 設計](./i18n-design.md) を参照。
 
-- i18n ライブラリ選定 (react-i18next, lingui など)
-- リソースファイル形式 (JSON, TypeScript)
-- 翻訳キー命名規則
+- `<Trans>` マクロによる自然文ベースの翻訳
+- コンパイル済み TypeScript カタログ (`i18n/locales/{locale}/messages.ts`)
+- `vite-plugin-lingui` による自動コンパイル
 
 ## 関連ドキュメント
 
@@ -194,4 +197,5 @@ Phase 2 (共通コンポーネント) 開始前に以下を決定：
 - [状態管理方針](./state-management.md)
 - [Worker 設計](./worker-design.md)
 - [レスポンシブ対応](./responsive-design.md)
+- [デザインシステム](./design-system.md)
 - [i18n 設計](./i18n-design.md)
