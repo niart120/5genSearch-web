@@ -389,19 +389,24 @@ interface TimeRangePickerProps {
 
 #### 4.3.3 UI 構成
 
-開始時刻と終了時刻を横に並べるレイアウト。**区間の取り方が特殊**: 秒は固定値で開始・終了とも同一の値を使用し、時:分のみが範囲として反復する。
+**時・分・秒はそれぞれ独立した範囲を持つ。** 検索対象は 3 軸の直積 (`hour_start〜hour_end × minute_start〜minute_end × second_start〜second_end`) で展開される。連続する時刻区間 (`HH:MM:SS 〜 HH:MM:SS`) ではない。
 
-例: `10:20:11 〜 11:40:11` の場合、列挙される時刻は:
-`10:20:11, 10:21:11, 10:22:11, ..., 10:59:11, 11:00:11, ..., 11:40:11`
+例: `時: 10〜12, 分: 20〜40, 秒: 0〜59` の場合、列挙される時刻は:
+```
+10:20:00, 10:20:01, ..., 10:20:59,
+10:21:00, ..., 10:40:59,
+11:20:00, ..., 11:40:59,
+12:20:00, ..., 12:40:59
+```
+※ 10:41:00 や 11:00:00 は含まない (分の範囲 20〜40 の外)
 
-このため、秒は範囲ではなく単一値フィールドとし、時分のみ開始・終了の 2 フィールドを持つ。
+このため、時・分・秒それぞれに開始・終了の 2 フィールドを持つ。
 
 ```
- 開始(時分)           終了(時分)        秒
-┌────┬────┐    ┌────┬────┐    ┌────┐
-│[ 0]│[ 0]│ 〜 │[23]│[59]│    │[ 0]│
-│ 時 │ 分 │    │ 時 │ 分 │    │ 秒 │
-└────┴────┘    └────┴────┘    └────┘
+  時                   分                   秒
+┌────┐ 〜 ┌────┐  ┌────┐ 〜 ┌────┐  ┌────┐ 〜 ┌────┐
+│[ 0]│   │[23]│  │[ 0]│   │[59]│  │[ 0]│   │[59]│
+└────┘   └────┘  └────┘   └────┘  └────┘   └────┘
 ```
 
 モバイル (`< md`) では縦積み。
@@ -412,9 +417,9 @@ interface TimeRangePickerProps {
 |-----------|--------|-------------------|-------------------|--------|
 | 時 | 0 - 23 | 0 | 23 | `w-12` (3rem) |
 | 分 | 0 - 59 | 0 | 59 | `w-12` (3rem) |
-| 秒 | 0 - 59 | 0 (単一値) | — | `w-12` (3rem) |
+| 秒 | 0 - 59 | 0 | 59 | `w-12` (3rem) |
 
-秒は単一値フィールド。入力値を `second_start` と `second_end` の両方に設定する。WASM 型 `TimeRangeParams` は `second_start` / `second_end` を個別に持つが、検索ロジック上は常に同一値のため UI では 1 フィールドに統合する。
+時・分・秒それぞれが独立した start/end を持つ。WASM 型 `TimeRangeParams` の 6 フィールドと 1:1 で対応する。
 
 共通:
 - `inputMode="numeric"` 指定
@@ -423,7 +428,34 @@ interface TimeRangePickerProps {
 
 #### 4.3.5 フィールド間セパレータ
 
-時分の間には `:` を表示する。開始時分と終了時分の間には `〜` を表示する。秒フィールドは独立した位置に配置し、ラベル「秒」を付与する。
+各軸 (時・分・秒) の start と end の間には `〜` を表示する。軸間の区切りには `:` を表示する。
+
+```tsx
+{/* 例: 時の範囲 */}
+<span>時</span> [start] <span>〜</span> [end]
+<span>:</span>
+<span>分</span> [start] <span>〜</span> [end]
+<span>:</span>
+<span>秒</span> [start] <span>〜</span> [end]
+```
+
+#### 4.3.6 WASM 側の既知不整合
+
+調査の結果、本プロジェクトの WASM 実装内で TimeRange の解釈に**不整合**が存在する。
+
+| 実装箇所 | ファイル | 方式 | 正否 |
+|---------|--------|------|------|
+| GPU シェーダ | `wasm-pkg/src/gpu/datetime_search/shader.wgsl` | 独立軸の直積 (正しい) | OK |
+| CPU テーブル構築 | `wasm-pkg/src/datetime_search/base.rs` `build_ranged_time_code_table()` | **連続区間** (`HH:MM:SS ~ HH:MM:SS`) | **BUG** |
+| 有効秒数計算 | `wasm-pkg/src/types/search.rs` `count_valid_seconds()` | **連続区間** (`end_seconds - start_seconds + 1`) | **BUG** |
+
+**CPU 側バグの詳細**: `build_ranged_time_code_table()` は hour の境界で minute/second の start/end を調整する実装になっている。例えば `hour=10, minute_start=20` のとき、`hour=11` では `minute_start=0` からイテレーションを開始する。これは連続区間の挙動であり、独立軸の直積 (全 hour で `minute_start=20` から開始すべき) とは異なる。
+
+**`count_valid_seconds()` のバグ**: 正しい計算は `(hour_end - hour_start + 1) * (minute_end - minute_start + 1) * (second_end - second_start + 1)` だが、現実装は `(hour_end*3600 + minute_end*60 + second_end) - (hour_start*3600 + minute_start*60 + second_start) + 1` で連続区間の長さを返している。
+
+**参考実装 (niart120/pokemon-gen5-initseed)** では `combosPerDay = hourRange.count * minuteRange.count * secondRange.count` として独立軸の直積を採用しており、そちらが正しい挙動。
+
+**対応**: 本仕様書のスコープ外。別途 Rust 側修正の仕様書を作成して対応する必要がある。
 
 ---
 
@@ -860,11 +892,12 @@ export type { HiddenPowerSelectProps } from './hidden-power-select';
 
 | テストケース | 検証内容 |
 |-------------|---------|
-| 初期値の表示 | 時/分/秒が正しく表示される |
+| 初期値の表示 | 時/分/秒の各 start/end が正しく表示される |
 | 時の範囲制限 | -1 → 0、24 → 23 にクランプ |
 | 分の範囲制限 | -1 → 0、60 → 59 にクランプ |
-| 秒の範囲制限 | -1 → 0、60 → 59 にクランプ || 秒の単一値同期 | 秒入力変更時に `second_start` と `second_end` が同一値で onChange に渡る |
-| 秒フィールド数 | 秒の入力フィールドが 1 つのみ表示される (開始/終了で分かれない) |
+| 秒の範囲制限 | -1 → 0、60 → 59 にクランプ |
+| 独立範囲の確認 | 時・分・秒それぞれに独立した start/end が設定できる |
+| onChange の値 | 6 フィールド (hour_start, hour_end, minute_start, minute_end, second_start, second_end) が正しく渡る |
 #### MacAddressInput
 
 | テストケース | 検証内容 |
