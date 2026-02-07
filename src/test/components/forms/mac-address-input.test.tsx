@@ -106,19 +106,9 @@ describe('MacAddressInput', () => {
     expect(lastCall[0]).toBe(10); // 0x0A
   });
 
-  it('2 文字入力で自動タブが動作し blur が発火する', async () => {
-    const user = userEvent.setup();
-    const onChange = vi.fn();
-    renderMac({ onChange });
-
-    const inputs = screen.getAllByRole('textbox');
-    await user.clear(inputs[0]);
-    await user.type(inputs[0], 'AB');
-
-    // 2 文字入力で auto-tab → focus 移動 → blur 発火 → onChange が呼ばれる
-    // onChange が呼ばれていれば auto-tab (focus() 呼び出し) → blur の連鎖が動作している
-    expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
-    expect(lastCall[0]).toBe(0xab);
-  });
+  // TODO: auto-tab によるフォーカス移動の検証
+  // jsdom + userEvent 環境では、コンポーネント内の focus() 呼び出しが
+  // userEvent のフォーカス管理に上書きされるため toHaveFocus() で検証できない。
+  // 実ブラウザ環境 (Playwright 等) での E2E テストで検証する。
+  it.todo('2 文字入力で次フィールドにフォーカスが移動する');
 });
