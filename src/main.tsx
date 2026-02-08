@@ -20,36 +20,32 @@ function applyTheme(theme: 'light' | 'dark' | 'system') {
 // Apply theme before render to prevent flash
 applyTheme(useUiStore.getState().theme);
 
-async function bootstrap() {
-  const initialLocale = useUiStore.getState().language;
-  await activateLocale(initialLocale);
+const initialLocale = useUiStore.getState().language;
+await activateLocale(initialLocale);
 
-  setupStoreSyncSubscriptions();
+setupStoreSyncSubscriptions();
 
-  // Subscribe to theme changes
-  useUiStore.subscribe(
-    (state) => state.theme,
-    (theme) => applyTheme(theme)
-  );
+// Subscribe to theme changes
+useUiStore.subscribe(
+  (state) => state.theme,
+  (theme) => applyTheme(theme)
+);
 
-  // Listen for OS color scheme changes (for system mode)
-  globalThis.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    const { theme } = useUiStore.getState();
-    if (theme === 'system') applyTheme(theme);
-  });
+// Listen for OS color scheme changes (for system mode)
+globalThis.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  const { theme } = useUiStore.getState();
+  if (theme === 'system') applyTheme(theme);
+});
 
-  const rootElement = document.querySelector('#root');
-  if (!rootElement) {
-    throw new Error('Root element not found');
-  }
-
-  createRoot(rootElement).render(
-    <StrictMode>
-      <I18nProvider i18n={i18n}>
-        <App />
-      </I18nProvider>
-    </StrictMode>
-  );
+const rootElement = document.querySelector('#root');
+if (!rootElement) {
+  throw new Error('Root element not found');
 }
 
-bootstrap();
+createRoot(rootElement).render(
+  <StrictMode>
+    <I18nProvider i18n={i18n}>
+      <App />
+    </I18nProvider>
+  </StrictMode>
+);
