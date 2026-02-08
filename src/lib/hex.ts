@@ -6,11 +6,6 @@ function parseHexByte(raw: string, defaultValue: number = 0): number {
   return Number.parseInt(trimmed, 16);
 }
 
-/** 数値を 16 進数 2 桁の大文字文字列に変換する */
-function toHexString(value: number): string {
-  return value.toString(16).padStart(2, '0').toUpperCase();
-}
-
 /** 16 進数文字列を 2 バイト整数 (0–65535) にパースする */
 function parseHexWord(raw: string, defaultValue: number = 0): number {
   const trimmed = raw.trim();
@@ -19,9 +14,9 @@ function parseHexWord(raw: string, defaultValue: number = 0): number {
   return Number.parseInt(trimmed, 16);
 }
 
-/** 数値を 16 進数 4 桁の大文字文字列に変換する */
-function toHexWordString(value: number): string {
-  return value.toString(16).padStart(4, '0').toUpperCase();
+/** 数値を指定桁数の 16 進数大文字文字列に変換する */
+function toHex(value: number, digits: number): string {
+  return value.toString(16).toUpperCase().padStart(digits, '0');
 }
 
 /** MAC アドレス文字列をパースして 6 バイト配列を返す。不正な形式なら undefined */
@@ -40,4 +35,4 @@ function parseMacAddress(
   ];
 }
 
-export { parseHexByte, toHexString, parseHexWord, toHexWordString, parseMacAddress };
+export { parseHexByte, parseHexWord, toHex, parseMacAddress };

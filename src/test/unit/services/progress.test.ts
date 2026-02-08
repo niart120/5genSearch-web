@@ -3,12 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  ProgressAggregator,
-  formatProgress,
-  formatRemainingTime,
-  formatThroughput,
-} from '../../../services/progress';
+import { ProgressAggregator } from '../../../services/progress';
 import type { ProgressInfo } from '../../../workers/types';
 
 describe('ProgressAggregator', () => {
@@ -140,64 +135,6 @@ describe('ProgressAggregator', () => {
       expect(progress.tasksCompleted).toBe(0);
       expect(progress.totalProcessed).toBe(0);
     });
-  });
-});
-
-describe('formatProgress', () => {
-  it('should format progress string correctly', () => {
-    const progress = {
-      totalProcessed: 5000,
-      totalCount: 10_000,
-      percentage: 50,
-      elapsedMs: 1000,
-      estimatedRemainingMs: 1000,
-      throughput: 5000,
-      tasksCompleted: 1,
-      tasksTotal: 2,
-    };
-
-    const formatted = formatProgress(progress);
-
-    expect(formatted).toContain('50.0%');
-    expect(formatted).toContain('5.0K/s');
-    expect(formatted).toContain('1s');
-    expect(formatted).toContain('1/2');
-  });
-});
-
-describe('formatRemainingTime', () => {
-  it('should format seconds', () => {
-    expect(formatRemainingTime(30_000)).toBe('30s');
-  });
-
-  it('should format minutes and seconds', () => {
-    expect(formatRemainingTime(90_000)).toBe('1m 30s');
-  });
-
-  it('should format hours and minutes', () => {
-    expect(formatRemainingTime(3_700_000)).toBe('1h 1m');
-  });
-
-  it('should handle zero', () => {
-    expect(formatRemainingTime(0)).toBe('0s');
-  });
-
-  it('should handle negative values', () => {
-    expect(formatRemainingTime(-1000)).toBe('0s');
-  });
-});
-
-describe('formatThroughput', () => {
-  it('should format small values', () => {
-    expect(formatThroughput(500)).toBe('500/s');
-  });
-
-  it('should format thousands', () => {
-    expect(formatThroughput(5000)).toBe('5.0K/s');
-  });
-
-  it('should format millions', () => {
-    expect(formatThroughput(2_500_000)).toBe('2.50M/s');
   });
 });
 

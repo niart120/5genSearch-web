@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { parseHexByte, toHexString, parseMacAddress } from '@/lib/hex';
+import { parseHexByte, toHex, parseMacAddress } from '@/lib/hex';
 import { handleFocusSelectAll } from '@/components/forms/input-helpers';
 
 type MacAddress = [number, number, number, number, number, number];
@@ -16,16 +16,14 @@ interface MacAddressInputProps {
 }
 
 function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
-  const [locals, setLocals] = React.useState<string[]>(() =>
-    value.map((byte) => toHexString(byte))
-  );
+  const [locals, setLocals] = React.useState<string[]>(() => value.map((byte) => toHex(byte, 2)));
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
   // ref で最新の locals を保持。auto-tab による blur が setState 反映前に
   // 発火する問題を回避するため、handleChange で即座に更新する。
   const localsRef = React.useRef<string[]>(locals);
 
   React.useEffect(() => {
-    const next = value.map((byte) => toHexString(byte));
+    const next = value.map((byte) => toHex(byte, 2));
     setLocals(next);
     localsRef.current = next;
   }, [value]);
@@ -47,7 +45,7 @@ function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
   const handleBlur = (index: number) => {
     const parsed = parseHexByte(localsRef.current[index], value[index]);
     const nextLocals = [...localsRef.current];
-    nextLocals[index] = toHexString(parsed);
+    nextLocals[index] = toHex(parsed, 2);
     localsRef.current = nextLocals;
     setLocals(nextLocals);
 
@@ -61,7 +59,7 @@ function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
     const mac = parseMacAddress(pasted);
     if (mac) {
       e.preventDefault();
-      const nextLocals = mac.map((byte) => toHexString(byte));
+      const nextLocals = mac.map((byte) => toHex(byte, 2));
       localsRef.current = nextLocals;
       setLocals(nextLocals);
       onChange(mac);
