@@ -559,15 +559,15 @@ export { useMediaQuery };
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/components/ui/sheet.tsx` の実装
-- [ ] `src/components/layout/sidebar.tsx` の実装
-- [ ] `src/components/layout/responsive-container.tsx` の実装
-- [ ] `src/components/layout/language-toggle.tsx` の実装
-- [ ] `src/components/layout/header.tsx` の変更 (LanguageToggle + ハンバーガーボタン)
-- [ ] `src/App.tsx` の変更 (ResponsiveContainer 適用)
-- [ ] `src/hooks/use-media-query.ts` の実装
-- [ ] Sidebar コンポーネントテスト
-- [ ] LanguageToggle コンポーネントテスト
-- [ ] Header コンポーネントテスト
-- [ ] useMediaQuery ユニットテスト
-- [ ] lint / format / 型チェック 通過
+- [x] `src/components/ui/sheet.tsx` の実装
+- [x] `src/components/layout/sidebar.tsx` の実装
+- [x] `src/components/layout/responsive-container.tsx` の実装
+- [x] `src/components/layout/language-toggle.tsx` の実装
+- [x] `src/components/layout/header.tsx` の変更 (LanguageToggle + ハンバーガーボタン)
+- [x] `src/App.tsx` の変更 (ResponsiveContainer 適用)
+- [x] `src/hooks/use-media-query.ts` の実装
+- [x] Sidebar コンポーネントテスト
+- [x] LanguageToggle コンポーネントテスト
+- [x] Header コンポーネントテスト
+- [x] useMediaQuery ユニットテスト
+- [x] lint / format / 型チェック 通過
