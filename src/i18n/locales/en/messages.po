@@ -14,14 +14,40 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: value.length
-#: src/components/forms/hidden-power-select.tsx:40
-#: src/components/forms/nature-select.tsx:40
+#: src/components/forms/hidden-power-select.tsx:37
+#: src/components/forms/nature-select.tsx:37
 msgid "{0}件選択中"
 msgstr "{0} selected"
 
 #: src/components/layout/header.tsx:8
 msgid "5genSearch"
 msgstr ""
+
+#: src/components/forms/timer0-vcount-range-input.tsx:89
+#: src/components/forms/timer0-vcount-range-input.tsx:129
+msgid "Max"
+msgstr "Max"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:72
+#: src/components/forms/timer0-vcount-range-input.tsx:112
+msgid "Min"
+msgstr "Min"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:100
+msgid "Timer0最大値"
+msgstr "Timer0 max"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:83
+msgid "Timer0最小値"
+msgstr "Timer0 min"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:140
+msgid "VCount最大値"
+msgstr "VCount max"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:123
+msgid "VCount最小値"
+msgstr "VCount min"
 
 #: src/App.tsx:30
 #~ msgid "Vite と React のロゴをクリックして詳細を確認"
@@ -31,21 +57,21 @@ msgstr ""
 #~ msgid "ポケモン乱数調整ツール"
 #~ msgstr "Pokémon RNG Tool"
 
-#: src/components/forms/hidden-power-select.tsx:52
+#: src/components/forms/hidden-power-select.tsx:48
 msgid "めざパ"
 msgstr "Hidden Power"
 
-#: src/components/forms/iv-range-input.tsx:158
+#: src/components/forms/iv-range-input.tsx:153
 msgid "不明(任意)"
 msgstr "Unknown(Any)"
 
-#: src/components/forms/hidden-power-select.tsx:73
-#: src/components/forms/nature-select.tsx:73
+#: src/components/forms/hidden-power-select.tsx:69
+#: src/components/forms/nature-select.tsx:69
 msgid "全解除"
 msgstr "Deselect all"
 
-#: src/components/forms/hidden-power-select.tsx:70
-#: src/components/forms/nature-select.tsx:70
+#: src/components/forms/hidden-power-select.tsx:66
+#: src/components/forms/nature-select.tsx:66
 msgid "全選択"
 msgstr "Select all"
 
@@ -53,12 +79,12 @@ msgstr "Select all"
 msgid "分"
 msgstr "Min"
 
-#: src/components/forms/nature-select.tsx:52
+#: src/components/forms/nature-select.tsx:48
 msgid "性格"
 msgstr "Nature"
 
-#: src/components/forms/hidden-power-select.tsx:38
-#: src/components/forms/nature-select.tsx:38
+#: src/components/forms/hidden-power-select.tsx:37
+#: src/components/forms/nature-select.tsx:37
 msgid "指定なし"
 msgstr "Not specified"
 

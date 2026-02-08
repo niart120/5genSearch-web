@@ -207,13 +207,13 @@ blur 時に空欄または不正入力の場合はデフォルト値（変更前
 
 ## 6. 実装チェックリスト
 
-- [ ] `parseHexWord` / `toHexWordString` を `src/lib/hex.ts` に追加
-- [ ] `hex.test.ts` に 16-bit hex テスト追加
-- [ ] `Timer0VCountRangeInput` コンポーネント実装
-- [ ] コンポーネントテスト実装
-- [ ] i18n ラベル追加 (Timer0, VCount, Min, Max)
-- [ ] 全テスト pass 確認
-- [ ] `tsc --noEmit` / `pnpm lint` pass 確認
+- [x] `parseHexWord` / `toHexWordString` を `src/lib/hex.ts` に追加
+- [x] `hex.test.ts` に 16-bit hex テスト追加
+- [x] `Timer0VCountRangeInput` コンポーネント実装
+- [x] コンポーネントテスト実装
+- [x] i18n ラベル追加 (Timer0, VCount, Min, Max)
+- [x] 全テスト pass 確認
+- [x] `tsc --noEmit` / `pnpm lint` pass 確認
 
 ## 7. 設計メモ
 
