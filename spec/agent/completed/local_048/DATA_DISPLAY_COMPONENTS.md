@@ -1118,46 +1118,46 @@ jsdom は `getBoundingClientRect` / `IntersectionObserver` を完全にサポー
 
 ### 6.1 依存パッケージ
 
-- [ ] `@tanstack/react-table` をインストール
-- [ ] `@tanstack/react-virtual` をインストール
-- [ ] `@radix-ui/react-progress` をインストール
+- [x] `@tanstack/react-table` をインストール
+- [x] `@tanstack/react-virtual` をインストール
+- [x] `@radix-ui/react-progress` をインストール
 
 ### 6.2 UI プリミティブ (`components/ui/`)
 
-- [ ] `table.tsx` — Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption
-- [ ] `progress.tsx` — Radix Progress ラッパー
-- [ ] `badge.tsx` — Badge (variant: default / secondary / destructive / outline)
+- [x] `table.tsx` — Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption
+- [x] `progress.tsx` — Radix Progress ラッパー
+- [x] `badge.tsx` — Badge (variant: default / secondary / destructive / outline)
 
 ### 6.3 データ表示部品 (`components/data-display/`)
 
-- [ ] `data-table-types.ts` — DataTableOptions 型定義
-- [ ] `data-table.tsx` — DataTable (TanStack Table + Virtual)
-- [ ] `result-card.tsx` — ResultCardList (モバイル向けカード)
-- [ ] `search-progress.tsx` — SearchProgress (進捗バー + 統計)
-- [ ] `empty-state.tsx` — EmptyState (空状態)
-- [ ] `index.ts` — barrel export
+- [x] `data-table-types.ts` — DataTableOptions 型定義
+- [x] `data-table.tsx` — DataTable (TanStack Table + Virtual)
+- [x] `result-card.tsx` — ResultCardList (モバイル向けカード)
+- [x] `search-progress.tsx` — SearchProgress (進捗バー + 統計)
+- [x] `empty-state.tsx` — EmptyState (空状態)
+- [x] `index.ts` — barrel export
 
 ### 6.4 ユーティリティ・リファクタリング
 
-- [ ] `lib/format.ts` — フォーマッタ集約 (`formatElapsedTime`, `formatRemainingTime`, `formatThroughput`, `formatProgress`, `toBigintHex`, `formatResultCount`, `remToPx`)
-- [ ] `lib/hex.ts` — `toHexString` / `toHexWordString` 削除、`toHex(value, digits)` に一本化
-- [ ] `services/progress.ts` — `formatRemainingTime` / `formatThroughput` / `formatProgress` を削除
-- [ ] `components/forms/mac-address-input.tsx` — `toHexString` → `toHex` に移行
-- [ ] `components/forms/timer0-vcount-range-input.tsx` — `toHexString` / `toHexWordString` → `toHex` に移行
-- [ ] `test/unit/services/progress.test.ts` — フォーマッタテストを `format.test.ts` へ移動
-- [ ] `test/unit/hex.test.ts` — `toHexString` / `toHexWordString` テストを `toHex` テストに置換
+- [x] `lib/format.ts` — フォーマッタ集約 (`formatElapsedTime`, `formatRemainingTime`, `formatThroughput`, `formatProgress`, `toBigintHex`, `formatResultCount`, `remToPx`)
+- [x] `lib/hex.ts` — `toHexString` / `toHexWordString` 削除、`toHex(value, digits)` に一本化
+- [x] `services/progress.ts` — `formatRemainingTime` / `formatThroughput` / `formatProgress` を削除
+- [x] `components/forms/mac-address-input.tsx` — `toHexString` → `toHex` に移行
+- [x] `components/forms/timer0-vcount-range-input.tsx` — `toHexString` / `toHexWordString` → `toHex` に移行
+- [x] `test/unit/services/progress.test.ts` — フォーマッタテストを `format.test.ts` へ移動
+- [x] `test/unit/hex.test.ts` — `toHexString` / `toHexWordString` テストを `toHex` テストに置換
 
 ### 6.5 テスト
 
-- [ ] `test/unit/lib/format.test.ts` — フォーマッタユニットテスト
-- [ ] `test/components/data-display/data-table.test.tsx`
-- [ ] `test/components/data-display/result-card.test.tsx`
-- [ ] `test/components/data-display/search-progress.test.tsx`
-- [ ] `test/components/data-display/empty-state.test.tsx`
+- [x] `test/unit/lib/format.test.ts` — フォーマッタユニットテスト
+- [x] `test/components/data-display/data-table.test.tsx`
+- [x] `test/components/data-display/result-card.test.tsx`
+- [x] `test/components/data-display/search-progress.test.tsx`
+- [x] `test/components/data-display/empty-state.test.tsx`
 
 ### 6.6 既存ファイルの更新
 
-- [ ] `design-system.md` のテーブルライブラリ記述を実態に合わせて更新 (必要に応じて)
+- [x] `design-system.md` のテーブルライブラリ記述を実態に合わせて更新 (必要に応じて)
 
 ## 7. 依存関係
 
