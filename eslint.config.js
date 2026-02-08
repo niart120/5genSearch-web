@@ -32,11 +32,19 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
       'import/no-cycle': 'error',
       'import/no-duplicates': 'error',
+      'unicorn/filename-case': [
+        'error',
+        {
+          cases: {
+            kebabCase: true,
+            pascalCase: true,
+          },
+        },
+      ],
       'unicorn/prevent-abbreviations': 'off',
-      'unicorn/filename-case': 'off',
     },
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 2023,
       globals: globals.browser,
     },
   },

@@ -80,6 +80,9 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.18"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "pnpm": {
     "overrides": {
       "glob": "13.0.1",
