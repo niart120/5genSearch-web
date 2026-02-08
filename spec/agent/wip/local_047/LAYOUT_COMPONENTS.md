@@ -143,8 +143,58 @@ Mobile:[☰] [タイトル]               [Lang] [Theme]
 
 ### 3.7 useMediaQuery フック
 
-`responsive-design.md` Section 5.2 で定義されたパターンに従い、CSS メディアクエリの状態を React state として提供する。
-レスポンシブレイアウトの切り替え判定 (`isDesktop`) に使用する。
+CSS メディアクエリの状態を React state として提供する。
+
+`responsive-design.md` Section 2.3 の判断基準に従い、以下のケースで使用する:
+
+- DOM 構造が大きく異なり、両方レンダリングがコストになる場合 (検索結果のテーブル/カード切替)
+- JS レベルの挙動分岐が必要な場合 (モバイルでの自動 Sheet 閉じ等)
+
+単純なスタイル差異や軽量要素の表示/非表示は Tailwind ブレークポイントを使用し、`useMediaQuery` は使わない。
+
+### 3.8 フォーカス管理
+
+#### PC 版 (固定 Sidebar)
+
+PC 版では Sidebar とメインコンテンツが同一ページ内に常設されるため、Tab キーによる自然なフォーカス移動で遷移する。
+
+| フォーカス遷移 | 挙動 |
+|-------------|------|
+| Sidebar 内の最後の入力 → Tab | メインコンテンツの最初のフォーカス可能要素へ移動 |
+| メインコンテンツの最初の要素 → Shift+Tab | Sidebar 内の最後のフォーカス可能要素へ戻る |
+
+フォーカストラップは**設定しない**。Sidebar は常設パネルであり、モーダルではないため、自然な Tab 順序 (DOM 順) に従う。
+
+#### モバイル版 (Sheet)
+
+Radix UI Dialog のフォーカストラップに従う。
+
+| フォーカス遷移 | 挙動 |
+|-------------|------|
+| Sheet 開 | Sheet 内の最初のフォーカス可能要素にフォーカス移動 (Radix 標準) |
+| Sheet 内で Tab 循環 | Sheet 内でフォーカスがトラップされる (Radix 標準) |
+| Sheet 閉 | トリガー要素 (ハンバーガーボタン) にフォーカス復帰 (Radix 標準) |
+
+### 3.9 Sheet 閉じ時のフォーム状態
+
+モバイル Sheet の閉操作は blur と同等に扱う。`design-system.md` Section 10.4 で定義されたフォーム入力の blur ハンドラが適用され、空欄はデフォルト値に復元、範囲外の値はクランプされる。
+
+Sheet 閉じ時に追加のリセット処理は行わない。ローカル state + blur 同期パターン (`useState` で表示用テキスト保持、blur 時に Store 反映) が Sheet 閉じでも動作することを Phase 3 のフォーム実装時に検証する。
+
+### 3.10 Sidebar 幅の決定方針
+
+初期値は `w-64` (16rem) で仮置きする。Phase 3 で DS 設定フォームを実装した後、以下の観点で開発サーバ上の実機表示を評価し、必要に応じて調整する。
+
+| 評価観点 | 確認内容 |
+|---------|---------|
+| フォーム配置 | DS 設定の入力項目が `w-64` に収まるか。ラベルの折り返しが許容範囲か |
+| メインコンテンツとのバランス | HD (1366px) でメインコンテンツが窮屈にならないか |
+| 視覚的バランス | Sidebar の情報密度とメインコンテンツの余白のバランス |
+
+幅変更時の影響範囲:
+
+- `responsive-container.tsx` の `w-64` クラス
+- `max-w-screen-xl` (1280px) 内に Sidebar + メインコンテンツが収まるか
 
 ## 4. 実装仕様
 
@@ -320,7 +370,7 @@ function ResponsiveContainer({
   children,
 }: ResponsiveContainerProps) {
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="mx-auto flex max-w-screen-xl flex-1 overflow-hidden">
       {/* PC: 固定 Sidebar */}
       {sidebarContent && (
         <aside className="hidden w-64 shrink-0 border-r border-border lg:block">
@@ -344,7 +394,7 @@ function ResponsiveContainer({
 
       {/* メインコンテンツ */}
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-screen-xl px-4 py-4 lg:px-6">{children}</div>
+        <div className="px-4 py-4 lg:px-6">{children}</div>
       </main>
     </div>
   );
@@ -489,7 +539,7 @@ function useMediaQuery(query: string): boolean {
 export { useMediaQuery };
 ```
 
-本 Phase では ResponsiveContainer が Tailwind ブレークポイントで分岐するため `useMediaQuery` は直接使用しないが、Phase 3 以降のデータ表示切り替え (テーブル/カード) で必要になるため、この時点で整備する。
+本 Phase の ResponsiveContainer は Tailwind ブレークポイントで Sidebar の表示/非表示を分岐する。`useMediaQuery` は Phase 3 以降で DOM 構造が大きく異なるケース (検索結果テーブル ↔ カード切替) や JS レベルの挙動分岐 (モバイルでの Sheet 自動閉じ等) で使用するため、この時点で整備する。
 
 ## 5. テスト方針
 
