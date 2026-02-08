@@ -338,6 +338,10 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
 
     // 進捗の構造が正しいこと
     const lastProgress = progressHistory.at(-1);
+    expect(lastProgress).toBeDefined();
+    if (!lastProgress) {
+      return;
+    }
     expect(lastProgress.processed).toBeGreaterThan(0);
     expect(lastProgress.total).toBeGreaterThan(0);
     expect(lastProgress.percentage).toBeGreaterThanOrEqual(0);

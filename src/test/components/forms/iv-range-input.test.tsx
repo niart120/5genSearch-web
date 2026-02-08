@@ -84,7 +84,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[0]).toBe(5);
   });
 
@@ -98,7 +101,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[0]).toBe(0);
   });
 
@@ -113,7 +119,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[1]).toBe(31);
   });
 
@@ -128,7 +137,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[0]).toBe(0);
   });
 
@@ -159,7 +171,10 @@ describe('IvRangeInput', () => {
     await user.click(checkboxes[0]); // HP の不明チェック
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp).toEqual([0, 32]);
   });
 
@@ -189,7 +204,10 @@ describe('IvRangeInput', () => {
     await user.click(checkboxes[0]); // HP の不明チェック OFF
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp).toEqual([0, 31]);
   });
 });
