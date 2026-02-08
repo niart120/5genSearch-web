@@ -94,7 +94,7 @@ function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerProps) {
   return (
     <div className={cn('flex flex-col gap-2 md:flex-row md:items-end md:gap-2')}>
       <TimeAxisField
-        label={<Trans>時</Trans>}
+        label={<Trans>Hour</Trans>}
         startValue={value.hour_start}
         endValue={value.hour_end}
         onStartChange={(v) => onChange({ ...value, hour_start: v })}
@@ -108,7 +108,7 @@ function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerProps) {
       />
       <span className="self-end pb-2 text-sm text-muted-foreground hidden md:block">:</span>
       <TimeAxisField
-        label={<Trans>分</Trans>}
+        label={<Trans>Minute</Trans>}
         startValue={value.minute_start}
         endValue={value.minute_end}
         onStartChange={(v) => onChange({ ...value, minute_start: v })}
@@ -122,7 +122,7 @@ function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerProps) {
       />
       <span className="self-end pb-2 text-sm text-muted-foreground hidden md:block">:</span>
       <TimeAxisField
-        label={<Trans>秒</Trans>}
+        label={<Trans>Second</Trans>}
         startValue={value.second_start}
         endValue={value.second_end}
         onStartChange={(v) => onChange({ ...value, second_start: v })}

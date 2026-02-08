@@ -14,66 +14,84 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: value.length
-#: src/components/forms/hidden-power-select.tsx:40
-#: src/components/forms/nature-select.tsx:40
-msgid "{0}件選択中"
+#: src/components/forms/hidden-power-select.tsx:37
+#: src/components/forms/nature-select.tsx:37
+msgid "{0} selected"
 msgstr "{0}件選択中"
 
 #: src/components/layout/header.tsx:8
 msgid "5genSearch"
 msgstr "5genSearch"
 
-#: src/App.tsx:30
-#~ msgid "Vite と React のロゴをクリックして詳細を確認"
-#~ msgstr "Vite と React のロゴをクリックして詳細を確認"
-
-#: src/App.tsx:21
-#~ msgid "ポケモン乱数調整ツール"
-#~ msgstr "ポケモン乱数調整ツール"
-
-#: src/components/forms/hidden-power-select.tsx:52
-msgid "めざパ"
-msgstr "めざパ"
-
-#: src/components/forms/iv-range-input.tsx:158
-msgid "不明(任意)"
-msgstr "不明(任意)"
-
-#: src/components/forms/hidden-power-select.tsx:73
-#: src/components/forms/nature-select.tsx:73
-msgid "全解除"
+#: src/components/forms/hidden-power-select.tsx:69
+#: src/components/forms/nature-select.tsx:69
+msgid "Deselect all"
 msgstr "全解除"
 
-#: src/components/forms/hidden-power-select.tsx:70
-#: src/components/forms/nature-select.tsx:70
-msgid "全選択"
-msgstr "全選択"
-
-#: src/components/forms/time-range-picker.tsx:111
-msgid "分"
-msgstr "分"
-
-#: src/components/forms/nature-select.tsx:52
-msgid "性格"
-msgstr "性格"
-
-#: src/components/forms/hidden-power-select.tsx:38
-#: src/components/forms/nature-select.tsx:38
-msgid "指定なし"
-msgstr "指定なし"
-
-#: src/components/forms/time-range-picker.tsx:97
-msgid "時"
-msgstr "時"
-
-#: src/components/forms/time-range-picker.tsx:125
-msgid "秒"
-msgstr "秒"
-
 #: src/components/forms/date-range-picker.tsx:130
-msgid "終了日"
+msgid "End date"
 msgstr "終了日"
 
+#: src/components/forms/hidden-power-select.tsx:48
+msgid "Hidden Power"
+msgstr "めざパ"
+
+#: src/components/forms/time-range-picker.tsx:97
+msgid "Hour"
+msgstr "時"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:89
+#: src/components/forms/timer0-vcount-range-input.tsx:129
+msgid "Max"
+msgstr "Max"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:72
+#: src/components/forms/timer0-vcount-range-input.tsx:112
+msgid "Min"
+msgstr "Min"
+
+#: src/components/forms/time-range-picker.tsx:111
+msgid "Minute"
+msgstr "分"
+
+#: src/components/forms/nature-select.tsx:48
+msgid "Nature"
+msgstr "性格"
+
+#: src/components/forms/hidden-power-select.tsx:37
+#: src/components/forms/nature-select.tsx:37
+msgid "Not specified"
+msgstr "指定なし"
+
+#: src/components/forms/time-range-picker.tsx:125
+msgid "Second"
+msgstr "秒"
+
+#: src/components/forms/hidden-power-select.tsx:66
+#: src/components/forms/nature-select.tsx:66
+msgid "Select all"
+msgstr "全選択"
+
 #: src/components/forms/date-range-picker.tsx:111
-msgid "開始日"
+msgid "Start date"
 msgstr "開始日"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:100
+msgid "Timer0 max"
+msgstr "Timer0 max"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:83
+msgid "Timer0 min"
+msgstr "Timer0 min"
+
+#: src/components/forms/iv-range-input.tsx:153
+msgid "Unknown (any)"
+msgstr "不明(任意)"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:140
+msgid "VCount max"
+msgstr "VCount max"
+
+#: src/components/forms/timer0-vcount-range-input.tsx:123
+msgid "VCount min"
+msgstr "VCount min"

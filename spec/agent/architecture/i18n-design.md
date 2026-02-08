@@ -37,10 +37,11 @@ Lingui を選定した理由:
 
 | ロケールコード | 言語 | 役割 |
 |-------------|------|------|
-| `ja` | 日本語 | デフォルト言語・ソースロケール |
-| `en` | 英語 | 翻訳対象 |
+| `ja` | 日本語 | デフォルト言語 |
+| `en` | 英語 | ソースロケール |
 
-- `sourceLocale: "ja"` とし、ソースコード上のメッセージは日本語で記述する
+- `sourceLocale: "en"` とし、ソースコード上のメッセージは英語で記述する
+- `ja.po` に日本語翻訳を記載する
 - ブラウザの `navigator.language` を検出し、`en` 系であれば英語カタログを読み込む
 - ユーザの明示的な言語選択は `useUiStore` の `language` フィールドで永続化する (既に実装済み)
 
@@ -80,13 +81,13 @@ src/
 ### 5.3 カタログ管理フロー
 
 ```
-ソースコード (ja でメッセージ記述)
+ソースコード (en でメッセージ記述)
         │
         ▼
   lingui extract     → src/i18n/locales/{locale}/messages.po を更新
         │
         ▼
-  翻訳作業 (en.po)   → 英語翻訳を記入
+  翻訳作業 (ja.po)   → 日本語翻訳を記入
         │
         ▼
   lingui compile     → src/i18n/locales/{locale}/messages.ts を生成
@@ -146,8 +147,8 @@ function SearchButton({ isSearching }: { isSearching: boolean }) {
   const { t } = useLingui();
 
   return (
-    <button disabled={isSearching} aria-label={t`検索を開始`}>
-      <Trans>検索開始</Trans>
+    <button disabled={isSearching} aria-label={t`Start search`}>
+      <Trans>Start search</Trans>
     </button>
   );
 }
@@ -209,10 +210,10 @@ Generated IDs を採用するため、開発者がキーを命名する必要は
 
 | ルール | 説明 | 例 |
 |-------|------|-----|
-| 日本語で記述 | ソースロケールが `ja` のため | `<Trans>検索開始</Trans>` |
-| UI コンテキストを含める | 同じ文言でも意味が異なる場合は `context` を付与 | `<Trans context="button">開始</Trans>` |
-| 変数は ICU 構文 | 変数埋め込みは `{variable}` | `<Trans>{count} 件のヒット</Trans>` |
-| 複数形は `Plural` | 複数形処理は `Plural` マクロ | `<Plural value={count} one="# 件" other="# 件" />` |
+| 英語で記述 | ソースロケールが `en` のため | `<Trans>Start search</Trans>` |
+| UI コンテキストを含める | 同じ文言でも意味が異なる場合は `context` を付与 | `<Trans context="button">Start</Trans>` |
+| 変数は ICU 構文 | 変数埋め込みは `{variable}` | `<Trans>{count} results</Trans>` |
+| 複数形は `Plural` | 複数形処理は `Plural` マクロ | `<Plural value={count} one="# result" other="# results" />` |
 
 ### 7.2 翻訳対象の判断基準
 
@@ -240,8 +241,8 @@ Generated IDs を採用するため、開発者がキーを命名する必要は
 
 | テキスト | 管理先 | 例 |
 |---------|-------|----|
-| ボタン・ラベル | Lingui | 「検索開始」「全選択」「開始日」 |
-| フォームエラー | Lingui | 「値が不正です」 |
+| ボタン・ラベル | Lingui | "Start search", "Select all", "Start date" |
+| フォームエラー | Lingui | "Invalid value" |
 | ステータス略称 | ゲームデータ辞書 | H/A/B/C/D/S (ja), HP/Atk/Def/SpA/SpD/Spe (en) |
 | 性格名 (25 種) | ゲームデータ辞書 | がんばりや / Hardy |
 | めざパタイプ名 (16 種) | ゲームデータ辞書 | ほのお / Fire |
@@ -268,7 +269,7 @@ Generated IDs を採用するため、開発者がキーを命名する必要は
 import { defineConfig } from '@lingui/cli';
 
 export default defineConfig({
-  sourceLocale: 'ja',
+  sourceLocale: 'en',
   locales: ['ja', 'en'],
   catalogs: [
     {
@@ -332,7 +333,7 @@ export function I18nTestWrapper({ children }: { children: React.ReactNode }) {
 }
 ```
 
-翻訳を読み込まない場合、ソースメッセージ (日本語) がそのまま表示される。テストではソースメッセージに対してアサーションする。
+翻訳を読み込まない場合、ソースメッセージ (英語) がそのまま表示される。テストではソースメッセージに対してアサーションする。
 
 ### 9.2 マクロのテスト互換性
 

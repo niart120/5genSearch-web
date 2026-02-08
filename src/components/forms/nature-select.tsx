@@ -34,7 +34,7 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
   const clearAll = () => onChange([]);
 
   const triggerLabel =
-    value.length === 0 ? <Trans>指定なし</Trans> : <Trans>{value.length}件選択中</Trans>;
+    value.length === 0 ? <Trans>Not specified</Trans> : <Trans>{value.length} selected</Trans>;
 
   return (
     <Popover.Root>
@@ -45,7 +45,7 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
           aria-label="nature-select-trigger"
         >
           <span className="truncate">
-            <Trans>性格</Trans> ({triggerLabel})
+            <Trans>Nature</Trans> ({triggerLabel})
           </span>
           <ChevronDown className="ml-1 size-3.5 shrink-0 opacity-50" />
         </Button>
@@ -63,10 +63,10 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
         >
           <div className="mb-2 flex gap-2">
             <Button variant="ghost" size="sm" onClick={selectAll} type="button">
-              <Trans>全選択</Trans>
+              <Trans>Select all</Trans>
             </Button>
             <Button variant="ghost" size="sm" onClick={clearAll} type="button">
-              <Trans>全解除</Trans>
+              <Trans>Deselect all</Trans>
             </Button>
           </div>
           <div className="grid grid-cols-5 gap-1">
