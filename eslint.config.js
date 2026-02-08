@@ -32,15 +32,6 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
       'import/no-cycle': 'error',
       'import/no-duplicates': 'error',
-      'unicorn/filename-case': [
-        'error',
-        {
-          cases: {
-            kebabCase: true,
-            pascalCase: true,
-          },
-        },
-      ],
       'unicorn/prevent-abbreviations': 'off',
     },
     languageOptions: {

@@ -5,7 +5,7 @@ import { i18n, activateLocale } from './i18n';
 import { useUiStore } from './stores/settings/ui';
 import { setupStoreSyncSubscriptions } from './stores/sync';
 import './index.css';
-import App from './App.tsx';
+import App from './app.tsx';
 
 function resolveTheme(theme: 'light' | 'dark' | 'system'): 'light' | 'dark' {
   if (theme !== 'system') return theme;
