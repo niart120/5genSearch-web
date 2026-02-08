@@ -7,6 +7,10 @@ import { parseHexByte, toHexString, parseHexWord, toHexWordString } from '@/lib/
 import { handleFocusSelectAll } from '@/components/forms/input-helpers';
 import type { Timer0VCountRange } from '@/wasm/wasm_pkg';
 
+const filterHex = (raw: string, maxLen: number): string => {
+  return raw.replaceAll(/[^0-9a-fA-F]/g, '').slice(0, maxLen);
+};
+
 interface Timer0VCountRangeInputProps {
   /** 現在の Timer0/VCount 範囲 */
   value: Timer0VCountRange;
@@ -30,10 +34,6 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
     setVcountMin(toHexString(value.vcount_min));
     setVcountMax(toHexString(value.vcount_max));
   }, [value.timer0_min, value.timer0_max, value.vcount_min, value.vcount_max]);
-
-  const filterHex = (raw: string, maxLen: number): string => {
-    return raw.replaceAll(/[^0-9a-fA-F]/g, '').slice(0, maxLen);
-  };
 
   const handleTimer0MinBlur = () => {
     const parsed = parseHexWord(timer0Min, value.timer0_min);

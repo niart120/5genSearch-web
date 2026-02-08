@@ -24,7 +24,7 @@ let currentIterator: GpuDatetimeSearchIterator | null = null;
 // Message Handler
 // =============================================================================
 
-self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
+globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
@@ -64,7 +64,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       }
       break;
   }
-};
+});
 
 // =============================================================================
 // Init Handler
@@ -182,5 +182,5 @@ async function executeSearchLoop(taskId: string): Promise<void> {
 }
 
 function postResponse(response: WorkerResponse): void {
-  self.postMessage(response);
+  globalThis.postMessage(response);
 }

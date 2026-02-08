@@ -66,19 +66,7 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
     const results: unknown[] = [];
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    const cleanup = () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      worker.terminate();
-    };
-
-    timeoutId = setTimeout(() => {
-      cleanup();
-      reject(new Error(`Search timeout after ${timeout}ms`));
-    }, timeout);
-
-    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+    const handleMessage = (e: MessageEvent<WorkerResponse>) => {
       switch (e.data.type) {
         case 'ready':
           worker.postMessage({
@@ -109,10 +97,27 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
       }
     };
 
-    worker.onerror = (e) => {
+    const handleError = (e: ErrorEvent) => {
       cleanup();
       reject(new Error(e.message));
     };
+
+    const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      worker.removeEventListener('message', handleMessage);
+      worker.removeEventListener('error', handleError);
+      worker.terminate();
+    };
+
+    timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Search timeout after ${timeout}ms`));
+    }, timeout);
+
+    worker.addEventListener('message', handleMessage);
+    worker.addEventListener('error', handleError);
 
     // WASM 初期化を指示 (Worker が独自に fetch)
     worker.postMessage({ type: 'init' } as WorkerRequest);
@@ -135,23 +140,32 @@ export async function testWorkerInitialization(): Promise<boolean> {
       reject(new Error('Worker initialization timeout'));
     }, 10000);
 
-    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+    const handleMessage = (e: MessageEvent<WorkerResponse>) => {
       if (e.data.type === 'ready') {
         clearTimeout(timeoutId);
+        worker.removeEventListener('message', handleMessage);
+        worker.removeEventListener('error', handleError);
         worker.terminate();
         resolve(true);
       } else if (e.data.type === 'error') {
         clearTimeout(timeoutId);
+        worker.removeEventListener('message', handleMessage);
+        worker.removeEventListener('error', handleError);
         worker.terminate();
         reject(new Error(e.data.message));
       }
     };
 
-    worker.onerror = (e) => {
+    const handleError = (e: ErrorEvent) => {
       clearTimeout(timeoutId);
+      worker.removeEventListener('message', handleMessage);
+      worker.removeEventListener('error', handleError);
       worker.terminate();
       reject(new Error(e.message));
     };
+
+    worker.addEventListener('message', handleMessage);
+    worker.addEventListener('error', handleError);
 
     // WASM 初期化を指示 (Worker が独自に fetch)
     worker.postMessage({ type: 'init' } as WorkerRequest);

@@ -17,6 +17,23 @@ import type {
   MtSeed,
 } from '../../wasm/wasm_pkg.js';
 
+async function checkGpuDeviceAvailable(): Promise<boolean> {
+  if (!('gpu' in navigator)) {
+    return false;
+  }
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) {
+      return false;
+    }
+    const device = await adapter.requestDevice();
+    device.destroy();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 describe('WASM Binding Verification', () => {
   beforeAll(async () => {
     // Browser Mode では fetch ベースで WASM を読み込む
@@ -123,26 +140,6 @@ describe('WASM Binding Verification', () => {
   });
 
   describe('GpuDatetimeSearchIterator', () => {
-    /**
-     * GPU adapter およびデバイスが利用可能かチェック
-     */
-    async function checkGpuDeviceAvailable(): Promise<boolean> {
-      if (!('gpu' in navigator)) {
-        return false;
-      }
-      try {
-        const adapter = await navigator.gpu.requestAdapter();
-        if (!adapter) {
-          return false;
-        }
-        const device = await adapter.requestDevice();
-        device.destroy();
-        return true;
-      } catch {
-        return false;
-      }
-    }
-
     it('should find known MT Seed via GPU search (direct WASM call)', async (ctx) => {
       const gpuDeviceAvailable = await checkGpuDeviceAvailable();
       if (!gpuDeviceAvailable) {

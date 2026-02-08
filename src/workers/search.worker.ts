@@ -34,7 +34,7 @@ let cancelled = false;
 // Message Handler
 // =============================================================================
 
-self.onmessage = (e: MessageEvent<WorkerRequest>) => {
+globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
@@ -59,7 +59,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
       cancelled = true;
       break;
   }
-};
+});
 
 // =============================================================================
 // Init Handler
@@ -318,5 +318,5 @@ function yieldToMain(): Promise<void> {
 }
 
 function postResponse(response: WorkerResponse): void {
-  self.postMessage(response);
+  globalThis.postMessage(response);
 }

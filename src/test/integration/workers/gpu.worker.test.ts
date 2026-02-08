@@ -373,7 +373,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     let errorReceived = false;
 
     const searchPromise = new Promise<void>((resolve) => {
-      worker!.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      worker!.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
         switch (e.data.type) {
           case 'progress':
             progressHistory.push(e.data.progress);
@@ -389,7 +389,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
             resolve();
             break;
         }
-      };
+      });
 
       // 100年分の検索を開始
       const request: WorkerRequest = {
@@ -450,12 +450,12 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
         reject(new Error('Timeout waiting for error response'));
       }, 5000);
 
-      worker!.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      worker!.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
         if (e.data.type === 'error') {
           clearTimeout(timeoutId);
           resolve(e.data.message);
         }
-      };
+      });
     });
 
     // GPU Worker がサポートしない mtseed タスクを送信
@@ -494,12 +494,12 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
         reject(new Error('Timeout waiting for error response'));
       }, 5000);
 
-      worker!.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      worker!.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
         if (e.data.type === 'error') {
           clearTimeout(timeoutId);
           resolve(e.data.message);
         }
-      };
+      });
     });
 
     const request: WorkerRequest = {

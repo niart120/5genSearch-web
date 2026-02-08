@@ -127,12 +127,12 @@ export class WorkerPool {
   }
 
   private setupWorker(worker: Worker): void {
-    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+    worker.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
       this.handleWorkerMessage(worker, e.data);
-    };
-    worker.onerror = (e) => {
+    });
+    worker.addEventListener('error', (e) => {
       this.errorCallbacks.forEach((cb) => cb(new Error(e.message)));
-    };
+    });
   }
 
   private async initializeWorkers(): Promise<void> {

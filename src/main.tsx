@@ -9,7 +9,7 @@ import App from './App.tsx';
 
 function resolveTheme(theme: 'light' | 'dark' | 'system'): 'light' | 'dark' {
   if (theme !== 'system') return theme;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function applyTheme(theme: 'light' | 'dark' | 'system') {
@@ -33,7 +33,7 @@ async function bootstrap() {
   );
 
   // Listen for OS color scheme changes (for system mode)
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  globalThis.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     const { theme } = useUiStore.getState();
     if (theme === 'system') applyTheme(theme);
   });
