@@ -3,7 +3,7 @@ import { useLingui } from '@lingui/react/macro';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { parseHexByte, toHexString, parseHexWord, toHexWordString } from '@/lib/hex';
+import { parseHexByte, parseHexWord, toHex } from '@/lib/hex';
 import { handleFocusSelectAll } from '@/components/forms/input-helpers';
 import type { Timer0VCountRange } from '@/wasm/wasm_pkg';
 
@@ -23,39 +23,39 @@ interface Timer0VCountRangeInputProps {
 function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRangeInputProps) {
   const { t } = useLingui();
 
-  const [timer0Min, setTimer0Min] = React.useState(() => toHexWordString(value.timer0_min));
-  const [timer0Max, setTimer0Max] = React.useState(() => toHexWordString(value.timer0_max));
-  const [vcountMin, setVcountMin] = React.useState(() => toHexString(value.vcount_min));
-  const [vcountMax, setVcountMax] = React.useState(() => toHexString(value.vcount_max));
+  const [timer0Min, setTimer0Min] = React.useState(() => toHex(value.timer0_min, 4));
+  const [timer0Max, setTimer0Max] = React.useState(() => toHex(value.timer0_max, 4));
+  const [vcountMin, setVcountMin] = React.useState(() => toHex(value.vcount_min, 2));
+  const [vcountMax, setVcountMax] = React.useState(() => toHex(value.vcount_max, 2));
 
   React.useEffect(() => {
-    setTimer0Min(toHexWordString(value.timer0_min));
-    setTimer0Max(toHexWordString(value.timer0_max));
-    setVcountMin(toHexString(value.vcount_min));
-    setVcountMax(toHexString(value.vcount_max));
+    setTimer0Min(toHex(value.timer0_min, 4));
+    setTimer0Max(toHex(value.timer0_max, 4));
+    setVcountMin(toHex(value.vcount_min, 2));
+    setVcountMax(toHex(value.vcount_max, 2));
   }, [value.timer0_min, value.timer0_max, value.vcount_min, value.vcount_max]);
 
   const handleTimer0MinBlur = () => {
     const parsed = parseHexWord(timer0Min, value.timer0_min);
-    setTimer0Min(toHexWordString(parsed));
+    setTimer0Min(toHex(parsed, 4));
     onChange({ ...value, timer0_min: parsed });
   };
 
   const handleTimer0MaxBlur = () => {
     const parsed = parseHexWord(timer0Max, value.timer0_max);
-    setTimer0Max(toHexWordString(parsed));
+    setTimer0Max(toHex(parsed, 4));
     onChange({ ...value, timer0_max: parsed });
   };
 
   const handleVcountMinBlur = () => {
     const parsed = parseHexByte(vcountMin, value.vcount_min);
-    setVcountMin(toHexString(parsed));
+    setVcountMin(toHex(parsed, 2));
     onChange({ ...value, vcount_min: parsed });
   };
 
   const handleVcountMaxBlur = () => {
     const parsed = parseHexByte(vcountMax, value.vcount_max);
-    setVcountMax(toHexString(parsed));
+    setVcountMax(toHex(parsed, 2));
     onChange({ ...value, vcount_max: parsed });
   };
 

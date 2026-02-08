@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHexByte, toHexString, parseHexWord, toHexWordString } from '@/lib/hex';
+import { parseHexByte, parseHexWord, toHex } from '@/lib/hex';
 
 describe('parseHexByte', () => {
   it('有効な 1–2 桁 hex を正しくパースする', () => {
@@ -20,11 +20,25 @@ describe('parseHexByte', () => {
   });
 });
 
-describe('toHexString', () => {
+describe('toHex', () => {
   it('2 桁大文字 hex 文字列を返す', () => {
-    expect(toHexString(0)).toBe('00');
-    expect(toHexString(0x5e)).toBe('5E');
-    expect(toHexString(255)).toBe('FF');
+    expect(toHex(0, 2)).toBe('00');
+    expect(toHex(0x5e, 2)).toBe('5E');
+    expect(toHex(255, 2)).toBe('FF');
+  });
+
+  it('4 桁大文字 hex 文字列を返す', () => {
+    expect(toHex(0x0c_79, 4)).toBe('0C79');
+    expect(toHex(0x1a_2b, 4)).toBe('1A2B');
+  });
+
+  it('0 を指定桁数でパディングする', () => {
+    expect(toHex(0, 2)).toBe('00');
+    expect(toHex(0, 4)).toBe('0000');
+  });
+
+  it('0xFFFF を 4 桁で "FFFF" に変換する', () => {
+    expect(toHex(0xff_ff, 4)).toBe('FFFF');
   });
 });
 
@@ -50,20 +64,5 @@ describe('parseHexWord', () => {
   it('5 桁以上でデフォルト値を返す', () => {
     expect(parseHexWord('12345')).toBe(0);
     expect(parseHexWord('ABCDE', 99)).toBe(99);
-  });
-});
-
-describe('toHexWordString', () => {
-  it('4 桁大文字 hex 文字列を返す', () => {
-    expect(toHexWordString(0x0c_79)).toBe('0C79');
-    expect(toHexWordString(0x1a_2b)).toBe('1A2B');
-  });
-
-  it('0 を "0000" に変換する', () => {
-    expect(toHexWordString(0)).toBe('0000');
-  });
-
-  it('0xFFFF を "FFFF" に変換する', () => {
-    expect(toHexWordString(0xff_ff)).toBe('FFFF');
   });
 });
