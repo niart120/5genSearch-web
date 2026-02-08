@@ -61,9 +61,12 @@ Phase 3 の各検索機能 (起動時刻検索、個体生成リスト、孵化�
 | `src/components/data-display/search-progress.tsx` | 新規 | 検索進捗表示コンポーネント (ProgressBar + 統計情報) |
 | `src/components/data-display/empty-state.tsx` | 新規 | 結果なし / 検索未実行時の空状態表示 |
 | `src/components/data-display/index.ts` | 新規 | barrel export |
-| `src/lib/format.ts` | 新規 | 表示用フォーマッタ (経過時間、スループット、16 進数等) |
+| `src/lib/format.ts` | 新規 | 表示用フォーマッタ (経過時間、件数、16 進数等) |
+| `src/lib/hex.ts` | 変更 | 汎用 `toHex(value, digits)` を追加。既存の `toHexString` / `toHexWordString` を `toHex` 委譲に変更 |
+| `src/services/progress.ts` | 変更 | `formatRemainingTime` / `formatThroughput` を `lib/format.ts` へ移動し、re-export に変更 (後方互換維持) |
 | `src/test/components/data-display/` | 新規 | コンポーネントテスト |
 | `src/test/unit/lib/format.test.ts` | 新規 | フォーマッタのユニットテスト |
+| `src/test/unit/services/progress.test.ts` | 変更 | import 元の変更に伴うテスト更新 |
 | `package.json` | 変更 | `@tanstack/react-table`, `@tanstack/react-virtual` 追加 |
 
 ## 3. 設計方針
@@ -117,7 +120,7 @@ Phase 3 機能側                  Phase 2 共通部品
 #### 3.2.2 仮想スクロール
 
 - `@tanstack/react-virtual` の `useVirtualizer` でビューポート内の行のみレンダリング
-- 行高さは固定値 (`ROW_HEIGHT = 34px`) を前提とし、`estimateSize` に渡す
+- 行高さは `h-8` (2rem) を基準とし、`remToPx()` で変換した値を `estimateSize` に渡す
 - `overscan` はデフォルト 8 行 (スクロール時のちらつき防止)
 
 #### 3.2.3 ソート
@@ -154,6 +157,28 @@ Phase 3 機能側                  Phase 2 共通部品
 - ロケール (`SupportedLocale`) 対応
 - Lingui のスコープ外 (ゲームデータ辞書と同様、定型フォーマットのため)
 - ただし、ラベル文言 (「経過時間」「残り時間」等) は Lingui 翻訳対象とする
+
+#### 3.5.1 既存実装との統合
+
+以下の既存関数と機能が重複するため、`lib/format.ts` への集約とリファクタリングを行う。
+
+| 既存関数 | 既存ファイル | 対応 |
+|----------|------------|------|
+| `formatRemainingTime(ms)` | `services/progress.ts` | `lib/format.ts` へ移動。`services/progress.ts` からは re-export して後方互換を維持 |
+| `formatThroughput(throughput)` | `services/progress.ts` | 同上。ロケール対応 (`SupportedLocale` 引数) を追加する |
+| `toHexString(value)` | `lib/hex.ts` | `toHex(value, 2)` への委譲に変更。`toHex` を `lib/hex.ts` に追加 |
+| `toHexWordString(value)` | `lib/hex.ts` | `toHex(value, 4)` への委譲に変更 |
+
+`formatDuration` は既存 `formatRemainingTime` と実質同一のため、新設しない。
+
+### 3.6 サイズ単位の方針
+
+デザインシステム (Section 5.1) に従い、固定 `px` レイアウトは使用しない。
+
+- **CSS スタイリング**: Tailwind クラス (rem ベース) を使用
+- **行高さ**: `h-8` (2rem、design-system.md Section 6.3) に準拠
+- **仮想スクロール API**: `@tanstack/react-virtual` の `estimateSize` はピクセル値を要求するため、定数を rem で定義し `remToPx()` ヘルパーで変換する
+- **virtualizer 出力値** (`virtualItem.start`, `getTotalSize()` 等) はライブラリがピクセル単位で返すため、`style` 属性への px 代入は API 制約上の例外として許容する
 
 ## 4. 実装仕様
 
@@ -361,8 +386,8 @@ export interface DataTableOptions<TData> {
   /** ソートの初期状態 */
   initialSorting?: SortingState;
 
-  /** 仮想スクロールの行高さ (px)。デフォルト: 34 */
-  rowHeight?: number;
+  /** 仮想スクロールの行高さ (rem)。デフォルト: 2 (= h-8) */
+  rowHeightRem?: number;
 
   /** 仮想スクロールの overscan 行数。デフォルト: 8 */
   overscan?: number;
@@ -411,16 +436,18 @@ import {
 } from '@/components/ui/table';
 import { EmptyState } from './empty-state';
 import { cn } from '@/lib/utils';
+import { remToPx } from '@/lib/format';
 import type { DataTableOptions } from './data-table-types';
 
-const DEFAULT_ROW_HEIGHT = 34;
+/** design-system.md Section 6.3: テーブル行 h-8 = 2rem */
+const DEFAULT_ROW_HEIGHT_REM = 2;
 const DEFAULT_OVERSCAN = 8;
 
 function DataTable<TData>({
   columns,
   data,
   initialSorting = [],
-  rowHeight = DEFAULT_ROW_HEIGHT,
+  rowHeightRem = DEFAULT_ROW_HEIGHT_REM,
   overscan = DEFAULT_OVERSCAN,
   getRowId,
   className,
@@ -443,10 +470,12 @@ function DataTable<TData>({
   const { rows } = table.getRowModel();
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const rowHeightPx = remToPx(rowHeightRem);
+
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: useCallback(() => rowHeight, [rowHeight]),
+    estimateSize: useCallback(() => rowHeightPx, [rowHeightPx]),
     overscan,
   });
 
@@ -596,9 +625,11 @@ export type { EmptyStateProps };
 import { useRef, useCallback, type ReactNode } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from './empty-state';
+import { remToPx } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-const DEFAULT_CARD_HEIGHT = 120;
+/** カード推定高さ: 7.5rem (root 16px 時 120px 相当) */
+const DEFAULT_CARD_HEIGHT_REM = 7.5;
 const DEFAULT_OVERSCAN = 4;
 
 interface ResultCardListProps<TData> {
@@ -608,8 +639,8 @@ interface ResultCardListProps<TData> {
   /** カード 1 件分のレンダラー */
   renderCard: (item: TData, index: number) => ReactNode;
 
-  /** カード推定高さ (px)。デフォルト: 120 */
-  cardHeight?: number;
+  /** カード推定高さ (rem)。デフォルト: 7.5 */
+  cardHeightRem?: number;
 
   /** overscan 数。デフォルト: 4 */
   overscan?: number;
@@ -624,17 +655,18 @@ interface ResultCardListProps<TData> {
 function ResultCardList<TData>({
   data,
   renderCard,
-  cardHeight = DEFAULT_CARD_HEIGHT,
+  cardHeightRem = DEFAULT_CARD_HEIGHT_REM,
   overscan = DEFAULT_OVERSCAN,
   className,
   emptyMessage,
 }: ResultCardListProps<TData>) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const cardHeightPx = remToPx(cardHeightRem);
 
   const virtualizer = useVirtualizer({
     count: data.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: useCallback(() => cardHeight, [cardHeight]),
+    estimateSize: useCallback(() => cardHeightPx, [cardHeightPx]),
     overscan,
   });
 
@@ -680,15 +712,10 @@ export type { ResultCardListProps };
 ```tsx
 // src/components/data-display/search-progress.tsx
 import { Trans } from '@lingui/react/macro';
-import { useLingui } from '@lingui/react/macro';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import {
-  formatElapsedTime,
-  formatRemainingTime,
-  formatThroughput,
-} from '@/lib/format';
-import type { SupportedLocale } from '@/i18n';
+import { formatElapsedTime } from '@/lib/format';
+import { formatRemainingTime, formatThroughput } from '@/services/progress';
 
 /**
  * 検索進捗の入力データ型。
@@ -712,19 +739,14 @@ export interface SearchProgressData {
 interface SearchProgressProps {
   /** 進捗データ */
   progress: SearchProgressData;
-  /** ロケール */
-  locale: SupportedLocale;
   /** 追加クラス名 */
   className?: string;
 }
 
 function SearchProgress({
   progress,
-  locale,
   className,
 }: SearchProgressProps) {
-  const { t } = useLingui();
-
   return (
     <div className={cn('space-y-2', className)}>
       {/* プログレスバー */}
@@ -761,7 +783,7 @@ function SearchProgress({
             <Trans>Speed</Trans>
           </div>
           <div className="font-mono tabular-nums">
-            {formatThroughput(progress.throughput, locale)}
+            {formatThroughput(progress.throughput)}
           </div>
         </div>
       </div>
@@ -775,11 +797,26 @@ export type { SearchProgressProps };
 
 ### 4.9 フォーマッタ (`lib/format.ts`)
 
-検索結果の表示に使用する純粋関数群。
+データ表示で新規に必要なフォーマッタ。既存の `formatRemainingTime` / `formatThroughput` は `services/progress.ts` に残し、そこから利用する (Section 3.5.1 参照)。
 
 ```tsx
 // src/lib/format.ts
 import type { SupportedLocale } from '@/i18n';
+
+/**
+ * rem 値をピクセル値に変換する。
+ * ブラウザの root font-size を参照するため、ユーザーの文字サイズ設定に追従する。
+ * @tanstack/react-virtual の estimateSize 等、px を要求する API 向け。
+ */
+export function remToPx(rem: number): number {
+  if (typeof document === 'undefined') {
+    return rem * 16; // SSR / テスト環境フォールバック
+  }
+  const rootFontSize = parseFloat(
+    getComputedStyle(document.documentElement).fontSize,
+  );
+  return rem * rootFontSize;
+}
 
 /**
  * 経過時間をフォーマットする (mm:ss または hh:mm:ss)
@@ -796,41 +833,6 @@ export function formatElapsedTime(ms: number): string {
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   }
   return `${pad(minutes)}:${pad(seconds)}`;
-}
-
-/**
- * 残り時間をフォーマットする
- * 推定不能時は "--:--" を返す
- */
-export function formatRemainingTime(ms: number): string {
-  if (ms <= 0 || !Number.isFinite(ms)) {
-    return '--:--';
-  }
-  return formatElapsedTime(ms);
-}
-
-/**
- * スループットをフォーマットする (例: "1,234,567 /s")
- */
-export function formatThroughput(
-  throughput: number,
-  locale: SupportedLocale,
-): string {
-  if (throughput <= 0 || !Number.isFinite(throughput)) {
-    return '-- /s';
-  }
-  const bcp47 = locale === 'ja' ? 'ja-JP' : 'en-US';
-  const formatted = new Intl.NumberFormat(bcp47, {
-    maximumFractionDigits: 0,
-  }).format(Math.round(throughput));
-  return `${formatted} /s`;
-}
-
-/**
- * 数値を 16 進数文字列に変換する (大文字、prefix なし)
- */
-export function toHex(value: number, digits: number): string {
-  return value.toString(16).toUpperCase().padStart(digits, '0');
 }
 
 /**
@@ -851,22 +853,33 @@ export function formatResultCount(
   const formatted = new Intl.NumberFormat(bcp47).format(count);
   return locale === 'ja' ? `${formatted} 件` : `${formatted} results`;
 }
+```
 
-/**
- * 経過時間を短縮表記する (例: "1.2s", "45.3s", "2m 15s")
- */
-export function formatDuration(ms: number): string {
-  if (ms < 1000) {
-    return `${ms}ms`;
-  }
-  const seconds = ms / 1000;
-  if (seconds < 60) {
-    return `${seconds.toFixed(1)}s`;
-  }
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}m ${remainingSeconds}s`;
+### 4.9.1 hex.ts の拡張
+
+既存の `lib/hex.ts` に汎用 `toHex` を追加し、固定桁数関数を委譲に変更する。
+
+```tsx
+// src/lib/hex.ts (変更後)
+
+/** 数値を指定桁数の 16 進数大文字文字列に変換する */
+function toHex(value: number, digits: number): string {
+  return value.toString(16).toUpperCase().padStart(digits, '0');
 }
+
+/** 数値を 16 進数 2 桁の大文字文字列に変換する */
+function toHexString(value: number): string {
+  return toHex(value, 2);
+}
+
+/** 数値を 16 進数 4 桁の大文字文字列に変換する */
+function toHexWordString(value: number): string {
+  return toHex(value, 4);
+}
+
+// parseHexByte, parseHexWord, parseMacAddress は変更なし
+
+export { toHex, toHexString, parseHexByte, toHexWordString, parseHexWord, parseMacAddress };
 ```
 
 ### 4.10 barrel export (`data-display/index.ts`)
@@ -878,7 +891,10 @@ export type { DataTableOptions } from './data-table-types';
 export { ResultCardList } from './result-card';
 export type { ResultCardListProps } from './result-card';
 export { SearchProgress } from './search-progress';
-export type { SearchProgressData, SearchProgressProps } from './search-progress';
+export type {
+  SearchProgressData,
+  SearchProgressProps,
+} from './search-progress';
 export { EmptyState } from './empty-state';
 export type { EmptyStateProps } from './empty-state';
 ```
@@ -890,7 +906,8 @@ Phase 3 で起動時刻検索の結果テーブルを定義する際のイメー
 ```tsx
 // Phase 3 イメージ: features/datetime-search/columns.ts
 import { createColumnHelper } from '@tanstack/react-table';
-import { toHex, toBigintHex } from '@/lib/format';
+import { toHex } from '@/lib/hex';
+import { toBigintHex } from '@/lib/format';
 import type { UiPokemonData } from '@/wasm/wasm_pkg';
 
 const columnHelper = createColumnHelper<UiPokemonData>();
@@ -1031,7 +1048,9 @@ jsdom は `getBoundingClientRect` / `IntersectionObserver` を完全にサポー
 
 ### 6.4 ユーティリティ
 
-- [ ] `lib/format.ts` — フォーマッタ関数群
+- [ ] `lib/format.ts` — 新規フォーマッタ (`formatElapsedTime`, `toBigintHex`, `formatResultCount`, `remToPx`)
+- [ ] `lib/hex.ts` — `toHex(value, digits)` 追加、`toHexString` / `toHexWordString` を委譲に変更
+- [ ] `services/progress.ts` — `formatRemainingTime` / `formatThroughput` の re-export 確認 (後方互換)
 
 ### 6.5 テスト
 
@@ -1055,7 +1074,7 @@ jsdom は `getBoundingClientRect` / `IntersectionObserver` を完全にサポー
                         │
                         ├── ui/table.tsx
                         ├── data-display/empty-state.tsx
-                        └── lib/format.ts
+                        └── lib/format.ts (remToPx)
 
 @radix-ui/react-progress
         │
@@ -1063,12 +1082,19 @@ jsdom は `getBoundingClientRect` / `IntersectionObserver` を完全にサポー
   ui/progress.tsx
         │
         ▼
-  data-display/search-progress.tsx ── lib/format.ts
+  data-display/search-progress.tsx
+        │
+        ├── lib/format.ts (formatElapsedTime)
+        └── services/progress.ts (formatRemainingTime, formatThroughput)
 
 data-display/result-card.tsx
         │
         ├── @tanstack/react-virtual
+        ├── lib/format.ts (remToPx)
         └── data-display/empty-state.tsx
+
+lib/hex.ts
+        └── toHex (汎用) ← toHexString, toHexWordString が委譲
 ```
 
 ## 8. 関連ドキュメント
