@@ -61,12 +61,15 @@ Phase 3 の各検索機能 (起動時刻検索、個体生成リスト、孵化�
 | `src/components/data-display/search-progress.tsx` | 新規 | 検索進捗表示コンポーネント (ProgressBar + 統計情報) |
 | `src/components/data-display/empty-state.tsx` | 新規 | 結果なし / 検索未実行時の空状態表示 |
 | `src/components/data-display/index.ts` | 新規 | barrel export |
-| `src/lib/format.ts` | 新規 | 表示用フォーマッタ (経過時間、件数、16 進数等) |
-| `src/lib/hex.ts` | 変更 | 汎用 `toHex(value, digits)` を追加。既存の `toHexString` / `toHexWordString` を `toHex` 委譲に変更 |
-| `src/services/progress.ts` | 変更 | `formatRemainingTime` / `formatThroughput` を `lib/format.ts` へ移動し、re-export に変更 (後方互換維持) |
+| `src/lib/format.ts` | 新規 | 表示用フォーマッタ (経過時間、残り時間、スループット、件数、16 進数等) |
+| `src/lib/hex.ts` | 変更 | `toHexString` / `toHexWordString` を削除し `toHex(value, digits)` に一本化 |
+| `src/services/progress.ts` | 変更 | `formatRemainingTime` / `formatThroughput` / `formatProgress` を削除 (`lib/format.ts` へ完全移動) |
+| `src/components/forms/mac-address-input.tsx` | 変更 | `toHexString` → `toHex` に移行 |
+| `src/components/forms/timer0-vcount-range-input.tsx` | 変更 | `toHexString` / `toHexWordString` → `toHex` に移行 |
 | `src/test/components/data-display/` | 新規 | コンポーネントテスト |
-| `src/test/unit/lib/format.test.ts` | 新規 | フォーマッタのユニットテスト |
-| `src/test/unit/services/progress.test.ts` | 変更 | import 元の変更に伴うテスト更新 |
+| `src/test/unit/lib/format.test.ts` | 新規 | フォーマッタのユニットテスト (既存 progress.test.ts のフォーマッタテストを移動) |
+| `src/test/unit/services/progress.test.ts` | 変更 | `formatRemainingTime` / `formatThroughput` / `formatProgress` のテストを `format.test.ts` へ移動。`ProgressAggregator` テストのみ残す |
+| `src/test/unit/hex.test.ts` | 変更 | `toHexString` / `toHexWordString` テストを `toHex` テストに置換 |
 | `package.json` | 変更 | `@tanstack/react-table`, `@tanstack/react-virtual` 追加 |
 
 ## 3. 設計方針
@@ -158,18 +161,28 @@ Phase 3 機能側                  Phase 2 共通部品
 - Lingui のスコープ外 (ゲームデータ辞書と同様、定型フォーマットのため)
 - ただし、ラベル文言 (「経過時間」「残り時間」等) は Lingui 翻訳対象とする
 
-#### 3.5.1 既存実装との統合
+#### 3.5.1 既存実装との統合 (破壊的変更)
 
-以下の既存関数と機能が重複するため、`lib/format.ts` への集約とリファクタリングを行う。
+以下の既存関数と機能が重複するため、`lib/format.ts` への集約と呼び出し側の一斉移行を行う。後方互換 (re-export / 委譲) は維持せず、旧 API を削除する。
 
 | 既存関数 | 既存ファイル | 対応 |
 |----------|------------|------|
-| `formatRemainingTime(ms)` | `services/progress.ts` | `lib/format.ts` へ移動。`services/progress.ts` からは re-export して後方互換を維持 |
-| `formatThroughput(throughput)` | `services/progress.ts` | 同上。ロケール対応 (`SupportedLocale` 引数) を追加する |
-| `toHexString(value)` | `lib/hex.ts` | `toHex(value, 2)` への委譲に変更。`toHex` を `lib/hex.ts` に追加 |
-| `toHexWordString(value)` | `lib/hex.ts` | `toHex(value, 4)` への委譲に変更 |
+| `formatRemainingTime(ms)` | `services/progress.ts` | `services/progress.ts` から**削除**し `lib/format.ts` へ完全移動 |
+| `formatThroughput(throughput)` | `services/progress.ts` | 同上。シグネチャは既存を維持 (`2.50M/s` 形式) |
+| `formatProgress(progress)` | `services/progress.ts` | 同上 |
+| `toHexString(value)` | `lib/hex.ts` | **削除**。呼び出し側を `toHex(value, 2)` に移行 |
+| `toHexWordString(value)` | `lib/hex.ts` | **削除**。呼び出し側を `toHex(value, 4)` に移行 |
 
-`formatDuration` は既存 `formatRemainingTime` と実質同一のため、新設しない。
+`formatDuration` は `formatRemainingTime` と実質同一のため、新設しない。
+
+#### 3.5.2 呼び出し側の移行対象
+
+| ファイル | 変更内容 |
+|----------|----------|
+| `components/forms/mac-address-input.tsx` | `toHexString(byte)` → `toHex(byte, 2)` |
+| `components/forms/timer0-vcount-range-input.tsx` | `toHexString` → `toHex(v, 2)`, `toHexWordString` → `toHex(v, 4)` |
+| `test/unit/services/progress.test.ts` | `formatProgress` / `formatRemainingTime` / `formatThroughput` のテストを `test/unit/lib/format.test.ts` へ移動 |
+| `test/unit/hex.test.ts` | `toHexString` / `toHexWordString` テストを `toHex` テストに置換 |
 
 ### 3.6 サイズ単位の方針
 
@@ -715,7 +728,7 @@ import { Trans } from '@lingui/react/macro';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { formatElapsedTime } from '@/lib/format';
-import { formatRemainingTime, formatThroughput } from '@/services/progress';
+import { formatRemainingTime, formatThroughput } from '@/lib/format';
 
 /**
  * 検索進捗の入力データ型。
@@ -797,7 +810,7 @@ export type { SearchProgressProps };
 
 ### 4.9 フォーマッタ (`lib/format.ts`)
 
-データ表示で新規に必要なフォーマッタ。既存の `formatRemainingTime` / `formatThroughput` は `services/progress.ts` に残し、そこから利用する (Section 3.5.1 参照)。
+データ表示で新規に必要なフォーマッタおよび `services/progress.ts` から移動するフォーマッタを集約する。
 
 ```tsx
 // src/lib/format.ts
@@ -853,33 +866,111 @@ export function formatResultCount(
   const formatted = new Intl.NumberFormat(bcp47).format(count);
   return locale === 'ja' ? `${formatted} 件` : `${formatted} results`;
 }
+
+// --- 以下、services/progress.ts から移動 ---
+
+import type { AggregatedProgress } from '@/services/progress';
+
+/**
+ * 進捗情報をフォーマット
+ * (元: services/progress.ts)
+ */
+export function formatProgress(progress: AggregatedProgress): string {
+  const { percentage, throughput, estimatedRemainingMs, tasksCompleted, tasksTotal } = progress;
+
+  const remainingSeconds = Math.ceil(estimatedRemainingMs / 1000);
+  const throughputStr =
+    throughput >= 1000 ? `${(throughput / 1000).toFixed(1)}K/s` : `${Math.round(throughput)}/s`;
+
+  return `${percentage.toFixed(1)}% | ${throughputStr} | 残り ${remainingSeconds}s | タスク ${tasksCompleted}/${tasksTotal}`;
+}
+
+/**
+ * 推定残り時間を人間が読みやすい形式にフォーマット
+ * (元: services/progress.ts)
+ */
+export function formatRemainingTime(ms: number): string {
+  if (ms <= 0) return '0s';
+
+  const seconds = Math.ceil(ms / 1000);
+
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes < 60) {
+    return `${minutes}m ${remainingSeconds}s`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${hours}h ${remainingMinutes}m`;
+}
+
+/**
+ * スループットを人間が読みやすい形式にフォーマット
+ * (元: services/progress.ts)
+ */
+export function formatThroughput(throughput: number): string {
+  if (throughput >= 1_000_000) {
+    return `${(throughput / 1_000_000).toFixed(2)}M/s`;
+  }
+  if (throughput >= 1000) {
+    return `${(throughput / 1000).toFixed(1)}K/s`;
+  }
+  return `${Math.round(throughput)}/s`;
+}
 ```
 
-### 4.9.1 hex.ts の拡張
+### 4.9.1 hex.ts の変更
 
-既存の `lib/hex.ts` に汎用 `toHex` を追加し、固定桁数関数を委譲に変更する。
+`toHexString` / `toHexWordString` を削除し、汎用 `toHex(value, digits)` に一本化する。
 
 ```tsx
 // src/lib/hex.ts (変更後)
+
+/** 16 進数文字列を 1 バイト整数 (0–255) にパースする */
+function parseHexByte(raw: string, defaultValue: number = 0): number {
+  const trimmed = raw.trim();
+  if (trimmed === '') return defaultValue;
+  if (!/^[0-9a-fA-F]{1,2}$/.test(trimmed)) return defaultValue;
+  return Number.parseInt(trimmed, 16);
+}
+
+/** 16 進数文字列を 2 バイト整数 (0–65535) にパースする */
+function parseHexWord(raw: string, defaultValue: number = 0): number {
+  const trimmed = raw.trim();
+  if (trimmed === '') return defaultValue;
+  if (!/^[0-9a-fA-F]{1,4}$/.test(trimmed)) return defaultValue;
+  return Number.parseInt(trimmed, 16);
+}
 
 /** 数値を指定桁数の 16 進数大文字文字列に変換する */
 function toHex(value: number, digits: number): string {
   return value.toString(16).toUpperCase().padStart(digits, '0');
 }
 
-/** 数値を 16 進数 2 桁の大文字文字列に変換する */
-function toHexString(value: number): string {
-  return toHex(value, 2);
+/** MAC アドレス文字列をパースして 6 バイト配列を返す。不正な形式なら undefined */
+function parseMacAddress(
+  input: string,
+): [number, number, number, number, number, number] | undefined {
+  const cleaned = input.replaceAll(/[-:]/g, '');
+  if (!/^[0-9a-fA-F]{12}$/.test(cleaned)) return undefined;
+  return [
+    Number.parseInt(cleaned.slice(0, 2), 16),
+    Number.parseInt(cleaned.slice(2, 4), 16),
+    Number.parseInt(cleaned.slice(4, 6), 16),
+    Number.parseInt(cleaned.slice(6, 8), 16),
+    Number.parseInt(cleaned.slice(8, 10), 16),
+    Number.parseInt(cleaned.slice(10, 12), 16),
+  ];
 }
 
-/** 数値を 16 進数 4 桁の大文字文字列に変換する */
-function toHexWordString(value: number): string {
-  return toHex(value, 4);
-}
-
-// parseHexByte, parseHexWord, parseMacAddress は変更なし
-
-export { toHex, toHexString, parseHexByte, toHexWordString, parseHexWord, parseMacAddress };
+export { parseHexByte, parseHexWord, toHex, parseMacAddress };
 ```
 
 ### 4.10 barrel export (`data-display/index.ts`)
@@ -908,6 +999,7 @@ Phase 3 で起動時刻検索の結果テーブルを定義する際のイメー
 import { createColumnHelper } from '@tanstack/react-table';
 import { toHex } from '@/lib/hex';
 import { toBigintHex } from '@/lib/format';
+// 旧 API: toHexString / toHexWordString は削除済み → toHex(value, digits) を使用
 import type { UiPokemonData } from '@/wasm/wasm_pkg';
 
 const columnHelper = createColumnHelper<UiPokemonData>();
@@ -992,12 +1084,11 @@ function DatetimeSearchResults({ results }: { results: UiPokemonData[] }) {
 | テスト | 検証内容 |
 |--------|---------|
 | `formatElapsedTime` | 0ms → `"00:00"`, 61000ms → `"01:01"`, 3661000ms → `"01:01:01"` |
-| `formatRemainingTime` | 0 → `"--:--"`, 負値 → `"--:--"`, NaN → `"--:--"`, 正値 → 正常フォーマット |
-| `formatThroughput` | 0 → `"-- /s"`, 1234567 → ロケール別カンマ区切り |
-| `toHex` | 0xFF → `"FF"` (2桁), 0x0C80 → `"0C80"` (4桁) |
+| `formatRemainingTime` | 0 → `"0s"`, 負値 → `"0s"`, 90000ms → `"1m 30s"`, 3700000ms → `"1h 1m"` (既存テストケース維持) |
+| `formatThroughput` | 500 → `"500/s"`, 5000 → `"5.0K/s"`, 2500000 → `"2.50M/s"` (既存テストケース維持) |
+| `formatProgress` | AggregatedProgress → 複合フォーマット文字列 (既存テストケース維持) |
 | `toBigintHex` | 16桁パディング |
 | `formatResultCount` | ja: `"1,234 件"`, en: `"1,234 results"` |
-| `formatDuration` | 500ms → `"500ms"`, 1500ms → `"1.5s"`, 125000ms → `"2m 5s"` |
 
 ### 5.2 コンポーネントテスト (`src/test/components/data-display/`)
 
@@ -1046,11 +1137,15 @@ jsdom は `getBoundingClientRect` / `IntersectionObserver` を完全にサポー
 - [ ] `empty-state.tsx` — EmptyState (空状態)
 - [ ] `index.ts` — barrel export
 
-### 6.4 ユーティリティ
+### 6.4 ユーティリティ・リファクタリング
 
-- [ ] `lib/format.ts` — 新規フォーマッタ (`formatElapsedTime`, `toBigintHex`, `formatResultCount`, `remToPx`)
-- [ ] `lib/hex.ts` — `toHex(value, digits)` 追加、`toHexString` / `toHexWordString` を委譲に変更
-- [ ] `services/progress.ts` — `formatRemainingTime` / `formatThroughput` の re-export 確認 (後方互換)
+- [ ] `lib/format.ts` — フォーマッタ集約 (`formatElapsedTime`, `formatRemainingTime`, `formatThroughput`, `formatProgress`, `toBigintHex`, `formatResultCount`, `remToPx`)
+- [ ] `lib/hex.ts` — `toHexString` / `toHexWordString` 削除、`toHex(value, digits)` に一本化
+- [ ] `services/progress.ts` — `formatRemainingTime` / `formatThroughput` / `formatProgress` を削除
+- [ ] `components/forms/mac-address-input.tsx` — `toHexString` → `toHex` に移行
+- [ ] `components/forms/timer0-vcount-range-input.tsx` — `toHexString` / `toHexWordString` → `toHex` に移行
+- [ ] `test/unit/services/progress.test.ts` — フォーマッタテストを `format.test.ts` へ移動
+- [ ] `test/unit/hex.test.ts` — `toHexString` / `toHexWordString` テストを `toHex` テストに置換
 
 ### 6.5 テスト
 
@@ -1084,8 +1179,7 @@ jsdom は `getBoundingClientRect` / `IntersectionObserver` を完全にサポー
         ▼
   data-display/search-progress.tsx
         │
-        ├── lib/format.ts (formatElapsedTime)
-        └── services/progress.ts (formatRemainingTime, formatThroughput)
+        └── lib/format.ts (formatElapsedTime, formatRemainingTime, formatThroughput)
 
 data-display/result-card.tsx
         │
@@ -1094,7 +1188,7 @@ data-display/result-card.tsx
         └── data-display/empty-state.tsx
 
 lib/hex.ts
-        └── toHex (汎用) ← toHexString, toHexWordString が委譲
+        └── toHex (汎用。旧 toHexString / toHexWordString は削除済み)
 ```
 
 ## 8. 関連ドキュメント
