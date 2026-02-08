@@ -76,11 +76,11 @@ async function handleInit(): Promise<void> {
     await initWasm(WASM_URL);
     initialized = true;
     postResponse({ type: 'ready' });
-  } catch (err) {
+  } catch (error) {
     postResponse({
       type: 'error',
       taskId: '',
-      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+      message: `WASM init failed: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }
@@ -102,11 +102,11 @@ async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<
     currentIterator = await GpuDatetimeSearchIterator.create(task.context, task.targetSeeds);
 
     await executeSearchLoop(taskId);
-  } catch (err) {
+  } catch (error) {
     postResponse({
       type: 'error',
       taskId,
-      message: err instanceof Error ? err.message : String(err),
+      message: error instanceof Error ? error.message : String(error),
     });
   } finally {
     // リソースを確実に解放

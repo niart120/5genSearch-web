@@ -32,7 +32,7 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
   }, [value.timer0_min, value.timer0_max, value.vcount_min, value.vcount_max]);
 
   const filterHex = (raw: string, maxLen: number): string => {
-    return raw.replace(/[^0-9a-fA-F]/g, '').slice(0, maxLen);
+    return raw.replaceAll(/[^0-9a-fA-F]/g, '').slice(0, maxLen);
   };
 
   const handleTimer0MinBlur = () => {

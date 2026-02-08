@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import init, {
+import wasmInit, {
   health_check,
   resolve_seeds,
   generate_pokemon_list,
@@ -20,7 +20,7 @@ import type {
 describe('WASM Binding Verification', () => {
   beforeAll(async () => {
     // Browser Mode では fetch ベースで WASM を読み込む
-    await init();
+    await wasmInit();
   });
 
   describe('health_check', () => {

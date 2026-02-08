@@ -16,21 +16,23 @@ interface MacAddressInputProps {
 }
 
 function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
-  const [locals, setLocals] = React.useState<string[]>(() => value.map(toHexString));
+  const [locals, setLocals] = React.useState<string[]>(() =>
+    value.map((byte) => toHexString(byte))
+  );
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
   // ref で最新の locals を保持。auto-tab による blur が setState 反映前に
   // 発火する問題を回避するため、handleChange で即座に更新する。
   const localsRef = React.useRef<string[]>(locals);
 
   React.useEffect(() => {
-    const next = value.map(toHexString);
+    const next = value.map((byte) => toHexString(byte));
     setLocals(next);
     localsRef.current = next;
   }, [value]);
 
   const handleChange = (index: number, raw: string) => {
     // 16 進数文字のみ許容
-    const filtered = raw.replace(/[^0-9a-fA-F]/g, '').slice(0, 2);
+    const filtered = raw.replaceAll(/[^0-9a-fA-F]/g, '').slice(0, 2);
     const next = [...localsRef.current];
     next[index] = filtered;
     localsRef.current = next;
@@ -59,7 +61,7 @@ function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
     const mac = parseMacAddress(pasted);
     if (mac) {
       e.preventDefault();
-      const nextLocals = mac.map(toHexString);
+      const nextLocals = mac.map((byte) => toHexString(byte));
       localsRef.current = nextLocals;
       setLocals(nextLocals);
       onChange(mac);
@@ -69,7 +71,7 @@ function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
     }
     // 単一バイトのペーストはデフォルト動作に委ねる (handleChange でフィルタされる)
     // ただし index に対して 2 文字分だけ処理
-    const cleaned = pasted.replace(/[^0-9a-fA-F]/g, '').slice(0, 2);
+    const cleaned = pasted.replaceAll(/[^0-9a-fA-F]/g, '').slice(0, 2);
     if (cleaned.length > 0) {
       e.preventDefault();
       handleChange(index, cleaned);

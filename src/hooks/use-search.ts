@@ -64,8 +64,8 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
       .then(() => {
         setIsInitialized(true);
       })
-      .catch((e) => {
-        setError(e instanceof Error ? e : new Error(String(e)));
+      .catch((error) => {
+        setError(error instanceof Error ? error : new Error(String(error)));
       });
 
     // コールバック登録

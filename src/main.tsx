@@ -38,7 +38,12 @@ async function bootstrap() {
     if (theme === 'system') applyTheme(theme);
   });
 
-  createRoot(document.getElementById('root')!).render(
+  const rootElement = document.querySelector('#root');
+  if (!rootElement) {
+    throw new Error('Root element not found');
+  }
+
+  createRoot(rootElement).render(
     <StrictMode>
       <I18nProvider i18n={i18n}>
         <App />

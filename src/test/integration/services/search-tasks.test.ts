@@ -6,12 +6,12 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import init from '../../../wasm/wasm_pkg.js';
+import wasmInit from '../../../wasm/wasm_pkg.js';
 import { createMtseedIvSearchTasks } from '../../../services/search-tasks';
 
 describe('search-tasks', () => {
   beforeAll(async () => {
-    await init();
+    await wasmInit();
   });
 
   describe('createMtseedIvSearchTasks', () => {

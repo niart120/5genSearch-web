@@ -14,4 +14,4 @@ export async function activateLocale(locale: SupportedLocale): Promise<void> {
   i18n.activate(locale);
 }
 
-export { i18n };
+export { i18n } from '@lingui/core';

@@ -79,11 +79,11 @@ async function handleInit(): Promise<void> {
 
     initialized = true;
     postResponse({ type: 'ready' });
-  } catch (err) {
+  } catch (error) {
     postResponse({
       type: 'error',
       taskId: '',
-      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+      message: `WASM init failed: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }
@@ -110,8 +110,8 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
         await runTrainerInfoSearch(taskId, task.params, startTime);
         break;
     }
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     const taskInfo = JSON.stringify(task, (_key, value) =>
       typeof value === 'bigint' ? value.toString() : value
     );
