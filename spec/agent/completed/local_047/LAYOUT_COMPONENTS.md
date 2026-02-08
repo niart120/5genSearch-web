@@ -515,25 +515,28 @@ export default App;
 
 CSS メディアクエリの変更を監視し、React state として返すフック。
 
+`useSyncExternalStore` を使用する。`useState` + `useEffect` パターンでは effect 内の `setState` が `react-hooks/set-state-in-effect` ルールに抵触するため、外部ストア購読 API を採用した。
+
 ```tsx
-import { useState, useEffect } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => {
-    if (typeof window === 'undefined') return false;
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener('change', callback);
+      return () => mql.removeEventListener('change', callback);
+    },
+    [query]
+  );
+
+  const getSnapshot = useCallback(() => {
     return window.matchMedia(query).matches;
-  });
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    setMatches(mql.matches);
-
-    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
   }, [query]);
 
-  return matches;
+  const getServerSnapshot = useCallback(() => false, []);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export { useMediaQuery };
