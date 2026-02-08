@@ -26,7 +26,7 @@ describe('NatureSelect', () => {
 
   it('選択数 0 のとき指定なしと表示される', () => {
     renderNatureSelect();
-    expect(screen.getByText(/指定なし/)).toBeInTheDocument();
+    expect(screen.getByText(/Not specified/)).toBeInTheDocument();
   });
 
   it('選択数が表示される', () => {
@@ -59,7 +59,7 @@ describe('NatureSelect', () => {
     const trigger = screen.getByRole('button', { name: 'nature-select-trigger' });
     await user.click(trigger);
 
-    const selectAll = screen.getByText('全選択');
+    const selectAll = screen.getByText('Select all');
     await user.click(selectAll);
 
     expect(onChange).toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe('NatureSelect', () => {
     const trigger = screen.getByRole('button', { name: 'nature-select-trigger' });
     await user.click(trigger);
 
-    const clearAll = screen.getByText('全解除');
+    const clearAll = screen.getByText('Deselect all');
     await user.click(clearAll);
 
     expect(onChange).toHaveBeenCalledWith([]);

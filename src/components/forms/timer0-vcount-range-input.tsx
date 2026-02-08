@@ -80,7 +80,7 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               onBlur={handleTimer0MinBlur}
               maxLength={4}
               disabled={disabled}
-              aria-label={t`Timer0最小値`}
+              aria-label={t`Timer0 min`}
             />
           </div>
           <span className="text-sm text-muted-foreground">–</span>
@@ -97,7 +97,7 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               onBlur={handleTimer0MaxBlur}
               maxLength={4}
               disabled={disabled}
-              aria-label={t`Timer0最大値`}
+              aria-label={t`Timer0 max`}
             />
           </div>
         </div>
@@ -120,7 +120,7 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               onBlur={handleVcountMinBlur}
               maxLength={2}
               disabled={disabled}
-              aria-label={t`VCount最小値`}
+              aria-label={t`VCount min`}
             />
           </div>
           <span className="text-sm text-muted-foreground">–</span>
@@ -137,7 +137,7 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               onBlur={handleVcountMaxBlur}
               maxLength={2}
               disabled={disabled}
-              aria-label={t`VCount最大値`}
+              aria-label={t`VCount max`}
             />
           </div>
         </div>

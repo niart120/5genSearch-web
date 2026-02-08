@@ -108,7 +108,7 @@ function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
     <div className={cn('flex flex-col gap-2 md:flex-row md:items-end md:gap-3')}>
       <div className="flex flex-col gap-1">
         <Label htmlFor="date-start-year" className="text-xs text-muted-foreground">
-          <Trans>開始日</Trans>
+          <Trans>Start date</Trans>
         </Label>
         <DateField
           yearValue={value.start_year}
@@ -127,7 +127,7 @@ function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
       <span className="self-center text-sm text-muted-foreground">〜</span>
       <div className="flex flex-col gap-1">
         <Label htmlFor="date-end-year" className="text-xs text-muted-foreground">
-          <Trans>終了日</Trans>
+          <Trans>End date</Trans>
         </Label>
         <DateField
           yearValue={value.end_year}

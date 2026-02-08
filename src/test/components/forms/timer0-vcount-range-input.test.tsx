@@ -32,10 +32,10 @@ describe('Timer0VCountRangeInput', () => {
   it('初期値が hex で表示される', () => {
     renderComponent();
 
-    const timer0Min = screen.getByLabelText('Timer0最小値');
-    const timer0Max = screen.getByLabelText('Timer0最大値');
-    const vcountMin = screen.getByLabelText('VCount最小値');
-    const vcountMax = screen.getByLabelText('VCount最大値');
+    const timer0Min = screen.getByLabelText('Timer0 min');
+    const timer0Max = screen.getByLabelText('Timer0 max');
+    const vcountMin = screen.getByLabelText('VCount min');
+    const vcountMax = screen.getByLabelText('VCount max');
 
     expect(timer0Min).toHaveValue('0C79');
     expect(timer0Max).toHaveValue('0C7A');
@@ -48,7 +48,7 @@ describe('Timer0VCountRangeInput', () => {
     const onChange = vi.fn();
     renderComponent({ onChange });
 
-    const timer0Min = screen.getByLabelText('Timer0最小値');
+    const timer0Min = screen.getByLabelText('Timer0 min');
     await user.clear(timer0Min);
     await user.type(timer0Min, '0C80');
     await user.tab();
@@ -64,7 +64,7 @@ describe('Timer0VCountRangeInput', () => {
     const onChange = vi.fn();
     renderComponent({ onChange });
 
-    const timer0Max = screen.getByLabelText('Timer0最大値');
+    const timer0Max = screen.getByLabelText('Timer0 max');
     await user.clear(timer0Max);
     await user.type(timer0Max, 'FFFF');
     await user.tab();
@@ -80,7 +80,7 @@ describe('Timer0VCountRangeInput', () => {
     const onChange = vi.fn();
     renderComponent({ onChange });
 
-    const vcountMin = screen.getByLabelText('VCount最小値');
+    const vcountMin = screen.getByLabelText('VCount min');
     await user.clear(vcountMin);
     await user.type(vcountMin, '60');
     await user.tab();
@@ -96,7 +96,7 @@ describe('Timer0VCountRangeInput', () => {
     const onChange = vi.fn();
     renderComponent({ onChange });
 
-    const vcountMax = screen.getByLabelText('VCount最大値');
+    const vcountMax = screen.getByLabelText('VCount max');
     await user.clear(vcountMax);
     await user.type(vcountMax, 'A0');
     await user.tab();
@@ -111,7 +111,7 @@ describe('Timer0VCountRangeInput', () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const timer0Min = screen.getByLabelText('Timer0最小値');
+    const timer0Min = screen.getByLabelText('Timer0 min');
     await user.clear(timer0Min);
     await user.type(timer0Min, 'GZ1X');
 
@@ -123,7 +123,7 @@ describe('Timer0VCountRangeInput', () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const timer0Min = screen.getByLabelText('Timer0最小値');
+    const timer0Min = screen.getByLabelText('Timer0 min');
     await user.clear(timer0Min);
     await user.type(timer0Min, 'ABCDE');
 
@@ -134,7 +134,7 @@ describe('Timer0VCountRangeInput', () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const vcountMin = screen.getByLabelText('VCount最小値');
+    const vcountMin = screen.getByLabelText('VCount min');
     await user.clear(vcountMin);
     await user.type(vcountMin, 'ABC');
 
@@ -146,7 +146,7 @@ describe('Timer0VCountRangeInput', () => {
     const onChange = vi.fn();
     renderComponent({ onChange });
 
-    const timer0Min = screen.getByLabelText('Timer0最小値');
+    const timer0Min = screen.getByLabelText('Timer0 min');
     await user.clear(timer0Min);
     await user.tab();
 
@@ -178,26 +178,26 @@ describe('Timer0VCountRangeInput', () => {
       </I18nTestWrapper>
     );
 
-    expect(screen.getByLabelText('Timer0最小値')).toHaveValue('1000');
-    expect(screen.getByLabelText('Timer0最大値')).toHaveValue('2000');
-    expect(screen.getByLabelText('VCount最小値')).toHaveValue('10');
-    expect(screen.getByLabelText('VCount最大値')).toHaveValue('20');
+    expect(screen.getByLabelText('Timer0 min')).toHaveValue('1000');
+    expect(screen.getByLabelText('Timer0 max')).toHaveValue('2000');
+    expect(screen.getByLabelText('VCount min')).toHaveValue('10');
+    expect(screen.getByLabelText('VCount max')).toHaveValue('20');
   });
 
   it('disabled prop で全入力が無効化される', () => {
     renderComponent({ disabled: true });
 
-    expect(screen.getByLabelText('Timer0最小値')).toBeDisabled();
-    expect(screen.getByLabelText('Timer0最大値')).toBeDisabled();
-    expect(screen.getByLabelText('VCount最小値')).toBeDisabled();
-    expect(screen.getByLabelText('VCount最大値')).toBeDisabled();
+    expect(screen.getByLabelText('Timer0 min')).toBeDisabled();
+    expect(screen.getByLabelText('Timer0 max')).toBeDisabled();
+    expect(screen.getByLabelText('VCount min')).toBeDisabled();
+    expect(screen.getByLabelText('VCount max')).toBeDisabled();
   });
 
   it('フォーカス時にテキスト全選択される', async () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const timer0Min = screen.getByLabelText('Timer0最小値');
+    const timer0Min = screen.getByLabelText('Timer0 min');
     await user.click(timer0Min);
 
     // フォーカス時に select() が呼ばれ、全テキストが選択状態になる

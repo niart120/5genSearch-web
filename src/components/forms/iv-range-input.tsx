@@ -150,7 +150,7 @@ function IvRangeInput({ value, onChange, allowUnknown, disabled }: IvRangeInputP
           <span className="text-xs text-muted-foreground text-center">min</span>
           <span className="text-xs text-muted-foreground text-center">max</span>
           <span className="text-xs text-muted-foreground text-center">
-            <Trans>不明(任意)</Trans>
+            <Trans>Unknown (any)</Trans>
           </span>
         </div>
       )}
