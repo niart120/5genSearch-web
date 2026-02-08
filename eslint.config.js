@@ -34,7 +34,6 @@ export default defineConfig([
       'import/no-duplicates': 'error',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/filename-case': 'off',
-      'unicorn/prefer-top-level-await': 'error',
     },
     languageOptions: {
       ecmaVersion: 2022,
