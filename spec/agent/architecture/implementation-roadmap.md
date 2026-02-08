@@ -144,7 +144,6 @@ Phase 4: 仕上げ
 | ResultTable | PC 向けテーブル表示 |
 | ResultCard | モバイル向けカード表示 |
 | ProgressBar | 進捗バー |
-| Pagination | ページネーション |
 
 ## 5. Phase 3: 機能実装
 
