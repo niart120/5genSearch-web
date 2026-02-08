@@ -181,8 +181,8 @@ export function formatThroughput(throughput: number): string {
   if (throughput >= 1_000_000) {
     return `${(throughput / 1_000_000).toFixed(2)}M/s`;
   }
-  if (throughput >= 1_000) {
-    return `${(throughput / 1_000).toFixed(1)}K/s`;
+  if (throughput >= 1000) {
+    return `${(throughput / 1000).toFixed(1)}K/s`;
   }
   return `${Math.round(throughput)}/s`;
 }

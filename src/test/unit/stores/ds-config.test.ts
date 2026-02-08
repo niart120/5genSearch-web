@@ -42,15 +42,15 @@ describe('ds-config store', () => {
   it('should update ranges via setRanges', () => {
     useDsConfigStore.getState().setRanges([
       {
-        timer0_min: 0x1111,
-        timer0_max: 0x2222,
+        timer0_min: 0x11_11,
+        timer0_max: 0x22_22,
         vcount_min: 0x33,
         vcount_max: 0x44,
       },
     ]);
     const { ranges } = useDsConfigStore.getState();
     expect(ranges.length).toBe(1);
-    expect(ranges[0].timer0_min).toBe(0x1111);
+    expect(ranges[0].timer0_min).toBe(0x11_11);
   });
 
   it('should reset to default', () => {

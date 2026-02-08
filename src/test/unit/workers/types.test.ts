@@ -38,7 +38,7 @@ describe('Worker Types', () => {
             mt_offset: 7,
             is_roamer: false,
             start_seed: 0,
-            end_seed: 0xffffffff,
+            end_seed: 0xff_ff_ff_ff,
           },
         },
       };
@@ -69,7 +69,7 @@ describe('Worker Types', () => {
     it('should type progress response correctly', () => {
       const progress: ProgressInfo = {
         processed: 1000,
-        total: 10000,
+        total: 10_000,
         percentage: 10,
         elapsedMs: 500,
         estimatedRemainingMs: 4500,
@@ -112,7 +112,7 @@ describe('Worker Types', () => {
     it('should calculate percentage correctly', () => {
       const progress: ProgressInfo = {
         processed: 5000,
-        total: 10000,
+        total: 10_000,
         percentage: 50,
         elapsedMs: 1000,
         estimatedRemainingMs: 1000,
@@ -153,7 +153,7 @@ describe('Worker Types', () => {
           mt_offset: 7,
           is_roamer: false,
           start_seed: 0,
-          end_seed: 0xffffffff,
+          end_seed: 0xff_ff_ff_ff,
         },
       };
 
@@ -164,7 +164,7 @@ describe('Worker Types', () => {
       const task: SearchTask = {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x12345678],
+          target_seeds: [0x12_34_56_78],
           ds: {
             mac: [0x00, 0x09, 0xbf, 0x12, 0x34, 0x56],
             hardware: 'DsLite',
@@ -184,18 +184,18 @@ describe('Worker Types', () => {
             start_month: 9,
             start_day: 18,
             start_second_offset: 0,
-            range_seconds: 86400,
+            range_seconds: 86_400,
           },
           condition: {
-            timer0: 0x0c79,
+            timer0: 0x0c_79,
             vcount: 0x60,
-            key_code: 0x2fff,
+            key_code: 0x2f_ff,
           },
         },
       };
 
       expect(task.kind).toBe('mtseed-datetime');
-      expect(task.params.target_seeds).toContain(0x12345678);
+      expect(task.params.target_seeds).toContain(0x12_34_56_78);
     });
   });
 });

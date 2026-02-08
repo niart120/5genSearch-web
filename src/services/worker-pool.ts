@@ -56,7 +56,7 @@ type ErrorCallback = (error: Error) => void;
 export class WorkerPool {
   private workers: Worker[] = [];
   private readyCount = 0;
-  private initPromise: Promise<void> | null = null;
+  private initPromise: Promise<void> | undefined = undefined;
 
   private taskQueue: Array<{ taskId: string; task: SearchTask }> = [];
   private activeWorkers = new Map<Worker, string>();
@@ -127,12 +127,12 @@ export class WorkerPool {
   }
 
   private setupWorker(worker: Worker): void {
-    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+    worker.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
       this.handleWorkerMessage(worker, e.data);
-    };
-    worker.onerror = (e) => {
-      this.errorCallbacks.forEach((cb) => cb(new Error(e.message)));
-    };
+    });
+    worker.addEventListener('error', (e) => {
+      for (const cb of this.errorCallbacks) cb(new Error(e.message));
+    });
   }
 
   private async initializeWorkers(): Promise<void> {
@@ -156,49 +156,53 @@ export class WorkerPool {
       setTimeout(() => {
         clearInterval(checkReadyInterval);
         if (this.readyCount !== this.workers.length) {
-          this.errorCallbacks.forEach((cb) =>
+          for (const cb of this.errorCallbacks)
             cb(
               new Error(
                 `Worker initialization timeout: ${this.readyCount}/${this.workers.length} ready`
               )
-            )
-          );
+            );
         }
-      }, 10000);
+      }, 10_000);
     });
   }
 
   private handleWorkerMessage(worker: Worker, response: WorkerResponse): void {
     switch (response.type) {
-      case 'ready':
+      case 'ready': {
         this.readyCount++;
         break;
+      }
 
-      case 'progress':
+      case 'progress': {
         this.progressAggregator.updateProgress(response.taskId, response.progress);
         this.emitAggregatedProgress();
         break;
+      }
 
-      case 'result':
+      case 'result': {
         // 結果タイプに応じて適切なコールバックを呼び出す
-        this.resultCallbacks.forEach((cb) => cb(response.results as SearchResult));
+        for (const cb of this.resultCallbacks) cb(response.results as SearchResult);
         break;
+      }
 
-      case 'done':
+      case 'done': {
         this.progressAggregator.markCompleted(response.taskId);
         this.emitAggregatedProgress(); // 完了時に進捗を通知
         this.activeWorkers.delete(worker);
         this.dispatchNextTask(worker);
 
         if (this.progressAggregator.isComplete() && this.taskQueue.length === 0) {
-          this.completeCallbacks.forEach((cb) => cb());
+          for (const cb of this.completeCallbacks) cb();
         }
         break;
+      }
 
-      case 'error':
+      case 'error': {
         this.cancel();
-        this.errorCallbacks.forEach((cb) => cb(new Error(response.message)));
+        for (const cb of this.errorCallbacks) cb(new Error(response.message));
         break;
+      }
     }
   }
 
@@ -248,7 +252,7 @@ export class WorkerPool {
 
   private emitAggregatedProgress(): void {
     const aggregated = this.progressAggregator.getAggregatedProgress();
-    this.progressCallbacks.forEach((cb) => cb(aggregated));
+    for (const cb of this.progressCallbacks) cb(aggregated);
   }
 
   /**
@@ -314,7 +318,7 @@ export class WorkerPool {
     }
     this.workers = [];
     this.readyCount = 0;
-    this.initPromise = null;
+    this.initPromise = undefined;
     this.progressAggregator.reset();
     this.progressCallbacks = [];
     this.resultCallbacks = [];

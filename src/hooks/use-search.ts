@@ -18,11 +18,11 @@ export interface UseSearchResult {
   /** WorkerPool が初期化済みかどうか */
   isInitialized: boolean;
   /** 集約された進捗情報 */
-  progress: AggregatedProgress | null;
+  progress: AggregatedProgress | undefined;
   /** 検索結果 (累積) */
   results: SearchResult[];
   /** エラー */
-  error: Error | null;
+  error: Error | undefined;
   /** 検索を開始 */
   start: (tasks: SearchTask[]) => void;
   /** 検索をキャンセル */
@@ -46,12 +46,12 @@ export interface UseSearchResult {
  * ```
  */
 export function useSearch(config: WorkerPoolConfig): UseSearchResult {
-  const poolRef = useRef<WorkerPool | null>(null);
+  const poolRef = useRef<WorkerPool | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [progress, setProgress] = useState<AggregatedProgress | null>(null);
+  const [progress, setProgress] = useState<AggregatedProgress | undefined>();
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<Error | undefined>();
 
   // 設定変更時に WorkerPool を再作成
   useEffect(() => {
@@ -64,8 +64,8 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
       .then(() => {
         setIsInitialized(true);
       })
-      .catch((e) => {
-        setError(e instanceof Error ? e : new Error(String(e)));
+      .catch((error) => {
+        setError(error instanceof Error ? error : new Error(String(error)));
       });
 
     // コールバック登録
@@ -96,9 +96,9 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
       if (!poolRef.current || !isInitialized) return;
 
       setIsLoading(true);
-      setProgress(null);
+      setProgress(undefined);
       setResults([]);
-      setError(null);
+      setError(undefined);
 
       poolRef.current.start(tasks);
     },

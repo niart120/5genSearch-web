@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IvRangeInput } from '@/components/forms/iv-range-input';
@@ -28,7 +28,10 @@ function renderIvRange(props: Partial<Parameters<typeof IvRangeInput>[0]> = {}) 
 
 describe('IvRangeInput', () => {
   beforeEach(() => {
-    setupTestI18n('ja');
+    act(() => {
+      setupTestI18n('ja');
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 
   it('初期値が表示される', () => {
@@ -52,8 +55,10 @@ describe('IvRangeInput', () => {
   });
 
   it('ステータスラベル (en) が表示される', () => {
-    setupTestI18n('en');
-    useUiStore.setState({ language: 'en' });
+    act(() => {
+      setupTestI18n('en');
+      useUiStore.setState({ language: 'en' });
+    });
 
     renderIvRange();
     expect(screen.getByText('HP')).toBeInTheDocument();
@@ -63,7 +68,9 @@ describe('IvRangeInput', () => {
     expect(screen.getByText('SpD')).toBeInTheDocument();
     expect(screen.getByText('Spe')).toBeInTheDocument();
 
-    useUiStore.setState({ language: 'ja' });
+    act(() => {
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 
   it('値変更で onChange が呼ばれる', async () => {
@@ -77,7 +84,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[0]).toBe(5);
   });
 
@@ -91,7 +101,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[0]).toBe(0);
   });
 
@@ -106,7 +119,10 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[1]).toBe(31);
   });
 
@@ -121,14 +137,17 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp[0]).toBe(0);
   });
 
   it('disabled で全フィールドが無効化される', () => {
     renderIvRange({ disabled: true });
     const allInputs = screen.getAllByRole('textbox');
-    allInputs.forEach((input) => expect(input).toBeDisabled());
+    for (const input of allInputs) expect(input).toBeDisabled();
   });
 
   it('allowUnknown 未指定時に不明チェックボックスが表示されない', () => {
@@ -152,7 +171,10 @@ describe('IvRangeInput', () => {
     await user.click(checkboxes[0]); // HP の不明チェック
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp).toEqual([0, 32]);
   });
 
@@ -182,7 +204,10 @@ describe('IvRangeInput', () => {
     await user.click(checkboxes[0]); // HP の不明チェック OFF
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall.hp).toEqual([0, 31]);
   });
 });

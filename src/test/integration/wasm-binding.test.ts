@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import init, {
+import wasmInit, {
   health_check,
   resolve_seeds,
   generate_pokemon_list,
@@ -17,10 +17,27 @@ import type {
   MtSeed,
 } from '../../wasm/wasm_pkg.js';
 
+async function checkGpuDeviceAvailable(): Promise<boolean> {
+  if (!('gpu' in navigator)) {
+    return false;
+  }
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) {
+      return false;
+    }
+    const device = await adapter.requestDevice();
+    device.destroy();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 describe('WASM Binding Verification', () => {
   beforeAll(async () => {
     // Browser Mode では fetch ベースで WASM を読み込む
-    await init();
+    await wasmInit();
   });
 
   describe('health_check', () => {
@@ -34,7 +51,7 @@ describe('WASM Binding Verification', () => {
     it('should resolve seed from direct specification', () => {
       const spec = {
         type: 'Seeds' as const,
-        seeds: [0x123456789abcdefn],
+        seeds: [0x1_23_45_67_89_ab_cd_efn],
       };
       const origins = resolve_seeds(spec);
       expect(origins.length).toBe(1);
@@ -70,7 +87,7 @@ describe('WASM Binding Verification', () => {
   describe('MtseedDatetimeSearcher', () => {
     it('should create and search without panic', () => {
       const params: MtseedDatetimeSearchParams = {
-        target_seeds: [0x32bf6858],
+        target_seeds: [0x32_bf_68_58],
         ds: {
           mac: [0x8c, 0x56, 0xc5, 0x86, 0x15, 0x28] as [
             number,
@@ -97,12 +114,12 @@ describe('WASM Binding Verification', () => {
           start_month: 9,
           start_day: 18,
           start_second_offset: 0,
-          range_seconds: 86400,
+          range_seconds: 86_400,
         },
         condition: {
-          timer0: 0x0c79,
+          timer0: 0x0c_79,
           vcount: 0x60,
-          key_code: 0x2fff,
+          key_code: 0x2f_ff,
         },
       };
 
@@ -123,26 +140,6 @@ describe('WASM Binding Verification', () => {
   });
 
   describe('GpuDatetimeSearchIterator', () => {
-    /**
-     * GPU adapter およびデバイスが利用可能かチェック
-     */
-    async function checkGpuDeviceAvailable(): Promise<boolean> {
-      if (!('gpu' in navigator)) {
-        return false;
-      }
-      try {
-        const adapter = await navigator.gpu.requestAdapter();
-        if (!adapter) {
-          return false;
-        }
-        const device = await adapter.requestDevice();
-        device.destroy();
-        return true;
-      } catch {
-        return false;
-      }
-    }
-
     it('should find known MT Seed via GPU search (direct WASM call)', async (ctx) => {
       const gpuDeviceAvailable = await checkGpuDeviceAvailable();
       if (!gpuDeviceAvailable) {
@@ -184,8 +181,8 @@ describe('WASM Binding Verification', () => {
         },
         ranges: [
           {
-            timer0_min: 0x0c79,
-            timer0_max: 0x0c79,
+            timer0_min: 0x0c_79,
+            timer0_max: 0x0c_79,
             vcount_min: 0x60,
             vcount_max: 0x60,
           },
@@ -193,7 +190,7 @@ describe('WASM Binding Verification', () => {
         key_spec: { available_buttons: [] },
       };
 
-      const targetSeeds: MtSeed[] = [0x32bf6858];
+      const targetSeeds: MtSeed[] = [0x32_bf_68_58];
 
       // GPU 検索イテレータを直接作成（新 API）
       const iterator = await GpuDatetimeSearchIterator.create(context, targetSeeds);
@@ -219,7 +216,7 @@ describe('WASM Binding Verification', () => {
       expect(allResults.length).toBeGreaterThan(0);
 
       iterator.free();
-    }, 60000);
+    }, 60_000);
   });
 
   describe('generate_mtseed_iv_search_tasks', () => {
@@ -246,7 +243,7 @@ describe('WASM Binding Verification', () => {
       expect(tasks[0].start_seed).toBe(0);
 
       // 最後のタスクは 0xFFFF_FFFF で終了
-      expect(tasks[tasks.length - 1].end_seed).toBe(0xffff_ffff);
+      expect(tasks.at(-1).end_seed).toBe(0xff_ff_ff_ff);
 
       // 各タスクの start_seed が前タスクの end_seed + 1 であること
       for (let i = 1; i < tasks.length; i++) {

@@ -18,21 +18,22 @@ const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
 let initialized = false;
 let cancelRequested = false;
-let currentIterator: GpuDatetimeSearchIterator | null = null;
+let currentIterator: GpuDatetimeSearchIterator | undefined;
 
 // =============================================================================
 // Message Handler
 // =============================================================================
 
-self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
+globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
-    case 'init':
+    case 'init': {
       await handleInit();
       break;
+    }
 
-    case 'start':
+    case 'start': {
       if (!initialized) {
         postResponse({
           type: 'error',
@@ -54,17 +55,19 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
         return;
       }
       break;
+    }
 
-    case 'cancel':
+    case 'cancel': {
       cancelRequested = true;
       // イテレータを破棄してリソースを解放
       if (currentIterator) {
         currentIterator.free();
-        currentIterator = null;
+        currentIterator = undefined;
       }
       break;
+    }
   }
-};
+});
 
 // =============================================================================
 // Init Handler
@@ -76,11 +79,11 @@ async function handleInit(): Promise<void> {
     await initWasm(WASM_URL);
     initialized = true;
     postResponse({ type: 'ready' });
-  } catch (err) {
+  } catch (error) {
     postResponse({
       type: 'error',
       taskId: '',
-      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+      message: `WASM init failed: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }
@@ -102,23 +105,17 @@ async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<
     currentIterator = await GpuDatetimeSearchIterator.create(task.context, task.targetSeeds);
 
     await executeSearchLoop(taskId);
-  } catch (err) {
+  } catch (error) {
     postResponse({
       type: 'error',
       taskId,
-      message: err instanceof Error ? err.message : String(err),
+      message: error instanceof Error ? error.message : String(error),
     });
   } finally {
     // リソースを確実に解放
     if (currentIterator) {
       currentIterator.free();
-      currentIterator = null;
-    }
-  }
-}
-
-/**
- * 検索ループ実行 (共通処理);
+      currentIterator = undefined;
     }
   }
 }
@@ -182,5 +179,5 @@ async function executeSearchLoop(taskId: string): Promise<void> {
 }
 
 function postResponse(response: WorkerResponse): void {
-  self.postMessage(response);
+  globalThis.postMessage(response);
 }

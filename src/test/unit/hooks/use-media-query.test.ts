@@ -21,7 +21,7 @@ describe('useMediaQuery', () => {
         removeEventListener: (_event: string, handler: () => void) => {
           listeners = listeners.filter((l) => l !== handler);
         },
-        onchange: null,
+        onchange: undefined,
         addListener: vi.fn(),
         removeListener: vi.fn(),
         dispatchEvent: vi.fn(),

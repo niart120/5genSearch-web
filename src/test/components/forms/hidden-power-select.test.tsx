@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HiddenPowerSelect } from '@/components/forms/hidden-power-select';
@@ -20,8 +20,10 @@ function renderHiddenPowerSelect(props: Partial<Parameters<typeof HiddenPowerSel
 
 describe('HiddenPowerSelect', () => {
   beforeEach(() => {
-    setupTestI18n('ja');
-    useUiStore.setState({ language: 'ja' });
+    act(() => {
+      setupTestI18n('ja');
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 
   it('選択数 0 のとき指定なしと表示される', () => {
@@ -61,7 +63,10 @@ describe('HiddenPowerSelect', () => {
     await user.click(selectAll);
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastArgs = onChange.mock.calls.at(-1);
+    expect(lastArgs).toBeDefined();
+    if (!lastArgs) return;
+    const lastCall = lastArgs[0];
     expect(lastCall).toHaveLength(16);
   });
 
@@ -82,8 +87,10 @@ describe('HiddenPowerSelect', () => {
 
   it('ロケール切替でタイプ名が切り替わる', async () => {
     const user = userEvent.setup();
-    useUiStore.setState({ language: 'en' });
-    setupTestI18n('en');
+    act(() => {
+      useUiStore.setState({ language: 'en' });
+      setupTestI18n('en');
+    });
 
     renderHiddenPowerSelect();
 
@@ -93,6 +100,8 @@ describe('HiddenPowerSelect', () => {
     expect(screen.getByText('Fire')).toBeInTheDocument();
     expect(screen.getByText('Ice')).toBeInTheDocument();
 
-    useUiStore.setState({ language: 'ja' });
+    act(() => {
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 });

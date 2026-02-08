@@ -34,15 +34,16 @@ let cancelled = false;
 // Message Handler
 // =============================================================================
 
-self.onmessage = (e: MessageEvent<WorkerRequest>) => {
+globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
-    case 'init':
+    case 'init': {
       void handleInit();
       break;
+    }
 
-    case 'start':
+    case 'start': {
       if (!initialized) {
         postResponse({
           type: 'error',
@@ -54,12 +55,14 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
       cancelled = false;
       void runSearch(data.taskId, data.task);
       break;
+    }
 
-    case 'cancel':
+    case 'cancel': {
       cancelled = true;
       break;
+    }
   }
-};
+});
 
 // =============================================================================
 // Init Handler
@@ -79,11 +82,11 @@ async function handleInit(): Promise<void> {
 
     initialized = true;
     postResponse({ type: 'ready' });
-  } catch (err) {
+  } catch (error) {
     postResponse({
       type: 'error',
       taskId: '',
-      message: `WASM init failed: ${err instanceof Error ? err.message : String(err)}`,
+      message: `WASM init failed: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }
@@ -97,21 +100,25 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
 
   try {
     switch (task.kind) {
-      case 'egg-datetime':
+      case 'egg-datetime': {
         await runEggDatetimeSearch(taskId, task.params, startTime);
         break;
-      case 'mtseed-datetime':
+      }
+      case 'mtseed-datetime': {
         await runMtseedDatetimeSearch(taskId, task.params, startTime);
         break;
-      case 'mtseed':
+      }
+      case 'mtseed': {
         await runMtseedSearch(taskId, task.params, startTime);
         break;
-      case 'trainer-info':
+      }
+      case 'trainer-info': {
         await runTrainerInfoSearch(taskId, task.params, startTime);
         break;
+      }
     }
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     const taskInfo = JSON.stringify(task, (_key, value) =>
       typeof value === 'bigint' ? value.toString() : value
     );
@@ -214,7 +221,7 @@ async function runMtseedSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(0x10000);
+      const batch = searcher.next_batch(0x1_00_00);
 
       if (batch.candidates.length > 0) {
         postResponse({
@@ -318,5 +325,5 @@ function yieldToMain(): Promise<void> {
 }
 
 function postResponse(response: WorkerResponse): void {
-  self.postMessage(response);
+  globalThis.postMessage(response);
 }

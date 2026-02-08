@@ -17,19 +17,25 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
+      importPlugin.flatConfigs.recommended,
+      importPlugin.flatConfigs.typescript,
+      unicorn.configs.recommended,
     ],
-    plugins: {
-      import: importPlugin,
-      unicorn,
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: ['./tsconfig.app.json'],
+        },
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       'import/no-cycle': 'error',
       'import/no-duplicates': 'error',
-      'unicorn/prefer-node-protocol': 'error',
+      'unicorn/prevent-abbreviations': 'off',
     },
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 2023,
       globals: globals.browser,
     },
   },

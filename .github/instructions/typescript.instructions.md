@@ -24,6 +24,9 @@ applyTo: 'src/**/*.{ts,tsx}'
 - React function-based components 使用
 - React Hooks 使用
 - ESLint/Prettier 設定に準拠
+- `null` は原則使わず `undefined` を採用する
+  - 省略可能な値は `foo?: T` または `foo: T | undefined` で表現する
+  - 外部 API/永続化/JSON 由来の `null` は境界で `undefined` に正規化する
 
 ## 永続化 (persist) 変更の運用
 
@@ -37,6 +40,7 @@ applyTo: 'src/**/*.{ts,tsx}'
 - 型アサーション (`as`) の濫用
 - `@ts-ignore` / `@ts-expect-error` の不必要な使用
 - 未使用の import / 変数の放置
+- `null` の使用（例外: 外部仕様で `null` に意味があり、境界で変換できない場合のみ許可）
 
 ---
 
@@ -78,6 +82,7 @@ applyTo: 'src/**/*.{ts,tsx}'
 - テスト名は「何をテストしているか」が明確に分かるように記述
 - AAA パターン（Arrange-Act-Assert）を意識
 - 1 テスト 1 アサーション を基本とする（複数でも可だが過度に複雑にしない）
+- `null` を前提にせず `toBeUndefined()` を使用する
 
 ## GPU テスト
 

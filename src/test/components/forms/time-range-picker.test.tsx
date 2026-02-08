@@ -123,7 +123,7 @@ describe('TimeRangePicker', () => {
     await user.type(hourStart, '10');
     await user.tab();
 
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall).toEqual(
       expect.objectContaining({
         hour_start: 10,

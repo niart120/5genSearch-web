@@ -3,3 +3,5 @@
 // DOM 関連のモックは不要
 
 // 必要に応じて共通のセットアップ処理を追加
+
+export const browserTestSetup = true;

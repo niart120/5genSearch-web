@@ -17,11 +17,11 @@ describe('search results store', () => {
   it('should have empty initial results', () => {
     const { results, lastUpdatedAt } = useSearchResultsStore.getState();
     expect(results).toEqual([]);
-    expect(lastUpdatedAt).toBeNull();
+    expect(lastUpdatedAt).toBeUndefined();
   });
 
   it('should add results and update timestamp', () => {
-    const now = 1700000000000;
+    const now = 1_700_000_000_000;
     vi.spyOn(Date, 'now').mockReturnValue(now);
 
     const result: SeedOrigin[] = [];
@@ -51,6 +51,6 @@ describe('search results store', () => {
 
     const { results, lastUpdatedAt } = useSearchResultsStore.getState();
     expect(results).toEqual([]);
-    expect(lastUpdatedAt).toBeNull();
+    expect(lastUpdatedAt).toBeUndefined();
   });
 });

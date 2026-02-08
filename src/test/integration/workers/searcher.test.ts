@@ -24,8 +24,8 @@ describe('MtseedDatetimeSearcher', () => {
   it('should find known MT Seed with correct datetime', async () => {
     // 既知の期待値 (ウェブツールにて検証済み)
     // 日時: 2010/09/18 18:13:11
-    const expectedMtSeed = 0x32bf6858;
-    const expectedLcgSeed = 0x768360781d1ce6ddn;
+    const expectedMtSeed = 0x32_bf_68_58;
+    const expectedLcgSeed = 0x76_83_60_78_1d_1c_e6_ddn;
 
     const task: MtseedDatetimeSearchTask = {
       kind: 'mtseed-datetime',
@@ -40,12 +40,12 @@ describe('MtseedDatetimeSearcher', () => {
           second_start: 0,
           second_end: 59,
         },
-        search_range: createTestSearchRange(2010, 9, 18, 86400),
+        search_range: createTestSearchRange(2010, 9, 18, 86_400),
         condition: createTestStartupCondition(),
       },
     };
 
-    const results = await runSearchInWorker(task, { timeout: 60000 });
+    const results = await runSearchInWorker(task, { timeout: 60_000 });
 
     // 期待する MT Seed が見つかること
     const found = results.find((r) => {
@@ -70,9 +70,9 @@ describe('MtseedDatetimeSearcher', () => {
       expect(found.Startup.datetime.second).toBe(11);
 
       // Timer0, VCount, KeyCode
-      expect(found.Startup.condition.timer0).toBe(0x0c79);
+      expect(found.Startup.condition.timer0).toBe(0x0c_79);
       expect(found.Startup.condition.vcount).toBe(0x60);
-      expect(found.Startup.condition.key_code).toBe(0x2fff);
+      expect(found.Startup.condition.key_code).toBe(0x2f_ff);
     }
   });
 });
@@ -93,12 +93,12 @@ describe('MtseedSearcher', () => {
         mt_offset: 7,
         is_roamer: false,
         start_seed: 0,
-        end_seed: 0xffff_ffff,
+        end_seed: 0xff_ff_ff_ff,
       },
     };
 
     // 全探索は時間がかかるため、最初のバッチで結果を確認したら終了
-    const results = await runSearchInWorker(task, { timeout: 15000, earlyReturn: true });
+    const results = await runSearchInWorker(task, { timeout: 15_000, earlyReturn: true });
 
     // any フィルタなので多数の結果が見つかるはず
     expect(results.length).toBeGreaterThan(0);
@@ -122,15 +122,17 @@ describe('MtseedSearcher', () => {
         mt_offset: 7,
         is_roamer: false,
         start_seed: 0,
-        end_seed: 0xffff_ffff,
+        end_seed: 0xff_ff_ff_ff,
       },
     };
 
     // 全探索 (WASM では数分かかる)
-    const results = await runSearchInWorker(task, { timeout: 600000 });
+    const results = await runSearchInWorker(task, { timeout: 600_000 });
 
     // 既知の 6V Seed (ウェブツールにて検証済み)
-    const expected6vSeeds = [0x14b11ba6, 0x8a30480d, 0x9e02b0ae, 0xadfa2178, 0xfc4aa3ac];
+    const expected6vSeeds = [
+      0x14_b1_1b_a6, 0x8a_30_48_0d, 0x9e_02_b0_ae, 0xad_fa_21_78, 0xfc_4a_a3_ac,
+    ];
 
     // 期待される Seed がすべて見つかること
     const foundSeeds = results.map((r) => r.seed);
@@ -140,7 +142,7 @@ describe('MtseedSearcher', () => {
 
     // 正確に 5 件であること
     expect(results.length).toBe(5);
-  }, 600000);
+  }, 600_000);
 
   it('should find results in parallel', async () => {
     // 小さい範囲を直接 MtseedSearchTask として分割し並列実行
@@ -167,7 +169,7 @@ describe('MtseedSearcher', () => {
     }));
 
     // 各タスクを並列実行
-    const searchPromises = tasks.map((task) => runSearchInWorker(task, { timeout: 30000 }));
+    const searchPromises = tasks.map((task) => runSearchInWorker(task, { timeout: 30_000 }));
 
     const allResults = await Promise.all(searchPromises);
 
@@ -187,7 +189,7 @@ describe('MtseedSearcher', () => {
 describe('EggDatetimeSearcher', () => {
   it('should find egg result at specific datetime', async () => {
     // 2010/09/18 00:00:00 における既知の卵検索結果 (Adv=0)
-    const expectedMtSeed = 0x2d9429c0;
+    const expectedMtSeed = 0x2d_94_29_c0;
 
     const task: EggDatetimeSearchTask = {
       kind: 'egg-datetime',
@@ -226,7 +228,7 @@ describe('EggDatetimeSearcher', () => {
       },
     };
 
-    const results = await runSearchInWorker(task, { timeout: 30000 });
+    const results = await runSearchInWorker(task, { timeout: 30_000 });
 
     // 結果が返ること
     expect(results.length).toBeGreaterThan(0);
@@ -267,7 +269,7 @@ describe('TrainerInfoSearcher', () => {
       },
     };
 
-    await expect(runSearchInWorker(task, { timeout: 10000 })).rejects.toThrow();
+    await expect(runSearchInWorker(task, { timeout: 10_000 })).rejects.toThrow();
   });
 
   it('should process with NewGame mode', async () => {
@@ -283,7 +285,7 @@ describe('TrainerInfoSearcher', () => {
       },
     };
 
-    const results = await runSearchInWorker(task, { timeout: 30000 });
+    const results = await runSearchInWorker(task, { timeout: 30_000 });
 
     // 結果が返ること (フィルタなしなので複数件)
     expect(results.length).toBeGreaterThan(0);

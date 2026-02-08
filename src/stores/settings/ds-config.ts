@@ -25,8 +25,8 @@ const DEFAULT_DS_CONFIG: DsConfig = {
 
 const DEFAULT_RANGES: Timer0VCountRange[] = [
   {
-    timer0_min: 0x0c79,
-    timer0_max: 0x0c7a,
+    timer0_min: 0x0c_79,
+    timer0_max: 0x0c_7a,
     vcount_min: 0x5e,
     vcount_max: 0x5e,
   },
