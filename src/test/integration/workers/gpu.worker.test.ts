@@ -95,7 +95,7 @@ async function initializeGpuWorker(worker: Worker, timeout = 10000): Promise<voi
 async function runGpuSearch(
   worker: Worker,
   params: {
-    target_seeds: number[];
+    targetSeeds: number[];
     startYear: number;
     startMonth: number;
     startDay: number;
@@ -112,7 +112,7 @@ async function runGpuSearch(
   return new Promise((resolve, reject) => {
     const results: SeedOrigin[] = [];
     const progressHistory: ProgressInfo[] = [];
-    let cancelled = false;
+    const cancelled = false;
 
     const timeoutId = setTimeout(() => {
       worker.postMessage({ type: 'cancel' } as WorkerRequest);
@@ -147,12 +147,6 @@ async function runGpuSearch(
 
     worker.addEventListener('message', handler);
 
-    // キャンセルによる中断を検知
-    const originalCancel = cancelled;
-    if (originalCancel !== cancelled) {
-      cancelled = true;
-    }
-
     const request: WorkerRequest = {
       type: 'start',
       taskId: 'test-gpu-search',
@@ -186,7 +180,7 @@ async function runGpuSearch(
           ],
           key_spec: { available_buttons: [] },
         },
-        targetSeeds: params.target_seeds,
+        targetSeeds: params.targetSeeds,
       },
     };
 
@@ -277,7 +271,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     const expectedLcgSeed = 0x768360781d1ce6ddn;
 
     const { results } = await runGpuSearch(worker, {
-      target_seeds: [expectedMtSeed],
+      targetSeeds: [expectedMtSeed],
       startYear: 2010,
       startMonth: 9,
       startDay: 18,
@@ -326,7 +320,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     await initializeGpuWorker(worker);
 
     const { progressHistory } = await runGpuSearch(worker, {
-      target_seeds: [0x14b11ba6],
+      targetSeeds: [0x14b11ba6],
       startYear: 2025,
       startMonth: 8,
       startDay: 20,
@@ -475,6 +469,8 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
           },
           mt_offset: 7,
           is_roamer: false,
+          start_seed: 0,
+          end_seed: 0xffffffff,
         },
       },
     };

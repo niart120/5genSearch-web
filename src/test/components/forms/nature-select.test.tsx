@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NatureSelect } from '@/components/forms/nature-select';
@@ -20,8 +20,10 @@ function renderNatureSelect(props: Partial<Parameters<typeof NatureSelect>[0]> =
 
 describe('NatureSelect', () => {
   beforeEach(() => {
-    setupTestI18n('ja');
-    useUiStore.setState({ language: 'ja' });
+    act(() => {
+      setupTestI18n('ja');
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 
   it('選択数 0 のとき指定なしと表示される', () => {
@@ -84,8 +86,10 @@ describe('NatureSelect', () => {
 
   it('ロケール切替で性格名が切り替わる', async () => {
     const user = userEvent.setup();
-    useUiStore.setState({ language: 'en' });
-    setupTestI18n('en');
+    act(() => {
+      useUiStore.setState({ language: 'en' });
+      setupTestI18n('en');
+    });
 
     renderNatureSelect();
 
@@ -95,6 +99,8 @@ describe('NatureSelect', () => {
     expect(screen.getByText('Hardy')).toBeInTheDocument();
     expect(screen.getByText('Adamant')).toBeInTheDocument();
 
-    useUiStore.setState({ language: 'ja' });
+    act(() => {
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 });

@@ -38,6 +38,7 @@ describe('Dialog', () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Title</DialogTitle>
+            <DialogDescription>Description</DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>

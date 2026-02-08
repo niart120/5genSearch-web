@@ -39,7 +39,7 @@ describe('Tabs', () => {
   it('キーボード操作でタブ切り替えできる', async () => {
     const user = userEvent.setup();
     renderTabs();
-    screen.getByRole('tab', { name: 'Tab 1' }).focus();
+    await user.click(screen.getByRole('tab', { name: 'Tab 1' }));
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Tab 2' })).toHaveFocus();
   });

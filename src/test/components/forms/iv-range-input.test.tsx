@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { IvRangeInput } from '@/components/forms/iv-range-input';
@@ -28,7 +28,10 @@ function renderIvRange(props: Partial<Parameters<typeof IvRangeInput>[0]> = {}) 
 
 describe('IvRangeInput', () => {
   beforeEach(() => {
-    setupTestI18n('ja');
+    act(() => {
+      setupTestI18n('ja');
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 
   it('初期値が表示される', () => {
@@ -52,8 +55,10 @@ describe('IvRangeInput', () => {
   });
 
   it('ステータスラベル (en) が表示される', () => {
-    setupTestI18n('en');
-    useUiStore.setState({ language: 'en' });
+    act(() => {
+      setupTestI18n('en');
+      useUiStore.setState({ language: 'en' });
+    });
 
     renderIvRange();
     expect(screen.getByText('HP')).toBeInTheDocument();
@@ -63,7 +68,9 @@ describe('IvRangeInput', () => {
     expect(screen.getByText('SpD')).toBeInTheDocument();
     expect(screen.getByText('Spe')).toBeInTheDocument();
 
-    useUiStore.setState({ language: 'ja' });
+    act(() => {
+      useUiStore.setState({ language: 'ja' });
+    });
   });
 
   it('値変更で onChange が呼ばれる', async () => {
