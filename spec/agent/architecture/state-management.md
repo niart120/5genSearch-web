@@ -95,7 +95,7 @@ stores/
 └── index.ts              # re-export
 ```
 
-**進捗 (progress) を Store 化しない理由**: 現時点で進捗を参照するのは `use-search.ts` を呼び出すコンポーネントのみ。ProgressOverlay 等でコンポーネントツリーを跨ぐ参照が必要になった段階で Store 化を検討する。
+**進捗 (progress) を Store 化しない理由**: 現時点で進捗を参照するのは `use-search.ts` を呼び出すコンポーネントのみ。コンポーネントツリーを跨ぐ参照が必要になった段階で Store 化を検討する。
 
 ### 4.2 分割基準
 

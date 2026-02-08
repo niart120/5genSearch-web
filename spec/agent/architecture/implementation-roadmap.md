@@ -136,7 +136,6 @@ Phase 4: 仕上げ
 | ThemeToggle | テーマ切替ボタン | ✅ |
 | Sidebar | 設定サイドバー (PC) | 未着手 |
 | ResponsiveContainer | レスポンシブレイアウト | 未着手 |
-| ProgressOverlay | 進捗表示オーバーレイ | 未着手 |
 
 ### 4.4 データ表示部品
 

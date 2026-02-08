@@ -22,16 +22,22 @@
 
 **ハイブリッドアプローチ**を採用：
 
-1. **基本**: Tailwind ブレークポイントによる単一コンポーネント内分岐
-2. **複雑なレイアウト差異**: レスポンシブ HOC / Container で差し替え
+1. **Tailwind ブレークポイント**: スタイル差異や軽量要素の表示/非表示
+2. **`useMediaQuery` フック**: DOM 構造が大きく異なる場合の条件レンダリング、JS レベルの挙動分岐
 
 ### 2.3 判断基準
 
-| 条件 | アプローチ |
-|-----|----------|
-| 表示/非表示の切り替えのみ | Tailwind `hidden md:block` |
-| スタイルの差異 (余白、サイズ) | Tailwind ブレークポイント |
-| レイアウト構造が異なる | Container コンポーネント分離 |
+| 条件 | 手段 | 例 |
+|-----|------|-----|
+| スタイルの差異のみ (余白、サイズ、grid 列数) | Tailwind ブレークポイント | `px-4 lg:px-6`, `grid-cols-1 lg:grid-cols-2` |
+| 軽量要素の表示/非表示 | Tailwind `hidden lg:block` | ハンバーガーボタン、PC 版 Sidebar |
+| DOM 構造が異なり、両方レンダリングがコストになる | `useMediaQuery` で条件レンダリング | 検索結果テーブル ↔ カード |
+| JS レベルの挙動分岐が必要 | `useMediaQuery` | モバイルで検索実行後に Sheet 自動閉じ 等 |
+
+#### 選定理由
+
+- **Tailwind 統一を不採用の理由**: 検索結果のテーブル/カード切替のように DOM 構造が完全に異なるケースで、両方をレンダリングして `hidden` で隠すのは DOM コストが大きい
+- **`useMediaQuery` 統一を不採用の理由**: `px-4 lg:px-6` 程度の単純なスタイル差異まで JS 条件分岐にするのは冗長。ブレークポイント値の二重管理 (Tailwind 設定 + JS ハードコード) も生じる
 
 ## 3. ブレークポイント定義
 
@@ -118,18 +124,26 @@ function ResponsiveContainer({ sidebar, main }: ResponsiveContainerProps) {
 
 ```tsx
 // hooks/use-media-query.ts
+// useSyncExternalStore を使用。
+// useState + useEffect パターンでは effect 内の setState が
+// react-hooks/set-state-in-effect ルールに抵触するため。
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
-  
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    setMatches(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener('change', callback);
+      return () => mql.removeEventListener('change', callback);
+    },
+    [query]
+  );
+
+  const getSnapshot = useCallback(() => {
+    return window.matchMedia(query).matches;
   }, [query]);
-  
-  return matches;
+
+  const getServerSnapshot = useCallback(() => false, []);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 // 使用例
@@ -142,35 +156,9 @@ function ResultsView({ results }: Props) {
 }
 ```
 
-## 6. 機能別対応方針
+## 6. テスト方針
 
-| 機能 | PC 表示 | モバイル表示 |
-|-----|--------|-------------|
-| DS 設定 | サイドバー常設 | ドロワー or 別ページ |
-| 検索フォーム | 横並び入力 | 縦積み入力 |
-| 検索結果 | テーブル (横スクロール可) | カード形式 |
-| 進捗表示 | インライン | フローティング |
-| エクスポート | ボタン | FAB or メニュー内 |
-
-## 7. 入力 UI の考慮
-
-### 7.1 モバイル特有の課題
-
-| 課題 | 対策 |
-|-----|------|
-| 数値入力が煩雑 | Native number input + ステッパー |
-| 日付入力 | Native date picker 優先 |
-| 複数選択 | チェックボックスリスト or タグ選択 |
-| MAC アドレス入力 | 6分割入力 or QR スキャン (将来) |
-
-### 7.2 タッチ操作
-
-- タップ領域は最低 44x44px
-- スワイプジェスチャーは必須機能には使わない
-
-## 8. テスト方針
-
-### 8.1 ブレークポイントテスト
+### 6.1 ブレークポイントテスト
 
 - [ ] 320px (iPhone SE)
 - [ ] 375px (iPhone 12)
@@ -178,13 +166,12 @@ function ResultsView({ results }: Props) {
 - [ ] 1024px (iPad Pro / 小型PC)
 - [ ] 1440px (一般的なPC)
 
-### 8.2 検証ツール
+### 6.2 検証ツール
 
 - Chrome DevTools Device Mode
 - 実機確認 (iOS Safari, Android Chrome)
 
-## 9. 検討事項
+## 7. 検討事項
 
-- [ ] 現行アプリのレスポンシブ実装確認
 - [ ] 結果テーブルの横スクロール vs カード切り替え判断
 - [ ] PWA 対応の必要性

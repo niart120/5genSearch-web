@@ -19,7 +19,7 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
-#: src/components/layout/header.tsx:8
+#: src/components/layout/header.tsx:25
 msgid "5genSearch"
 msgstr "5genSearch"
 
@@ -71,6 +71,11 @@ msgstr "秒"
 #: src/components/forms/nature-select.tsx:66
 msgid "Select all"
 msgstr "全選択"
+
+#: src/components/layout/responsive-container.tsx:34
+#: src/components/layout/sidebar.tsx:15
+msgid "Settings"
+msgstr "設定"
 
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
