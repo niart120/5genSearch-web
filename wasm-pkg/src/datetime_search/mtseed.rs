@@ -412,7 +412,7 @@ mod tests {
             second_start: 0,
             second_end: 59,
         };
-        // 10:00:00 - 10:00:59 = 60 seconds
+        // 10:00:00 - 10:00:59 = 1 * 1 * 60 = 60 seconds
         assert_eq!(range.count_valid_seconds(), 60);
 
         let full_day = TimeRangeParams {
@@ -423,8 +423,44 @@ mod tests {
             second_start: 0,
             second_end: 59,
         };
-        // Full day = 86400 seconds
+        // Full day = 24 * 60 * 60 = 86400 seconds
         assert_eq!(full_day.count_valid_seconds(), 86400);
+
+        // 独立軸直積の検証: hour: 10~12, min: 20~40, sec: 0~59
+        let cartesian = TimeRangeParams {
+            hour_start: 10,
+            hour_end: 12,
+            minute_start: 20,
+            minute_end: 40,
+            second_start: 0,
+            second_end: 59,
+        };
+        // 3 * 21 * 60 = 3,780 (連続区間なら 8,460 になるため差を検出)
+        assert_eq!(cartesian.count_valid_seconds(), 3 * 21 * 60);
+
+        // 各軸 1 値
+        let single = TimeRangeParams {
+            hour_start: 5,
+            hour_end: 5,
+            minute_start: 30,
+            minute_end: 30,
+            second_start: 15,
+            second_end: 15,
+        };
+        // 1 * 1 * 1 = 1
+        assert_eq!(single.count_valid_seconds(), 1);
+
+        // 秒だけ範囲あり
+        let seconds_only = TimeRangeParams {
+            hour_start: 0,
+            hour_end: 0,
+            minute_start: 0,
+            minute_end: 0,
+            second_start: 10,
+            second_end: 20,
+        };
+        // 1 * 1 * 11 = 11
+        assert_eq!(seconds_only.count_valid_seconds(), 11);
     }
 
     #[test]
