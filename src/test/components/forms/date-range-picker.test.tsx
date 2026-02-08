@@ -55,7 +55,7 @@ describe('DateRangePicker', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.start_year).toBe(2000);
   });
 
@@ -70,7 +70,7 @@ describe('DateRangePicker', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.end_year).toBe(2099);
   });
 

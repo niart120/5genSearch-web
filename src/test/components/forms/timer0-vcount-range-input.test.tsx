@@ -6,8 +6,8 @@ import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import type { Timer0VCountRange } from '@/wasm/wasm_pkg';
 
 const DEFAULT_VALUE: Timer0VCountRange = {
-  timer0_min: 0x0c79,
-  timer0_max: 0x0c7a,
+  timer0_min: 0x0c_79,
+  timer0_max: 0x0c_7a,
   vcount_min: 0x5e,
   vcount_max: 0x5e,
 };
@@ -55,7 +55,7 @@ describe('Timer0VCountRangeInput', () => {
 
     expect(onChange).toHaveBeenCalledWith({
       ...DEFAULT_VALUE,
-      timer0_min: 0x0c80,
+      timer0_min: 0x0c_80,
     });
   });
 
@@ -71,7 +71,7 @@ describe('Timer0VCountRangeInput', () => {
 
     expect(onChange).toHaveBeenCalledWith({
       ...DEFAULT_VALUE,
-      timer0_max: 0xffff,
+      timer0_max: 0xff_ff,
     });
   });
 
@@ -166,8 +166,8 @@ describe('Timer0VCountRangeInput', () => {
     );
 
     const newValue: Timer0VCountRange = {
-      timer0_min: 0x1000,
-      timer0_max: 0x2000,
+      timer0_min: 0x10_00,
+      timer0_max: 0x20_00,
       vcount_min: 0x10,
       vcount_max: 0x20,
     };

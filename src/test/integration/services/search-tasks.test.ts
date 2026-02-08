@@ -59,7 +59,7 @@ describe('search-tasks', () => {
       expect(tasks[0].params.start_seed).toBe(0);
 
       // 最後のタスクは 0xFFFF_FFFF で終了
-      expect(tasks[tasks.length - 1].params.end_seed).toBe(0xffff_ffff);
+      expect(tasks.at(-1).params.end_seed).toBe(0xff_ff_ff_ff);
 
       // 隣接タスク間に隙間がないこと
       for (let i = 1; i < tasks.length; i++) {

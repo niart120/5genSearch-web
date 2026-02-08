@@ -22,8 +22,8 @@ import { createTestDsConfig, createTestStartupCondition } from '../helpers/worke
  * Target Seeds (BW 固定・野生 6V):
  * 0x14B11BA6, 0x8A30480D, 0x9E02B0AE, 0xADFA2178, 0xFC4AA3AC
  */
-const TARGET_SEED = 0x14b11ba6;
-const EXPECTED_LCG_SEED = 0x2adab5de040079f7n;
+const TARGET_SEED = 0x14_b1_1b_a6;
+const EXPECTED_LCG_SEED = 0x2a_da_b5_de_04_00_79_f7n;
 
 // =============================================================================
 // Helper Functions
@@ -126,8 +126,8 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
           },
           ranges: [
             {
-              timer0_min: 0x0c79,
-              timer0_max: 0x0c79,
+              timer0_min: 0x0c_79,
+              timer0_max: 0x0c_79,
               vcount_min: 0x60,
               vcount_max: 0x60,
             },
@@ -144,7 +144,7 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('GPU search timeout'));
-      }, 120000);
+      }, 120_000);
 
       pool!.onComplete(() => {
         clearTimeout(timeout);
@@ -175,7 +175,7 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
     if (found && 'Startup' in found) {
       expect(found.Startup.base_seed).toBe(EXPECTED_LCG_SEED);
     }
-  }, 120000);
+  }, 120_000);
 
   // ---------------------------------------------------------------------------
   // 4.2.3 進捗集約テスト
@@ -212,8 +212,8 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
           },
           ranges: [
             {
-              timer0_min: 0x0c79,
-              timer0_max: 0x0c79,
+              timer0_min: 0x0c_79,
+              timer0_max: 0x0c_79,
               vcount_min: 0x60,
               vcount_max: 0x60,
             },
@@ -230,7 +230,7 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('GPU search timeout'));
-      }, 120000);
+      }, 120_000);
 
       pool!.onComplete(() => {
         clearTimeout(timeout);
@@ -249,11 +249,11 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
     expect(progressHistory.length).toBeGreaterThan(0);
 
     // 最終進捗が高い値であること
-    const lastProgress = progressHistory[progressHistory.length - 1];
+    const lastProgress = progressHistory.at(-1);
     expect(lastProgress.percentage).toBeGreaterThan(90);
     expect(lastProgress.tasksCompleted).toBe(1);
     expect(lastProgress.tasksTotal).toBe(1);
-  }, 120000);
+  }, 120_000);
 });
 
 // =============================================================================
@@ -289,7 +289,7 @@ describe('WorkerPool GPU fallback', () => {
       {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x32bf6858],
+          target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
           time_range: {
             hour_start: 18,
@@ -304,7 +304,7 @@ describe('WorkerPool GPU fallback', () => {
             start_month: 9,
             start_day: 18,
             start_second_offset: 0,
-            range_seconds: 86400,
+            range_seconds: 86_400,
           },
           condition: createTestStartupCondition(),
         },
@@ -317,7 +317,7 @@ describe('WorkerPool GPU fallback', () => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Search timeout'));
-      }, 60000);
+      }, 60_000);
 
       pool!.onComplete(() => {
         clearTimeout(timeout);
@@ -334,5 +334,5 @@ describe('WorkerPool GPU fallback', () => {
 
     // 結果が見つかること (CPU Worker で正常に動作)
     expect(results.length).toBeGreaterThan(0);
-  }, 60000);
+  }, 60_000);
 });

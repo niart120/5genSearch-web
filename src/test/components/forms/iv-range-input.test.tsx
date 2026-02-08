@@ -84,7 +84,7 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.hp[0]).toBe(5);
   });
 
@@ -98,7 +98,7 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.hp[0]).toBe(0);
   });
 
@@ -113,7 +113,7 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.hp[1]).toBe(31);
   });
 
@@ -128,14 +128,14 @@ describe('IvRangeInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.hp[0]).toBe(0);
   });
 
   it('disabled で全フィールドが無効化される', () => {
     renderIvRange({ disabled: true });
     const allInputs = screen.getAllByRole('textbox');
-    allInputs.forEach((input) => expect(input).toBeDisabled());
+    for (const input of allInputs) expect(input).toBeDisabled();
   });
 
   it('allowUnknown 未指定時に不明チェックボックスが表示されない', () => {
@@ -159,7 +159,7 @@ describe('IvRangeInput', () => {
     await user.click(checkboxes[0]); // HP の不明チェック
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.hp).toEqual([0, 32]);
   });
 
@@ -189,7 +189,7 @@ describe('IvRangeInput', () => {
     await user.click(checkboxes[0]); // HP の不明チェック OFF
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall.hp).toEqual([0, 31]);
   });
 });

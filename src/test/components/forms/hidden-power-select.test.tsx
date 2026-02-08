@@ -63,7 +63,7 @@ describe('HiddenPowerSelect', () => {
     await user.click(selectAll);
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    const lastCall = onChange.mock.calls.at(-1)[0];
     expect(lastCall).toHaveLength(16);
   });
 

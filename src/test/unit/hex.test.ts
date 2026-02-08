@@ -30,11 +30,11 @@ describe('toHexString', () => {
 
 describe('parseHexWord', () => {
   it('有効な 1–4 桁 hex を正しくパースする', () => {
-    expect(parseHexWord('0C79')).toBe(0x0c79);
+    expect(parseHexWord('0C79')).toBe(0x0c_79);
     expect(parseHexWord('0')).toBe(0);
-    expect(parseHexWord('FFFF')).toBe(0xffff);
+    expect(parseHexWord('FFFF')).toBe(0xff_ff);
     expect(parseHexWord('1A')).toBe(0x1a);
-    expect(parseHexWord('abc')).toBe(0xabc);
+    expect(parseHexWord('abc')).toBe(0xa_bc);
   });
 
   it('空文字列でデフォルト値を返す', () => {
@@ -55,8 +55,8 @@ describe('parseHexWord', () => {
 
 describe('toHexWordString', () => {
   it('4 桁大文字 hex 文字列を返す', () => {
-    expect(toHexWordString(0x0c79)).toBe('0C79');
-    expect(toHexWordString(0x1a2b)).toBe('1A2B');
+    expect(toHexWordString(0x0c_79)).toBe('0C79');
+    expect(toHexWordString(0x1a_2b)).toBe('1A2B');
   });
 
   it('0 を "0000" に変換する', () => {
@@ -64,6 +64,6 @@ describe('toHexWordString', () => {
   });
 
   it('0xFFFF を "FFFF" に変換する', () => {
-    expect(toHexWordString(0xffff)).toBe('FFFF');
+    expect(toHexWordString(0xff_ff)).toBe('FFFF');
   });
 });

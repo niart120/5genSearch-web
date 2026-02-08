@@ -147,7 +147,7 @@ describe('formatProgress', () => {
   it('should format progress string correctly', () => {
     const progress = {
       totalProcessed: 5000,
-      totalCount: 10000,
+      totalCount: 10_000,
       percentage: 50,
       elapsedMs: 1000,
       estimatedRemainingMs: 1000,
@@ -167,15 +167,15 @@ describe('formatProgress', () => {
 
 describe('formatRemainingTime', () => {
   it('should format seconds', () => {
-    expect(formatRemainingTime(30000)).toBe('30s');
+    expect(formatRemainingTime(30_000)).toBe('30s');
   });
 
   it('should format minutes and seconds', () => {
-    expect(formatRemainingTime(90000)).toBe('1m 30s');
+    expect(formatRemainingTime(90_000)).toBe('1m 30s');
   });
 
   it('should format hours and minutes', () => {
-    expect(formatRemainingTime(3700000)).toBe('1h 1m');
+    expect(formatRemainingTime(3_700_000)).toBe('1h 1m');
   });
 
   it('should handle zero', () => {
@@ -197,7 +197,7 @@ describe('formatThroughput', () => {
   });
 
   it('should format millions', () => {
-    expect(formatThroughput(2500000)).toBe('2.50M/s');
+    expect(formatThroughput(2_500_000)).toBe('2.50M/s');
   });
 });
 

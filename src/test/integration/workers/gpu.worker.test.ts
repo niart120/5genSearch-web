@@ -40,13 +40,13 @@ import { createTestDsConfig, createTestStartupCondition } from '../helpers/worke
  * | 0x6C5313399F212006 | 2039/04/21 17:45:41 | 0xFC4AA3AC |
  * | 0xE8878C0CDAE45CD6 | 2093/09/07 11:46:58 | 0x8A30480D |
  */
-const TARGET_SEEDS_6V = [0x14b11ba6, 0x8a30480d, 0x9e02b0ae, 0xadfa2178, 0xfc4aa3ac];
+const TARGET_SEEDS_6V = [0x14_b1_1b_a6, 0x8a_30_48_0d, 0x9e_02_b0_ae, 0xad_fa_21_78, 0xfc_4a_a3_ac];
 
 // TODO: GPU 検索が正常に動作するようになったら使用
 const _EXPECTED_RESULTS = [
-  { mtSeed: 0x14b11ba6, lcgSeed: 0x2adab5de040079f7n, year: 2025, month: 8, day: 20 },
-  { mtSeed: 0xfc4aa3ac, lcgSeed: 0x6c5313399f212006n, year: 2039, month: 4, day: 21 },
-  { mtSeed: 0x8a30480d, lcgSeed: 0xe8878c0cdae45cd6n, year: 2093, month: 9, day: 7 },
+  { mtSeed: 0x14_b1_1b_a6, lcgSeed: 0x2a_da_b5_de_04_00_79_f7n, year: 2025, month: 8, day: 20 },
+  { mtSeed: 0xfc_4a_a3_ac, lcgSeed: 0x6c_53_13_39_9f_21_20_06n, year: 2039, month: 4, day: 21 },
+  { mtSeed: 0x8a_30_48_0d, lcgSeed: 0xe8_87_8c_0c_da_e4_5c_d6n, year: 2093, month: 9, day: 7 },
 ];
 void _EXPECTED_RESULTS;
 
@@ -66,7 +66,7 @@ function createGpuWorker(): Worker {
 /**
  * GPU Worker の初期化を待つ
  */
-async function initializeGpuWorker(worker: Worker, timeout = 10000): Promise<void> {
+async function initializeGpuWorker(worker: Worker, timeout = 10_000): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new Error('GPU Worker initialization timeout'));
@@ -103,7 +103,7 @@ async function runGpuSearch(
     endMonth: number;
     endDay: number;
   },
-  timeout = 120000
+  timeout = 120_000
 ): Promise<{
   results: SeedOrigin[];
   progressHistory: ProgressInfo[];
@@ -121,27 +121,31 @@ async function runGpuSearch(
 
     const handler = (e: MessageEvent<WorkerResponse>) => {
       switch (e.data.type) {
-        case 'progress':
+        case 'progress': {
           progressHistory.push(e.data.progress);
           break;
+        }
 
-        case 'result':
+        case 'result': {
           if (e.data.resultType === 'seed-origin') {
             results.push(...e.data.results);
           }
           break;
+        }
 
-        case 'done':
+        case 'done': {
           clearTimeout(timeoutId);
           worker.removeEventListener('message', handler);
           resolve({ results, progressHistory, cancelled });
           break;
+        }
 
-        case 'error':
+        case 'error': {
           clearTimeout(timeoutId);
           worker.removeEventListener('message', handler);
           reject(new Error(e.data.message));
           break;
+        }
       }
     };
 
@@ -172,8 +176,8 @@ async function runGpuSearch(
           },
           ranges: [
             {
-              timer0_min: 0x0c79,
-              timer0_max: 0x0c79,
+              timer0_min: 0x0c_79,
+              timer0_max: 0x0c_79,
               vcount_min: 0x60,
               vcount_max: 0x60,
             },
@@ -267,8 +271,8 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     await initializeGpuWorker(worker);
 
     // CPU テストと同じ期待値を使用 (2010/09/18 18:13:11)
-    const expectedMtSeed = 0x32bf6858;
-    const expectedLcgSeed = 0x768360781d1ce6ddn;
+    const expectedMtSeed = 0x32_bf_68_58;
+    const expectedLcgSeed = 0x76_83_60_78_1d_1c_e6_ddn;
 
     const { results } = await runGpuSearch(worker, {
       targetSeeds: [expectedMtSeed],
@@ -305,7 +309,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
       expect(found.Startup.datetime.minute).toBe(13);
       expect(found.Startup.datetime.second).toBe(11);
     }
-  }, 60000);
+  }, 60_000);
 
   // ---------------------------------------------------------------------------
   // 4.1.3 進捗報告テスト
@@ -320,7 +324,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     await initializeGpuWorker(worker);
 
     const { progressHistory } = await runGpuSearch(worker, {
-      targetSeeds: [0x14b11ba6],
+      targetSeeds: [0x14_b1_1b_a6],
       startYear: 2025,
       startMonth: 8,
       startDay: 20,
@@ -333,7 +337,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     expect(progressHistory.length).toBeGreaterThan(0);
 
     // 進捗の構造が正しいこと
-    const lastProgress = progressHistory[progressHistory.length - 1];
+    const lastProgress = progressHistory.at(-1);
     expect(lastProgress.processed).toBeGreaterThan(0);
     expect(lastProgress.total).toBeGreaterThan(0);
     expect(lastProgress.percentage).toBeGreaterThanOrEqual(0);
@@ -345,7 +349,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
       const firstProgress = progressHistory[0];
       expect(lastProgress.processed).toBeGreaterThanOrEqual(firstProgress.processed);
     }
-  }, 120000);
+  }, 120_000);
 
   // ---------------------------------------------------------------------------
   // 4.1.4 キャンセルテスト
@@ -369,19 +373,22 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     const searchPromise = new Promise<void>((resolve) => {
       worker!.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
         switch (e.data.type) {
-          case 'progress':
+          case 'progress': {
             progressHistory.push(e.data.progress);
             break;
+          }
 
-          case 'done':
+          case 'done': {
             searchCompleted = true;
             resolve();
             break;
+          }
 
-          case 'error':
+          case 'error': {
             errorReceived = true;
             resolve();
             break;
+          }
         }
       });
 
@@ -407,7 +414,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
               start_month: 1,
               start_day: 1,
               start_second_offset: 0,
-              range_seconds: 86400 * 365 * 100, // 100年分
+              range_seconds: 86_400 * 365 * 100, // 100年分
             },
             condition: createTestStartupCondition(),
           },
@@ -470,7 +477,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
           mt_offset: 7,
           is_roamer: false,
           start_seed: 0,
-          end_seed: 0xffffffff,
+          end_seed: 0xff_ff_ff_ff,
         },
       },
     };
@@ -504,7 +511,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
       task: {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x14b11ba6],
+          target_seeds: [0x14_b1_1b_a6],
           ds: createTestDsConfig(),
           time_range: {
             hour_start: 0,
@@ -519,7 +526,7 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
             start_month: 8,
             start_day: 20,
             start_second_offset: 0,
-            range_seconds: 86400,
+            range_seconds: 86_400,
           },
           condition: createTestStartupCondition(),
         },

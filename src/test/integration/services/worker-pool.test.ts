@@ -49,7 +49,7 @@ describe('WorkerPool', () => {
       {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x32bf6858],
+          target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
           time_range: {
             hour_start: 18,
@@ -59,7 +59,7 @@ describe('WorkerPool', () => {
             second_start: 0,
             second_end: 59,
           },
-          search_range: createTestSearchRange(2010, 9, 18, 86400),
+          search_range: createTestSearchRange(2010, 9, 18, 86_400),
           condition: createTestStartupCondition(),
         },
       },
@@ -71,7 +71,7 @@ describe('WorkerPool', () => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Test timeout'));
-      }, 60000);
+      }, 60_000);
 
       pool!.onComplete(() => {
         clearTimeout(timeout);
@@ -99,7 +99,7 @@ describe('WorkerPool', () => {
       {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x32bf6858],
+          target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
           time_range: createTestTimeRange(0, 1),
           search_range: createTestSearchRange(2010, 9, 18, 3600),
@@ -109,7 +109,7 @@ describe('WorkerPool', () => {
       {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x32bf6858],
+          target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
           time_range: createTestTimeRange(2, 3),
           search_range: createTestSearchRange(2010, 9, 18, 3600),
@@ -124,7 +124,7 @@ describe('WorkerPool', () => {
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Test timeout'));
-      }, 60000);
+      }, 60_000);
 
       pool!.onComplete(() => {
         clearTimeout(timeout);
@@ -143,7 +143,7 @@ describe('WorkerPool', () => {
     expect(progressHistory.length).toBeGreaterThan(0);
 
     // 最終進捗が高い値であること
-    const lastProgress = progressHistory[progressHistory.length - 1];
+    const lastProgress = progressHistory.at(-1);
     expect(lastProgress.percentage).toBeGreaterThan(90);
     expect(lastProgress.tasksCompleted).toBe(2);
     expect(lastProgress.tasksTotal).toBe(2);
@@ -158,10 +158,10 @@ describe('WorkerPool', () => {
       {
         kind: 'mtseed-datetime',
         params: {
-          target_seeds: [0x12345678],
+          target_seeds: [0x12_34_56_78],
           ds: createTestDsConfig(),
           time_range: createTestTimeRange(),
-          search_range: createTestSearchRange(2010, 1, 1, 86400 * 30), // 30日分
+          search_range: createTestSearchRange(2010, 1, 1, 86_400 * 30), // 30日分
           condition: createTestStartupCondition(),
         },
       },
@@ -199,7 +199,7 @@ describe('WorkerPool', () => {
           target_seeds: [], // エラーになるはず
           ds: createTestDsConfig(),
           time_range: createTestTimeRange(),
-          search_range: createTestSearchRange(2010, 9, 18, 86400),
+          search_range: createTestSearchRange(2010, 9, 18, 86_400),
           condition: createTestStartupCondition(),
         },
       },

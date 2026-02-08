@@ -28,11 +28,12 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
   const { data } = e;
 
   switch (data.type) {
-    case 'init':
+    case 'init': {
       await handleInit();
       break;
+    }
 
-    case 'start':
+    case 'start': {
       if (!initialized) {
         postResponse({
           type: 'error',
@@ -54,8 +55,9 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
         return;
       }
       break;
+    }
 
-    case 'cancel':
+    case 'cancel': {
       cancelRequested = true;
       // イテレータを破棄してリソースを解放
       if (currentIterator) {
@@ -63,6 +65,7 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
         currentIterator = null;
       }
       break;
+    }
   }
 });
 

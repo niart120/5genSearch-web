@@ -38,11 +38,12 @@ globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
   const { data } = e;
 
   switch (data.type) {
-    case 'init':
+    case 'init': {
       void handleInit();
       break;
+    }
 
-    case 'start':
+    case 'start': {
       if (!initialized) {
         postResponse({
           type: 'error',
@@ -54,10 +55,12 @@ globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
       cancelled = false;
       void runSearch(data.taskId, data.task);
       break;
+    }
 
-    case 'cancel':
+    case 'cancel': {
       cancelled = true;
       break;
+    }
   }
 });
 
@@ -97,18 +100,22 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
 
   try {
     switch (task.kind) {
-      case 'egg-datetime':
+      case 'egg-datetime': {
         await runEggDatetimeSearch(taskId, task.params, startTime);
         break;
-      case 'mtseed-datetime':
+      }
+      case 'mtseed-datetime': {
         await runMtseedDatetimeSearch(taskId, task.params, startTime);
         break;
-      case 'mtseed':
+      }
+      case 'mtseed': {
         await runMtseedSearch(taskId, task.params, startTime);
         break;
-      case 'trainer-info':
+      }
+      case 'trainer-info': {
         await runTrainerInfoSearch(taskId, task.params, startTime);
         break;
+      }
     }
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
@@ -214,7 +221,7 @@ async function runMtseedSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(0x10000);
+      const batch = searcher.next_batch(0x1_00_00);
 
       if (batch.candidates.length > 0) {
         postResponse({
