@@ -17,7 +17,7 @@ describe('search results store', () => {
   it('should have empty initial results', () => {
     const { results, lastUpdatedAt } = useSearchResultsStore.getState();
     expect(results).toEqual([]);
-    expect(lastUpdatedAt).toBeNull();
+    expect(lastUpdatedAt).toBeUndefined();
   });
 
   it('should add results and update timestamp', () => {
@@ -51,6 +51,6 @@ describe('search results store', () => {
 
     const { results, lastUpdatedAt } = useSearchResultsStore.getState();
     expect(results).toEqual([]);
-    expect(lastUpdatedAt).toBeNull();
+    expect(lastUpdatedAt).toBeUndefined();
   });
 });

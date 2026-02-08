@@ -34,7 +34,6 @@ export default defineConfig([
       'import/no-duplicates': 'error',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/filename-case': 'off',
-      'unicorn/no-null': 'off',
       'unicorn/prefer-top-level-await': 'off',
     },
     languageOptions: {

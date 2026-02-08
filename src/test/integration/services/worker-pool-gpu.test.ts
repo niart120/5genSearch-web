@@ -62,7 +62,7 @@ async function checkGpuDeviceAvailable(): Promise<boolean> {
 const hasWebGpuApi = typeof navigator !== 'undefined' && 'gpu' in navigator;
 
 describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
-  let pool: WorkerPool | null = null;
+  let pool: WorkerPool | undefined;
   let gpuDeviceAvailable = false;
 
   beforeAll(async () => {
@@ -74,7 +74,6 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
 
   afterEach(() => {
     pool?.dispose();
-    pool = null;
   });
 
   // ---------------------------------------------------------------------------
@@ -261,11 +260,10 @@ describe.skipIf(!hasWebGpuApi)('WorkerPool with GPU', () => {
 // =============================================================================
 
 describe('WorkerPool GPU fallback', () => {
-  let pool: WorkerPool | null = null;
+  let pool: WorkerPool | undefined;
 
   afterEach(() => {
     pool?.dispose();
-    pool = null;
   });
 
   // ---------------------------------------------------------------------------

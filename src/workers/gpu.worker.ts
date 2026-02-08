@@ -18,7 +18,7 @@ const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
 let initialized = false;
 let cancelRequested = false;
-let currentIterator: GpuDatetimeSearchIterator | null = null;
+let currentIterator: GpuDatetimeSearchIterator | undefined;
 
 // =============================================================================
 // Message Handler
@@ -62,7 +62,7 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
       // イテレータを破棄してリソースを解放
       if (currentIterator) {
         currentIterator.free();
-        currentIterator = null;
+        currentIterator = undefined;
       }
       break;
     }
@@ -115,13 +115,7 @@ async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<
     // リソースを確実に解放
     if (currentIterator) {
       currentIterator.free();
-      currentIterator = null;
-    }
-  }
-}
-
-/**
- * 検索ループ実行 (共通処理);
+      currentIterator = undefined;
     }
   }
 }

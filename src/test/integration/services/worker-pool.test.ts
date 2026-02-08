@@ -17,11 +17,10 @@ import {
 } from '../helpers/worker-test-utils';
 
 describe('WorkerPool', () => {
-  let pool: WorkerPool | null = null;
+  let pool: WorkerPool | undefined;
 
   afterEach(() => {
     pool?.dispose();
-    pool = null;
   });
 
   it('should initialize all workers', async () => {

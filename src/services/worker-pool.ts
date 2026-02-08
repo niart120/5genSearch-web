@@ -56,7 +56,7 @@ type ErrorCallback = (error: Error) => void;
 export class WorkerPool {
   private workers: Worker[] = [];
   private readyCount = 0;
-  private initPromise: Promise<void> | null = null;
+  private initPromise: Promise<void> | undefined = undefined;
 
   private taskQueue: Array<{ taskId: string; task: SearchTask }> = [];
   private activeWorkers = new Map<Worker, string>();
@@ -318,7 +318,7 @@ export class WorkerPool {
     }
     this.workers = [];
     this.readyCount = 0;
-    this.initPromise = null;
+    this.initPromise = undefined;
     this.progressAggregator.reset();
     this.progressCallbacks = [];
     this.resultCallbacks = [];

@@ -14,7 +14,7 @@ export type SearchResult =
 
 interface SearchResultsState {
   results: SearchResult[];
-  lastUpdatedAt: number | null;
+  lastUpdatedAt: number | undefined;
 }
 
 interface SearchResultsActions {
@@ -24,7 +24,7 @@ interface SearchResultsActions {
 
 const DEFAULT_STATE: SearchResultsState = {
   results: [],
-  lastUpdatedAt: null,
+  lastUpdatedAt: undefined,
 };
 
 export const useSearchResultsStore = create<SearchResultsState & SearchResultsActions>()((set) => ({

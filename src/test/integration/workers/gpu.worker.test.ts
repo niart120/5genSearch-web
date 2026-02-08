@@ -225,7 +225,7 @@ async function checkGpuDeviceAvailable(): Promise<boolean> {
 const hasWebGpuApi = typeof navigator !== 'undefined' && 'gpu' in navigator;
 
 describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
-  let worker: Worker | null = null;
+  let worker: Worker | undefined;
   let gpuDeviceAvailable = false;
 
   beforeAll(async () => {
@@ -240,7 +240,6 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
   afterEach(() => {
     if (worker) {
       worker.terminate();
-      worker = null;
     }
   });
 

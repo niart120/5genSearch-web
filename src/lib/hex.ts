@@ -24,10 +24,12 @@ function toHexWordString(value: number): string {
   return value.toString(16).padStart(4, '0').toUpperCase();
 }
 
-/** MAC アドレス文字列をパースして 6 バイト配列を返す。不正な形式なら null */
-function parseMacAddress(input: string): [number, number, number, number, number, number] | null {
+/** MAC アドレス文字列をパースして 6 バイト配列を返す。不正な形式なら undefined */
+function parseMacAddress(
+  input: string
+): [number, number, number, number, number, number] | undefined {
   const cleaned = input.replaceAll(/[-:]/g, '');
-  if (!/^[0-9a-fA-F]{12}$/.test(cleaned)) return null;
+  if (!/^[0-9a-fA-F]{12}$/.test(cleaned)) return undefined;
   return [
     Number.parseInt(cleaned.slice(0, 2), 16),
     Number.parseInt(cleaned.slice(2, 4), 16),

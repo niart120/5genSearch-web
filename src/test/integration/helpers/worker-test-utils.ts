@@ -64,7 +64,17 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
 
   return new Promise<SearchResults<T>>((resolve, reject) => {
     const results: unknown[] = [];
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Search timeout after ${timeout}ms`));
+    }, timeout);
+
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      worker.removeEventListener('message', handleMessage);
+      worker.removeEventListener('error', handleError);
+      worker.terminate();
+    };
 
     const handleMessage = (e: MessageEvent<WorkerResponse>) => {
       switch (e.data.type) {
@@ -105,20 +115,6 @@ export async function runSearchInWorker<T extends SearchTask['kind']>(
       cleanup();
       reject(new Error(e.message));
     };
-
-    const cleanup = () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      worker.removeEventListener('message', handleMessage);
-      worker.removeEventListener('error', handleError);
-      worker.terminate();
-    };
-
-    timeoutId = setTimeout(() => {
-      cleanup();
-      reject(new Error(`Search timeout after ${timeout}ms`));
-    }, timeout);
 
     worker.addEventListener('message', handleMessage);
     worker.addEventListener('error', handleError);
