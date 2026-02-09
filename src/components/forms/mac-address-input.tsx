@@ -77,7 +77,7 @@ function MacAddressInput({ value, onChange, disabled }: MacAddressInputProps) {
   };
 
   return (
-    <div className={cn('flex items-center gap-1')}>
+    <div className={cn('flex items-center gap-0.5')}>
       {value.map((_, i) => (
         <React.Fragment key={i}>
           {i > 0 && <span className="text-sm text-muted-foreground">-</span>}
