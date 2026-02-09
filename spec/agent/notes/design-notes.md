@@ -4,6 +4,10 @@
 
 ---
 
+## 2026-02-09: `design-notes.md` のリネーム
+[spec/agent/notes/design-notes.md](./design-notes.md) が既存のアーキテクチャドキュメントである[spec/agent/architecture/design-system.md](../architecture/design-system.md) と類似した名称を持っており混乱を招く恐れがある
+英名・日本語名をより分かりやすい名称にリネームする。
+
 ## 2026-02-09: 言語切り替えボタンの表記
 
 言語ボタンは現在 "JA" / "EN" （大文字 ISO-639-1 コード）を採用。
