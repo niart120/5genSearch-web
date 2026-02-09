@@ -107,17 +107,19 @@ describe('GameStartConfigForm', () => {
     expect(shinyCharm).not.toBeDisabled();
   });
 
-  it('Start mode / Save state Select が表示される', () => {
+  it('Save file / Memory Link / Shiny Charm チェックボックスが表示される', () => {
     renderGameStartForm();
 
     expect(screen.getByLabelText('Start mode')).toBeInTheDocument();
-    expect(screen.getByLabelText('Save state')).toBeInTheDocument();
+    expect(screen.getByLabelText('With save')).toBeInTheDocument();
+    expect(screen.getByLabelText('Memory Link')).toBeInTheDocument();
+    expect(screen.getByLabelText('Shiny Charm')).toBeInTheDocument();
   });
 
-  it('BW2→BW 切替で shiny_charm が false にリセットされ UI に反映される', () => {
-    // Arrange: BW2 + shiny_charm=true の状態を Store アクション経由で構築
+  it('BW2→BW 切替で shiny_charm が NotObtained にリセットされ UI に反映される', () => {
+    // Arrange: BW2 + shiny_charm=Obtained の状態を Store アクション経由で構築
     useDsConfigStore.getState().setConfig({ version: 'Black2' });
-    useDsConfigStore.getState().setGameStart({ shiny_charm: true });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: 'Obtained' });
 
     renderGameStartForm();
     expect(screen.getByLabelText('Shiny Charm')).toBeChecked();
@@ -127,15 +129,15 @@ describe('GameStartConfigForm', () => {
       useDsConfigStore.getState().setConfig({ version: 'Black' });
     });
 
-    // Assert: shiny_charm が false にリセットされ、disabled + unchecked
+    // Assert: shiny_charm が NotObtained にリセットされ、disabled + unchecked
     const shinyCharm = screen.getByLabelText('Shiny Charm');
     expect(shinyCharm).not.toBeChecked();
     expect(shinyCharm).toBeDisabled();
   });
 
-  it('BW2→BW 切替で save_state が WithMemoryLink → WithSave にリセットされる', () => {
+  it('BW2→BW 切替で memory_link が Disabled にリセットされる', () => {
     useDsConfigStore.getState().setConfig({ version: 'White2' });
-    useDsConfigStore.getState().setGameStart({ save_state: 'WithMemoryLink' });
+    useDsConfigStore.getState().setGameStart({ memory_link: 'Enabled' });
 
     renderGameStartForm();
 
@@ -145,6 +147,6 @@ describe('GameStartConfigForm', () => {
 
     // Store 経由でリセットが反映されていることを確認
     const { gameStart } = useDsConfigStore.getState();
-    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.memory_link).toBe('Disabled');
   });
 });

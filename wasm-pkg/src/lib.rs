@@ -31,12 +31,12 @@ pub use types::{
     EncounterType, EverstonePlan, GameStartConfig, GenderRatio, GeneratedEggData,
     GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
     ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed, LeadAbilityEffect,
-    MovingEncounterInfo, MovingEncounterLikelihood, MtSeed, MtseedDatetimeSearchBatch,
-    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchContext,
-    MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,
-    PokemonGenerationParams, RomVersion, SaveState, SearchRangeParams, SeedOrigin, SeedSpec,
-    ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode, TimeRangeParams,
-    Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
+    MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed,
+    MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch,
+    MtseedSearchContext, MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,
+    PokemonGenerationParams, RomVersion, SavePresence, SearchRangeParams, SeedOrigin, SeedSpec,
+    ShinyCharmState, ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
+    TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
     TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData, UiPokemonData,
 };
 

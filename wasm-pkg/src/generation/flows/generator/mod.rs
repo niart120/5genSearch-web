@@ -178,7 +178,8 @@ mod tests {
     use crate::generation::algorithm::calculate_mt_offset;
     use crate::types::{
         EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
-        LeadAbilityEffect, Nature, Pid, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+        LeadAbilityEffect, MemoryLinkState, Nature, Pid, RomVersion, SavePresence, SeedOrigin,
+        ShinyCharmState, StartMode, TrainerInfo,
     };
 
     fn make_source(seed: LcgSeed) -> SeedOrigin {
@@ -235,8 +236,9 @@ mod tests {
 
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
 
         let config = GenerationConfig {
@@ -296,8 +298,9 @@ mod tests {
 
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
 
         let config = GenerationConfig {
@@ -353,8 +356,9 @@ mod tests {
 
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
 
         let config = GenerationConfig {
@@ -410,8 +414,9 @@ mod tests {
 
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithMemoryLink,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Enabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
 
         let config = GenerationConfig {
@@ -467,8 +472,9 @@ mod tests {
 
         let game_start = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
 
         let config = GenerationConfig {

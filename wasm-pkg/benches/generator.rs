@@ -9,7 +9,8 @@ use wasm_pkg::generation::flows::generator::{EggGenerator, PokemonGenerator};
 use wasm_pkg::types::{
     EggGenerationParams, EncounterMethod, EncounterSlotConfig, EncounterType, EverstonePlan,
     GameStartConfig, GenderRatio, GenerationConfig, Ivs, LcgSeed, LeadAbilityEffect,
-    PokemonGenerationParams, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+    MemoryLinkState, PokemonGenerationParams, RomVersion, SavePresence, SeedOrigin,
+    ShinyCharmState, StartMode, TrainerInfo,
 };
 
 // ===== テスト用パラメータ生成 =====
@@ -34,8 +35,9 @@ fn create_generation_config() -> GenerationConfig {
         version: RomVersion::Black,
         game_start: GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         },
         user_offset: 0,
         max_advance: 10000,

@@ -128,15 +128,16 @@ impl EggGenerator {
 mod tests {
     use super::*;
     use crate::types::{
-        EverstonePlan, GameStartConfig, GenderRatio, Ivs, LcgSeed, RomVersion, SaveState,
-        SeedOrigin, StartMode, TrainerInfo,
+        EverstonePlan, GameStartConfig, GenderRatio, Ivs, LcgSeed, MemoryLinkState, RomVersion,
+        SavePresence, SeedOrigin, ShinyCharmState, StartMode, TrainerInfo,
     };
 
     fn make_game_start() -> GameStartConfig {
         GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         }
     }
 

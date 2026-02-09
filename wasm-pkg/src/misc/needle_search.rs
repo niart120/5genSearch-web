@@ -120,8 +120,8 @@ pub fn get_needle_pattern_at(seed_value: u64, advance: u32, count: u32) -> Vec<u
 mod tests {
     use super::*;
     use crate::types::{
-        GameStartConfig, GenerationConfig, LcgSeed, NeedlePattern, RomVersion, SaveState,
-        SeedOrigin, StartMode,
+        GameStartConfig, GenerationConfig, LcgSeed, MemoryLinkState, NeedlePattern, RomVersion,
+        SavePresence, SeedOrigin, ShinyCharmState, StartMode,
     };
 
     fn make_config() -> GenerationConfig {
@@ -129,8 +129,9 @@ mod tests {
             version: RomVersion::Black,
             game_start: GameStartConfig {
                 start_mode: StartMode::Continue,
-                save_state: SaveState::WithSave,
-                shiny_charm: false,
+                save: SavePresence::WithSave,
+                memory_link: MemoryLinkState::Disabled,
+                shiny_charm: ShinyCharmState::NotObtained,
             },
             user_offset: 0,
             max_advance: 100,

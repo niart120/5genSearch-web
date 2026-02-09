@@ -5,7 +5,9 @@ import type {
   RomRegion,
   Hardware,
   StartMode,
-  SaveState,
+  SavePresence,
+  MemoryLinkState,
+  ShinyCharmState,
 } from '@/wasm/wasm_pkg';
 import type { SupportedLocale } from '@/i18n';
 
@@ -245,19 +247,48 @@ function getStartModeName(mode: StartMode, locale: SupportedLocale): string {
 }
 
 // ---------------------------------------------------------------------------
-// SaveState
+// SavePresence
 // ---------------------------------------------------------------------------
 
-const SAVE_STATE_ORDER: SaveState[] = ['NoSave', 'WithSave', 'WithMemoryLink'];
+const SAVE_PRESENCE_ORDER: SavePresence[] = ['NoSave', 'WithSave'];
 
-const SAVE_STATE_NAMES: Record<SaveState, Record<SupportedLocale, string>> = {
+const SAVE_PRESENCE_NAMES: Record<SavePresence, Record<SupportedLocale, string>> = {
   NoSave: { ja: 'セーブなし', en: 'No save' },
   WithSave: { ja: 'セーブあり', en: 'With save' },
-  WithMemoryLink: { ja: '思い出リンクあり', en: 'With Memory Link' },
 };
 
-function getSaveStateName(state: SaveState, locale: SupportedLocale): string {
-  return SAVE_STATE_NAMES[state][locale];
+function getSavePresenceName(state: SavePresence, locale: SupportedLocale): string {
+  return SAVE_PRESENCE_NAMES[state][locale];
+}
+
+// ---------------------------------------------------------------------------
+// MemoryLinkState
+// ---------------------------------------------------------------------------
+
+const MEMORY_LINK_STATE_ORDER: MemoryLinkState[] = ['Disabled', 'Enabled'];
+
+const MEMORY_LINK_STATE_NAMES: Record<MemoryLinkState, Record<SupportedLocale, string>> = {
+  Disabled: { ja: '思い出リンクなし', en: 'Without Memory Link' },
+  Enabled: { ja: '思い出リンクあり', en: 'With Memory Link' },
+};
+
+function getMemoryLinkStateName(state: MemoryLinkState, locale: SupportedLocale): string {
+  return MEMORY_LINK_STATE_NAMES[state][locale];
+}
+
+// ---------------------------------------------------------------------------
+// ShinyCharmState
+// ---------------------------------------------------------------------------
+
+const SHINY_CHARM_STATE_ORDER: ShinyCharmState[] = ['NotObtained', 'Obtained'];
+
+const SHINY_CHARM_STATE_NAMES: Record<ShinyCharmState, Record<SupportedLocale, string>> = {
+  NotObtained: { ja: '未所持', en: 'Not obtained' },
+  Obtained: { ja: '所持', en: 'Obtained' },
+};
+
+function getShinyCharmStateName(state: ShinyCharmState, locale: SupportedLocale): string {
+  return SHINY_CHARM_STATE_NAMES[state][locale];
 }
 
 export type { IvStatKey };
@@ -276,6 +307,10 @@ export {
   getHardwareName,
   START_MODE_ORDER,
   getStartModeName,
-  SAVE_STATE_ORDER,
-  getSaveStateName,
+  SAVE_PRESENCE_ORDER,
+  getSavePresenceName,
+  MEMORY_LINK_STATE_ORDER,
+  getMemoryLinkStateName,
+  SHINY_CHARM_STATE_ORDER,
+  getShinyCharmStateName,
 };

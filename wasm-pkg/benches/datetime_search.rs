@@ -8,8 +8,8 @@ use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::{EggDatetimeSearcher, MtseedDatetimeSearcher};
 use wasm_pkg::types::{
     DsConfig, EggGenerationParams, EverstonePlan, GameStartConfig, GenderRatio, GenerationConfig,
-    Hardware, Ivs, KeyCode, MtSeed, RomRegion, RomVersion, SaveState, SearchRangeParams, StartMode,
-    StartupCondition, TimeRangeParams, TrainerInfo,
+    Hardware, Ivs, KeyCode, MemoryLinkState, MtSeed, RomRegion, RomVersion, SavePresence,
+    SearchRangeParams, ShinyCharmState, StartMode, StartupCondition, TimeRangeParams, TrainerInfo,
 };
 use wasm_pkg::{EggDatetimeSearchParams, MtseedDatetimeSearchParams};
 
@@ -90,8 +90,9 @@ fn create_egg_searcher() -> EggDatetimeSearcher {
             version: RomVersion::Black,
             game_start: GameStartConfig {
                 start_mode: StartMode::Continue,
-                save_state: SaveState::WithSave,
-                shiny_charm: false,
+                save: SavePresence::WithSave,
+                memory_link: MemoryLinkState::Disabled,
+                shiny_charm: ShinyCharmState::NotObtained,
             },
             user_offset: 0,
             max_advance: 100,

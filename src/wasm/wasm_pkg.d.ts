@@ -393,6 +393,11 @@ export interface TrainerInfoSearchResult {
 export type EverstonePlan = "None" | { Fixed: Nature };
 
 /**
+ * ひかるおまもりの所持状態 (BW2 のみ有効)
+ */
+export type ShinyCharmState = "NotObtained" | "Obtained";
+
+/**
  * めざめるパワーのタイプ
  */
 export type HiddenPowerType = "Fighting" | "Flying" | "Poison" | "Ground" | "Rock" | "Bug" | "Ghost" | "Steel" | "Fire" | "Water" | "Grass" | "Electric" | "Psychic" | "Ice" | "Dragon" | "Dark";
@@ -481,9 +486,9 @@ export interface KeySpec {
 }
 
 /**
- * セーブ状態
+ * セーブデータの有無
  */
-export type SaveState = "NoSave" | "WithSave" | "WithMemoryLink";
+export type SavePresence = "NoSave" | "WithSave";
 
 /**
  * トレーナー情報
@@ -825,6 +830,11 @@ export interface GeneratedEggData {
      */
     margin_frames: number | undefined;
 }
+
+/**
+ * 思い出リンクの状態 (BW2 のみ有効)
+ */
+export type MemoryLinkState = "Disabled" | "Enabled";
 
 /**
  * 性別
@@ -1227,11 +1237,9 @@ export interface StartupCondition {
  */
 export interface GameStartConfig {
     start_mode: StartMode;
-    save_state: SaveState;
-    /**
-     * ひかるおまもり所持 (BW2 のみ有効)
-     */
-    shiny_charm: boolean;
+    save: SavePresence;
+    memory_link: MemoryLinkState;
+    shiny_charm: ShinyCharmState;
 }
 
 /**
@@ -1592,8 +1600,10 @@ export interface InitOutput {
     readonly gpudatetimesearchiterator_next: (a: number) => any;
     readonly gpudatetimesearchiterator_progress: (a: number) => number;
     readonly health_check: () => [number, number];
+    readonly mtseeddatetimesearcher_is_done: (a: number) => number;
     readonly mtseeddatetimesearcher_new: (a: any) => [number, number, number];
     readonly mtseeddatetimesearcher_next_batch: (a: number, b: number) => any;
+    readonly mtseeddatetimesearcher_progress: (a: number) => number;
     readonly mtseedsearcher_is_done: (a: number) => number;
     readonly mtseedsearcher_new: (a: any) => number;
     readonly mtseedsearcher_next_batch: (a: number, b: number) => any;
@@ -1608,8 +1618,6 @@ export interface InitOutput {
     readonly trainerinfosearcher_next_batch: (a: number, b: number) => any;
     readonly trainerinfosearcher_progress: (a: number) => number;
     readonly init: () => void;
-    readonly mtseeddatetimesearcher_is_done: (a: number) => number;
-    readonly mtseeddatetimesearcher_progress: (a: number) => number;
     readonly wasm_bindgen_c7c36fbcbf27e5fc___closure__destroy___dyn_core_679abc6d1f37082f___ops__function__FnMut__wasm_bindgen_c7c36fbcbf27e5fc___JsValue____Output_______: (a: number, b: number) => void;
     readonly wasm_bindgen_c7c36fbcbf27e5fc___convert__closures_____invoke___wasm_bindgen_c7c36fbcbf27e5fc___JsValue__wasm_bindgen_c7c36fbcbf27e5fc___JsValue_____: (a: number, b: number, c: any, d: any) => void;
     readonly wasm_bindgen_c7c36fbcbf27e5fc___convert__closures_____invoke___wasm_bindgen_c7c36fbcbf27e5fc___JsValue_____: (a: number, b: number, c: any) => void;
