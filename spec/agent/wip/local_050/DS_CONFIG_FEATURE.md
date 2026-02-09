@@ -144,12 +144,21 @@ lookupDefaultRanges(hardware, version, region) → Timer0VCountRange[] | undefin
 
 これらは対応する Select / Checkbox を `disabled` にして入力段階で防ぐ。
 
-**Version 切替時の自動リセット**: BW2 → BW 切替時に GameStartConfig の不整合を防ぐため、Store 値を安全な状態にリセットする。
+**Version 切替時の自動リセット**: BW2 → BW 切替時に GameStartConfig の不整合を防ぐため、Store の `setConfig` アクション内部でリセットする。
 
 | 条件 | リセット対象 | リセット後の値 |
 |------|-------------|---------------|
 | BW2 → BW 切替時 | `save_state` | `WithMemoryLink` だった場合 → `WithSave` に変更 |
 | BW2 → BW 切替時 | `shiny_charm` | `false` に変更 |
+
+リセットを Store アクションに配置する理由:
+- UI コンポーネントの実装に依存せず、Store レベルで不変条件を保証する
+- テストや別経路から `setConfig` を呼んだ場合にもリセットが走る
+
+検討した代替案:
+- **GameStartConfigForm の useEffect**: `config.version` を監視して自前でリセット → コンポーネント未マウント時にリセットされない、1 レンダー分の不整合が残る
+- **Zustand subscribe**: `subscribeWithSelector` で version 変更を監視 → 暗黙の副作用で追跡困難
+- **読み取り時の導出**: `getEffectiveSaveState(version, saveState)` で読み取り時に矯正 → Store の raw 値が不正のまま残り、WASM 呼び出し時に毎回変換が必要
 
 ### 3.6 状態管理
 
@@ -212,6 +221,8 @@ export function lookupDefaultRanges(
 
 ### 4.2 Store 変更 (`src/stores/settings/ds-config.ts`)
 
+**既存バグ修正**: `DEFAULT_RANGES` の VCount が 0x5E だが、DsLite/Black/Jpn の正しい値は 0x60 (参照元 `rom-parameters.ts` と一致)。`timer0Auto` 追加と合わせて修正する。
+
 ```typescript
 interface DsConfigState {
   config: DsConfig;
@@ -220,39 +231,67 @@ interface DsConfigState {
   timer0Auto: boolean;  // 追加
 }
 
-// DEFAULT_STATE に追加
+// VCount 0x5E → 0x60 に修正
+const DEFAULT_RANGES: Timer0VCountRange[] = [
+  { timer0_min: 0x0C79, timer0_max: 0x0C7A, vcount_min: 0x60, vcount_max: 0x60 },
+];
+
 const DEFAULT_STATE: DsConfigState = {
   config: DEFAULT_DS_CONFIG,
   ranges: DEFAULT_RANGES,
   gameStart: DEFAULT_GAME_START,
-  timer0Auto: true,  // 追加
+  timer0Auto: true,
 };
 ```
 
-Actions に `setTimer0Auto` を追加:
+Actions に `setTimer0Auto` を追加し、`setConfig` に版切替リセットを組み込む:
 
 ```typescript
 interface DsConfigActions {
   // ... 既存
   setTimer0Auto: (auto: boolean) => void;
 }
+
+// setConfig 内部で BW2→BW 切替時に GameStartConfig をリセット
+setConfig: (partial) =>
+  set((state) => {
+    const newConfig = { ...state.config, ...partial };
+    const prevIsBw2 = state.config.version === 'Black2' || state.config.version === 'White2';
+    const nextIsBw2 = newConfig.version === 'Black2' || newConfig.version === 'White2';
+    const gameStart = (prevIsBw2 && !nextIsBw2)
+      ? {
+          ...state.gameStart,
+          save_state: state.gameStart.save_state === 'WithMemoryLink'
+            ? ('WithSave' as const)
+            : state.gameStart.save_state,
+          shiny_charm: false,
+        }
+      : state.gameStart;
+    return { config: newConfig, gameStart };
+  }),
 ```
+
+**Persist 方針**: `version` は現行の `1` を維持する。`timer0Auto` フィールド追加時にバージョンを上げない。Zustand persist のデフォルト merge (`{ ...initialState, ...persistedState }`) により、永続化データに `timer0Auto` が存在しない場合は初期値 `true` が適用される。仕様安定後に破壊的変更が入った時点で初めてマイグレーションを検討する。
 
 ### 4.3 フック変更 (`src/hooks/use-ds-config.ts`)
 
+既存の `useDsConfig()` に `timer0Auto` / `setTimer0Auto` を追加する。
+
 ```typescript
 export function useDsConfig() {
-  // ... 既存
+  // ... 既存フィールド
   const timer0Auto = useDsConfigStore((s) => s.timer0Auto);
   const setTimer0Auto = useDsConfigStore((s) => s.setTimer0Auto);
 
   return {
-    // ... 既存
+    // ... 既存フィールド
     timer0Auto,
     setTimer0Auto,
   } as const;
 }
 ```
+
+**購読粒度の指針**: `useDsConfig()` は全スライスを購読するため、不要な再レンダーを招きやすい。各コンポーネントでは `useDsConfigStore` から必要なスライスのみ直接セレクトする。`useDsConfig()` の利用は `DsConfigForm` など大半のフィールドを必要とする箇所に限定する。
 
 ### 4.4 DsConfigForm (`src/features/ds-config/components/ds-config-form.tsx`)
 
@@ -275,11 +314,10 @@ function DsConfigForm() {
     }
   };
 
+  // BW2→BW 切替時の GameStartConfig リセットは Store の setConfig 内で自動処理
   const handleVersionChange = (version: RomVersion) => {
     setConfig({ version });
     applyAutoRanges(config.hardware, version, config.region);
-    // BW2 → BW 切替時に GameStartConfig の不整合を解消
-    resetGameStartIfNeeded(version);
   };
 
   const handleRegionChange = (region: RomRegion) => {
@@ -308,8 +346,12 @@ function DsConfigForm() {
 
 ```tsx
 function GameStartConfigForm() {
-  const { config, gameStart, setGameStart } = useDsConfig();
-  const isBw2 = config.version === 'Black2' || config.version === 'White2';
+  // 必要なスライスのみ直接セレクト (config 全体の購読を避ける)
+  const isBw2 = useDsConfigStore(
+    (s) => s.config.version === 'Black2' || s.config.version === 'White2'
+  );
+  const gameStart = useDsConfigStore((s) => s.gameStart);
+  const setGameStart = useDsConfigStore((s) => s.setGameStart);
 
   return (
     <div className="space-y-3">
@@ -329,7 +371,11 @@ Auto/Manual 切替 + 複数 `Timer0VCountRange` セグメント表示。
 
 ```tsx
 function Timer0VCountSection() {
-  const { ranges, setRanges, timer0Auto, setTimer0Auto } = useDsConfig();
+  // 必要なスライスのみ直接セレクト
+  const ranges = useDsConfigStore((s) => s.ranges);
+  const setRanges = useDsConfigStore((s) => s.setRanges);
+  const timer0Auto = useDsConfigStore((s) => s.timer0Auto);
+  const setTimer0Auto = useDsConfigStore((s) => s.setTimer0Auto);
 
   return (
     <div className="space-y-3">
@@ -414,6 +460,8 @@ export type { Timer0VCountRangeInputProps } from './timer0-vcount-range-input';
 | lookupDefaultRanges — 確定値 | 同上 | 既知の hardware × version × region で期待値が返ること |
 | lookupDefaultRanges — 未収集 | 同上 | DSi/3DS + JPN 以外で `undefined` が返ること |
 | timer0Auto フラグの Store 反映 | `stores/ds-config.test.ts` (既存に追加) | setTimer0Auto が状態を更新すること |
+| setConfig BW2→BW リセット | 同上 | BW2→BW 切替時に save_state / shiny_charm がリセットされること |
+| DEFAULT_RANGES VCount 修正 | 同上 | DsLite/Black/Jpn の VCount が 0x60 であること |
 
 ### 5.2 コンポーネントテスト (`src/test/components/`)
 
@@ -428,7 +476,7 @@ export type { Timer0VCountRangeInputProps } from './timer0-vcount-range-input';
 ## 6. 実装チェックリスト
 
 - [ ] `src/data/timer0-vcount-defaults.ts` — デフォルト範囲テーブル (DS/DSLite 28 + DSi/3DS JPN 4 パターン)
-- [ ] `src/stores/settings/ds-config.ts` — `timer0Auto` フラグ追加
+- [ ] `src/stores/settings/ds-config.ts` — `timer0Auto` 追加、`DEFAULT_RANGES` VCount 修正 (0x5E→0x60)、`setConfig` にリセットロジック追加
 - [ ] `src/hooks/use-ds-config.ts` — `timer0Auto` 読み書き公開
 - [ ] `src/lib/game-data-names.ts` — Version/Region/Hardware/StartMode/SaveState 名称関数
 - [ ] `src/features/ds-config/types.ts` — 機能固有型定義
