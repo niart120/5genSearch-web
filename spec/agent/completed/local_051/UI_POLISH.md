@@ -306,17 +306,17 @@ Phase 3 でルーティング導入時に `WelcomePage` を適切なページに
 
 ## 6. 実装チェックリスト
 
-- [ ] `spec/agent/notes/design-notes.md` → `dev-journal.md` にリネーム
-- [ ] `.github/instructions/design-notes.instructions.md` のパス参照を更新
-- [ ] `dev-journal.md` 内の自己参照リンクを更新
-- [ ] `src/components/layout/language-toggle.tsx`: `toUpperCase()` 除去
-- [ ] `src/test/components/layout/language-toggle.test.tsx`: 期待値を小文字に更新
-- [ ] `src/stores/settings/ui.ts`: `Theme` 型を 2 値化 (version 変更なし)
-- [ ] `src/components/layout/theme-toggle.tsx`: 2 状態トグルに変更
-- [ ] `src/main.tsx`: `resolveTheme` 削除、OS リスナー削除
-- [ ] `src/test/unit/stores/ui.test.ts`: テスト更新
-- [ ] `src/components/layout/welcome-page.tsx`: 新規作成
-- [ ] `src/app.tsx`: `WelcomePage` を children に配置
-- [ ] `src/test/components/layout/welcome-page.test.tsx`: 新規作成
-- [ ] i18n メッセージカタログ更新 (`pnpm lingui:extract`)
-- [ ] 全テスト通過確認 (`pnpm test:run`)
+- [x] `spec/agent/notes/design-notes.md` → `dev-journal.md` にリネーム
+- [x] `.github/instructions/design-notes.instructions.md` のパス参照を更新
+- [x] `dev-journal.md` 内の自己参照リンクを更新
+- [x] `src/components/layout/language-toggle.tsx`: `toUpperCase()` 除去
+- [x] `src/test/components/layout/language-toggle.test.tsx`: 期待値を小文字に更新
+- [x] `src/stores/settings/ui.ts`: `Theme` 型を 2 値化 (version 変更なし)
+- [x] `src/components/layout/theme-toggle.tsx`: 2 状態トグルに変更
+- [x] `src/main.tsx`: `resolveTheme` 削除、OS リスナー削除
+- [x] `src/test/unit/stores/ui.test.ts`: テスト更新
+- [x] `src/components/layout/welcome-page.tsx`: 新規作成
+- [x] `src/app.tsx`: `WelcomePage` を children に配置
+- [x] `src/test/components/layout/welcome-page.test.tsx`: 新規作成
+- [x] i18n メッセージカタログ更新 (`pnpm lingui:extract`)
+- [x] 全テスト通過確認 (`pnpm test:run`)
