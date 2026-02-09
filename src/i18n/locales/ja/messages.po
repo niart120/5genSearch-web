@@ -101,7 +101,7 @@ msgstr "残り"
 #: src/features/ds-config/components/game-start-config-form.tsx:57
 #: src/features/ds-config/components/game-start-config-form.tsx:63
 msgid "Save state"
-msgstr "セーブ状態"
+msgstr "セーブ"
 
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"

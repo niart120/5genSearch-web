@@ -253,7 +253,7 @@ const SAVE_STATE_ORDER: SaveState[] = ['NoSave', 'WithSave', 'WithMemoryLink'];
 const SAVE_STATE_NAMES: Record<SaveState, Record<SupportedLocale, string>> = {
   NoSave: { ja: 'セーブなし', en: 'No save' },
   WithSave: { ja: 'セーブあり', en: 'With save' },
-  WithMemoryLink: { ja: 'メモリーリンクあり', en: 'With Memory Link' },
+  WithMemoryLink: { ja: '思い出リンクあり', en: 'With Memory Link' },
 };
 
 function getSaveStateName(state: SaveState, locale: SupportedLocale): string {
