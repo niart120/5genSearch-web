@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro';
-import { useDsConfig } from '@/hooks/use-ds-config';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useUiStore } from '@/stores/settings/ui';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,7 +18,6 @@ import {
   HARDWARE_ORDER,
   getHardwareName,
 } from '@/lib/game-data-names';
-import { lookupDefaultRanges } from '@/data/timer0-vcount-defaults';
 import { toast } from '@/components/ui/toast-state';
 import { Timer0VCountSection } from './timer0-vcount-section';
 import type { Hardware, RomVersion, RomRegion } from '@/wasm/wasm_pkg';
@@ -26,34 +25,32 @@ import type { Hardware, RomVersion, RomRegion } from '@/wasm/wasm_pkg';
 function DsConfigForm() {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
-  const { config, setConfig, setRanges, timer0Auto, setTimer0Auto } = useDsConfig();
 
-  const applyAutoRanges = (hw: Hardware, ver: RomVersion, reg: RomRegion) => {
-    if (!timer0Auto) return;
-    const defaults = lookupDefaultRanges(hw, ver, reg);
-    if (defaults) {
-      setRanges(defaults);
-    } else {
-      setTimer0Auto(false);
+  // 個別スライス購読 — config 全体ではなくフィールド単位
+  const version = useDsConfigStore((s) => s.config.version);
+  const region = useDsConfigStore((s) => s.config.region);
+  const hardware = useDsConfigStore((s) => s.config.hardware);
+  const mac = useDsConfigStore((s) => s.config.mac);
+  const setConfig = useDsConfigStore((s) => s.setConfig);
+
+  const notifyFallback = (result: 'auto-fallback' | undefined) => {
+    if (result === 'auto-fallback') {
       toast.warning(
         t`No default Timer0/VCount data for this combination. Switched to manual mode.`
       );
     }
   };
 
-  const handleVersionChange = (version: RomVersion) => {
-    setConfig({ version });
-    applyAutoRanges(config.hardware, version, config.region);
+  const handleVersionChange = (v: RomVersion) => {
+    notifyFallback(setConfig({ version: v }));
   };
 
-  const handleRegionChange = (region: RomRegion) => {
-    setConfig({ region });
-    applyAutoRanges(config.hardware, config.version, region);
+  const handleRegionChange = (r: RomRegion) => {
+    notifyFallback(setConfig({ region: r }));
   };
 
-  const handleHardwareChange = (hardware: Hardware) => {
-    setConfig({ hardware });
-    applyAutoRanges(hardware, config.version, config.region);
+  const handleHardwareChange = (h: Hardware) => {
+    notifyFallback(setConfig({ hardware: h }));
   };
 
   return (
@@ -63,7 +60,7 @@ function DsConfigForm() {
         <Label className="text-xs">
           <Trans>Version</Trans>
         </Label>
-        <Select value={config.version} onValueChange={handleVersionChange}>
+        <Select value={version} onValueChange={handleVersionChange}>
           <SelectTrigger aria-label={t`Version`}>
             <SelectValue />
           </SelectTrigger>
@@ -82,7 +79,7 @@ function DsConfigForm() {
         <Label className="text-xs">
           <Trans>Region</Trans>
         </Label>
-        <Select value={config.region} onValueChange={handleRegionChange}>
+        <Select value={region} onValueChange={handleRegionChange}>
           <SelectTrigger aria-label={t`Region`}>
             <SelectValue />
           </SelectTrigger>
@@ -101,7 +98,7 @@ function DsConfigForm() {
         <Label className="text-xs">
           <Trans>Hardware</Trans>
         </Label>
-        <Select value={config.hardware} onValueChange={handleHardwareChange}>
+        <Select value={hardware} onValueChange={handleHardwareChange}>
           <SelectTrigger aria-label={t`Hardware`}>
             <SelectValue />
           </SelectTrigger>
@@ -120,7 +117,7 @@ function DsConfigForm() {
         <Label className="text-xs">
           <Trans>MAC address</Trans>
         </Label>
-        <MacAddressInput value={config.mac} onChange={(mac) => setConfig({ mac })} />
+        <MacAddressInput value={mac} onChange={(m) => setConfig({ mac: m })} />
       </div>
 
       {/* Timer0/VCount Section */}

@@ -71,6 +71,21 @@ describe('DsConfigForm', () => {
     expect(screen.getByLabelText('VCount min')).toHaveValue('60');
     expect(screen.getByLabelText('VCount max')).toHaveValue('60');
   });
+
+  it('Version 変更 (Auto) で Timer0/VCount 範囲が自動更新される', () => {
+    renderDsConfigForm();
+
+    // Act: Store アクション経由で version 変更 → auto-lookup 発火
+    act(() => {
+      useDsConfigStore.getState().setConfig({ version: 'White' });
+    });
+
+    // DsLite/White/Jpn → timer0: 0x0C67-0x0C69, vcount: 0x5F
+    expect(screen.getByLabelText('Timer0 min')).toHaveValue('0C67');
+    expect(screen.getByLabelText('Timer0 max')).toHaveValue('0C69');
+    expect(screen.getByLabelText('VCount min')).toHaveValue('5F');
+    expect(screen.getByLabelText('VCount max')).toHaveValue('5F');
+  });
 });
 
 describe('GameStartConfigForm', () => {

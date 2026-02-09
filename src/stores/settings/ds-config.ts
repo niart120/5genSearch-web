@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DsConfig, GameStartConfig, Timer0VCountRange } from '../../wasm/wasm_pkg.js';
+import { lookupDefaultRanges } from '../../data/timer0-vcount-defaults';
 
 interface DsConfigState {
   config: DsConfig;
@@ -9,8 +10,11 @@ interface DsConfigState {
   timer0Auto: boolean;
 }
 
+/** setConfig が timer0Auto フォールバックを行った場合に返す値 */
+type SetConfigResult = 'auto-fallback' | undefined;
+
 interface DsConfigActions {
-  setConfig: (partial: Partial<DsConfig>) => void;
+  setConfig: (partial: Partial<DsConfig>) => SetConfigResult;
   replaceConfig: (config: DsConfig) => void;
   setRanges: (ranges: Timer0VCountRange[]) => void;
   setGameStart: (partial: Partial<GameStartConfig>) => void;
@@ -53,27 +57,51 @@ function isBw2(version: DsConfig['version']): boolean {
 
 export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...DEFAULT_STATE,
-      setConfig: (partial) =>
-        set((state) => {
-          const newConfig = { ...state.config, ...partial };
-          // BW2 → BW 切替時に GameStartConfig の不整合を防ぐ
-          const prevIsBw2 = isBw2(state.config.version);
-          const nextIsBw2 = isBw2(newConfig.version);
-          const gameStart =
-            prevIsBw2 && !nextIsBw2
-              ? {
-                  ...state.gameStart,
-                  save_state:
-                    state.gameStart.save_state === 'WithMemoryLink'
-                      ? ('WithSave' as const)
-                      : state.gameStart.save_state,
-                  shiny_charm: false,
-                }
-              : state.gameStart;
-          return { config: newConfig, gameStart };
-        }),
+      setConfig: (partial) => {
+        const state = get();
+        const newConfig = { ...state.config, ...partial };
+
+        // BW2 → BW 切替時に GameStartConfig の不整合を防ぐ
+        const prevIsBw2 = isBw2(state.config.version);
+        const nextIsBw2 = isBw2(newConfig.version);
+        const gameStart =
+          prevIsBw2 && !nextIsBw2
+            ? {
+                ...state.gameStart,
+                save_state:
+                  state.gameStart.save_state === 'WithMemoryLink'
+                    ? ('WithSave' as const)
+                    : state.gameStart.save_state,
+                shiny_charm: false,
+              }
+            : state.gameStart;
+
+        // timer0Auto 時に hardware/version/region 変更があれば自動 lookup
+        const dsFieldChanged =
+          newConfig.hardware !== state.config.hardware ||
+          newConfig.version !== state.config.version ||
+          newConfig.region !== state.config.region;
+
+        if (state.timer0Auto && dsFieldChanged) {
+          const defaults = lookupDefaultRanges(
+            newConfig.hardware,
+            newConfig.version,
+            newConfig.region
+          );
+          if (defaults) {
+            set({ config: newConfig, gameStart, ranges: defaults });
+            return;
+          }
+          // フォールバック: Auto → Manual
+          set({ config: newConfig, gameStart, timer0Auto: false });
+          return 'auto-fallback';
+        }
+
+        set({ config: newConfig, gameStart });
+        return;
+      },
       replaceConfig: (config) => set({ config }),
       setRanges: (ranges) => set({ ranges }),
       setGameStart: (partial) =>
