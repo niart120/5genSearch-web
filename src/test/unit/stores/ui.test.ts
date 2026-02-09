@@ -14,7 +14,7 @@ describe('ui store', () => {
   it('should have default settings', () => {
     const { language, theme } = useUiStore.getState();
     expect(language).toBe('ja');
-    expect(theme).toBe('system');
+    expect(['light', 'dark']).toContain(theme);
   });
 
   it('should set language', () => {
@@ -33,6 +33,6 @@ describe('ui store', () => {
     useUiStore.getState().setTheme('dark');
     useUiStore.getState().reset();
     const { theme } = useUiStore.getState();
-    expect(theme).toBe('system');
+    expect(['light', 'dark']).toContain(theme);
   });
 });

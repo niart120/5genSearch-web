@@ -20,6 +20,7 @@ msgid "{0} selected"
 msgstr "{0} selected"
 
 #: src/components/layout/header.tsx:25
+#: src/components/layout/welcome-page.tsx:8
 msgid "5genSearch"
 msgstr ""
 
@@ -41,8 +42,8 @@ msgstr "Elapsed"
 msgid "End date"
 msgstr "End date"
 
-#: src/features/ds-config/components/ds-config-form.tsx:100
-#: src/features/ds-config/components/ds-config-form.tsx:103
+#: src/features/ds-config/components/ds-config-form.tsx:99
+#: src/features/ds-config/components/ds-config-form.tsx:102
 msgid "Hardware"
 msgstr "Hardware"
 
@@ -54,7 +55,7 @@ msgstr "Hidden Power"
 msgid "Hour"
 msgstr "Hour"
 
-#: src/features/ds-config/components/ds-config-form.tsx:119
+#: src/features/ds-config/components/ds-config-form.tsx:118
 msgid "MAC address"
 msgstr "MAC address"
 
@@ -76,7 +77,7 @@ msgstr "Minute"
 msgid "Nature"
 msgstr "Nature"
 
-#: src/features/ds-config/components/ds-config-form.tsx:38
+#: src/features/ds-config/components/ds-config-form.tsx:39
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
 
@@ -89,8 +90,12 @@ msgstr "No results"
 msgid "Not specified"
 msgstr "Not specified"
 
-#: src/features/ds-config/components/ds-config-form.tsx:81
-#: src/features/ds-config/components/ds-config-form.tsx:84
+#: src/components/layout/welcome-page.tsx:11
+msgid "Pokemon BW/BW2 RNG seed search tool."
+msgstr "Pokemon BW/BW2 RNG seed search tool."
+
+#: src/features/ds-config/components/ds-config-form.tsx:80
+#: src/features/ds-config/components/ds-config-form.tsx:83
 msgid "Region"
 msgstr "Region"
 
@@ -117,8 +122,8 @@ msgstr "Select all"
 msgid "Settings"
 msgstr "Settings"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:92
-#: src/features/ds-config/components/game-start-config-form.tsx:95
+#: src/features/ds-config/components/game-start-config-form.tsx:90
+#: src/features/ds-config/components/game-start-config-form.tsx:93
 msgid "Shiny Charm"
 msgstr "Shiny Charm"
 
@@ -130,6 +135,10 @@ msgstr "Start date"
 #: src/features/ds-config/components/game-start-config-form.tsx:41
 msgid "Start mode"
 msgstr "Start mode"
+
+#: src/components/layout/welcome-page.tsx:14
+msgid "Tap the menu icon at the top left to configure search settings."
+msgstr "Tap the menu icon at the top left to configure search settings."
 
 #: src/components/forms/timer0-vcount-range-input.tsx:100
 msgid "Timer0 max"
@@ -151,7 +160,7 @@ msgstr "VCount max"
 msgid "VCount min"
 msgstr "VCount min"
 
-#: src/features/ds-config/components/ds-config-form.tsx:62
-#: src/features/ds-config/components/ds-config-form.tsx:65
+#: src/features/ds-config/components/ds-config-form.tsx:61
+#: src/features/ds-config/components/ds-config-form.tsx:64
 msgid "Version"
 msgstr "Version"

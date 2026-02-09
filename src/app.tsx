@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { ResponsiveContainer } from '@/components/layout/responsive-container';
+import { WelcomePage } from '@/components/layout/welcome-page';
 import { Toaster } from '@/components/ui/toast';
 import { DsConfigForm, GameStartConfigForm } from '@/features/ds-config';
 
@@ -22,7 +23,7 @@ function App() {
         sidebarOpen={sidebarOpen}
         onSidebarOpenChange={setSidebarOpen}
       >
-        {/* Phase 3: feature pages */}
+        <WelcomePage />
       </ResponsiveContainer>
       <Toaster />
     </div>

@@ -7,14 +7,8 @@ import { setupStoreSyncSubscriptions } from './stores/sync';
 import './index.css';
 import App from './app.tsx';
 
-function resolveTheme(theme: 'light' | 'dark' | 'system'): 'light' | 'dark' {
-  if (theme !== 'system') return theme;
-  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme(theme: 'light' | 'dark' | 'system') {
-  const resolved = resolveTheme(theme);
-  document.documentElement.classList.toggle('dark', resolved === 'dark');
+function applyTheme(theme: 'light' | 'dark') {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
 }
 
 // Apply theme before render to prevent flash
@@ -30,12 +24,6 @@ useUiStore.subscribe(
   (state) => state.theme,
   (theme) => applyTheme(theme)
 );
-
-// Listen for OS color scheme changes (for system mode)
-globalThis.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  const { theme } = useUiStore.getState();
-  if (theme === 'system') applyTheme(theme);
-});
 
 const rootElement = document.querySelector('#root');
 if (!rootElement) {

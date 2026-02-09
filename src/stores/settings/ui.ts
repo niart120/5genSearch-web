@@ -2,7 +2,12 @@ import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import type { SupportedLocale } from '../../i18n';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark';
+
+function getSystemTheme(): Theme {
+  if (typeof globalThis.matchMedia !== 'function') return 'light';
+  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
 interface UiState {
   language: SupportedLocale;
@@ -17,7 +22,7 @@ interface UiActions {
 
 const DEFAULT_STATE: UiState = {
   language: 'ja',
-  theme: 'system',
+  theme: getSystemTheme(),
 };
 
 export const useUiStore = create<UiState & UiActions>()(

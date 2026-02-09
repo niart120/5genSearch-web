@@ -17,7 +17,7 @@ describe('LanguageToggle', () => {
         <LanguageToggle />
       </I18nTestWrapper>
     );
-    expect(screen.getByRole('button')).toHaveTextContent('JA');
+    expect(screen.getByRole('button')).toHaveTextContent('ja');
   });
 
   it('クリックで言語が切り替わる (ja → en)', async () => {
@@ -29,10 +29,10 @@ describe('LanguageToggle', () => {
     );
 
     const button = screen.getByRole('button');
-    expect(button).toHaveTextContent('JA');
+    expect(button).toHaveTextContent('ja');
 
     await user.click(button);
-    expect(button).toHaveTextContent('EN');
+    expect(button).toHaveTextContent('en');
     expect(useUiStore.getState().language).toBe('en');
   });
 
@@ -47,7 +47,7 @@ describe('LanguageToggle', () => {
     const button = screen.getByRole('button');
     await user.click(button);
     await user.click(button);
-    expect(button).toHaveTextContent('JA');
+    expect(button).toHaveTextContent('ja');
     expect(useUiStore.getState().language).toBe('ja');
   });
 

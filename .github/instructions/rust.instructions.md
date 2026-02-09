@@ -1,5 +1,5 @@
 ---
-applyTo: '**/wasm-pkg/**/*.rs'
+applyTo: '{**/wasm-pkg/**/*.rs,spec/agent/*/local_*/*.md}'
 ---
 
 # Rust (WASM) コーディング規約
