@@ -40,9 +40,22 @@ Phase 2 の UI 部品として `src/components/ui/toast.tsx` に配置し、Phas
 
 | ファイル | 変更種別 | 変更内容 |
 |---------|---------|---------|
-| `src/components/ui/toast.tsx` | 新規作成 | Toast / Toaster / toast() の実装 |
+| `src/components/ui/toast-state.ts` | 新規作成 | Toast state 管理 + `toast()` / `dismissToast()` API + 型定義 |
+| `src/components/ui/toast.tsx` | 新規作成 | `Toaster` / `ToastItem` UI コンポーネント |
 | `src/app.tsx` | 変更 | `<Toaster />` の配置 |
-| `src/test/components/toast.test.tsx` | 新規作成 | コンポーネントテスト |
+| `src/index.css` | 変更 | `--success` / `--warning` CSS 変数、アニメーションユーティリティ追加 |
+| `src/test/components/ui/toast.test.tsx` | 新規作成 | コンポーネントテスト (13 件) |
+
+### 2.1 ファイル分離の設計判断
+
+`react-refresh/only-export-components` ルールにより、コンポーネント (`Toaster`) と非コンポーネント (`toast`, `dismissToast`) を同一ファイルからエクスポートできない。
+そのため状態管理・API を `toast-state.ts` に分離し、UI コンポーネントを `toast.tsx` に配置した。
+
+**`stores/` 配下に置かない理由**:
+- `stores/` は Zustand Store 専用ディレクトリ (state-management.md Section 4)
+- `toast-state.ts` は Zustand を使わない module-scope state + `useSyncExternalStore` パターン
+- `subscribe` / `getSnapshot` は `Toaster` コンポーネント専用の内部 API
+- co-location の原則により、密結合した実装は同一ディレクトリに配置する
 
 ## 3. 設計方針
 
@@ -59,7 +72,7 @@ Phase 2 の UI 部品として `src/components/ui/toast.tsx` に配置し、Phas
 | バンドルサイズ | ~5 kB | ~3 kB (他 Radix と共有) | Radix |
 
 Radix UI Toast は Provider パターンのため、命令的な `toast()` 関数を自前で実装する必要がある。
-Zustand の一時 Store または React 外 state で Toast キューを管理し、`toast()` 関数を公開する。
+module-scope state + `useSyncExternalStore` パターンで Toast 状態を管理し、`toast()` 関数を公開する。
 
 ### 3.2 表示仕様
 
@@ -118,13 +131,13 @@ Radix Toast Provider の `swipeDirection` や viewport のポジショニング�
 
 ## 4. 実装仕様
 
-### 4.1 Toast Store (状態管理)
+### 4.1 Toast State (`toast-state.ts`)
 
 React ツリー外から `toast()` を呼び出すために、モジュールスコープの state を使用する。
-Store ではなく、コンポーネントローカルの `useSyncExternalStore` パターンで実装する。
+Zustand Store ではなく、`useSyncExternalStore` パターンで実装する。
 
 ```typescript
-// src/components/ui/toast.tsx (state 部分)
+// src/components/ui/toast-state.ts
 
 type ToastVariant = 'info' | 'success' | 'warning' | 'error';
 
@@ -133,43 +146,35 @@ interface ToastData {
   title: string;
   description?: string;
   variant: ToastVariant;
-  duration: number; // ms。Infinity で手動閉じ
+  duration: number; // ms
 }
 
 type ToastListener = () => void;
 
-let currentToast: ToastData | null = null;
+let currentToast: ToastData | undefined;
 let listeners: ToastListener[] = [];
 
-function subscribe(listener: ToastListener): () => void {
-  listeners = [...listeners, listener];
-  return () => {
-    listeners = listeners.filter((l) => l !== listener);
-  };
-}
-
-function getSnapshot(): ToastData | null {
-  return currentToast;
-}
-
-function emitChange(): void {
-  for (const listener of listeners) {
-    listener();
-  }
-}
-
-/** duration の解決: error は Infinity (手動閉じ)、他は 3000ms */
 const DEFAULT_DURATION_MS = 3000;
+/** Max safe value for setTimeout (2^31 - 1). error toast の手動閉じに使用 */
+const MANUAL_DISMISS_DURATION_MS = 2_147_483_647;
+
+function subscribe(listener: ToastListener): () => void { /* ... */ }
+function getSnapshot(): ToastData | undefined { return currentToast; }
+function emitChange(): void { /* notify listeners */ }
 
 function resolveDuration(variant: ToastVariant, explicit?: number): number {
   if (explicit !== undefined) return explicit;
-  return variant === 'error' ? Infinity : DEFAULT_DURATION_MS;
+  return variant === 'error' ? MANUAL_DISMISS_DURATION_MS : DEFAULT_DURATION_MS;
 }
 ```
+
+**`Infinity` を使わない理由**: `setTimeout` の内部表現は 32bit 整数。`Number.MAX_SAFE_INTEGER` や `Infinity` を渡すとオーバーフローして即時発火する。`2^31 - 1` (約 24.8 日) が安全な最大値。
 
 ### 4.2 toast() 関数
 
 ```typescript
+// src/components/ui/toast-state.ts (続き)
+
 interface ToastOptions {
   title: string;
   description?: string;
@@ -205,15 +210,22 @@ function dismissToast(): void {
 }
 ```
 
-### 4.3 Toast UI コンポーネント
+### 4.3 Toast UI コンポーネント (`toast.tsx`)
+
+`toast-state.ts` から state API をインポートし、UI のみを担当する。
 
 ```tsx
-import { cva, type VariantProps } from 'class-variance-authority';
-import * as ToastPrimitive from '@radix-ui/react-toast';
-import { CheckCircle, Info, AlertTriangle, XCircle, X } from 'lucide-react';
+// src/components/ui/toast.tsx
 import { useSyncExternalStore } from 'react';
+import * as ToastPrimitive from '@radix-ui/react-toast';
+import { cva } from 'class-variance-authority';
+import { CheckCircle, Info, AlertTriangle, XCircle, X } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
+import {
+  dismissToast, subscribe, getSnapshot, DEFAULT_DURATION_MS,
+  type ToastData, type ToastVariant,
+} from './toast-state';
 
 const toastVariants = cva(
   'group pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-sm border p-3 shadow-md transition-all',
@@ -226,61 +238,25 @@ const toastVariants = cva(
         error: 'border-destructive bg-background text-foreground',
       },
     },
-    defaultVariants: {
-      variant: 'info',
-    },
+    defaultVariants: { variant: 'info' },
   }
 );
 
-const VARIANT_ICONS = {
-  info: Info,
-  success: CheckCircle,
-  warning: AlertTriangle,
-  error: XCircle,
-} as const;
+const VARIANT_ICONS: Record<ToastVariant, typeof Info> = {
+  info: Info, success: CheckCircle, warning: AlertTriangle, error: XCircle,
+};
 
 function Toaster() {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const data = useSyncExternalStore(subscribe, getSnapshot, () => null);
-
-  return (
-    <ToastPrimitive.Provider
-      swipeDirection={isDesktop ? 'right' : 'down'}
-      duration={data?.duration === Infinity ? Number.MAX_SAFE_INTEGER : (data?.duration ?? DEFAULT_DURATION_MS)}
-    >
-      {data && (
-        <ToastPrimitive.Root
-          key={data.id}
-          className={cn(toastVariants({ variant: data.variant }))}
-          onOpenChange={(open) => { if (!open) dismissToast(); }}
-        >
-          <Icon className="mt-0.5 size-4 shrink-0" />
-          <div className="flex-1 space-y-1">
-            <ToastPrimitive.Title className="text-sm font-medium">
-              {data.title}
-            </ToastPrimitive.Title>
-            {data.description && (
-              <ToastPrimitive.Description className="text-xs text-muted-foreground">
-                {data.description}
-              </ToastPrimitive.Description>
-            )}
-          </div>
-          <ToastPrimitive.Close className="shrink-0 rounded-sm opacity-70 hover:opacity-100">
-            <X className="size-3.5" />
-          </ToastPrimitive.Close>
-        </ToastPrimitive.Root>
-      )}
-      <ToastPrimitive.Viewport
-        className={cn(
-          'fixed z-50 flex max-w-sm flex-col',
-          isDesktop
-            ? 'bottom-4 right-4'
-            : 'bottom-4 left-1/2 w-[calc(100%-2rem)] -translate-x-1/2'
-        )}
-      />
-    </ToastPrimitive.Provider>
-  );
+  const data = useSyncExternalStore(subscribe, getSnapshot, () => SERVER_SNAPSHOT);
+  // ...
 }
+
+function ToastItem({ data, isDesktop }: { data: ToastData; isDesktop: boolean }) {
+  // Radix Toast Root + animation classes
+}
+
+export { Toaster };
 ```
 
 ### 4.4 app.tsx への組み込み
@@ -305,7 +281,7 @@ function App() {
 ### 4.5 利用例 (Phase 3 以降)
 
 ```tsx
-import { toast } from '@/components/ui/toast';
+import { toast } from '@/components/ui/toast-state';
 
 // コピー操作
 async function handleCopy(text: string) {
@@ -328,14 +304,17 @@ function handleWorkerError(err: Error) {
 ### 4.6 エクスポート一覧
 
 ```typescript
-// src/components/ui/toast.tsx
-export { Toaster, toast, dismissToast };
+// src/components/ui/toast-state.ts
+export { toast, dismissToast, subscribe, getSnapshot, DEFAULT_DURATION_MS };
 export type { ToastData, ToastOptions, ToastVariant };
+
+// src/components/ui/toast.tsx
+export { Toaster };
 ```
 
 ## 5. テスト方針
 
-### 5.1 コンポーネントテスト (`src/test/components/toast.test.tsx`)
+### 5.1 コンポーネントテスト (`src/test/components/ui/toast.test.tsx`)
 
 | # | テスト | 検証内容 |
 |---|--------|---------|
@@ -356,7 +335,7 @@ export type { ToastData, ToastOptions, ToastVariant };
 ## 6. 実装チェックリスト
 
 - [x] `@radix-ui/react-toast` パッケージの追加
-- [x] `src/components/ui/toast.tsx` の実装 (Toast Store + UI + toast 関数)
+- [x] `src/components/ui/toast-state.ts` + `toast.tsx` の実装 (state / API と UI コンポーネントを分離)
 - [x] ステータスカラー用の CSS カスタムプロパティ追加 (`--success`, `--warning` ボーダー色)
 - [x] `src/app.tsx` に `<Toaster />` 配置
 - [x] コンポーネントテスト作成・通過
