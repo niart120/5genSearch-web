@@ -58,10 +58,10 @@ function GameStartConfigForm() {
             })
           }
           disabled={gameStart.start_mode === 'Continue'}
-          aria-label={t`Save file`}
+          aria-label={t`With save`}
         />
         <Label htmlFor="save-presence" className="text-xs">
-          <Trans>Save file</Trans>
+          <Trans>With save</Trans>
         </Label>
       </div>
 

@@ -111,7 +111,7 @@ describe('GameStartConfigForm', () => {
     renderGameStartForm();
 
     expect(screen.getByLabelText('Start mode')).toBeInTheDocument();
-    expect(screen.getByLabelText('Save file')).toBeInTheDocument();
+    expect(screen.getByLabelText('With save')).toBeInTheDocument();
     expect(screen.getByLabelText('Memory Link')).toBeInTheDocument();
     expect(screen.getByLabelText('Shiny Charm')).toBeInTheDocument();
   });

@@ -110,13 +110,9 @@ msgstr "Remaining"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:61
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-msgid "Save file"
-msgstr "Save file"
+msgid "With save"
+msgstr "With save"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:57
-#: src/features/ds-config/components/game-start-config-form.tsx:63
-#~ msgid "Save state"
-#~ msgstr "Save state"
 
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"
