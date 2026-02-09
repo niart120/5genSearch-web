@@ -20,3 +20,9 @@
 local_052 で SaveState Select を Checkbox に変更したが、二値切り替えの UI パターンとして Switch (トグルスイッチ) を採用する選択肢もある。
 モバイル OS の設定画面では Switch 形式が一般的であり、Radix UI にも `Switch` プリミティブが存在する。
 現時点では Checkbox で統一しているが、モバイル対応を進める段階で Switch への切り替えを検討する価値がある。
+
+## 2026-02-10: pre-commit と Lingui 生成物の整合
+
+現状: `.git/hooks/pre-commit.ps1` で `src/i18n/locales/` を除外し、CI は `pnpm format:check` で全体を検査している。
+観察: フックはリポジトリ管理外のため共有されず、生成物の整形漏れが CI で検知される。
+当面の方針: `src/i18n/locales/` をチェック対象に戻し、Husky でフック設定をリポジトリ管理に含める方針を検討する。
