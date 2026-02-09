@@ -475,20 +475,20 @@ export type { Timer0VCountRangeInputProps } from './timer0-vcount-range-input';
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/data/timer0-vcount-defaults.ts` — デフォルト範囲テーブル (DS/DSLite 28 + DSi/3DS JPN 4 パターン)
-- [ ] `src/stores/settings/ds-config.ts` — `timer0Auto` 追加、`DEFAULT_RANGES` VCount 修正 (0x5E→0x60)、`setConfig` にリセットロジック追加
-- [ ] `src/hooks/use-ds-config.ts` — `timer0Auto` 読み書き公開
-- [ ] `src/lib/game-data-names.ts` — Version/Region/Hardware/StartMode/SaveState 名称関数
-- [ ] `src/features/ds-config/types.ts` — 機能固有型定義
-- [ ] `src/features/ds-config/components/ds-config-form.tsx` — DS 設定フォーム
-- [ ] `src/features/ds-config/components/game-start-config-form.tsx` — ゲーム起動設定フォーム
-- [ ] `src/features/ds-config/components/timer0-vcount-section.tsx` — Timer0/VCount セクション
-- [ ] `src/features/ds-config/index.ts` — barrel export
-- [ ] `src/app.tsx` — 統合
-- [ ] `src/components/forms/index.ts` — Timer0VCountRangeInput の barrel export 追加
-- [ ] `src/test/unit/data/timer0-vcount-defaults.test.ts` — テーブルテスト
-- [ ] `src/test/components/features/ds-config-form.test.tsx` — フォームテスト
-- [ ] Lingui カタログ更新 (`pnpm lingui:extract`)
+- [x] `src/data/timer0-vcount-defaults.ts` — デフォルト範囲テーブル (DS/DSLite 28 + DSi/3DS JPN 4 パターン)
+- [x] `src/stores/settings/ds-config.ts` — `timer0Auto` 追加、`DEFAULT_RANGES` VCount 修正 (0x5E→0x60)、`setConfig` にリセットロジック追加
+- [x] `src/hooks/use-ds-config.ts` — `timer0Auto` 読み書き公開
+- [x] `src/lib/game-data-names.ts` — Version/Region/Hardware/StartMode/SaveState 名称関数
+- [x] `src/features/ds-config/types.ts` — 機能固有型定義
+- [x] `src/features/ds-config/components/ds-config-form.tsx` — DS 設定フォーム
+- [x] `src/features/ds-config/components/game-start-config-form.tsx` — ゲーム起動設定フォーム
+- [x] `src/features/ds-config/components/timer0-vcount-section.tsx` — Timer0/VCount セクション
+- [x] `src/features/ds-config/index.ts` — barrel export
+- [x] `src/app.tsx` — 統合
+- [x] `src/components/forms/index.ts` — Timer0VCountRangeInput の barrel export 追加
+- [x] `src/test/unit/data/timer0-vcount-defaults.test.ts` — テーブルテスト
+- [x] `src/test/components/features/ds-config-form.test.tsx` — フォームテスト
+- [x] Lingui カタログ更新 (`pnpm lingui:extract`)
 
 ## 7. 検討事項 (レビュー論点)
 

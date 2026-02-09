@@ -90,4 +90,54 @@ describe('ds-config store', () => {
     expect(gameStart.save_state).toBe('WithSave');
     expect(gameStart.shiny_charm).toBe(false);
   });
+
+  it('should have timer0Auto default to true', () => {
+    const { timer0Auto } = useDsConfigStore.getState();
+    expect(timer0Auto).toBe(true);
+  });
+
+  it('should update timer0Auto via setTimer0Auto', () => {
+    useDsConfigStore.getState().setTimer0Auto(false);
+    expect(useDsConfigStore.getState().timer0Auto).toBe(false);
+    useDsConfigStore.getState().setTimer0Auto(true);
+    expect(useDsConfigStore.getState().timer0Auto).toBe(true);
+  });
+
+  it('should have DEFAULT_RANGES with VCount 0x60 (DsLite/Black/Jpn)', () => {
+    const { ranges } = useDsConfigStore.getState();
+    expect(ranges[0].vcount_min).toBe(0x60);
+    expect(ranges[0].vcount_max).toBe(0x60);
+  });
+
+  it('should reset save_state from WithMemoryLink to WithSave on BW2→BW switch', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    useDsConfigStore.getState().setGameStart({ save_state: 'WithMemoryLink' });
+    useDsConfigStore.getState().setConfig({ version: 'Black' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save_state).toBe('WithSave');
+  });
+
+  it('should reset shiny_charm to false on BW2→BW switch', () => {
+    useDsConfigStore.getState().setConfig({ version: 'White2' });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: true });
+    useDsConfigStore.getState().setConfig({ version: 'White' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.shiny_charm).toBe(false);
+  });
+
+  it('should not reset gameStart on BW→BW2 switch', () => {
+    useDsConfigStore.getState().setGameStart({ shiny_charm: false, save_state: 'WithSave' });
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save_state).toBe('WithSave');
+  });
+
+  it('should keep save_state if not WithMemoryLink on BW2→BW switch', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    useDsConfigStore.getState().setGameStart({ save_state: 'WithSave', shiny_charm: true });
+    useDsConfigStore.getState().setConfig({ version: 'Black' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.shiny_charm).toBe(false);
+  });
 });

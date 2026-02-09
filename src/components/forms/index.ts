@@ -10,3 +10,5 @@ export { NatureSelect } from './nature-select';
 export type { NatureSelectProps } from './nature-select';
 export { HiddenPowerSelect } from './hidden-power-select';
 export type { HiddenPowerSelectProps } from './hidden-power-select';
+export { Timer0VCountRangeInput } from './timer0-vcount-range-input';
+export type { Timer0VCountRangeInputProps } from './timer0-vcount-range-input';
