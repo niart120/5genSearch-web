@@ -21,6 +21,18 @@ Theme toggle は 3 状態 (Light / Dark / System) をサポートするが、現
 
 Phase 2 以降の UI/UX レビューで改善を検討すべき項目。
 
+## 2026-02-09: メインコンテンツ未実装時の空画面
+
+`App.tsx` の `<ResponsiveContainer>` に `children` を渡していないため、PC 版では sidebar + 空白の main、モバイル版では完全な白画面となる。
+`max-w-screen-xl mx-auto` によるコンテナ中央寄せの影響で、小さめのモニタではサイドバーが画面中央に見える。
+
+対処すべき事項は 2 つ:
+
+1. **Phase 3 未実装時の暫定表示**: メインコンテンツが空のときにプレースホルダー（例: "検索条件を設定してください"）を表示する。既存の `EmptyState` コンポーネントを流用可能。
+2. **ロード失敗時のフォールバック**: Error Boundary による React レンダリングエラーのキャッチ + フォールバック UI。Phase 3 のフィーチャーページ実装時に合わせて検討する。
+
+DS Config (local_050) のスコープ外。Phase 3 で対応する。
+
 ## 2026-02-09: GameStartConfig の SaveState 表現の再検討
 
 `SaveState` は現在 `"NoSave" | "WithSave" | "WithMemoryLink"` の enum だが、MemoryLink は BW2 専用かつ WithSave の上位互換という性質を持つ。
