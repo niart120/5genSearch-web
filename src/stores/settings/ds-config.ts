@@ -56,6 +56,28 @@ function isBw2(version: DsConfig['version']): boolean {
   return version === 'Black2' || version === 'White2';
 }
 
+function normalizeGameStart(
+  gameStart: GameStartConfig,
+  version: DsConfig['version']
+): GameStartConfig {
+  const next = { ...gameStart };
+
+  if (next.start_mode === 'Continue') {
+    next.save = 'WithSave';
+  }
+
+  if (next.save === 'NoSave') {
+    next.memory_link = 'Disabled';
+  }
+
+  if (!isBw2(version)) {
+    next.memory_link = 'Disabled';
+    next.shiny_charm = 'NotObtained';
+  }
+
+  return next;
+}
+
 export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
   persist(
     (set, get) => ({
@@ -64,17 +86,7 @@ export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
         const state = get();
         const newConfig = { ...state.config, ...partial };
 
-        // BW2 → BW 切替時に GameStartConfig の不整合を防ぐ
-        const prevIsBw2 = isBw2(state.config.version);
-        const nextIsBw2 = isBw2(newConfig.version);
-        const gameStart =
-          prevIsBw2 && !nextIsBw2
-            ? {
-                ...state.gameStart,
-                memory_link: 'Disabled' as const,
-                shiny_charm: 'NotObtained' as const,
-              }
-            : state.gameStart;
+        const gameStart = normalizeGameStart(state.gameStart, newConfig.version);
 
         // timer0Auto 時に hardware/version/region 変更があれば自動 lookup
         const dsFieldChanged =
@@ -104,7 +116,7 @@ export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
       setRanges: (ranges) => set({ ranges }),
       setGameStart: (partial) =>
         set((state) => ({
-          gameStart: { ...state.gameStart, ...partial },
+          gameStart: normalizeGameStart({ ...state.gameStart, ...partial }, state.config.version),
         })),
       setTimer0Auto: (timer0Auto) => set({ timer0Auto }),
       reset: () => set(DEFAULT_STATE),

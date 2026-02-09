@@ -76,11 +76,29 @@ describe('ds-config store', () => {
   });
 
   it('should partially update gameStart via setGameStart', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
     useDsConfigStore.getState().setGameStart({ shiny_charm: 'Obtained' });
     const { gameStart } = useDsConfigStore.getState();
     expect(gameStart.shiny_charm).toBe('Obtained');
     expect(gameStart.start_mode).toBe('Continue');
     expect(gameStart.save).toBe('WithSave');
+  });
+
+  it('should normalize save to WithSave when start_mode is Continue', () => {
+    useDsConfigStore.getState().setGameStart({ start_mode: 'Continue', save: 'NoSave' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save).toBe('WithSave');
+  });
+
+  it('should disable memory_link when save is NoSave', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    useDsConfigStore.getState().setGameStart({
+      start_mode: 'NewGame',
+      save: 'NoSave',
+      memory_link: 'Enabled',
+    });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.memory_link).toBe('Disabled');
   });
 
   it('should reset gameStart to default', () => {

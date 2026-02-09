@@ -407,6 +407,12 @@ impl GameStartConfig {
 `src/stores/settings/ds-config.ts` のデフォルト値とフォールバックロジックを更新する。
 persist の `version` は変更しない (リリース前のためマイグレーションは不要)。
 
+`setGameStart` は以下の正規化を行う:
+
+- `start_mode == Continue` のとき `save` を `WithSave` に補正
+- `save == NoSave` のとき `memory_link` を `Disabled` に補正
+- BW (非 BW2) のとき `memory_link` を `Disabled`、`shiny_charm` を `NotObtained` に補正
+
 ### 4.6 TypeScript: UI コンポーネント
 
 セクション 3.5 に従い、Select → Checkbox 2 つに変更する。
@@ -432,6 +438,8 @@ persist の `version` は変更しない (リリース前のためマイグレ�
 |--------|----------|
 | ds-config store テスト | デフォルト値が `save: 'WithSave', memory_link: 'Disabled', shiny_charm: 'NotObtained'` |
 | ds-config store テスト | BW2→BW 切替で `memory_link` が `'Disabled'` に、`shiny_charm` が `'NotObtained'` にリセット |
+| ds-config store テスト | `Continue` + `NoSave` の入力が `WithSave` に補正される |
+| ds-config store テスト | `NoSave` の入力で `memory_link` が `Disabled` に補正される |
 | form テスト | `save` チェックボックスの表示・操作 |
 | form テスト | `memory_link` チェックボックスの disabled 制御 (BW / save=NoSave 時) |
 
