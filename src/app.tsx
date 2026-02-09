@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { ResponsiveContainer } from '@/components/layout/responsive-container';
+import { Toaster } from '@/components/ui/toast';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -15,6 +16,7 @@ function App() {
       >
         {/* Phase 3: feature pages */}
       </ResponsiveContainer>
+      <Toaster />
     </div>
   );
 }

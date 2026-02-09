@@ -120,7 +120,7 @@ Phase 4: 仕上げ
 | Progress | Radix UI | ✅ | 進捗バー |
 | Sheet | Radix UI | ✅ | モバイル Sidebar |
 | Table | Radix UI | ✅ | テーブルベース |
-| Toast | Radix UI | 未着手 | 通知 (仕様未確定) |
+| Toast | Radix UI | ✅ | 通知 (local_049) |
 
 ### 4.2 フォーム部品
 
