@@ -1,5 +1,5 @@
 ---
-applyTo: 'src/**/*.{ts,tsx}'
+applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 ---
 
 # TypeScript コーディング規約
