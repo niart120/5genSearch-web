@@ -64,6 +64,11 @@ msgstr "MACアドレス"
 msgid "Max"
 msgstr "Max"
 
+#: src/features/ds-config/components/game-start-config-form.tsx:79
+#: src/features/ds-config/components/game-start-config-form.tsx:82
+msgid "Memory Link"
+msgstr "思い出リンク"
+
 #: src/components/forms/timer0-vcount-range-input.tsx:72
 #: src/components/forms/timer0-vcount-range-input.tsx:112
 msgid "Min"
@@ -103,10 +108,15 @@ msgstr "リージョン"
 msgid "Remaining"
 msgstr "残り"
 
+#: src/features/ds-config/components/game-start-config-form.tsx:61
+#: src/features/ds-config/components/game-start-config-form.tsx:64
+msgid "Save file"
+msgstr "セーブデータ"
+
 #: src/features/ds-config/components/game-start-config-form.tsx:57
 #: src/features/ds-config/components/game-start-config-form.tsx:63
-msgid "Save state"
-msgstr "セーブ"
+#~ msgid "Save state"
+#~ msgstr "セーブ"
 
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"
@@ -122,8 +132,8 @@ msgstr "全選択"
 msgid "Settings"
 msgstr "設定"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:90
-#: src/features/ds-config/components/game-start-config-form.tsx:93
+#: src/features/ds-config/components/game-start-config-form.tsx:97
+#: src/features/ds-config/components/game-start-config-form.tsx:100
 msgid "Shiny Charm"
 msgstr "ひかるおまもり"
 
@@ -131,8 +141,8 @@ msgstr "ひかるおまもり"
 msgid "Start date"
 msgstr "開始日"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:35
-#: src/features/ds-config/components/game-start-config-form.tsx:41
+#: src/features/ds-config/components/game-start-config-form.tsx:30
+#: src/features/ds-config/components/game-start-config-form.tsx:36
 msgid "Start mode"
 msgstr "起動モード"
 
