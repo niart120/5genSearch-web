@@ -1,19 +1,19 @@
-# SaveState 2 軸 boolean 移行 仕様書
+# SaveState 2 軸 enum 分解 仕様書
 
 ## 1. 概要
 
 ### 1.1 目的
 
-`SaveState` enum (`NoSave | WithSave | WithMemoryLink`) を `has_save: bool` + `memory_link: bool` の 2 軸 boolean に分解し、ドメインの直交する 2 つの概念を型で素直に表現する。
+`SaveState` enum (`NoSave | WithSave | WithMemoryLink`) を `SavePresence` (`NoSave | WithSave`) + `MemoryLinkState` (`Disabled | Enabled`) の 2 軸 enum に分解し、ドメインの直交する 2 つの概念をそれぞれ独立した型で表現する。
 
 ### 1.2 用語定義
 
 | 用語 | 定義 |
 |------|------|
-| SaveState | 現行のセーブ状態を表す 3 値 enum |
-| has_save | セーブデータの有無を表す boolean |
-| memory_link | 思い出リンクの有無を表す boolean (BW2 のみ有効) |
-| GameStartConfig | ゲーム開始設定を表す構造体。`start_mode`, `save_state`(→ `has_save`, `memory_link`), `shiny_charm` を持つ |
+| SaveState | 現行のセーブ状態を表す 3 値 enum (廃止対象) |
+| SavePresence | セーブデータの有無を表す 2 値 enum (`NoSave`, `WithSave`) |
+| MemoryLinkState | 思い出リンクの有無を表す 2 値 enum (`Disabled`, `Enabled`)。BW2 のみ有効 |
+| GameStartConfig | ゲーム開始設定を表す構造体。`start_mode`, `save`(旧 `save_state`), `memory_link`, `shiny_charm` を持つ |
 | offset | PRNG の初期消費数。`GameStartConfig` の組み合わせで決定される |
 
 ### 1.3 背景・問題
@@ -26,13 +26,16 @@
 `offset.rs` のパターンマッチでも BW2 Continue のケースで `WithSave | NoSave` として束ねており、2 軸の直交性が表出している。
 enum では「`NoSave` かつ `MemoryLink`」が型レベルで排除されるが、同じ制約を `validate()` や UI の `disabled` で重複表現しており、enum の型安全性の恩恵は限定的。
 
+2 値 enum に分解することで、boolean と同等の直交性を確保しつつ、パターンマッチの網羅性検査や意味の明示性で boolean より優位性がある。
+
 ### 1.4 期待効果
 
 | 項目 | 効果 |
 |------|------|
 | 可読性 | パターンマッチの分岐が 2 軸の意味に対応し、ロジックの意図が明確になる |
 | 拡張性 | 将来のセーブ関連属性の追加が容易 (enum の列挙子追加より boolean フィールド追加の方が影響が限定的) |
-| UI 表現 | チェックボックス 2 つで自然に表現可能 (Select ドロップダウンからの変更は任意) |
+| UI 表現 | チェックボックス 2 つで自然に表現可能 |
+| 型安全性 | boolean と異なり、enum のバリアント名で意味が自己文書化される。パターンマッチの exhaustiveness 検査も有効 |
 
 ### 1.5 着手条件
 
@@ -45,10 +48,10 @@ enum では「`NoSave` かつ `MemoryLink`」が型レベルで排除される�
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/types/generation.rs` | 修正 | `SaveState` enum 削除、`GameStartConfig` のフィールド変更、`validate()` の条件更新 |
-| `wasm-pkg/src/types/mod.rs` | 修正 | `SaveState` の re-export 削除 |
-| `wasm-pkg/src/lib.rs` | 修正 | `SaveState` の re-export 削除 |
-| `wasm-pkg/src/core/offset.rs` | 修正 | パターンマッチを 2 軸に変更 (3 関数, 約 8 match arm) |
+| `wasm-pkg/src/types/generation.rs` | 修正 | `SaveState` enum を `SavePresence` + `MemoryLinkState` に分解、`GameStartConfig` のフィールド変更、`validate()` の条件更新 |
+| `wasm-pkg/src/types/mod.rs` | 修正 | `SaveState` の re-export を `SavePresence` + `MemoryLinkState` に置換 |
+| `wasm-pkg/src/lib.rs` | 修正 | 同上 |
+| `wasm-pkg/src/core/offset.rs` | 修正 | パターンマッチを 2 軸 enum に変更 (3 関数, 約 8 match arm) |
 | `wasm-pkg/src/generation/flows/generator/mod.rs` | 修正 | テスト内の `SaveState::*` 構築を置換 (約 5 箇所) |
 | `wasm-pkg/src/generation/flows/generator/egg.rs` | 修正 | テスト内の構築 (1 箇所) |
 | `wasm-pkg/src/generation/flows/generator/pokemon.rs` | 修正 | テスト内の構築 (1 箇所) |
@@ -67,9 +70,9 @@ enum では「`NoSave` かつ `MemoryLink`」が型レベルで排除される�
 |----------|----------|----------|
 | `src/wasm/wasm_pkg.d.ts` | 自動生成 | `wasm-pack build` により自動更新 |
 | `src/wasm/wasm_pkg.js` | 自動生成 | 同上 |
-| `src/lib/game-data-names.ts` | 修正 | `SAVE_STATE_*` → `HAS_SAVE_*` / `MEMORY_LINK_*` に分離 |
-| `src/stores/settings/ds-config.ts` | 修正 | `save_state` → `has_save` + `memory_link` に変更、マイグレーション追加 |
-| `src/features/ds-config/components/game-start-config-form.tsx` | 修正 | Select → チェックボックス 2 つに変更 (任意) |
+| `src/lib/game-data-names.ts` | 修正 | `SAVE_STATE_*` → `SAVE_PRESENCE_*` / `MEMORY_LINK_*` に分離 |
+| `src/stores/settings/ds-config.ts` | 修正 | `save_state` → `save` + `memory_link` に変更 (persist version 変更なし) |
+| `src/features/ds-config/components/game-start-config-form.tsx` | 修正 | Select → チェックボックス 2 つに変更 |
 | `src/test/unit/stores/ds-config.test.ts` | 修正 | テストの期待値更新 |
 | `src/test/components/ds-config/game-start-config-form.test.tsx` | 修正 | UI テスト更新 |
 
@@ -77,28 +80,28 @@ enum では「`NoSave` かつ `MemoryLink`」が型レベルで排除される�
 
 ### 3.1 変換マッピング
 
-| 旧 `SaveState` | `has_save` | `memory_link` | 備考 |
-|-----------------|------------|---------------|------|
-| `NoSave` | `false` | `false` | MemoryLink は has_save 前提のため必然的に false |
-| `WithSave` | `true` | `false` | |
-| `WithMemoryLink` | `true` | `true` | BW2 のみ有効 |
+| 旧 `SaveState` | `SavePresence` | `MemoryLinkState` | 備考 |
+|-----------------|----------------|-------------------|------|
+| `NoSave` | `NoSave` | `Disabled` | MemoryLink は WithSave 前提のため必然的に Disabled |
+| `WithSave` | `WithSave` | `Disabled` | |
+| `WithMemoryLink` | `WithSave` | `Enabled` | BW2 のみ有効 |
 
-不正状態: `has_save = false, memory_link = true` → `validate()` でエラーとする。
+不正状態: `SavePresence::NoSave` + `MemoryLinkState::Enabled` → `validate()` でエラーとする。
 
 ### 3.2 バリデーション規則
 
 変更後の `validate()` の制約:
 
 | 条件 | エラーメッセージ |
-|------|------------------|
-| `memory_link && !is_bw2` | `"MemoryLink is only available in BW2"` |
-| `memory_link && !has_save` | `"MemoryLink requires a save file"` (新規追加) |
-| `start_mode == Continue && !has_save` | `"Continue requires a save file"` |
+|------|-----------------|
+| `memory_link == Enabled && !is_bw2` | `"MemoryLink is only available in BW2"` |
+| `memory_link == Enabled && save == NoSave` | `"MemoryLink requires a save file"` (新規追加) |
+| `start_mode == Continue && save == NoSave` | `"Continue requires a save file"` |
 | `shiny_charm && !is_bw2` | (既存、変更なし) |
 
 ### 3.3 パターンマッチの変換方針
 
-`offset.rs` の 3 要素タプル `(is_bw2, start_mode, save_state)` を 4 要素タプル `(is_bw2, start_mode, has_save, memory_link)` に拡張する。
+`offset.rs` の 3 要素タプル `(is_bw2, start_mode, save_state)` を 4 要素タプル `(is_bw2, start_mode, save, memory_link)` に拡張する。
 
 #### `calculate_game_offset()` の変換例
 
@@ -117,51 +120,52 @@ match (version.is_bw2(), config.start_mode, config.save_state) {
 }
 
 // 変更後
-match (version.is_bw2(), config.start_mode, config.has_save, config.memory_link) {
-    (false, NewGame,   true,  false) => bw_new_game_with_save(&mut lcg),
-    (false, NewGame,   false, false) => bw_new_game_no_save(&mut lcg),
-    (false, Continue,  _,     false) => bw_continue(&mut lcg),
-    (true,  NewGame,   true,  true)  => bw2_new_game_with_memory_link(&mut lcg),
-    (true,  NewGame,   true,  false) => bw2_new_game_with_save(&mut lcg),
-    (true,  NewGame,   false, false) => bw2_new_game_no_save(&mut lcg),
-    (true,  Continue,  _,     true)  => bw2_continue_with_memory_link(&mut lcg),
-    (true,  Continue,  _,     false) => bw2_continue_no_memory_link(&mut lcg),
+use SavePresence::{NoSave, WithSave};
+use MemoryLinkState::{Disabled, Enabled};
+
+match (version.is_bw2(), config.start_mode, config.save, config.memory_link) {
+    (false, NewGame,   WithSave, Disabled) => bw_new_game_with_save(&mut lcg),
+    (false, NewGame,   NoSave,   Disabled) => bw_new_game_no_save(&mut lcg),
+    (false, Continue,  _,        Disabled) => bw_continue(&mut lcg),
+    (true,  NewGame,   WithSave, Enabled)  => bw2_new_game_with_memory_link(&mut lcg),
+    (true,  NewGame,   WithSave, Disabled) => bw2_new_game_with_save(&mut lcg),
+    (true,  NewGame,   NoSave,   Disabled) => bw2_new_game_no_save(&mut lcg),
+    (true,  Continue,  _,        Enabled)  => bw2_continue_with_memory_link(&mut lcg),
+    (true,  Continue,  _,        Disabled) => bw2_continue_no_memory_link(&mut lcg),
     _ => return Err("Invalid combination".into()),
 }
 ```
 
 #### `advance_to_tid_sid_point_bw()` / `advance_to_tid_sid_point_bw2()` の変換
 
-関数シグネチャを `save_state: SaveState` → `has_save: bool, memory_link: bool` に変更:
+関数シグネチャを `save_state: SaveState` → `save: SavePresence` + `memory_link: MemoryLinkState` に変更:
 
 ```rust
-// 変更前
-fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save_state: SaveState) {
-    match save_state {
-        SaveState::WithSave => { ... }
-        SaveState::NoSave => { ... }
-        SaveState::WithMemoryLink => { /* BW では不到達 */ }
-    }
-}
-
 // 変更後
-fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, has_save: bool) {
-    // memory_link は BW では常に false (validate 保証済み) のため引数不要
-    if has_save {
-        probability_table_multiple(lcg, 2);
-        consume_random(lcg, 2);
-    } else {
-        probability_table_multiple(lcg, 3);
-        consume_random(lcg, 2);
+fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save: SavePresence) {
+    // memory_link は BW では常に Disabled (validate 保証済み) のため引数不要
+    match save {
+        SavePresence::WithSave => {
+            probability_table_multiple(lcg, 2);
+            consume_random(lcg, 2);
+        }
+        SavePresence::NoSave => {
+            probability_table_multiple(lcg, 3);
+            consume_random(lcg, 2);
+        }
     }
 }
 
-fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, has_save: bool, memory_link: bool) {
-    match (has_save, memory_link) {
-        (true, true) => { /* WithMemoryLink の処理 */ }
-        (true, false) => { /* WithSave の処理 */ }
-        (false, false) => { /* NoSave の処理 */ }
-        (false, true) => unreachable!("validated: memory_link requires has_save"),
+fn advance_to_tid_sid_point_bw2(
+    lcg: &mut Lcg64,
+    save: SavePresence,
+    memory_link: MemoryLinkState,
+) {
+    match (save, memory_link) {
+        (WithSave, Enabled) => { /* WithMemoryLink の処理 */ }
+        (WithSave, Disabled) => { /* WithSave の処理 */ }
+        (NoSave, Disabled) => { /* NoSave の処理 */ }
+        (NoSave, Enabled) => unreachable!("validated: memory_link requires save"),
     }
 }
 ```
@@ -179,8 +183,8 @@ GameStartConfig {
 // 変更後
 GameStartConfig {
     start_mode: StartMode::Continue,
-    has_save: true,
-    memory_link: false,
+    save: SavePresence::WithSave,
+    memory_link: MemoryLinkState::Disabled,
     shiny_charm: false,
 }
 ```
@@ -200,8 +204,8 @@ const DEFAULT_GAME_START: GameStartConfig = {
 // 変更後
 const DEFAULT_GAME_START: GameStartConfig = {
   start_mode: 'Continue',
-  has_save: true,
-  memory_link: false,
+  save: 'WithSave',
+  memory_link: 'Disabled',
   shiny_charm: false,
 };
 ```
@@ -215,23 +219,27 @@ save_state: state.gameStart.save_state === 'WithMemoryLink'
   : state.gameStart.save_state,
 
 // 変更後
-memory_link: false,
-// has_save はそのまま保持
+memory_link: 'Disabled' as const,
+// save はそのまま保持
 ```
+
+persist の `version` は変更しない。フィールド名変更により旧データは shallow merge でデフォルト値に落ちる。
 
 #### 名前解決 (game-data-names.ts)
 
-`SAVE_STATE_ORDER` / `SAVE_STATE_NAMES` を廃止し、boolean 値のラベルに変更:
+`SAVE_STATE_ORDER` / `SAVE_STATE_NAMES` を廃止し、各 enum の名前マップに分離:
 
 ```typescript
-const HAS_SAVE_NAMES: Record<string, Record<SupportedLocale, string>> = {
-  true: { ja: 'セーブあり', en: 'With save' },
-  false: { ja: 'セーブなし', en: 'No save' },
+const SAVE_PRESENCE_ORDER: SavePresence[] = ['NoSave', 'WithSave'];
+const SAVE_PRESENCE_NAMES: Record<SavePresence, Record<SupportedLocale, string>> = {
+  NoSave:   { ja: 'セーブなし', en: 'No save' },
+  WithSave: { ja: 'セーブあり', en: 'With save' },
 };
 
-const MEMORY_LINK_NAMES: Record<string, Record<SupportedLocale, string>> = {
-  true: { ja: '思い出リンクあり', en: 'With Memory Link' },
-  false: { ja: '思い出リンクなし', en: 'Without Memory Link' },
+const MEMORY_LINK_STATE_ORDER: MemoryLinkState[] = ['Disabled', 'Enabled'];
+const MEMORY_LINK_STATE_NAMES: Record<MemoryLinkState, Record<SupportedLocale, string>> = {
+  Disabled: { ja: '思い出リンクなし', en: 'Without Memory Link' },
+  Enabled:  { ja: '思い出リンクあり', en: 'With Memory Link' },
 };
 ```
 
@@ -242,29 +250,32 @@ Select ドロップダウンからチェックボックス 2 つへの変更:
 ```tsx
 {/* セーブの有無 */}
 <Checkbox
-  checked={gameStart.has_save}
+  checked={gameStart.save === 'WithSave'}
   onCheckedChange={(checked) => setGameStart({
-    has_save: !!checked,
-    // has_save を外すとき memory_link も強制 off
-    ...(checked ? {} : { memory_link: false }),
+    save: checked ? 'WithSave' : 'NoSave',
+    // save を外すとき memory_link も強制 off
+    ...(checked ? {} : { memory_link: 'Disabled' as const }),
   })}
   disabled={gameStart.start_mode === 'Continue'}
 />
 
 {/* 思い出リンク (BW2 のみ) */}
 <Checkbox
-  checked={gameStart.memory_link}
-  onCheckedChange={(checked) => setGameStart({ memory_link: !!checked })}
-  disabled={!isBw2 || !gameStart.has_save}
+  checked={gameStart.memory_link === 'Enabled'}
+  onCheckedChange={(checked) => setGameStart({
+    memory_link: checked ? 'Enabled' : 'Disabled',
+  })}
+  disabled={!isBw2 || gameStart.save === 'NoSave'}
 />
 ```
 
 ### 3.6 WASM ビルドとTS型の自動更新
 
 `wasm-pack build` により `src/wasm/wasm_pkg.d.ts` が自動再生成される。
-`SaveState` 型は消滅し、`GameStartConfig` のフィールドが直接 `has_save: boolean` + `memory_link: boolean` になる。
+`SaveState` 型は消滅し、代わりに `SavePresence` と `MemoryLinkState` が生成される。
+`GameStartConfig` のフィールドは `save: SavePresence` + `memory_link: MemoryLinkState` になる。
 
-tsify の derive マクロにより boolean フィールドは TypeScript の `boolean` に自動マッピングされる。
+tsify の derive マクロにより 2 値 enum は TypeScript の string literal union に自動マッピングされる。
 
 ## 4. 実装仕様
 
@@ -273,14 +284,28 @@ tsify の derive マクロにより boolean フィールドは TypeScript の `b
 `wasm-pkg/src/types/generation.rs`:
 
 ```rust
-// SaveState enum を削除
+// SaveState enum を削除し、以下の 2 enum に分解
+
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum SavePresence {
+    NoSave,
+    WithSave,
+}
+
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum MemoryLinkState {
+    Disabled,
+    Enabled,
+}
 
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GameStartConfig {
     pub start_mode: StartMode,
-    pub has_save: bool,
-    pub memory_link: bool,
+    pub save: SavePresence,
+    pub memory_link: MemoryLinkState,
     pub shiny_charm: bool,
 }
 
@@ -288,15 +313,19 @@ impl GameStartConfig {
     pub fn validate(&self, version: RomVersion) -> Result<(), String> {
         let is_bw2 = matches!(version, RomVersion::Black2 | RomVersion::White2);
 
-        if self.memory_link && !is_bw2 {
+        if self.memory_link == MemoryLinkState::Enabled && !is_bw2 {
             return Err("MemoryLink is only available in BW2".to_string());
         }
 
-        if self.memory_link && !self.has_save {
+        if self.memory_link == MemoryLinkState::Enabled
+            && self.save == SavePresence::NoSave
+        {
             return Err("MemoryLink requires a save file".to_string());
         }
 
-        if self.start_mode == StartMode::Continue && !self.has_save {
+        if self.start_mode == StartMode::Continue
+            && self.save == SavePresence::NoSave
+        {
             return Err("Continue requires a save file".to_string());
         }
 
@@ -311,34 +340,21 @@ impl GameStartConfig {
 
 ### 4.2 Rust: re-export の更新
 
-`wasm-pkg/src/types/mod.rs` と `wasm-pkg/src/lib.rs` から `SaveState` を削除する。
+`wasm-pkg/src/types/mod.rs` と `wasm-pkg/src/lib.rs` の `SaveState` を `SavePresence, MemoryLinkState` に置換する。
 
 ### 4.3 Rust: offset.rs のパターンマッチ
 
-セクション 3.3 の変換例に従い、3 関数のパターンマッチを更新する。
+セクション 3.3 の変換例に従い、3 関数のパターンマッチを 2 軸 enum 版に更新する。
 
 ### 4.4 Rust: テストコードの一括置換
 
 セクション 3.4 の構築パターンに従い、約 30 箇所を置換する。
-`save_state: SaveState::WithSave` → `has_save: true, memory_link: false` 等。
+`save_state: SaveState::WithSave` → `save: SavePresence::WithSave, memory_link: MemoryLinkState::Disabled` 等。
 
-### 4.5 TypeScript: Store マイグレーション
+### 4.5 TypeScript: Store
 
-`src/stores/settings/ds-config.ts` の persist version をインクリメントし、migrate 関数で旧 `save_state` を新フィールドに変換:
-
-```typescript
-migrate: (persisted, version) => {
-  if (version < NEW_VERSION) {
-    const state = persisted as Record<string, unknown>;
-    const gameStart = state.gameStart as Record<string, unknown>;
-    const oldSaveState = gameStart.save_state as string;
-    gameStart.has_save = oldSaveState !== 'NoSave';
-    gameStart.memory_link = oldSaveState === 'WithMemoryLink';
-    delete gameStart.save_state;
-  }
-  return persisted;
-},
-```
+`src/stores/settings/ds-config.ts` のデフォルト値とフォールバックロジックを更新する。
+persist の `version` は変更しない (リリース前のためマイグレーションは不要)。
 
 ### 4.6 TypeScript: UI コンポーネント
 
@@ -350,9 +366,9 @@ migrate: (persisted, version) => {
 
 | テスト | 検証内容 |
 |--------|----------|
-| `validate` テスト | BW + `memory_link=true` → エラー |
-| `validate` テスト | `has_save=false, memory_link=true` → エラー (新規) |
-| `validate` テスト | `Continue + has_save=false` → エラー |
+| `validate` テスト | BW + `MemoryLinkState::Enabled` → エラー |
+| `validate` テスト | `NoSave + Enabled` → エラー (新規) |
+| `validate` テスト | `Continue + NoSave` → エラー |
 | offset テスト | 全パターン (BW: 3, BW2: 5) の既存テストが通過すること |
 | generator テスト | 全 5 パターンの既存テストが通過すること |
 | datetime_search テスト | 既存テストが通過すること |
@@ -361,11 +377,10 @@ migrate: (persisted, version) => {
 
 | テスト | 検証内容 |
 |--------|----------|
-| ds-config store テスト | デフォルト値が `has_save: true, memory_link: false` |
-| ds-config store テスト | BW2→BW 切替で `memory_link` が `false` にリセット |
-| ds-config store テスト | マイグレーション: `save_state: 'WithMemoryLink'` → `has_save: true, memory_link: true` |
-| form テスト | `has_save` チェックボックスの表示・操作 |
-| form テスト | `memory_link` チェックボックスの disabled 制御 (BW / has_save=false 時) |
+| ds-config store テスト | デフォルト値が `save: 'WithSave', memory_link: 'Disabled'` |
+| ds-config store テスト | BW2→BW 切替で `memory_link` が `'Disabled'` にリセット |
+| form テスト | `save` チェックボックスの表示・操作 |
+| form テスト | `memory_link` チェックボックスの disabled 制御 (BW / save=NoSave 時) |
 
 ### 5.3 WASM 統合テスト
 
@@ -378,11 +393,11 @@ migrate: (persisted, version) => {
 
 ### Rust 側
 
-- [ ] `wasm-pkg/src/types/generation.rs`: `SaveState` enum 削除
-- [ ] `wasm-pkg/src/types/generation.rs`: `GameStartConfig` のフィールド変更 (`has_save`, `memory_link`)
+- [ ] `wasm-pkg/src/types/generation.rs`: `SaveState` enum を `SavePresence` + `MemoryLinkState` に分解
+- [ ] `wasm-pkg/src/types/generation.rs`: `GameStartConfig` のフィールド変更 (`save: SavePresence`, `memory_link: MemoryLinkState`)
 - [ ] `wasm-pkg/src/types/generation.rs`: `validate()` の条件更新 (不正状態チェック追加)
-- [ ] `wasm-pkg/src/types/mod.rs`: `SaveState` の re-export 削除
-- [ ] `wasm-pkg/src/lib.rs`: `SaveState` の re-export 削除
+- [ ] `wasm-pkg/src/types/mod.rs`: `SaveState` → `SavePresence, MemoryLinkState` に置換
+- [ ] `wasm-pkg/src/lib.rs`: 同上
 - [ ] `wasm-pkg/src/core/offset.rs`: `calculate_game_offset()` のパターンマッチ変更
 - [ ] `wasm-pkg/src/core/offset.rs`: `advance_to_tid_sid_point_bw()` のシグネチャ・実装変更
 - [ ] `wasm-pkg/src/core/offset.rs`: `advance_to_tid_sid_point_bw2()` のシグネチャ・実装変更
@@ -396,13 +411,13 @@ migrate: (persisted, version) => {
 ### WASM ビルド
 
 - [ ] `pnpm build:wasm` で WASM 再ビルド
-- [ ] `src/wasm/wasm_pkg.d.ts` から `SaveState` 型が消滅していることを確認
-- [ ] `GameStartConfig` に `has_save: boolean` + `memory_link: boolean` が存在することを確認
+- [ ] `src/wasm/wasm_pkg.d.ts` から `SaveState` 型が消滅し、`SavePresence` と `MemoryLinkState` が生成されていることを確認
+- [ ] `GameStartConfig` に `save: SavePresence` + `memory_link: MemoryLinkState` が存在することを確認
 
 ### TypeScript 側
 
-- [ ] `src/lib/game-data-names.ts`: `SAVE_STATE_*` を `HAS_SAVE_*` / `MEMORY_LINK_*` に分離
-- [ ] `src/stores/settings/ds-config.ts`: デフォルト値・フォールバック・マイグレーション更新
+- [ ] `src/lib/game-data-names.ts`: `SAVE_STATE_*` を `SAVE_PRESENCE_*` / `MEMORY_LINK_STATE_*` に分離
+- [ ] `src/stores/settings/ds-config.ts`: デフォルト値・フォールバック更新 (version 変更なし)
 - [ ] `src/features/ds-config/components/game-start-config-form.tsx`: Select → Checkbox 変更
 - [ ] テスト: Store テスト更新
 - [ ] テスト: Form コンポーネントテスト更新

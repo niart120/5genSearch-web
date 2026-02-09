@@ -73,9 +73,9 @@ design-notes.md に蓄積された UI 関連の軽微な改善項目 4 件を一
 - `'system'` オプションは廃止し、初回アクセス時（localStorage に値がない場合）にブラウザの `prefers-color-scheme` から初期値を決定する
 - 以降はユーザーの明示的な選択 (light ↔ dark) を localStorage に永続化する
 
-#### Store のマイグレーション
+#### Store の変更
 
-Zustand persist の `version` を `1` → `2` に上げ、`migrate` 関数で `'system'` を `resolveTheme('system')` に変換する。
+`Theme` 型を `'light' | 'dark'` に縮小し、デフォルト値をブラウザの `prefers-color-scheme` から動的に決定する。persist の `version` は変更しない (リリース前のためマイグレーションは不要)。localStorage に旧 `'system'` が残っている場合は Zustand の shallow merge により `DEFAULT_STATE.theme` で上書きされる。
 
 ```typescript
 type Theme = 'light' | 'dark';
@@ -200,16 +200,7 @@ export const useUiStore = create<UiState & UiActions>()(
       }),
       {
         name: 'ui-settings',
-        version: 2,
-        migrate: (persisted, version) => {
-          if (version < 2) {
-            const state = persisted as Record<string, unknown>;
-            if (state.theme === 'system') {
-              state.theme = getSystemTheme();
-            }
-          }
-          return persisted as UiState & UiActions;
-        },
+        version: 1,
       }
     )
   )
@@ -302,7 +293,6 @@ Phase 3 でルーティング導入時に `WelcomePage` を適切なページに
 | `ui.test.ts` | デフォルト theme が `'light'` または `'dark'` (system 非存在) |
 | `ui.test.ts` | `setTheme('dark')` / `setTheme('light')` の動作 |
 | `ui.test.ts` | `reset()` 後の theme がブラウザ設定に基づく値 |
-| `ui.test.ts` | v1 → v2 マイグレーション (`'system'` → 解決値) |
 
 ### 5.2 コンポーネントテスト
 
@@ -321,7 +311,7 @@ Phase 3 でルーティング導入時に `WelcomePage` を適切なページに
 - [ ] `dev-journal.md` 内の自己参照リンクを更新
 - [ ] `src/components/layout/language-toggle.tsx`: `toUpperCase()` 除去
 - [ ] `src/test/components/layout/language-toggle.test.tsx`: 期待値を小文字に更新
-- [ ] `src/stores/settings/ui.ts`: `Theme` 型を 2 値化、マイグレーション追加
+- [ ] `src/stores/settings/ui.ts`: `Theme` 型を 2 値化 (version 変更なし)
 - [ ] `src/components/layout/theme-toggle.tsx`: 2 状態トグルに変更
 - [ ] `src/main.tsx`: `resolveTheme` 削除、OS リスナー削除
 - [ ] `src/test/unit/stores/ui.test.ts`: テスト更新
