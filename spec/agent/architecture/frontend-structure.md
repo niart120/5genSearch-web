@@ -17,23 +17,14 @@
 ```
 src/
 ├── main.tsx                # エントリポイント
-├── App.tsx                 # ルートコンポーネント
+├── app.tsx                 # ルートコンポーネント
 ├── index.css               # グローバルスタイル
 │
 ├── components/             # 共通UIコンポーネント (Radix UI ベース)
 │   ├── ui/                 # 汎用部品 (Button, Input, Select など)
 │   ├── layout/             # レイアウト部品 (Header, Footer, Container)
 │   ├── forms/              # フォーム入力部品 (IvInput, DateRangePicker など)
-│   └── data-display/       # データ表示部品 (ResultTable, ResultCard など)
-│
-├── features/               # 機能単位モジュール
-│   ├── datetime-search/    # 起動時刻検索
-│   ├── pokemon-list/       # 個体生成リスト
-│   ├── egg-search/         # 孵化検索
-│   ├── needle-search/      # 針検索
-│   ├── mtseed-search/      # 初期Seed検索
-│   ├── trainer-search/     # トレーナーID検索
-│   └── settings/           # DS設定・共通設定
+│   ├── data-display/       # データ表示部品 (DataTable, ResultCardList など)
 │
 ├── workers/                # Web Worker エントリポイント
 │   ├── search.worker.ts    # CPU 検索用 Worker
@@ -65,23 +56,26 @@ src/
 │   ├── use-ds-config.ts    # DS設定フック
 │   ├── use-trainer.ts      # トレーナー情報フック
 │   ├── use-ui-settings.ts  # UI設定フック
-│   └── use-search-results.ts # 検索結果フック
-│
-├── io/                     # 入出力処理
-│   ├── export-csv.ts       # CSV エクスポート
-│   ├── export-json.ts      # JSON エクスポート
-│   └── clipboard.ts        # クリップボード操作
+│   ├── use-search-results.ts # 検索結果フック
+│   └── use-media-query.ts  # メディアクエリ
 │
 ├── i18n/                   # 国際化
 │   ├── index.ts            # i18n 設定
-│   ├── ja.ts               # 日本語リソース
-│   └── en.ts               # 英語リソース
+│   └── locales/            # Lingui カタログ
+│       ├── ja/             # 日本語
+│       │   ├── messages.po
+│       │   └── messages.ts
+│       └── en/             # 英語
+│           ├── messages.po
+│           └── messages.ts
 │
-├── validation/             # バリデーション (必要に応じて)
-│   └── index.ts            # 共通バリデーションルール
+├── test/                   # テスト
+│   ├── unit/
+│   ├── integration/
+│   └── components/
 │
-└── assets/                 # 静的リソース
-    └── ...
+├── wasm/                   # WASM バインディング
+└── workers/                # Web Worker エントリポイント
 ```
 
 ## モジュール責務
@@ -92,16 +86,15 @@ src/
 | `components/ui/` | 最小単位の汎用部品 (Button, Input, Select, Checkbox など) |
 | `components/layout/` | ページレイアウト部品 (Header, Sidebar, Container など) |
 | `components/forms/` | フォーム入力に特化した部品 (IvRangeInput, DateRangePicker など) |
-| `components/data-display/` | データ表示に特化した部品 (ResultTable, ResultCard, ProgressBar など) |
-| `features/` | 機能単位のまとまり。機能固有の UI + ロジックを内包 |
+| `components/data-display/` | データ表示に特化した部品 (DataTable, ResultCardList, SearchProgress など) |
 | `workers/` | Web Worker エントリポイント。WASM 呼び出しを担当 (CPU/GPU 別) |
 | `services/` | 機能横断のインフラサービス (Worker 管理、進捗管理、タスク生成など) |
 | `stores/` | 状態管理。永続化対象の設定を含む |
 | `hooks/` | React カスタムフック |
-| `io/` | 入出力処理 (エクスポート、クリップボード操作) |
 | `lib/` | ユーティリティ関数 (`cn()` など) |
 | `i18n/` | 国際化リソースと設定 |
-| `validation/` | 共通バリデーションルール (必要に応じて) |
+| `test/` | テスト (unit / integration / components) |
+| `wasm/` | WASM バインディング |
 
 ### features/ と services/ の役割分担
 
@@ -114,7 +107,7 @@ src/
 
 ## features/ 内部構成
 
-各機能ディレクトリは以下の構成を持つ：
+Phase 3 で `features/` を追加予定。追加時の構成は以下を基準とする：
 
 ```
 features/{feature-name}/
@@ -137,15 +130,11 @@ stores/
   │           ↑
   │           └── workers/
   │
-  ├── io/
-  │
-  ├── validation/
-  │
   ├── components/
   │     ↑
   │     └── features/
   │           ↑
-  │           └── App.tsx
+  │           └── app.tsx
   │
   └── i18n/
 ```

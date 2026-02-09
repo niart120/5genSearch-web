@@ -107,26 +107,32 @@ Phase 4: 仕上げ
 
 ### 4.1 UI 部品
 
-| コンポーネント | ベース | 備考 |
-|--------------|-------|------|
-| Button | Radix UI | バリアント対応 |
-| Input | Radix UI | 数値/テキスト |
-| Select | Radix UI | 単一/複数選択 |
-| Checkbox | Radix UI | |
-| Tabs | Radix UI | 機能切り替え |
-| Dialog | Radix UI | モーダル |
-| Toast | Radix UI | 通知 |
+| コンポーネント | ベース | 状態 | 備考 |
+|--------------|-------|------|------|
+| Button | Radix UI | ✅ | バリアント対応 |
+| Input | Radix UI | ✅ | 数値/テキスト |
+| Select | Radix UI | ✅ | 単一/複数選択 |
+| Checkbox | Radix UI | ✅ | |
+| Tabs | Radix UI | ✅ | 機能切り替え |
+| Dialog | Radix UI | ✅ | モーダル |
+| Badge | Radix UI | ✅ | 状態表示 |
+| Label | Radix UI | ✅ | フォームラベル |
+| Progress | Radix UI | ✅ | 進捗バー |
+| Sheet | Radix UI | ✅ | モバイル Sidebar |
+| Table | Radix UI | ✅ | テーブルベース |
+| Toast | Radix UI | 未着手 | 通知 (仕様未確定) |
 
 ### 4.2 フォーム部品
 
-| コンポーネント | 説明 |
-|--------------|------|
-| IvRangeInput | IV 範囲入力 (6ステータス) |
-| DateRangePicker | 日付範囲選択 |
-| TimeRangePicker | 時刻範囲選択 |
-| MacAddressInput | MAC アドレス入力 |
-| NatureSelect | 性格選択 (複数可) |
-| HiddenPowerSelect | めざパタイプ選択 |
+| コンポーネント | 説明 | 状態 |
+|--------------|------|------|
+| IvRangeInput | IV 範囲入力 (6ステータス) | ✅ |
+| DateRangePicker | 日付範囲選択 | ✅ |
+| TimeRangePicker | 時刻範囲選択 | ✅ |
+| MacAddressInput | MAC アドレス入力 | ✅ |
+| NatureSelect | 性格選択 (複数可) | ✅ |
+| HiddenPowerSelect | めざパタイプ選択 | ✅ |
+| Timer0VCountRangeInput | Timer0/VCount 範囲入力 | ✅ |
 
 ### 4.3 レイアウト部品
 
@@ -134,16 +140,16 @@ Phase 4: 仕上げ
 |--------------|------|------|
 | Header | アプリヘッダー | ✅ |
 | ThemeToggle | テーマ切替ボタン | ✅ |
-| Sidebar | 設定サイドバー (PC) | 未着手 |
-| ResponsiveContainer | レスポンシブレイアウト | 未着手 |
+| Sidebar | 設定サイドバー (PC) | ✅ |
+| ResponsiveContainer | レスポンシブレイアウト | ✅ |
 
 ### 4.4 データ表示部品
 
-| コンポーネント | 説明 |
-|--------------|------|
-| ResultTable | PC 向けテーブル表示 |
-| ResultCard | モバイル向けカード表示 |
-| ProgressBar | 進捗バー |
+| コンポーネント | 説明 | 状態 |
+|--------------|------|------|
+| DataTable | 仮想スクロール付きテーブル表示 | ✅ |
+| ResultCardList | モバイル向けカード表示 | ✅ |
+| SearchProgress | 進捗バー + 統計表示 | ✅ |
 
 ## 5. Phase 3: 機能実装
 

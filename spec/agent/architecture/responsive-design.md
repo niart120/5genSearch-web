@@ -99,22 +99,41 @@ Tailwind のデフォルトブレークポイントを使用：
 ### 5.1 レスポンシブ Container パターン
 
 ```tsx
-// components/layout/ResponsiveContainer.tsx
+// components/layout/responsive-container.tsx
 interface ResponsiveContainerProps {
-  sidebar?: ReactNode;
-  main: ReactNode;
+  sidebarContent?: ReactNode;
+  sidebarOpen: boolean;
+  onSidebarOpenChange: (open: boolean) => void;
+  children: ReactNode;
 }
 
-function ResponsiveContainer({ sidebar, main }: ResponsiveContainerProps) {
+function ResponsiveContainer({
+  sidebarContent,
+  sidebarOpen,
+  onSidebarOpenChange,
+  children,
+}: ResponsiveContainerProps) {
   return (
-    <div className="flex flex-col lg:flex-row">
-      {/* モバイル: 非表示 or アコーディオン */}
-      {sidebar && (
-        <aside className="hidden lg:block lg:w-64 lg:shrink-0">
-          {sidebar}
+    <div className="mx-auto flex max-w-screen-xl flex-1 overflow-hidden">
+      {/* PC: 固定 Sidebar */}
+      {sidebarContent && (
+        <aside className="hidden w-64 shrink-0 border-r border-border lg:block">
+          <Sidebar>{sidebarContent}</Sidebar>
         </aside>
       )}
-      <main className="flex-1">{main}</main>
+
+      {/* モバイル: Sheet Sidebar */}
+      {sidebarContent && (
+        <Sheet open={sidebarOpen} onOpenChange={onSidebarOpenChange}>
+          <SheetContent side="left" className="w-4/5 max-w-xs p-0">
+            <Sidebar>{sidebarContent}</Sidebar>
+          </SheetContent>
+        </Sheet>
+      )}
+
+      <main className="flex-1 overflow-y-auto">
+        <div className="px-4 py-4 lg:px-6">{children}</div>
+      </main>
     </div>
   );
 }
