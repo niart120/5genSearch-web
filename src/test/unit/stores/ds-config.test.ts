@@ -90,4 +90,104 @@ describe('ds-config store', () => {
     expect(gameStart.save_state).toBe('WithSave');
     expect(gameStart.shiny_charm).toBe(false);
   });
+
+  it('should have timer0Auto default to true', () => {
+    const { timer0Auto } = useDsConfigStore.getState();
+    expect(timer0Auto).toBe(true);
+  });
+
+  it('should update timer0Auto via setTimer0Auto', () => {
+    useDsConfigStore.getState().setTimer0Auto(false);
+    expect(useDsConfigStore.getState().timer0Auto).toBe(false);
+    useDsConfigStore.getState().setTimer0Auto(true);
+    expect(useDsConfigStore.getState().timer0Auto).toBe(true);
+  });
+
+  it('should have DEFAULT_RANGES with VCount 0x60 (DsLite/Black/Jpn)', () => {
+    const { ranges } = useDsConfigStore.getState();
+    expect(ranges[0].vcount_min).toBe(0x60);
+    expect(ranges[0].vcount_max).toBe(0x60);
+  });
+
+  it('should reset save_state from WithMemoryLink to WithSave on BW2→BW switch', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    useDsConfigStore.getState().setGameStart({ save_state: 'WithMemoryLink' });
+    useDsConfigStore.getState().setConfig({ version: 'Black' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save_state).toBe('WithSave');
+  });
+
+  it('should reset shiny_charm to false on BW2→BW switch', () => {
+    useDsConfigStore.getState().setConfig({ version: 'White2' });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: true });
+    useDsConfigStore.getState().setConfig({ version: 'White' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.shiny_charm).toBe(false);
+  });
+
+  it('should not reset gameStart on BW→BW2 switch', () => {
+    useDsConfigStore.getState().setGameStart({ shiny_charm: false, save_state: 'WithSave' });
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save_state).toBe('WithSave');
+  });
+
+  it('should keep save_state if not WithMemoryLink on BW2→BW switch', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    useDsConfigStore.getState().setGameStart({ save_state: 'WithSave', shiny_charm: true });
+    useDsConfigStore.getState().setConfig({ version: 'Black' });
+    const { gameStart } = useDsConfigStore.getState();
+    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.shiny_charm).toBe(false);
+  });
+
+  describe('auto-lookup on setConfig', () => {
+    it('should auto-update ranges when timer0Auto=true and version changes', () => {
+      // 初期: DsLite/Black/Jpn → ranges は DEFAULT_RANGES (0x0C79-0x0C7A)
+      const result = useDsConfigStore.getState().setConfig({ version: 'White' });
+      expect(result).toBeUndefined();
+      const { ranges } = useDsConfigStore.getState();
+      // DsLite/White/Jpn → 0x0C67-0x0C69
+      expect(ranges[0].timer0_min).toBe(0x0c_67);
+      expect(ranges[0].timer0_max).toBe(0x0c_69);
+    });
+
+    it('should auto-update ranges when timer0Auto=true and hardware changes', () => {
+      const result = useDsConfigStore.getState().setConfig({ hardware: 'Dsi' });
+      expect(result).toBeUndefined();
+      const { ranges } = useDsConfigStore.getState();
+      // Dsi/Black/Jpn → 0x1237-0x1238
+      expect(ranges[0].timer0_min).toBe(0x12_37);
+    });
+
+    it('should auto-update ranges when timer0Auto=true and region changes', () => {
+      const result = useDsConfigStore.getState().setConfig({ region: 'Usa' });
+      expect(result).toBeUndefined();
+      const { ranges } = useDsConfigStore.getState();
+      // DsLite/Black/Usa → 0x0C7B-0x0C7C
+      expect(ranges[0].timer0_min).toBe(0x0c_7b);
+    });
+
+    it('should fallback to manual when auto-lookup fails', () => {
+      // DSi + Usa は未収集
+      const result = useDsConfigStore.getState().setConfig({ hardware: 'Dsi', region: 'Usa' });
+      expect(result).toBe('auto-fallback');
+      expect(useDsConfigStore.getState().timer0Auto).toBe(false);
+    });
+
+    it('should not auto-update ranges when timer0Auto=false', () => {
+      useDsConfigStore.getState().setTimer0Auto(false);
+      const rangesBefore = useDsConfigStore.getState().ranges;
+      useDsConfigStore.getState().setConfig({ version: 'White' });
+      const rangesAfter = useDsConfigStore.getState().ranges;
+      expect(rangesAfter).toEqual(rangesBefore);
+    });
+
+    it('should not auto-update ranges when only mac changes', () => {
+      const rangesBefore = useDsConfigStore.getState().ranges;
+      useDsConfigStore.getState().setConfig({ mac: [1, 2, 3, 4, 5, 6] });
+      const rangesAfter = useDsConfigStore.getState().ranges;
+      expect(rangesAfter).toEqual(rangesBefore);
+    });
+  });
 });

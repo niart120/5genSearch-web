@@ -7,7 +7,7 @@ interface ResponsiveContainerProps {
   sidebarContent?: ReactNode;
   sidebarOpen: boolean;
   onSidebarOpenChange: (open: boolean) => void;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 function ResponsiveContainer({

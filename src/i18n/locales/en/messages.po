@@ -23,14 +23,28 @@ msgstr "{0} selected"
 msgid "5genSearch"
 msgstr ""
 
+#: src/features/ds-config/components/timer0-vcount-section.tsx:23
+#: src/features/ds-config/components/timer0-vcount-section.tsx:26
+msgid "Auto"
+msgstr "Auto"
+
 #: src/components/forms/hidden-power-select.tsx:69
 #: src/components/forms/nature-select.tsx:69
 msgid "Deselect all"
 msgstr "Deselect all"
 
+#: src/components/data-display/search-progress.tsx:47
+msgid "Elapsed"
+msgstr "Elapsed"
+
 #: src/components/forms/date-range-picker.tsx:130
 msgid "End date"
 msgstr "End date"
+
+#: src/features/ds-config/components/ds-config-form.tsx:100
+#: src/features/ds-config/components/ds-config-form.tsx:103
+msgid "Hardware"
+msgstr "Hardware"
 
 #: src/components/forms/hidden-power-select.tsx:48
 msgid "Hidden Power"
@@ -39,6 +53,10 @@ msgstr "Hidden Power"
 #: src/components/forms/time-range-picker.tsx:97
 msgid "Hour"
 msgstr "Hour"
+
+#: src/features/ds-config/components/ds-config-form.tsx:119
+msgid "MAC address"
+msgstr "MAC address"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:89
 #: src/components/forms/timer0-vcount-range-input.tsx:129
@@ -58,10 +76,32 @@ msgstr "Minute"
 msgid "Nature"
 msgstr "Nature"
 
+#: src/features/ds-config/components/ds-config-form.tsx:38
+msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
+msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
+
+#: src/components/data-display/empty-state.tsx:11
+msgid "No results"
+msgstr "No results"
+
 #: src/components/forms/hidden-power-select.tsx:37
 #: src/components/forms/nature-select.tsx:37
 msgid "Not specified"
 msgstr "Not specified"
+
+#: src/features/ds-config/components/ds-config-form.tsx:81
+#: src/features/ds-config/components/ds-config-form.tsx:84
+msgid "Region"
+msgstr "Region"
+
+#: src/components/data-display/search-progress.tsx:50
+msgid "Remaining"
+msgstr "Remaining"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:57
+#: src/features/ds-config/components/game-start-config-form.tsx:63
+msgid "Save state"
+msgstr "Save state"
 
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"
@@ -77,9 +117,19 @@ msgstr "Select all"
 msgid "Settings"
 msgstr "Settings"
 
+#: src/features/ds-config/components/game-start-config-form.tsx:92
+#: src/features/ds-config/components/game-start-config-form.tsx:95
+msgid "Shiny Charm"
+msgstr "Shiny Charm"
+
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
 msgstr "Start date"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:35
+#: src/features/ds-config/components/game-start-config-form.tsx:41
+msgid "Start mode"
+msgstr "Start mode"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:100
 msgid "Timer0 max"
@@ -100,3 +150,8 @@ msgstr "VCount max"
 #: src/components/forms/timer0-vcount-range-input.tsx:123
 msgid "VCount min"
 msgstr "VCount min"
+
+#: src/features/ds-config/components/ds-config-form.tsx:62
+#: src/features/ds-config/components/ds-config-form.tsx:65
+msgid "Version"
+msgstr "Version"

@@ -200,19 +200,19 @@
   --tw-enter-translate-x: 0.5rem;
 }
 
-@utility slide-in-from-top-\[48\%\] {
+@utility slide-in-top-48 {
   --tw-enter-translate-y: -48%;
 }
 
-@utility slide-in-from-left-1\/2 {
+@utility slide-in-left-half {
   --tw-enter-translate-x: -50%;
 }
 
-@utility slide-out-to-top-\[48\%\] {
+@utility slide-out-top-48 {
   --tw-exit-translate-y: -48%;
 }
 
-@utility slide-out-to-left-1\/2 {
+@utility slide-out-left-half {
   --tw-exit-translate-x: -50%;
 }
 
