@@ -10,7 +10,7 @@ applyTo: spec/agent/notes/**
 
 ## ファイル配置
 
-- `spec/agent/notes/design-notes.md` に時系列で追記する
+- `spec/agent/notes/dev-journal.md` に時系列で追記する
 - テーマが大きくなった場合は別途仕様書として再構築する (例: `spec/agent/wip/STATE_MANAGEMENT.md`) 
 
 ## エントリ形式

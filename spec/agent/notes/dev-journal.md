@@ -1,11 +1,11 @@
-# 設計メモ (Design Notes)
+# 開発ジャーナル (Dev Journal)
 
 実装中に生じた設計上の気づき・疑問・将来検討事項を蓄積する。
 
 ---
 
 ## 2026-02-09: `design-notes.md` のリネーム
-[spec/agent/notes/design-notes.md](./design-notes.md) が既存のアーキテクチャドキュメントである[spec/agent/architecture/design-system.md](../architecture/design-system.md) と類似した名称を持っており混乱を招く恐れがある
+`spec/agent/notes/design-notes.md` が既存のアーキテクチャドキュメントである[spec/agent/architecture/design-system.md](../architecture/design-system.md) と類似した名称を持っており混乱を招く恐れがある
 英名・日本語名をより分かりやすい名称にリネームする。
 
 ## 2026-02-09: 言語切り替えボタンの表記

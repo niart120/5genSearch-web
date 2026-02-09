@@ -1,7 +1,7 @@
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { useUiSettings } from '@/hooks/use-ui-settings';
 
-const THEME_CYCLE = ['light', 'dark', 'system'] as const;
+const THEME_CYCLE = ['light', 'dark'] as const;
 
 function ThemeToggle() {
   const { theme, setTheme } = useUiSettings();
@@ -12,7 +12,7 @@ function ThemeToggle() {
     setTheme(THEME_CYCLE[nextIndex]);
   };
 
-  const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
+  const Icon = theme === 'dark' ? Moon : Sun;
 
   return (
     <button

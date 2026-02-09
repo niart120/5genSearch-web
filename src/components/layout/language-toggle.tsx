@@ -23,7 +23,7 @@ function LanguageToggle() {
       )}
       aria-label={`Switch language to ${language === 'ja' ? 'English' : '日本語'}`}
     >
-      {language.toUpperCase()}
+      {language}
     </button>
   );
 }

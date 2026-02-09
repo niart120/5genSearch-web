@@ -20,6 +20,7 @@ msgid "{0} selected"
 msgstr "{0}件選択中"
 
 #: src/components/layout/header.tsx:25
+#: src/components/layout/welcome-page.tsx:8
 msgid "5genSearch"
 msgstr "5genSearch"
 
@@ -41,8 +42,8 @@ msgstr "経過"
 msgid "End date"
 msgstr "終了日"
 
-#: src/features/ds-config/components/ds-config-form.tsx:100
-#: src/features/ds-config/components/ds-config-form.tsx:103
+#: src/features/ds-config/components/ds-config-form.tsx:99
+#: src/features/ds-config/components/ds-config-form.tsx:102
 msgid "Hardware"
 msgstr "ハードウェア"
 
@@ -54,7 +55,7 @@ msgstr "めざパ"
 msgid "Hour"
 msgstr "時"
 
-#: src/features/ds-config/components/ds-config-form.tsx:119
+#: src/features/ds-config/components/ds-config-form.tsx:118
 msgid "MAC address"
 msgstr "MACアドレス"
 
@@ -76,7 +77,7 @@ msgstr "分"
 msgid "Nature"
 msgstr "性格"
 
-#: src/features/ds-config/components/ds-config-form.tsx:38
+#: src/features/ds-config/components/ds-config-form.tsx:39
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "この組み合わせのデフォルトTimer0/VCountデータがありません。手動モードに切り替えました。"
 
@@ -89,8 +90,12 @@ msgstr "結果なし"
 msgid "Not specified"
 msgstr "指定なし"
 
-#: src/features/ds-config/components/ds-config-form.tsx:81
-#: src/features/ds-config/components/ds-config-form.tsx:84
+#: src/components/layout/welcome-page.tsx:11
+msgid "Pokemon BW/BW2 RNG seed search tool."
+msgstr "ポケモンBW/BW2 乱数調整ツール"
+
+#: src/features/ds-config/components/ds-config-form.tsx:80
+#: src/features/ds-config/components/ds-config-form.tsx:83
 msgid "Region"
 msgstr "リージョン"
 
@@ -117,8 +122,8 @@ msgstr "全選択"
 msgid "Settings"
 msgstr "設定"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:92
-#: src/features/ds-config/components/game-start-config-form.tsx:95
+#: src/features/ds-config/components/game-start-config-form.tsx:90
+#: src/features/ds-config/components/game-start-config-form.tsx:93
 msgid "Shiny Charm"
 msgstr "ひかるおまもり"
 
@@ -130,6 +135,10 @@ msgstr "開始日"
 #: src/features/ds-config/components/game-start-config-form.tsx:41
 msgid "Start mode"
 msgstr "起動モード"
+
+#: src/components/layout/welcome-page.tsx:14
+msgid "Tap the menu icon at the top left to configure search settings."
+msgstr "左上のメニューアイコンから検索設定を行えます。"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:100
 msgid "Timer0 max"
@@ -151,7 +160,7 @@ msgstr "VCount max"
 msgid "VCount min"
 msgstr "VCount min"
 
-#: src/features/ds-config/components/ds-config-form.tsx:62
-#: src/features/ds-config/components/ds-config-form.tsx:65
+#: src/features/ds-config/components/ds-config-form.tsx:61
+#: src/features/ds-config/components/ds-config-form.tsx:64
 msgid "Version"
 msgstr "バージョン"
