@@ -220,7 +220,12 @@ describe('EggDatetimeSearcher', () => {
         },
         gen_config: {
           version: 'Black',
-          game_start: { start_mode: 'Continue', save_state: 'WithSave', shiny_charm: false },
+          game_start: {
+            start_mode: 'Continue',
+            save: 'WithSave',
+            memory_link: 'Disabled',
+            shiny_charm: 'NotObtained',
+          },
           user_offset: 0,
           max_advance: 10,
         },
@@ -265,7 +270,12 @@ describe('TrainerInfoSearcher', () => {
         time_range: createTestTimeRange(0, 0, 0, 0),
         search_range: createTestSearchRange(2023, 1, 1, 60),
         condition: createTestStartupCondition(),
-        game_start: { start_mode: 'Continue', save_state: 'WithSave', shiny_charm: false },
+        game_start: {
+          start_mode: 'Continue',
+          save: 'WithSave',
+          memory_link: 'Disabled',
+          shiny_charm: 'NotObtained',
+        },
       },
     };
 
@@ -281,7 +291,12 @@ describe('TrainerInfoSearcher', () => {
         time_range: createTestTimeRange(0, 0, 0, 0),
         search_range: createTestSearchRange(2023, 1, 1, 60),
         condition: createTestStartupCondition(),
-        game_start: { start_mode: 'NewGame', save_state: 'NoSave', shiny_charm: false },
+        game_start: {
+          start_mode: 'NewGame',
+          save: 'NoSave',
+          memory_link: 'Disabled',
+          shiny_charm: 'NotObtained',
+        },
       },
     };
 

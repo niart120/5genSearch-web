@@ -40,8 +40,9 @@ const DEFAULT_RANGES: Timer0VCountRange[] = [
 
 const DEFAULT_GAME_START: GameStartConfig = {
   start_mode: 'Continue',
-  save_state: 'WithSave',
-  shiny_charm: false,
+  save: 'WithSave',
+  memory_link: 'Disabled',
+  shiny_charm: 'NotObtained',
 };
 
 const DEFAULT_STATE: DsConfigState = {
@@ -70,11 +71,8 @@ export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
           prevIsBw2 && !nextIsBw2
             ? {
                 ...state.gameStart,
-                save_state:
-                  state.gameStart.save_state === 'WithMemoryLink'
-                    ? ('WithSave' as const)
-                    : state.gameStart.save_state,
-                shiny_charm: false,
+                memory_link: 'Disabled' as const,
+                shiny_charm: 'NotObtained' as const,
               }
             : state.gameStart;
 

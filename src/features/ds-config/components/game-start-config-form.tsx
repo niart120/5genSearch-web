@@ -1,6 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
-import { useUiStore } from '@/stores/settings/ui';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -10,13 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  START_MODE_ORDER,
-  getStartModeName,
-  SAVE_STATE_ORDER,
-  getSaveStateName,
-} from '@/lib/game-data-names';
-import type { StartMode, SaveState } from '@/wasm/wasm_pkg';
+import { START_MODE_ORDER, getStartModeName } from '@/lib/game-data-names';
+import { useUiStore } from '@/stores/settings/ui';
+import type { StartMode } from '@/wasm/wasm_pkg';
 
 function GameStartConfigForm() {
   const { t } = useLingui();
@@ -51,41 +46,53 @@ function GameStartConfigForm() {
         </Select>
       </div>
 
-      {/* SaveState */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">
-          <Trans>Save state</Trans>
+      {/* Save presence */}
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="save-presence"
+          checked={gameStart.save === 'WithSave'}
+          onCheckedChange={(checked) =>
+            setGameStart({
+              save: checked ? 'WithSave' : 'NoSave',
+              ...(checked ? {} : { memory_link: 'Disabled' as const }),
+            })
+          }
+          disabled={gameStart.start_mode === 'Continue'}
+          aria-label={t`Save file`}
+        />
+        <Label htmlFor="save-presence" className="text-xs">
+          <Trans>Save file</Trans>
         </Label>
-        <Select
-          value={gameStart.save_state}
-          onValueChange={(v: SaveState) => setGameStart({ save_state: v })}
-        >
-          <SelectTrigger aria-label={t`Save state`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SAVE_STATE_ORDER.map((s) => (
-              <SelectItem
-                key={s}
-                value={s}
-                disabled={
-                  (s === 'WithMemoryLink' && !isBw2) ||
-                  (s === 'NoSave' && gameStart.start_mode === 'Continue')
-                }
-              >
-                {getSaveStateName(s, language)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Shiny Charm */}
+      {/* Memory Link (BW2 only) */}
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="memory-link"
+          checked={gameStart.memory_link === 'Enabled'}
+          onCheckedChange={(checked) =>
+            setGameStart({
+              memory_link: checked ? 'Enabled' : 'Disabled',
+            })
+          }
+          disabled={!isBw2 || gameStart.save === 'NoSave'}
+          aria-label={t`Memory Link`}
+        />
+        <Label htmlFor="memory-link" className="text-xs">
+          <Trans>Memory Link</Trans>
+        </Label>
+      </div>
+
+      {/* Shiny Charm (BW2 only) */}
       <div className="flex items-center gap-2">
         <Checkbox
           id="shiny-charm"
-          checked={gameStart.shiny_charm}
-          onCheckedChange={(checked) => setGameStart({ shiny_charm: checked === true })}
+          checked={gameStart.shiny_charm === 'Obtained'}
+          onCheckedChange={(checked) =>
+            setGameStart({
+              shiny_charm: checked ? 'Obtained' : 'NotObtained',
+            })
+          }
           disabled={!isBw2}
           aria-label={t`Shiny Charm`}
         />

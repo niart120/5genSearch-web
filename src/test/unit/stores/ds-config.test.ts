@@ -70,25 +70,27 @@ describe('ds-config store', () => {
   it('should have default gameStart', () => {
     const { gameStart } = useDsConfigStore.getState();
     expect(gameStart.start_mode).toBe('Continue');
-    expect(gameStart.save_state).toBe('WithSave');
-    expect(gameStart.shiny_charm).toBe(false);
+    expect(gameStart.save).toBe('WithSave');
+    expect(gameStart.memory_link).toBe('Disabled');
+    expect(gameStart.shiny_charm).toBe('NotObtained');
   });
 
   it('should partially update gameStart via setGameStart', () => {
-    useDsConfigStore.getState().setGameStart({ shiny_charm: true });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: 'Obtained' });
     const { gameStart } = useDsConfigStore.getState();
-    expect(gameStart.shiny_charm).toBe(true);
+    expect(gameStart.shiny_charm).toBe('Obtained');
     expect(gameStart.start_mode).toBe('Continue');
-    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.save).toBe('WithSave');
   });
 
   it('should reset gameStart to default', () => {
-    useDsConfigStore.getState().setGameStart({ shiny_charm: true, start_mode: 'NewGame' });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: 'Obtained', start_mode: 'NewGame' });
     useDsConfigStore.getState().reset();
     const { gameStart } = useDsConfigStore.getState();
     expect(gameStart.start_mode).toBe('Continue');
-    expect(gameStart.save_state).toBe('WithSave');
-    expect(gameStart.shiny_charm).toBe(false);
+    expect(gameStart.save).toBe('WithSave');
+    expect(gameStart.memory_link).toBe('Disabled');
+    expect(gameStart.shiny_charm).toBe('NotObtained');
   });
 
   it('should have timer0Auto default to true', () => {
@@ -109,36 +111,36 @@ describe('ds-config store', () => {
     expect(ranges[0].vcount_max).toBe(0x60);
   });
 
-  it('should reset save_state from WithMemoryLink to WithSave on BW2→BW switch', () => {
+  it('should reset memory_link to Disabled on BW2→BW switch', () => {
     useDsConfigStore.getState().setConfig({ version: 'Black2' });
-    useDsConfigStore.getState().setGameStart({ save_state: 'WithMemoryLink' });
+    useDsConfigStore.getState().setGameStart({ memory_link: 'Enabled' });
     useDsConfigStore.getState().setConfig({ version: 'Black' });
     const { gameStart } = useDsConfigStore.getState();
-    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.memory_link).toBe('Disabled');
   });
 
-  it('should reset shiny_charm to false on BW2→BW switch', () => {
+  it('should reset shiny_charm to NotObtained on BW2→BW switch', () => {
     useDsConfigStore.getState().setConfig({ version: 'White2' });
-    useDsConfigStore.getState().setGameStart({ shiny_charm: true });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: 'Obtained' });
     useDsConfigStore.getState().setConfig({ version: 'White' });
     const { gameStart } = useDsConfigStore.getState();
-    expect(gameStart.shiny_charm).toBe(false);
+    expect(gameStart.shiny_charm).toBe('NotObtained');
   });
 
   it('should not reset gameStart on BW→BW2 switch', () => {
-    useDsConfigStore.getState().setGameStart({ shiny_charm: false, save_state: 'WithSave' });
+    useDsConfigStore.getState().setGameStart({ shiny_charm: 'NotObtained', save: 'WithSave' });
     useDsConfigStore.getState().setConfig({ version: 'Black2' });
     const { gameStart } = useDsConfigStore.getState();
-    expect(gameStart.save_state).toBe('WithSave');
+    expect(gameStart.save).toBe('WithSave');
   });
 
-  it('should keep save_state if not WithMemoryLink on BW2→BW switch', () => {
+  it('should preserve save on BW2→BW switch', () => {
     useDsConfigStore.getState().setConfig({ version: 'Black2' });
-    useDsConfigStore.getState().setGameStart({ save_state: 'WithSave', shiny_charm: true });
+    useDsConfigStore.getState().setGameStart({ save: 'WithSave', shiny_charm: 'Obtained' });
     useDsConfigStore.getState().setConfig({ version: 'Black' });
     const { gameStart } = useDsConfigStore.getState();
-    expect(gameStart.save_state).toBe('WithSave');
-    expect(gameStart.shiny_charm).toBe(false);
+    expect(gameStart.save).toBe('WithSave');
+    expect(gameStart.shiny_charm).toBe('NotObtained');
   });
 
   describe('auto-lookup on setConfig', () => {
