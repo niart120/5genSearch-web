@@ -21,6 +21,8 @@
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -49,6 +51,9 @@
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
+
+    --success: 142 72% 29%;
+    --warning: 38 92% 50%;
 
     --border: 30 8% 82%;
     --input: 30 8% 82%;
@@ -80,6 +85,9 @@
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
+
+    --success: 142 72% 45%;
+    --warning: 38 92% 55%;
 
     --border: 215 15% 20%;
     --input: 215 15% 20%;
@@ -206,4 +214,12 @@
 
 @utility slide-out-to-left-1\/2 {
   --tw-exit-translate-x: -50%;
+}
+
+@utility slide-out-to-right-2 {
+  --tw-exit-translate-x: 0.5rem;
+}
+
+@utility slide-out-to-bottom-2 {
+  --tw-exit-translate-y: 0.5rem;
 }

@@ -355,10 +355,10 @@ export type { ToastData, ToastOptions, ToastVariant };
 
 ## 6. 実装チェックリスト
 
-- [ ] `@radix-ui/react-toast` パッケージの追加
-- [ ] `src/components/ui/toast.tsx` の実装 (Toast Store + UI + toast 関数)
-- [ ] ステータスカラー用の CSS カスタムプロパティ追加 (`--success`, `--warning` ボーダー色)
-- [ ] `src/app.tsx` に `<Toaster />` 配置
-- [ ] コンポーネントテスト作成・通過
-- [ ] i18n 対応 (Toast メッセージは呼び出し側で `t` マクロを使用)
-- [ ] `implementation-roadmap.md` の Toast 行を ✅ に更新
+- [x] `@radix-ui/react-toast` パッケージの追加
+- [x] `src/components/ui/toast.tsx` の実装 (Toast Store + UI + toast 関数)
+- [x] ステータスカラー用の CSS カスタムプロパティ追加 (`--success`, `--warning` ボーダー色)
+- [x] `src/app.tsx` に `<Toaster />` 配置
+- [x] コンポーネントテスト作成・通過
+- [x] i18n 対応 (Toast メッセージは呼び出し側で `t` マクロを使用)
+- [x] `implementation-roadmap.md` の Toast 行を ✅ に更新
