@@ -95,16 +95,34 @@ pub enum StartMode {
     Continue,
 }
 
-/// セーブ状態
+/// セーブデータの有無
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum SaveState {
+pub enum SavePresence {
     /// セーブデータなし
     NoSave,
     /// セーブデータあり
     WithSave,
-    /// セーブ + 思い出リンク済み (BW2 のみ)
-    WithMemoryLink,
+}
+
+/// 思い出リンクの状態 (BW2 のみ有効)
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum MemoryLinkState {
+    /// 思い出リンクなし
+    Disabled,
+    /// 思い出リンクあり
+    Enabled,
+}
+
+/// ひかるおまもりの所持状態 (BW2 のみ有効)
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum ShinyCharmState {
+    /// 未所持
+    NotObtained,
+    /// 所持
+    Obtained,
 }
 
 /// 起動設定
@@ -112,9 +130,9 @@ pub enum SaveState {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct GameStartConfig {
     pub start_mode: StartMode,
-    pub save_state: SaveState,
-    /// ひかるおまもり所持 (BW2 のみ有効)
-    pub shiny_charm: bool,
+    pub save: SavePresence,
+    pub memory_link: MemoryLinkState,
+    pub shiny_charm: ShinyCharmState,
 }
 
 impl GameStartConfig {
@@ -126,18 +144,23 @@ impl GameStartConfig {
         let is_bw2 = matches!(version, RomVersion::Black2 | RomVersion::White2);
 
         // 思い出リンクは BW2 のみ
-        if self.save_state == SaveState::WithMemoryLink && !is_bw2 {
+        if self.memory_link == MemoryLinkState::Enabled && !is_bw2 {
             return Err("MemoryLink is only available in BW2".to_string());
         }
 
+        // 思い出リンクはセーブデータ必須
+        if self.memory_link == MemoryLinkState::Enabled && self.save == SavePresence::NoSave {
+            return Err("MemoryLink requires a save file".to_string());
+        }
+
         // 続きからはセーブ必須
-        if self.start_mode == StartMode::Continue && self.save_state == SaveState::NoSave {
+        if self.start_mode == StartMode::Continue && self.save == SavePresence::NoSave {
             return Err("Continue requires a save file".to_string());
         }
 
         // ひかるおまもりは BW2 のみ
-        if self.shiny_charm && !is_bw2 {
-            return Err("Shiny Charm is only available in BW2".to_string());
+        if self.shiny_charm == ShinyCharmState::Obtained && !is_bw2 {
+            return Err("Shiny charm is only available in BW2".to_string());
         }
 
         Ok(())

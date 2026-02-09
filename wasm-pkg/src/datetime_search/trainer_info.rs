@@ -190,9 +190,9 @@ pub fn generate_trainer_info_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, DsConfig, GameStartConfig, Hardware, KeyCode, KeySpec, Pid, RomRegion,
-        RomVersion, SaveState, SearchRangeParams, StartMode, StartupCondition, TimeRangeParams,
-        Timer0VCountRange, TrainerInfo, TrainerInfoSearchParams,
+        DateRangeParams, DsConfig, GameStartConfig, Hardware, KeyCode, KeySpec, MemoryLinkState,
+        Pid, RomRegion, RomVersion, SavePresence, SearchRangeParams, ShinyCharmState, StartMode,
+        StartupCondition, TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoSearchParams,
     };
 
     use super::*;
@@ -224,8 +224,9 @@ mod tests {
             condition: StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
             game_start: GameStartConfig {
                 start_mode: StartMode::NewGame,
-                save_state: SaveState::NoSave,
-                shiny_charm: false,
+                save: SavePresence::NoSave,
+                memory_link: MemoryLinkState::Disabled,
+                shiny_charm: ShinyCharmState::NotObtained,
             },
         }
     }
@@ -234,7 +235,7 @@ mod tests {
     fn test_searcher_rejects_continue_mode() {
         let mut params = create_test_params(TrainerInfoFilter::default());
         params.game_start.start_mode = StartMode::Continue;
-        params.game_start.save_state = SaveState::WithSave;
+        params.game_start.save = SavePresence::WithSave;
 
         let result = TrainerInfoSearcher::new(params);
         assert!(result.is_err());
@@ -244,7 +245,7 @@ mod tests {
     #[test]
     fn test_searcher_rejects_bw_memory_link() {
         let mut params = create_test_params(TrainerInfoFilter::default());
-        params.game_start.save_state = SaveState::WithMemoryLink;
+        params.game_start.memory_link = MemoryLinkState::Enabled;
 
         let result = TrainerInfoSearcher::new(params);
         assert!(result.is_err());
@@ -372,8 +373,9 @@ mod tests {
         };
         let game_start = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::NoSave,
-            shiny_charm: false,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
 
         let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2);

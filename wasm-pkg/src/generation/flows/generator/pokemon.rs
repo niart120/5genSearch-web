@@ -185,14 +185,16 @@ mod tests {
     use super::*;
     use crate::types::{
         EncounterMethod, EncounterSlotConfig, EncounterType, GameStartConfig, GenderRatio, LcgSeed,
-        LeadAbilityEffect, RomVersion, SaveState, SeedOrigin, StartMode, TrainerInfo,
+        LeadAbilityEffect, MemoryLinkState, RomVersion, SavePresence, SeedOrigin, ShinyCharmState,
+        StartMode, TrainerInfo,
     };
 
     fn make_game_start() -> GameStartConfig {
         GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         }
     }
 

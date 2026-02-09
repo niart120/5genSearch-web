@@ -40,9 +40,9 @@ pub use filter::{
 pub use generation::{
     CorePokemonData, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
     EncounterType, EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
-    GenerationConfig, ItemContent, MovingEncounterInfo, MovingEncounterLikelihood,
-    PokemonGenerationParams, SaveState, SeedSpec, SpecialEncounterDirection, SpecialEncounterInfo,
-    StartMode,
+    GenerationConfig, ItemContent, MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood,
+    PokemonGenerationParams, SavePresence, SeedSpec, ShinyCharmState, SpecialEncounterDirection,
+    SpecialEncounterInfo, StartMode,
 };
 
 // needle

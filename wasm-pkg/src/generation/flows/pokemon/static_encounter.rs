@@ -8,7 +8,7 @@ use crate::generation::algorithm::{
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
     EncounterResult, EncounterType, GenerationConfig, HeldItemSlot, LeadAbilityEffect, Nature, Pid,
-    PokemonGenerationParams, RomVersion, ShinyType,
+    PokemonGenerationParams, RomVersion, ShinyCharmState, ShinyType,
 };
 
 /// 固定ポケモン生成 (IV なし)
@@ -31,7 +31,10 @@ pub fn generate_static_pokemon(
     // PID 生成
     let (pid, shiny_type) = match enc_type {
         EncounterType::StaticSymbol | EncounterType::Roamer => {
-            let reroll_count = if config.game_start.shiny_charm { 2 } else { 0 };
+            let reroll_count = match config.game_start.shiny_charm {
+                ShinyCharmState::Obtained => 2,
+                ShinyCharmState::NotObtained => 0,
+            };
             let (pid, shiny) = generate_wild_pid_with_reroll(lcg, params.trainer, reroll_count);
             if slot.shiny_locked {
                 (apply_shiny_lock(pid, params.trainer), ShinyType::None)
@@ -175,8 +178,8 @@ pub fn generate_hidden_grotto_pokemon(
 mod tests {
     use super::*;
     use crate::types::{
-        EncounterMethod, GameStartConfig, GenderRatio, GenerationConfig, RomVersion, SaveState,
-        StartMode, TrainerInfo,
+        EncounterMethod, GameStartConfig, GenderRatio, GenerationConfig, MemoryLinkState,
+        RomVersion, SavePresence, ShinyCharmState, StartMode, TrainerInfo,
     };
 
     fn make_params(encounter_type: EncounterType) -> PokemonGenerationParams {
@@ -198,8 +201,9 @@ mod tests {
             version,
             game_start: GameStartConfig {
                 start_mode: StartMode::Continue,
-                save_state: SaveState::WithSave,
-                shiny_charm: false,
+                save: SavePresence::WithSave,
+                memory_link: MemoryLinkState::Disabled,
+                shiny_charm: ShinyCharmState::NotObtained,
             },
             user_offset: 0,
             max_advance: 1000,

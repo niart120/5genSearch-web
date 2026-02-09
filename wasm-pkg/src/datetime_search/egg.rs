@@ -200,9 +200,9 @@ pub fn generate_egg_search_tasks(
 mod tests {
     use crate::types::{
         DateRangeParams, DsConfig, EggDatetimeSearchParams, EverstonePlan, GameStartConfig,
-        GenderRatio, Hardware, KeyCode, KeySpec, RomRegion, RomVersion, SaveState,
-        SearchRangeParams, StartMode, StartupCondition, TimeRangeParams, Timer0VCountRange,
-        TrainerInfo,
+        GenderRatio, Hardware, KeyCode, KeySpec, MemoryLinkState, RomRegion, RomVersion,
+        SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition,
+        TimeRangeParams, Timer0VCountRange, TrainerInfo,
     };
 
     use super::*;
@@ -251,8 +251,9 @@ mod tests {
                 version: RomVersion::Black,
                 game_start: GameStartConfig {
                     start_mode: StartMode::NewGame,
-                    save_state: SaveState::NoSave,
-                    shiny_charm: false,
+                    save: SavePresence::NoSave,
+                    memory_link: MemoryLinkState::Disabled,
+                    shiny_charm: ShinyCharmState::NotObtained,
                 },
                 user_offset: 0,
                 max_advance: 100,
@@ -332,8 +333,9 @@ mod tests {
             version: RomVersion::Black,
             game_start: GameStartConfig {
                 start_mode: StartMode::NewGame,
-                save_state: SaveState::NoSave,
-                shiny_charm: false,
+                save: SavePresence::NoSave,
+                memory_link: MemoryLinkState::Disabled,
+                shiny_charm: ShinyCharmState::NotObtained,
             },
             user_offset: 0,
             max_advance: 100,

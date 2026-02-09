@@ -7,7 +7,8 @@
 
 use super::lcg::Lcg64;
 use crate::types::{
-    EncounterType, GameStartConfig, LcgSeed, RomVersion, SaveState, StartMode, TrainerInfo,
+    EncounterType, GameStartConfig, LcgSeed, MemoryLinkState, RomVersion, SavePresence, StartMode,
+    TrainerInfo,
 };
 
 /// PT操作の6段階テーブル定義（元実装準拠）
@@ -219,22 +220,35 @@ pub fn calculate_game_offset(
 
     let mut lcg = Lcg64::new(seed);
 
-    let advances = match (version.is_bw2(), config.start_mode, config.save_state) {
+    let advances = match (
+        version.is_bw2(),
+        config.start_mode,
+        config.save,
+        config.memory_link,
+    ) {
         // BW
-        (false, StartMode::NewGame, SaveState::WithSave) => bw_new_game_with_save(&mut lcg),
-        (false, StartMode::NewGame, SaveState::NoSave) => bw_new_game_no_save(&mut lcg),
-        (false, StartMode::Continue, _) => bw_continue(&mut lcg),
+        (false, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
+            bw_new_game_with_save(&mut lcg)
+        }
+        (false, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
+            bw_new_game_no_save(&mut lcg)
+        }
+        (false, StartMode::Continue, _, MemoryLinkState::Disabled) => bw_continue(&mut lcg),
 
         // BW2
-        (true, StartMode::NewGame, SaveState::WithMemoryLink) => {
+        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Enabled) => {
             bw2_new_game_with_memory_link(&mut lcg)
         }
-        (true, StartMode::NewGame, SaveState::WithSave) => bw2_new_game_with_save(&mut lcg),
-        (true, StartMode::NewGame, SaveState::NoSave) => bw2_new_game_no_save(&mut lcg),
-        (true, StartMode::Continue, SaveState::WithMemoryLink) => {
+        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
+            bw2_new_game_with_save(&mut lcg)
+        }
+        (true, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
+            bw2_new_game_no_save(&mut lcg)
+        }
+        (true, StartMode::Continue, _, MemoryLinkState::Enabled) => {
             bw2_continue_with_memory_link(&mut lcg)
         }
-        (true, StartMode::Continue, SaveState::WithSave | SaveState::NoSave) => {
+        (true, StartMode::Continue, _, MemoryLinkState::Disabled) => {
             bw2_continue_no_memory_link(&mut lcg)
         }
 
@@ -272,28 +286,25 @@ pub const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterT
 // ===== TrainerInfo 算出 =====
 
 /// TID/SID 決定直前まで LCG を進める (BW)
-fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save_state: SaveState) {
-    match save_state {
-        SaveState::WithSave => {
+fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save: SavePresence) {
+    match save {
+        SavePresence::WithSave => {
             // PT×2 + チラーミィPID + チラーミィID
             probability_table_multiple(lcg, 2);
             consume_random(lcg, 2);
         }
-        SaveState::NoSave => {
+        SavePresence::NoSave => {
             // PT×3 + チラーミィPID + チラーミィID
             probability_table_multiple(lcg, 3);
             consume_random(lcg, 2);
-        }
-        SaveState::WithMemoryLink => {
-            // BW では MemoryLink は使用不可 (validate で弾かれる)
         }
     }
 }
 
 /// TID/SID 決定直前まで LCG を進める (BW2)
-fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save_state: SaveState) {
-    match save_state {
-        SaveState::WithMemoryLink => {
+fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save: SavePresence, memory_link: MemoryLinkState) {
+    match (save, memory_link) {
+        (SavePresence::WithSave, MemoryLinkState::Enabled) => {
             // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
             consume_random(lcg, 1);
             probability_table_multiple(lcg, 1);
@@ -302,7 +313,7 @@ fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save_state: SaveState) {
             consume_random(lcg, 2);
             consume_random(lcg, 2);
         }
-        SaveState::WithSave => {
+        (SavePresence::WithSave, MemoryLinkState::Disabled) => {
             // Rand×1 + PT×1 + Rand×3 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
             consume_random(lcg, 1);
             probability_table_multiple(lcg, 1);
@@ -311,7 +322,7 @@ fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save_state: SaveState) {
             consume_random(lcg, 2);
             consume_random(lcg, 2);
         }
-        SaveState::NoSave => {
+        (SavePresence::NoSave, MemoryLinkState::Disabled) => {
             // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×4 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
             consume_random(lcg, 1);
             probability_table_multiple(lcg, 1);
@@ -321,6 +332,9 @@ fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save_state: SaveState) {
             probability_table_multiple(lcg, 1);
             consume_random(lcg, 2);
             consume_random(lcg, 2);
+        }
+        (SavePresence::NoSave, MemoryLinkState::Enabled) => {
+            unreachable!("validated: memory_link requires save")
         }
     }
 }
@@ -349,9 +363,9 @@ pub fn calculate_trainer_info(
 
     // TID/SID 決定直前まで進める
     if version.is_bw2() {
-        advance_to_tid_sid_point_bw2(&mut lcg, config.save_state);
+        advance_to_tid_sid_point_bw2(&mut lcg, config.save, config.memory_link);
     } else {
-        advance_to_tid_sid_point_bw(&mut lcg, config.save_state);
+        advance_to_tid_sid_point_bw(&mut lcg, config.save);
     }
 
     // TID/SID 算出 (元実装準拠)
@@ -366,6 +380,7 @@ pub fn calculate_trainer_info(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::ShinyCharmState;
 
     // ===== 元実装との互換性テスト =====
     // 元実装: https://github.com/niart120/pokemon-gen5-initseed
@@ -377,8 +392,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::NoSave,
-            shiny_charm: false,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 71, "BW1 最初から（セーブなし）のオフセット");
@@ -390,8 +406,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 59, "BW1 最初から（セーブあり）のオフセット");
@@ -403,8 +420,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         assert_eq!(offset, 49, "BW1 続きからのオフセット");
@@ -418,8 +436,9 @@ mod tests {
         let seed = LcgSeed::new(0x90AB_CDEF);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::NoSave,
-            shiny_charm: false,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 44, "BW2 最初から（セーブなし）のオフセット");
@@ -431,8 +450,9 @@ mod tests {
         let seed = LcgSeed::new(0x90AB_CDEF);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(
@@ -447,8 +467,9 @@ mod tests {
         let seed = LcgSeed::new(0x90AB_CDEF);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::WithMemoryLink,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Enabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 29, "BW2 最初から（思い出リンクあり）のオフセット");
@@ -460,8 +481,9 @@ mod tests {
         let seed = LcgSeed::new(0x90AB_CDEF);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクなし）のオフセット");
@@ -473,8 +495,9 @@ mod tests {
         let seed = LcgSeed::new(0x90AB_CDEF);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithMemoryLink,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Enabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(offset, 55, "BW2 続きから（思い出リンクあり）のオフセット");
@@ -487,8 +510,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::NoSave,
-            shiny_charm: false,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -500,8 +524,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::WithMemoryLink,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Enabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let result = calculate_game_offset(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -514,8 +539,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let offset = calculate_game_offset(seed, RomVersion::Black, config).unwrap();
         let mut lcg = Lcg64::new(seed);
@@ -532,8 +558,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::Continue,
-            save_state: SaveState::WithSave,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let result = calculate_trainer_info(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -545,8 +572,9 @@ mod tests {
         let seed = LcgSeed::new(0x1234_5678);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::WithMemoryLink,
-            shiny_charm: false,
+            save: SavePresence::WithSave,
+            memory_link: MemoryLinkState::Enabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let result = calculate_trainer_info(seed, RomVersion::Black, config);
         assert!(result.is_err());
@@ -558,8 +586,9 @@ mod tests {
         let seed = LcgSeed::new(0x96FD_2CBD_8A22_63A3);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::NoSave,
-            shiny_charm: false,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let trainer = calculate_trainer_info(seed, RomVersion::Black, config).unwrap();
         assert_eq!(trainer.tid, 42267);
@@ -572,8 +601,9 @@ mod tests {
         let seed = LcgSeed::new(0x90AB_CDEF);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
-            save_state: SaveState::NoSave,
-            shiny_charm: false,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
         };
         let trainer = calculate_trainer_info(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(trainer.tid, 910);
