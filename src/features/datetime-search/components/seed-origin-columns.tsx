@@ -5,7 +5,7 @@
  */
 
 import { createColumnHelper } from '@tanstack/react-table';
-import { t } from '@lingui/react/macro';
+import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';

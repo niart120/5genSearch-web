@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from 'react';
-import { Trans, t } from '@lingui/react/macro';
+import { Trans, useLingui } from '@lingui/react/macro';
 import { Copy } from 'lucide-react';
 import {
   Dialog,
@@ -31,6 +31,7 @@ interface DetailRowProps {
 }
 
 function DetailRow({ label, value }: DetailRowProps) {
+  const { t } = useLingui();
   const handleCopy = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
@@ -55,6 +56,8 @@ function DetailRow({ label, value }: DetailRowProps) {
 }
 
 function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDialogProps) {
+  const { t } = useLingui();
+
   if (!seedOrigin) return;
 
   const startup = 'Startup' in seedOrigin ? seedOrigin.Startup : undefined;
