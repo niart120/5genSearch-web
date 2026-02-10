@@ -83,8 +83,9 @@ pass a single object instead
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `src/services/search-tasks.ts` | 修正 | メインスレッド WASM 初期化関数の追加、初期化完了を保証してからタスク生成 |
-| `src/features/datetime-search/hooks/use-datetime-search.ts` | 修正 | WASM 初期化済みを前提とした呼び出しフローの調整 |
+| `src/wasm/init.ts` | 新規 | メインスレッド WASM 初期化シングルトン |
+| `src/services/search-tasks.ts` | 修正 | モジュールコメント修正 (初期化前提の記述を削除) |
+| `src/features/datetime-search/hooks/use-datetime-search.ts` | 修正 | WASM 初期化を await してからタスク生成 |
 | `src/workers/search.worker.ts` | 修正 | `initWasm` 呼び出しをオブジェクト形式に変更 |
 | `src/workers/gpu.worker.ts` | 修正 | `initWasm` 呼び出しをオブジェクト形式に変更 |
 | `src/test/integration/services/search-tasks.test.ts` | 修正 | 初期化フロー変更に伴うテスト修正 |
@@ -103,26 +104,37 @@ pass a single object instead
 | B. タスク生成を TypeScript で再実装 | Rust の `generate_mtseed_search_tasks` ロジックを TS で複製 | 却下: ロジックの二重管理が発生。Rust 側変更時に同期が必要になる |
 | C. タスク生成を Worker 内に移動 | Worker が自身の担当範囲を自律的に計算 | 却下: Worker プロトコル (`WorkerRequest`) の変更が広範。現行の「タスクを受け取って実行」モデルとの乖離が大きい |
 
-### 3.2 初期化タイミング
+### 3.2 初期化のシングルトン配置
 
-`search-tasks.ts` に `initMainThreadWasm()` を新設し、タスク生成関数の呼び出し前に初期化を保証する。
+`src/wasm/init.ts` に `initMainThreadWasm()` を新設する。`search-tasks.ts` ではなく `src/wasm/` 配下に配置する理由:
 
-初期化は一度だけ実行される (WASM 側の `__wbg_init` が `if (wasm !== undefined) return wasm;` で冪等性を保証)。
+- WASM 初期化はタスク生成に限らず、メインスレッドで WASM 関数を呼ぶ任意の feature で必要になりうる
+- `src/wasm/` はバインディング生成物の配置場所であり、初期化ユーティリティの配置先として自然
+- feature 固有のモジュール (`search-tasks.ts`) に初期化責務を持たせると、別 feature が WASM を使う際に不適切な依存が生まれる
 
-呼び出し元のフック (`use-datetime-search.ts`) で `startSearch` 内にて `await initMainThreadWasm()` を実行してからタスク生成を呼ぶ。
+初期化は一度だけ実行される。モジュールスコープの Promise 変数で冪等性を担保する (加えて WASM 側の `__wbg_init` も `if (wasm !== undefined) return wasm;` でガード)。
+
+呼び出し元の各フックで `await initMainThreadWasm()` を実行してからタスク生成を呼ぶ。
 
 ### 3.3 deprecated init API の修正
 
-`initWasm(WASM_URL)` を `initWasm({ module_or_path: WASM_URL })` に変更する。対象は `search.worker.ts`、`gpu.worker.ts`、および新設する `search-tasks.ts` の初期化呼び出し。
+`initWasm(WASM_URL)` を `initWasm({ module_or_path: WASM_URL })` に変更する。対象は `search.worker.ts`、`gpu.worker.ts`、および新設の `src/wasm/init.ts`。
 
 ## 4. 実装仕様
 
-### 4.1 `src/services/search-tasks.ts` の修正
+### 4.1 `src/wasm/init.ts` の新設
 
-#### 4.1.1 WASM 初期化関数の追加
+アプリ全体でメインスレッド WASM 初期化をシングルトンとして提供する。
 
 ```typescript
-import initWasm from '../wasm/wasm_pkg.js';
+/**
+ * メインスレッド WASM 初期化 (シングルトン)
+ *
+ * メインスレッドで WASM 関数を呼ぶ前に await する。
+ * Worker 内の初期化とは独立 — Worker は各自で initWasm を呼ぶ。
+ */
+
+import initWasm from './wasm_pkg.js';
 
 const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
@@ -131,8 +143,8 @@ let initPromise: Promise<void> | undefined;
 /**
  * メインスレッドで WASM を初期化する。
  *
- * 複数回呼び出しても初回のみ実行される。
- * タスク生成関数の呼び出し前に await すること。
+ * 複数回呼び出しても初回のみ実行される (冪等)。
+ * メインスレッドで WASM 関数を呼ぶ前に必ず await すること。
  */
 export function initMainThreadWasm(): Promise<void> {
   if (initPromise === undefined) {
@@ -144,17 +156,19 @@ export function initMainThreadWasm(): Promise<void> {
 
 - `initPromise` をモジュールスコープに保持し、複数回呼び出し時に同一 Promise を返す
 - `initWasm` の戻り値 (`InitOutput`) は不要なため `void` に変換
+- `src/wasm/` 配下に配置し、feature に依存しないシングルトンとする
 
-#### 4.1.2 既存のタスク生成関数は変更なし
+### 4.2 `src/services/search-tasks.ts` の修正
 
-`createMtseedDatetimeSearchTasks`、`createMtseedIvSearchTasks`、`createEggSearchTasks`、`createTrainerInfoSearchTasks` のシグネチャ・実装は変更しない。呼び出し前の初期化保証は呼び出し元の責務とする。
+モジュール冒頭コメントの「WASM 初期化済み前提」記述を「呼び出し前に `initMainThreadWasm()` で初期化すること」に修正する。タスク生成関数自体のシグネチャ・実装は変更しない。
 
-### 4.2 `src/features/datetime-search/hooks/use-datetime-search.ts` の修正
+### 4.3 `src/features/datetime-search/hooks/use-datetime-search.ts` の修正
 
 `startSearch` 内で `initMainThreadWasm()` を await してからタスク生成を呼ぶ。
 
 ```typescript
-import { initMainThreadWasm, createMtseedDatetimeSearchTasks } from '@/services/search-tasks';
+import { initMainThreadWasm } from '@/wasm/init';
+import { createMtseedDatetimeSearchTasks } from '@/services/search-tasks';
 
 // startSearch コールバック内:
 const startSearch = useCallback(
@@ -180,9 +194,9 @@ const startSearch = useCallback(
 
 `initMainThreadWasm()` は冪等なため、2 回目以降の検索開始では即座に resolve される。
 
-### 4.3 Worker init API 修正
+### 4.4 Worker init API 修正
 
-#### 4.3.1 `src/workers/search.worker.ts`
+#### 4.4.1 `src/workers/search.worker.ts`
 
 ```typescript
 // 修正前
@@ -192,7 +206,7 @@ await initWasm(WASM_URL);
 await initWasm({ module_or_path: WASM_URL });
 ```
 
-#### 4.3.2 `src/workers/gpu.worker.ts`
+#### 4.4.2 `src/workers/gpu.worker.ts`
 
 ```typescript
 // 修正前
@@ -212,18 +226,19 @@ await initWasm({ module_or_path: WASM_URL });
 
 | テスト | 対象 | 検証内容 |
 |--------|------|----------|
-| `search-tasks.test.ts` | `initMainThreadWasm` + `createMtseedDatetimeSearchTasks` | WASM 初期化後にタスク生成が成功することを検証 |
+| `search-tasks.test.ts` | `initMainThreadWasm` (from `@/wasm/init`) + `createMtseedDatetimeSearchTasks` | WASM 初期化後にタスク生成が成功することを検証 |
 | 手動検証 | CPU 経路の起動時刻検索 | エラーなく検索結果が返ること |
 | 手動検証 | GPU 経路の起動時刻検索 | 修正によるリグレッションがないこと |
 | 手動検証 | コンソール出力 | deprecated 警告が出力されないこと |
 
 ### 5.3 既存テストへの影響
 
-`search-tasks.test.ts` は Browser Mode (headless Chromium) で実行される統合テストであり、テスト内で `initMainThreadWasm()` を呼び出すよう修正が必要。
+`search-tasks.test.ts` は Browser Mode (headless Chromium) で実行される統合テストであり、テスト内で `initMainThreadWasm()` (`@/wasm/init`) を呼び出すよう修正が必要。
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/services/search-tasks.ts` に `initMainThreadWasm()` を追加
+- [ ] `src/wasm/init.ts` を新設 (`initMainThreadWasm` シングルトン)
+- [ ] `src/services/search-tasks.ts` のモジュールコメント修正
 - [ ] `src/features/datetime-search/hooks/use-datetime-search.ts` で `initMainThreadWasm()` を呼び出し
 - [ ] `src/workers/search.worker.ts` の `initWasm` 呼び出しをオブジェクト形式に修正
 - [ ] `src/workers/gpu.worker.ts` の `initWasm` 呼び出しをオブジェクト形式に修正
