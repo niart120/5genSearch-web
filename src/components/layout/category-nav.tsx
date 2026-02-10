@@ -1,15 +1,8 @@
 import type { ReactElement } from 'react';
-import { Trans } from '@lingui/react/macro';
 import { CATEGORIES } from '@/lib/navigation';
-import type { Category } from '@/lib/navigation';
+import { CATEGORY_LABELS } from '@/lib/navigation-labels';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
-
-const CATEGORY_LABELS: Record<Category, () => ReactElement> = {
-  search: () => <Trans>Search</Trans>,
-  generation: () => <Trans>Generation</Trans>,
-  tools: () => <Trans>Tools</Trans>,
-};
 
 function CategoryNav(): ReactElement {
   const activeCategory = useUiStore((s) => s.activeCategory);

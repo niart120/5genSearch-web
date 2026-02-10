@@ -1,19 +1,9 @@
 import type { ReactElement } from 'react';
-import { Trans } from '@lingui/react/macro';
 import { getCategoryDef } from '@/lib/navigation';
-import type { Category, FeatureId } from '@/lib/navigation';
+import type { Category } from '@/lib/navigation';
+import { FEATURE_LABELS } from '@/lib/navigation-labels';
 import { useUiStore } from '@/stores/settings/ui';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const FEATURE_LABELS: Record<FeatureId, () => ReactElement> = {
-  'datetime-search': () => <Trans>Datetime Search</Trans>,
-  'egg-search': () => <Trans>Egg Search</Trans>,
-  'generation-list': () => <Trans>Generation List</Trans>,
-  'egg-generation': () => <Trans>Egg Generation</Trans>,
-  'mtseed-search': () => <Trans>MT Seed Search</Trans>,
-  'tid-adjust': () => <Trans>TID Adjust</Trans>,
-  needle: () => <Trans>Needle</Trans>,
-};
 
 function FeatureTabs(): ReactElement | undefined {
   const activeCategory: Category = useUiStore((s) => s.activeCategory);

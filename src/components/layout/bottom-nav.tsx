@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
-import { Trans } from '@lingui/react/macro';
 import { Search, ListOrdered, Wrench } from 'lucide-react';
 import { CATEGORIES } from '@/lib/navigation';
 import type { Category } from '@/lib/navigation';
+import { CATEGORY_LABELS } from '@/lib/navigation-labels';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
 
@@ -10,12 +10,6 @@ const CATEGORY_ICONS: Record<Category, ReactElement> = {
   search: <Search className="size-5" />,
   generation: <ListOrdered className="size-5" />,
   tools: <Wrench className="size-5" />,
-};
-
-const CATEGORY_LABELS: Record<Category, () => ReactElement> = {
-  search: () => <Trans>Search</Trans>,
-  generation: () => <Trans>Generation</Trans>,
-  tools: () => <Trans>Tools</Trans>,
 };
 
 function BottomNav(): ReactElement {
