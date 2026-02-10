@@ -270,11 +270,11 @@ function ResponsiveContainer({
 
 ## 6. 実装チェックリスト
 
-- [ ] `responsive-container.tsx` の外枠 `div` から `mx-auto max-w-screen-xl` を削除
-- [ ] `responsive-design.md` Section 4.2 のレイアウト図を更新
-- [ ] `responsive-design.md` Section 5.1 のコード例を更新
-- [ ] `design-system.md` Section 5.2 の `max-w-screen-xl` 説明をコンポーネント単位の制約方針に修正
-- [ ] `design-system.md` Section 5.4 の超広幅対策を更新
-- [ ] `design-system.md` Section 5.5 のレイアウト図を更新
-- [ ] 各ブレークポイントでの目視確認完了
-- [ ] `pnpm test:run` で全テスト通過
+- [x] `responsive-container.tsx` の外枠 `div` から `mx-auto max-w-screen-xl` を削除
+- [x] `responsive-design.md` Section 4.2 のレイアウト図を更新
+- [x] `responsive-design.md` Section 5.1 のコード例を更新
+- [x] `design-system.md` Section 5.2 の `max-w-screen-xl` 説明をコンポーネント単位の制約方針に修正
+- [x] `design-system.md` Section 5.4 の超広幅対策を更新
+- [x] `design-system.md` Section 5.5 のレイアウト図を更新
+- [x] 各ブレークポイントでの目視確認完了
+- [x] `pnpm test:run` で全テスト通過
