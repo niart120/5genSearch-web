@@ -239,12 +239,12 @@ await initWasm({ module_or_path: WASM_URL });
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/services/wasm-init.ts` を新設 (`initMainThreadWasm` シングルトン)
-- [ ] `src/services/search-tasks.ts` のモジュールコメント修正
-- [ ] `src/features/datetime-search/hooks/use-datetime-search.ts` で `initMainThreadWasm()` を呼び出し
-- [ ] `src/workers/search.worker.ts` の `initWasm` 呼び出しをオブジェクト形式に修正
-- [ ] `src/workers/gpu.worker.ts` の `initWasm` 呼び出しをオブジェクト形式に修正
-- [ ] `src/test/integration/services/search-tasks.test.ts` を初期化フロー変更に対応
+- [x] `src/services/wasm-init.ts` を新設 (`initMainThreadWasm` シングルトン)
+- [x] `src/services/search-tasks.ts` のモジュールコメント修正
+- [x] `src/features/datetime-search/hooks/use-datetime-search.ts` で `initMainThreadWasm()` を呼び出し
+- [x] `src/workers/search.worker.ts` の `initWasm` 呼び出しをオブジェクト形式に修正
+- [x] `src/workers/gpu.worker.ts` の `initWasm` 呼び出しをオブジェクト形式に修正
+- [x] `src/test/integration/services/search-tasks.test.ts` を初期化フロー変更に対応
 - [ ] CPU 経路の起動時刻検索が正常動作することを手動検証
 - [ ] GPU 経路にリグレッションがないことを手動検証
 - [ ] コンソールに deprecated 警告が出力されないことを確認
