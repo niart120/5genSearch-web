@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { ResponsiveContainer } from '@/components/layout/responsive-container';
-import { CategoryNav } from '@/components/layout/category-nav';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { FeatureTabs } from '@/components/layout/feature-tabs';
 import { FeatureContent } from '@/components/layout/feature-content';
@@ -26,7 +25,6 @@ function App() {
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <Header onMenuClick={() => setSidebarOpen(true)} />
-      <CategoryNav />
       <Tabs
         value={activeFeature}
         onValueChange={(v) => setActiveFeature(v as FeatureId)}

@@ -230,13 +230,13 @@ function App() {
 
 ## 6. 実装チェックリスト
 
-- [ ] `header.tsx` にカテゴリナビゲーションを統合
-- [ ] `app.tsx` から `<CategoryNav />` を削除
-- [ ] `category-nav.tsx` を削除
-- [ ] `category-nav.test.tsx` を削除
-- [ ] `header.test.tsx` にカテゴリナビゲーションのテストを追加
-- [ ] `responsive-design.md` のレイアウト図を更新
-- [ ] `design-system.md` のレイアウト図を更新
-- [ ] `frontend-structure.md` のコンポーネント一覧を更新
-- [ ] 各ブレークポイントでの目視確認完了
-- [ ] `pnpm test:run` で全テスト通過
+- [x] `header.tsx` にカテゴリナビゲーションを統合
+- [x] `app.tsx` から `<CategoryNav />` を削除
+- [x] `category-nav.tsx` を削除
+- [x] `category-nav.test.tsx` を削除
+- [x] `header.test.tsx` にカテゴリナビゲーションのテストを追加
+- [x] `responsive-design.md` のレイアウト図を更新
+- [x] `design-system.md` のレイアウト図を更新
+- [x] `frontend-structure.md` のコンポーネント一覧を更新
+- [x] 各ブレークポイントでの目視確認完了
+- [x] `pnpm test:run` で全テスト通過
