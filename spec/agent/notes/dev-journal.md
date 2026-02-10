@@ -32,3 +32,10 @@ local_052 で SaveState Select を Checkbox に変更したが、二値切り替
 `src/components/ui/` の既存コンポーネント (tabs.tsx 等) が `React.forwardRef` を使用している。
 React 19 では `ref` を通常の prop として渡せるため、`forwardRef` は不要。
 対象範囲が `ui/` 全体に及ぶため、専用のリファクタリングタスクとして実施するのが適切。
+
+## 2026-02-10: PC 版 FeatureContent 内部のレイアウト構成
+
+現状 design-system.md のレイアウト図および各機能 spec (DATETIME_SEARCH.md, EGG_SEARCH.md) では、FeatureContent 内部を「上: フォーム → 下: 結果テーブル」の縦積みで暗黙に前提としている。
+PC 版では横幅に余裕があるため、フォームと結果を左右に分割する構成 (メインエリア内 2 ペイン = アプリ全体 3 ペイン) も候補になりうる。
+ただし入力項目数が機能ごとに大きく異なるため、一律の分割が適切かは検証が必要。
+起動時刻検索 (local_054) の実装時に、実際のフォーム量と結果表示を見ながら判断するのが適切。
