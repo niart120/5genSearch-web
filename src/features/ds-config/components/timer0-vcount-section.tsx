@@ -22,7 +22,7 @@ function Timer0VCountSection() {
           <Switch
             id="timer0-auto"
             checked={timer0Auto}
-            onCheckedChange={(checked) => setTimer0Auto(checked === true)}
+            onCheckedChange={setTimer0Auto}
             aria-label={t`Auto`}
           />
         </div>
