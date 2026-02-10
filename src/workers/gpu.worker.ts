@@ -76,7 +76,7 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
 async function handleInit(): Promise<void> {
   try {
     // Worker 内で独立して WASM を初期化
-    await initWasm(WASM_URL);
+    await initWasm({ module_or_path: WASM_URL });
     initialized = true;
     postResponse({ type: 'ready' });
   } catch (error) {

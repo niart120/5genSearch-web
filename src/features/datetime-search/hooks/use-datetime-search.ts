@@ -6,6 +6,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { initMainThreadWasm } from '@/services/wasm-init';
 import { createMtseedDatetimeSearchTasks } from '@/services/search-tasks';
 import type { DatetimeSearchContext, MtSeed, SeedOrigin } from '@/wasm/wasm_pkg.js';
 import type { GpuMtseedSearchTask } from '@/workers/types';
@@ -41,8 +42,10 @@ export function useDatetimeSearch(useGpu: boolean): UseDatetimeSearchReturn {
         search.start([gpuTask]);
       } else {
         const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
-        const tasks = createMtseedDatetimeSearchTasks(context, targetSeeds, workerCount);
-        search.start(tasks);
+        void initMainThreadWasm().then(() => {
+          const tasks = createMtseedDatetimeSearchTasks(context, targetSeeds, workerCount);
+          search.start(tasks);
+        });
       }
     },
     [useGpu, config.workerCount, search]
