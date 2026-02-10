@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { Sidebar } from '@/components/layout/sidebar';
 

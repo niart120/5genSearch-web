@@ -221,7 +221,7 @@ async function runMtseedSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(0x1_00_00);
+      const batch = searcher.next_batch(1_000_000);
 
       if (batch.candidates.length > 0) {
         postResponse({
@@ -260,7 +260,7 @@ async function runTrainerInfoSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(500_000);
+      const batch = searcher.next_batch(1_000_000);
 
       if (batch.results.length > 0) {
         postResponse({

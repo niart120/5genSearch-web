@@ -243,7 +243,7 @@ describe('WASM Binding Verification', () => {
       expect(tasks[0].start_seed).toBe(0);
 
       // 最後のタスクは 0xFFFF_FFFF で終了
-      expect(tasks.at(-1).end_seed).toBe(0xff_ff_ff_ff);
+      expect(tasks.at(-1)!.end_seed).toBe(0xff_ff_ff_ff);
 
       // 各タスクの start_seed が前タスクの end_seed + 1 であること
       for (let i = 1; i < tasks.length; i++) {
