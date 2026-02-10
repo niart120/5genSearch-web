@@ -18,3 +18,5 @@ export { TargetSeedsInput } from './target-seeds-input';
 export type { TargetSeedsInputProps } from './target-seeds-input';
 export { SearchContextForm } from './search-context-form';
 export type { SearchContextFormProps } from './search-context-form';
+export { SearchControls } from './search-controls';
+export type { SearchControlsProps } from './search-controls';

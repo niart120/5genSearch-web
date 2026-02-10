@@ -9,13 +9,9 @@ import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
+import { SearchControls } from '@/components/forms/search-controls';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
 import { DataTable } from '@/components/data-display/data-table';
-import { SearchProgress, type SearchProgressData } from '@/components/data-display/search-progress';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useDatetimeSearch } from '../hooks/use-datetime-search';
 import { parseTargetSeeds, validateMtseedSearchForm } from '../types';
@@ -49,92 +45,6 @@ const DEFAULT_TIME_RANGE: TimeRangeParams = {
 };
 
 const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
-
-/* ------------------------------------------------------------------ */
-/*  SearchControls — PC / モバイルで共有する検索操作 UI                   */
-/* ------------------------------------------------------------------ */
-
-interface SearchControlsProps {
-  layout: 'desktop' | 'mobile';
-  isLoading: boolean;
-  isInitialized: boolean;
-  isValid: boolean;
-  useGpu: boolean;
-  onGpuChange: (checked: boolean) => void;
-  progress: SearchProgressData | undefined;
-  error: Error | undefined;
-  onSearch: () => void;
-  onCancel: () => void;
-}
-
-function SearchControls({
-  layout,
-  isLoading,
-  isInitialized,
-  isValid,
-  useGpu,
-  onGpuChange,
-  progress,
-  error,
-  onSearch,
-  onCancel,
-}: SearchControlsProps) {
-  const buttonSize = layout === 'mobile' ? 'sm' : 'default';
-  const gpuToggleId = layout === 'mobile' ? 'gpu-toggle-mobile' : 'gpu-toggle';
-
-  const buttonRow = (
-    <div className={cn('flex items-center gap-3', layout === 'mobile' && 'mt-2')}>
-      {isLoading ? (
-        <Button variant="outline" onClick={onCancel} className="flex-1" size={buttonSize}>
-          <Trans>Cancel</Trans>
-        </Button>
-      ) : (
-        <Button
-          onClick={onSearch}
-          disabled={!isValid || !isInitialized}
-          className="flex-1"
-          size={buttonSize}
-        >
-          <Trans>Search</Trans>
-        </Button>
-      )}
-      <div className="flex items-center gap-1.5">
-        <Switch
-          id={gpuToggleId}
-          checked={useGpu}
-          onCheckedChange={onGpuChange}
-          disabled={isLoading}
-        />
-        <Label htmlFor={gpuToggleId} className="text-xs">
-          GPU
-        </Label>
-      </div>
-    </div>
-  );
-
-  const progressElement = <SearchProgress progress={progress} />;
-  const errorElement = error ? (
-    <p className={cn('text-xs text-destructive', layout === 'mobile' && 'mt-1')}>{error.message}</p>
-  ) : undefined;
-
-  if (layout === 'mobile') {
-    return (
-      <>
-        {progressElement}
-        {buttonRow}
-        {errorElement}
-      </>
-    );
-  }
-
-  return (
-    <>
-      {buttonRow}
-      {progressElement}
-      {errorElement}
-    </>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  DatetimeSearchPage                                                 */
