@@ -194,10 +194,10 @@ Timer0 Auto のトグルも同様に Switch に置換する。ヘッダー右端
 
 ## 6. 実装チェックリスト
 
-- [ ] `@radix-ui/react-switch` をインストール
-- [ ] `src/components/ui/switch.tsx` を作成
-- [ ] `game-start-config-form.tsx` で 3 箇所の Checkbox → Switch に変更
-- [ ] `timer0-vcount-section.tsx` で 1 箇所の Checkbox → Switch に変更
+- [x] `@radix-ui/react-switch` をインストール
+- [x] `src/components/ui/switch.tsx` を作成
+- [x] `game-start-config-form.tsx` で 3 箇所の Checkbox → Switch に変更
+- [x] `timer0-vcount-section.tsx` で 1 箇所の Checkbox → Switch に変更
 - [ ] Switch のコンポーネントテストを追加
 - [ ] 既存テストのロール名を更新 (該当する場合)
 - [ ] `design-system.md` に Switch のサイズ定義を追記

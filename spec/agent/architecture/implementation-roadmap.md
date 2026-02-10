@@ -114,6 +114,7 @@ Phase 4: 仕上げ
 | Input | Radix UI | ✅ | 数値/テキスト |
 | Select | Radix UI | ✅ | 単一/複数選択 |
 | Checkbox | Radix UI | ✅ | |
+| Switch | Radix UI | ✅ | on/off トグル用 |
 | Tabs | Radix UI | ✅ | 機能切り替え |
 | Dialog | Radix UI | ✅ | モーダル |
 | Badge | Radix UI | ✅ | 状態表示 |
