@@ -98,90 +98,121 @@ function DatetimeSearchPage(): ReactElement {
   }, [dsConfig, dateRange, timeRange, ranges, keySpec, parsedSeeds.seeds, startSearch]);
 
   return (
-    <FeaturePageLayout>
-      <FeaturePageLayout.Controls>
-        {/* 検索ボタン + GPU トグル + 進捗 (PC では上部に表示) */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            {isLoading ? (
-              <Button variant="outline" onClick={cancel} className="flex-1">
-                <Trans>Cancel</Trans>
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSearch}
-                disabled={!validation.isValid || !isInitialized}
-                className="flex-1"
-              >
-                <Trans>Search</Trans>
-              </Button>
-            )}
-            <div className="flex items-center gap-1.5">
-              <Switch
-                id="gpu-toggle"
-                checked={useGpu}
-                onCheckedChange={setUseGpu}
-                disabled={isLoading}
-              />
-              <Label htmlFor="gpu-toggle" className="text-xs">
-                GPU
-              </Label>
+    <>
+      <FeaturePageLayout className="pb-32 lg:pb-4">
+        <FeaturePageLayout.Controls>
+          {/* PC: 検索ボタン + GPU トグル + 進捗 */}
+          <div className="hidden lg:flex lg:flex-col lg:gap-2">
+            <div className="flex items-center gap-3">
+              {isLoading ? (
+                <Button variant="outline" onClick={cancel} className="flex-1">
+                  <Trans>Cancel</Trans>
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSearch}
+                  disabled={!validation.isValid || !isInitialized}
+                  className="flex-1"
+                >
+                  <Trans>Search</Trans>
+                </Button>
+              )}
+              <div className="flex items-center gap-1.5">
+                <Switch
+                  id="gpu-toggle"
+                  checked={useGpu}
+                  onCheckedChange={setUseGpu}
+                  disabled={isLoading}
+                />
+                <Label htmlFor="gpu-toggle" className="text-xs">
+                  GPU
+                </Label>
+              </div>
             </div>
+            <SearchProgress progress={progress} />
+            {error && <p className="text-xs text-destructive">{error.message}</p>}
           </div>
 
-          {/* 進捗 (常駐表示) */}
-          <SearchProgress progress={progress} />
+          <SearchContextForm
+            dateRange={dateRange}
+            timeRange={timeRange}
+            keySpec={keySpec}
+            onDateRangeChange={setDateRange}
+            onTimeRangeChange={setTimeRange}
+            onKeySpecChange={setKeySpec}
+            disabled={isLoading}
+          />
 
-          {/* エラー */}
-          {error && <p className="text-xs text-destructive">{error.message}</p>}
+          <TargetSeedsInput
+            value={targetSeedsRaw}
+            onChange={setTargetSeedsRaw}
+            parsedSeeds={parsedSeeds.seeds}
+            errors={parsedSeeds.errors}
+            disabled={isLoading}
+          />
+
+          {/* バリデーションエラー */}
+          {validation.errors.length > 0 && (
+            <ul className="text-xs text-destructive space-y-0.5">
+              {validation.errors.map((err) => (
+                <li key={err}>{err}</li>
+              ))}
+            </ul>
+          )}
+        </FeaturePageLayout.Controls>
+
+        <FeaturePageLayout.Results>
+          <p className="text-xs text-muted-foreground">
+            <Trans>Results</Trans>: {results.length.toLocaleString()}
+          </p>
+          <DataTable
+            columns={columns}
+            data={results}
+            className="flex-1"
+            emptyMessage={t`No results found. Please enter MT Seeds and start searching.`}
+            getRowId={(_row, index) => String(index)}
+          />
+          <ResultDetailDialog
+            open={detailOpen}
+            onOpenChange={setDetailOpen}
+            seedOrigin={selectedOrigin}
+          />
+        </FeaturePageLayout.Results>
+      </FeaturePageLayout>
+
+      {/* モバイル: 下部固定 検索バー */}
+      <div className="fixed bottom-14 left-0 right-0 z-40 border-t border-border bg-background p-3 lg:hidden">
+        <SearchProgress progress={progress} />
+        <div className="mt-2 flex items-center gap-3">
+          {isLoading ? (
+            <Button variant="outline" onClick={cancel} className="flex-1" size="sm">
+              <Trans>Cancel</Trans>
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSearch}
+              disabled={!validation.isValid || !isInitialized}
+              className="flex-1"
+              size="sm"
+            >
+              <Trans>Search</Trans>
+            </Button>
+          )}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              id="gpu-toggle-mobile"
+              checked={useGpu}
+              onCheckedChange={setUseGpu}
+              disabled={isLoading}
+            />
+            <Label htmlFor="gpu-toggle-mobile" className="text-xs">
+              GPU
+            </Label>
+          </div>
         </div>
-
-        <SearchContextForm
-          dateRange={dateRange}
-          timeRange={timeRange}
-          keySpec={keySpec}
-          onDateRangeChange={setDateRange}
-          onTimeRangeChange={setTimeRange}
-          onKeySpecChange={setKeySpec}
-          disabled={isLoading}
-        />
-
-        <TargetSeedsInput
-          value={targetSeedsRaw}
-          onChange={setTargetSeedsRaw}
-          parsedSeeds={parsedSeeds.seeds}
-          errors={parsedSeeds.errors}
-          disabled={isLoading}
-        />
-
-        {/* バリデーションエラー */}
-        {validation.errors.length > 0 && (
-          <ul className="text-xs text-destructive space-y-0.5">
-            {validation.errors.map((err) => (
-              <li key={err}>{err}</li>
-            ))}
-          </ul>
-        )}
-      </FeaturePageLayout.Controls>
-
-      <FeaturePageLayout.Results>
-        <p className="text-xs text-muted-foreground">
-          <Trans>Results</Trans>: {results.length.toLocaleString()}
-        </p>
-        <DataTable
-          columns={columns}
-          data={results}
-          className="flex-1"
-          emptyMessage={t`No results found. Please enter MT Seeds and start searching.`}
-          getRowId={(_row, index) => String(index)}
-        />
-        <ResultDetailDialog
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
-          seedOrigin={selectedOrigin}
-        />
-      </FeaturePageLayout.Results>
-    </FeaturePageLayout>
+        {error && <p className="mt-1 text-xs text-destructive">{error.message}</p>}
+      </div>
+    </>
   );
 }
 

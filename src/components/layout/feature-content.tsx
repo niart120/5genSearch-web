@@ -20,7 +20,11 @@ function FeatureContent(): ReactElement {
     <>
       {CATEGORIES.flatMap((cat) =>
         cat.features.map((featureId) => (
-          <TabsContent key={featureId} value={featureId} className="mt-0">
+          <TabsContent
+            key={featureId}
+            value={featureId}
+            className="mt-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
+          >
             {renderFeature(featureId)}
           </TabsContent>
         ))

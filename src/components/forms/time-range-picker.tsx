@@ -50,13 +50,13 @@ function TimeAxisField({
 
   return (
     <div className="flex flex-col gap-1">
-      <Label htmlFor={`${prefix}-start`} className="text-xs text-muted-foreground">
+      <Label htmlFor={`${prefix}-start`} className="hidden text-xs text-muted-foreground sm:block">
         {label}
       </Label>
       <div className="flex items-center gap-1">
         <Input
           id={`${prefix}-start`}
-          className="w-10 px-0.5 text-center font-mono tabular-nums"
+          className="h-7 w-8 px-0 text-center font-mono tabular-nums"
           inputMode="numeric"
           value={localStart}
           onChange={(e) => setLocalStart(e.target.value)}
@@ -72,7 +72,7 @@ function TimeAxisField({
         <span className="text-sm text-muted-foreground">〜</span>
         <Input
           id={`${prefix}-end`}
-          className="w-10 px-0.5 text-center font-mono tabular-nums"
+          className="h-7 w-8 px-0 text-center font-mono tabular-nums"
           inputMode="numeric"
           value={localEnd}
           onChange={(e) => setLocalEnd(e.target.value)}
@@ -92,7 +92,7 @@ function TimeAxisField({
 
 function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerProps) {
   return (
-    <div className={cn('flex flex-col gap-2 md:flex-row md:items-end md:gap-2')}>
+    <div className={cn('flex flex-row flex-wrap items-end gap-x-2 gap-y-1')}>
       <TimeAxisField
         label={<Trans>Hour</Trans>}
         startValue={value.hour_start}
@@ -106,7 +106,7 @@ function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerProps) {
         disabled={disabled}
         prefix="time-hour"
       />
-      <span className="self-end pb-2 text-sm text-muted-foreground hidden md:block">:</span>
+      <span className="inline-flex h-7 items-center self-end text-sm text-muted-foreground">:</span>
       <TimeAxisField
         label={<Trans>Minute</Trans>}
         startValue={value.minute_start}
@@ -120,7 +120,7 @@ function TimeRangePicker({ value, onChange, disabled }: TimeRangePickerProps) {
         disabled={disabled}
         prefix="time-minute"
       />
-      <span className="self-end pb-2 text-sm text-muted-foreground hidden md:block">:</span>
+      <span className="inline-flex h-7 items-center self-end text-sm text-muted-foreground">:</span>
       <TimeAxisField
         label={<Trans>Second</Trans>}
         startValue={value.second_start}

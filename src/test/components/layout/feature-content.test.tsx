@@ -24,8 +24,9 @@ describe('FeatureContent', () => {
 
   it('datetime-search がアクティブのとき DatetimeSearchPage が表示される', () => {
     renderFeatureContent('datetime-search');
-    // DatetimeSearchPage はフォームを含む — Search ボタンが表示される
-    expect(screen.getByRole('button', { name: /Search/i })).toBeInTheDocument();
+    // DatetimeSearchPage はフォームを含む — Search ボタンが表示される (PC + モバイル)
+    const buttons = screen.getAllByRole('button', { name: /Search/i });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('egg-search がアクティブのとき PlaceholderPage が表示される', () => {

@@ -15,7 +15,9 @@ interface FeaturePageLayoutProps {
 
 function FeaturePageLayout({ children, className }: FeaturePageLayoutProps) {
   return (
-    <div className={cn('flex h-full flex-col gap-4 p-4 lg:flex-row', className)}>{children}</div>
+    <div className={cn('flex flex-col gap-4 p-4 lg:min-h-0 lg:flex-1 lg:flex-row', className)}>
+      {children}
+    </div>
   );
 }
 

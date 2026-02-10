@@ -142,7 +142,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
       </Label>
 
       {/* Controller layout */}
-      <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3">
+      <div className="mx-auto flex max-w-72 flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3">
         {/* Shoulder: L ... R */}
         <div className="flex items-center justify-between px-1">
           <ToggleButton
@@ -164,7 +164,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
         </div>
 
         {/* Main body: D-Pad | Face */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center gap-8">
           {/* D-Pad */}
           {renderGrid(DPAD_LAYOUT)}
 
