@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
-import { Trans, t } from '@lingui/react/macro';
+import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
@@ -49,6 +49,8 @@ const DEFAULT_TIME_RANGE: TimeRangeParams = {
 const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
 
 function DatetimeSearchPage(): ReactElement {
+  const { t } = useLingui();
+
   // DS 設定 (サイドバーで管理済み)
   const { config: dsConfig, ranges } = useDsConfigReadonly();
 

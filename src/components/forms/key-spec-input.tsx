@@ -6,7 +6,7 @@
  */
 
 import { useMemo, useCallback } from 'react';
-import { Trans, t } from '@lingui/react/macro';
+import { Trans, useLingui } from '@lingui/react/macro';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { DsButton, KeySpec } from '@/wasm/wasm_pkg';
@@ -51,6 +51,7 @@ interface KeySpecInputProps {
 }
 
 function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecInputProps) {
+  const { t } = useLingui();
   const selectedSet = useMemo(
     () => new Set<DsButton>(value.available_buttons),
     [value.available_buttons]

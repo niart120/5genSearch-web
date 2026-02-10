@@ -22,10 +22,10 @@ describe('FeatureContent', () => {
     useUiStore.setState(getUiInitialState());
   });
 
-  it('datetime-search がアクティブのとき PlaceholderPage が表示される', () => {
+  it('datetime-search がアクティブのとき DatetimeSearchPage が表示される', () => {
     renderFeatureContent('datetime-search');
-    expect(screen.getByText('Datetime Search')).toBeInTheDocument();
-    expect(screen.getByText('This feature is under development.')).toBeInTheDocument();
+    // DatetimeSearchPage はフォームを含む — Search ボタンが表示される
+    expect(screen.getByRole('button', { name: /Search/i })).toBeInTheDocument();
   });
 
   it('egg-search がアクティブのとき PlaceholderPage が表示される', () => {
