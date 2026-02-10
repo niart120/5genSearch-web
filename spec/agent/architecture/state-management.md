@@ -52,7 +52,7 @@ Zustand を選定した理由:
 | DS 設定 | MAC アドレス、Hardware、Version、Region |
 | Timer0/VCount 範囲 | 各 DS の個体差設定 |
 | トレーナー情報 | TID/SID |
-| UI 設定 | 言語、テーマ (将来) |
+| UI 設定 | 言語、テーマ、ナビゲーション状態 (アクティブカテゴリ・機能・機能記憶) |
 
 ### 3.2 セッション状態 — Zustand Store (非永続化)
 
@@ -220,13 +220,13 @@ export const useDsConfigStore = create<DsConfigState>()(
 
 ### 6.4 スキーマ変更時の運用
 
-公開前は破壊的変更が続くため、migrate を実装しない。運用は以下で統一する。
+公開前は migration を一切行わない。状態追加は後方互換 (Zustand の shallow merge で初期値補完)。破壊的変更が必要な場合は localStorage クリアで対応する。
 
 | 状況 | 方針 |
 |------|------|
-| 追加のみ (後方互換) | `version` は据え置き。`merge` で初期値補完される前提で対応する |
-| 破壊的変更 | `name` を変更してストレージを切り替える。必要に応じて `reset` を案内する |
-| 安定化後 | 影響の大きい変更に限り `migrate` を導入する |
+| 公開前・追加のみ | `name`・`version` 据え置き。`merge` で初期値補完される |
+| 公開前・破壊的変更 | localStorage クリアで対応。`reset` を案内する |
+| 公開後・破壊的変更 | `name` 変更または `version` + `migrate` で移行 |
 
 ## 7. テスト方針
 
