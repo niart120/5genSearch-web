@@ -53,29 +53,93 @@
 | `src/features/datetime-search/components/result-detail-dialog.tsx` | 新規 | 結果詳細ダイアログ |
 | `src/features/datetime-search/hooks/use-datetime-search.ts` | 新規 | 検索実行ロジック |
 | `src/lib/format.ts` | 変更 | フォーマット関数追加 (`toHex`, `formatDatetime`, `formatKeyCode`) |
+| `src/components/layout/feature-page-layout.tsx` | 新規 | FeaturePageLayout Compound Component (Controls / Results 2 ペイン) |
 | `src/components/layout/feature-content.tsx` | 変更 | `datetime-search` の `case` を実ページに差し替え |
 
 ## 3. 設計方針
 
 ### 3.1 画面構成
 
+PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み + 下部固定検索バー。
+
+#### PC レイアウト (`lg+`)
+
 ```
-┌──────────────────────────────────┐
-│ SearchContextForm (共通)         │
-│ ├ DateRangePicker                │
-│ ├ TimeRangePicker                │
-│ └ KeySpecInput                   │
-│                                  │
-│ TargetSeedsInput                 │
-│                                  │
-│ [検索開始] [GPU ⚙️]  SearchProgress │
-│                                  │
-│ 結果テーブル (DataTable/CardList) │
-│ ResultDetailDialog               │
-└──────────────────────────────────┘
+┌─── Controls (lg:w-[28rem]) ──┬───── Results (flex-1) ─────┐
+│ [検索開始] [GPU]  (hidden lg:flex) │                              │
+│ SearchProgress (常駐)            │ 結果テーブル (DataTable)       │
+│                                  │ │ 日時 | T0 | VC | Key | Base  │
+│ SearchContextForm                │ │ ...                        │
+│ ├ DateRangePicker                │ │ ...                        │
+│ ├ TimeRangePicker                │ │ (internal scroll)          │
+│ └ KeySpecInput (コントローラ型)   │                              │
+│                                  │ ResultDetailDialog          │
+│ TargetSeedsInput                 │                              │
+└──────────────────────────────────┴──────────────────────────────┘
 ```
 
-スクロール: ページ全体は `FeatureContent` のスクロール領域内に配置され、内部スクロールが必要な場合は結果テーブルの仮想化 (TanStack Virtual) で対応する。
+#### モバイルレイアウト (`< lg`)
+
+```
+┌────────────────────────────────────┐
+│ SearchContextForm (shared)          │
+│ ├ DateRangePicker  (flex-row wrap)  │
+│ ├ TimeRangePicker  (flex-row wrap)  │
+│ └ KeySpecInput (コントローラ型)      │
+│                                      │
+│ TargetSeedsInput                     │
+│                                      │
+│ 結果 (DataTable / CardList)           │
+│ ResultDetailDialog                   │
+│                                      │
+│ (pb-32 でバー分の余白確保)             │
+├──────────────────────────────────────┤
+│ BottomNav (h-14)                     │
+├──────────────────────────────────────┤  ← fixed bottom-14
+│ [検索開始] SearchProgress [GPU]      │  ← モバイル固定検索バー (lg:hidden)
+└──────────────────────────────────────┘
+```
+
+#### デュアルレンダーパターン
+
+検索ボタン・SearchProgress・GPU トグルは PC とモバイルで配置が異なるため、2 箇所に描画する:
+
+- **PC**: Controls ペイン先頭に `hidden lg:flex` で配置
+- **モバイル**: `fixed bottom-14 left-0 right-0 z-40 lg:hidden` の固定バーとして画面下部に配置。`bottom-14` は BottomNav (`h-14`) の上に重ねるためのオフセット
+
+ページコンポーネントは `FeaturePageLayout` に `pb-32 lg:pb-4` を渡し、モバイルで固定バーとコンテンツが重ならないようにする。
+
+#### 使用例
+
+```tsx
+function DatetimeSearchPage() {
+  return (
+    <>
+      <FeaturePageLayout className="pb-32 lg:pb-4">
+        <FeaturePageLayout.Controls>
+          {/* PC 用: hidden lg:flex */}
+          <div className="hidden lg:flex lg:flex-col lg:gap-2">
+            <SearchButton ... />
+            <SearchProgress ... />
+          </div>
+          <SearchContextForm ... />
+          <TargetSeedsInput ... />
+        </FeaturePageLayout.Controls>
+        <FeaturePageLayout.Results>
+          <DataTable ... />
+          <ResultDetailDialog ... />
+        </FeaturePageLayout.Results>
+      </FeaturePageLayout>
+
+      {/* モバイル用固定検索バー */}
+      <div className="fixed bottom-14 ... lg:hidden">
+        <SearchProgress ... />
+        <SearchButton ... />
+      </div>
+    </>
+  );
+}
+```
 
 ### 3.2 WASM API 対応
 
@@ -128,6 +192,41 @@ DS 設定 (`DsConfig`, `Timer0VCountRange[]`) はサイドバーで管理済み�
 - WASM 由来の表示文字列: 本機能では不要 (SeedOrigin は数値データのみ)
 - 対象ロケール: `ja` / `en`
 
+### 3.7 レスポンシブ実装パターン
+
+#### 高さ制約の伝播 (PC)
+
+PC 版で Results ペインが 1 画面に収まるよう、flex チェーンで高さ制約を伝播する。
+
+```
+ResponsiveContainer (overflow-hidden)
+  └ scroll area (lg: flex min-h-0 flex-col overflow-hidden)
+    └ content inner (lg: flex min-h-0 flex-1 flex-col)
+      └ TabsContent (lg: flex min-h-0 flex-1 flex-col)
+        └ FeaturePageLayout (lg: min-h-0 flex-1 flex-row)
+          ├ Controls (lg:w-[28rem] overflow-y-auto)
+          └ Results (min-h-0 flex-1 overflow-hidden)
+```
+
+`lg:` では各レイヤーが `min-h-0` + `flex-1` + `flex-col` を繰り返すことで、ビューポート高さの制約が Results まで到達する。モバイルでは `overflow-y-auto` で通常スクロールとなり、この制約は適用されない。
+
+#### 入力コンポーネントのコンパクト化
+
+日付・時刻入力で使用するコンパクトサイズ:
+
+| 要素 | サイズ | 備考 |
+|------|--------|------|
+| DateRangePicker 入力 | `h-7 w-12 px-0` (年), `h-7 w-8 px-0` (月/日) | `text-center` |
+| TimeRangePicker 入力 | `h-7 w-8 px-0` | `text-center` |
+| 区切り文字 (`:`, `〜`) | `inline-flex h-7 items-center self-end` | 入力と高さを揃える |
+| モバイルラベル | `hidden sm:block` | sm 未満では非表示 |
+
+DateRangePicker / TimeRangePicker はいずれも `flex-row flex-wrap` で、画面幅に応じて折り返す。
+
+#### SearchProgress の常駐表示
+
+`SearchProgress` は `progress` が `undefined` (アイドル状態) でも表示する。アイドル時は全値 0 + `opacity-40` で薄く表示し、検索開始後に通常の不透明度に切り替わる。
+
 ## 4. 実装仕様
 
 ### 4.1 機能固有型 (`types.ts`)
@@ -174,7 +273,7 @@ export function parseTargetSeeds(input: string): ParsedTargetSeeds;
 src/components/forms/key-spec-input.tsx
 ```
 
-DS ボタンの選択 UI。`KeySpec` 型と対応する。
+DS ボタンの選択 UI。`KeySpec` 型と対応する。DS コントローラ風レイアウトで表示する。
 
 ```typescript
 interface KeySpecInputProps {
@@ -186,9 +285,24 @@ interface KeySpecInputProps {
 
 | 項目 | 仕様 |
 |------|------|
-| ボタン一覧 | A, B, X, Y, L, R, Start, Select, ↑, ↓, ←, → (チェックボックス群) |
+| コンテナ | `mx-auto max-w-72 rounded-lg border border-border bg-muted/30 p-3` |
+| レイアウト | DS コントローラ風: ショルダー (L/R) 上段 → D-Pad + Face を `justify-center gap-8` で横並び → Select/Start 下部中央 |
+| D-Pad / Face | `grid grid-cols-3 gap-1`、各セル `size-8` (32px 正方形) |
+| ショルダー (L/R) | `h-7 w-12 rounded-t-lg` |
+| Select / Start | `h-6 w-14 rounded-full text-[10px]`、`justify-center gap-3` で横並び |
+| ボタン一覧 | A, B, X, Y, L, R, Start, Select, ↑, ↓, ←, → (トグルボタン) |
 | 組み合わせ数表示 | `get_key_combination_count(key_spec)` (WASM) で計算した値を表示 |
 | WASM 未初期化時 | ボタン数のみ表示 (組み合わせ数のフォールバック) |
+
+#### ToggleButton
+
+各ボタンは `ToggleButton` として実装。`pressed` / `unpressed` で背景色を切り替える。
+
+| 状態 | スタイル |
+|------|--------|
+| pressed | `bg-primary text-primary-foreground shadow-sm` |
+| unpressed | `border border-input bg-background hover:bg-accent` |
+| 共通 | `inline-flex items-center justify-center rounded-sm text-xs font-medium select-none` |
 
 ### 4.3 共通コンポーネント: TargetSeedsInput
 
@@ -390,30 +504,31 @@ const testContext: DatetimeSearchContext = {
 
 ### 共通コンポーネント
 
-- [ ] `components/forms/key-spec-input.tsx` — KeySpec 入力部品
-- [ ] `components/forms/target-seeds-input.tsx` — Target Seeds 入力部品
-- [ ] `components/forms/search-context-form.tsx` — 検索コンテキストフォーム
-- [ ] `components/forms/index.ts` — re-export 追加
+- [x] `components/forms/key-spec-input.tsx` — KeySpec 入力部品
+- [x] `components/forms/target-seeds-input.tsx` — Target Seeds 入力部品
+- [x] `components/forms/search-context-form.tsx` — 検索コンテキストフォーム
+- [x] `components/forms/index.ts` — re-export 追加
 
 ### Feature: datetime-search
 
-- [ ] `features/datetime-search/types.ts` — 型定義 + バリデーション + パーサー
-- [ ] `features/datetime-search/hooks/use-datetime-search.ts` — 検索実行ロジック
-- [ ] `features/datetime-search/components/datetime-search-page.tsx` — ページコンポーネント
-- [ ] `features/datetime-search/components/seed-origin-columns.tsx` — 結果テーブル列定義
-- [ ] `features/datetime-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
-- [ ] `features/datetime-search/index.ts` — re-export
+- [x] `features/datetime-search/types.ts` — 型定義 + バリデーション + パーサー
+- [x] `features/datetime-search/hooks/use-datetime-search.ts` — 検索実行ロジック
+- [x] `features/datetime-search/components/datetime-search-page.tsx` — ページコンポーネント
+- [x] `features/datetime-search/components/seed-origin-columns.tsx` — 結果テーブル列定義
+- [x] `features/datetime-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
+- [x] `features/datetime-search/index.ts` — re-export
 
-### 統合・ユーティリティ
+### レイアウト・ユーティリティ
 
-- [ ] `lib/format.ts` — フォーマット関数追加 (既存確認後)
-- [ ] `components/layout/feature-content.tsx` — `datetime-search` case 追加
+- [x] `components/layout/feature-page-layout.tsx` — FeaturePageLayout Compound Component
+- [x] `components/layout/feature-content.tsx` — `datetime-search` case 追加
+- [x] `lib/format.ts` — フォーマット関数追加 (既存確認後)
 
 ### テスト
 
-- [ ] `test/unit/target-seeds-parser.test.ts` — パース関数
-- [ ] `test/unit/datetime-search-validation.test.ts` — バリデーション
-- [ ] `test/unit/format.test.ts` — フォーマット関数
-- [ ] `test/components/key-spec-input.test.tsx` — KeySpec 入力
-- [ ] `test/components/target-seeds-input.test.tsx` — Target Seeds 入力
-- [ ] `test/integration/mtseed-datetime-search.test.ts` — Worker/WASM 統合
+- [x] `test/unit/target-seeds-parser.test.ts` — パース関数
+- [x] `test/unit/datetime-search-validation.test.ts` — バリデーション
+- [x] `test/unit/format.test.ts` — フォーマット関数
+- [x] `test/components/key-spec-input.test.tsx` — KeySpec 入力
+- [x] `test/components/target-seeds-input.test.tsx` — Target Seeds 入力
+- [x] `test/integration/mtseed-datetime-search.test.ts` — Worker/WASM 統合

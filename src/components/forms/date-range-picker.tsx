@@ -54,7 +54,7 @@ function DateField({
     <div className="flex items-center gap-1">
       <Input
         id={`${prefix}-year`}
-        className="w-16 px-1 text-center font-mono tabular-nums"
+        className="h-7 w-12 px-0 text-center font-mono tabular-nums"
         inputMode="numeric"
         value={localYear}
         onChange={(e) => setLocalYear(e.target.value)}
@@ -70,7 +70,7 @@ function DateField({
       <span className="text-sm text-muted-foreground">/</span>
       <Input
         id={`${prefix}-month`}
-        className="w-12 px-1 text-center font-mono tabular-nums"
+        className="h-7 w-8 px-0 text-center font-mono tabular-nums"
         inputMode="numeric"
         value={localMonth}
         onChange={(e) => setLocalMonth(e.target.value)}
@@ -86,7 +86,7 @@ function DateField({
       <span className="text-sm text-muted-foreground">/</span>
       <Input
         id={`${prefix}-day`}
-        className="w-12 px-1 text-center font-mono tabular-nums"
+        className="h-7 w-8 px-0 text-center font-mono tabular-nums"
         inputMode="numeric"
         value={localDay}
         onChange={(e) => setLocalDay(e.target.value)}
@@ -105,9 +105,9 @@ function DateField({
 
 function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
   return (
-    <div className={cn('flex flex-col gap-2 md:flex-row md:items-end md:gap-3')}>
+    <div className={cn('flex flex-row flex-wrap items-end gap-x-2 gap-y-1')}>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="date-start-year" className="text-xs text-muted-foreground">
+        <Label htmlFor="date-start-year" className="hidden text-xs text-muted-foreground sm:block">
           <Trans>Start date</Trans>
         </Label>
         <DateField
@@ -124,9 +124,11 @@ function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
           prefix="date-start"
         />
       </div>
-      <span className="self-center text-sm text-muted-foreground">〜</span>
+      <span className="inline-flex h-7 items-center self-end text-sm text-muted-foreground">
+        〜
+      </span>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="date-end-year" className="text-xs text-muted-foreground">
+        <Label htmlFor="date-end-year" className="hidden text-xs text-muted-foreground sm:block">
           <Trans>End date</Trans>
         </Label>
         <DateField

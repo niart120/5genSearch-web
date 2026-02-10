@@ -11,6 +11,9 @@ import {
   toBigintHex,
   formatResultCount,
   remToPx,
+  toHex,
+  formatDatetime,
+  formatKeyCode,
 } from '@/lib/format';
 
 describe('formatElapsedTime', () => {
@@ -129,5 +132,56 @@ describe('remToPx', () => {
     const result = remToPx(2);
     expect(result).toBeGreaterThan(0);
     expect(typeof result).toBe('number');
+  });
+});
+
+describe('toHex', () => {
+  it('数値を大文字 hex に変換する', () => {
+    expect(toHex(255, 2)).toBe('FF');
+  });
+
+  it('指定桁数でゼロ埋めする', () => {
+    expect(toHex(1, 8)).toBe('00000001');
+  });
+
+  it('0 を指定桁数にパディングする', () => {
+    expect(toHex(0, 4)).toBe('0000');
+  });
+
+  it('大きな値を正しく変換する', () => {
+    expect(toHex(0xff_ff_ff_ff, 8)).toBe('FFFFFFFF');
+  });
+});
+
+describe('formatDatetime', () => {
+  it('Datetime をフォーマット文字列に変換する', () => {
+    const dt = { year: 2025, month: 1, day: 5, hour: 9, minute: 3, second: 7 };
+    expect(formatDatetime(dt)).toBe('2025/01/05 09:03:07');
+  });
+
+  it('2 桁のフィールドをパディングする', () => {
+    const dt = { year: 2000, month: 12, day: 31, hour: 23, minute: 59, second: 59 };
+    expect(formatDatetime(dt)).toBe('2000/12/31 23:59:59');
+  });
+});
+
+describe('formatKeyCode', () => {
+  it('ボタンなしの場合 "なし" を返す', () => {
+    expect(formatKeyCode(0x2f_ff)).toBe('なし');
+  });
+
+  it('A ボタンのみ押下を表示する', () => {
+    // mask = 0x2FFE ^ 0x2FFF = 0x0001 → A
+    expect(formatKeyCode(0x2f_fe)).toBe('A');
+  });
+
+  it('複数ボタンの組み合わせを表示する', () => {
+    // A + Start = bit0 + bit3 = 0x0009 → keyCode = 0x2FFF ^ 0x0009 = 0x2FF6
+    expect(formatKeyCode(0x2f_f6)).toBe('A + Start');
+  });
+
+  it('全ボタン押下を表示する', () => {
+    // all bits = 0x0FFF → keyCode = 0x2FFF ^ 0x0FFF = 0x2000
+    expect(formatKeyCode(0x20_00)).toBe('A + B + X + Y + L + R + Start + Select + ↑ + ↓ + ← + →');
   });
 });

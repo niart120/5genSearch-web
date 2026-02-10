@@ -85,7 +85,7 @@ src/
 |-----------|------|
 | `components/` | 再利用可能な UI コンポーネント (Radix UI ベース)。ビジネスロジックを持たない |
 | `components/ui/` | 最小単位の汎用部品 (Button, Input, Select, Checkbox など) |
-| `components/layout/` | ページレイアウト部品 (Header, Sidebar, Container など) |
+| `components/layout/` | ページレイアウト部品 (Header, Sidebar, Container, FeaturePageLayout など) |
 | `components/forms/` | フォーム入力に特化した部品 (IvRangeInput, DateRangePicker など) |
 | `components/data-display/` | データ表示に特化した部品 (DataTable, ResultCardList, SearchProgress など) |
 | `workers/` | Web Worker エントリポイント。WASM 呼び出しを担当 (CPU/GPU 別) |
@@ -114,11 +114,13 @@ Phase 3 で `features/` を追加予定。追加時の構成は以下を基準�
 features/{feature-name}/
 ├── index.ts                # 公開 API (re-export)
 ├── components/             # 機能固有コンポーネント
-│   ├── {Feature}Page.tsx   # ページコンポーネント
+│   ├── {Feature}Page.tsx   # ページコンポーネント (FeaturePageLayout 使用)
 │   └── {Feature}Form.tsx   # 入力フォーム
 ├── hooks/                  # 機能固有フック
 └── types.ts                # 機能固有型定義
 ```
+
+各 feature のページコンポーネントは `FeaturePageLayout` (Compound Component) を使用し、Controls / Results の 2 スロットにコンテンツを配置する。検索ボタン・SearchProgress はデュアルレンダーパターン (PC: Controls 内 `hidden lg:flex`、モバイル: `fixed bottom-14 lg:hidden`) で 2 箇所に描画する。詳細は [デザインシステム](./design-system.md) セクション 5.5.1 および [レスポンシブ対応](./responsive-design.md) セクション 5.2 を参照。
 
 ## 依存関係
 

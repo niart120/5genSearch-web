@@ -265,24 +265,70 @@ CSS カスタムプロパティで定義し、Tailwind CSS v4 の `@theme` で�
 | 項目 | 方針 |
 |------|------|
 | ページ高さ | ビューポート高さ (`100dvh`) に収める。`overflow: hidden` でページ全体のスクロールを抑制 |
-| 結果テーブル | テーブル領域内で独立スクロール (`overflow-y-auto` + `flex-1`)。ページ全体は動かさない |
-| フォーム | 折りたたみ・タブ切り替えで表示面積を制御 |
+| FeatureContent 内部 | Controls ペインと Results ペインの横 2 ペイン構成 (アプリ全体では Sidebar を含め 3 ペイン) |
+| Controls ペイン | 固定幅 (`lg:w-[28rem]` = 28rem)。内容が溢れる場合は内部スクロール (`overflow-y-auto`) |
+| Results ペイン | `flex-1` で残り幅を使用。テーブル領域内で独立スクロール (`overflow-y-auto`) |
+| フォーム | Controls ペイン内で Accordion / Collapsible によりセクション管理 |
 | サイドバー | 固定高さ。内容が溢れる場合は内部スクロール |
-| モバイル (`< lg`) | 1 画面制約なし。通常の縦スクロール |
+| モバイル (`< lg`) | 2 ペイン制約なし。Controls → Results の縦積み + 通常の縦スクロール + 下部固定検索バー |
 
 ```
-┌─ Header (+ CategoryNav) ────────────┐  ─┐
-├─────────┬────────────────────────────┤   │
-│         │  Form (compact / tabs)     │   │
-│ Sidebar ├────────────────────────────┤   │ 100dvh
-│ 左端固定 │  Result Table              │    │
-│         │  (internal scroll)         │    │
-├─────────┴────────────────────────────┤    │
-│ Footer (optional)                    │  ─┘
-└──────────────────────────────────────┘
-↑ 左端固定         ← 残り幅を全て使用 →
+┌─ Header (+ CategoryNav) ─────────────────────────────┐  ─┐
+├──────────┬──────────────────┬─────────────────────────┤   │
+│          │ Controls         │ Results                 │   │
+│ Sidebar  │ (内部スクロール)  │ (DataTable)              │   │ 100dvh
+│ 左端固定  │ lg:w-[28rem]     │ flex-1                  │   │
+│          │                  │ (内部スクロール)          │   │
+├──────────┴──────────────────┴─────────────────────────┤   │
+│ Footer (optional)                                     │  ─┘
+└───────────────────────────────────────────────────────┘
+↑ 左端固定   ← FeatureContent (残り幅) →
+             ├── Controls ──┤├── Results (flex-1) ──┤
 ```
+
+### 5.5.1 FeaturePageLayout コンポーネント
+
+各 feature ページ用のレイアウトコンポーネント。Compound Component パターンで Controls / Results の 2 スロットを提供する。
+
+```tsx
+// 使用例: DatetimeSearchPage
+<FeaturePageLayout className="pb-32 lg:pb-4">
+  <FeaturePageLayout.Controls>
+    <div className="hidden lg:flex lg:flex-col lg:gap-2">
+      <SearchButton />
+      <SearchProgress />
+    </div>
+    <SearchContextForm ... />
+    <TargetSeedsInput ... />
+  </FeaturePageLayout.Controls>
+  <FeaturePageLayout.Results>
+    <DataTable ... />
+  </FeaturePageLayout.Results>
+</FeaturePageLayout>
 ```
+
+| 項目 | PC (`lg+`) | モバイル (`< lg`) |
+|------|-----------|------------------|
+| 配置 | 横 2 ペイン (`flex-row`) | 縦積み (`flex-col`) |
+| Controls 幅 | `lg:w-[28rem]` (28rem = 448px) | 全幅 |
+| Results 幅 | `flex-1` (残り幅すべて) | 全幅 |
+| Controls スクロール | 内部スクロール (`overflow-y-auto`) | ページスクロールに統合 |
+| Results スクロール | 内部スクロール (`overflow-y-auto`) | ページスクロールに統合 |
+
+Controls ペインの幅は `lg:w-[28rem]` で統一する。
+
+### 5.5.2 デュアルレンダーパターン
+
+検索ボタン・SearchProgress・GPU トグルなど、PC とモバイルで配置が異なる要素は 2 箇所に描画する:
+
+- **PC**: Controls ペイン先頭に `hidden lg:flex` で配置
+- **モバイル**: `fixed bottom-14 left-0 right-0 z-40 lg:hidden` の固定バーとして画面下部に配置
+
+ページコンポーネントは `FeaturePageLayout` に `className="pb-32 lg:pb-4"` を渡し、モバイルで固定バーとコンテンツが重ならないよう余白を確保する。
+
+### 5.5.3 SearchProgress の常駐表示
+
+`SearchProgress` は `progress` が `undefined` (アイドル状態) でも表示する。アイドル時は全値 0 + `opacity-40` で薄く表示し、検索中は通常の不透明度に切り替わる。
 
 ### 5.6 ブレークポイント (再掲)
 
@@ -408,10 +454,25 @@ PC ではテーブル表示、モバイル (`< md`) ではカード形式に切�
 
 ### 10.1 レイアウト
 
-| デバイス | レイアウト |
-|---------|----------|
-| PC (`lg+`) | グリッド 2-3 列 (`grid-cols-2` / `grid-cols-3`) |
-| モバイル | 1 列縦積み (`grid-cols-1`) |
+PC 版ではフォームは `FeaturePageLayout.Controls` ペイン内に配置される (セクション 5.5.1 参照)。Controls ペインの幅は `lg:w-[28rem]` (28rem = 448px) のため、フォームは基本的に 1 列レイアウトとなる。
+
+| デバイス | レイアウト | 備考 |
+|---------|----------|------|
+| PC (`lg+`) | Controls ペイン内 1 列。セクションごとに Accordion / Collapsible で折りたたみ | ペイン幅に余裕がある場合は部分的に `grid-cols-2` 可 |
+| モバイル | 1 列縦積み (`grid-cols-1`) | Controls → Results の順で縦積み |
+
+### 10.1.1 コンパクト入力サイズ
+
+日付・時刻入力など繰り返し配置される数値入力は、コンパクトサイズを使用する:
+
+| 対象 | サイズ | CSS クラス | 備考 |
+|------|--------|-----------|------|
+| 年入力 | 28×48px | `h-7 w-12 px-0 text-center` | DateRangePicker |
+| 月/日/時/分/秒入力 | 28×32px | `h-7 w-8 px-0 text-center` | DateRangePicker / TimeRangePicker |
+| 区切り文字 (`〜`, `:`) | 28px 高さ | `inline-flex h-7 items-center self-end` | 入力と高さを揃える |
+| モバイルラベル | — | `hidden sm:block` | sm 未満では非表示にし幅を節約 |
+
+DateRangePicker / TimeRangePicker はいずれも `flex-row flex-wrap` で配置し、画面幅に応じて折り返す。
 
 ### 10.2 ラベル配置
 

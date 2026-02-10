@@ -44,8 +44,10 @@ function ResponsiveContainer({
       {/* メインコンテンツ */}
       <main className="flex flex-1 flex-col overflow-hidden">
         {topContent && <div className="shrink-0">{topContent}</div>}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 py-4 lg:px-6">{children}</div>
+        <div className="flex-1 overflow-y-auto lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+          <div className="px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:px-6">
+            {children}
+          </div>
         </div>
       </main>
     </div>

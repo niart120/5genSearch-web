@@ -23,18 +23,28 @@ interface SearchProgressData {
 }
 
 interface SearchProgressProps {
-  /** 進捗データ */
-  progress: SearchProgressData;
+  /** 進捗データ (未指定時はアイドル表示) */
+  progress: SearchProgressData | undefined;
   /** 追加クラス名 */
   className?: string;
 }
 
+const IDLE_PROGRESS: SearchProgressData = {
+  percentage: 0,
+  elapsedMs: 0,
+  estimatedRemainingMs: 0,
+  throughput: 0,
+  totalProcessed: 0,
+  totalCount: 0,
+};
+
 function SearchProgress({ progress, className }: SearchProgressProps) {
   const { percentage, elapsedMs, estimatedRemainingMs, throughput, totalProcessed, totalCount } =
-    progress;
+    progress ?? IDLE_PROGRESS;
+  const isIdle = !progress;
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-1', isIdle && 'opacity-40', className)}>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{percentage.toFixed(1)}%</span>
         <span>
