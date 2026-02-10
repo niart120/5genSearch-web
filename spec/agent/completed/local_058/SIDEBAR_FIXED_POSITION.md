@@ -4,7 +4,7 @@
 
 ### 1.1 目的
 
-PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固定し、メインコンテンツのみに `max-width` 制約をかける構成に変更する。ウィンドウ幅に関わらずサイドバーの左端位置が安定する操作体験を実現する。
+PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固定し、メインコンテンツはサイドバー右側の残り幅を全て使う構成に変更する。ウィンドウ幅に関わらずサイドバーの左端位置が安定する操作体験を実現する。
 
 ### 1.2 用語定義
 
@@ -26,7 +26,7 @@ PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固�
 | 項目 | 内容 |
 |------|------|
 | サイドバー位置の安定化 | ウィンドウ幅に関わらずサイドバーが左端に固定される |
-| メインコンテンツの視認性 | メインコンテンツは `max-width` で適切な幅に制約され、超広幅ディスプレイでの可読性を維持 |
+| メインコンテンツの全幅活用 | メインコンテンツはサイドバー右側の残り幅を全て使い、テーブルやフォームの表示領域を最大化する |
 
 ### 1.5 着手条件
 
@@ -39,8 +39,7 @@ PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固�
 
 | ファイル | 変更種別 | 変更内容 |
 |---------|---------|---------|
-| `src/components/layout/responsive-container.tsx` | 変更 | `max-w-screen-xl mx-auto` をサイドバー外のメインコンテンツ側に移動 |
-| `src/app.tsx` | 変更 | レイアウト構造の調整 (サイドバーを `ResponsiveContainer` の外に分離する場合) |
+| `src/components/layout/responsive-container.tsx` | 変更 | 外枠の `max-w-screen-xl mx-auto` を削除し、サイドバーを左端固定化 |
 
 ### 2.2 アーキテクチャドキュメント
 
@@ -48,7 +47,8 @@ PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固�
 |---------|---------|---------|
 | `spec/agent/architecture/responsive-design.md` | Section 4.2 PC レイアウト | レイアウト図のサイドバー配置を更新 |
 | `spec/agent/architecture/responsive-design.md` | Section 5.1 ResponsiveContainer | コード例を更新 |
-| `spec/agent/architecture/design-system.md` | Section 5.2 コンテンツ幅の制約 | `max-w-screen-xl` の適用範囲を「メインコンテンツのみ」に修正 |
+| `spec/agent/architecture/design-system.md` | Section 5.2 コンテンツ幅の制約 | `max-w-screen-xl` のグローバル制約を廃止し、コンポーネント単位の制約方針に変更 |
+| `spec/agent/architecture/design-system.md` | Section 5.4 崩れ防止の方針 | 超広幅対策の記述を更新 |
 | `spec/agent/architecture/design-system.md` | Section 5.5 PC 版 1 画面レイアウト | レイアウト図を更新 |
 
 ### 2.3 WIP 仕様書
@@ -80,17 +80,18 @@ PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固�
 #### 変更後
 
 ```
-┌─ aside ──┐ ┌─ max-w-screen-xl ─────────────┐
-│ Sidebar  │ │ FeatureTabs                    │
-│ (w-64)   │ │ Content (scroll)               │
-│ 左端固定  │ │                                │
-└──────────┘ └────────────────────────────────┘
-↑ 常に左端    ← メインのみ max-width 制約 →
+┌─ aside ──┐ ┌─ main (flex-1) ──────────────────┐
+│ Sidebar  │ │ FeatureTabs                        │
+│ (w-64)   │ │ Content (scroll)                   │
+│ 左端固定  │ │                                    │
+└──────────┘ └──────────────────────────────────┘
+↑ 常に左端    ← 残り幅を全て使用 →
 ```
 
-- サイドバーは `max-width` コンテナの外に配置
-- メインコンテンツのみ `max-w-screen-xl` で幅制約
-- 超広幅ディスプレイでは、サイドバー右側のメインコンテンツが適切な幅に制約され、右側に余白が生まれる
+- サイドバーは `max-width` コンテナの外に配置し、左端に固定
+- メインコンテンツはグローバルな `max-width` 制約を持たず、`flex-1` で残り幅を全て使用
+- VS Code / Slack / Discord 等のワークベンチ型アプリと同様の構成
+- 個別コンポーネント (フォーム、テキスト段落等) が必要に応じて自身の `max-width` を設定する
 
 ### 3.2 実装アプローチの選択肢
 
@@ -102,7 +103,7 @@ PC 版 (`lg+`) のサイドバー (DS 設定) をビューポート左端に固�
 function ResponsiveContainer({ ... }) {
   return (
     <div className="flex flex-1 overflow-hidden">
-      {/* PC: Sidebar — max-width コンテナの外 */}
+      {/* PC: Sidebar — 左端固定 */}
       {sidebarContent && (
         <aside className="hidden w-64 shrink-0 border-r border-border lg:block">
           <Sidebar>{sidebarContent}</Sidebar>
@@ -112,13 +113,11 @@ function ResponsiveContainer({ ... }) {
       {/* モバイル: Sheet Sidebar (変更なし) */}
       ...
 
-      {/* メインコンテンツ — こちらにのみ max-width */}
+      {/* メインコンテンツ — グローバル max-width なし */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col overflow-hidden">
-          {topContent && <div className="shrink-0">{topContent}</div>}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-4 py-4 lg:px-6">{children}</div>
-          </div>
+        {topContent && <div className="shrink-0">{topContent}</div>}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-4 lg:px-6">{children}</div>
         </div>
       </main>
     </div>
@@ -145,12 +144,10 @@ function ResponsiveContainer({ ... }) {
       <MobileSidebar ... />
       {/* Main */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="mx-auto flex w-full max-w-screen-xl flex-1 flex-col overflow-hidden">
-          <FeatureTabs />
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-4 py-4 lg:px-6">
-              <FeatureContent />
-            </div>
+        <FeatureTabs />
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-4 lg:px-6">
+            <FeatureContent />
           </div>
         </div>
       </main>
@@ -170,12 +167,16 @@ function ResponsiveContainer({ ... }) {
 
 A案は `ResponsiveContainer` の内部構造のみの変更で完結し、外部インターフェース (`ResponsiveContainerProps`) に変更がない。
 
-### 3.4 メインコンテンツの `max-width` 制約
+### 3.4 メインコンテンツの幅制約方針
 
-| 項目 | 値 | 備考 |
-|------|-----|------|
-| メインコンテンツ最大幅 | `max-w-screen-xl` (1280px) | 既存値を維持。サイドバー幅 (256px) を含まないため、実効的なアプリ幅は最大 1536px |
-| 余白配置 | メインコンテンツの右側に集中 | サイドバーが左端固定のため、`mx-auto` は不要。`ml-0` (デフォルト) で左詰め |
+ワークベンチ型アプリ (VS Code, Slack, Discord 等) に倣い、メインコンテンツにグローバルな `max-width` 制約を設けない。
+
+| 項目 | 方針 | 備考 |
+|------|------|------|
+| メインコンテンツ全体 | `max-width` なし。`flex-1` で残り幅を全て使用 | テーブル・フォームの表示領域を最大化する |
+| 個別コンポーネント | 必要に応じてコンポーネント単位で制約 | 例: フォームの `max-w-2xl`、テキスト段落の `max-w-prose` |
+
+**理由**: 本アプリのメインコンテンツは検索フォームと結果テーブルで構成される。テーブルは幅が広いほど列の視認性が向上し、フォームは `grid-cols` で自然にレイアウトされるため、グローバルな幅制約は不要。
 
 ### 3.5 各ウィンドウ幅での挙動
 
@@ -184,13 +185,13 @@ A案は `ResponsiveContainer` の内部構造のみの変更で完結し、外�
 | < 1024px | 非表示 (Sheet) | 100% | なし |
 | 1024px | 表示 (256px) | 768px (= 1024 - 256) | なし |
 | 1280px | 表示 (256px) | 1024px | なし |
-| 1536px | 表示 (256px) | 1280px (max) | なし |
-| 1920px | 表示 (256px) | 1280px (max) | 384px |
-| 2560px | 表示 (256px) | 1280px (max) | 1024px |
+| 1536px | 表示 (256px) | 1280px | なし |
+| 1920px | 表示 (256px) | 1664px | なし |
+| 2560px | 表示 (256px) | 2304px | なし |
 
 ### 3.6 モバイル版への影響
 
-モバイル版 (`< lg`) ではサイドバーが `hidden` のため、`max-w-screen-xl` は従来同様メインコンテンツ全体に適用される。`mx-auto` を外しても `< 1280px` では影響なし。
+モバイル版 (`< lg`) ではサイドバーが `hidden` のため、メインコンテンツが全幅を占有する。`max-w-screen-xl mx-auto` の削除は `< 1280px` の環境では視覚的変化なし。
 
 ## 4. 実装仕様
 
@@ -229,11 +230,9 @@ function ResponsiveContainer({
 
       {/* メインコンテンツ */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex w-full max-w-screen-xl flex-1 flex-col overflow-hidden">
-          {topContent && <div className="shrink-0">{topContent}</div>}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-4 py-4 lg:px-6">{children}</div>
-          </div>
+        {topContent && <div className="shrink-0">{topContent}</div>}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-4 lg:px-6">{children}</div>
         </div>
       </main>
     </div>
@@ -244,8 +243,7 @@ function ResponsiveContainer({
 変更点:
 
 1. 外枠 `div` から `mx-auto max-w-screen-xl` を削除
-2. `main` 内に `max-w-screen-xl` を持つ内部コンテナを追加
-3. `mx-auto` を除去し、メインコンテンツを左詰めに配置
+2. `main` 内の `max-w-screen-xl` コンテナも不要。`flex-1` で残り幅を全て使用
 
 ## 5. テスト方針
 
@@ -255,7 +253,7 @@ function ResponsiveContainer({
 |------|------|
 | レイアウト目視確認 | Chrome DevTools で 1024px / 1280px / 1920px / 2560px 幅に切り替えて確認 |
 | サイドバー位置 | ウィンドウ幅を変えてもサイドバー左端が移動しないことを確認 |
-| メインコンテンツ幅 | 1536px 以上で max-width 制約が効いていることを確認 |
+| メインコンテンツ幅 | 全ブレークポイントでメインコンテンツが残り幅を全て使い切っていることを確認 |
 | モバイル表示 | 1024px 未満でサイドバーが非表示、Sheet 動作に影響がないことを確認 |
 | 既存テスト | `pnpm test:run` で全テスト通過を確認 |
 
@@ -267,16 +265,16 @@ function ResponsiveContainer({
 | 768px | サイドバー非表示。Sheet 正常動作 |
 | 1024px | サイドバー左端固定表示。メインコンテンツが残り幅を占有 |
 | 1280px | サイドバー左端固定。メインコンテンツ 1024px |
-| 1536px | サイドバー左端固定。メインコンテンツ 1280px (max) |
-| 1920px | サイドバー左端固定。メインコンテンツ 1280px。右に 384px 余白 |
+| 1536px | サイドバー左端固定。メインコンテンツ 1280px |
+| 1920px | サイドバー左端固定。メインコンテンツ 1664px |
 
 ## 6. 実装チェックリスト
 
-- [ ] `responsive-container.tsx` の外枠 `div` から `mx-auto max-w-screen-xl` を削除
-- [ ] `main` 内に `max-w-screen-xl` コンテナを追加
-- [ ] `responsive-design.md` Section 4.2 のレイアウト図を更新
-- [ ] `responsive-design.md` Section 5.1 のコード例を更新
-- [ ] `design-system.md` Section 5.2 の `max-w-screen-xl` 説明を「メインコンテンツのみ」に修正
-- [ ] `design-system.md` Section 5.5 のレイアウト図を更新
-- [ ] 各ブレークポイントでの目視確認完了
-- [ ] `pnpm test:run` で全テスト通過
+- [x] `responsive-container.tsx` の外枠 `div` から `mx-auto max-w-screen-xl` を削除
+- [x] `responsive-design.md` Section 4.2 のレイアウト図を更新
+- [x] `responsive-design.md` Section 5.1 のコード例を更新
+- [x] `design-system.md` Section 5.2 の `max-w-screen-xl` 説明をコンポーネント単位の制約方針に修正
+- [x] `design-system.md` Section 5.4 の超広幅対策を更新
+- [x] `design-system.md` Section 5.5 のレイアウト図を更新
+- [x] 各ブレークポイントでの目視確認完了
+- [x] `pnpm test:run` で全テスト通過

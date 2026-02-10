@@ -19,7 +19,7 @@ function ResponsiveContainer({
   children,
 }: ResponsiveContainerProps) {
   return (
-    <div className="mx-auto flex max-w-screen-xl flex-1 overflow-hidden">
+    <div className="flex flex-1 overflow-hidden">
       {/* PC: 固定 Sidebar */}
       {sidebarContent && (
         <aside className="hidden w-64 shrink-0 border-r border-border lg:block">
