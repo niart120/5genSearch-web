@@ -78,7 +78,7 @@ Tailwind のデフォルトブレークポイントを使用：
 │ Settings ├──────────────────┬─────────────────────────┤   │
 │ (Sidebar)│ Controls         │ Results                 │   │ 100dvh
 │ 左端固定  │ (内部スクロール)  │ (DataTable)              │   │
-│          │ w-80             │ flex-1                  │   │
+│          │ lg:w-[28rem]     │ flex-1                  │   │
 │          │                  │ (内部スクロール)          │   │
 ├──────────┴──────────────────┴─────────────────────────┤   │
 │ Footer (optional)                                       │  ─┘
@@ -103,11 +103,16 @@ FeatureContent 内部は `FeaturePageLayout` により Controls / Results の 2 
 │                                      │
 │         Main Content                 │
 │         (scroll area)                │
+│         pb-32 で下部バー分余白        │
 │                                      │
 ├─────────────────────────────────────┤
-│ BottomNav: 🔍 📋 🔧                │
+│ BottomNav: 🔍 📋 🔧                │  h-14
+├─────────────────────────────────────┤  ← fixed bottom-14
+│ [検索] SearchProgress [GPU]        │  ← 固定検索バー (lg:hidden)
 └─────────────────────────────────────┘
 ```
+
+モバイルでは検索ボタン・SearchProgress を画面下部に固定配置する。`fixed bottom-14 left-0 right-0 z-40 lg:hidden` で BottomNav (`h-14`) の上に重ねる。コンテンツ側は `pb-32 lg:pb-4` でバーとの重なりを防止する。
 
 ## 5. コンポーネント設計
 
@@ -150,14 +155,34 @@ function ResponsiveContainer({
 
       <main className="flex flex-1 flex-col overflow-hidden">
         {topContent && <div className="shrink-0">{topContent}</div>}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 py-4 lg:px-6">{children}</div>
+        <div className="flex-1 overflow-y-auto lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+          <div className="px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:px-6">
+            {children}
+          </div>
         </div>
       </main>
     </div>
   );
 }
 ```
+
+#### 高さ制約の伝播 (PC)
+
+PC 版 (`lg+`) ではビューポート高さ内にコンテンツを収めるため、flex チェーンで高さ制約を伝播する。モバイルでは `overflow-y-auto` で通常スクロールとなる。
+
+```
+ResponsiveContainer (overflow-hidden)
+  └ scroll area (lg: flex min-h-0 flex-col overflow-hidden)
+    └ content inner (lg: flex min-h-0 flex-1 flex-col)
+      └ TabsContent (lg: flex min-h-0 flex-1 flex-col)
+        └ FeaturePageLayout (lg: min-h-0 flex-1 flex-row)
+          ├ Controls (lg:w-[28rem] overflow-y-auto)
+          └ Results (min-h-0 flex-1 overflow-hidden)
+```
+
+`lg:` では各レイヤーが `min-h-0` + `flex-1` + `flex-col` を繰り返すことで、`overflow-hidden` のルートから Results まで高さ制約が到達する。モバイルではこれらの `lg:` クラスが非適用となり、`overflow-y-auto` で通常縦スクロールとなる。
+
+> **設計注意**: `overflow-y-auto` の親要素内で `h-full` を使うと Chrome/Firefox で高さ制約が切れる問題がある。`lg:` では `h-full` ではなく `min-h-0 flex-1` で高さを制御すること。
 
 ### 5.2 FeaturePageLayout パターン
 
@@ -180,9 +205,9 @@ const ResultsSlot = ({ children, className }: { children: ReactNode; className?:
   </div>
 );
 
-function FeaturePageLayout({ children }: { children: ReactNode }) {
+function FeaturePageLayout({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="flex h-full flex-col gap-4 p-4 lg:flex-row">
+    <div className={cn('flex flex-col gap-4 p-4 lg:min-h-0 lg:flex-1 lg:flex-row', className)}>
       {children}
     </div>
   );
@@ -194,8 +219,49 @@ FeaturePageLayout.Results = ResultsSlot;
 
 | デバイス | 動作 |
 |---------|------|
-| PC (`lg+`) | `flex-row`: Controls (固定幅) + Results (`flex-1`) の横 2 ペイン |
+| PC (`lg+`) | `flex-row`: Controls (`lg:w-[28rem]` 固定幅) + Results (`flex-1`) の横 2 ペイン |
 | モバイル (`< lg`) | `flex-col`: Controls → Results の縦積み。1 画面制約なし |
+
+Controls ペインの幅は `lg:w-[28rem]` (28rem = 448px) で統一。
+
+### 5.2.1 デュアルレンダーパターン
+
+検索ボタン・進捗バーなど、PC とモバイルで配置が異なる要素は 2 箇所に描画する:
+
+| デバイス | 配置 | CSS | 備考 |
+|---------|------|-----|------|
+| PC | Controls ペイン先頭 | `hidden lg:flex lg:flex-col lg:gap-2` | フロー内配置 |
+| モバイル | 画面下部固定バー | `fixed bottom-14 left-0 right-0 z-40 lg:hidden` | BottomNav の上 |
+
+ページコンポーネントは `FeaturePageLayout` に `className="pb-32 lg:pb-4"` を渡し、モバイルで固定バーとコンテンツが重ならないよう余白を確保する。
+
+```tsx
+// 使用例
+function SomePage() {
+  return (
+    <>
+      <FeaturePageLayout className="pb-32 lg:pb-4">
+        <FeaturePageLayout.Controls>
+          <div className="hidden lg:flex lg:flex-col lg:gap-2">
+            <SearchButton />
+            <SearchProgress />
+          </div>
+          {/* フォーム内容 */}
+        </FeaturePageLayout.Controls>
+        <FeaturePageLayout.Results>
+          <DataTable />
+        </FeaturePageLayout.Results>
+      </FeaturePageLayout>
+
+      {/* モバイル固定検索バー */}
+      <div className="fixed bottom-14 left-0 right-0 z-40 border-t border-border bg-background p-3 lg:hidden">
+        <SearchProgress />
+        <SearchButton />
+      </div>
+    </>
+  );
+}
+```
 
 ### 5.3 条件付きレンダリング
 

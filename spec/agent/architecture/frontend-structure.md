@@ -120,7 +120,7 @@ features/{feature-name}/
 └── types.ts                # 機能固有型定義
 ```
 
-各 feature のページコンポーネントは `FeaturePageLayout` (Compound Component) を使用し、Controls / Results の 2 スロットにコンテンツを配置する。詳細は [デザインシステム](./design-system.md) セクション 5.5.1 および [レスポンシブ対応](./responsive-design.md) セクション 5.2 を参照。
+各 feature のページコンポーネントは `FeaturePageLayout` (Compound Component) を使用し、Controls / Results の 2 スロットにコンテンツを配置する。検索ボタン・SearchProgress はデュアルレンダーパターン (PC: Controls 内 `hidden lg:flex`、モバイル: `fixed bottom-14 lg:hidden`) で 2 箇所に描画する。詳細は [デザインシステム](./design-system.md) セクション 5.5.1 および [レスポンシブ対応](./responsive-design.md) セクション 5.2 を参照。
 
 ## 依存関係
 

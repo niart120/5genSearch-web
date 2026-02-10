@@ -60,56 +60,83 @@
 
 ### 3.1 画面構成
 
-PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み。
+PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み + 下部固定検索バー。
+
+#### PC レイアウト (`lg+`)
 
 ```
-PC (lg+)
-┌─── Controls (w-[28rem]) ──┬───── Results (flex-1) ─────┐
-│ [検索開始] [GPU]             │                              │
-│ SearchProgress (常駐)       │ 結果テーブル (DataTable)       │
-│                             │ │ 日時 | T0 | VC | Key | Base  │
-│ SearchContextForm           │ │ ...                        │
-│ ├ DateRangePicker            │ │ ...                        │
-│ ├ TimeRangePicker            │ │ (internal scroll)          │
-│ └ KeySpecInput (コントローラ型) │                              │
-│                             │ ResultDetailDialog          │
-│ TargetSeedsInput            │                              │
-└─────────────────────────────┴──────────────────────────────┘
-
-モバイル (< lg)
-┌────────────────────────────────┐
-│ [検索開始] [GPU]                 │
-│ SearchProgress (常駐)           │
-│                                  │
-│ SearchContextForm (shared)       │
-│ ├ DateRangePicker                │
-│ ├ TimeRangePicker                │
-│ └ KeySpecInput (コントローラ型)   │
-│                                  │
-│ TargetSeedsInput                 │
-│                                  │
-│ 結果 (DataTable / CardList)       │
-│ ResultDetailDialog               │
-└────────────────────────────────┘
+┌─── Controls (lg:w-[28rem]) ──┬───── Results (flex-1) ─────┐
+│ [検索開始] [GPU]  (hidden lg:flex) │                              │
+│ SearchProgress (常駐)            │ 結果テーブル (DataTable)       │
+│                                  │ │ 日時 | T0 | VC | Key | Base  │
+│ SearchContextForm                │ │ ...                        │
+│ ├ DateRangePicker                │ │ ...                        │
+│ ├ TimeRangePicker                │ │ (internal scroll)          │
+│ └ KeySpecInput (コントローラ型)   │                              │
+│                                  │ ResultDetailDialog          │
+│ TargetSeedsInput                 │                              │
+└──────────────────────────────────┴──────────────────────────────┘
 ```
 
-ページコンポーネントでの使用例:
+#### モバイルレイアウト (`< lg`)
+
+```
+┌────────────────────────────────────┐
+│ SearchContextForm (shared)          │
+│ ├ DateRangePicker  (flex-row wrap)  │
+│ ├ TimeRangePicker  (flex-row wrap)  │
+│ └ KeySpecInput (コントローラ型)      │
+│                                      │
+│ TargetSeedsInput                     │
+│                                      │
+│ 結果 (DataTable / CardList)           │
+│ ResultDetailDialog                   │
+│                                      │
+│ (pb-32 でバー分の余白確保)             │
+├──────────────────────────────────────┤
+│ BottomNav (h-14)                     │
+├──────────────────────────────────────┤  ← fixed bottom-14
+│ [検索開始] SearchProgress [GPU]      │  ← モバイル固定検索バー (lg:hidden)
+└──────────────────────────────────────┘
+```
+
+#### デュアルレンダーパターン
+
+検索ボタン・SearchProgress・GPU トグルは PC とモバイルで配置が異なるため、2 箇所に描画する:
+
+- **PC**: Controls ペイン先頭に `hidden lg:flex` で配置
+- **モバイル**: `fixed bottom-14 left-0 right-0 z-40 lg:hidden` の固定バーとして画面下部に配置。`bottom-14` は BottomNav (`h-14`) の上に重ねるためのオフセット
+
+ページコンポーネントは `FeaturePageLayout` に `pb-32 lg:pb-4` を渡し、モバイルで固定バーとコンテンツが重ならないようにする。
+
+#### 使用例
 
 ```tsx
 function DatetimeSearchPage() {
   return (
-    <FeaturePageLayout>
-      <FeaturePageLayout.Controls>
+    <>
+      <FeaturePageLayout className="pb-32 lg:pb-4">
+        <FeaturePageLayout.Controls>
+          {/* PC 用: hidden lg:flex */}
+          <div className="hidden lg:flex lg:flex-col lg:gap-2">
+            <SearchButton ... />
+            <SearchProgress ... />
+          </div>
+          <SearchContextForm ... />
+          <TargetSeedsInput ... />
+        </FeaturePageLayout.Controls>
+        <FeaturePageLayout.Results>
+          <DataTable ... />
+          <ResultDetailDialog ... />
+        </FeaturePageLayout.Results>
+      </FeaturePageLayout>
+
+      {/* モバイル用固定検索バー */}
+      <div className="fixed bottom-14 ... lg:hidden">
+        <SearchProgress ... />
         <SearchButton ... />
-        <SearchProgress ... /> {/* 常駐表示 */}
-        <SearchContextForm ... />
-        <TargetSeedsInput ... />
-      </FeaturePageLayout.Controls>
-      <FeaturePageLayout.Results>
-        <DataTable ... />
-        <ResultDetailDialog ... />
-      </FeaturePageLayout.Results>
-    </FeaturePageLayout>
+      </div>
+    </>
   );
 }
 ```
@@ -164,6 +191,41 @@ DS 設定 (`DsConfig`, `Timer0VCountRange[]`) はサイドバーで管理済み�
 - UI ラベル: Lingui `<Trans>` マクロ / `t` 関数を使用
 - WASM 由来の表示文字列: 本機能では不要 (SeedOrigin は数値データのみ)
 - 対象ロケール: `ja` / `en`
+
+### 3.7 レスポンシブ実装パターン
+
+#### 高さ制約の伝播 (PC)
+
+PC 版で Results ペインが 1 画面に収まるよう、flex チェーンで高さ制約を伝播する。
+
+```
+ResponsiveContainer (overflow-hidden)
+  └ scroll area (lg: flex min-h-0 flex-col overflow-hidden)
+    └ content inner (lg: flex min-h-0 flex-1 flex-col)
+      └ TabsContent (lg: flex min-h-0 flex-1 flex-col)
+        └ FeaturePageLayout (lg: min-h-0 flex-1 flex-row)
+          ├ Controls (lg:w-[28rem] overflow-y-auto)
+          └ Results (min-h-0 flex-1 overflow-hidden)
+```
+
+`lg:` では各レイヤーが `min-h-0` + `flex-1` + `flex-col` を繰り返すことで、ビューポート高さの制約が Results まで到達する。モバイルでは `overflow-y-auto` で通常スクロールとなり、この制約は適用されない。
+
+#### 入力コンポーネントのコンパクト化
+
+日付・時刻入力で使用するコンパクトサイズ:
+
+| 要素 | サイズ | 備考 |
+|------|--------|------|
+| DateRangePicker 入力 | `h-7 w-12 px-0` (年), `h-7 w-8 px-0` (月/日) | `text-center` |
+| TimeRangePicker 入力 | `h-7 w-8 px-0` | `text-center` |
+| 区切り文字 (`:`, `〜`) | `inline-flex h-7 items-center self-end` | 入力と高さを揃える |
+| モバイルラベル | `hidden sm:block` | sm 未満では非表示 |
+
+DateRangePicker / TimeRangePicker はいずれも `flex-row flex-wrap` で、画面幅に応じて折り返す。
+
+#### SearchProgress の常駐表示
+
+`SearchProgress` は `progress` が `undefined` (アイドル状態) でも表示する。アイドル時は全値 0 + `opacity-40` で薄く表示し、検索開始後に通常の不透明度に切り替わる。
 
 ## 4. 実装仕様
 
@@ -223,10 +285,24 @@ interface KeySpecInputProps {
 
 | 項目 | 仕様 |
 |------|------|
-| レイアウト | DS コントローラ風: ショルダー (L/R) 上段、D-Pad (十字) 左側、Face (XYAB ダイヤモンド) 右側、Select/Start 下部中央に横並び |
+| コンテナ | `mx-auto max-w-72 rounded-lg border border-border bg-muted/30 p-3` |
+| レイアウト | DS コントローラ風: ショルダー (L/R) 上段 → D-Pad + Face を `justify-center gap-8` で横並び → Select/Start 下部中央 |
+| D-Pad / Face | `grid grid-cols-3 gap-1`、各セル `size-8` (32px 正方形) |
+| ショルダー (L/R) | `h-7 w-12 rounded-t-lg` |
+| Select / Start | `h-6 w-14 rounded-full text-[10px]`、`justify-center gap-3` で横並び |
 | ボタン一覧 | A, B, X, Y, L, R, Start, Select, ↑, ↓, ←, → (トグルボタン) |
 | 組み合わせ数表示 | `get_key_combination_count(key_spec)` (WASM) で計算した値を表示 |
 | WASM 未初期化時 | ボタン数のみ表示 (組み合わせ数のフォールバック) |
+
+#### ToggleButton
+
+各ボタンは `ToggleButton` として実装。`pressed` / `unpressed` で背景色を切り替える。
+
+| 状態 | スタイル |
+|------|--------|
+| pressed | `bg-primary text-primary-foreground shadow-sm` |
+| unpressed | `border border-input bg-background hover:bg-accent` |
+| 共通 | `inline-flex items-center justify-center rounded-sm text-xs font-medium select-none` |
 
 ### 4.3 共通コンポーネント: TargetSeedsInput
 

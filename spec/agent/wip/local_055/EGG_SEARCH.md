@@ -57,38 +57,46 @@
 
 ### 3.1 画面構成
 
-PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み。
+PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み + 下部固定検索バー。
 
-入力項目が多いため、Controls ペイン内部では EggParamsForm と EggFilterForm をセクション分離し、Accordion / Collapsible で折りたたみ管理する。Controls ペイン幅はデフォルト `w-80` では狭い場合、`w-96` 等に拡張する。
+local_054 で確立したレスポンシブパターンを踏襲する:
+
+- **Controls 幅**: `lg:w-[28rem]` (入力項目が多い本機能でも同一幅)
+- **デュアルレンダーパターン**: 検索ボタン・SearchProgress を PC (`hidden lg:flex`) とモバイル (`fixed bottom-14 lg:hidden`) の 2 箇所に描画
+- **FeaturePageLayout**: `className="pb-32 lg:pb-4"` でモバイル固定バーとの重なりを防止
+- **高さ制約伝播**: PC 版は flex チェーンで Results が 1 画面に収まる
+
+入力項目が多いため、Controls ペイン内部では EggParamsForm と EggFilterForm を Accordion / Collapsible で折りたたみ管理する。
 
 ```
 PC (lg+)
-┌─── Controls (w-80~w-96) ─┬───── Results (flex-1) ─────┐
-│ SearchContextForm        │                              │
-│ ├ DateRangePicker         │ 結果テーブル (DataTable)       │
-│ ├ TimeRangePicker         │ │ 日時 | 性格 | IV | 色違い   │
-│ └ KeySpecInput            │ │ ...                        │
-│                          │ │ ...                        │
-│ ▼ EggParamsForm           │ │ (internal scroll)          │
-│ ├ かわらずのいし (性格指定)   │                              │
-│ ├ メス親夢特性/メタモン    │ ResultDetailDialog          │
-│ ├ 親個体値 (♂ / ♀)         │                              │
-│ ├ NPC 消費                │                              │
-│ └ offset / max_advance   │                              │
-│                          │                              │
-│ ▼ EggFilterForm (任意)     │                              │
-│ ├ IV フィルター               │                              │
-│ └ 性格/性別/特性/色違い    │                              │
-│                          │                              │
-│ [検索開始] SearchProgress │                              │
-└──────────────────────────┴──────────────────────────────┘
+┌─── Controls (lg:w-[28rem]) ──┬───── Results (flex-1) ─────┐
+│ [検索開始]  (hidden lg:flex)   │                              │
+│ SearchProgress (常駐)          │ 結果テーブル (DataTable)       │
+│                                │ │ 日時 | 性格 | IV | 色違い   │
+│ SearchContextForm              │ │ ...                        │
+│ ├ DateRangePicker              │ │ ...                        │
+│ ├ TimeRangePicker              │ │ (internal scroll)          │
+│ └ KeySpecInput                 │                              │
+│                                │ ResultDetailDialog          │
+│ ▼ EggParamsForm                │                              │
+│ ├ かわらずのいし (性格指定)      │                              │
+│ ├ メス親夢特性/メタモン         │                              │
+│ ├ 親個体値 (♂ / ♀)            │                              │
+│ ├ NPC 消費                     │                              │
+│ └ offset / max_advance         │                              │
+│                                │                              │
+│ ▼ EggFilterForm (任意)         │                              │
+│ ├ IV フィルター                 │                              │
+│ └ 性格/性別/特性/色違い         │                              │
+└────────────────────────────────┴──────────────────────────────┘
 
 モバイル (< lg)
 ┌──────────────────────────────────┐
 │ SearchContextForm (共通/local_054)│
-│ ├ DateRangePicker                │
-│ ├ TimeRangePicker                │
-│ └ KeySpecInput                   │
+│ ├ DateRangePicker (flex-row wrap) │
+│ ├ TimeRangePicker (flex-row wrap) │
+│ └ KeySpecInput (コントローラ型)    │
 │                                  │
 │ EggParamsForm                    │
 │ ├ かわらずのいし (性格指定)        │
@@ -104,10 +112,14 @@ PC (lg+)
 │ ├ 性格 / 性別 / 特性 / 色違い     │
 │ └ 猶予フレーム下限                │
 │                                  │
-│ [検索開始]  SearchProgress        │
-│                                  │
 │ 結果テーブル (DataTable/CardList) │
 │ ResultDetailDialog               │
+│                                  │
+│ (pb-32 でバー分の余白確保)        │
+├──────────────────────────────────┤
+│ BottomNav (h-14)                 │
+├──────────────────────────────────┤  ← fixed bottom-14
+│ [検索開始] SearchProgress        │  ← モバイル固定検索バー (lg:hidden)
 └──────────────────────────────────┘
 ```
 
@@ -316,6 +328,40 @@ function EggSearchPage(): ReactElement;
 3. `useEggSearch` で検索実行
 4. Store から DS 設定 + トレーナー情報を取得し `DatetimeSearchContext` / `GenerationConfig` を構築
 5. 結果テーブル + 詳細ダイアログの描画
+6. デュアルレンダーパターンで検索ボタン・SearchProgress を PC / モバイルに描画
+
+local_054 (`DatetimeSearchPage`) と同じ構造を採用する:
+
+```tsx
+function EggSearchPage() {
+  return (
+    <>
+      <FeaturePageLayout className="pb-32 lg:pb-4">
+        <FeaturePageLayout.Controls>
+          {/* PC 用: hidden lg:flex */}
+          <div className="hidden lg:flex lg:flex-col lg:gap-2">
+            <SearchButton ... />
+            <SearchProgress ... />
+          </div>
+          <SearchContextForm ... />
+          <EggParamsForm ... />
+          <EggFilterForm ... />
+        </FeaturePageLayout.Controls>
+        <FeaturePageLayout.Results>
+          <DataTable ... />
+          <ResultDetailDialog ... />
+        </FeaturePageLayout.Results>
+      </FeaturePageLayout>
+
+      {/* モバイル用固定検索バー */}
+      <div className="fixed bottom-14 ... lg:hidden">
+        <SearchProgress ... />
+        <SearchButton ... />
+      </div>
+    </>
+  );
+}
+```
 
 ### 4.8 FeatureContent 更新
 
