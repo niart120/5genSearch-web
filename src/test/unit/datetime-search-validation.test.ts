@@ -61,7 +61,7 @@ describe('validateMtseedSearchForm', () => {
     });
     const result = validateMtseedSearchForm(form, createDefaultParsed());
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('開始日は終了日以前を指定してください');
+    expect(result.errors).toContain('DATE_RANGE_INVALID');
   });
 
   it('開始日と終了日が同じ場合は valid を返す', () => {
@@ -74,16 +74,16 @@ describe('validateMtseedSearchForm', () => {
     const parsed = createDefaultParsed({ seeds: [] });
     const result = validateMtseedSearchForm(form, parsed);
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('MT Seed を 1 つ以上入力してください');
+    expect(result.errors).toContain('SEEDS_EMPTY');
   });
 
   it('Target Seeds にパースエラーがある場合はエラーを返す', () => {
     const parsed = createDefaultParsed({
-      errors: [{ line: 1, value: 'invalid', message: 'parse error' }],
+      errors: [{ line: 1, value: 'invalid', code: 'INVALID_HEX' }],
     });
     const result = validateMtseedSearchForm(createDefaultForm(), parsed);
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('MT Seed は 0〜FFFFFFFF の範囲で指定してください');
+    expect(result.errors).toContain('SEEDS_INVALID');
   });
 
   it('時刻範囲が無効な場合はエラーを返す', () => {
@@ -99,7 +99,7 @@ describe('validateMtseedSearchForm', () => {
     });
     const result = validateMtseedSearchForm(form, createDefaultParsed());
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('時刻の範囲が無効です');
+    expect(result.errors).toContain('TIME_RANGE_INVALID');
   });
 
   it('複数のエラーを同時に報告する', () => {

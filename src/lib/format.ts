@@ -159,7 +159,10 @@ const KEY_BUTTONS: readonly [number, string][] = [
  */
 function formatKeyCode(keyCode: number): string {
   const mask = keyCode ^ 0x2f_ff;
-  const pressed = KEY_BUTTONS.filter(([bit]) => (mask & bit) !== 0).map(([, name]) => name);
+  const pressed: string[] = [];
+  for (const [bit, name] of KEY_BUTTONS) {
+    if ((mask & bit) !== 0) pressed.push(name);
+  }
   return pressed.length === 0 ? 'なし' : pressed.join(' + ');
 }
 

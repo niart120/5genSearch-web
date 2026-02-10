@@ -11,13 +11,15 @@ import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
 import { DataTable } from '@/components/data-display/data-table';
-import { SearchProgress } from '@/components/data-display/search-progress';
+import { SearchProgress, type SearchProgressData } from '@/components/data-display/search-progress';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useDatetimeSearch } from '../hooks/use-datetime-search';
 import { parseTargetSeeds, validateMtseedSearchForm } from '../types';
+import type { ValidationErrorCode, ParseErrorCode } from '../types';
 import { createSeedOriginColumns } from './seed-origin-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import type {
@@ -48,6 +50,96 @@ const DEFAULT_TIME_RANGE: TimeRangeParams = {
 
 const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
 
+/* ------------------------------------------------------------------ */
+/*  SearchControls — PC / モバイルで共有する検索操作 UI                   */
+/* ------------------------------------------------------------------ */
+
+interface SearchControlsProps {
+  layout: 'desktop' | 'mobile';
+  isLoading: boolean;
+  isInitialized: boolean;
+  isValid: boolean;
+  useGpu: boolean;
+  onGpuChange: (checked: boolean) => void;
+  progress: SearchProgressData | undefined;
+  error: Error | undefined;
+  onSearch: () => void;
+  onCancel: () => void;
+}
+
+function SearchControls({
+  layout,
+  isLoading,
+  isInitialized,
+  isValid,
+  useGpu,
+  onGpuChange,
+  progress,
+  error,
+  onSearch,
+  onCancel,
+}: SearchControlsProps) {
+  const buttonSize = layout === 'mobile' ? 'sm' : 'default';
+  const gpuToggleId = layout === 'mobile' ? 'gpu-toggle-mobile' : 'gpu-toggle';
+
+  const buttonRow = (
+    <div className={cn('flex items-center gap-3', layout === 'mobile' && 'mt-2')}>
+      {isLoading ? (
+        <Button variant="outline" onClick={onCancel} className="flex-1" size={buttonSize}>
+          <Trans>Cancel</Trans>
+        </Button>
+      ) : (
+        <Button
+          onClick={onSearch}
+          disabled={!isValid || !isInitialized}
+          className="flex-1"
+          size={buttonSize}
+        >
+          <Trans>Search</Trans>
+        </Button>
+      )}
+      <div className="flex items-center gap-1.5">
+        <Switch
+          id={gpuToggleId}
+          checked={useGpu}
+          onCheckedChange={onGpuChange}
+          disabled={isLoading}
+        />
+        <Label htmlFor={gpuToggleId} className="text-xs">
+          GPU
+        </Label>
+      </div>
+    </div>
+  );
+
+  const progressElement = <SearchProgress progress={progress} />;
+  const errorElement = error ? (
+    <p className={cn('text-xs text-destructive', layout === 'mobile' && 'mt-1')}>{error.message}</p>
+  ) : undefined;
+
+  if (layout === 'mobile') {
+    return (
+      <>
+        {progressElement}
+        {buttonRow}
+        {errorElement}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {buttonRow}
+      {progressElement}
+      {errorElement}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  DatetimeSearchPage                                                 */
+/* ------------------------------------------------------------------ */
+
 function DatetimeSearchPage(): ReactElement {
   const { t } = useLingui();
 
@@ -72,6 +164,35 @@ function DatetimeSearchPage(): ReactElement {
   const validation = useMemo(
     () => validateMtseedSearchForm({ dateRange, timeRange, keySpec, targetSeedsRaw }, parsedSeeds),
     [dateRange, timeRange, keySpec, targetSeedsRaw, parsedSeeds]
+  );
+
+  // i18n: バリデーションエラーコード → 翻訳済みメッセージ
+  const validationMessages = useMemo(
+    (): Record<ValidationErrorCode, string> => ({
+      DATE_RANGE_INVALID: t`Start date must be on or before end date`,
+      TIME_RANGE_INVALID: t`Time range is invalid`,
+      SEEDS_EMPTY: t`Enter at least one MT Seed`,
+      SEEDS_INVALID: t`MT Seed must be in the range 0 to FFFFFFFF`,
+    }),
+    [t]
+  );
+
+  // i18n: パースエラーコード → 翻訳済みメッセージ
+  const parseErrorMessages = useMemo(
+    (): Record<ParseErrorCode, string> => ({
+      INVALID_HEX: t`Enter a hex value in the range 0 to FFFFFFFF`,
+    }),
+    [t]
+  );
+
+  const translatedParseErrors = useMemo(
+    () =>
+      parsedSeeds.errors.map((err) => ({
+        line: err.line,
+        value: err.value,
+        message: parseErrorMessages[err.code],
+      })),
+    [parsedSeeds.errors, parseErrorMessages]
   );
 
   // 詳細ダイアログ
@@ -101,36 +222,20 @@ function DatetimeSearchPage(): ReactElement {
     <>
       <FeaturePageLayout className="pb-32 lg:pb-4">
         <FeaturePageLayout.Controls>
-          {/* PC: 検索ボタン + GPU トグル + 進捗 */}
+          {/* PC: 検索コントロール */}
           <div className="hidden lg:flex lg:flex-col lg:gap-2">
-            <div className="flex items-center gap-3">
-              {isLoading ? (
-                <Button variant="outline" onClick={cancel} className="flex-1">
-                  <Trans>Cancel</Trans>
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSearch}
-                  disabled={!validation.isValid || !isInitialized}
-                  className="flex-1"
-                >
-                  <Trans>Search</Trans>
-                </Button>
-              )}
-              <div className="flex items-center gap-1.5">
-                <Switch
-                  id="gpu-toggle"
-                  checked={useGpu}
-                  onCheckedChange={setUseGpu}
-                  disabled={isLoading}
-                />
-                <Label htmlFor="gpu-toggle" className="text-xs">
-                  GPU
-                </Label>
-              </div>
-            </div>
-            <SearchProgress progress={progress} />
-            {error && <p className="text-xs text-destructive">{error.message}</p>}
+            <SearchControls
+              layout="desktop"
+              isLoading={isLoading}
+              isInitialized={isInitialized}
+              isValid={validation.isValid}
+              useGpu={useGpu}
+              onGpuChange={setUseGpu}
+              progress={progress}
+              error={error}
+              onSearch={handleSearch}
+              onCancel={cancel}
+            />
           </div>
 
           <SearchContextForm
@@ -147,18 +252,18 @@ function DatetimeSearchPage(): ReactElement {
             value={targetSeedsRaw}
             onChange={setTargetSeedsRaw}
             parsedSeeds={parsedSeeds.seeds}
-            errors={parsedSeeds.errors}
+            errors={translatedParseErrors}
             disabled={isLoading}
           />
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 && (
+          {validation.errors.length > 0 ? (
             <ul className="text-xs text-destructive space-y-0.5">
-              {validation.errors.map((err) => (
-                <li key={err}>{err}</li>
+              {validation.errors.map((code) => (
+                <li key={code}>{validationMessages[code]}</li>
               ))}
             </ul>
-          )}
+          ) : undefined}
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
@@ -182,35 +287,18 @@ function DatetimeSearchPage(): ReactElement {
 
       {/* モバイル: 下部固定 検索バー */}
       <div className="fixed bottom-14 left-0 right-0 z-40 border-t border-border bg-background p-3 lg:hidden">
-        <SearchProgress progress={progress} />
-        <div className="mt-2 flex items-center gap-3">
-          {isLoading ? (
-            <Button variant="outline" onClick={cancel} className="flex-1" size="sm">
-              <Trans>Cancel</Trans>
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSearch}
-              disabled={!validation.isValid || !isInitialized}
-              className="flex-1"
-              size="sm"
-            >
-              <Trans>Search</Trans>
-            </Button>
-          )}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="gpu-toggle-mobile"
-              checked={useGpu}
-              onCheckedChange={setUseGpu}
-              disabled={isLoading}
-            />
-            <Label htmlFor="gpu-toggle-mobile" className="text-xs">
-              GPU
-            </Label>
-          </div>
-        </div>
-        {error && <p className="mt-1 text-xs text-destructive">{error.message}</p>}
+        <SearchControls
+          layout="mobile"
+          isLoading={isLoading}
+          isInitialized={isInitialized}
+          isValid={validation.isValid}
+          useGpu={useGpu}
+          onGpuChange={setUseGpu}
+          progress={progress}
+          error={error}
+          onSearch={handleSearch}
+          onCancel={cancel}
+        />
       </div>
     </>
   );

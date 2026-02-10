@@ -4,6 +4,20 @@
 
 import type { DateRangeParams, TimeRangeParams, KeySpec, MtSeed } from '../../wasm/wasm_pkg.js';
 
+/** 16 進数パース用 — module-level にホイストして毎回の再生成を回避 */
+const HEX_PREFIX_RE = /^0[xX]/;
+const HEX_DIGITS_RE = /^[\da-fA-F]+$/;
+
+/** バリデーションエラーコード */
+export type ValidationErrorCode =
+  | 'DATE_RANGE_INVALID'
+  | 'TIME_RANGE_INVALID'
+  | 'SEEDS_EMPTY'
+  | 'SEEDS_INVALID';
+
+/** パースエラーコード */
+export type ParseErrorCode = 'INVALID_HEX';
+
 /** MT Seed 検索フォーム状態 */
 export interface MtseedSearchFormState {
   dateRange: DateRangeParams;
@@ -14,7 +28,7 @@ export interface MtseedSearchFormState {
 
 /** バリデーション結果 */
 export interface ValidationResult {
-  errors: string[];
+  errors: ValidationErrorCode[];
   isValid: boolean;
 }
 
@@ -22,7 +36,7 @@ export interface ValidationResult {
 export interface ParseError {
   line: number;
   value: string;
-  message: string;
+  code: ParseErrorCode;
 }
 
 /** Target Seeds パース結果 */
@@ -39,8 +53,8 @@ function parseHexU32(raw: string): number | undefined {
   const trimmed = raw.trim();
   if (trimmed === '') return undefined;
 
-  const hex = trimmed.replace(/^0[xX]/, '');
-  if (!/^[\da-fA-F]+$/.test(hex)) return undefined;
+  const hex = trimmed.replace(HEX_PREFIX_RE, '');
+  if (!HEX_DIGITS_RE.test(hex)) return undefined;
 
   const value = Number.parseInt(hex, 16);
   if (!Number.isFinite(value) || value < 0 || value > 0xff_ff_ff_ff) return undefined;
@@ -66,7 +80,7 @@ export function parseTargetSeeds(input: string): ParsedTargetSeeds {
       errors.push({
         line: i + 1,
         value: raw,
-        message: 'MT Seed は 0〜FFFFFFFF の 16 進数で指定してください',
+        code: 'INVALID_HEX',
       });
     } else {
       seeds.push(value);
@@ -112,22 +126,22 @@ export function validateMtseedSearchForm(
   form: MtseedSearchFormState,
   parsedSeeds: ParsedTargetSeeds
 ): ValidationResult {
-  const errors: string[] = [];
+  const errors: ValidationErrorCode[] = [];
 
   if (!isDateRangeValid(form.dateRange)) {
-    errors.push('開始日は終了日以前を指定してください');
+    errors.push('DATE_RANGE_INVALID');
   }
 
   if (!isTimeRangeValid(form.timeRange)) {
-    errors.push('時刻の範囲が無効です');
+    errors.push('TIME_RANGE_INVALID');
   }
 
   if (parsedSeeds.seeds.length === 0) {
-    errors.push('MT Seed を 1 つ以上入力してください');
+    errors.push('SEEDS_EMPTY');
   }
 
   if (parsedSeeds.errors.length > 0) {
-    errors.push('MT Seed は 0〜FFFFFFFF の範囲で指定してください');
+    errors.push('SEEDS_INVALID');
   }
 
   return { errors, isValid: errors.length === 0 };
