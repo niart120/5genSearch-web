@@ -57,7 +57,33 @@
 
 ### 3.1 画面構成
 
+PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み。
+
+入力項目が多いため、Controls ペイン内部では EggParamsForm と EggFilterForm をセクション分離し、Accordion / Collapsible で折りたたみ管理する。Controls ペイン幅はデフォルト `w-80` では狭い場合、`w-96` 等に拡張する。
+
 ```
+PC (lg+)
+┌─── Controls (w-80~w-96) ─┬───── Results (flex-1) ─────┐
+│ SearchContextForm        │                              │
+│ ├ DateRangePicker         │ 結果テーブル (DataTable)       │
+│ ├ TimeRangePicker         │ │ 日時 | 性格 | IV | 色違い   │
+│ └ KeySpecInput            │ │ ...                        │
+│                          │ │ ...                        │
+│ ▼ EggParamsForm           │ │ (internal scroll)          │
+│ ├ かわらずのいし (性格指定)   │                              │
+│ ├ メス親夢特性/メタモン    │ ResultDetailDialog          │
+│ ├ 親個体値 (♂ / ♀)         │                              │
+│ ├ NPC 消費                │                              │
+│ └ offset / max_advance   │                              │
+│                          │                              │
+│ ▼ EggFilterForm (任意)     │                              │
+│ ├ IV フィルター               │                              │
+│ └ 性格/性別/特性/色違い    │                              │
+│                          │                              │
+│ [検索開始] SearchProgress │                              │
+└──────────────────────────┴──────────────────────────────┘
+
+モバイル (< lg)
 ┌──────────────────────────────────┐
 │ SearchContextForm (共通/local_054)│
 │ ├ DateRangePicker                │
@@ -84,8 +110,6 @@
 │ ResultDetailDialog               │
 └──────────────────────────────────┘
 ```
-
-入力項目が多いため、EggParamsForm と EggFilterForm はセクション分離し、フィルターは折りたたみ可能 (Radix `Collapsible` or `Accordion`) にすることを検討する。
 
 ### 3.2 WASM API 対応
 

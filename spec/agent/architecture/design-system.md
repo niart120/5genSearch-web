@@ -265,24 +265,54 @@ CSS カスタムプロパティで定義し、Tailwind CSS v4 の `@theme` で�
 | 項目 | 方針 |
 |------|------|
 | ページ高さ | ビューポート高さ (`100dvh`) に収める。`overflow: hidden` でページ全体のスクロールを抑制 |
-| 結果テーブル | テーブル領域内で独立スクロール (`overflow-y-auto` + `flex-1`)。ページ全体は動かさない |
-| フォーム | 折りたたみ・タブ切り替えで表示面積を制御 |
+| FeatureContent 内部 | Controls ペインと Results ペインの横 2 ペイン構成 (アプリ全体では Sidebar を含め 3 ペイン) |
+| Controls ペイン | 固定幅 (`w-80` = 20rem 目安)。内容が溢れる場合は内部スクロール (`overflow-y-auto`) |
+| Results ペイン | `flex-1` で残り幅を使用。テーブル領域内で独立スクロール (`overflow-y-auto`) |
+| フォーム | Controls ペイン内で Accordion / Collapsible によりセクション管理 |
 | サイドバー | 固定高さ。内容が溢れる場合は内部スクロール |
-| モバイル (`< lg`) | 1 画面制約なし。通常の縦スクロール |
+| モバイル (`< lg`) | 2 ペイン制約なし。Controls → Results の縦積み + 通常の縦スクロール |
 
 ```
-┌─ Header (+ CategoryNav) ────────────┐  ─┐
-├─────────┬────────────────────────────┤   │
-│         │  Form (compact / tabs)     │   │
-│ Sidebar ├────────────────────────────┤   │ 100dvh
-│ 左端固定 │  Result Table              │    │
-│         │  (internal scroll)         │    │
-├─────────┴────────────────────────────┤    │
-│ Footer (optional)                    │  ─┘
-└──────────────────────────────────────┘
-↑ 左端固定         ← 残り幅を全て使用 →
+┌─ Header (+ CategoryNav) ─────────────────────────────┐  ─┐
+├──────────┬──────────────────┬─────────────────────────┤   │
+│          │ Controls         │ Results                 │   │
+│ Sidebar  │ (内部スクロール)  │ (DataTable)              │   │ 100dvh
+│ 左端固定  │ w-80 (20rem)     │ flex-1                  │   │
+│          │                  │ (内部スクロール)          │   │
+├──────────┴──────────────────┴─────────────────────────┤   │
+│ Footer (optional)                                     │  ─┘
+└───────────────────────────────────────────────────────┘
+↑ 左端固定   ← FeatureContent (残り幅) →
+             ├── Controls ──┤├── Results (flex-1) ──┤
 ```
+
+### 5.5.1 FeaturePageLayout コンポーネント
+
+各 feature ページ用のレイアウトコンポーネント。Compound Component パターンで Controls / Results の 2 スロットを提供する。
+
+```tsx
+// 使用例: DatetimeSearchPage
+<FeaturePageLayout>
+  <FeaturePageLayout.Controls>
+    <SearchContextForm ... />
+    <TargetSeedsInput ... />
+    <SearchButton ... />
+  </FeaturePageLayout.Controls>
+  <FeaturePageLayout.Results>
+    <DataTable ... />
+  </FeaturePageLayout.Results>
+</FeaturePageLayout>
 ```
+
+| 項目 | PC (`lg+`) | モバイル (`< lg`) |
+|------|-----------|------------------|
+| 配置 | 横 2 ペイン (`flex-row`) | 縦積み (`flex-col`) |
+| Controls 幅 | `w-80` (20rem)。feature ごとに上書き可能 | 全幅 |
+| Results 幅 | `flex-1` (残り幅すべて) | 全幅 |
+| Controls スクロール | 内部スクロール (`overflow-y-auto`) | ページスクロールに統合 |
+| Results スクロール | 内部スクロール (`overflow-y-auto`) | ページスクロールに統合 |
+
+Controls ペインの幅はデフォルト `w-80` だが、入力項目が多い feature (例: egg-search) では `w-96` 等に拡張可能とする。内部レイアウト (グリッド列数、Accordion 構成等) は各 feature が自由に決定する。
 
 ### 5.6 ブレークポイント (再掲)
 
@@ -408,10 +438,12 @@ PC ではテーブル表示、モバイル (`< md`) ではカード形式に切�
 
 ### 10.1 レイアウト
 
-| デバイス | レイアウト |
-|---------|----------|
-| PC (`lg+`) | グリッド 2-3 列 (`grid-cols-2` / `grid-cols-3`) |
-| モバイル | 1 列縦積み (`grid-cols-1`) |
+PC 版ではフォームは `FeaturePageLayout.Controls` ペイン内に配置される (セクション 5.5.1 参照)。Controls ペインの幅は `w-80` (20rem) ~ `w-96` (24rem) 程度のため、フォームは基本的に 1 列レイアウトとなる。
+
+| デバイス | レイアウト | 備考 |
+|---------|----------|------|
+| PC (`lg+`) | Controls ペイン内 1 列。セクションごとに Accordion / Collapsible で折りたたみ | ペイン幅に余裕がある場合は部分的に `grid-cols-2` 可 |
+| モバイル | 1 列縦積み (`grid-cols-1`) | Controls → Results の順で縦積み |
 
 ### 10.2 ラベル配置
 

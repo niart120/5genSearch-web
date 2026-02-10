@@ -23,10 +23,9 @@
 
 ## 2026-02-10: PC 版 FeatureContent 内部のレイアウト構成
 
-現状 design-system.md のレイアウト図および各機能 spec (DATETIME_SEARCH.md, EGG_SEARCH.md) では、FeatureContent 内部を「上: フォーム → 下: 結果テーブル」の縦積みで暗黙に前提としている。
-PC 版では横幅に余裕があるため、フォームと結果を左右に分割する構成 (メインエリア内 2 ペイン = アプリ全体 3 ペイン) も候補になりうる。
-ただし入力項目数が機能ごとに大きく異なるため、一律の分割が適切かは検証が必要。
-起動時刻検索 (local_054) の実装時に、実際のフォーム量と結果表示を見ながら判断するのが適切。
+現状: design-system.md のレイアウト図および各機能 spec (DATETIME_SEARCH.md, EGG_SEARCH.md) では、FeatureContent 内部を「上: フォーム → 下: 結果テーブル」の縦積みで暗黙に前提としていた。
+観察: PC 版で縦積みにすると、フォーム量が多い機能 (egg-search 等) では 100dvh 制約内で結果テーブルに割ける高さが不足する。また「条件微調整 → 再検索 → 結果確認」の反復操作でフォームと結果が同時に視認できない。
+当面の方針: PC 版 (`lg+`) は FeatureContent 内を Controls | Results の横 2 ペインとする。`FeaturePageLayout` Compound Component で Controls / Results の 2 スロットを提供し、各 feature page がスロットに children を渡す設計。Controls ペイン内部の構成 (Accordion/grid 等) は各 feature が自由に決定する。モバイルは縦積み。関連ドキュメント (design-system.md, responsive-design.md, frontend-structure.md, DATETIME_SEARCH.md, EGG_SEARCH.md) を更新済み。
 
 ## 2026-02-10: 数値入力での IME 自動無効化
 

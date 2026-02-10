@@ -53,29 +53,65 @@
 | `src/features/datetime-search/components/result-detail-dialog.tsx` | 新規 | 結果詳細ダイアログ |
 | `src/features/datetime-search/hooks/use-datetime-search.ts` | 新規 | 検索実行ロジック |
 | `src/lib/format.ts` | 変更 | フォーマット関数追加 (`toHex`, `formatDatetime`, `formatKeyCode`) |
+| `src/components/layout/feature-page-layout.tsx` | 新規 | FeaturePageLayout Compound Component (Controls / Results 2 ペイン) |
 | `src/components/layout/feature-content.tsx` | 変更 | `datetime-search` の `case` を実ページに差し替え |
 
 ## 3. 設計方針
 
 ### 3.1 画面構成
 
+PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 ペイン構成とする。モバイル (`< lg`) では縦積み。
+
 ```
-┌──────────────────────────────────┐
-│ SearchContextForm (共通)         │
+PC (lg+)
+┌─── Controls (w-80) ───┬───── Results (flex-1) ─────┐
+│ SearchContextForm       │                              │
+│ ├ DateRangePicker        │ 結果テーブル (DataTable)       │
+│ ├ TimeRangePicker        │ │ 日時 | T0 | VC | Key | Base  │
+│ └ KeySpecInput           │ │ ...                        │
+│                         │ │ ...                        │
+│ TargetSeedsInput        │ │ (internal scroll)          │
+│                         │                              │
+│ [検索開始] [GPU]          │ ResultDetailDialog          │
+│ SearchProgress          │                              │
+└─────────────────────────┴──────────────────────────────┘
+
+モバイル (< lg)
+┌────────────────────────────────┐
+│ SearchContextForm (shared)       │
 │ ├ DateRangePicker                │
 │ ├ TimeRangePicker                │
 │ └ KeySpecInput                   │
 │                                  │
 │ TargetSeedsInput                 │
 │                                  │
-│ [検索開始] [GPU ⚙️]  SearchProgress │
+│ [検索開始] [GPU]  SearchProgress   │
 │                                  │
-│ 結果テーブル (DataTable/CardList) │
+│ 結果 (DataTable / CardList)       │
 │ ResultDetailDialog               │
-└──────────────────────────────────┘
+└────────────────────────────────┘
 ```
 
-スクロール: ページ全体は `FeatureContent` のスクロール領域内に配置され、内部スクロールが必要な場合は結果テーブルの仮想化 (TanStack Virtual) で対応する。
+ページコンポーネントでの使用例:
+
+```tsx
+function DatetimeSearchPage() {
+  return (
+    <FeaturePageLayout>
+      <FeaturePageLayout.Controls>
+        <SearchContextForm ... />
+        <TargetSeedsInput ... />
+        <SearchButton ... />
+        <SearchProgress ... />
+      </FeaturePageLayout.Controls>
+      <FeaturePageLayout.Results>
+        <DataTable ... />
+        <ResultDetailDialog ... />
+      </FeaturePageLayout.Results>
+    </FeaturePageLayout>
+  );
+}
+```
 
 ### 3.2 WASM API 対応
 
@@ -404,10 +440,11 @@ const testContext: DatetimeSearchContext = {
 - [ ] `features/datetime-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
 - [ ] `features/datetime-search/index.ts` — re-export
 
-### 統合・ユーティリティ
+### レイアウト・ユーティリティ
 
-- [ ] `lib/format.ts` — フォーマット関数追加 (既存確認後)
+- [ ] `components/layout/feature-page-layout.tsx` — FeaturePageLayout Compound Component
 - [ ] `components/layout/feature-content.tsx` — `datetime-search` case 追加
+- [ ] `lib/format.ts` — フォーマット関数追加 (既存確認後)
 
 ### テスト
 
