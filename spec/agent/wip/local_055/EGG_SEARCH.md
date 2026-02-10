@@ -19,7 +19,7 @@
 
 ### 1.3 背景・問題
 
-ナビゲーション (local_053) 内の「検索」カテゴリ第 2 機能。MT Seed 起動時刻検索 (local_054) で作成した共通コンポーネント (`SearchContextForm`, `KeySpecInput`) を再利用する。
+ナビゲーション (local_053) 内の「検索」カテゴリ第 2 機能。MT Seed 起動時刻検索 (local_054) で作成した共通コンポーネント (`SearchContextForm`, `KeySpecInput`, `SearchControls`) を再利用する。
 
 孵化検索は入力パラメータが多く (親情報、国際孵化、NPC 消費等)、フォーム設計に注意を要する。WASM 側の `EggDatetimeSearcher` および関連型を活用する。
 
@@ -29,7 +29,7 @@
 |------|------|
 | 孵化個体の起動時刻特定 | 目的の IV / 性格 / 色違い等を満たす孵化個体の起動日時 + 条件を検索 |
 | フィルタリング | IV / 性格 / 性別 / 特性 / 色違い / 猶予フレームで結果を絞り込み |
-| 共通基盤の再利用 | local_054 で整備した SearchContextForm, フォーマット関数を活用 |
+| 共通基盤の再利用 | local_054 で整備した SearchContextForm, SearchControls, フォーマット関数を活用 |
 
 ### 1.5 着手条件
 
@@ -62,7 +62,7 @@ PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 
 local_054 で確立したレスポンシブパターンを踏襲する:
 
 - **Controls 幅**: `lg:w-[28rem]` (入力項目が多い本機能でも同一幅)
-- **デュアルレンダーパターン**: 検索ボタン・SearchProgress を PC (`hidden lg:flex`) とモバイル (`fixed bottom-14 lg:hidden`) の 2 箇所に描画
+- **デュアルレンダーパターン**: 共通コンポーネント `SearchControls` (`src/components/forms/search-controls.tsx`) を PC (`hidden lg:flex`) とモバイル (`fixed bottom-14 lg:hidden`) の 2 箇所に配置。GPU トグルは不要なため `useGpu` / `onGpuChange` props を省略する
 - **FeaturePageLayout**: `className="pb-32 lg:pb-4"` でモバイル固定バーとの重なりを防止
 - **高さ制約伝播**: PC 版は flex チェーンで Results が 1 画面に収まる
 
@@ -71,8 +71,8 @@ local_054 で確立したレスポンシブパターンを踏襲する:
 ```
 PC (lg+)
 ┌─── Controls (lg:w-[28rem]) ──┬───── Results (flex-1) ─────┐
-│ [検索開始]  (hidden lg:flex)   │                              │
-│ SearchProgress (常駐)          │ 結果テーブル (DataTable)       │
+│ SearchControls (hidden lg:flex) │                              │
+│  (GPU トグルなし)               │ 結果テーブル (DataTable)       │
 │                                │ │ 日時 | 性格 | IV | 色違い   │
 │ SearchContextForm              │ │ ...                        │
 │ ├ DateRangePicker              │ │ ...                        │
@@ -119,7 +119,7 @@ PC (lg+)
 ├──────────────────────────────────┤
 │ BottomNav (h-14)                 │
 ├──────────────────────────────────┤  ← fixed bottom-14
-│ [検索開始] SearchProgress        │  ← モバイル固定検索バー (lg:hidden)
+│ SearchControls (GPU トグルなし)   │  ← モバイル固定検索バー (lg:hidden)
 └──────────────────────────────────┘
 ```
 
@@ -185,9 +185,17 @@ export interface EggSearchFormState {
   filter: EggFilter | undefined;
 }
 
+/** バリデーションエラーコード (i18n: UI 層で翻訳する) */
+export type EggValidationErrorCode =
+  | 'DATE_RANGE_INVALID'
+  | 'TIME_RANGE_INVALID'
+  | 'ADVANCE_RANGE_INVALID'
+  | 'OFFSET_NEGATIVE'
+  | 'IV_OUT_OF_RANGE';
+
 /** バリデーション結果 */
 export interface ValidationResult {
-  errors: string[];
+  errors: EggValidationErrorCode[];
   isValid: boolean;
 }
 
@@ -328,11 +336,13 @@ function EggSearchPage(): ReactElement;
 3. `useEggSearch` で検索実行
 4. Store から DS 設定 + トレーナー情報を取得し `DatetimeSearchContext` / `GenerationConfig` を構築
 5. 結果テーブル + 詳細ダイアログの描画
-6. デュアルレンダーパターンで検索ボタン・SearchProgress を PC / モバイルに描画
+6. デュアルレンダーパターンで共通 `SearchControls` を PC / モバイルに配置 (GPU トグルなし)
 
-local_054 (`DatetimeSearchPage`) と同じ構造を採用する:
+local_054 (`DatetimeSearchPage`) と同じ構造を採用する。検索ボタン・進捗・エラー表示は `src/components/forms/search-controls.tsx` の `SearchControls` を使用し、機能固有の再定義を行わない:
 
 ```tsx
+import { SearchControls } from '@/components/forms/search-controls';
+
 function EggSearchPage() {
   return (
     <>
@@ -340,8 +350,16 @@ function EggSearchPage() {
         <FeaturePageLayout.Controls>
           {/* PC 用: hidden lg:flex */}
           <div className="hidden lg:flex lg:flex-col lg:gap-2">
-            <SearchButton ... />
-            <SearchProgress ... />
+            <SearchControls
+              layout="desktop"
+              isLoading={isLoading}
+              isInitialized={isInitialized}
+              isValid={validation.isValid}
+              progress={progress}
+              error={error}
+              onSearch={handleSearch}
+              onCancel={cancel}
+            />
           </div>
           <SearchContextForm ... />
           <EggParamsForm ... />
@@ -355,13 +373,23 @@ function EggSearchPage() {
 
       {/* モバイル用固定検索バー */}
       <div className="fixed bottom-14 ... lg:hidden">
-        <SearchProgress ... />
-        <SearchButton ... />
+        <SearchControls
+          layout="mobile"
+          isLoading={isLoading}
+          isInitialized={isInitialized}
+          isValid={validation.isValid}
+          progress={progress}
+          error={error}
+          onSearch={handleSearch}
+          onCancel={cancel}
+        />
       </div>
     </>
   );
 }
 ```
+
+`useGpu` / `onGpuChange` を省略することで GPU トグルは描画されない。
 
 ### 4.8 FeatureContent 更新
 
