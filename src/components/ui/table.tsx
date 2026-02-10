@@ -1,35 +1,30 @@
-import { forwardRef, type ComponentPropsWithoutRef } from 'react';
+import { type ComponentPropsWithRef } from 'react';
 import { cn } from '@/lib/utils';
 
-const Table = forwardRef<HTMLTableElement, ComponentPropsWithoutRef<'table'>>(
-  ({ className, ...props }, ref) => (
+function Table({ className, ref, ...props }: ComponentPropsWithRef<'table'>) {
+  return (
     <div className="relative w-full overflow-auto">
       <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
-  )
-);
-Table.displayName = 'Table';
+  );
+}
 
-const TableHeader = forwardRef<HTMLTableSectionElement, ComponentPropsWithoutRef<'thead'>>(
-  ({ className, ...props }, ref) => (
+function TableHeader({ className, ref, ...props }: ComponentPropsWithRef<'thead'>) {
+  return (
     <thead
       ref={ref}
       className={cn('sticky top-0 bg-muted text-xs [&_tr]:border-b', className)}
       {...props}
     />
-  )
-);
-TableHeader.displayName = 'TableHeader';
+  );
+}
 
-const TableBody = forwardRef<HTMLTableSectionElement, ComponentPropsWithoutRef<'tbody'>>(
-  ({ className, ...props }, ref) => (
-    <tbody ref={ref} className={cn('[&_tr:last-child]:border-0', className)} {...props} />
-  )
-);
-TableBody.displayName = 'TableBody';
+function TableBody({ className, ref, ...props }: ComponentPropsWithRef<'tbody'>) {
+  return <tbody ref={ref} className={cn('[&_tr:last-child]:border-0', className)} {...props} />;
+}
 
-const TableRow = forwardRef<HTMLTableRowElement, ComponentPropsWithoutRef<'tr'>>(
-  ({ className, ...props }, ref) => (
+function TableRow({ className, ref, ...props }: ComponentPropsWithRef<'tr'>) {
+  return (
     <tr
       ref={ref}
       className={cn(
@@ -38,12 +33,11 @@ const TableRow = forwardRef<HTMLTableRowElement, ComponentPropsWithoutRef<'tr'>>
       )}
       {...props}
     />
-  )
-);
-TableRow.displayName = 'TableRow';
+  );
+}
 
-const TableHead = forwardRef<HTMLTableCellElement, ComponentPropsWithoutRef<'th'>>(
-  ({ className, ...props }, ref) => (
+function TableHead({ className, ref, ...props }: ComponentPropsWithRef<'th'>) {
+  return (
     <th
       ref={ref}
       className={cn(
@@ -52,22 +46,17 @@ const TableHead = forwardRef<HTMLTableCellElement, ComponentPropsWithoutRef<'th'
       )}
       {...props}
     />
-  )
-);
-TableHead.displayName = 'TableHead';
+  );
+}
 
-const TableCell = forwardRef<HTMLTableCellElement, ComponentPropsWithoutRef<'td'>>(
-  ({ className, ...props }, ref) => (
-    <td ref={ref} className={cn('px-2 py-1 align-middle', className)} {...props} />
-  )
-);
-TableCell.displayName = 'TableCell';
+function TableCell({ className, ref, ...props }: ComponentPropsWithRef<'td'>) {
+  return <td ref={ref} className={cn('px-2 py-1 align-middle', className)} {...props} />;
+}
 
-const TableCaption = forwardRef<HTMLTableCaptionElement, ComponentPropsWithoutRef<'caption'>>(
-  ({ className, ...props }, ref) => (
+function TableCaption({ className, ref, ...props }: ComponentPropsWithRef<'caption'>) {
+  return (
     <caption ref={ref} className={cn('mt-2 text-sm text-muted-foreground', className)} {...props} />
-  )
-);
-TableCaption.displayName = 'TableCaption';
+  );
+}
 
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption };

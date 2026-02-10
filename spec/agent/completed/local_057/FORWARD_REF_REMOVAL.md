@@ -248,17 +248,17 @@ function Input({
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/components/ui/button.tsx` から `forwardRef` を除去
-- [ ] `src/components/ui/checkbox.tsx` から `forwardRef` を除去
-- [ ] `src/components/ui/dialog.tsx` から `forwardRef` を除去 (4 コンポーネント)
-- [ ] `src/components/ui/input.tsx` から `forwardRef` を除去
-- [ ] `src/components/ui/label.tsx` から `forwardRef` を除去
-- [ ] `src/components/ui/progress.tsx` から `forwardRef` を除去
-- [ ] `src/components/ui/select.tsx` から `forwardRef` を除去 (6 コンポーネント)
-- [ ] `src/components/ui/sheet.tsx` から `forwardRef` を除去 (4 コンポーネント)
-- [ ] `src/components/ui/table.tsx` から `forwardRef` を除去 (7 コンポーネント)
-- [ ] `src/components/ui/tabs.tsx` から `forwardRef` を除去 (3 コンポーネント)
-- [ ] `design-system.md` Section 15.3 の props パターンを更新
-- [ ] `pnpm exec tsc --noEmit` で型チェック通過
-- [ ] `pnpm lint` でエラーなし
-- [ ] `pnpm test:run` で全テスト通過
+- [x] `src/components/ui/button.tsx` から `forwardRef` を除去
+- [x] `src/components/ui/checkbox.tsx` から `forwardRef` を除去
+- [x] `src/components/ui/dialog.tsx` から `forwardRef` を除去 (4 コンポーネント)
+- [x] `src/components/ui/input.tsx` から `forwardRef` を除去
+- [x] `src/components/ui/label.tsx` から `forwardRef` を除去
+- [x] `src/components/ui/progress.tsx` から `forwardRef` を除去
+- [x] `src/components/ui/select.tsx` から `forwardRef` を除去 (6 コンポーネント)
+- [x] `src/components/ui/sheet.tsx` から `forwardRef` を除去 (4 コンポーネント)
+- [x] `src/components/ui/table.tsx` から `forwardRef` を除去 (7 コンポーネント)
+- [x] `src/components/ui/tabs.tsx` から `forwardRef` を除去 (3 コンポーネント)
+- [x] `design-system.md` Section 15.3 の props パターンを更新
+- [x] `pnpm exec tsc --noEmit` で型チェック通過
+- [x] `pnpm lint` でエラーなし
+- [x] `pnpm test:run` で全テスト通過
