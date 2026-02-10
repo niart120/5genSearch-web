@@ -79,11 +79,14 @@ Tailwind のデフォルトブレークポイントを使用：
 ├──────────┬──────────────────────────┤
 │          │ FeatureTabs              │
 │ Settings │┌────────────────────────┐│
-│ (Sidebar)││ Main Content             ││
-│          ││ (scroll area)            ││
+│ (Sidebar)││ Main Content (flex-1)    ││
+│ 左端固定  ││ (scroll area)            ││
 │          │└────────────────────────┘│
 └──────────┴──────────────────────────┘
+↑ 左端固定    ← 残り幅を全て使用 →
 ```
+
+サイドバーはビューポート左端に固定され、メインコンテンツは残り幅を全て使用する。グローバルな `max-width` 制約は設けない。
 
 ### 4.3 モバイルレイアウト
 
@@ -124,8 +127,8 @@ function ResponsiveContainer({
   children,
 }: ResponsiveContainerProps) {
   return (
-    <div className="mx-auto flex max-w-screen-xl flex-1 overflow-hidden">
-      {/* PC: 固定 Sidebar */}
+    <div className="flex flex-1 overflow-hidden">
+      {/* PC: 固定 Sidebar (左端固定) */}
       {sidebarContent && (
         <aside className="hidden w-64 shrink-0 border-r border-border lg:block">
           <Sidebar>{sidebarContent}</Sidebar>
