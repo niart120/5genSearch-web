@@ -32,3 +32,9 @@
 現状: 数値系 input はブラウザと IME の状態に依存しており、入力時に日本語 IME が残る場合がある。
 観察: 数値入力中に IME が有効だと、変換候補表示や確定操作が混ざり、入力体験とバリデーションが不安定になる。
 当面の方針: 数値系 form の focus 時に IME を無効化し、英数入力を強制する方法を検討する。
+
+## 2026-02-11: WASM ビルドターゲットの `bundler` 移行検討
+
+現状: `wasm-pack build --target web` で生成し、メインスレッド・Worker ともに手動で `initWasm()` を呼んで初期化している。`--target web` ではインポートだけでは WASM が使えず、初期化漏れによるバグが local_060 で発生した。
+観察: `vite-plugin-wasm` + `vite-plugin-top-level-await` を導入し `--target bundler` に切り替えれば、import 時に自動初期化される。Worker 内でも `worker.plugins` に同プラグインを追加すれば動作する (`vite-plugin-wasm` README の Web Worker セクション参照)。これにより `initMainThreadWasm()` や Worker 内の手動初期化コード、`public/wasm/` への配信パイプラインが不要になる。
+当面の方針: local_060 では `src/services/wasm-init.ts` にシングルトン初期化関数を新設して対処する。`bundler` ターゲットへの移行はビルドパイプライン全体の変更を伴うため、別タスクとして検討する。
