@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { getCategoryDef } from '@/lib/navigation';
 import type { Category } from '@/lib/navigation';
-import { FEATURE_LABELS } from '@/lib/navigation-labels';
+import { FEATURE_LABELS } from './navigation-labels';
 import { useUiStore } from '@/stores/settings/ui';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 

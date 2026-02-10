@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { Trans } from '@lingui/react/macro';
 import type { FeatureId } from '@/lib/navigation';
-import { FEATURE_LABELS } from '@/lib/navigation-labels';
+import { FEATURE_LABELS } from './navigation-labels';
 
 interface PlaceholderPageProps {
   featureId: FeatureId;

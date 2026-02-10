@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { Search, ListOrdered, Wrench } from 'lucide-react';
 import { CATEGORIES } from '@/lib/navigation';
 import type { Category } from '@/lib/navigation';
-import { CATEGORY_LABELS } from '@/lib/navigation-labels';
+import { CATEGORY_LABELS } from './navigation-labels';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
 

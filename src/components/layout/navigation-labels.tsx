@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Trans } from '@lingui/react/macro';
-import type { Category, FeatureId } from './navigation';
+import type { Category, FeatureId } from '@/lib/navigation';
 
 export const CATEGORY_LABELS: Record<Category, () => ReactElement> = {
   search: () => <Trans>Search</Trans>,
