@@ -38,3 +38,20 @@
 現状: `wasm-pack build --target web` で生成し、メインスレッド・Worker ともに手動で `initWasm()` を呼んで初期化している。`--target web` ではインポートだけでは WASM が使えず、初期化漏れによるバグが local_060 で発生した。
 観察: `vite-plugin-wasm` + `vite-plugin-top-level-await` を導入し `--target bundler` に切り替えれば、import 時に自動初期化される。Worker 内でも `worker.plugins` に同プラグインを追加すれば動作する (`vite-plugin-wasm` README の Web Worker セクション参照)。これにより `initMainThreadWasm()` や Worker 内の手動初期化コード、`public/wasm/` への配信パイプラインが不要になる。
 当面の方針: local_060 では `src/services/wasm-init.ts` にシングルトン初期化関数を新設して対処する。`bundler` ターゲットへの移行はビルドパイプライン全体の変更を伴うため、別タスクとして検討する。
+
+## 2026-02-11: MtseedDatetime CPU 検索のスループット低下
+
+現状: CPU パスの MtseedDatetime 検索が約 100M calc/s。参照実装 (`niart120/pokemon-gen5-initseed`) は同一マシンで約 280-300M calc/s を達成している。バッチサイズを 1,000 → 1,000,000 に増やしたが改善なし。Criterion ベンチマーク (ネイティブ) は約 11.9 Melem/s/core。
+
+観察: SHA-1 SIMD 実装に構造差がある。
+
+1. 本リポジトリ: `std::simd::u32x4` (Rust Portable SIMD) を使用。`.cargo/config.toml` なし (= `-C target-feature=+simd128` 未指定)。ただし WASM バイナリに SIMD 命令 (0xFD prefix) は 196 箇所存在しており、一定のベクタ化はされている。
+2. 参照実装: `core::arch::wasm32::*` (WASM SIMD intrinsics) を直接使用。`.cargo/config.toml` で `-C target-feature=+simd128` を明示。wasm-opt も `--enable-simd` 付き。
+
+Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より非効率なコード生成になる可能性がある。また `-C target-feature=+simd128` の有無により、LLVM が SIMD 前提のコード最適化 (auto-vectorization 等) を行えるかも変わる。
+
+当面の方針: 以下を段階的に検証する。
+
+1. `wasm-pkg/.cargo/config.toml` を追加し `-C target-feature=+simd128` を有効化 → 効果測定
+2. 効果不十分なら SHA-1 実装を `core::arch::wasm32` intrinsics (`v128`, `u32x4_shl` 等) に書き換え
+3. wasm-opt オプションに `--enable-simd` を追加
