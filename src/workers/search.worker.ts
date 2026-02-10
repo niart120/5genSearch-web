@@ -182,7 +182,7 @@ async function runMtseedDatetimeSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1000);
+      const batch = searcher.next_batch(500_000);
 
       if (batch.results.length > 0) {
         postResponse({
@@ -260,7 +260,7 @@ async function runTrainerInfoSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1000);
+      const batch = searcher.next_batch(500_000);
 
       if (batch.results.length > 0) {
         postResponse({
