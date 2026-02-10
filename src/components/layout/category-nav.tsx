@@ -11,7 +11,7 @@ function CategoryNav(): ReactElement {
   return (
     <nav
       aria-label="Category navigation"
-      className="hidden h-10 shrink-0 items-center gap-1 border-b border-border px-4 lg:flex lg:px-6"
+      className="hidden h-10 shrink-0 items-center justify-center gap-1 border-b border-border px-4 lg:flex lg:px-6"
     >
       {CATEGORIES.map((cat) => {
         const isActive = cat.id === activeCategory;
