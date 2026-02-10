@@ -1,0 +1,66 @@
+/**
+ * 検索コンテキスト入力フォーム (共通)
+ *
+ * 日付範囲 / 時刻範囲 / キー入力仕様の入力を束ねる。
+ * MT Seed 検索・孵化検索の両方で再利用する。
+ * DS 設定 (DsConfig, Timer0VCountRange[]) はサイドバーで管理済みのため含めない。
+ */
+
+import { Trans } from '@lingui/react/macro';
+import { DateRangePicker } from './date-range-picker';
+import { TimeRangePicker } from './time-range-picker';
+import { KeySpecInput } from './key-spec-input';
+import type { DateRangeParams, TimeRangeParams, KeySpec } from '@/wasm/wasm_pkg';
+
+interface SearchContextFormProps {
+  dateRange: DateRangeParams;
+  timeRange: TimeRangeParams;
+  keySpec: KeySpec;
+  onDateRangeChange: (range: DateRangeParams) => void;
+  onTimeRangeChange: (range: TimeRangeParams) => void;
+  onKeySpecChange: (spec: KeySpec) => void;
+  disabled?: boolean;
+  /** KeySpec の組み合わせ数 (WASM 計算値) */
+  keyCombinationCount?: number;
+}
+
+function SearchContextForm({
+  dateRange,
+  timeRange,
+  keySpec,
+  onDateRangeChange,
+  onTimeRangeChange,
+  onKeySpecChange,
+  disabled,
+  keyCombinationCount,
+}: SearchContextFormProps) {
+  return (
+    <div className="flex flex-col gap-4">
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">
+          <Trans>Date range</Trans>
+        </h3>
+        <DateRangePicker value={dateRange} onChange={onDateRangeChange} disabled={disabled} />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">
+          <Trans>Time range</Trans>
+        </h3>
+        <TimeRangePicker value={timeRange} onChange={onTimeRangeChange} disabled={disabled} />
+      </section>
+
+      <section>
+        <KeySpecInput
+          value={keySpec}
+          onChange={onKeySpecChange}
+          disabled={disabled}
+          combinationCount={keyCombinationCount}
+        />
+      </section>
+    </div>
+  );
+}
+
+export type { SearchContextFormProps };
+export { SearchContextForm };

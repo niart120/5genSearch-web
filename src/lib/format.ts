@@ -7,6 +7,7 @@
 
 import type { SupportedLocale } from '@/i18n';
 import type { AggregatedProgress } from '@/services/progress';
+import type { Datetime } from '@/wasm/wasm_pkg';
 
 /**
  * rem 値をピクセル値に変換する。
@@ -113,6 +114,55 @@ function formatThroughput(throughput: number): string {
   return `${Math.round(throughput)}/s`;
 }
 
+/**
+ * 数値を 16 進文字列にフォーマット (大文字、指定桁数ゼロ埋め)
+ */
+function toHex(value: number, digits: number): string {
+  return value.toString(16).toUpperCase().padStart(digits, '0');
+}
+
+/**
+ * WASM Datetime 型を表示文字列にフォーマット
+ * 例: "2025/01/15 12:30:45"
+ */
+function formatDatetime(dt: Datetime): string {
+  return `${dt.year}/${pad(dt.month)}/${pad(dt.day)} ${pad(dt.hour)}:${pad(dt.minute)}:${pad(dt.second)}`;
+}
+
+/**
+ * ボタンビットマスク定義 (bit → 表示名、表示順固定)
+ *
+ * KeyCode = KeyMask XOR 0x2FFF
+ * KeyMask のビット割り当て:
+ *   bit0=A, bit1=B, bit2=Select, bit3=Start,
+ *   bit4=→, bit5=←, bit6=↑, bit7=↓,
+ *   bit8=R, bit9=L, bit10=X, bit11=Y
+ */
+const KEY_BUTTONS: readonly [number, string][] = [
+  [0x00_01, 'A'],
+  [0x00_02, 'B'],
+  [0x04_00, 'X'],
+  [0x08_00, 'Y'],
+  [0x02_00, 'L'],
+  [0x01_00, 'R'],
+  [0x00_08, 'Start'],
+  [0x00_04, 'Select'],
+  [0x00_40, '↑'],
+  [0x00_80, '↓'],
+  [0x00_20, '←'],
+  [0x00_10, '→'],
+];
+
+/**
+ * KeyCode からボタン名リストを逆引き
+ * 例: 0x2FFF → "なし", 0x2FFE → "A", 0x2FF6 → "A + Start"
+ */
+function formatKeyCode(keyCode: number): string {
+  const mask = keyCode ^ 0x2f_ff;
+  const pressed = KEY_BUTTONS.filter(([bit]) => (mask & bit) !== 0).map(([, name]) => name);
+  return pressed.length === 0 ? 'なし' : pressed.join(' + ');
+}
+
 export {
   remToPx,
   formatElapsedTime,
@@ -121,4 +171,7 @@ export {
   formatProgress,
   formatRemainingTime,
   formatThroughput,
+  toHex,
+  formatDatetime,
+  formatKeyCode,
 };
