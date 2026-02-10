@@ -72,7 +72,6 @@ function SheetContent({ side = 'left', className, children, ref, ...props }: She
 function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('flex flex-col gap-1.5 p-4 text-left', className)} {...props} />;
 }
-SheetHeader.displayName = 'SheetHeader';
 
 function SheetTitle({
   className,

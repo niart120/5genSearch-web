@@ -57,7 +57,6 @@ function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
     <div className={cn('flex flex-col gap-1.5 text-center sm:text-left', className)} {...props} />
   );
 }
-DialogHeader.displayName = 'DialogHeader';
 
 function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
@@ -67,7 +66,6 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
     />
   );
 }
-DialogFooter.displayName = 'DialogFooter';
 
 function DialogTitle({
   className,
