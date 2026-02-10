@@ -1,7 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -47,8 +47,11 @@ function GameStartConfigForm() {
       </div>
 
       {/* Save presence */}
-      <div className="flex items-center gap-2">
-        <Checkbox
+      <div className="flex items-center justify-between">
+        <Label htmlFor="save-presence" className="text-xs">
+          <Trans>With save</Trans>
+        </Label>
+        <Switch
           id="save-presence"
           checked={gameStart.save === 'WithSave'}
           onCheckedChange={(checked) =>
@@ -60,14 +63,14 @@ function GameStartConfigForm() {
           disabled={gameStart.start_mode === 'Continue'}
           aria-label={t`With save`}
         />
-        <Label htmlFor="save-presence" className="text-xs">
-          <Trans>With save</Trans>
-        </Label>
       </div>
 
       {/* Memory Link (BW2 only) */}
-      <div className="flex items-center gap-2">
-        <Checkbox
+      <div className="flex items-center justify-between">
+        <Label htmlFor="memory-link" className="text-xs">
+          <Trans>Memory Link</Trans>
+        </Label>
+        <Switch
           id="memory-link"
           checked={gameStart.memory_link === 'Enabled'}
           onCheckedChange={(checked) =>
@@ -78,14 +81,14 @@ function GameStartConfigForm() {
           disabled={!isBw2 || gameStart.save === 'NoSave'}
           aria-label={t`Memory Link`}
         />
-        <Label htmlFor="memory-link" className="text-xs">
-          <Trans>Memory Link</Trans>
-        </Label>
       </div>
 
       {/* Shiny Charm (BW2 only) */}
-      <div className="flex items-center gap-2">
-        <Checkbox
+      <div className="flex items-center justify-between">
+        <Label htmlFor="shiny-charm" className="text-xs">
+          <Trans>Shiny Charm</Trans>
+        </Label>
+        <Switch
           id="shiny-charm"
           checked={gameStart.shiny_charm === 'Obtained'}
           onCheckedChange={(checked) =>
@@ -96,9 +99,6 @@ function GameStartConfigForm() {
           disabled={!isBw2}
           aria-label={t`Shiny Charm`}
         />
-        <Label htmlFor="shiny-charm" className="text-xs">
-          <Trans>Shiny Charm</Trans>
-        </Label>
       </div>
     </div>
   );

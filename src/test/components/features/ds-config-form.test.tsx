@@ -107,7 +107,7 @@ describe('GameStartConfigForm', () => {
     expect(shinyCharm).not.toBeDisabled();
   });
 
-  it('Save file / Memory Link / Shiny Charm チェックボックスが表示される', () => {
+  it('Save file / Memory Link / Shiny Charm スイッチが表示される', () => {
     renderGameStartForm();
 
     expect(screen.getByLabelText('Start mode')).toBeInTheDocument();

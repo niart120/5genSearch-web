@@ -1,7 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Timer0VCountRangeInput } from '@/components/forms/timer0-vcount-range-input';
 
 function Timer0VCountSection() {
@@ -16,15 +16,15 @@ function Timer0VCountSection() {
       <div className="flex items-center justify-between">
         <Label className="text-xs font-medium">Timer0 / VCount</Label>
         <div className="flex items-center gap-1.5">
-          <Checkbox
+          <Label htmlFor="timer0-auto" className="text-xs">
+            <Trans>Auto</Trans>
+          </Label>
+          <Switch
             id="timer0-auto"
             checked={timer0Auto}
             onCheckedChange={(checked) => setTimer0Auto(checked === true)}
             aria-label={t`Auto`}
           />
-          <Label htmlFor="timer0-auto" className="text-xs">
-            <Trans>Auto</Trans>
-          </Label>
         </div>
       </div>
 

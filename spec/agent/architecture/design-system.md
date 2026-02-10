@@ -320,6 +320,8 @@ Tailwind のデフォルト 4px グリッドを使用する。
 | 入力フィールド | 2rem (32px) | `h-8` | |
 | セレクト | 2rem (32px) | `h-8` | |
 | チェックボックス | 1rem (16px) | `size-4` | |
+| Switch トラック | 1.25rem × 2.25rem (20×36px) | `h-5 w-9` | on/off トグル用 |
+| Switch サム | 1rem (16px) | `size-4` | |
 | テーブル行 | 2rem (32px) | `h-8` | |
 
 ## 7. 角丸 (Border Radius)
@@ -544,6 +546,7 @@ src/
 │       ├── input.tsx
 │       ├── select.tsx
 │       ├── checkbox.tsx
+│       ├── switch.tsx
 │       ├── tabs.tsx
 │       ├── dialog.tsx
 │       └── toast.tsx
@@ -571,15 +574,19 @@ export { Button, buttonVariants };
 ### 15.3 props 設計規約
 
 ```tsx
-// Radix プリミティブを拡張するパターン
-interface ButtonProps
-  extends React.ComponentPropsWithoutRef<typeof Primitive.button>,
-    VariantProps<typeof buttonVariants> {}
+// Radix プリミティブを拡張するパターン (React 19)
+function MyComponent({
+  className,
+  ref,
+  ...props
+}: React.ComponentPropsWithRef<typeof Primitive.Root>) {
+  return <Primitive.Root ref={ref} className={cn('...', className)} {...props} />;
+}
 ```
 
-- `React.ComponentPropsWithoutRef` でネイティブ HTML 属性を透過
-- `VariantProps` で cva バリアントを型安全に受け取る
-- `ref` は `React.forwardRef` で伝播
+- `React.ComponentPropsWithRef` で `ref` を含むネイティブ属性を透過 (React 19)
+- cva バリアントが必要な場合は `VariantProps` を intersection で追加
+- `forwardRef` は使用しない (React 19 では props に `ref` が含まれる)
 
 ## 16. 関連ドキュメント
 
