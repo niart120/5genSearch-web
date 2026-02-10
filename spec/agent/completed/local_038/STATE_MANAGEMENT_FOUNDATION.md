@@ -29,14 +29,14 @@ Zustand による状態管理基盤を構築し、永続化対象の設定 Store
 
 検索進捗 (progress) は `use-search.ts` 内の `useState` で管理しており、Phase 1 では据え置く。ProgressOverlay のデザインが固まり、コンポーネントツリーを跨ぐ参照が必要になった時点で Store 化を検討する。
 
-検索結果 (results) は Zustand Store で管理する。起動時刻検索で得た `SeedOrigin` を個体生成リスト機能に引き継ぐ等、機能横断で結果を参照するユースケースが想定されるため、Phase 1 の時点で Store 化しておく。
+検索結果 (results) は Zustand Store で管理する。起動時刻検索で得た `SeedOrigin` をポケモンリスト機能に引き継ぐ等、機能横断で結果を参照するユースケースが想定されるため、Phase 1 の時点で Store 化しておく。
 
 ### 1.4 期待効果
 
 | 項目 | 効果 |
 |------|------|
 | 永続化 | DS 設定やトレーナー情報がブラウザリロード後も保持される |
-| 結果の機能横断参照 | 検索結果を features 間で引き継げる (例: 起動時刻検索 → 個体生成リスト) |
+| 結果の機能横断参照 | 検索結果を features 間で引き継げる (例: 起動時刻検索 → ポケモンリスト) |
 | Store 分割 | 1 ファイルあたり 200 行以下を目安にし、保守性を確保 |
 | tsx 疎結合 | コンポーネントが Store 実装に依存せず、カスタムフック経由でアクセス |
 | テスト容易性 | `getState()` / `setState()` で React 不要のユニットテスト |
@@ -407,7 +407,7 @@ export const getSearchResultsInitialState = (): SearchResultsState => DEFAULT_ST
 
 進捗情報は現時点で `use-search.ts` を呼び出すコンポーネント内でのみ参照される。ProgressOverlay 等でコンポーネントツリーを跨ぐ参照が必要になった時点で Store 化を検討する。
 
-結果を Store 化する理由は、起動時刻検索で得た `SeedOrigin` を個体生成リスト機能に引き継ぐ等、機能横断での参照が想定されるため。
+結果を Store 化する理由は、起動時刻検索で得た `SeedOrigin` をポケモンリスト機能に引き継ぐ等、機能横断での参照が想定されるため。
 
 ### 4.5 re-export
 

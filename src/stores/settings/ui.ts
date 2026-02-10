@@ -59,7 +59,7 @@ export const useUiStore = create<UiState & UiActions>()(
       }),
       {
         name: 'ui-settings',
-        version: 1,
+        version: 2,
       }
     )
   )

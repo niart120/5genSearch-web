@@ -28,8 +28,7 @@ msgstr "5genSearch"
 msgid "Auto"
 msgstr "自動"
 
-#: src/components/layout/feature-tabs.tsx:9
-#: src/components/layout/placeholder-page.tsx:6
+#: src/components/layout/navigation-labels.tsx:12
 msgid "Datetime Search"
 msgstr "起動時刻検索"
 
@@ -38,13 +37,16 @@ msgstr "起動時刻検索"
 msgid "Deselect all"
 msgstr "全解除"
 
+#: src/components/layout/navigation-labels.tsx:15
+msgid "Egg"
+msgstr "タマゴ"
+
 #: src/components/layout/feature-tabs.tsx:12
 #: src/components/layout/placeholder-page.tsx:9
-msgid "Egg Generation"
-msgstr "孵化個体生成"
+#~ msgid "Egg Generation"
+#~ msgstr "孵化個体生成"
 
-#: src/components/layout/feature-tabs.tsx:10
-#: src/components/layout/placeholder-page.tsx:7
+#: src/components/layout/navigation-labels.tsx:13
 msgid "Egg Search"
 msgstr "孵化検索"
 
@@ -56,15 +58,14 @@ msgstr "経過"
 msgid "End date"
 msgstr "終了日"
 
-#: src/components/layout/bottom-nav.tsx:17
-#: src/components/layout/category-nav.tsx:10
+#: src/components/layout/navigation-labels.tsx:7
 msgid "Generation"
 msgstr "個体生成"
 
 #: src/components/layout/feature-tabs.tsx:11
 #: src/components/layout/placeholder-page.tsx:8
-msgid "Generation List"
-msgstr "個体生成リスト"
+#~ msgid "Generation List"
+#~ msgstr "個体生成リスト"
 
 #: src/features/ds-config/components/ds-config-form.tsx:99
 #: src/features/ds-config/components/ds-config-form.tsx:102
@@ -102,8 +103,7 @@ msgstr "Min"
 msgid "Minute"
 msgstr "分"
 
-#: src/components/layout/feature-tabs.tsx:13
-#: src/components/layout/placeholder-page.tsx:10
+#: src/components/layout/navigation-labels.tsx:16
 msgid "MT Seed Search"
 msgstr "MT Seed 検索"
 
@@ -111,8 +111,7 @@ msgstr "MT Seed 検索"
 msgid "Nature"
 msgstr "性格"
 
-#: src/components/layout/feature-tabs.tsx:15
-#: src/components/layout/placeholder-page.tsx:12
+#: src/components/layout/navigation-labels.tsx:18
 msgid "Needle"
 msgstr "針読み"
 
@@ -129,6 +128,10 @@ msgstr "結果なし"
 msgid "Not specified"
 msgstr "指定なし"
 
+#: src/components/layout/navigation-labels.tsx:14
+msgid "Pokemon"
+msgstr "ポケモン"
+
 #: src/components/layout/welcome-page.tsx:11
 #~ msgid "Pokemon BW/BW2 RNG seed search tool."
 #~ msgstr "ポケモンBW/BW2 乱数調整ツール"
@@ -142,8 +145,7 @@ msgstr "リージョン"
 msgid "Remaining"
 msgstr "残り"
 
-#: src/components/layout/bottom-nav.tsx:16
-#: src/components/layout/category-nav.tsx:9
+#: src/components/layout/navigation-labels.tsx:6
 msgid "Search"
 msgstr "検索"
 
@@ -179,12 +181,11 @@ msgstr "起動モード"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "左上のメニューアイコンから検索設定を行えます。"
 
-#: src/components/layout/placeholder-page.tsx:29
+#: src/components/layout/placeholder-page.tsx:20
 msgid "This feature is under development."
 msgstr "この機能は準備中です。"
 
-#: src/components/layout/feature-tabs.tsx:14
-#: src/components/layout/placeholder-page.tsx:11
+#: src/components/layout/navigation-labels.tsx:17
 msgid "TID Adjust"
 msgstr "TID 調整"
 
@@ -196,8 +197,7 @@ msgstr "Timer0 max"
 msgid "Timer0 min"
 msgstr "Timer0 min"
 
-#: src/components/layout/bottom-nav.tsx:18
-#: src/components/layout/category-nav.tsx:11
+#: src/components/layout/navigation-labels.tsx:8
 msgid "Tools"
 msgstr "ツール"
 

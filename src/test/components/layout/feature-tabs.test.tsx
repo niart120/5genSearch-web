@@ -32,8 +32,8 @@ describe('FeatureTabs', () => {
   it('generation カテゴリで 2 つのタブが表示される', () => {
     useUiStore.setState({ activeCategory: 'generation' });
     renderFeatureTabs();
-    expect(screen.getByRole('tab', { name: 'Generation List' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Egg Generation' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Pokemon' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Egg' })).toBeInTheDocument();
   });
 
   it('tools カテゴリで 3 つのタブが表示される', () => {

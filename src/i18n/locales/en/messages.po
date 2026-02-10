@@ -28,8 +28,7 @@ msgstr ""
 msgid "Auto"
 msgstr "Auto"
 
-#: src/components/layout/feature-tabs.tsx:9
-#: src/components/layout/placeholder-page.tsx:6
+#: src/components/layout/navigation-labels.tsx:12
 msgid "Datetime Search"
 msgstr "Datetime Search"
 
@@ -38,13 +37,16 @@ msgstr "Datetime Search"
 msgid "Deselect all"
 msgstr "Deselect all"
 
+#: src/components/layout/navigation-labels.tsx:15
+msgid "Egg"
+msgstr "Egg"
+
 #: src/components/layout/feature-tabs.tsx:12
 #: src/components/layout/placeholder-page.tsx:9
-msgid "Egg Generation"
-msgstr "Egg Generation"
+#~ msgid "Egg Generation"
+#~ msgstr "Egg Generation"
 
-#: src/components/layout/feature-tabs.tsx:10
-#: src/components/layout/placeholder-page.tsx:7
+#: src/components/layout/navigation-labels.tsx:13
 msgid "Egg Search"
 msgstr "Egg Search"
 
@@ -56,15 +58,14 @@ msgstr "Elapsed"
 msgid "End date"
 msgstr "End date"
 
-#: src/components/layout/bottom-nav.tsx:17
-#: src/components/layout/category-nav.tsx:10
+#: src/components/layout/navigation-labels.tsx:7
 msgid "Generation"
 msgstr "Generation"
 
 #: src/components/layout/feature-tabs.tsx:11
 #: src/components/layout/placeholder-page.tsx:8
-msgid "Generation List"
-msgstr "Generation List"
+#~ msgid "Generation List"
+#~ msgstr "Generation List"
 
 #: src/features/ds-config/components/ds-config-form.tsx:99
 #: src/features/ds-config/components/ds-config-form.tsx:102
@@ -102,8 +103,7 @@ msgstr "Min"
 msgid "Minute"
 msgstr "Minute"
 
-#: src/components/layout/feature-tabs.tsx:13
-#: src/components/layout/placeholder-page.tsx:10
+#: src/components/layout/navigation-labels.tsx:16
 msgid "MT Seed Search"
 msgstr "MT Seed Search"
 
@@ -111,8 +111,7 @@ msgstr "MT Seed Search"
 msgid "Nature"
 msgstr "Nature"
 
-#: src/components/layout/feature-tabs.tsx:15
-#: src/components/layout/placeholder-page.tsx:12
+#: src/components/layout/navigation-labels.tsx:18
 msgid "Needle"
 msgstr "Needle"
 
@@ -129,6 +128,10 @@ msgstr "No results"
 msgid "Not specified"
 msgstr "Not specified"
 
+#: src/components/layout/navigation-labels.tsx:14
+msgid "Pokemon"
+msgstr "Pokemon"
+
 #: src/components/layout/welcome-page.tsx:11
 #~ msgid "Pokemon BW/BW2 RNG seed search tool."
 #~ msgstr "Pokemon BW/BW2 RNG seed search tool."
@@ -142,8 +145,7 @@ msgstr "Region"
 msgid "Remaining"
 msgstr "Remaining"
 
-#: src/components/layout/bottom-nav.tsx:16
-#: src/components/layout/category-nav.tsx:9
+#: src/components/layout/navigation-labels.tsx:6
 msgid "Search"
 msgstr "Search"
 
@@ -179,12 +181,11 @@ msgstr "Start mode"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "Tap the menu icon at the top left to configure search settings."
 
-#: src/components/layout/placeholder-page.tsx:29
+#: src/components/layout/placeholder-page.tsx:20
 msgid "This feature is under development."
 msgstr "This feature is under development."
 
-#: src/components/layout/feature-tabs.tsx:14
-#: src/components/layout/placeholder-page.tsx:11
+#: src/components/layout/navigation-labels.tsx:17
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
@@ -196,8 +197,7 @@ msgstr "Timer0 max"
 msgid "Timer0 min"
 msgstr "Timer0 min"
 
-#: src/components/layout/bottom-nav.tsx:18
-#: src/components/layout/category-nav.tsx:11
+#: src/components/layout/navigation-labels.tsx:8
 msgid "Tools"
 msgstr "Tools"
 

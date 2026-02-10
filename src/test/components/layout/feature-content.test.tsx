@@ -38,8 +38,8 @@ describe('FeatureContent', () => {
     expect(screen.getByText('MT Seed Search')).toBeInTheDocument();
   });
 
-  it('generation-list がアクティブのとき PlaceholderPage が表示される', () => {
-    renderFeatureContent('generation-list');
-    expect(screen.getByText('Generation List')).toBeInTheDocument();
+  it('pokemon-list がアクティブのとき PlaceholderPage が表示される', () => {
+    renderFeatureContent('pokemon-list');
+    expect(screen.getByText('Pokemon')).toBeInTheDocument();
   });
 });

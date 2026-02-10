@@ -31,7 +31,7 @@ describe('navigation', () => {
     it('generation カテゴリの定義を返す', () => {
       const def = getCategoryDef('generation');
       expect(def.id).toBe('generation');
-      expect(def.features).toContain('generation-list');
+      expect(def.features).toContain('pokemon-list');
     });
 
     it('tools カテゴリの定義を返す', () => {
@@ -55,8 +55,8 @@ describe('navigation', () => {
       expect(getCategoryByFeature('egg-search')).toBe('search');
     });
 
-    it('generation-list は generation カテゴリに属する', () => {
-      expect(getCategoryByFeature('generation-list')).toBe('generation');
+    it('pokemon-list は generation カテゴリに属する', () => {
+      expect(getCategoryByFeature('pokemon-list')).toBe('generation');
     });
 
     it('mtseed-search は tools カテゴリに属する', () => {
@@ -78,8 +78,8 @@ describe('navigation', () => {
       expect(getDefaultFeature('search')).toBe('datetime-search');
     });
 
-    it('generation のデフォルトは generation-list', () => {
-      expect(getDefaultFeature('generation')).toBe('generation-list');
+    it('generation のデフォルトは pokemon-list', () => {
+      expect(getDefaultFeature('generation')).toBe('pokemon-list');
     });
 
     it('tools のデフォルトは mtseed-search', () => {

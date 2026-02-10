@@ -5,8 +5,8 @@ export type Category = 'search' | 'generation' | 'tools';
 export type FeatureId =
   | 'datetime-search'
   | 'egg-search'
-  | 'generation-list'
-  | 'egg-generation'
+  | 'pokemon-list'
+  | 'egg-list'
   | 'mtseed-search'
   | 'tid-adjust'
   | 'needle';
@@ -25,8 +25,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
   },
   {
     id: 'generation',
-    features: ['generation-list', 'egg-generation'],
-    defaultFeature: 'generation-list',
+    features: ['pokemon-list', 'egg-list'],
+    defaultFeature: 'pokemon-list',
   },
   {
     id: 'tools',

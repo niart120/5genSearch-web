@@ -85,7 +85,7 @@ TypeScript から呼び出し可能な WASM API の網羅性を確認し、フ�
 
 | 関数名 | ファイル | 説明 | 必要性 |
 |--------|----------|------|--------|
-| `generate_pokemon_list` | `generation/flows/generator/mod.rs` | ポケモン一括生成 | 高 (個体生成リスト機能) |
+| `generate_pokemon_list` | `generation/flows/generator/mod.rs` | ポケモン一括生成 | 高 (ポケモンリスト機能) |
 | `generate_egg_list` | `generation/flows/generator/mod.rs` | タマゴ一括生成 | 高 (孵化個体リスト機能) |
 
 ### 2.3 GPU API 状態

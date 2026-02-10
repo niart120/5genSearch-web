@@ -76,13 +76,13 @@ URL ルーティング (`react-router` 等) は以下の理由で不採用:
 |---------|------------|------|---------|---------|
 | 検索 | `search` | 起動時刻検索 | `datetime-search` | `Search` |
 | | | 孵化検索 | `egg-search` | |
-| 個体生成 | `generation` | 個体生成リスト | `generation-list` | `ListOrdered` |
-| | | 孵化個体生成 | `egg-generation` | |
+| 個体生成 | `generation` | ポケモン | `pokemon-list` | `ListOrdered` |
+| | | タマゴ | `egg-list` | |
 | ツール | `tools` | MT Seed 検索 | `mtseed-search` | `Wrench` |
 | | | TID 調整 | `tid-adjust` | |
 | | | 針読み | `needle` | |
 
-各カテゴリのデフォルト機能: `datetime-search`, `generation-list`, `mtseed-search`。
+各カテゴリのデフォルト機能: `datetime-search`, `pokemon-list`, `mtseed-search`。
 
 ### 3.3 状態管理
 
@@ -186,8 +186,8 @@ export type Category = 'search' | 'generation' | 'tools';
 export type FeatureId =
   | 'datetime-search'
   | 'egg-search'
-  | 'generation-list'
-  | 'egg-generation'
+  | 'pokemon-list'
+  | 'egg-list'
   | 'mtseed-search'
   | 'tid-adjust'
   | 'needle';
@@ -206,8 +206,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
   },
   {
     id: 'generation',
-    features: ['generation-list', 'egg-generation'],
-    defaultFeature: 'generation-list',
+    features: ['pokemon-list', 'egg-list'],
+    defaultFeature: 'pokemon-list',
   },
   {
     id: 'tools',

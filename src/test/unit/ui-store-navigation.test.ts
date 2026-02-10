@@ -23,7 +23,7 @@ describe('ui store navigation', () => {
       useUiStore.getState().setActiveCategory('generation');
       const { activeCategory, activeFeature } = useUiStore.getState();
       expect(activeCategory).toBe('generation');
-      expect(activeFeature).toBe('generation-list');
+      expect(activeFeature).toBe('pokemon-list');
     });
 
     it('tools カテゴリに切り替えるとデフォルト機能が選択される', () => {
@@ -40,7 +40,7 @@ describe('ui store navigation', () => {
 
       // generation に切り替え
       useUiStore.getState().setActiveCategory('generation');
-      expect(useUiStore.getState().activeFeature).toBe('generation-list');
+      expect(useUiStore.getState().activeFeature).toBe('pokemon-list');
 
       // search に戻ると egg-search に復帰
       useUiStore.getState().setActiveCategory('search');
@@ -63,13 +63,13 @@ describe('ui store navigation', () => {
       // search で egg-search を選択
       useUiStore.getState().setActiveFeature('egg-search');
 
-      // generation に切り替え、egg-generation を選択
+      // generation に切り替え、egg-list を選択
       useUiStore.getState().setActiveCategory('generation');
-      useUiStore.getState().setActiveFeature('egg-generation');
+      useUiStore.getState().setActiveFeature('egg-list');
 
       expect(useUiStore.getState().featureMemory).toEqual({
         search: 'egg-search',
-        generation: 'egg-generation',
+        generation: 'egg-list',
       });
     });
   });
