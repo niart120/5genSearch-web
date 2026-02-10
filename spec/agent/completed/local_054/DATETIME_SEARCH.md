@@ -64,28 +64,29 @@ PC 版 (`lg+`) では `FeaturePageLayout` により Controls / Results の横 2 
 
 ```
 PC (lg+)
-┌─── Controls (w-80) ───┬───── Results (flex-1) ─────┐
-│ SearchContextForm       │                              │
-│ ├ DateRangePicker        │ 結果テーブル (DataTable)       │
-│ ├ TimeRangePicker        │ │ 日時 | T0 | VC | Key | Base  │
-│ └ KeySpecInput           │ │ ...                        │
-│                         │ │ ...                        │
-│ TargetSeedsInput        │ │ (internal scroll)          │
-│                         │                              │
-│ [検索開始] [GPU]          │ ResultDetailDialog          │
-│ SearchProgress          │                              │
-└─────────────────────────┴──────────────────────────────┘
+┌─── Controls (w-[28rem]) ──┬───── Results (flex-1) ─────┐
+│ [検索開始] [GPU]             │                              │
+│ SearchProgress (常駐)       │ 結果テーブル (DataTable)       │
+│                             │ │ 日時 | T0 | VC | Key | Base  │
+│ SearchContextForm           │ │ ...                        │
+│ ├ DateRangePicker            │ │ ...                        │
+│ ├ TimeRangePicker            │ │ (internal scroll)          │
+│ └ KeySpecInput (コントローラ型) │                              │
+│                             │ ResultDetailDialog          │
+│ TargetSeedsInput            │                              │
+└─────────────────────────────┴──────────────────────────────┘
 
 モバイル (< lg)
 ┌────────────────────────────────┐
+│ [検索開始] [GPU]                 │
+│ SearchProgress (常駐)           │
+│                                  │
 │ SearchContextForm (shared)       │
 │ ├ DateRangePicker                │
 │ ├ TimeRangePicker                │
-│ └ KeySpecInput                   │
+│ └ KeySpecInput (コントローラ型)   │
 │                                  │
 │ TargetSeedsInput                 │
-│                                  │
-│ [検索開始] [GPU]  SearchProgress   │
 │                                  │
 │ 結果 (DataTable / CardList)       │
 │ ResultDetailDialog               │
@@ -99,10 +100,10 @@ function DatetimeSearchPage() {
   return (
     <FeaturePageLayout>
       <FeaturePageLayout.Controls>
+        <SearchButton ... />
+        <SearchProgress ... /> {/* 常駐表示 */}
         <SearchContextForm ... />
         <TargetSeedsInput ... />
-        <SearchButton ... />
-        <SearchProgress ... />
       </FeaturePageLayout.Controls>
       <FeaturePageLayout.Results>
         <DataTable ... />
@@ -210,7 +211,7 @@ export function parseTargetSeeds(input: string): ParsedTargetSeeds;
 src/components/forms/key-spec-input.tsx
 ```
 
-DS ボタンの選択 UI。`KeySpec` 型と対応する。
+DS ボタンの選択 UI。`KeySpec` 型と対応する。DS コントローラ風レイアウトで表示する。
 
 ```typescript
 interface KeySpecInputProps {
@@ -222,7 +223,8 @@ interface KeySpecInputProps {
 
 | 項目 | 仕様 |
 |------|------|
-| ボタン一覧 | A, B, X, Y, L, R, Start, Select, ↑, ↓, ←, → (チェックボックス群) |
+| レイアウト | DS コントローラ風: ショルダー (L/R) 上段、D-Pad (十字) 左側、Face (XYAB ダイヤモンド) 右側、Select/Start 下部中央に横並び |
+| ボタン一覧 | A, B, X, Y, L, R, Start, Select, ↑, ↓, ←, → (トグルボタン) |
 | 組み合わせ数表示 | `get_key_combination_count(key_spec)` (WASM) で計算した値を表示 |
 | WASM 未初期化時 | ボタン数のみ表示 (組み合わせ数のフォールバック) |
 

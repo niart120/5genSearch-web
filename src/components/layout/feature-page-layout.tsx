@@ -28,7 +28,7 @@ function Controls({ children, className }: PaneProps) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-4 lg:w-96 lg:shrink-0 lg:overflow-y-auto lg:pr-2',
+        'flex flex-col gap-4 lg:w-[28rem] lg:shrink-0 lg:overflow-y-auto lg:pr-2',
         className
       )}
     >

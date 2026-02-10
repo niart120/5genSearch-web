@@ -54,7 +54,7 @@ function DateField({
     <div className="flex items-center gap-1">
       <Input
         id={`${prefix}-year`}
-        className="w-16 px-1 text-center font-mono tabular-nums"
+        className="w-14 px-0.5 text-center font-mono tabular-nums"
         inputMode="numeric"
         value={localYear}
         onChange={(e) => setLocalYear(e.target.value)}
@@ -70,7 +70,7 @@ function DateField({
       <span className="text-sm text-muted-foreground">/</span>
       <Input
         id={`${prefix}-month`}
-        className="w-12 px-1 text-center font-mono tabular-nums"
+        className="w-10 px-0.5 text-center font-mono tabular-nums"
         inputMode="numeric"
         value={localMonth}
         onChange={(e) => setLocalMonth(e.target.value)}
@@ -86,7 +86,7 @@ function DateField({
       <span className="text-sm text-muted-foreground">/</span>
       <Input
         id={`${prefix}-day`}
-        className="w-12 px-1 text-center font-mono tabular-nums"
+        className="w-10 px-0.5 text-center font-mono tabular-nums"
         inputMode="numeric"
         value={localDay}
         onChange={(e) => setLocalDay(e.target.value)}

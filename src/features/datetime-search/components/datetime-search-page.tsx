@@ -100,6 +100,42 @@ function DatetimeSearchPage(): ReactElement {
   return (
     <FeaturePageLayout>
       <FeaturePageLayout.Controls>
+        {/* 検索ボタン + GPU トグル + 進捗 (PC では上部に表示) */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            {isLoading ? (
+              <Button variant="outline" onClick={cancel} className="flex-1">
+                <Trans>Cancel</Trans>
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSearch}
+                disabled={!validation.isValid || !isInitialized}
+                className="flex-1"
+              >
+                <Trans>Search</Trans>
+              </Button>
+            )}
+            <div className="flex items-center gap-1.5">
+              <Switch
+                id="gpu-toggle"
+                checked={useGpu}
+                onCheckedChange={setUseGpu}
+                disabled={isLoading}
+              />
+              <Label htmlFor="gpu-toggle" className="text-xs">
+                GPU
+              </Label>
+            </div>
+          </div>
+
+          {/* 進捗 (常駐表示) */}
+          <SearchProgress progress={progress} />
+
+          {/* エラー */}
+          {error && <p className="text-xs text-destructive">{error.message}</p>}
+        </div>
+
         <SearchContextForm
           dateRange={dateRange}
           timeRange={timeRange}
@@ -126,40 +162,6 @@ function DatetimeSearchPage(): ReactElement {
             ))}
           </ul>
         )}
-
-        {/* 検索ボタン + GPU トグル */}
-        <div className="flex items-center gap-3">
-          {isLoading ? (
-            <Button variant="outline" onClick={cancel} className="flex-1">
-              <Trans>Cancel</Trans>
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSearch}
-              disabled={!validation.isValid || !isInitialized}
-              className="flex-1"
-            >
-              <Trans>Search</Trans>
-            </Button>
-          )}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="gpu-toggle"
-              checked={useGpu}
-              onCheckedChange={setUseGpu}
-              disabled={isLoading}
-            />
-            <Label htmlFor="gpu-toggle" className="text-xs">
-              GPU
-            </Label>
-          </div>
-        </div>
-
-        {/* 進捗 */}
-        {progress && <SearchProgress progress={progress} />}
-
-        {/* エラー */}
-        {error && <p className="text-xs text-destructive">{error.message}</p>}
       </FeaturePageLayout.Controls>
 
       <FeaturePageLayout.Results>

@@ -7,8 +7,9 @@
  * レイアウト:
  *   [L]                    [R]       ← Shoulder
  *   [↑]               [X]           ← Row 1
- *  [←] [→]   [Sel][St]  [Y] [A]     ← Row 2
+ *  [←] [→]            [Y] [A]       ← Row 2
  *   [↓]               [B]           ← Row 3
+ *        [Select] [Start]            ← Bottom center
  */
 
 import { useMemo, useCallback, type ReactNode } from 'react';
@@ -25,8 +26,8 @@ const BUTTON_LABELS: Record<DsButton, string> = {
   Y: 'Y',
   L: 'L',
   R: 'R',
-  Start: 'St',
-  Select: 'Sel',
+  Start: 'Start',
+  Select: 'Select',
   Up: '↑',
   Down: '↓',
   Left: '←',
@@ -162,33 +163,33 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
           />
         </div>
 
-        {/* Main body: D-Pad | Center | Face */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Main body: D-Pad | Face */}
+        <div className="flex items-center justify-between">
           {/* D-Pad */}
           {renderGrid(DPAD_LAYOUT)}
 
-          {/* Center: Select / Start (stacked) */}
-          <div className="flex flex-col items-center gap-1">
-            <ToggleButton
-              pressed={selectedSet.has('Select')}
-              onToggle={(pressed) => handleToggle('Select', pressed)}
-              disabled={disabled}
-              label="Sel"
-              ariaLabel={t`Button Select`}
-              className="h-6 w-10 rounded-full text-[10px]"
-            />
-            <ToggleButton
-              pressed={selectedSet.has('Start')}
-              onToggle={(pressed) => handleToggle('Start', pressed)}
-              disabled={disabled}
-              label="St"
-              ariaLabel={t`Button Start`}
-              className="h-6 w-10 rounded-full text-[10px]"
-            />
-          </div>
-
           {/* Face buttons: X Y A B */}
           {renderGrid(FACE_LAYOUT)}
+        </div>
+
+        {/* Bottom center: Select / Start */}
+        <div className="flex items-center justify-center gap-3">
+          <ToggleButton
+            pressed={selectedSet.has('Select')}
+            onToggle={(pressed) => handleToggle('Select', pressed)}
+            disabled={disabled}
+            label="Select"
+            ariaLabel={t`Button Select`}
+            className="h-6 w-14 rounded-full text-[10px]"
+          />
+          <ToggleButton
+            pressed={selectedSet.has('Start')}
+            onToggle={(pressed) => handleToggle('Start', pressed)}
+            disabled={disabled}
+            label="Start"
+            ariaLabel={t`Button Start`}
+            className="h-6 w-14 rounded-full text-[10px]"
+          />
         </div>
       </div>
 

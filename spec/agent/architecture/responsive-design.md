@@ -167,8 +167,7 @@ function ResponsiveContainer({
 // components/layout/feature-page-layout.tsx
 const ControlsSlot = ({ children, className }: { children: ReactNode; className?: string }) => (
   <div className={cn(
-    'shrink-0 overflow-y-auto border-r border-border p-4',
-    'w-full lg:w-80',
+    'flex flex-col gap-4 lg:w-[28rem] lg:shrink-0 lg:overflow-y-auto lg:pr-2',
     className,
   )}>
     {children}
@@ -176,14 +175,14 @@ const ControlsSlot = ({ children, className }: { children: ReactNode; className?
 );
 
 const ResultsSlot = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={cn('flex-1 overflow-y-auto p-4', className)}>
+  <div className={cn('flex min-h-0 flex-1 flex-col gap-2 overflow-hidden', className)}>
     {children}
   </div>
 );
 
 function FeaturePageLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-full flex-col lg:flex-row">
+    <div className="flex h-full flex-col gap-4 p-4 lg:flex-row">
       {children}
     </div>
   );

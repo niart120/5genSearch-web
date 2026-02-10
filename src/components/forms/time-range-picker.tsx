@@ -56,7 +56,7 @@ function TimeAxisField({
       <div className="flex items-center gap-1">
         <Input
           id={`${prefix}-start`}
-          className="w-12 px-1 text-center font-mono tabular-nums"
+          className="w-10 px-0.5 text-center font-mono tabular-nums"
           inputMode="numeric"
           value={localStart}
           onChange={(e) => setLocalStart(e.target.value)}
@@ -72,7 +72,7 @@ function TimeAxisField({
         <span className="text-sm text-muted-foreground">〜</span>
         <Input
           id={`${prefix}-end`}
-          className="w-12 px-1 text-center font-mono tabular-nums"
+          className="w-10 px-0.5 text-center font-mono tabular-nums"
           inputMode="numeric"
           value={localEnd}
           onChange={(e) => setLocalEnd(e.target.value)}
