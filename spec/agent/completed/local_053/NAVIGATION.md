@@ -462,34 +462,34 @@ function App() {
 
 ### 定義・状態
 
-- [ ] `lib/navigation.ts` — カテゴリ / 機能定義 + ユーティリティ関数 (アイコン定義を含まない)
-- [ ] `stores/settings/ui.ts` — ナビゲーション状態追加 (name・version 据え置き)
-- [ ] `hooks/use-ui-settings.ts` — ナビゲーションセレクタ追加
+- [x] `lib/navigation.ts` — カテゴリ / 機能定義 + ユーティリティ関数 (アイコン定義を含まない)
+- [x] `stores/settings/ui.ts` — ナビゲーション状態追加 (name・version 据え置き)
+- [x] `hooks/use-ui-settings.ts` — ナビゲーションセレクタ追加
 
 ### レイアウトコンポーネント
 
-- [ ] `components/layout/category-nav.tsx` — PC カテゴリタブ
-- [ ] `components/layout/bottom-nav.tsx` — モバイルボトムナビ
-- [ ] `components/layout/feature-tabs.tsx` — 機能切り替えタブ
-- [ ] `components/layout/feature-content.tsx` — コンテンツルーティング
-- [ ] `components/layout/placeholder-page.tsx` — 未実装機能プレースホルダ
-- [ ] `components/layout/responsive-container.tsx` — `topContent` プロップ追加
-- [ ] `components/layout/welcome-page.tsx` — 削除
+- [x] `components/layout/category-nav.tsx` — PC カテゴリタブ
+- [x] `components/layout/bottom-nav.tsx` — モバイルボトムナビ
+- [x] `components/layout/feature-tabs.tsx` — 機能切り替えタブ
+- [x] `components/layout/feature-content.tsx` — コンテンツルーティング
+- [x] `components/layout/placeholder-page.tsx` — 未実装機能プレースホルダ
+- [x] `components/layout/responsive-container.tsx` — `topContent` プロップ追加
+- [x] `components/layout/welcome-page.tsx` — 削除
 
 ### 統合
 
-- [ ] `app.tsx` — ナビゲーション構造統合
+- [x] `app.tsx` — ナビゲーション構造統合
 
 ### テスト
 
-- [ ] `test/unit/navigation.test.ts` — 定義ユーティリティ
-- [ ] `test/unit/ui-store-navigation.test.ts` — Store ナビゲーション状態
-- [ ] `test/components/category-nav.test.tsx` — PC カテゴリタブ
-- [ ] `test/components/bottom-nav.test.tsx` — モバイルボトムナビ
-- [ ] `test/components/feature-tabs.test.tsx` — 機能タブ
-- [ ] `test/components/feature-content.test.tsx` — コンテンツルーティング
+- [x] `test/unit/navigation.test.ts` — 定義ユーティリティ
+- [x] `test/unit/ui-store-navigation.test.ts` — Store ナビゲーション状態
+- [x] `test/components/category-nav.test.tsx` — PC カテゴリタブ
+- [x] `test/components/bottom-nav.test.tsx` — モバイルボトムナビ
+- [x] `test/components/feature-tabs.test.tsx` — 機能タブ
+- [x] `test/components/feature-content.test.tsx` — コンテンツルーティング
 
 ### 後続タスク (アーキテクチャドキュメント更新)
 
-- [ ] `spec/agent/architecture/responsive-design.md` — レイアウト図・`ResponsiveContainerProps` 定義の更新
-- [ ] `welcome-page.tsx` 削除後に `lingui extract` で未使用翻訳キーを確認・整理
+- [x] `spec/agent/architecture/responsive-design.md` — レイアウト図・`ResponsiveContainerProps` 定義の更新
+- [x] `welcome-page.tsx` 削除後に `lingui extract` で未使用翻訳キーを確認・整理
