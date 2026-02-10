@@ -26,3 +26,9 @@ local_052 で SaveState Select を Checkbox に変更したが、二値切り替
 現状: `.git/hooks/pre-commit.ps1` で `src/i18n/locales/` を除外し、CI は `pnpm format:check` で全体を検査している。
 観察: フックはリポジトリ管理外のため共有されず、生成物の整形漏れが CI で検知される。
 当面の方針: `src/i18n/locales/` をチェック対象に戻し、Husky でフック設定をリポジトリ管理に含める方針を検討する。
+
+## 2026-02-10: React 19 での forwardRef 廃止
+
+`src/components/ui/` の既存コンポーネント (tabs.tsx 等) が `React.forwardRef` を使用している。
+React 19 では `ref` を通常の prop として渡せるため、`forwardRef` は不要。
+対象範囲が `ui/` 全体に及ぶため、専用のリファクタリングタスクとして実施するのが適切。

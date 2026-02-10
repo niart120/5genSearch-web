@@ -30,9 +30,8 @@ applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 
 ## 永続化 (persist) 変更の運用
 
-- 公開前は migrate を実装しない
-- 破壊的変更時は persist の name を変更し、新ストレージに切り替える
-- 安定化後に限り migrate を導入する
+- **公開前 (現段階)**: migration は一切行わない。状態追加は後方互換 (shallow merge で初期値補完)。破壊的変更時は localStorage クリアで対応
+- **公開後**: 破壊的変更時は `name` 変更または `version` + `migrate` で対応
 
 ## 禁止事項
 

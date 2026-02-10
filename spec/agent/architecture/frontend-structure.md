@@ -49,6 +49,7 @@ src/
 │   └── index.ts            # re-export
 │
 ├── lib/                    # ユーティリティ
+│   ├── navigation.ts       # カテゴリ / 機能定義、マッピングユーティリティ
 │   └── utils.ts            # cn() (clsx + tailwind-merge)
 │
 ├── hooks/                  # カスタムフック

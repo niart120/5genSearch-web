@@ -49,7 +49,7 @@ URL ルーティング (`react-router` 等) は以下の理由で不採用:
 
 | ファイル | 変更種別 | 変更内容 |
 |---------|---------|---------|
-| `src/lib/navigation.ts` | 新規 | カテゴリ / 機能定義、マッピングユーティリティ |
+| `src/lib/navigation.ts` | 新規 | カテゴリ / 機能定義、マッピングユーティリティ (アイコン定義を含まない) |
 | `src/stores/settings/ui.ts` | 変更 | ナビゲーション状態追加 (`activeCategory`, `activeFeature`, `featureMemory`) |
 | `src/hooks/use-ui-settings.ts` | 変更 | ナビゲーション用セレクタ追加 |
 | `src/components/layout/category-nav.tsx` | 新規 | PC 向けカテゴリタブ (Header 直下) |
@@ -179,9 +179,6 @@ PC 最小想定 (768px): 48 + 40 + 36 = 124px 固定 → コンテンツ 644px�
 ### 4.1 ナビゲーション定義 (`lib/navigation.ts`)
 
 ```typescript
-import type { LucideIcon } from 'lucide-react';
-import { Search, ListOrdered, Wrench } from 'lucide-react';
-
 /** 第 1 層: カテゴリ */
 export type Category = 'search' | 'generation' | 'tools';
 
@@ -197,7 +194,6 @@ export type FeatureId =
 
 export interface CategoryDef {
   readonly id: Category;
-  readonly icon: LucideIcon;
   readonly features: readonly FeatureId[];
   readonly defaultFeature: FeatureId;
 }
@@ -205,19 +201,16 @@ export interface CategoryDef {
 export const CATEGORIES: readonly CategoryDef[] = [
   {
     id: 'search',
-    icon: Search,
     features: ['datetime-search', 'egg-search'],
     defaultFeature: 'datetime-search',
   },
   {
     id: 'generation',
-    icon: ListOrdered,
     features: ['generation-list', 'egg-generation'],
     defaultFeature: 'generation-list',
   },
   {
     id: 'tools',
-    icon: Wrench,
     features: ['mtseed-search', 'tid-adjust', 'needle'],
     defaultFeature: 'mtseed-search',
   },
@@ -296,7 +289,7 @@ setActiveFeature: (feature) =>
   })),
 ```
 
-persist の `name` は `'ui-settings'` のまま、`version` を `2` に更新する。公開前のため migrate は実装しない (規約準拠)。
+persist の `name`・`version` は据え置き。公開前のため migration は一切行わない (後方互換な追加のみ)。
 
 ### 4.3 CategoryNav (`components/layout/category-nav.tsx`)
 
@@ -328,7 +321,7 @@ function BottomNav(): ReactElement;
 |------|------|
 | HTML 構造 | `<nav aria-label="Category navigation">` + `<button>` per category |
 | 表示制御 | `className="flex lg:hidden"` (モバイルのみ) |
-| 各ボタン | アイコン (`LucideIcon`) + ラベル (小テキスト) の縦積み |
+| 各ボタン | アイコン + ラベル (小テキスト) の縦積み。カテゴリ → アイコンのマッピングはコンポーネント内で定義 |
 | アクティブ状態 | `aria-current="true"` + テキスト/アイコン色変更 (`text-primary` vs `text-muted-foreground`) |
 | クリック | `setActiveCategory(category.id)` 呼び出し |
 | 高さ | `h-14` (56px)。`border-t border-border` で上辺罫線 |
@@ -344,12 +337,11 @@ function FeatureTabs(): ReactElement | null;
 
 | 項目 | 仕様 |
 |------|------|
-| UI 部品 | Radix `Tabs` (`TabsList` + `TabsTrigger`) |
+| UI 部品 | Radix `TabsList` + `TabsTrigger` (親の `Tabs` コンテキストを使用。`Tabs` ルートは App.tsx に配置) |
 | タブ項目 | `getCategoryDef(activeCategory).features` を `map` |
-| 値同期 | `value={activeFeature}` / `onValueChange={setActiveFeature}` |
 | 非表示条件 | カテゴリ内の機能数が 1 の場合 `return null` |
 | スタイル | `border-b border-border` で下辺罫線 |
-| Store 接続 | `useUiStore` から `activeCategory`, `activeFeature`, `setActiveFeature` を取得 |
+| Store 接続 | `useUiStore` から `activeCategory` を取得。値同期は親 `Tabs` が担当 |
 
 ### 4.6 FeatureContent (`components/layout/feature-content.tsx`)
 
@@ -359,22 +351,29 @@ function FeatureTabs(): ReactElement | null;
 function FeatureContent(): ReactElement;
 ```
 
-- `useUiStore` から `activeFeature` を取得し `switch` で対応するページを描画
+- Radix `TabsContent` を使用し、各機能に対応するパネルを描画する
+- 親の `Tabs` コンテキストにより、`activeFeature` に一致する `TabsContent` のみがマウントされる
 - 初期実装時点では全機能に `PlaceholderPage` を描画
-- 各機能 spec 実装時に、対応する `case` を実際のページコンポーネントに差し替え
+- 各機能 spec 実装時に、対応する `TabsContent` 内を実際のページコンポーネントに差し替え
 
-```typescript
+```tsx
+import { CATEGORIES } from '@/lib/navigation';
+import { TabsContent } from '@/components/ui/tabs';
+
 // 初期実装 (本 spec 範囲)
 function FeatureContent(): ReactElement {
-  const activeFeature = useUiStore((s) => s.activeFeature);
-
-  switch (activeFeature) {
-    // 各機能 spec で順次差し替え:
-    // case 'datetime-search':
-    //   return <DatetimeSearchPage />;
-    default:
-      return <PlaceholderPage featureId={activeFeature} />;
-  }
+  return (
+    <>
+      {CATEGORIES.flatMap((cat) =>
+        cat.features.map((featureId) => (
+          <TabsContent key={featureId} value={featureId} className="mt-0">
+            {/* 各機能 spec で順次差し替え */}
+            <PlaceholderPage featureId={featureId} />
+          </TabsContent>
+        ))
+      )}
+    </>
+  );
 }
 ```
 
@@ -398,6 +397,8 @@ function PlaceholderPage({ featureId }: PlaceholderPageProps): ReactElement;
 ```tsx
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const activeFeature = useUiStore((s) => s.activeFeature);
+  const setActiveFeature = useUiStore((s) => s.setActiveFeature);
 
   const sidebarContent = (
     <div className="space-y-6">
@@ -410,14 +411,20 @@ function App() {
     <div className="flex h-dvh flex-col overflow-hidden">
       <Header onMenuClick={() => setSidebarOpen(true)} />
       <CategoryNav />
-      <ResponsiveContainer
-        sidebarContent={sidebarContent}
-        sidebarOpen={sidebarOpen}
-        onSidebarOpenChange={setSidebarOpen}
-        topContent={<FeatureTabs />}
+      <Tabs
+        value={activeFeature}
+        onValueChange={(v) => setActiveFeature(v as FeatureId)}
+        className="flex flex-1 flex-col overflow-hidden"
       >
-        <FeatureContent />
-      </ResponsiveContainer>
+        <ResponsiveContainer
+          sidebarContent={sidebarContent}
+          sidebarOpen={sidebarOpen}
+          onSidebarOpenChange={setSidebarOpen}
+          topContent={<FeatureTabs />}
+        >
+          <FeatureContent />
+        </ResponsiveContainer>
+      </Tabs>
       <BottomNav />
       <Toaster />
     </div>
@@ -429,8 +436,9 @@ function App() {
 
 1. `WelcomePage` → `FeatureContent` に差し替え
 2. `CategoryNav` を Header 直下に追加 (PC のみ表示)
-3. `BottomNav` を `ResponsiveContainer` 直後に追加 (モバイルのみ表示)
+3. `BottomNav` を最下部に追加 (モバイルのみ表示)
 4. `ResponsiveContainer` に `topContent={<FeatureTabs />}` を渡す
+5. `Tabs` で `ResponsiveContainer` をラップし、`FeatureTabs` (TabsList) と `FeatureContent` (TabsContent) を Radix コンテキストで接続
 
 ## 5. テスト方針
 
@@ -454,8 +462,8 @@ function App() {
 
 ### 定義・状態
 
-- [ ] `lib/navigation.ts` — カテゴリ / 機能定義 + ユーティリティ関数
-- [ ] `stores/settings/ui.ts` — ナビゲーション状態追加 (`version: 2`)
+- [ ] `lib/navigation.ts` — カテゴリ / 機能定義 + ユーティリティ関数 (アイコン定義を含まない)
+- [ ] `stores/settings/ui.ts` — ナビゲーション状態追加 (name・version 据え置き)
 - [ ] `hooks/use-ui-settings.ts` — ナビゲーションセレクタ追加
 
 ### レイアウトコンポーネント
@@ -480,3 +488,8 @@ function App() {
 - [ ] `test/components/bottom-nav.test.tsx` — モバイルボトムナビ
 - [ ] `test/components/feature-tabs.test.tsx` — 機能タブ
 - [ ] `test/components/feature-content.test.tsx` — コンテンツルーティング
+
+### 後続タスク (アーキテクチャドキュメント更新)
+
+- [ ] `spec/agent/architecture/responsive-design.md` — レイアウト図・`ResponsiveContainerProps` 定義の更新
+- [ ] `welcome-page.tsx` 削除後に `lingui extract` で未使用翻訳キーを確認・整理
