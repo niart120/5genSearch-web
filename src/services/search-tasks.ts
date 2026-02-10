@@ -4,7 +4,8 @@
  * WASM の generate_*_search_tasks 関数を呼び出し、
  * WorkerPool に渡す SearchTask[] を生成する。
  *
- * メインスレッドで実行される前提 (WASM 初期化済み)。
+ * 呼び出し前に initMainThreadWasm() (from @/services/wasm-init) で
+ * WASM を初期化すること。
  */
 
 import {

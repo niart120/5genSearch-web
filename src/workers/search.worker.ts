@@ -72,7 +72,7 @@ async function handleInit(): Promise<void> {
   try {
     // Worker 内で独立して WASM を初期化
     // 絶対パスで public/wasm/ から WASM バイナリを取得
-    await initWasm(WASM_URL);
+    await initWasm({ module_or_path: WASM_URL });
 
     // WASM が正しく初期化されたか確認
     const healthResult = health_check();
@@ -182,7 +182,7 @@ async function runMtseedDatetimeSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1000);
+      const batch = searcher.next_batch(500_000);
 
       if (batch.results.length > 0) {
         postResponse({
@@ -221,7 +221,7 @@ async function runMtseedSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(0x1_00_00);
+      const batch = searcher.next_batch(1_000_000);
 
       if (batch.candidates.length > 0) {
         postResponse({
@@ -260,7 +260,7 @@ async function runTrainerInfoSearch(
 
   try {
     while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1000);
+      const batch = searcher.next_batch(1_000_000);
 
       if (batch.results.length > 0) {
         postResponse({

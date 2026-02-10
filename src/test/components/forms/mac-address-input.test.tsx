@@ -35,7 +35,7 @@ describe('MacAddressInput', () => {
     // 2 文字入力で auto-tab → blur が発火し onChange が呼ばれる
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastCall = onChange.mock.calls.at(-1)![0];
     expect(lastCall[0]).toBe(255);
   });
 
@@ -51,7 +51,7 @@ describe('MacAddressInput', () => {
 
     // GG は parseHexByte で除外されるが、入力フィルタで G は排除されるため空欄 → デフォルト 00
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastCall = onChange.mock.calls.at(-1)![0];
     expect(lastCall[0]).toBe(0);
   });
 
@@ -102,7 +102,7 @@ describe('MacAddressInput', () => {
     await user.tab();
 
     expect(onChange).toHaveBeenCalled();
-    const lastCall = onChange.mock.calls.at(-1)[0];
+    const lastCall = onChange.mock.calls.at(-1)![0];
     expect(lastCall[0]).toBe(10); // 0x0A
   });
 

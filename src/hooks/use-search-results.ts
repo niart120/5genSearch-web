@@ -12,7 +12,7 @@ export function useSearchResults() {
 
 export function useSearchResultsReadonly(): {
   results: SearchResult[];
-  lastUpdatedAt: number | null;
+  lastUpdatedAt: number | undefined;
 } {
   const results = useSearchResultsStore((s) => s.results);
   const lastUpdatedAt = useSearchResultsStore((s) => s.lastUpdatedAt);

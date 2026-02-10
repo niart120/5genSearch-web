@@ -142,7 +142,7 @@ describe('WorkerPool', () => {
     expect(progressHistory.length).toBeGreaterThan(0);
 
     // 最終進捗が高い値であること
-    const lastProgress = progressHistory.at(-1);
+    const lastProgress = progressHistory.at(-1)!;
     expect(lastProgress.percentage).toBeGreaterThan(90);
     expect(lastProgress.tasksCompleted).toBe(2);
     expect(lastProgress.tasksTotal).toBe(2);
