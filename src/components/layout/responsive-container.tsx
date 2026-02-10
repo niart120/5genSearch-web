@@ -7,6 +7,7 @@ interface ResponsiveContainerProps {
   sidebarContent?: ReactNode;
   sidebarOpen: boolean;
   onSidebarOpenChange: (open: boolean) => void;
+  topContent?: ReactNode;
   children?: ReactNode;
 }
 
@@ -14,6 +15,7 @@ function ResponsiveContainer({
   sidebarContent,
   sidebarOpen,
   onSidebarOpenChange,
+  topContent,
   children,
 }: ResponsiveContainerProps) {
   return (
@@ -40,8 +42,11 @@ function ResponsiveContainer({
       )}
 
       {/* メインコンテンツ */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="px-4 py-4 lg:px-6">{children}</div>
+      <main className="flex flex-1 flex-col overflow-hidden">
+        {topContent && <div className="shrink-0">{topContent}</div>}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-4 lg:px-6">{children}</div>
+        </div>
       </main>
     </div>
   );

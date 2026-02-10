@@ -20,7 +20,6 @@ msgid "{0} selected"
 msgstr "{0} selected"
 
 #: src/components/layout/header.tsx:25
-#: src/components/layout/welcome-page.tsx:8
 msgid "5genSearch"
 msgstr ""
 
@@ -29,10 +28,25 @@ msgstr ""
 msgid "Auto"
 msgstr "Auto"
 
+#: src/components/layout/feature-tabs.tsx:9
+#: src/components/layout/placeholder-page.tsx:6
+msgid "Datetime Search"
+msgstr "Datetime Search"
+
 #: src/components/forms/hidden-power-select.tsx:69
 #: src/components/forms/nature-select.tsx:69
 msgid "Deselect all"
 msgstr "Deselect all"
+
+#: src/components/layout/feature-tabs.tsx:12
+#: src/components/layout/placeholder-page.tsx:9
+msgid "Egg Generation"
+msgstr "Egg Generation"
+
+#: src/components/layout/feature-tabs.tsx:10
+#: src/components/layout/placeholder-page.tsx:7
+msgid "Egg Search"
+msgstr "Egg Search"
 
 #: src/components/data-display/search-progress.tsx:47
 msgid "Elapsed"
@@ -41,6 +55,16 @@ msgstr "Elapsed"
 #: src/components/forms/date-range-picker.tsx:130
 msgid "End date"
 msgstr "End date"
+
+#: src/components/layout/bottom-nav.tsx:17
+#: src/components/layout/category-nav.tsx:10
+msgid "Generation"
+msgstr "Generation"
+
+#: src/components/layout/feature-tabs.tsx:11
+#: src/components/layout/placeholder-page.tsx:8
+msgid "Generation List"
+msgstr "Generation List"
 
 #: src/features/ds-config/components/ds-config-form.tsx:99
 #: src/features/ds-config/components/ds-config-form.tsx:102
@@ -78,9 +102,19 @@ msgstr "Min"
 msgid "Minute"
 msgstr "Minute"
 
+#: src/components/layout/feature-tabs.tsx:13
+#: src/components/layout/placeholder-page.tsx:10
+msgid "MT Seed Search"
+msgstr "MT Seed Search"
+
 #: src/components/forms/nature-select.tsx:48
 msgid "Nature"
 msgstr "Nature"
+
+#: src/components/layout/feature-tabs.tsx:15
+#: src/components/layout/placeholder-page.tsx:12
+msgid "Needle"
+msgstr "Needle"
 
 #: src/features/ds-config/components/ds-config-form.tsx:39
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
@@ -96,8 +130,8 @@ msgid "Not specified"
 msgstr "Not specified"
 
 #: src/components/layout/welcome-page.tsx:11
-msgid "Pokemon BW/BW2 RNG seed search tool."
-msgstr "Pokemon BW/BW2 RNG seed search tool."
+#~ msgid "Pokemon BW/BW2 RNG seed search tool."
+#~ msgstr "Pokemon BW/BW2 RNG seed search tool."
 
 #: src/features/ds-config/components/ds-config-form.tsx:80
 #: src/features/ds-config/components/ds-config-form.tsx:83
@@ -108,11 +142,10 @@ msgstr "Region"
 msgid "Remaining"
 msgstr "Remaining"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:61
-#: src/features/ds-config/components/game-start-config-form.tsx:64
-msgid "With save"
-msgstr "With save"
-
+#: src/components/layout/bottom-nav.tsx:16
+#: src/components/layout/category-nav.tsx:9
+msgid "Search"
+msgstr "Search"
 
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"
@@ -123,7 +156,7 @@ msgstr "Second"
 msgid "Select all"
 msgstr "Select all"
 
-#: src/components/layout/responsive-container.tsx:34
+#: src/components/layout/responsive-container.tsx:36
 #: src/components/layout/sidebar.tsx:15
 msgid "Settings"
 msgstr "Settings"
@@ -143,8 +176,17 @@ msgid "Start mode"
 msgstr "Start mode"
 
 #: src/components/layout/welcome-page.tsx:14
-msgid "Tap the menu icon at the top left to configure search settings."
-msgstr "Tap the menu icon at the top left to configure search settings."
+#~ msgid "Tap the menu icon at the top left to configure search settings."
+#~ msgstr "Tap the menu icon at the top left to configure search settings."
+
+#: src/components/layout/placeholder-page.tsx:29
+msgid "This feature is under development."
+msgstr "This feature is under development."
+
+#: src/components/layout/feature-tabs.tsx:14
+#: src/components/layout/placeholder-page.tsx:11
+msgid "TID Adjust"
+msgstr "TID Adjust"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:100
 msgid "Timer0 max"
@@ -153,6 +195,11 @@ msgstr "Timer0 max"
 #: src/components/forms/timer0-vcount-range-input.tsx:83
 msgid "Timer0 min"
 msgstr "Timer0 min"
+
+#: src/components/layout/bottom-nav.tsx:18
+#: src/components/layout/category-nav.tsx:11
+msgid "Tools"
+msgstr "Tools"
 
 #: src/components/forms/iv-range-input.tsx:153
 msgid "Unknown (any)"
@@ -170,3 +217,8 @@ msgstr "VCount min"
 #: src/features/ds-config/components/ds-config-form.tsx:64
 msgid "Version"
 msgstr "Version"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:61
+#: src/features/ds-config/components/game-start-config-form.tsx:64
+msgid "With save"
+msgstr "With save"
