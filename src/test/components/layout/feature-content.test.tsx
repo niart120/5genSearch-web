@@ -29,9 +29,11 @@ describe('FeatureContent', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('egg-search がアクティブのとき PlaceholderPage が表示される', () => {
+  it('egg-search がアクティブのとき EggSearchPage が表示される', () => {
     renderFeatureContent('egg-search');
-    expect(screen.getByText('Egg Search')).toBeInTheDocument();
+    // EggSearchPage はフォームを含む — Search ボタンが表示される
+    const buttons = screen.getAllByRole('button', { name: /Search/i });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('mtseed-search がアクティブのとき PlaceholderPage が表示される', () => {
