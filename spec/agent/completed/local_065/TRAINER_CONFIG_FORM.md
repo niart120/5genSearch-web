@@ -187,8 +187,8 @@ const sidebarContent = (
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/features/ds-config/components/trainer-config-form.tsx` — フォームコンポーネント
-- [ ] `src/features/ds-config/index.ts` — re-export 追加
-- [ ] `src/app.tsx` — サイドバーに `<TrainerConfigForm />` 追加
-- [ ] `src/test/components/trainer-config-form.test.tsx` — コンポーネントテスト
-- [ ] i18n: `pnpm lingui:extract` で翻訳キー抽出・追加
+- [x] `src/features/ds-config/components/trainer-config-form.tsx` — フォームコンポーネント
+- [x] `src/features/ds-config/index.ts` — re-export 追加
+- [x] `src/app.tsx` — サイドバーに `<TrainerConfigForm />` 追加
+- [x] `src/test/components/features/trainer-config-form.test.tsx` — コンポーネントテスト
+- [x] i18n: `pnpm lingui:extract` で翻訳キー抽出・追加
