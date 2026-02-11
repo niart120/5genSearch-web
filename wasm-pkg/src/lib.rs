@@ -55,6 +55,19 @@ pub use types::NeedleSearchResult;
 // Re-export resolve module
 pub use resolve::{resolve_egg_data, resolve_pokemon_data};
 
+/// 種族名を取得
+///
+/// # Arguments
+/// * `species_id` - 全国図鑑番号 (1-649)
+/// * `locale` - ロケール (`"ja"` または `"en"`)
+///
+/// # Returns
+/// 種族名。範囲外の場合は `"???"` を返す。
+#[wasm_bindgen]
+pub fn get_species_name(species_id: u16, locale: &str) -> String {
+    data::get_species_name(species_id, locale).to_string()
+}
+
 // Re-export GPU module (when enabled)
 #[cfg(feature = "gpu")]
 pub use gpu::{

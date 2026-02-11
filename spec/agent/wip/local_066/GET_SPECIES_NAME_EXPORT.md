@@ -83,27 +83,14 @@ pub fn get_species_name(species_id: u16, locale: &str) -> String {
 ```
 
 - 内部関数は `&'static str` を返すが、wasm_bindgen は `&str` の返却をサポートしないため `String` に変換する
-- 関数名は内部関数と同名 (`get_species_name`) で統一する。`pub use data::get_species_name` との名前衝突を避けるため、lib.rs 側の `pub use` は維持しつつ `#[wasm_bindgen]` 関数は別途定義する
+- 関数名は内部関数と同名 (`get_species_name`) で統一する。`lib.rs` に同名の `pub use` は存在しないため名前衝突は発生しない
 
-### 4.2 名前衝突の回避
+### 4.2 名前衝突について
 
-`lib.rs` に既存の `pub use data::names::get_species_name` がある (via `pub use names::{get_nature_name, get_species_name}` in `data/mod.rs`)。
+`lib.rs` に `get_species_name` の `pub use` は存在しない。
+`data/mod.rs` の `pub use names::{get_nature_name, get_species_name}` により `crate::data::get_species_name` としてアクセス可能だが、`lib.rs` のトップレベル名前空間には影響しない。
 
-wasm_bindgen export 関数は lib.rs のトップレベルに定義するため、`pub use` と衝突する。
-対処法: wasm_bindgen export 関数に `js_name` を指定するか、`pub use` を削除して crate 内部は `data::get_species_name` で直接参照する。
-
-推奨: `pub use` を削除し、crate 内部で `data::get_species_name` を直接呼び出す方式に変更する。
-
-```rust
-// lib.rs — 変更前
-pub use data::names::{get_nature_name, get_species_name};
-
-// lib.rs — 変更後
-pub use data::names::get_nature_name;
-// get_species_name は #[wasm_bindgen] 関数として直接定義
-```
-
-crate 内の他の利用箇所 (`resolve/egg.rs`, `resolve/pokemon.rs` 等) は `crate::data::get_species_name(...)` で呼び出しているため影響なし。
+よって `#[wasm_bindgen]` ラッパー関数を `lib.rs` に定義するだけでよく、名前衝突の回避策は不要。
 
 ---
 
@@ -129,9 +116,8 @@ crate 内の他の利用箇所 (`resolve/egg.rs`, `resolve/pokemon.rs` 等) は 
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/lib.rs` — `#[wasm_bindgen] pub fn get_species_name` 追加
-- [ ] `wasm-pkg/src/lib.rs` — `pub use data::names::get_species_name` 削除 (衝突回避)
-- [ ] `pnpm build:wasm` で型定義の自動生成を確認
-- [ ] `cargo test` — 既存テスト通過確認
-- [ ] `cargo clippy --all-targets -- -D warnings` — lint 通過確認
-- [ ] `src/test/integration/species-name.test.ts` — 統合テスト
+- [x] `wasm-pkg/src/lib.rs` — `#[wasm_bindgen] pub fn get_species_name` 追加
+- [x] `pnpm build:wasm` で型定義の自動生成を確認
+- [x] `cargo test` — 既存テスト通過確認
+- [x] `cargo clippy --all-targets -- -D warnings` — lint 通過確認
+- [x] `src/test/integration/species-name.test.ts` — 統合テスト
