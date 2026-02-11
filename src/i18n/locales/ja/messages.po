@@ -361,7 +361,7 @@ msgstr "秒"
 #: src/features/ds-config/components/trainer-config-form.tsx:52
 #: src/features/ds-config/components/trainer-config-form.tsx:55
 msgid "Secret ID"
-msgstr "\u88CFID"
+msgstr "裏ID"
 
 #: src/components/forms/hidden-power-select.tsx:66
 #: src/components/forms/nature-select.tsx:66
@@ -457,7 +457,7 @@ msgstr "ツール"
 #: src/features/ds-config/components/trainer-config-form.tsx:37
 #: src/features/ds-config/components/trainer-config-form.tsx:40
 msgid "Trainer ID"
-msgstr "\u30C8\u30EC\u30FC\u30CA\u30FCID"
+msgstr "表ID"
 
 #: src/components/forms/iv-range-input.tsx:153
 #~ msgid "Unknown (any)"
