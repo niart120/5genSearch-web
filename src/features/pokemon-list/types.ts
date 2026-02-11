@@ -9,14 +9,14 @@ import type {
 /** Seed 入力モード */
 export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
 
-/** ステータスフィルター (クライアントサイド post-filter) */
+/** ステータスフィルター (クライアントサイド post-filter, 固定値指定) */
 export interface StatsFilter {
-  hp: [number, number];
-  atk: [number, number];
-  def: [number, number];
-  spa: [number, number];
-  spd: [number, number];
-  spe: [number, number];
+  hp: number | undefined;
+  atk: number | undefined;
+  def: number | undefined;
+  spa: number | undefined;
+  spd: number | undefined;
+  spe: number | undefined;
 }
 
 /** ポケモンリスト生成フォーム状態 */

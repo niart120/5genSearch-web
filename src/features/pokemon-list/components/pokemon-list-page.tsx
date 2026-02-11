@@ -133,9 +133,11 @@ function PokemonListPage(): ReactElement {
     const keys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
     return uiResults.filter((r) =>
       keys.every((key, i) => {
+        const expected = statsFilter[key];
+        if (expected === undefined) return true; // 未指定は任意の値にマッチ
         const v = Number(r.stats[i]);
         if (Number.isNaN(v)) return true; // '?' は通過
-        return v >= statsFilter[key][0] && v <= statsFilter[key][1];
+        return v === expected;
       })
     );
   }, [uiResults, statsFilter]);

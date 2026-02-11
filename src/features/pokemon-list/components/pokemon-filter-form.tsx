@@ -6,7 +6,7 @@
  * statMode に応じて IV / 実ステータスフィルターを切り替える。
  */
 
-import { useState, useCallback, useMemo, useEffect, type ReactElement } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
@@ -76,12 +76,12 @@ const DEFAULT_IV_FILTER: IvFilter = {
 };
 
 const DEFAULT_STATS_FILTER: StatsFilter = {
-  hp: [0, 999],
-  atk: [0, 999],
-  def: [0, 999],
-  spa: [0, 999],
-  spd: [0, 999],
-  spe: [0, 999],
+  hp: undefined,
+  atk: undefined,
+  def: undefined,
+  spa: undefined,
+  spd: undefined,
+  spe: undefined,
 };
 
 const DEFAULT_FILTER: PokemonFilter = {
@@ -94,100 +94,12 @@ const DEFAULT_FILTER: PokemonFilter = {
   level_range: undefined,
 };
 
-const STATS_MIN = 0;
-const STATS_MAX = 999;
-
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-/** ステータス範囲入力 1 行 */
-function StatRangeRow({
-  label,
-  min,
-  max,
-  disabled,
-  onMinChange,
-  onMaxChange,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  disabled?: boolean;
-  onMinChange: (v: number) => void;
-  onMaxChange: (v: number) => void;
-}) {
-  const localMin = min.toString();
-  const localMax = max.toString();
-  const [editMin, setEditMin] = useState(localMin);
-  const [editMax, setEditMax] = useState(localMax);
-
-  // Reset local state on prop change via key pattern would be complex;
-  // Use controlled approach: display prop value when not editing
-  const [isEditingMin, setIsEditingMin] = useState(false);
-  const [isEditingMax, setIsEditingMax] = useState(false);
-
-  return (
-    <>
-      <Label className="font-mono text-sm tabular-nums font-medium">{label}</Label>
-      <Input
-        className="w-16 px-1 text-center font-mono tabular-nums"
-        inputMode="numeric"
-        value={isEditingMin ? editMin : localMin}
-        onChange={(e) => {
-          setEditMin(e.target.value);
-          setIsEditingMin(true);
-        }}
-        onFocus={(e) => {
-          handleFocusSelectAll(e);
-          setIsEditingMin(true);
-          setEditMin(localMin);
-        }}
-        onBlur={() => {
-          setIsEditingMin(false);
-          const v = clampOrDefault(editMin, {
-            defaultValue: STATS_MIN,
-            min: STATS_MIN,
-            max: STATS_MAX,
-          });
-          onMinChange(v);
-        }}
-        disabled={disabled}
-        placeholder="0"
-        aria-label={`${label} min`}
-      />
-      <Input
-        className="w-16 px-1 text-center font-mono tabular-nums"
-        inputMode="numeric"
-        value={isEditingMax ? editMax : localMax}
-        onChange={(e) => {
-          setEditMax(e.target.value);
-          setIsEditingMax(true);
-        }}
-        onFocus={(e) => {
-          handleFocusSelectAll(e);
-          setIsEditingMax(true);
-          setEditMax(localMax);
-        }}
-        onBlur={() => {
-          setIsEditingMax(false);
-          const v = clampOrDefault(editMax, {
-            defaultValue: STATS_MAX,
-            min: STATS_MIN,
-            max: STATS_MAX,
-          });
-          onMaxChange(v);
-        }}
-        disabled={disabled}
-        placeholder="999"
-        aria-label={`${label} max`}
-      />
-    </>
-  );
-}
-
-/** ステータスレンジ入力 (6 ステータス) */
-function StatsRangeInput({
+/** ステータス固定値入力 (6 ステータス横並び) */
+function StatsFixedInput({
   value,
   onChange,
   disabled,
@@ -197,22 +109,61 @@ function StatsRangeInput({
   disabled?: boolean;
 }) {
   const language = useUiStore((s) => s.language);
+
+  const [localValues, setLocalValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      IV_STAT_KEYS.map((stat) => [stat, value[stat] === undefined ? '' : String(value[stat])])
+    )
+  );
+
+  const localValuesRef = useRef(localValues);
+  useEffect(() => {
+    localValuesRef.current = localValues;
+  });
+
+  const handleChange = useCallback((stat: (typeof IV_STAT_KEYS)[number], raw: string) => {
+    setLocalValues((prev) => ({ ...prev, [stat]: raw }));
+  }, []);
+
+  const handleBlur = useCallback(
+    (stat: (typeof IV_STAT_KEYS)[number]) => {
+      const raw = (localValuesRef.current[stat] ?? '').trim();
+      if (raw === '') {
+        setLocalValues((prev) => ({ ...prev, [stat]: '' }));
+        onChange({ ...value, [stat]: undefined });
+        return;
+      }
+      const parsed = Number.parseInt(raw, 10);
+      const clamped = Number.isNaN(parsed) ? undefined : Math.max(0, Math.min(999, parsed));
+      setLocalValues((prev) => ({
+        ...prev,
+        [stat]: clamped === undefined ? '' : String(clamped),
+      }));
+      onChange({ ...value, [stat]: clamped });
+    },
+    [value, onChange]
+  );
+
   return (
-    <div className="grid grid-cols-[auto_1fr_1fr] items-center gap-x-2 gap-y-1">
-      {IV_STAT_KEYS.map((key) => (
-        <StatRangeRow
-          key={key}
-          label={getStatLabel(key as IvStatKey, language)}
-          min={value[key][0]}
-          max={value[key][1]}
-          disabled={disabled}
-          onMinChange={(v) =>
-            onChange({ ...value, [key]: [Math.min(v, value[key][1]), value[key][1]] })
-          }
-          onMaxChange={(v) =>
-            onChange({ ...value, [key]: [value[key][0], Math.max(v, value[key][0])] })
-          }
-        />
+    <div className="grid grid-cols-6 gap-1">
+      {IV_STAT_KEYS.map((stat) => (
+        <div key={stat} className="flex flex-col items-center gap-0.5">
+          <span className="text-[0.65rem] font-mono text-muted-foreground">
+            {getStatLabel(stat as IvStatKey, language)}
+          </span>
+          <Input
+            type="text"
+            inputMode="numeric"
+            className="h-7 w-full text-center text-xs tabular-nums px-1"
+            value={localValues[stat]}
+            onChange={(e) => handleChange(stat, e.target.value)}
+            onBlur={() => handleBlur(stat)}
+            onFocus={handleFocusSelectAll}
+            disabled={disabled}
+            placeholder="-"
+            aria-label={`${getStatLabel(stat as IvStatKey, language)} stats`}
+          />
+        </div>
       ))}
     </div>
   );
@@ -424,7 +375,7 @@ function PokemonFilterForm({
   }, []);
 
   const isStatsDefault = useCallback((s: StatsFilter): boolean => {
-    return IV_STAT_KEYS.every((k) => s[k][0] === 0 && s[k][1] === 999);
+    return IV_STAT_KEYS.every((k) => s[k] === undefined);
   }, []);
 
   const propagate = useCallback(
@@ -704,9 +655,9 @@ function PokemonFilterForm({
           {statMode === 'stats' && (
             <div className="flex flex-col gap-1">
               <Label className="text-xs">
-                <Trans>Stats range</Trans>
+                <Trans>Stats filter</Trans>
               </Label>
-              <StatsRangeInput
+              <StatsFixedInput
                 value={internalStats}
                 onChange={updateStats}
                 disabled={filterDisabled}
