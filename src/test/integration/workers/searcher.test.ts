@@ -93,7 +93,7 @@ describe('MtseedSearcher', () => {
         mt_offset: 7,
         is_roamer: false,
         start_seed: 0,
-        end_seed: 0xff_ff_ff_ff,
+        end_seed: 0x00_00_ff_ff,
       },
     };
 
