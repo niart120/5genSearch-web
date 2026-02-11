@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type {
   EggDatetimeSearchResult,
+  GeneratedPokemonData,
   MtseedResult,
   SeedOrigin,
   TrainerInfoSearchResult,
@@ -10,7 +11,8 @@ export type SearchResult =
   | SeedOrigin[]
   | MtseedResult[]
   | EggDatetimeSearchResult[]
-  | TrainerInfoSearchResult[];
+  | TrainerInfoSearchResult[]
+  | GeneratedPokemonData[];
 
 interface SearchResultsState {
   results: SearchResult[];

@@ -23,12 +23,16 @@ import type {
   EggFilter,
   TrainerInfoFilter,
   GameStartConfig,
+  SeedOrigin,
+  PokemonGenerationParams,
+  PokemonFilter,
 } from '../wasm/wasm_pkg.js';
 import type {
   MtseedSearchTask,
   MtseedDatetimeSearchTask,
   EggDatetimeSearchTask,
   TrainerInfoSearchTask,
+  PokemonListTask,
 } from '../workers/types';
 
 /**
@@ -88,4 +92,24 @@ export function createTrainerInfoSearchTasks(
 ): TrainerInfoSearchTask[] {
   const paramsList = generate_trainer_info_search_tasks(context, filter, gameStart, workerCount);
   return paramsList.map((params) => ({ kind: 'trainer-info' as const, params }));
+}
+
+/**
+ * ポケモンリスト生成タスクを生成
+ *
+ * 単一 Worker で実行 (タスク分割不要)。
+ */
+export function createPokemonListTask(
+  origins: SeedOrigin[],
+  params: PokemonGenerationParams,
+  config: GenerationConfig,
+  filter: PokemonFilter | undefined
+): PokemonListTask {
+  return {
+    kind: 'pokemon-list',
+    origins,
+    params,
+    config,
+    filter,
+  };
 }

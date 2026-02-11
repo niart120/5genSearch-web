@@ -16,6 +16,10 @@ import type {
   MtseedResult,
   EggDatetimeSearchResult,
   TrainerInfoSearchResult,
+  PokemonGenerationParams,
+  GenerationConfig,
+  PokemonFilter,
+  GeneratedPokemonData,
 } from '../wasm/wasm_pkg.js';
 
 // =============================================================================
@@ -133,6 +137,16 @@ export interface ErrorResponse {
 /**
  * Worker → Main メッセージ
  */
+/**
+ * 検索結果レスポンス (PokemonList)
+ */
+export interface PokemonListResultResponse {
+  type: 'result';
+  taskId: string;
+  resultType: 'pokemon-list';
+  results: GeneratedPokemonData[];
+}
+
 export type WorkerResponse =
   | ReadyResponse
   | ProgressResponse
@@ -140,6 +154,7 @@ export type WorkerResponse =
   | MtseedResultResponse
   | EggResultResponse
   | TrainerInfoResultResponse
+  | PokemonListResultResponse
   | DoneResponse
   | ErrorResponse;
 
@@ -213,6 +228,17 @@ export interface TrainerInfoSearchTask {
 }
 
 /**
+ * ポケモンリスト生成タスク
+ */
+export interface PokemonListTask {
+  kind: 'pokemon-list';
+  origins: SeedOrigin[];
+  params: PokemonGenerationParams;
+  config: GenerationConfig;
+  filter: PokemonFilter | undefined;
+}
+
+/**
  * 検索タスク (Union)
  */
 export type SearchTask =
@@ -220,7 +246,8 @@ export type SearchTask =
   | MtseedDatetimeSearchTask
   | GpuMtseedSearchTask
   | MtseedSearchTask
-  | TrainerInfoSearchTask;
+  | TrainerInfoSearchTask
+  | PokemonListTask;
 
 // =============================================================================
 // Search Result Type Mapping
@@ -239,4 +266,6 @@ export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-date
         ? MtseedResult[]
         : T extends 'trainer-info'
           ? TrainerInfoSearchResult[]
-          : never;
+          : T extends 'pokemon-list'
+            ? GeneratedPokemonData[]
+            : never;

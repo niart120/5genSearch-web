@@ -9,7 +9,7 @@
 import { Trans } from '@lingui/react/macro';
 import { DateRangePicker } from './date-range-picker';
 import { TimeRangePicker } from './time-range-picker';
-import { KeySpecInput } from './key-spec-input';
+import { KeySpecSelector } from './key-spec-selector';
 import type { DateRangeParams, TimeRangeParams, KeySpec } from '@/wasm/wasm_pkg';
 
 interface SearchContextFormProps {
@@ -51,7 +51,7 @@ function SearchContextForm({
       </section>
 
       <section>
-        <KeySpecInput
+        <KeySpecSelector
           value={keySpec}
           onChange={onKeySpecChange}
           disabled={disabled}

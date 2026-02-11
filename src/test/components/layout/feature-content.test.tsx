@@ -41,8 +41,10 @@ describe('FeatureContent', () => {
     expect(screen.getByText('MT Seed Search')).toBeInTheDocument();
   });
 
-  it('pokemon-list がアクティブのとき PlaceholderPage が表示される', () => {
+  it('pokemon-list がアクティブのとき PokemonListPage が表示される', () => {
     renderFeatureContent('pokemon-list');
-    expect(screen.getByText('Pokemon')).toBeInTheDocument();
+    // PokemonListPage はフォームを含む — Search ボタンが表示される
+    const buttons = screen.getAllByRole('button', { name: /Search/i });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 });

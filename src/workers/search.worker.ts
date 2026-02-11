@@ -10,6 +10,7 @@ import initWasm, {
   MtseedDatetimeSearcher,
   MtseedSearcher,
   TrainerInfoSearcher,
+  generate_pokemon_list,
   health_check,
 } from '../wasm/wasm_pkg.js';
 import type {
@@ -18,7 +19,13 @@ import type {
   MtseedSearchParams,
   TrainerInfoSearchParams,
 } from '../wasm/wasm_pkg.js';
-import type { WorkerRequest, WorkerResponse, SearchTask, ProgressInfo } from './types';
+import type {
+  WorkerRequest,
+  WorkerResponse,
+  SearchTask,
+  PokemonListTask,
+  ProgressInfo,
+} from './types';
 
 // WASM バイナリの絶対パス（public/wasm/ から配信）
 const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
@@ -114,6 +121,10 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
       }
       case 'trainer-info': {
         await runTrainerInfoSearch(taskId, task.params, startTime);
+        break;
+      }
+      case 'pokemon-list': {
+        runPokemonListGeneration(taskId, task);
         break;
       }
     }
@@ -284,6 +295,23 @@ async function runTrainerInfoSearch(
   } finally {
     searcher.free();
   }
+}
+
+// =============================================================================
+// Pokemon List Generation
+// =============================================================================
+
+function runPokemonListGeneration(taskId: string, task: PokemonListTask): void {
+  const results = generate_pokemon_list(task.origins, task.params, task.config, task.filter);
+
+  postResponse({
+    type: 'result',
+    taskId,
+    resultType: 'pokemon-list',
+    results,
+  });
+
+  postResponse({ type: 'done', taskId });
 }
 
 // =============================================================================

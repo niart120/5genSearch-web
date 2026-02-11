@@ -292,7 +292,7 @@ pub struct CorePokemonData {
 
 /// 完全な個体データ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct GeneratedPokemonData {
     // 列挙コンテキスト
     pub advance: u32,
@@ -316,7 +316,7 @@ pub struct GeneratedPokemonData {
 
 /// 完全な卵データ
 #[derive(Tsify, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct GeneratedEggData {
     // 列挙コンテキスト
     pub advance: u32,

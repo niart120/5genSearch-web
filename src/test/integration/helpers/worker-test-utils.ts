@@ -12,6 +12,7 @@ import type {
   MtseedResult,
   EggDatetimeSearchResult,
   TrainerInfoSearchResult,
+  GeneratedPokemonData,
 } from '../../../wasm/wasm_pkg.js';
 
 // =============================================================================
@@ -29,7 +30,9 @@ export type SearchResults<T extends SearchTask['kind']> = T extends 'egg-datetim
       ? MtseedResult[]
       : T extends 'trainer-info'
         ? TrainerInfoSearchResult[]
-        : never;
+        : T extends 'pokemon-list'
+          ? GeneratedPokemonData[]
+          : never;
 
 /**
  * テスト実行オプション

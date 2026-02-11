@@ -91,3 +91,40 @@ About ページに掲載する内容候補 (別途検討):
 
 当面の方針: 今回は手動で 12 件を追加し、不要な `celestial_tower` を削除して整合をとった。将来的にはスクレイピング後にキーの過不足を自動検出するスクリプト（または CI チェック）の導入を検討する。
 
+## 2026-02-12: 実ステータスフィルタの責務境界
+
+現状: フィルタリングは2層構造になっている。
+
+1. Rust 側 (`PokemonFilter`): `generate_pokemon_list()` 内で生成時に適用。IV・性格・性別・特性・色違い・種族・レベルが対象。`GeneratedPokemonData` に対して判定する。
+2. TS 側 (`StatsFilter`): `pokemon-list-page.tsx` の `filteredResults` useMemo で、WASM 返却後の `UiPokemonData.stats` (文字列配列) を `Number()` でパースして post-filter する。
+
+観察: 実ステータス (stats) は `GeneratedPokemonData` に存在せず、`resolve_pokemon_data` で IV + 種族基本ステータスから算出して `UiPokemonData.stats` に文字列格納される。`PokemonFilter` は resolve 前の段階で適用されるため、stats フィルタを含められない。結果として TS 側に責務が漏れており、以下の問題がある。
+
+- フィルタ不一致の個体も全て resolve される（無駄な計算）
+- フィルタロジックが Rust/TS に分散し、テスト・保守が複雑化する
+- `UiPokemonData.stats` の文字列を数値にパースするコストと脆弱性
+
+対応案:
+
+1. 現状維持: TS post-filter のまま。実害が軽微なら許容
+2. resolve 後フィルタ統合: `resolve_pokemon_data_batch` に stats フィルタを渡し、Rust 側で resolve + フィルタを一括実行
+3. Generator 内統合: 生成ループ内で stats を算出しフィルタ。base stats データの参照が必要
+
+当面の方針: 現状の TS post-filter を維持する。別仕様書でフィルタアーキテクチャの整理を行い、resolve パイプライン全体の見直しと合わせて対応する。関連ファイル: `wasm-pkg/src/types/filter.rs`、`wasm-pkg/src/generation/flows/generator/mod.rs`、`wasm-pkg/src/resolve/pokemon.rs`、`src/features/pokemon-list/components/pokemon-list-page.tsx`。
+
+## 2026-02-13: pokemon-filter-form 内部状態同期の複雑性
+
+現状: `pokemon-filter-form.tsx` はフィルタの有効/無効トグルを持ち、無効時でもフォーム入力値を保持するために3つの内部状態を管理している。
+
+1. `filterEnabled`: トグル有効/無効
+2. `internalFilter`: `PokemonFilter` の内容 (トグル OFF でも保持)
+3. `internalStats`: `StatsFilter` の内容 (同上)
+
+これらを `propagate` ヘルパーで親に伝搬し、有効時は `internalFilter` / `internalStats` を、無効時は `undefined` を返す。
+
+問題: 親 (`value`/`statsFilter`) ↔ 子 (`internalFilter`/`internalStats`) の双方向同期が useEffect (`syncFromExternal`) で行われており、制御フローの把握が難しい。特に `filterEnabled` 切替時のタイミング依存は、将来的なバグの温床になりうる。
+
+許容理由: フィルタ無効時に入力値を破棄しない UX 要件を満たすには、何らかの内部保持が必要。現状の実装はこの要件を最小コストで実現しており、実際に動作上の問題は確認されていない。
+
+フォローアップ: フォームの複雑化が進む場合、`useReducer` への移行や状態保持を親コンポーネントに引き上げる案を検討する。関連ファイル: `src/features/pokemon-list/components/pokemon-filter-form.tsx`。
+

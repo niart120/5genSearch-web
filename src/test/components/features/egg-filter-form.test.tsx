@@ -40,29 +40,26 @@ describe('EggFilterForm', () => {
     expect(screen.getByText('Filter (optional)')).toBeInTheDocument();
   });
 
-  it('shiny チェックボックスが表示される', async () => {
+  it('shiny セレクトが表示される', async () => {
     const user = userEvent.setup();
     renderFilterForm();
     // 折りたたみを開く
     await user.click(screen.getByText('Filter (optional)'));
-    expect(screen.getByText('Shiny only')).toBeInTheDocument();
+    expect(screen.getByText('Shiny')).toBeInTheDocument();
   });
 
-  it('shiny チェックボックス変更で onChange が呼ばれる', async () => {
+  it('shiny 初期値が反映される', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    renderFilterForm({ onChange });
+    renderFilterForm({
+      value: { ...DEFAULT_FILTER, shiny: 'Star' },
+      onChange,
+    });
     await user.click(screen.getByText('Filter (optional)'));
-
-    const shinyCheckbox = screen
-      .getByText('Shiny only')
-      .closest('label')
-      ?.querySelector('[role="checkbox"]');
-    expect(shinyCheckbox).toBeDefined();
-    if (shinyCheckbox) {
-      await user.click(shinyCheckbox);
-      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ shiny: 'Shiny' }));
-    }
+    // Radix Select の combobox に現在値が表示される
+    const comboboxes = screen.getAllByRole('combobox');
+    const shinyCombobox = comboboxes.find((el) => el.textContent?.includes('☆'));
+    expect(shinyCombobox).toBeDefined();
   });
 
   it('min_margin_frames の入力フィールドが表示される', async () => {
