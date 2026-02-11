@@ -221,7 +221,6 @@ async function writeJson(file, data) {
 // ---------------------------------------------------------------------------
 
 const SPECIES_JSON_PATH = path.resolve('spec/agent/completed/local_029/gen5-species.json');
-const ALIAS_PATH = path.resolve('src/data/encounters/aliases/species-ja.json');
 
 let speciesDataCache = null;
 
@@ -241,42 +240,34 @@ const FORM_ALIASES = {
 };
 
 /**
- * Generate species-ja.json mapping (Japanese name -> speciesId)
+ * Build species alias map (Japanese name -> speciesId) in-memory.
+ * No longer persists to disk; derived from gen5-species.json at scrape time.
  */
-async function generateSpeciesAliasJa() {
+function buildSpeciesAliasJa() {
   const data = loadSpeciesData();
-  const alias = {};
+  const m = new Map();
   for (const [id, entry] of Object.entries(data)) {
     const jaName = entry.names?.ja;
     if (jaName) {
-      alias[jaName] = parseInt(id, 10);
+      m.set(jaName, parseInt(id, 10));
     }
   }
-  // Add form aliases
   for (const [name, id] of Object.entries(FORM_ALIASES)) {
-    alias[name] = id;
+    m.set(name, id);
   }
-  await ensureDir(path.dirname(ALIAS_PATH));
-  await writeJson(ALIAS_PATH, alias);
-  console.log(`[ok] Generated species-ja.json (${Object.keys(alias).length} entries)`);
-  return alias;
+  return m;
 }
 
+let speciesAliasCache = null;
+
 /**
- * Load species-ja.json (generating if missing)
+ * Get species alias map (cached after first build).
  */
-async function loadSpeciesAliasJa() {
-  if (!existsSync(ALIAS_PATH)) {
-    const alias = await generateSpeciesAliasJa();
-    const m = new Map();
-    for (const [k, v] of Object.entries(alias)) m.set(k, v);
-    return m;
+function loadSpeciesAliasJa() {
+  if (!speciesAliasCache) {
+    speciesAliasCache = buildSpeciesAliasJa();
   }
-  const txt = await fs.readFile(ALIAS_PATH, 'utf8');
-  const obj = JSON.parse(txt);
-  const m = new Map();
-  for (const [k, v] of Object.entries(obj)) m.set(k, v);
-  return m;
+  return speciesAliasCache;
 }
 
 // ---------------------------------------------------------------------------
@@ -714,6 +705,56 @@ function parseArgs() {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Display names validation
+// ---------------------------------------------------------------------------
+
+const DISPLAY_NAMES_PATH = path.resolve('src/data/encounters/i18n/display-names.json');
+
+/**
+ * Validate that all location keys in generated JSONs have entries in display-names.json.
+ * Warns about missing translations but does not fail the scrape.
+ */
+async function validateDisplayNames() {
+  if (!existsSync(DISPLAY_NAMES_PATH)) {
+    console.warn('[warn] display-names.json not found; skipping validation');
+    return;
+  }
+  const displayNames = JSON.parse(readFileSync(DISPLAY_NAMES_PATH, 'utf8'));
+  const knownLocations = displayNames.locations ?? {};
+
+  const generatedDir = path.resolve('src/data/encounters/generated/v1');
+  if (!existsSync(generatedDir)) return;
+
+  const missing = new Set();
+  const files = [];
+  for (const ver of VERSIONS) {
+    for (const method of METHODS) {
+      const fp = path.join(generatedDir, ver, `${method}.json`);
+      if (existsSync(fp)) files.push(fp);
+    }
+  }
+
+  for (const fp of files) {
+    const json = JSON.parse(readFileSync(fp, 'utf8'));
+    for (const locKey of Object.keys(json.locations ?? {})) {
+      if (!knownLocations[locKey]) missing.add(locKey);
+    }
+  }
+
+  if (missing.size) {
+    console.warn(
+      `[warn] ${missing.size} location key(s) missing from display-names.json:\n  ${[...missing].sort().join('\n  ')}`
+    );
+  } else {
+    console.log('[ok] All location keys have display name entries');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
 async function main() {
   const args = parseArgs();
   const versions = args.version ? [args.version] : VERSIONS;
@@ -728,6 +769,8 @@ async function main() {
       }
     }
   }
+
+  await validateDisplayNames();
 }
 
 main().catch((e) => {

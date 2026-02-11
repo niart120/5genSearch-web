@@ -100,29 +100,22 @@ About ページに掲載する内容候補 (別途検討):
 
 ### 現状
 
-エンカウントデータに関する i18n 対象は以下の 3 カテゴリ:
+エンカウントデータのロケーション名・メソッド名を多言語対応するため、辞書ベースの仕組みを導入した。
 
-1. **ロケーション名** (`displayNameKey`): 生成 JSON に日本語テキストがハードコードされている (例: `"電気石の洞穴1F"`)
-2. **種族名**: Rust 側 `SPECIES_NAMES_JA` / `SPECIES_NAMES_EN` で管理。Lingui 経由ではない
-3. **メソッド名** (Normal, ShakingGrass 等): UI ラベルとして Lingui で管理すべき
+### 実装済み
 
-### バスラオ (speciesId: 550) のフォーム問題
+1. **`display-names.json`** (`src/data/encounters/i18n/`): 127 ロケーション + 7 メソッドの `{ ja, en }` 辞書。スクレイパーの生成 JSON 内 `displayNameKey` (正規化キー) から引く
+2. **`display-name-resolver.ts`**: `resolveLocationName(key, locale)` / `resolveMethodName(method, locale)` を提供
+3. **スクレイパー**: `species-ja.json` のファイル永続化を廃止しインメモリ化。末尾に `validateDisplayNames()` を追加し、生成 JSON のキーと辞書の整合性を検証
+4. **`species-ja.json`**: 削除。`aliases/` ディレクトリも削除
 
-pokebook.jp では「バスラオ赤」「バスラオ青」と区別されるが、スクレイパーの `FORM_ALIASES` で両方とも `speciesId: 550` に解決される。以下の問題がある:
+### Lingui ではなく辞書方式を採用した理由
 
-- `EncounterSlotJson` に `formId` がない → フォーム情報が不可逆的に消失
-- `helpers.ts` の `listEncounterSpecies` は speciesId でグルーピングするため赤・青が合算される
-- Rust 側 `EncounterSlotConfig` にもフォーム情報がない
+- ロケーション名はソースコード中の UI 文字列ではなく、スクレイパーが生成するデータ由来
+- Lingui の `extract` は動的キーを検出できず、PO ファイルから自動削除される
+- 辞書方式なら JSON を直接編集するだけで翻訳管理が完結する
+- 参照実装 (niart120/pokemon-gen5-initseed) も同じ辞書方式を採用
 
-Gen 5 のゲーム仕様上、バスラオのフォーム (赤/青) はバージョンによって固定 (B/B2=赤縞、W/W2=青縞) であり、乱数で決まるわけではない。したがって、エンカウントスロットの計算結果に直接影響しない。表示上の区別が必要かどうかは UI 設計次第。
+### バスラオのフォーム情報
 
-### species-ja.json の位置づけ
-
-`species-ja.json` はスクレイパー専用。ランタイムでは未使用。ランタイムの種族名解決は Rust 側 `get_species_name()` が担当する。
-
-### 当面の方針
-
-- ロケーション名: `displayNameKey` を Lingui メッセージカタログのキーとして使用する方向を検討。英語訳は別途用意が必要
-- 種族名: 現状の Rust 側管理を維持。フォーム名が必要になった場合は Rust に `get_species_form_name()` を追加する方向
-- メソッド名: Lingui の `<Trans>` で UI ラベルを管理
-- バスラオのフォーム情報: 当面は `speciesId` のみで管理し、必要に応じて `formId` フィールドを全レイヤー (JSON schema → TS 型 → Rust `EncounterSlotConfig`) に追加する
+UI 上の区別不要と判断。`FORM_ALIASES` で `speciesId: 550` に統合されるまま維持。
