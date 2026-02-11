@@ -4,6 +4,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { PlaceholderPage } from './placeholder-page';
 import { DatetimeSearchPage } from '@/features/datetime-search';
 import { EggSearchPage } from '@/features/egg-search';
+import { PokemonListPage } from '@/features/pokemon-list';
 
 function renderFeature(featureId: FeatureId) {
   switch (featureId) {
@@ -12,6 +13,9 @@ function renderFeature(featureId: FeatureId) {
     }
     case 'egg-search': {
       return <EggSearchPage />;
+    }
+    case 'pokemon-list': {
+      return <PokemonListPage />;
     }
     default: {
       return <PlaceholderPage featureId={featureId} />;
