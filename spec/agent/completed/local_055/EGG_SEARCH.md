@@ -427,22 +427,22 @@ CI 環境制約: GPU なし環境では GPU 関連テストをスキップ (`des
 
 ### Feature: egg-search
 
-- [ ] `features/egg-search/types.ts` — 型定義 + バリデーション関数
-- [ ] `features/egg-search/hooks/use-egg-search.ts` — 検索実行ロジック
-- [ ] `features/egg-search/components/egg-params-form.tsx` — 孵化パラメータフォーム
-- [ ] `features/egg-search/components/egg-filter-form.tsx` — 孵化フィルターフォーム
-- [ ] `features/egg-search/components/egg-search-page.tsx` — ページコンポーネント
-- [ ] `features/egg-search/components/egg-result-columns.tsx` — 結果テーブル列定義
-- [ ] `features/egg-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
-- [ ] `features/egg-search/index.ts` — re-export
+- [x] `features/egg-search/types.ts` — 型定義 + バリデーション関数
+- [x] `features/egg-search/hooks/use-egg-search.ts` — 検索実行ロジック
+- [x] `features/egg-search/components/egg-params-form.tsx` — 孵化パラメータフォーム
+- [x] `features/egg-search/components/egg-filter-form.tsx` — 孵化フィルターフォーム
+- [x] `features/egg-search/components/egg-search-page.tsx` — ページコンポーネント
+- [x] `features/egg-search/components/egg-result-columns.tsx` — 結果テーブル列定義
+- [x] `features/egg-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
+- [x] `features/egg-search/index.ts` — re-export
 
 ### 統合
 
-- [ ] `components/layout/feature-content.tsx` — `egg-search` case 追加
+- [x] `components/layout/feature-content.tsx` — `egg-search` case 追加
 
 ### テスト
 
-- [ ] `test/unit/egg-search-validation.test.ts` — バリデーション
-- [ ] `test/components/egg-params-form.test.tsx` — 孵化パラメータフォーム
-- [ ] `test/components/egg-filter-form.test.tsx` — フィルターフォーム
-- [ ] `test/integration/egg-datetime-search.test.ts` — Worker/WASM 統合
+- [x] `test/unit/egg-search-validation.test.ts` — バリデーション
+- [x] `test/components/egg-params-form.test.tsx` — 孵化パラメータフォーム
+- [x] `test/components/egg-filter-form.test.tsx` — フィルターフォーム
+- [x] `test/integration/egg-datetime-search.test.ts` — Worker/WASM 統合
