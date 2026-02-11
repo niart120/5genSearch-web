@@ -7,7 +7,15 @@
  * - search-results: 直前の datetime-search 結果から SeedOrigin[] を引き継ぐ
  */
 
-import { useState, useCallback, useMemo, useRef, type ReactElement, type ReactNode } from 'react';
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -426,24 +434,6 @@ function SeedInputSection({
     return flat;
   }, [results]);
 
-  // Tab 変更
-  const handleTabChange = useCallback(
-    (newTab: string) => {
-      const m = newTab as SeedInputMode;
-      onModeChange(m);
-      setResolveError(undefined);
-      if (m === 'search-results') {
-        onOriginsChange(storeOrigins);
-      }
-    },
-    [onModeChange, onOriginsChange, storeOrigins]
-  );
-
-  // search-results: Store 結果を反映
-  const handleUseStoreResults = useCallback(() => {
-    onOriginsChange(storeOrigins);
-  }, [onOriginsChange, storeOrigins]);
-
   // ---------------------------------------------------------------------------
   // Auto-resolve helpers
   // ---------------------------------------------------------------------------
@@ -484,15 +474,6 @@ function SeedInputSection({
     [onOriginsChange]
   );
 
-  /** manual-seeds: テキスト変更ハンドラ */
-  const handleSeedTextChange = useCallback(
-    (text: string) => {
-      setSeedText(text);
-      autoResolveSeeds(text);
-    },
-    [autoResolveSeeds]
-  );
-
   /** manual-startup: DS 設定 + 日時 + キー入力から自動解決 */
   const autoResolveStartup = useCallback(
     (dt: Datetime, ki: KeyInput) => {
@@ -517,6 +498,53 @@ function SeedInputSection({
     [dsConfig, ranges, onOriginsChange]
   );
 
+  // Tab 変更
+  const handleTabChange = useCallback(
+    (newTab: string) => {
+      const m = newTab as SeedInputMode;
+      onModeChange(m);
+      setResolveError(undefined);
+      switch (m) {
+        case 'search-results': {
+          onOriginsChange(storeOrigins);
+          break;
+        }
+        case 'manual-startup': {
+          autoResolveStartup(datetime, keyInput);
+          break;
+        }
+        case 'manual-seeds': {
+          autoResolveSeeds(seedText);
+          break;
+        }
+      }
+    },
+    [
+      onModeChange,
+      onOriginsChange,
+      storeOrigins,
+      autoResolveStartup,
+      autoResolveSeeds,
+      datetime,
+      keyInput,
+      seedText,
+    ]
+  );
+
+  // search-results: Store 結果を反映
+  const handleUseStoreResults = useCallback(() => {
+    onOriginsChange(storeOrigins);
+  }, [onOriginsChange, storeOrigins]);
+
+  /** manual-seeds: テキスト変更ハンドラ */
+  const handleSeedTextChange = useCallback(
+    (text: string) => {
+      setSeedText(text);
+      autoResolveSeeds(text);
+    },
+    [autoResolveSeeds]
+  );
+
   /** Startup datetime 変更 */
   const handleDatetimeChange = useCallback(
     (dt: Datetime) => {
@@ -534,6 +562,17 @@ function SeedInputSection({
     },
     [datetime, autoResolveStartup]
   );
+
+  // 初回マウント時: Startup タブが初期選択なら自動解決
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+    if (mode === 'manual-startup') {
+      autoResolveStartup(datetime, keyInput);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section className="flex flex-col gap-2">

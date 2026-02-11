@@ -10,6 +10,8 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
 import { DataTable } from '@/components/data-display/data-table';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
@@ -20,6 +22,7 @@ import { SeedInputSection } from './seed-input-section';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
+import type { StatDisplayMode } from './pokemon-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
 import type {
@@ -120,14 +123,22 @@ function PokemonListPage(): ReactElement {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState<UiPokemonData | undefined>();
 
+  // ステータス/IV 表示切替
+  const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
+
   const handleSelectResult = useCallback((result: UiPokemonData) => {
     setSelectedResult(result);
     setDetailOpen(true);
   }, []);
 
   const columns = useMemo(
-    () => createPokemonResultColumns(handleSelectResult),
-    [handleSelectResult]
+    () =>
+      createPokemonResultColumns({
+        onSelect: handleSelectResult,
+        statMode,
+        locale: language,
+      }),
+    [handleSelectResult, statMode, language]
   );
 
   // 生成開始
@@ -222,9 +233,24 @@ function PokemonListPage(): ReactElement {
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
-          <p className="text-xs text-muted-foreground">
-            <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
+            </p>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
+                IV
+              </Label>
+              <Switch
+                id="stat-mode-toggle"
+                checked={statMode === 'stats'}
+                onCheckedChange={(checked) => setStatMode(checked ? 'stats' : 'ivs')}
+              />
+              <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
+                <Trans>Stats</Trans>
+              </Label>
+            </div>
+          </div>
           <DataTable
             columns={columns}
             data={uiResults}

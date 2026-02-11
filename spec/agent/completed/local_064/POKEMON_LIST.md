@@ -105,33 +105,61 @@
 
 ### 3.3 Seed 入力方式
 
-2 つの入力モードを提供する:
+Tabs (Radix UI) で 3 つのタブを切り替える:
 
-| モード | 説明 | 入力元 |
-|--------|------|--------|
-| **起動時刻検索結果** | 直前の datetime-search 結果を引き継ぐ | `useSearchResultsStore` |
-| **手動入力** | SeedSpec を直接入力し `resolve_seeds()` で変換 | ユーザー入力 |
+| タブ順 | SeedInputMode | 説明 | 入力元 |
+|--------|---------------|------|--------|
+| 1 | `manual-startup` | DS 設定 + 日時 + キー入力から `resolve_seeds()` で変換 | ユーザー入力 |
+| 2 | `manual-seeds` | LCG Seed (16 進 64bit) を改行区切りで入力 | ユーザー入力 |
+| 3 | `search-results` | 直前の datetime-search 結果を引き継ぐ | `useSearchResultsStore` |
 
-手動入力の SeedSpec は以下の 2 パターン:
+#### 自動 Seed 解決
 
-1. **Seeds**: LCG Seed (16 進 64bit) を改行区切りで入力
-2. **Startup**: DS 設定 + 日時 + Timer0/VCount + キー入力 → `resolve_seeds()` で SeedOrigin[] に展開
+各入力モードで **入力変更時** および **タブ遷移時** に `resolve_seeds()` を自動呼び出しする。Resolve ボタンは設けない。
+
+- `manual-startup`: `DatetimeInput` / `KeyInputSelector` の変更時に `autoResolveStartup(datetime, keyInput)` 呼び出し
+- `manual-seeds`: テキスト変更時に `autoResolveSeeds(text)` 呼び出し (hex パース失敗行があれば origins クリア)
+- `search-results`: タブ遷移時に `storeOrigins` を即時反映
+- **初回マウント時**: `manual-startup` が選択済みなら自動解決を実行 (`mountedRef` で 1 回のみ)
+- **重複防止**: `resolvingRef` (useRef) で非同期解決の二重呼び出しを抑制
+
+#### 日時入力 (`DatetimeInput`)
+
+- 日時 (YYYY/MM/DD HH:MM:SS) を 1 行レイアウトで表示
+- 月・日・時・分・秒はゼロ埋め 2 桁表示 (`padLength` prop)
+- `NumField` コンポーネント (clamp-on-blur + フォーカス時全選択)
+
+#### キー入力 (`KeyInputSelector`)
+
+- DS コントローラ風レイアウト (十字キー + ABXY + L/R + Start/Select)
+- トグルボタンで複数ボタン同時選択可能
 
 ### 3.4 エンカウント選択の UI フロー
 
+2 段階セレクト方式を採用する:
+
 ```
-① エンカウント種別  EncounterType (Select)
-   ├── ロケーションベース (Normal, ShakingGrass, DustCloud, ...):
-   │   ├── ② ロケーション (Select)
-   │   └── → スロット自動決定 (toEncounterSlotConfigs)
-   └── 固定エンカウント (StaticSymbol, StaticStarter, ...):
-       ├── ② ポケモン選択 (Select)
-       └── → スロット自動決定 (toEncounterSlotConfigFromEntry)
+① エンカウント大分類 (Select: ENCOUNTER_CATEGORIES)
+   野生 / 伝説・準伝説 / 徘徊 / 御三家 / 化石 / かくしあな
+      │
+      ▼
+② エンカウント中分類 (Select: categorySubTypes)  ※ サブタイプが 2 つ以上の場合のみ表示
+   例: 野生 → [草むら・洞窟, 揺れる草むら, 土煙, ポケモンの影, なみのり, ...]
+   例: 伝説 → [シンボル, イベント]
+   ※ サブタイプが 1 つのカテゴリは自動選択
+      │
+      ├── ロケーションベース (Normal, ShakingGrass, ...):
+      │   ├── ③ ロケーション (Select)
+      │   └── → スロット自動決定 (toEncounterSlotConfigs)
+      └── 固定エンカウント (StaticSymbol, StaticStarter, ...):
+          ├── ③ ポケモン選択 (Select) — 種族名を WASM `get_species_name` で解決して表示
+          └── → スロット自動決定 (toEncounterSlotConfigFromEntry)
 ```
 
 - `EncounterMethod` (Stationary / Moving) はロケーションベースの場合にユーザーが選択する
 - 固定エンカウントの場合は `Stationary` 固定
 - `EncounterType` から `EncounterMethod` の選択可否を自動判定
+- 固定ポケモン選択肢の表示名は `get_species_name(speciesId, locale)` で解決 (`displayNameKey` はフォールバック)
 
 ### 3.5 状態管理
 
@@ -424,19 +452,20 @@ FeaturePageLayout
 ├── Controls
 │   ├── SearchControls (PC)
 │   ├── SeedInputSection
-│   │   ├── モード切替 (search-results / manual-seeds / manual-startup)
-│   │   ├── [search-results] Store から SeedOrigin[] を表示
-│   │   ├── [manual-seeds] LCG Seed テキスト入力 → resolve_seeds
-│   │   └── [manual-startup] DS 日時 + 条件入力 → resolve_seeds
+│   │   ├── Tabs: manual-startup / manual-seeds / search-results
+│   │   ├── [manual-startup] DatetimeInput (1 行) + KeyInputSelector (DS 風) → autoResolveStartup
+│   │   ├── [manual-seeds] LCG Seed テキスト入力 → autoResolveSeeds
+│   │   └── [search-results] Store から SeedOrigin[] を表示 + "Load" ボタン
 │   ├── PokemonParamsForm
-│   │   ├── エンカウント種別 (EncounterType Select)
+│   │   ├── エンカウント大分類 (ENCOUNTER_CATEGORIES Select)
+│   │   ├── エンカウント中分類 (サブタイプ Select) ※ 2 種以上のカテゴリのみ表示
 │   │   ├── ロケーション / 固定ポケモン (条件付き Select)
 │   │   ├── エンカウント方法 (Stationary / Moving) ※ロケーションベースのみ
 │   │   ├── 先頭特性 (LeadAbilityEffect: None / Synchronize / CompoundEyes)
 │   │   ├── user_offset / max_advance
 │   │   └── (トレーナー情報は DS 設定 / Trainer Store から自動取得)
-│   ├── PokemonFilterForm
-│   │   ├── 種族 (SpeciesMultiSelect: エンカウントスロット内から複数選択)
+│   ├── PokemonFilterForm (折りたたみ可)
+│   │   ├── 種族 (SpeciesMultiSelect)
 │   │   ├── IV 範囲 (IvRangeInput)
 │   │   ├── 性格 (NatureSelect)
 │   │   ├── めざパタイプ (HiddenPowerSelect)
@@ -445,32 +474,48 @@ FeaturePageLayout
 │   │   └── 特性スロット (AbilitySlot)
 │   └── バリデーションエラー表示
 ├── Results
-│   ├── 件数表示
-│   ├── DataTable (UiPokemonData[])
+│   ├── 件数表示 + Stats/IV トグルスイッチ
+│   ├── DataTable (UiPokemonData[], H/A/B/C/D/S 個別列)
 │   └── ResultDetailDialog
 └── モバイル固定検索バー
 ```
 
+#### Stats/IV トグルスイッチ
+
+- デフォルト: 実ステータス (`stats`) 表示
+- Switch (Radix UI) で IV 表示に切替可能
+- `StatDisplayMode = 'stats' | 'ivs'` で管理
+- DataTable のカラム定義を `statMode` に応じて動的に切り替え
+
 ### 4.7 PokemonParamsForm — エンカウント選択フォーム
 
-エンカウント種別の選択 UI は以下のフローで動作する:
+2 段階セレクト方式でエンカウントを選択する。
 
 ```typescript
-// エンカウント種別の分類
-const LOCATION_BASED_TYPES: EncounterType[] = [
-  'Normal', 'ShakingGrass', 'DustCloud', 'PokemonShadow',
-  'Surfing', 'SurfingBubble', 'Fishing', 'FishingBubble',
-];
+/** エンカウントタイプのカテゴリ定義 */
+interface EncounterCategory {
+  labelKey: string;
+  labels: Record<SupportedLocale, string>;
+  types: (EncounterMethodKey | StaticEncounterTypeKey)[];
+}
 
-const STATIC_TYPES: EncounterType[] = [
-  'StaticSymbol', 'StaticStarter', 'StaticFossil', 'StaticEvent',
-  'Roamer', 'HiddenGrotto',
+const ENCOUNTER_CATEGORIES: EncounterCategory[] = [
+  { labelKey: 'wild', labels: { ja: '野生', en: 'Wild' },
+    types: ['Normal', 'ShakingGrass', 'DustCloud', 'PokemonShadow', 'Surfing', 'SurfingBubble', 'Fishing', 'FishingBubble'] },
+  { labelKey: 'legendary', labels: { ja: '伝説・準伝説', en: 'Legendary / Mythical' },
+    types: ['StaticSymbol', 'StaticEvent'] },
+  { labelKey: 'roamer', labels: { ja: '徘徊', en: 'Roamer' }, types: ['Roamer'] },
+  { labelKey: 'starter', labels: { ja: '御三家', en: 'Starter' }, types: ['StaticStarter'] },
+  { labelKey: 'fossil', labels: { ja: '化石', en: 'Fossil' }, types: ['StaticFossil'] },
+  { labelKey: 'hidden-grotto', labels: { ja: 'かくしあな', en: 'Hidden Grotto' }, types: ['HiddenGrotto'] },
 ];
 ```
 
 - `isLocationBasedEncounter()` (既存ヘルパー) で判定
 - ロケーションベース: `listLocations()` → `listSpecies()` でスロット情報を取得 → `toEncounterSlotConfigs()` で WASM 型に変換
 - 固定エンカウント: `listSpecies()` で static エントリ取得 → `toEncounterSlotConfigFromEntry()` で WASM 型に変換
+- 固定ポケモン選択肢の表示名: `get_species_name(speciesId, locale)` で WASM から解決 (`useEffect` + `initMainThreadWasm`)
+- カテゴリ変更時: サブタイプが 1 つなら自動選択、2 つ以上なら先頭を初期選択
 
 EncounterMethod の自動判定:
 
@@ -513,22 +558,42 @@ interface PokemonFilterFormProps {
 ### 4.9 pokemon-result-columns.tsx — テーブルカラム定義
 
 `UiPokemonData` のフィールドを DataTable のカラムとして定義する。
+`createPokemonResultColumns(options)` は `StatDisplayMode` と `locale` を受け取り、
+ステータス/IV 表示を動的に切り替える。
+
+```typescript
+type StatDisplayMode = 'stats' | 'ivs';
+interface PokemonResultColumnsOptions {
+  onSelect?: (result: UiPokemonData) => void;
+  statMode?: StatDisplayMode;  // default: 'stats'
+  locale?: string;             // default: 'ja'
+}
+```
 
 | カラム | フィールド | 説明 |
 |--------|-----------|------|
+| 詳細 | — | ダイアログ表示ボタン |
 | Advance | `advance` | フレーム消費数 |
 | 種族 | `species_name` | ポケモン名 |
 | 性格 | `nature_name` | 性格名 |
 | 特性 | `ability_name` | 特性名 |
 | 性別 | `gender_symbol` | ♂/♀/- |
 | 色違い | `shiny_symbol` | ◇/☆/空 |
-| IV | `ivs` | H-A-B-C-D-S |
+| H | `stats[0]` or `ivs[0]` | HP |
+| A | `stats[1]` or `ivs[1]` | こうげき |
+| B | `stats[2]` or `ivs[2]` | ぼうぎょ |
+| C | `stats[3]` or `ivs[3]` | とくこう |
+| D | `stats[4]` or `ivs[4]` | とくぼう |
+| S | `stats[5]` or `ivs[5]` | すばやさ |
 | めざパ | `hidden_power_type` | タイプ名 |
 | Lv | `level` | レベル |
 | PID | `pid` | 性格値 (hex) |
 | シンクロ | `sync_applied` | 〇/× |
 | 持ち物 | `held_item_name` | 持ち物名 (あれば) |
-| 詳細 | — | ダイアログ表示ボタン |
+
+ヘッダー表記はロケールに応じて切替:
+- ja: `H / A / B / C / D / S`
+- en: `HP / Atk / Def / SpA / SpD / Spe`
 
 モバイル表示では ResultCardList へ自動切替 (既存の DataTable/ResultCardList 機構)。
 
@@ -540,7 +605,7 @@ interface PokemonFilterFormProps {
 - 個体情報 (種族, 性格, 特性, 性別, 色違い, IV, ステータス, めざパ, PID)
 - エンカウント情報 (移動エンカウント判定, 特殊エンカウント判定)
 
-egg-search の `result-detail-dialog.tsx` を参考に実装する。
+IV/ステータスは `H:31 A:31 B:31 C:31 D:31 S:31` 形式で H/A/B/C/D/S ラベル付きで表示する。
 
 ### 4.11 stores/search/results.ts — 結果型拡張
 

@@ -29,7 +29,7 @@ msgstr ""
 
 #: src/features/egg-search/components/egg-result-columns.tsx:98
 #: src/features/egg-search/components/result-detail-dialog.tsx:110
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:49
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:65
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:92
 msgid "Ability"
 msgstr "Ability"
@@ -51,7 +51,7 @@ msgstr "Ability slot"
 
 #: src/features/egg-search/components/egg-result-columns.tsx:113
 #: src/features/egg-search/components/result-detail-dialog.tsx:115
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:34
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:50
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:109
 msgid "Advance"
 msgstr "Advance"
@@ -73,23 +73,23 @@ msgstr "Auto"
 #: src/components/forms/key-spec-input.tsx:161
 #: src/components/forms/key-spec-input.tsx:182
 #: src/components/forms/key-spec-input.tsx:190
-#: src/features/pokemon-list/components/seed-input-section.tsx:299
+#: src/features/pokemon-list/components/seed-input-section.tsx:307
 msgid "Button {0}"
 msgstr "Button {0}"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:321
+#: src/features/pokemon-list/components/seed-input-section.tsx:329
 msgid "Button L"
 msgstr "Button L"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:329
+#: src/features/pokemon-list/components/seed-input-section.tsx:337
 msgid "Button R"
 msgstr "Button R"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:345
+#: src/features/pokemon-list/components/seed-input-section.tsx:353
 msgid "Button Select"
 msgstr "Button Select"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:353
+#: src/features/pokemon-list/components/seed-input-section.tsx:361
 msgid "Button Start"
 msgstr "Button Start"
 
@@ -101,7 +101,7 @@ msgstr "Cancel"
 msgid "Combinations"
 msgstr "Combinations"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:439
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:520
 msgid "Compound Eyes"
 msgstr "Compound Eyes"
 
@@ -115,7 +115,7 @@ msgstr "Consider NPC"
 msgid "Copy {label}"
 msgstr "Copy {label}"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:569
+#: src/features/pokemon-list/components/seed-input-section.tsx:601
 msgid "Date & time"
 msgstr "Date & time"
 
@@ -142,11 +142,11 @@ msgstr "Deselect all"
 
 #: src/features/datetime-search/components/seed-origin-columns.tsx:33
 #: src/features/egg-search/components/egg-result-columns.tsx:46
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:26
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:42
 msgid "Details"
 msgstr "Details"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:561
+#: src/features/pokemon-list/components/seed-input-section.tsx:593
 msgid "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 msgstr "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 
@@ -175,7 +175,11 @@ msgstr "Egg search result details"
 msgid "Elapsed"
 msgstr "Elapsed"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:405
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:386
+msgid "Encounter category"
+msgstr "Encounter category"
+
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:486
 msgid "Encounter method"
 msgstr "Encounter method"
 
@@ -183,11 +187,11 @@ msgstr "Encounter method"
 msgid "Encounter result"
 msgstr "Encounter result"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:317
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:380
 msgid "Encounter settings"
 msgstr "Encounter settings"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:323
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:406
 msgid "Encounter type"
 msgstr "Encounter type"
 
@@ -220,7 +224,7 @@ msgstr "Filter (optional)"
 #: src/features/egg-search/components/egg-result-columns.tsx:103
 #: src/features/egg-search/components/result-detail-dialog.tsx:111
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:205
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:54
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:70
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:93
 msgid "Gender"
 msgstr "Gender"
@@ -243,7 +247,7 @@ msgstr "Generation"
 msgid "Hardware"
 msgstr "Hardware"
 
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:91
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:110
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:105
 msgid "Held item"
 msgstr "Held item"
@@ -254,7 +258,7 @@ msgid "Hidden Ability"
 msgstr "Hidden Ability"
 
 #: src/components/forms/hidden-power-select.tsx:48
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:70
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:89
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:98
 msgid "Hidden Power"
 msgstr "Hidden Power"
@@ -278,15 +282,15 @@ msgstr "Key"
 msgid "Key input"
 msgstr "Key input"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:311
+#: src/features/pokemon-list/components/seed-input-section.tsx:319
 msgid "Key input (buttons held)"
 msgstr "Key input (buttons held)"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:588
+#: src/features/pokemon-list/components/seed-input-section.tsx:624
 msgid "LCG Seeds (hex, one per line)"
 msgstr "LCG Seeds (hex, one per line)"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:426
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:507
 msgid "Lead ability"
 msgstr "Lead ability"
 
@@ -297,11 +301,11 @@ msgstr "Lead ability"
 msgid "Line {0}: \"{1}\" — {2}"
 msgstr "Line {0}: \"{1}\" — {2}"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:616
+#: src/features/pokemon-list/components/seed-input-section.tsx:652
 msgid "Load search results"
 msgstr "Load search results"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:350
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:431
 msgid "Location"
 msgstr "Location"
 
@@ -327,12 +331,12 @@ msgid "Max"
 msgstr "Max"
 
 #: src/features/egg-search/components/egg-params-form.tsx:384
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:486
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:567
 msgid "Max advance"
 msgstr "Max advance"
 
 #: src/features/egg-search/components/egg-search-page.tsx:123
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:113
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:116
 msgid "Max advance must be ≥ start offset"
 msgstr "Max advance must be ≥ start offset"
 
@@ -354,7 +358,7 @@ msgstr "Min margin frames"
 msgid "Minute"
 msgstr "Minute"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:417
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:498
 msgid "Moving"
 msgstr "Moving"
 
@@ -377,7 +381,7 @@ msgstr "MT Seed Search"
 #: src/components/forms/nature-select.tsx:48
 #: src/features/egg-search/components/egg-result-columns.tsx:87
 #: src/features/egg-search/components/result-detail-dialog.tsx:109
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:44
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:60
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:91
 msgid "Nature"
 msgstr "Nature"
@@ -398,7 +402,7 @@ msgstr "No default Timer0/VCount data for this combination. Switched to manual m
 msgid "No results"
 msgstr "No results"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:232
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:258
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
@@ -410,7 +414,7 @@ msgstr "No results found. Configure parameters and start searching."
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:437
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:518
 msgid "None"
 msgstr "None"
 
@@ -428,7 +432,7 @@ msgstr "Not specified"
 msgid "Not used"
 msgstr "Not used"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:111
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:114
 msgid "One or more seeds are invalid"
 msgstr "One or more seeds are invalid"
 
@@ -444,7 +448,7 @@ msgstr "Parent ♂ IVs"
 msgid "Pokemon"
 msgstr "Pokemon"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:375
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:456
 msgid "Pokémon"
 msgstr "Pokémon"
 
@@ -465,9 +469,9 @@ msgstr "Region"
 msgid "Remaining"
 msgstr "Remaining"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:579
-#: src/features/pokemon-list/components/seed-input-section.tsx:599
-#: src/features/pokemon-list/components/seed-input-section.tsx:619
+#: src/features/pokemon-list/components/seed-input-section.tsx:615
+#: src/features/pokemon-list/components/seed-input-section.tsx:635
+#: src/features/pokemon-list/components/seed-input-section.tsx:655
 msgid "Resolved seeds"
 msgstr "Resolved seeds"
 
@@ -479,7 +483,7 @@ msgstr "Result details"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:181
 #: src/features/egg-search/components/egg-search-page.tsx:233
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:226
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:238
 msgid "Results"
 msgstr "Results"
 
@@ -488,7 +492,7 @@ msgstr "Results"
 msgid "Search"
 msgstr "Search"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:553
+#: src/features/pokemon-list/components/seed-input-section.tsx:585
 msgid "Search results"
 msgstr "Search results"
 
@@ -501,19 +505,19 @@ msgstr "Second"
 msgid "Secret ID"
 msgstr "Secret ID"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:541
+#: src/features/pokemon-list/components/seed-input-section.tsx:573
 msgid "Seed input"
 msgstr "Seed input"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:550
+#: src/features/pokemon-list/components/seed-input-section.tsx:582
 msgid "Seeds"
 msgstr "Seeds"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:608
+#: src/features/pokemon-list/components/seed-input-section.tsx:644
 msgid "Seeds from search results"
 msgstr "Seeds from search results"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:112
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:115
 msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
@@ -522,19 +526,19 @@ msgstr "Select a location or Pokémon"
 msgid "Select all"
 msgstr "Select all"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:358
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:439
 msgid "Select location"
 msgstr "Select location"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:110
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:113
 msgid "Select or enter at least one seed"
 msgstr "Select or enter at least one seed"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:383
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:464
 msgid "Select Pokémon"
 msgstr "Select Pokémon"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:359
+#: src/features/pokemon-list/components/seed-input-section.tsx:367
 msgid "Selected buttons"
 msgstr "Selected buttons"
 
@@ -545,7 +549,7 @@ msgstr "Settings"
 
 #: src/features/egg-search/components/egg-result-columns.tsx:108
 #: src/features/egg-search/components/result-detail-dialog.tsx:112
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:59
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:75
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:94
 msgid "Shiny"
 msgstr "Shiny"
@@ -572,7 +576,7 @@ msgstr "Special direction"
 msgid "Special encounter"
 msgstr "Special encounter"
 
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:39
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:55
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:90
 msgid "Species"
 msgstr "Species"
@@ -596,16 +600,16 @@ msgid "Start mode"
 msgstr "Start mode"
 
 #: src/features/egg-search/components/egg-params-form.tsx:367
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:469
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:550
 msgid "Start offset"
 msgstr "Start offset"
 
 #: src/features/egg-search/components/egg-search-page.tsx:124
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:114
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:117
 msgid "Start offset must be ≥ 0"
 msgstr "Start offset must be ≥ 0"
 
-#: src/features/pokemon-list/components/seed-input-section.tsx:547
+#: src/features/pokemon-list/components/seed-input-section.tsx:579
 msgid "Startup"
 msgstr "Startup"
 
@@ -613,24 +617,25 @@ msgstr "Startup"
 msgid "Startup condition details"
 msgstr "Startup condition details"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:416
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:497
 msgid "Stationary"
 msgstr "Stationary"
 
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:250
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:96
 msgid "Stats"
 msgstr "Stats"
 
-#: src/features/pokemon-list/components/pokemon-result-columns.tsx:86
+#: src/features/pokemon-list/components/pokemon-result-columns.tsx:105
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:103
 msgid "Sync"
 msgstr "Sync"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:438
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:519
 msgid "Synchronize"
 msgstr "Synchronize"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:448
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:529
 msgid "Synchronize nature"
 msgstr "Synchronize nature"
 

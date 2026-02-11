@@ -92,8 +92,16 @@ function ResultDetailDialog({
           <DetailRow label={t`Ability`} value={result.ability_name} />
           <DetailRow label={t`Gender`} value={result.gender_symbol} />
           <DetailRow label={t`Shiny`} value={result.shiny_symbol || '-'} />
-          <DetailRow label="IV" value={result.ivs.join('-')} />
-          <DetailRow label={t`Stats`} value={result.stats.join('-')} />
+          <DetailRow
+            label="IV"
+            value={result.ivs.map((v, i) => `${['H', 'A', 'B', 'C', 'D', 'S'][i]}:${v}`).join(' ')}
+          />
+          <DetailRow
+            label={t`Stats`}
+            value={result.stats
+              .map((v, i) => `${['H', 'A', 'B', 'C', 'D', 'S'][i]}:${v}`)
+              .join(' ')}
+          />
           <DetailRow
             label={t`Hidden Power`}
             value={`${result.hidden_power_type} (${result.hidden_power_power})`}

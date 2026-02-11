@@ -4,21 +4,20 @@
  * EncounterType → Location or Static Pokemon → EncounterMethod 選択 → advance 範囲設定。
  */
 
-import { useState, useCallback, useMemo, type ReactElement } from 'react';
+import { useState, useCallback, useEffect, useMemo, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { getEncounterLocationName, getNatureName, NATURE_ORDER } from '@/lib/game-data-names';
+import { initMainThreadWasm } from '@/services/wasm-init';
 import { useUiStore } from '@/stores/settings/ui';
 import {
   isLocationBasedEncounter,
@@ -123,6 +122,16 @@ function getEncounterTypeLabel(type: string, locale: SupportedLocale): string {
   return ENCOUNTER_TYPE_LABELS[type]?.[locale] ?? type;
 }
 
+/** 指定された EncounterType が所属するカテゴリの labelKey を返す */
+function findCategoryForType(type: string): string | undefined {
+  for (const cat of ENCOUNTER_CATEGORIES) {
+    if (cat.types.includes(type as EncounterMethodKey | StaticEncounterTypeKey)) {
+      return cat.labelKey;
+    }
+  }
+  return undefined;
+}
+
 /** RomVersion → GameVersion 変換 */
 function toGameVersion(version: RomVersion): GameVersion {
   const map: Record<RomVersion, GameVersion> = {
@@ -175,9 +184,20 @@ function PokemonParamsForm({
   const language = useUiStore((s) => s.language);
   const gameVersion = toGameVersion(version);
 
+  // カテゴリ / サブタイプ選択状態
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    () => findCategoryForType(encounterType) ?? 'wild'
+  );
+
   // ロケーション / 固定ポケモン選択状態
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [selectedStaticEntry, setSelectedStaticEntry] = useState<string>('');
+
+  // 選択カテゴリのサブタイプ一覧
+  const categorySubTypes = useMemo(() => {
+    const cat = ENCOUNTER_CATEGORIES.find((c) => c.labelKey === selectedCategory);
+    return cat?.types ?? [];
+  }, [selectedCategory]);
 
   const isLocationBased = isLocationBasedEncounter(
     encounterType as EncounterMethodKey | StaticEncounterTypeKey
@@ -198,6 +218,27 @@ function PokemonParamsForm({
     return listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
   }, [gameVersion, encounterType, isLocationBased, selectedLocation]);
 
+  // 固定エンカウントの種族名解決 (WASM 経由)
+  const [speciesNames, setSpeciesNames] = useState<Map<number, string>>(new Map());
+  useEffect(() => {
+    if (isLocationBased) return;
+    const ids = speciesOptions
+      .filter((s): s is Extract<EncounterSpeciesOption, { kind: 'static' }> => s.kind === 'static')
+      .map((s) => s.speciesId);
+    if (ids.length === 0) {
+      setSpeciesNames(new Map());
+      return;
+    }
+    void initMainThreadWasm().then(async () => {
+      const { get_species_name } = await import('@/wasm/wasm_pkg.js');
+      const map = new Map<number, string>();
+      for (const id of ids) {
+        map.set(id, get_species_name(id, language));
+      }
+      setSpeciesNames(map);
+    });
+  }, [speciesOptions, isLocationBased, language]);
+
   // offset / max_advance ローカル state
   const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));
   const [localMaxAdv, setLocalMaxAdv] = useState(String(genConfig.max_advance));
@@ -205,7 +246,29 @@ function PokemonParamsForm({
   // シンクロ性格
   const [syncNature, setSyncNature] = useState<Nature>('Adamant');
 
-  // エンカウント種別変更
+  // カテゴリ変更ハンドラ
+  const handleCategoryChange = useCallback(
+    (categoryKey: string) => {
+      setSelectedCategory(categoryKey);
+      const cat = ENCOUNTER_CATEGORIES.find((c) => c.labelKey === categoryKey);
+      if (!cat || cat.types.length === 0) return;
+
+      // サブタイプが 1 つだけの場合は自動選択
+      const firstType = cat.types[0];
+      const newType = firstType as EncounterType;
+      onEncounterTypeChange(newType);
+      setSelectedLocation('');
+      setSelectedStaticEntry('');
+      onSlotsChange([]);
+      onAvailableSpeciesChange([]);
+      if (!isLocationBasedEncounter(firstType)) {
+        onEncounterMethodChange('Stationary');
+      }
+    },
+    [onEncounterTypeChange, onEncounterMethodChange, onSlotsChange, onAvailableSpeciesChange]
+  );
+
+  // エンカウントサブタイプ変更
   const handleEncounterTypeChange = useCallback(
     (value: string) => {
       const newType = value as EncounterType;
@@ -317,29 +380,49 @@ function PokemonParamsForm({
         <Trans>Encounter settings</Trans>
       </h3>
 
-      {/* エンカウント種別 */}
+      {/* エンカウント大分類 */}
       <div className="flex flex-col gap-1">
         <Label className="text-xs">
-          <Trans>Encounter type</Trans>
+          <Trans>Encounter category</Trans>
         </Label>
-        <Select value={encounterType} onValueChange={handleEncounterTypeChange} disabled={disabled}>
+        <Select value={selectedCategory} onValueChange={handleCategoryChange} disabled={disabled}>
           <SelectTrigger className="h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {ENCOUNTER_CATEGORIES.map((cat) => (
-              <SelectGroup key={cat.labelKey}>
-                <SelectLabel className="text-xs font-semibold">{cat.labels[language]}</SelectLabel>
-                {cat.types.map((et) => (
-                  <SelectItem key={et} value={et}>
-                    {getEncounterTypeLabel(et, language)}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+              <SelectItem key={cat.labelKey} value={cat.labelKey}>
+                {cat.labels[language]}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
+
+      {/* エンカウント中分類 (サブタイプが 2 つ以上ある場合のみ表示) */}
+      {categorySubTypes.length > 1 && (
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs">
+            <Trans>Encounter type</Trans>
+          </Label>
+          <Select
+            value={encounterType}
+            onValueChange={handleEncounterTypeChange}
+            disabled={disabled}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categorySubTypes.map((et) => (
+                <SelectItem key={et} value={et}>
+                  {getEncounterTypeLabel(et, language)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* ロケーション (ロケーションベースのみ) */}
       {isLocationBased && (
@@ -388,7 +471,7 @@ function PokemonParamsForm({
                 )
                 .map((entry) => (
                   <SelectItem key={entry.id} value={entry.id}>
-                    {entry.displayNameKey} (Lv.{entry.level})
+                    {speciesNames.get(entry.speciesId) ?? entry.displayNameKey} (Lv.{entry.level})
                   </SelectItem>
                 ))}
             </SelectContent>

@@ -12,7 +12,23 @@ import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
 const columnHelper = createColumnHelper<UiPokemonData>();
 
-function createPokemonResultColumns(onSelect?: (result: UiPokemonData) => void) {
+/** ステータス順序: H, A, B, C, D, S */
+const STAT_HEADERS_JA = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
+const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as const;
+
+type StatDisplayMode = 'stats' | 'ivs';
+
+interface PokemonResultColumnsOptions {
+  onSelect?: (result: UiPokemonData) => void;
+  statMode?: StatDisplayMode;
+  locale?: string;
+}
+
+function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
+  const { onSelect, statMode = 'stats', locale = 'ja' } = options;
+  const headers = locale === 'ja' ? STAT_HEADERS_JA : STAT_HEADERS_EN;
+  const dataKey = statMode === 'stats' ? 'stats' : 'ivs';
+
   return [
     columnHelper.display({
       id: 'detail',
@@ -59,12 +75,15 @@ function createPokemonResultColumns(onSelect?: (result: UiPokemonData) => void) 
       header: () => t`Shiny`,
       size: 40,
     }),
-    columnHelper.accessor((row) => row.ivs.join('-'), {
-      id: 'ivs',
-      header: () => 'IV',
-      size: 120,
-      cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
-    }),
+    // 個別ステータス列 (H/A/B/C/D/S)
+    ...headers.map((header, i) =>
+      columnHelper.accessor((row) => row[dataKey][i], {
+        id: `${dataKey}_${i}`,
+        header: () => header,
+        size: 40,
+        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+      })
+    ),
     columnHelper.accessor((row) => row.hidden_power_type, {
       id: 'hidden_power',
       header: () => t`Hidden Power`,
@@ -95,3 +114,4 @@ function createPokemonResultColumns(onSelect?: (result: UiPokemonData) => void) 
 }
 
 export { createPokemonResultColumns };
+export type { StatDisplayMode, PokemonResultColumnsOptions };
