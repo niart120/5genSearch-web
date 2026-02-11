@@ -594,19 +594,19 @@ export type SearchResult =
 
 ## 7. 実装チェックリスト
 
-- [ ] `src/features/pokemon-list/types.ts` — フォーム状態型 + バリデーション
-- [ ] `src/features/pokemon-list/index.ts` — re-export
-- [ ] `src/workers/types.ts` — `PokemonListTask` + `PokemonListResultResponse` 追加
-- [ ] `src/workers/search.worker.ts` — `pokemon-list` タスク処理追加
-- [ ] `src/services/search-tasks.ts` — `createPokemonListTask` 追加
-- [ ] `src/stores/search/results.ts` — `GeneratedPokemonData[]` を SearchResult に追加
-- [ ] `src/features/pokemon-list/hooks/use-pokemon-list.ts` — 生成フック
-- [ ] `src/features/pokemon-list/components/seed-input-section.tsx` — Seed 入力セクション
-- [ ] `src/features/pokemon-list/components/pokemon-params-form.tsx` — エンカウント / 生成パラメータ
-- [ ] `src/features/pokemon-list/components/pokemon-filter-form.tsx` — フィルタ入力
-- [ ] `src/features/pokemon-list/components/pokemon-result-columns.tsx` — カラム定義
-- [ ] `src/features/pokemon-list/components/result-detail-dialog.tsx` — 詳細ダイアログ
-- [ ] `src/features/pokemon-list/components/pokemon-list-page.tsx` — ページ統合
-- [ ] `src/test/unit/pokemon-list-validation.test.ts` — バリデーションテスト
-- [ ] `src/test/integration/pokemon-list-worker.test.ts` — Worker 統合テスト
-- [ ] `app.tsx` — `pokemon-list` ルートにページコンポーネントを登録
+- [x] `src/features/pokemon-list/types.ts` — フォーム状態型 + バリデーション
+- [x] `src/features/pokemon-list/index.ts` — re-export
+- [x] `src/workers/types.ts` — `PokemonListTask` + `PokemonListResultResponse` 追加
+- [x] `src/workers/search.worker.ts` — `pokemon-list` タスク処理追加
+- [x] `src/services/search-tasks.ts` — `createPokemonListTask` 追加
+- [x] `src/stores/search/results.ts` — `GeneratedPokemonData[]` を SearchResult に追加
+- [x] `src/features/pokemon-list/hooks/use-pokemon-list.ts` — 生成フック
+- [x] `src/features/pokemon-list/components/seed-input-section.tsx` — Seed 入力セクション
+- [x] `src/features/pokemon-list/components/pokemon-params-form.tsx` — エンカウント / 生成パラメータ
+- [x] `src/features/pokemon-list/components/pokemon-filter-form.tsx` — フィルタ入力
+- [x] `src/features/pokemon-list/components/pokemon-result-columns.tsx` — カラム定義
+- [x] `src/features/pokemon-list/components/result-detail-dialog.tsx` — 詳細ダイアログ
+- [x] `src/features/pokemon-list/components/pokemon-list-page.tsx` — ページ統合
+- [x] `src/test/unit/pokemon-list-validation.test.ts` — バリデーションテスト
+- [x] `src/test/integration/pokemon-list-worker.test.ts` — Worker 統合テスト
+- [x] `feature-content.tsx` — `pokemon-list` ルートにページコンポーネントを登録
