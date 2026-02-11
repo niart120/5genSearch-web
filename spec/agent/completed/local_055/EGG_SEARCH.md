@@ -453,11 +453,11 @@ CI 環境制約: GPU なし環境では GPU 関連テストをスキップ (`des
 
 ### IV Unknown UI 改善
 
-- [ ] `features/egg-search/components/egg-params-form.tsx` — `ParentIvsInput` に stat 毎の `[?]` Checkbox 追加
-- [ ] `features/egg-search/components/egg-filter-form.tsx` — `IvRangeInput` に `allowUnknown` prop を渡す
-- [ ] `components/forms/iv-range-input.tsx` — ラベル `Unknown (any)` → `任意` / `Any` に変更
-- [ ] `test/components/egg-params-form.test.tsx` — Checkbox トグルのテスト追加
-- [ ] `test/components/egg-filter-form.test.tsx` — `allowUnknown` 表示のテスト追加
+- [x] `features/egg-search/components/egg-params-form.tsx` — `ParentIvsInput` に stat 毎の `[?]` Checkbox 追加
+- [x] `features/egg-search/components/egg-filter-form.tsx` — `IvRangeInput` に `allowUnknown` prop を渡す
+- [x] `components/forms/iv-range-input.tsx` — ラベル `Unknown (any)` → `任意` / `Any` に変更
+- [x] `test/components/egg-params-form.test.tsx` — Checkbox トグルのテスト追加
+- [x] `test/components/egg-filter-form.test.tsx` — `allowUnknown` 表示のテスト追加
 
 ### テスト
 
