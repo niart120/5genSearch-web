@@ -78,7 +78,7 @@ About ページに掲載する内容候補 (別途検討):
 
 当面の方針: About ページの実装は別タスクとする。フッターコンポーネントは廃止済み (footer.tsx 削除、app.tsx から除去)。
 
-## 2025-07-24: スクレイピング時のエンカウント地名キーと表示名の不整合
+## 2026-02-11: スクレイピング時のエンカウント地名キーと表示名の不整合
 
 現状: `scripts/scrape-encounters.js` の `DUPLICATE_SUFFIX_RULES` が地名にサフィックスを付与し、`giant_chasm_cave` や `reversal_mountain_exterior` のようなサブエリアキーを生成する。一方 `src/lib/game-data-names.ts` の `ENCOUNTER_LOCATION_NAMES` にはサフィックス無しの親キーしか存在せず、生成された JSON に含まれるキーと表示名の対応が欠落していた。
 
