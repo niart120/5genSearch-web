@@ -1,8 +1,9 @@
 /**
- * KeySpec 入力コンポーネント
+ * DS コントローラ風ボタントグルグループ
  *
- * DS コントローラ風レイアウトでボタン選択 UI を提供する。
- * 探索対象のボタン組み合わせ仕様 (`KeySpec`) を編集する。
+ * D-pad / Face ボタン / ショルダー / Start / Select を
+ * トグルボタンで選択するコントローラ風レイアウト。
+ * `KeyInputSelector` と `KeySpecSelector` の共通 UI 基盤。
  *
  * レイアウト:
  *   [L]                    [R]       ← Shoulder
@@ -13,10 +14,13 @@
  */
 
 import { useMemo, useCallback, type ReactNode } from 'react';
-import { Trans, useLingui } from '@lingui/react/macro';
-import { Label } from '@/components/ui/label';
+import { useLingui } from '@lingui/react/macro';
 import { cn } from '@/lib/utils';
-import type { DsButton, KeySpec } from '@/wasm/wasm_pkg';
+import type { DsButton } from '@/wasm/wasm_pkg';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 /** ボタンの表示ラベル */
 const BUTTON_LABELS: Record<DsButton, string> = {
@@ -34,44 +38,42 @@ const BUTTON_LABELS: Record<DsButton, string> = {
   Right: '→',
 };
 
-/** D-Pad 3x3 グリッド配置 (null = 空セル) */
+/** D-Pad 3x3 グリッド配置 (undefined = 空セル) */
 const DPAD_LAYOUT: (DsButton | undefined)[][] = [
   [undefined, 'Up', undefined],
   ['Left', undefined, 'Right'],
   [undefined, 'Down', undefined],
 ];
 
-/** Face ボタン 3x3 グリッド配置 (null = 空セル) */
+/** Face ボタン 3x3 グリッド配置 (undefined = 空セル) */
 const FACE_LAYOUT: (DsButton | undefined)[][] = [
   [undefined, 'X', undefined],
   ['Y', undefined, 'A'],
   [undefined, 'B', undefined],
 ];
 
-interface KeySpecInputProps {
-  value: KeySpec;
-  onChange: (value: KeySpec) => void;
-  disabled?: boolean;
-  /** WASM get_key_combination_count で計算した組み合わせ数 */
-  combinationCount?: number;
-}
+// ---------------------------------------------------------------------------
+// ToggleBtn
+// ---------------------------------------------------------------------------
 
-/** トグルボタン (checkbox role を維持して既存テストとの互換性を保つ) */
-function ToggleButton({
-  pressed,
-  onToggle,
-  disabled,
-  label,
-  ariaLabel,
-  className,
-}: {
+interface ToggleBtnProps {
   pressed: boolean;
   onToggle: (pressed: boolean) => void;
   disabled?: boolean;
   label: ReactNode;
   ariaLabel: string;
   className?: string;
-}) {
+}
+
+/** DS コントローラ風トグルボタン */
+function ToggleBtn({
+  pressed,
+  onToggle,
+  disabled,
+  label,
+  ariaLabel,
+  className,
+}: ToggleBtnProps) {
   return (
     <button
       type="button"
@@ -88,7 +90,7 @@ function ToggleButton({
         pressed
           ? 'bg-primary text-primary-foreground shadow-sm'
           : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        className
+        className,
       )}
     >
       {label}
@@ -96,21 +98,45 @@ function ToggleButton({
   );
 }
 
-function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecInputProps) {
+// ---------------------------------------------------------------------------
+// DsButtonToggleGroup
+// ---------------------------------------------------------------------------
+
+interface DsButtonToggleGroupProps {
+  /** 選択中のボタンリスト */
+  selected: DsButton[];
+  /** トグル時のコールバック (更新後の全選択リストを返す) */
+  onToggle: (next: DsButton[]) => void;
+  disabled?: boolean;
+  /** コントローラ上部に表示するラベル (ReactNode) */
+  label?: ReactNode;
+  /** コントローラ下部に表示するフッター (ReactNode) */
+  footer?: ReactNode;
+}
+
+/**
+ * DS コントローラ風ボタン選択 UI
+ *
+ * 12 個の DS ボタンをトグル形式で選択する。
+ */
+function DsButtonToggleGroup({
+  selected,
+  onToggle,
+  disabled,
+  label,
+  footer,
+}: DsButtonToggleGroupProps) {
   const { t } = useLingui();
-  const selectedSet = useMemo(
-    () => new Set<DsButton>(value.available_buttons),
-    [value.available_buttons]
-  );
+  const selectedSet = useMemo(() => new Set<DsButton>(selected), [selected]);
 
   const handleToggle = useCallback(
     (button: DsButton, pressed: boolean) => {
       const next = pressed
-        ? [...value.available_buttons, button]
-        : value.available_buttons.filter((b) => b !== button);
-      onChange({ available_buttons: next });
+        ? [...selected, button]
+        : selected.filter((b) => b !== button);
+      onToggle(next);
     },
-    [value.available_buttons, onChange]
+    [selected, onToggle],
   );
 
   /** 3x3 グリッドを描画する */
@@ -120,7 +146,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
         .flat()
         .map((btn, idx) =>
           btn ? (
-            <ToggleButton
+            <ToggleBtn
               key={btn}
               pressed={selectedSet.has(btn)}
               onToggle={(pressed) => handleToggle(btn, pressed)}
@@ -130,22 +156,20 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             />
           ) : (
             <div key={`empty-${idx.toString()}`} />
-          )
+          ),
         )}
     </div>
   );
 
   return (
     <div className="flex flex-col gap-2">
-      <Label className="text-xs text-muted-foreground">
-        <Trans>Key input</Trans>
-      </Label>
+      {label}
 
       {/* Controller layout */}
       <div className="mx-auto flex max-w-72 flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3">
         {/* Shoulder: L ... R */}
         <div className="flex items-center justify-between px-1">
-          <ToggleButton
+          <ToggleBtn
             pressed={selectedSet.has('L')}
             onToggle={(pressed) => handleToggle('L', pressed)}
             disabled={disabled}
@@ -153,7 +177,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             ariaLabel={t`Button ${BUTTON_LABELS['L']}`}
             className="h-7 w-12 rounded-t-lg text-xs"
           />
-          <ToggleButton
+          <ToggleBtn
             pressed={selectedSet.has('R')}
             onToggle={(pressed) => handleToggle('R', pressed)}
             disabled={disabled}
@@ -165,16 +189,13 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
 
         {/* Main body: D-Pad | Face */}
         <div className="flex items-center justify-center gap-8">
-          {/* D-Pad */}
           {renderGrid(DPAD_LAYOUT)}
-
-          {/* Face buttons: X Y A B */}
           {renderGrid(FACE_LAYOUT)}
         </div>
 
-        {/* Bottom center: Select / Start */}
+        {/* Bottom: Select / Start */}
         <div className="flex items-center justify-center gap-3">
-          <ToggleButton
+          <ToggleBtn
             pressed={selectedSet.has('Select')}
             onToggle={(pressed) => handleToggle('Select', pressed)}
             disabled={disabled}
@@ -182,7 +203,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             ariaLabel={t`Button ${BUTTON_LABELS['Select']}`}
             className="h-6 w-14 rounded-full text-[10px]"
           />
-          <ToggleButton
+          <ToggleBtn
             pressed={selectedSet.has('Start')}
             onToggle={(pressed) => handleToggle('Start', pressed)}
             disabled={disabled}
@@ -193,15 +214,10 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        <Trans>Combinations</Trans>:{' '}
-        {combinationCount === undefined
-          ? value.available_buttons.length
-          : combinationCount.toLocaleString()}
-      </p>
+      {footer}
     </div>
   );
 }
 
-export type { KeySpecInputProps };
-export { KeySpecInput };
+export { DsButtonToggleGroup, ToggleBtn, BUTTON_LABELS };
+export type { DsButtonToggleGroupProps, ToggleBtnProps };
