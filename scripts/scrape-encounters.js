@@ -134,7 +134,7 @@ const DUPLICATE_SUFFIX_RULES_BW = Object.freeze({
   リュウラセンの塔: ['1F', '2F'],
   チャンピオンロード: ['1F', '2F', '3F,4F,5F', '6F,7F'],
   ジャイアントホール: {
-    Normal: ['外部', '洞窟', '森(クレーター)', '洞窟(クリア後)'],
+    Normal: ['外部', '洞窟', '森(クレーター)', '洞窟(最深部)'],
     ShakingGrass: ['外部', '森(クレーター)'],
     DustCloud: null,
   },
@@ -178,7 +178,7 @@ const DUPLICATE_SUFFIX_RULES_B2W2 = Object.freeze({
   フキヨセの洞穴: null,
   タワーオブヘブン: ['2F', '3F', '4F', '5F'],
   ジャイアントホール: {
-    Normal: ['外部', '洞窟', '森(クレーター)', '洞窟(クリア後)'],
+    Normal: ['外部', '洞窟', '森(クレーター)', '洞窟(最深部)'],
     ShakingGrass: ['外部', '森(クレーター)'],
     DustCloud: null,
   },
@@ -260,7 +260,7 @@ const JA_TO_ASCII_KEY = {
   ジャイアントホール外部: 'giant_chasm_exterior',
   ジャイアントホール洞窟: 'giant_chasm_cave',
   'ジャイアントホール森(クレーター)': 'giant_chasm_crater_forest',
-  'ジャイアントホール洞窟(クリア後)': 'giant_chasm_cave_postgame',
+  'ジャイアントホール洞窟(最深部)': 'giant_chasm_cave_depths',
   'ストレンジャーハウス入口,B1F': 'strange_house_entrance_b1f',
   ストレンジャーハウス小部屋: 'strange_house_small_room',
   セイガイハシティ: 'humilau_city',
