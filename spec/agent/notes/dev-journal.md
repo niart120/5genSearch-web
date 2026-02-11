@@ -57,6 +57,12 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 `SearchContextForm` や `KeySpecInput` と同様に `src/components/forms/` に昇格すれば複数機能で共有可能。
 当面の方針: 個体生成機能の仕様確定時に移動する。現状では props が `EggGenerationParams` + `GenerationConfig` で WASM 型ベースのため、移動時の変更は最小限で済む。`EggFilterForm` も同様に共有候補。
 
+## 2026-02-11: エンカウントデータの eager 読み込みとバンドルサイズ
+
+現状: `import.meta.glob('./generated/v1/**/*.json', { eager: true })` により 28 JSON ファイル全量がバンドルに含まれる。
+観察: ユーザは通常 1 バージョン + 1 メソッドの組み合わせしか選択しない。dynamic import に切り替えれば未使用 JSON を遅延読み込みでき、初期バンドルサイズを削減できる。ただし現時点では JSON は tree-shaking 対象外で実害は軽微。
+当面の方針: ファイル数が増加した場合やパフォーマンス計測で問題が確認された場合に、`eager: false` (dynamic import) への移行を検討する。
+
 ## 2026-02-11: About ページの新設計画
 
 経緯: pokebook.jp の出典表記をフッターに配置したが、フッターは常時表示されるため画面領域を圧迫する。出典情報は「About」タブ (独立ページ) にまとめたほうが適切。

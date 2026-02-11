@@ -55,8 +55,8 @@ describe('toEncounterSlotConfigs', () => {
     expect(result[1].has_held_item).toBe(true);
   });
 
-  it('maps all known GenderRatio values', () => {
-    const ratios = [
+  it('preserves all GenderRatio values', () => {
+    const ratios: import('@/wasm/wasm_pkg').GenderRatio[] = [
       'Genderless',
       'MaleOnly',
       'FemaleOnly',
@@ -64,7 +64,7 @@ describe('toEncounterSlotConfigs', () => {
       'F1M3',
       'F1M1',
       'F3M1',
-    ] as const;
+    ];
 
     for (const ratio of ratios) {
       const slots: EncounterSlotJson[] = [
@@ -80,21 +80,6 @@ describe('toEncounterSlotConfigs', () => {
       const result = toEncounterSlotConfigs(slots);
       expect(result[0].gender_ratio).toBe(ratio);
     }
-  });
-
-  it('falls back to F1M1 for unknown genderRatio', () => {
-    const slots: EncounterSlotJson[] = [
-      {
-        speciesId: 1,
-        rate: 100,
-        levelRange: { min: 1, max: 1 },
-        genderRatio: 'UnknownRatio',
-        hasHeldItem: false,
-      },
-    ];
-
-    const result = toEncounterSlotConfigs(slots);
-    expect(result[0].gender_ratio).toBe('F1M1');
   });
 
   it('always sets shiny_locked to false', () => {

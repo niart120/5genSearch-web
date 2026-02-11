@@ -121,7 +121,6 @@ interface EncounterLocationsJson {
   method: string;
   source: { name: string; url: string; retrievedAt: string };
   locations: Record<string, {
-    displayNameKey: string;
     slots: EncounterSlotJson[];
   }>;
 }
@@ -130,8 +129,8 @@ interface EncounterSlotJson {
   speciesId: number;
   rate: number;
   levelRange: { min: number; max: number };
-  genderRatio: string;   // GenderRatio enum 名 (例: "F1M1", "MaleOnly")
-  hasHeldItem: boolean;   // 該当バージョンで所持アイテムあり
+  genderRatio: GenderRatio;  // WASM 由来の GenderRatio 型 (例: "F1M1", "MaleOnly")
+  hasHeldItem: boolean;      // 該当バージョンで所持アイテムあり
 }
 ```
 
@@ -244,9 +243,11 @@ node scripts/scrape-encounters.js --version=B2 --url=https://example.com/test
 
 最終実装では `isDustCloudRow(parsedSlots)` を採用。パース済みスロットの `speciesId` でモグリュー (#529) / ドリュウズ (#530) の存在を判定する方式に変更した。Gen 5 の仕様上、洞窟の土煙エンカウントはこの 2 種専用であるため、誤判定のリスクは低い。
 
-### 7.2 `displayNameKey` の正規化
+### 7.2 `normalizeLocationKey` の同期
 
-`displayNameKey` はスクレイパー側で `normalizeLocationKey()` を適用した正規化済み文字列を格納している。空白・全角スペース・ハイフン系記号を除去する。この値はランタイム側 `loader.ts` の `normalizeLocationKey()` と同一ロジックであるため、スクレイパーで正規化済みの値をそのまま使用できる。
+スクレイパー側の `normalizeLocationKey()` (JS) とランタイム側 `src/data/encounters/loader.ts` の `normalizeLocationKey()` (TS) は同一ロジックである必要がある。空白・全角スペース・ハイフン系記号を除去し、アンダースコアは保持する。スクレイパー側には `// Keep in sync with src/data/encounters/loader.ts normalizeLocationKey` コメントで同期の必要性を明示している。
+
+JSON の `locations` オブジェクトキーには ASCII snake_case キー (例: `route_6_spring`) を使用する。スクレイパーは `JA_TO_ASCII_KEY` マッピングにより正規化済み日本語キーを ASCII キーに変換する。
 
 ### 7.3 バスラオのフォーム (FORM_ALIASES)
 

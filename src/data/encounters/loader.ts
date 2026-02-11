@@ -23,11 +23,11 @@ type Registry = Record<string, Record<string, RegistryEntry>>;
 // Location key normalization
 // ---------------------------------------------------------------------------
 
+const RE_WHITESPACE = /[\u3000\s]+/g;
+const RE_DASHES_DOTS = /[‐‑‒–—−\-.]/g;
+
 export function normalizeLocationKey(location: string): string {
-  return location
-    .trim()
-    .replaceAll(/[\u3000\s]+/g, '')
-    .replaceAll(/[‐‑‒–—−\-.]/g, '');
+  return location.trim().replaceAll(RE_WHITESPACE, '').replaceAll(RE_DASHES_DOTS, '');
 }
 
 // ---------------------------------------------------------------------------
@@ -37,24 +37,20 @@ export function normalizeLocationKey(location: string): string {
 let registry: Registry | undefined;
 
 function initRegistry(): Registry {
-  const modules = import.meta.glob('./generated/v1/**/*.json', {
+  const modules = import.meta.glob<EncounterLocationsJson>('./generated/v1/**/*.json', {
     eager: true,
-  }) as Record<string, { default: EncounterLocationsJson } | EncounterLocationsJson>;
+    import: 'default',
+  });
 
   const acc: Registry = {};
-  for (const [, mod] of Object.entries(modules)) {
-    const data: EncounterLocationsJson =
-      'default' in (mod as object)
-        ? (mod as { default: EncounterLocationsJson }).default
-        : (mod as EncounterLocationsJson);
-
+  for (const [, data] of Object.entries(modules)) {
     const key = `${data.version}_${data.method}`;
     if (!acc[key]) acc[key] = {};
 
     for (const [locKey, payload] of Object.entries(data.locations)) {
       const normalizedKey = normalizeLocationKey(locKey);
       acc[key][normalizedKey] = {
-        displayNameKey: payload.displayNameKey,
+        displayNameKey: locKey,
         slots: payload.slots,
       };
     }

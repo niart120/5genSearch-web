@@ -8,7 +8,6 @@
   },
   "locations": {
     "chargestone_cave_1f": {
-      "displayNameKey": "chargestone_cave_1f",
       "slots": [
         {
           "speciesId": 529,
@@ -133,7 +132,6 @@
       ]
     },
     "chargestone_cave_b1f": {
-      "displayNameKey": "chargestone_cave_b1f",
       "slots": [
         {
           "speciesId": 529,
@@ -258,7 +256,6 @@
       ]
     },
     "twist_mountain_spring": {
-      "displayNameKey": "twist_mountain_spring",
       "slots": [
         {
           "speciesId": 530,
@@ -383,7 +380,6 @@
       ]
     },
     "twist_mountain_summer": {
-      "displayNameKey": "twist_mountain_summer",
       "slots": [
         {
           "speciesId": 530,
@@ -508,7 +504,6 @@
       ]
     },
     "twist_mountain_autumn": {
-      "displayNameKey": "twist_mountain_autumn",
       "slots": [
         {
           "speciesId": 530,
@@ -633,7 +628,6 @@
       ]
     },
     "twist_mountain_winter": {
-      "displayNameKey": "twist_mountain_winter",
       "slots": [
         {
           "speciesId": 530,
@@ -758,7 +752,6 @@
       ]
     },
     "victory_road_1f": {
-      "displayNameKey": "victory_road_1f",
       "slots": [
         {
           "speciesId": 530,
@@ -883,7 +876,6 @@
       ]
     },
     "victory_road_2f": {
-      "displayNameKey": "victory_road_2f",
       "slots": [
         {
           "speciesId": 530,
@@ -1008,7 +1000,6 @@
       ]
     },
     "victory_road_3f_4f_5f": {
-      "displayNameKey": "victory_road_3f_4f_5f",
       "slots": [
         {
           "speciesId": 530,
@@ -1133,7 +1124,6 @@
       ]
     },
     "giant_chasm": {
-      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 530,
@@ -1378,7 +1368,6 @@
       ]
     },
     "reversal_mountain": {
-      "displayNameKey": "reversal_mountain",
       "slots": [
         {
           "speciesId": 530,
@@ -2823,7 +2812,6 @@
       ]
     },
     "relic_passage_south": {
-      "displayNameKey": "relic_passage_south",
       "slots": [
         {
           "speciesId": 529,
@@ -2948,7 +2936,6 @@
       ]
     },
     "relic_passage_north": {
-      "displayNameKey": "relic_passage_north",
       "slots": [
         {
           "speciesId": 529,
@@ -3073,7 +3060,6 @@
       ]
     },
     "clay_tunnel": {
-      "displayNameKey": "clay_tunnel",
       "slots": [
         {
           "speciesId": 530,
@@ -3198,7 +3184,6 @@
       ]
     },
     "underground_ruins": {
-      "displayNameKey": "underground_ruins",
       "slots": [
         {
           "speciesId": 530,
@@ -3323,7 +3308,6 @@
       ]
     },
     "rocky_mountain_chamber": {
-      "displayNameKey": "rocky_mountain_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -3448,7 +3432,6 @@
       ]
     },
     "iceberg_chamber": {
-      "displayNameKey": "iceberg_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -3573,7 +3556,6 @@
       ]
     },
     "iron_chamber": {
-      "displayNameKey": "iron_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -3698,7 +3680,6 @@
       ]
     },
     "seaside_cave_1f": {
-      "displayNameKey": "seaside_cave_1f",
       "slots": [
         {
           "speciesId": 530,
@@ -3823,7 +3804,6 @@
       ]
     },
     "seaside_cave_b1f": {
-      "displayNameKey": "seaside_cave_b1f",
       "slots": [
         {
           "speciesId": 530,
@@ -3948,7 +3928,6 @@
       ]
     },
     "wellspring_cave": {
-      "displayNameKey": "wellspring_cave",
       "slots": [
         {
           "speciesId": 530,
@@ -4073,7 +4052,6 @@
       ]
     },
     "mistralton_cave": {
-      "displayNameKey": "mistralton_cave",
       "slots": [
         {
           "speciesId": 529,
@@ -4198,7 +4176,6 @@
       ]
     },
     "guidance_chamber": {
-      "displayNameKey": "guidance_chamber",
       "slots": [
         {
           "speciesId": 529,

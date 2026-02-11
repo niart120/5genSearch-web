@@ -8,7 +8,6 @@
   },
   "locations": {
     "chargestone_cave_1f": {
-      "displayNameKey": "chargestone_cave_1f",
       "slots": [
         {
           "speciesId": 529,
@@ -133,7 +132,6 @@
       ]
     },
     "twist_mountain_spring": {
-      "displayNameKey": "twist_mountain_spring",
       "slots": [
         {
           "speciesId": 529,
@@ -258,7 +256,6 @@
       ]
     },
     "twist_mountain_summer": {
-      "displayNameKey": "twist_mountain_summer",
       "slots": [
         {
           "speciesId": 529,
@@ -383,7 +380,6 @@
       ]
     },
     "twist_mountain_autumn": {
-      "displayNameKey": "twist_mountain_autumn",
       "slots": [
         {
           "speciesId": 529,
@@ -508,7 +504,6 @@
       ]
     },
     "twist_mountain_winter": {
-      "displayNameKey": "twist_mountain_winter",
       "slots": [
         {
           "speciesId": 529,
@@ -633,7 +628,6 @@
       ]
     },
     "victory_road_1f": {
-      "displayNameKey": "victory_road_1f",
       "slots": [
         {
           "speciesId": 530,
@@ -758,7 +752,6 @@
       ]
     },
     "victory_road_2f": {
-      "displayNameKey": "victory_road_2f",
       "slots": [
         {
           "speciesId": 530,
@@ -883,7 +876,6 @@
       ]
     },
     "trial_chamber": {
-      "displayNameKey": "trial_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -1008,7 +1000,6 @@
       ]
     },
     "giant_chasm": {
-      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 530,
@@ -1253,7 +1244,6 @@
       ]
     },
     "wellspring_cave": {
-      "displayNameKey": "wellspring_cave",
       "slots": [
         {
           "speciesId": 529,
@@ -1498,7 +1488,6 @@
       ]
     },
     "mistralton_cave": {
-      "displayNameKey": "mistralton_cave",
       "slots": [
         {
           "speciesId": 529,
@@ -1743,7 +1732,6 @@
       ]
     },
     "guidance_chamber": {
-      "displayNameKey": "guidance_chamber",
       "slots": [
         {
           "speciesId": 529,
@@ -1868,7 +1856,6 @@
       ]
     },
     "challengers_cave": {
-      "displayNameKey": "challengers_cave",
       "slots": [
         {
           "speciesId": 530,

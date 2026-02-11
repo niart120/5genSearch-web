@@ -13,7 +13,7 @@
 | EncounterSlotConfig | WASM 側の入力型。`species_id`, `level_min`, `level_max`, `gender_ratio`, `has_held_item`, `shiny_locked` を含む |
 | EncounterSlotJson | JSON ファイル上のスロット表現。`speciesId`, `rate`, `levelRange`, `genderRatio`, `hasHeldItem` を含む |
 | レジストリ | 全バージョン・メソッドの JSON を統合したインメモリ辞書 |
-| ロケーションキー | 正規化済みのロケーション名 (空白・ダッシュ等を除去) |
+| ロケーションキー | ASCII snake_case の正規化済みロケーション名 (例: `route_6_spring`) |
 
 ### 1.3 背景・問題
 
@@ -42,10 +42,11 @@
 |----------|----------|----------|
 | `src/data/encounters/schema.ts` | 新規 | JSON スキーマの TypeScript 型定義 |
 | `src/data/encounters/loader.ts` | 新規 | JSON → レジストリのロードと検索 API |
-| `src/data/encounters/converter.ts` | 新規 | `EncounterSlotJson[]` → `EncounterSlotConfig[]` 変換 |
+| `src/data/encounters/converter.ts` | 新規 | `EncounterSlotJson[]` → `EncounterSlotConfig[]` 変換 (型パススルー) |
 | `src/data/encounters/helpers.ts` | 新規 | UI 向けヘルパー (ロケーション一覧、ポケモン一覧) |
-| `src/test/unit/encounter-schema.test.ts` | 新規 | スキーマ変換のユニットテスト |
+| `src/test/unit/encounter-converter.test.ts` | 新規 | 変換のユニットテスト |
 | `src/test/unit/encounter-loader.test.ts` | 新規 | ローダーのユニットテスト |
+| `src/test/unit/encounter-helpers.test.ts` | 新規 | ヘルパーのユニットテスト |
 
 ---
 
@@ -66,9 +67,9 @@ helpers.ts ── UI 向け API (ロケーション一覧 / ポケモン一覧)
 ### 3.2 設計判断
 
 1. **Eager ロード**: JSON ファイルはビルド時にバンドルに取り込む。実行時の fetch は行わない
-2. **ロケーションキー正規化**: 空白・各種ダッシュ・アンダースコアを除去し、表記揺れを吸収
+2. **ロケーションキー正規化**: 空白・各種ダッシュを除去し、アンダースコアは保持して表記揺れを吸収
 3. **`null` 排除**: 外部 JSON 由来の `null` は境界で `undefined` に正規化 (TypeScript 規約準拠)
-4. **GenderRatio 型安全**: 文字列から WASM の `GenderRatio` 型への変換は converter で行い、不正値はコンパイル時に検出する
+4. **GenderRatio 型安全**: JSON スキーマの `genderRatio` フィールドに WASM 由来の `GenderRatio` 型を使用し、converter ではそのままパススルーする (変換マップ不要)
 5. **shiny_locked**: JSON には含めず、converter で既定値 `false` を設定する (フィールドが必要になった際に拡張)
 
 ---
@@ -82,18 +83,17 @@ export interface EncounterSlotJson {
   speciesId: number;
   rate: number;
   levelRange: { min: number; max: number };
-  genderRatio: string;
+  genderRatio: GenderRatio;
   hasHeldItem: boolean;
 }
 
 export interface EncounterLocationPayload {
-  displayNameKey: string;
   slots: EncounterSlotJson[];
 }
 
 export interface EncounterLocationsJson {
   version: 'B' | 'W' | 'B2' | 'W2';
-  method: string;
+  method: EncounterMethodKey;
   source: { name: string; url: string; retrievedAt: string };
   locations: Record<string, EncounterLocationPayload>;
 }
@@ -107,6 +107,7 @@ import type { EncounterLocationsJson, EncounterSlotJson } from './schema';
 type RegistryEntry = { displayNameKey: string; slots: EncounterSlotJson[] };
 type Registry = Record<string, Record<string, RegistryEntry>>;
 // key: `${version}_${method}` → Record<normalizedLocationKey, RegistryEntry>
+// displayNameKey は JSON オブジェクトのキーから導出 (JSON 内には保持しない)
 
 function normalizeLocationKey(location: string): string;
 function initRegistry(): Registry;
@@ -127,20 +128,11 @@ export function listLocations(
 ### 4.3 converter.ts
 
 `EncounterSlotJson[]` を WASM の `EncounterSlotConfig[]` に変換する。
+`genderRatio` は JSON スキーマで WASM の `GenderRatio` 型を直接使用しているため、変換マップなしでパススルーする。
 
 ```typescript
-import type { EncounterSlotConfig, GenderRatio } from '../wasm/wasm_pkg';
+import type { EncounterSlotConfig } from '../wasm/wasm_pkg';
 import type { EncounterSlotJson } from './schema';
-
-const GENDER_RATIO_MAP: Record<string, GenderRatio> = {
-  Genderless: 'Genderless',
-  MaleOnly: 'MaleOnly',
-  FemaleOnly: 'FemaleOnly',
-  F1M7: 'F1M7',
-  F1M3: 'F1M3',
-  F1M1: 'F1M1',
-  F3M1: 'F3M1',
-};
 
 export function toEncounterSlotConfigs(
   slots: EncounterSlotJson[]
@@ -149,7 +141,7 @@ export function toEncounterSlotConfigs(
     species_id: slot.speciesId,
     level_min: slot.levelRange.min,
     level_max: slot.levelRange.max,
-    gender_ratio: GENDER_RATIO_MAP[slot.genderRatio] ?? 'F1M1',
+    gender_ratio: slot.genderRatio,
     has_held_item: slot.hasHeldItem,
     shiny_locked: false,
   }));
@@ -198,9 +190,9 @@ export function listEncounterSpecies(
 | テスト | 検証内容 |
 |--------|----------|
 | `normalizeLocationKey` | 空白・ダッシュ・全角空白の除去 |
-| `toEncounterSlotConfigs` | JSON → WASM 型変換の正確性 |
-| `toEncounterSlotConfigs` (不正 genderRatio) | 不明な文字列でフォールバック `F1M1` |
-| `listEncounterSpecies` | 種族集約・レート合算・レベル範囲 |
+| `toEncounterSlotConfigs` | JSON → WASM 型変換の正確性 (型パススルー) |
+| `listEncounterLocations` | キャッシュ有効性、空結果 |
+| `listEncounterSpecies` | 種族集約・レート合算・レベル範囲・ソート順 |
 
 ### 5.2 統合テスト (`src/test/integration/`)
 
@@ -222,10 +214,10 @@ export function listEncounterSpecies(
   - [ ] `listLocations` 実装
 - [ ] `src/data/encounters/converter.ts` 作成
   - [ ] `toEncounterSlotConfigs` 実装
-  - [ ] `GENDER_RATIO_MAP` 定義
 - [ ] `src/data/encounters/helpers.ts` 作成
   - [ ] `listEncounterLocations` 実装
   - [ ] `listEncounterSpecies` 実装
-- [ ] `src/test/unit/encounter-schema.test.ts` 作成
+- [ ] `src/test/unit/encounter-converter.test.ts` 作成
 - [ ] `src/test/unit/encounter-loader.test.ts` 作成
+- [ ] `src/test/unit/encounter-helpers.test.ts` 作成
 - [ ] JSON 生成後の統合テスト実行・確認

@@ -8,7 +8,6 @@
   },
   "locations": {
     "castelia_city": {
-      "displayNameKey": "castelia_city",
       "slots": [
         {
           "speciesId": 531,
@@ -133,7 +132,6 @@
       ]
     },
     "dreamyard": {
-      "displayNameKey": "dreamyard",
       "slots": [
         {
           "speciesId": 531,
@@ -258,7 +256,6 @@
       ]
     },
     "pinwheel_forest_exterior": {
-      "displayNameKey": "pinwheel_forest_exterior",
       "slots": [
         {
           "speciesId": 531,
@@ -383,7 +380,6 @@
       ]
     },
     "pinwheel_forest_interior": {
-      "displayNameKey": "pinwheel_forest_interior",
       "slots": [
         {
           "speciesId": 531,
@@ -508,7 +504,6 @@
       ]
     },
     "dragonspiral_tower_spring_exterior_south": {
-      "displayNameKey": "dragonspiral_tower_spring_exterior_south",
       "slots": [
         {
           "speciesId": 531,
@@ -633,7 +628,6 @@
       ]
     },
     "dragonspiral_tower_spring_exterior_northeast": {
-      "displayNameKey": "dragonspiral_tower_spring_exterior_northeast",
       "slots": [
         {
           "speciesId": 531,
@@ -758,7 +752,6 @@
       ]
     },
     "dragonspiral_tower_summer_exterior_south": {
-      "displayNameKey": "dragonspiral_tower_summer_exterior_south",
       "slots": [
         {
           "speciesId": 531,
@@ -883,7 +876,6 @@
       ]
     },
     "dragonspiral_tower_summer_exterior_northeast": {
-      "displayNameKey": "dragonspiral_tower_summer_exterior_northeast",
       "slots": [
         {
           "speciesId": 531,
@@ -1008,7 +1000,6 @@
       ]
     },
     "dragonspiral_tower_autumn_exterior_south": {
-      "displayNameKey": "dragonspiral_tower_autumn_exterior_south",
       "slots": [
         {
           "speciesId": 531,
@@ -1133,7 +1124,6 @@
       ]
     },
     "dragonspiral_tower_autumn_exterior_northeast": {
-      "displayNameKey": "dragonspiral_tower_autumn_exterior_northeast",
       "slots": [
         {
           "speciesId": 531,
@@ -1258,7 +1248,6 @@
       ]
     },
     "dragonspiral_tower_winter_exterior_south": {
-      "displayNameKey": "dragonspiral_tower_winter_exterior_south",
       "slots": [
         {
           "speciesId": 531,
@@ -1383,7 +1372,6 @@
       ]
     },
     "dragonspiral_tower_winter_exterior_northeast": {
-      "displayNameKey": "dragonspiral_tower_winter_exterior_northeast",
       "slots": [
         {
           "speciesId": 531,
@@ -1508,7 +1496,6 @@
       ]
     },
     "giant_chasm": {
-      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 531,
@@ -1873,7 +1860,6 @@
       ]
     },
     "p2_laboratory": {
-      "displayNameKey": "p2_laboratory",
       "slots": [
         {
           "speciesId": 531,
@@ -1998,7 +1984,6 @@
       ]
     },
     "floccesy_ranch": {
-      "displayNameKey": "floccesy_ranch",
       "slots": [
         {
           "speciesId": 531,
@@ -2123,7 +2108,6 @@
       ]
     },
     "virbank_complex": {
-      "displayNameKey": "virbank_complex",
       "slots": [
         {
           "speciesId": 531,
@@ -2368,7 +2352,6 @@
       ]
     },
     "reversal_mountain": {
-      "displayNameKey": "reversal_mountain",
       "slots": [
         {
           "speciesId": 531,
@@ -2493,7 +2476,6 @@
       ]
     },
     "victory_road_1f": {
-      "displayNameKey": "victory_road_1f",
       "slots": [
         {
           "speciesId": 531,
@@ -2618,7 +2600,6 @@
       ]
     },
     "victory_road_2f": {
-      "displayNameKey": "victory_road_2f",
       "slots": [
         {
           "speciesId": 531,
@@ -2743,7 +2724,6 @@
       ]
     },
     "victory_road_3f_4f_5f": {
-      "displayNameKey": "victory_road_3f_4f_5f",
       "slots": [
         {
           "speciesId": 531,
@@ -2868,7 +2848,6 @@
       ]
     },
     "nature_preserve": {
-      "displayNameKey": "nature_preserve",
       "slots": [
         {
           "speciesId": 531,
@@ -2993,7 +2972,6 @@
       ]
     },
     "driftveil_drawbridge": {
-      "displayNameKey": "driftveil_drawbridge",
       "slots": [
         {
           "speciesId": 580,
@@ -3118,7 +3096,6 @@
       ]
     },
     "village_bridge": {
-      "displayNameKey": "village_bridge",
       "slots": [
         {
           "speciesId": 531,
@@ -3243,7 +3220,6 @@
       ]
     },
     "marvelous_bridge": {
-      "displayNameKey": "marvelous_bridge",
       "slots": [
         {
           "speciesId": 581,
@@ -3368,7 +3344,6 @@
       ]
     },
     "route_1": {
-      "displayNameKey": "route_1",
       "slots": [
         {
           "speciesId": 531,
@@ -3493,7 +3468,6 @@
       ]
     },
     "route_2": {
-      "displayNameKey": "route_2",
       "slots": [
         {
           "speciesId": 531,
@@ -3618,7 +3592,6 @@
       ]
     },
     "route_3": {
-      "displayNameKey": "route_3",
       "slots": [
         {
           "speciesId": 531,
@@ -3743,7 +3716,6 @@
       ]
     },
     "route_5": {
-      "displayNameKey": "route_5",
       "slots": [
         {
           "speciesId": 531,
@@ -3868,7 +3840,6 @@
       ]
     },
     "route_6_spring": {
-      "displayNameKey": "route_6_spring",
       "slots": [
         {
           "speciesId": 531,
@@ -3993,7 +3964,6 @@
       ]
     },
     "route_6_summer": {
-      "displayNameKey": "route_6_summer",
       "slots": [
         {
           "speciesId": 531,
@@ -4118,7 +4088,6 @@
       ]
     },
     "route_6_autumn": {
-      "displayNameKey": "route_6_autumn",
       "slots": [
         {
           "speciesId": 531,
@@ -4243,7 +4212,6 @@
       ]
     },
     "route_6_winter": {
-      "displayNameKey": "route_6_winter",
       "slots": [
         {
           "speciesId": 531,
@@ -4368,7 +4336,6 @@
       ]
     },
     "route_7_spring": {
-      "displayNameKey": "route_7_spring",
       "slots": [
         {
           "speciesId": 531,
@@ -4493,7 +4460,6 @@
       ]
     },
     "route_7_summer": {
-      "displayNameKey": "route_7_summer",
       "slots": [
         {
           "speciesId": 531,
@@ -4618,7 +4584,6 @@
       ]
     },
     "route_7_autumn": {
-      "displayNameKey": "route_7_autumn",
       "slots": [
         {
           "speciesId": 531,
@@ -4743,7 +4708,6 @@
       ]
     },
     "route_7_winter": {
-      "displayNameKey": "route_7_winter",
       "slots": [
         {
           "speciesId": 531,
@@ -4868,7 +4832,6 @@
       ]
     },
     "route_9": {
-      "displayNameKey": "route_9",
       "slots": [
         {
           "speciesId": 531,
@@ -4993,7 +4956,6 @@
       ]
     },
     "route_11": {
-      "displayNameKey": "route_11",
       "slots": [
         {
           "speciesId": 531,
@@ -5118,7 +5080,6 @@
       ]
     },
     "route_12": {
-      "displayNameKey": "route_12",
       "slots": [
         {
           "speciesId": 531,
@@ -5243,7 +5204,6 @@
       ]
     },
     "route_13": {
-      "displayNameKey": "route_13",
       "slots": [
         {
           "speciesId": 531,
@@ -5368,7 +5328,6 @@
       ]
     },
     "route_14": {
-      "displayNameKey": "route_14",
       "slots": [
         {
           "speciesId": 531,
@@ -5493,7 +5452,6 @@
       ]
     },
     "abundant_shrine": {
-      "displayNameKey": "abundant_shrine",
       "slots": [
         {
           "speciesId": 531,
@@ -5618,7 +5576,6 @@
       ]
     },
     "route_15": {
-      "displayNameKey": "route_15",
       "slots": [
         {
           "speciesId": 531,
@@ -5743,7 +5700,6 @@
       ]
     },
     "route_16": {
-      "displayNameKey": "route_16",
       "slots": [
         {
           "speciesId": 531,
@@ -5868,7 +5824,6 @@
       ]
     },
     "lostlorn_forest": {
-      "displayNameKey": "lostlorn_forest",
       "slots": [
         {
           "speciesId": 531,
@@ -5993,7 +5948,6 @@
       ]
     },
     "route_18": {
-      "displayNameKey": "route_18",
       "slots": [
         {
           "speciesId": 531,
@@ -6118,7 +6072,6 @@
       ]
     },
     "route_19": {
-      "displayNameKey": "route_19",
       "slots": [
         {
           "speciesId": 504,
@@ -6243,7 +6196,6 @@
       ]
     },
     "route_20_spring": {
-      "displayNameKey": "route_20_spring",
       "slots": [
         {
           "speciesId": 531,
@@ -6368,7 +6320,6 @@
       ]
     },
     "route_20_summer": {
-      "displayNameKey": "route_20_summer",
       "slots": [
         {
           "speciesId": 531,
@@ -6493,7 +6444,6 @@
       ]
     },
     "route_20_autumn": {
-      "displayNameKey": "route_20_autumn",
       "slots": [
         {
           "speciesId": 531,
@@ -6618,7 +6568,6 @@
       ]
     },
     "route_20_winter": {
-      "displayNameKey": "route_20_winter",
       "slots": [
         {
           "speciesId": 531,
@@ -6743,7 +6692,6 @@
       ]
     },
     "route_22": {
-      "displayNameKey": "route_22",
       "slots": [
         {
           "speciesId": 531,
@@ -6868,7 +6816,6 @@
       ]
     },
     "route_23": {
-      "displayNameKey": "route_23",
       "slots": [
         {
           "speciesId": 531,

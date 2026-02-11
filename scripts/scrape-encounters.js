@@ -22,7 +22,7 @@ import { load as loadHtml } from 'cheerio';
 // Constants
 // ---------------------------------------------------------------------------
 
-let MISSING_SPECIES = new Set();
+const MISSING_SPECIES = new Set();
 
 const METHODS = [
   'Normal',
@@ -163,6 +163,7 @@ const DUPLICATE_SUFFIX_RULES = Object.freeze({
 // Utility functions
 // ---------------------------------------------------------------------------
 
+// Keep in sync with src/data/encounters/loader.ts normalizeLocationKey
 function normalizeLocationKey(location) {
   return location
     .trim()
@@ -728,7 +729,6 @@ function parseWaterEncounterPage(html, { version, method, url, aliasJa }) {
       const normalizedKey = normalizeLocationKey(displayName);
       const asciiKey = toAsciiLocationKey(normalizedKey);
       locations[asciiKey] = {
-        displayNameKey: asciiKey,
         slots: mergedSlots.map((s) => enrichSlot(s, version)),
       };
     }
@@ -802,7 +802,6 @@ function parseEncounterPage(html, { version, method, url, aliasJa }) {
       const normalizedKey = normalizeLocationKey(entry.displayName);
       const asciiKey = toAsciiLocationKey(normalizedKey);
       locations[asciiKey] = {
-        displayNameKey: asciiKey,
         slots: entry.slots.map((s) => enrichSlot(s, version)),
       };
     }
@@ -821,7 +820,7 @@ function parseEncounterPage(html, { version, method, url, aliasJa }) {
 // ---------------------------------------------------------------------------
 
 async function scrapeVersionMethod(version, method, overrideUrl) {
-  MISSING_SPECIES = new Set();
+  MISSING_SPECIES.clear();
   const url = overrideUrl || SOURCE_MAP[version]?.[method];
   if (!url) {
     console.warn(`[skip] No source URL for ${version}/${method}`);
