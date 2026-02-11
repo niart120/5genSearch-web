@@ -11,6 +11,7 @@ import type {
   AbilitySlot,
   GenderRatio,
 } from '@/wasm/wasm_pkg';
+import type { GameVersion } from '@/data/encounters/schema';
 import type { SupportedLocale } from '@/i18n';
 
 type IvStatKey = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
@@ -345,10 +346,17 @@ const ENCOUNTER_METHOD_NAMES: Record<string, Record<SupportedLocale, string>> = 
   Normal: { ja: '草むら・洞窟', en: 'Grass / Cave' },
   ShakingGrass: { ja: '揺れる草むら', en: 'Shaking Grass' },
   DustCloud: { ja: '土煙', en: 'Dust Cloud' },
+  PokemonShadow: { ja: 'ポケモンの影', en: 'Pokémon Shadow' },
   Surfing: { ja: 'なみのり', en: 'Surf' },
   SurfingBubble: { ja: 'なみのり(泡)', en: 'Rippling Surf' },
   Fishing: { ja: 'つり', en: 'Fishing' },
   FishingBubble: { ja: 'つり(泡)', en: 'Rippling Fishing' },
+  StaticSymbol: { ja: 'シンボル', en: 'Symbol' },
+  StaticStarter: { ja: '御三家', en: 'Starter' },
+  StaticFossil: { ja: '化石', en: 'Fossil' },
+  StaticEvent: { ja: 'イベント', en: 'Event' },
+  Roamer: { ja: '徘徊', en: 'Roamer' },
+  HiddenGrotto: { ja: 'かくしあな', en: 'Hidden Grotto' },
 };
 
 function getEncounterMethodName(method: string, locale: SupportedLocale): string {
@@ -559,6 +567,21 @@ function getNeedleArrow(direction: number): string {
   return NEEDLE_ARROWS[direction] ?? '?';
 }
 
+// ---------------------------------------------------------------------------
+// RomVersion → GameVersion
+// ---------------------------------------------------------------------------
+
+/** RomVersion → GameVersion 変換 */
+function toGameVersion(version: RomVersion): GameVersion {
+  const map: Record<RomVersion, GameVersion> = {
+    Black: 'B',
+    White: 'W',
+    Black2: 'B2',
+    White2: 'W2',
+  };
+  return map[version];
+}
+
 export type { IvStatKey };
 export {
   IV_STAT_KEYS,
@@ -591,4 +614,5 @@ export {
   getEncounterMethodName,
   ENCOUNTER_LOCATION_NAMES,
   getEncounterLocationName,
+  toGameVersion,
 };

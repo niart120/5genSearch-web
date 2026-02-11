@@ -34,11 +34,11 @@ interface UsePokemonListReturn {
 
 export function usePokemonList(version: RomVersion, locale: SupportedLocale): UsePokemonListReturn {
   const config = useSearchConfig(false);
-  const search = useSearch(config);
+  const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
   const rawResults = useMemo(() => {
     const flat: GeneratedPokemonData[] = [];
-    for (const batch of search.results) {
+    for (const batch of results) {
       if (Array.isArray(batch) && batch.length > 0) {
         const first = batch[0];
         if (first && typeof first === 'object' && 'core' in first && 'advance' in first) {
@@ -47,7 +47,7 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
       }
     }
     return flat;
-  }, [search.results]);
+  }, [results]);
 
   const uiResults = useMemo(() => {
     if (rawResults.length === 0) return [];
@@ -62,20 +62,20 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
       filter: PokemonFilter | undefined
     ) => {
       const task = createPokemonListTask(origins, params, genConfig, filter);
-      search.start([task]);
+      start([task]);
     },
-    [search]
+    [start]
   );
 
   return {
-    isLoading: search.isLoading,
-    isInitialized: search.isInitialized,
-    progress: search.progress,
+    isLoading,
+    isInitialized,
+    progress,
     rawResults,
     uiResults,
-    error: search.error,
+    error,
     generate,
-    cancel: search.cancel,
+    cancel,
   };
 }
 

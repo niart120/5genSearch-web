@@ -17,7 +17,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
-import { getEncounterLocationName, getNatureName, NATURE_ORDER } from '@/lib/game-data-names';
+import {
+  getEncounterLocationName,
+  getEncounterMethodName,
+  toGameVersion,
+} from '@/lib/game-data-names';
 import { initMainThreadWasm } from '@/services/wasm-init';
 import { useUiStore } from '@/stores/settings/ui';
 import {
@@ -33,116 +37,11 @@ import {
 } from '@/data/encounters/converter';
 import { getEncounterSlots, getStaticEncounterEntry } from '@/data/encounters/loader';
 import { get_species_name } from '@/wasm/wasm_pkg.js';
+import { ENCOUNTER_CATEGORIES, findCategoryForType } from './encounter-constants';
+import { LeadAbilitySection } from './lead-ability-section';
 import type { EncounterParamsOutput } from '../types';
-import type {
-  EncounterMethodKey,
-  StaticEncounterTypeKey,
-  GameVersion,
-} from '@/data/encounters/schema';
-import type {
-  EncounterType,
-  EncounterMethod,
-  LeadAbilityEffect,
-  Nature,
-  RomVersion,
-} from '@/wasm/wasm_pkg.js';
-import type { SupportedLocale } from '@/i18n';
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** エンカウントタイプのカテゴリ定義 */
-interface EncounterCategory {
-  labelKey: string;
-  labels: Record<SupportedLocale, string>;
-  types: (EncounterMethodKey | StaticEncounterTypeKey)[];
-}
-
-const ENCOUNTER_CATEGORIES: EncounterCategory[] = [
-  {
-    labelKey: 'wild',
-    labels: { ja: '野生', en: 'Wild' },
-    types: [
-      'Normal',
-      'ShakingGrass',
-      'DustCloud',
-      'PokemonShadow',
-      'Surfing',
-      'SurfingBubble',
-      'Fishing',
-      'FishingBubble',
-    ],
-  },
-  {
-    labelKey: 'legendary',
-    labels: { ja: '伝説・準伝説', en: 'Legendary / Mythical' },
-    types: ['StaticSymbol', 'StaticEvent'],
-  },
-  {
-    labelKey: 'roamer',
-    labels: { ja: '徘徊', en: 'Roamer' },
-    types: ['Roamer'],
-  },
-  {
-    labelKey: 'starter',
-    labels: { ja: '御三家', en: 'Starter' },
-    types: ['StaticStarter'],
-  },
-  {
-    labelKey: 'fossil',
-    labels: { ja: '化石', en: 'Fossil' },
-    types: ['StaticFossil'],
-  },
-  {
-    labelKey: 'hidden-grotto',
-    labels: { ja: 'かくしあな', en: 'Hidden Grotto' },
-    types: ['HiddenGrotto'],
-  },
-];
-
-/** EncounterType の表示名を取得 */
-const ENCOUNTER_TYPE_LABELS: Record<string, Record<SupportedLocale, string>> = {
-  Normal: { ja: '草むら・洞窟', en: 'Grass / Cave' },
-  ShakingGrass: { ja: '揺れる草むら', en: 'Shaking Grass' },
-  DustCloud: { ja: '土煙', en: 'Dust Cloud' },
-  PokemonShadow: { ja: 'ポケモンの影', en: 'Pokémon Shadow' },
-  Surfing: { ja: 'なみのり', en: 'Surf' },
-  SurfingBubble: { ja: 'なみのり(泡)', en: 'Rippling Surf' },
-  Fishing: { ja: 'つり', en: 'Fishing' },
-  FishingBubble: { ja: 'つり(泡)', en: 'Rippling Fishing' },
-  StaticSymbol: { ja: 'シンボル', en: 'Symbol' },
-  StaticStarter: { ja: '御三家', en: 'Starter' },
-  StaticFossil: { ja: '化石', en: 'Fossil' },
-  StaticEvent: { ja: 'イベント', en: 'Event' },
-  Roamer: { ja: '徘徊', en: 'Roamer' },
-  HiddenGrotto: { ja: 'かくしあな', en: 'Hidden Grotto' },
-};
-
-function getEncounterTypeLabel(type: string, locale: SupportedLocale): string {
-  return ENCOUNTER_TYPE_LABELS[type]?.[locale] ?? type;
-}
-
-/** 指定された EncounterType が所属するカテゴリの labelKey を返す */
-function findCategoryForType(type: string): string | undefined {
-  for (const cat of ENCOUNTER_CATEGORIES) {
-    if (cat.types.includes(type as EncounterMethodKey | StaticEncounterTypeKey)) {
-      return cat.labelKey;
-    }
-  }
-  return undefined;
-}
-
-/** RomVersion → GameVersion 変換 */
-function toGameVersion(version: RomVersion): GameVersion {
-  const map: Record<RomVersion, GameVersion> = {
-    Black: 'B',
-    White: 'W',
-    Black2: 'B2',
-    White2: 'W2',
-  };
-  return map[version];
-}
+import type { EncounterMethodKey, StaticEncounterTypeKey } from '@/data/encounters/schema';
+import type { EncounterType, EncounterMethod, RomVersion } from '@/wasm/wasm_pkg.js';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -242,9 +141,6 @@ function PokemonParamsForm({
   const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));
   const [localMaxAdv, setLocalMaxAdv] = useState(String(genConfig.max_advance));
 
-  // シンクロ性格
-  const [syncNature, setSyncNature] = useState<Nature>('Adamant');
-
   // カテゴリ変更ハンドラ
   const handleCategoryChange = useCallback(
     (categoryKey: string) => {
@@ -315,39 +211,6 @@ function PokemonParamsForm({
     [gameVersion, encounterType, value, onChange]
   );
 
-  // 先頭特性変更
-  const handleLeadAbilityChange = useCallback(
-    (newValue: string) => {
-      let newAbility: LeadAbilityEffect;
-      switch (newValue) {
-        case 'CompoundEyes': {
-          newAbility = 'CompoundEyes';
-          break;
-        }
-        case 'Synchronize': {
-          newAbility = { Synchronize: syncNature };
-          break;
-        }
-        default: {
-          newAbility = 'None';
-        }
-      }
-      onChange({ ...value, leadAbility: newAbility });
-    },
-    [value, onChange, syncNature]
-  );
-
-  const handleSyncNatureChange = useCallback(
-    (newValue: string) => {
-      const nature = newValue as Nature;
-      setSyncNature(nature);
-      if (typeof leadAbility === 'object' && 'Synchronize' in leadAbility) {
-        onChange({ ...value, leadAbility: { Synchronize: nature } });
-      }
-    },
-    [value, onChange, leadAbility]
-  );
-
   // offset / max_advance blur handlers
   const handleOffsetBlur = useCallback(() => {
     const clamped = clampOrDefault(localOffset, {
@@ -368,11 +231,6 @@ function PokemonParamsForm({
     setLocalMaxAdv(String(clamped));
     onChange({ ...value, genConfig: { ...value.genConfig, max_advance: clamped } });
   }, [localMaxAdv, value, onChange]);
-
-  const leadAbilityValue =
-    typeof leadAbility === 'object' && 'Synchronize' in leadAbility
-      ? 'Synchronize'
-      : (leadAbility as string);
 
   return (
     <section className="flex flex-col gap-3">
@@ -410,7 +268,7 @@ function PokemonParamsForm({
               <SelectContent>
                 {categorySubTypes.map((et) => (
                   <SelectItem key={et} value={et}>
-                    {getEncounterTypeLabel(et, language)}
+                    {getEncounterMethodName(et, language)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -497,46 +355,12 @@ function PokemonParamsForm({
       )}
 
       {/* 先頭特性 */}
-      <div className="flex flex-col gap-1">
-        <Label className="text-xs">
-          <Trans>Lead ability</Trans>
-        </Label>
-        <Select
-          value={leadAbilityValue}
-          onValueChange={handleLeadAbilityChange}
-          disabled={disabled}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="None">{t`None`}</SelectItem>
-            <SelectItem value="Synchronize">{t`Synchronize`}</SelectItem>
-            <SelectItem value="CompoundEyes">{t`Compound Eyes`}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* シンクロ性格 (Synchronize 選択時のみ) */}
-      {leadAbilityValue === 'Synchronize' && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">
-            <Trans>Synchronize nature</Trans>
-          </Label>
-          <Select value={syncNature} onValueChange={handleSyncNatureChange} disabled={disabled}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {NATURE_ORDER.map((n) => (
-                <SelectItem key={n} value={n}>
-                  {getNatureName(n, language)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <LeadAbilitySection
+        leadAbility={leadAbility}
+        onChange={(newAbility) => onChange({ ...value, leadAbility: newAbility })}
+        language={language}
+        disabled={disabled}
+      />
 
       {/* offset / max_advance */}
       <div className="grid grid-cols-2 gap-2">

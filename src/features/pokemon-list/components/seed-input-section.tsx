@@ -67,8 +67,8 @@ function SeedInputSection({
   const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
   const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
 
-  // 解決中フラグ (重複呼び出し防止)
-  const resolvingRef = useRef(false);
+  // 解決要求カウンタ (最新のリクエストのみ結果を適用する)
+  const resolveIdRef = useRef(0);
 
   // Store から SeedOrigin[] を抽出
   const storeOrigins = useMemo(() => {
@@ -110,15 +110,15 @@ function SeedInputSection({
         }
         seeds.push(seed);
       }
-      if (resolvingRef.current) return;
-      resolvingRef.current = true;
+      const id = ++resolveIdRef.current;
       void resolveSeedOrigins({ type: 'Seeds', seeds })
-        .then((resolved) => onOriginsChange(resolved))
-        .catch((error: unknown) => {
-          setResolveError(error instanceof Error ? error.message : String(error));
+        .then((resolved) => {
+          if (resolveIdRef.current === id) onOriginsChange(resolved);
         })
-        .finally(() => {
-          resolvingRef.current = false;
+        .catch((error: unknown) => {
+          if (resolveIdRef.current === id) {
+            setResolveError(error instanceof Error ? error.message : String(error));
+          }
         });
     },
     [onOriginsChange]
@@ -128,8 +128,7 @@ function SeedInputSection({
   const autoResolveStartup = useCallback(
     (dt: Datetime, ki: KeyInput) => {
       setResolveError(undefined);
-      if (resolvingRef.current) return;
-      resolvingRef.current = true;
+      const id = ++resolveIdRef.current;
       void resolveSeedOrigins({
         type: 'Startup',
         ds: dsConfig,
@@ -137,12 +136,13 @@ function SeedInputSection({
         ranges,
         key_input: ki,
       })
-        .then((resolved) => onOriginsChange(resolved))
-        .catch((error: unknown) => {
-          setResolveError(error instanceof Error ? error.message : String(error));
+        .then((resolved) => {
+          if (resolveIdRef.current === id) onOriginsChange(resolved);
         })
-        .finally(() => {
-          resolvingRef.current = false;
+        .catch((error: unknown) => {
+          if (resolveIdRef.current === id) {
+            setResolveError(error instanceof Error ? error.message : String(error));
+          }
         });
     },
     [dsConfig, ranges, onOriginsChange]

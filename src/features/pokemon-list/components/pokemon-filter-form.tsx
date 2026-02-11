@@ -186,22 +186,24 @@ function PokemonFilterForm({
   );
 
   // species 名前解決 (WASM 経由)
+  const speciesIds = useMemo(() => availableSpecies.map((s) => s.speciesId), [availableSpecies]);
   const [speciesNames, setSpeciesNames] = useState<Map<number, string>>(new Map());
   useEffect(() => {
-    const ids = availableSpecies.map((s) => s.speciesId);
-    if (ids.length === 0) {
-      // 次の tick で state を更新 (effect 内の同期 setState を回避)
-      const id = requestAnimationFrame(() => setSpeciesNames(new Map()));
-      return () => cancelAnimationFrame(id);
-    }
+    if (speciesIds.length === 0) return;
+    let cancelled = false;
     void initMainThreadWasm().then(() => {
+      if (cancelled) return;
       const map = new Map<number, string>();
-      for (const id of ids) {
+      for (const id of speciesIds) {
         map.set(id, get_species_name(id, language));
       }
       setSpeciesNames(map);
     });
-  }, [availableSpecies, language]);
+    return () => {
+      cancelled = true;
+    };
+  }, [speciesIds, language]);
+  const effectiveSpeciesNames = speciesIds.length === 0 ? new Map<number, string>() : speciesNames;
 
   // --- propagation helpers ---
 
@@ -476,7 +478,7 @@ function PokemonFilterForm({
           {uniqueSpecies.length > 0 && (
             <SpeciesSelect
               uniqueSpecies={uniqueSpecies}
-              speciesNames={speciesNames}
+              speciesNames={effectiveSpeciesNames}
               selectedIds={internalFilter.species_ids ?? []}
               onToggle={handleSpeciesToggle}
               disabled={filterDisabled}

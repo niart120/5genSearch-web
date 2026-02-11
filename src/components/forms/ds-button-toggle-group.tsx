@@ -66,14 +66,7 @@ interface ToggleBtnProps {
 }
 
 /** DS コントローラ風トグルボタン */
-function ToggleBtn({
-  pressed,
-  onToggle,
-  disabled,
-  label,
-  ariaLabel,
-  className,
-}: ToggleBtnProps) {
+function ToggleBtn({ pressed, onToggle, disabled, label, ariaLabel, className }: ToggleBtnProps) {
   return (
     <button
       type="button"
@@ -90,7 +83,7 @@ function ToggleBtn({
         pressed
           ? 'bg-primary text-primary-foreground shadow-sm'
           : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        className,
+        className
       )}
     >
       {label}
@@ -131,12 +124,10 @@ function DsButtonToggleGroup({
 
   const handleToggle = useCallback(
     (button: DsButton, pressed: boolean) => {
-      const next = pressed
-        ? [...selected, button]
-        : selected.filter((b) => b !== button);
+      const next = pressed ? [...selected, button] : selected.filter((b) => b !== button);
       onToggle(next);
     },
-    [selected, onToggle],
+    [selected, onToggle]
   );
 
   /** 3x3 グリッドを描画する */
@@ -156,7 +147,7 @@ function DsButtonToggleGroup({
             />
           ) : (
             <div key={`empty-${idx.toString()}`} />
-          ),
+          )
         )}
     </div>
   );

@@ -112,3 +112,19 @@ About ページに掲載する内容候補 (別途検討):
 
 当面の方針: 現状の TS post-filter を維持する。別仕様書でフィルタアーキテクチャの整理を行い、resolve パイプライン全体の見直しと合わせて対応する。関連ファイル: `wasm-pkg/src/types/filter.rs`、`wasm-pkg/src/generation/flows/generator/mod.rs`、`wasm-pkg/src/resolve/pokemon.rs`、`src/features/pokemon-list/components/pokemon-list-page.tsx`。
 
+## 2026-02-13: pokemon-filter-form 内部状態同期の複雑性
+
+現状: `pokemon-filter-form.tsx` はフィルタの有効/無効トグルを持ち、無効時でもフォーム入力値を保持するために3つの内部状態を管理している。
+
+1. `filterEnabled`: トグル有効/無効
+2. `internalFilter`: `PokemonFilter` の内容 (トグル OFF でも保持)
+3. `internalStats`: `StatsFilter` の内容 (同上)
+
+これらを `propagate` ヘルパーで親に伝搬し、有効時は `internalFilter` / `internalStats` を、無効時は `undefined` を返す。
+
+問題: 親 (`value`/`statsFilter`) ↔ 子 (`internalFilter`/`internalStats`) の双方向同期が useEffect (`syncFromExternal`) で行われており、制御フローの把握が難しい。特に `filterEnabled` 切替時のタイミング依存は、将来的なバグの温床になりうる。
+
+許容理由: フィルタ無効時に入力値を破棄しない UX 要件を満たすには、何らかの内部保持が必要。現状の実装はこの要件を最小コストで実現しており、実際に動作上の問題は確認されていない。
+
+フォローアップ: フォームの複雑化が進む場合、`useReducer` への移行や状態保持を親コンポーネントに引き上げる案を検討する。関連ファイル: `src/features/pokemon-list/components/pokemon-filter-form.tsx`。
+
