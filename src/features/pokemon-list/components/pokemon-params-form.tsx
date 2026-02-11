@@ -11,7 +11,9 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -50,29 +52,53 @@ import type { SupportedLocale } from '@/i18n';
 // Constants
 // ---------------------------------------------------------------------------
 
-const LOCATION_BASED_TYPES: EncounterMethodKey[] = [
-  'Normal',
-  'ShakingGrass',
-  'DustCloud',
-  'PokemonShadow',
-  'Surfing',
-  'SurfingBubble',
-  'Fishing',
-  'FishingBubble',
-];
+/** エンカウントタイプのカテゴリ定義 */
+interface EncounterCategory {
+  labelKey: string;
+  labels: Record<SupportedLocale, string>;
+  types: (EncounterMethodKey | StaticEncounterTypeKey)[];
+}
 
-const STATIC_TYPES: StaticEncounterTypeKey[] = [
-  'StaticSymbol',
-  'StaticStarter',
-  'StaticFossil',
-  'StaticEvent',
-  'Roamer',
-  'HiddenGrotto',
-];
-
-const ALL_ENCOUNTER_TYPES: (EncounterMethodKey | StaticEncounterTypeKey)[] = [
-  ...LOCATION_BASED_TYPES,
-  ...STATIC_TYPES,
+const ENCOUNTER_CATEGORIES: EncounterCategory[] = [
+  {
+    labelKey: 'wild',
+    labels: { ja: '野生', en: 'Wild' },
+    types: [
+      'Normal',
+      'ShakingGrass',
+      'DustCloud',
+      'PokemonShadow',
+      'Surfing',
+      'SurfingBubble',
+      'Fishing',
+      'FishingBubble',
+    ],
+  },
+  {
+    labelKey: 'legendary',
+    labels: { ja: '伝説・準伝説', en: 'Legendary / Mythical' },
+    types: ['StaticSymbol', 'StaticEvent'],
+  },
+  {
+    labelKey: 'roamer',
+    labels: { ja: '徘徊', en: 'Roamer' },
+    types: ['Roamer'],
+  },
+  {
+    labelKey: 'starter',
+    labels: { ja: '御三家', en: 'Starter' },
+    types: ['StaticStarter'],
+  },
+  {
+    labelKey: 'fossil',
+    labels: { ja: '化石', en: 'Fossil' },
+    types: ['StaticFossil'],
+  },
+  {
+    labelKey: 'hidden-grotto',
+    labels: { ja: 'かくしあな', en: 'Hidden Grotto' },
+    types: ['HiddenGrotto'],
+  },
 ];
 
 /** EncounterType の表示名を取得 */
@@ -301,10 +327,15 @@ function PokemonParamsForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {ALL_ENCOUNTER_TYPES.map((et) => (
-              <SelectItem key={et} value={et}>
-                {getEncounterTypeLabel(et, language)}
-              </SelectItem>
+            {ENCOUNTER_CATEGORIES.map((cat) => (
+              <SelectGroup key={cat.labelKey}>
+                <SelectLabel className="text-xs font-semibold">{cat.labels[language]}</SelectLabel>
+                {cat.types.map((et) => (
+                  <SelectItem key={et} value={et}>
+                    {getEncounterTypeLabel(et, language)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             ))}
           </SelectContent>
         </Select>

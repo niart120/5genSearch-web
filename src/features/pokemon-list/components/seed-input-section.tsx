@@ -2,12 +2,12 @@
  * Seed 入力セクション
  *
  * タブ切り替えで 3 つの Seed 入力モードを提供する:
- * - search-results: 直前の datetime-search 結果から SeedOrigin[] を引き継ぐ
- * - manual-seeds: LCG Seed を直接入力
  * - manual-startup: DS 設定 + 日時 + キー入力から resolve_seeds で変換
+ * - manual-seeds: LCG Seed を直接入力
+ * - search-results: 直前の datetime-search 結果から SeedOrigin[] を引き継ぐ
  */
 
-import { useState, useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, useRef, type ReactElement, type ReactNode } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -76,6 +76,7 @@ function NumField({
   disabled,
   label,
   className,
+  padLength = 0,
 }: {
   id: string;
   value: number;
@@ -86,10 +87,14 @@ function NumField({
   disabled?: boolean;
   label: string;
   className?: string;
+  /** ゼロ埋め桁数 (0 = 埋めなし) */
+  padLength?: number;
 }): ReactElement {
   // undefined = 未編集 (prop 値を表示)、string = 編集中 (ローカルバッファ)
   const [localInput, setLocalInput] = useState<string | undefined>();
-  const displayValue = localInput ?? String(value);
+  const formatValue = (v: number): string =>
+    padLength > 0 ? String(v).padStart(padLength, '0') : String(v);
+  const displayValue = localInput ?? formatValue(value);
 
   return (
     <Input
@@ -103,7 +108,7 @@ function NumField({
         e.target.select();
       }}
       onBlur={() => {
-        if (localInput !== null) {
+        if (localInput !== undefined) {
           const v = clampOrDefault(localInput, { defaultValue, min, max });
           onChange(v);
         }
@@ -125,7 +130,7 @@ interface DatetimeInputProps {
   disabled?: boolean;
 }
 
-/** 単一日時入力 (YYYY/MM/DD HH:MM:SS) */
+/** 単一日時入力 (YYYY/MM/DD HH:MM:SS) — 1 行レイアウト */
 function DatetimeInput({ value, onChange, disabled }: DatetimeInputProps): ReactElement {
   const update = useCallback(
     (field: keyof Datetime, v: number) => {
@@ -135,83 +140,83 @@ function DatetimeInput({ value, onChange, disabled }: DatetimeInputProps): React
   );
 
   return (
-    <div className="flex flex-col gap-1">
-      {/* Date: YYYY / MM / DD */}
-      <div className="flex items-center gap-1">
-        <NumField
-          id="startup-year"
-          value={value.year}
-          onChange={(v) => update('year', v)}
-          defaultValue={2000}
-          min={2000}
-          max={2099}
-          disabled={disabled}
-          label="year"
-          className="w-12"
-        />
-        <span className="text-sm text-muted-foreground">/</span>
-        <NumField
-          id="startup-month"
-          value={value.month}
-          onChange={(v) => update('month', v)}
-          defaultValue={1}
-          min={1}
-          max={12}
-          disabled={disabled}
-          label="month"
-          className="w-8"
-        />
-        <span className="text-sm text-muted-foreground">/</span>
-        <NumField
-          id="startup-day"
-          value={value.day}
-          onChange={(v) => update('day', v)}
-          defaultValue={1}
-          min={1}
-          max={31}
-          disabled={disabled}
-          label="day"
-          className="w-8"
-        />
-      </div>
-      {/* Time: HH : MM : SS */}
-      <div className="flex items-center gap-1">
-        <NumField
-          id="startup-hour"
-          value={value.hour}
-          onChange={(v) => update('hour', v)}
-          defaultValue={0}
-          min={0}
-          max={23}
-          disabled={disabled}
-          label="hour"
-          className="w-8"
-        />
-        <span className="text-sm text-muted-foreground">:</span>
-        <NumField
-          id="startup-minute"
-          value={value.minute}
-          onChange={(v) => update('minute', v)}
-          defaultValue={0}
-          min={0}
-          max={59}
-          disabled={disabled}
-          label="minute"
-          className="w-8"
-        />
-        <span className="text-sm text-muted-foreground">:</span>
-        <NumField
-          id="startup-second"
-          value={value.second}
-          onChange={(v) => update('second', v)}
-          defaultValue={0}
-          min={0}
-          max={59}
-          disabled={disabled}
-          label="second"
-          className="w-8"
-        />
-      </div>
+    <div className="flex flex-wrap items-center gap-1">
+      <NumField
+        id="startup-year"
+        value={value.year}
+        onChange={(v) => update('year', v)}
+        defaultValue={2000}
+        min={2000}
+        max={2099}
+        disabled={disabled}
+        label="year"
+        className="w-12"
+      />
+      <span className="text-sm text-muted-foreground">/</span>
+      <NumField
+        id="startup-month"
+        value={value.month}
+        onChange={(v) => update('month', v)}
+        defaultValue={1}
+        min={1}
+        max={12}
+        disabled={disabled}
+        label="month"
+        className="w-8"
+        padLength={2}
+      />
+      <span className="text-sm text-muted-foreground">/</span>
+      <NumField
+        id="startup-day"
+        value={value.day}
+        onChange={(v) => update('day', v)}
+        defaultValue={1}
+        min={1}
+        max={31}
+        disabled={disabled}
+        label="day"
+        className="w-8"
+        padLength={2}
+      />
+      <span className="mx-0.5 text-sm text-muted-foreground" />
+      <NumField
+        id="startup-hour"
+        value={value.hour}
+        onChange={(v) => update('hour', v)}
+        defaultValue={0}
+        min={0}
+        max={23}
+        disabled={disabled}
+        label="hour"
+        className="w-8"
+        padLength={2}
+      />
+      <span className="text-sm text-muted-foreground">:</span>
+      <NumField
+        id="startup-minute"
+        value={value.minute}
+        onChange={(v) => update('minute', v)}
+        defaultValue={0}
+        min={0}
+        max={59}
+        disabled={disabled}
+        label="minute"
+        className="w-8"
+        padLength={2}
+      />
+      <span className="text-sm text-muted-foreground">:</span>
+      <NumField
+        id="startup-second"
+        value={value.second}
+        onChange={(v) => update('second', v)}
+        defaultValue={0}
+        min={0}
+        max={59}
+        disabled={disabled}
+        label="second"
+        className="w-8"
+        padLength={2}
+      />
     </div>
   );
 }
@@ -404,6 +409,9 @@ function SeedInputSection({
   const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
   const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
 
+  // 解決中フラグ (重複呼び出し防止)
+  const resolvingRef = useRef(false);
+
   // Store から SeedOrigin[] を抽出
   const storeOrigins = useMemo(() => {
     const flat: SeedOrigin[] = [];
@@ -436,52 +444,96 @@ function SeedInputSection({
     onOriginsChange(storeOrigins);
   }, [onOriginsChange, storeOrigins]);
 
-  // manual-seeds: テキストから SeedOrigin[] を生成
-  const handleResolveSeedsManual = useCallback(() => {
-    setResolveError(undefined);
-    const lines = seedText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-    const seeds: LcgSeed[] = [];
-    for (const line of lines) {
-      const seed = parseLcgSeed(line);
-      if (seed === undefined) {
-        setResolveError(t`Invalid seed format: ${line}`);
+  // ---------------------------------------------------------------------------
+  // Auto-resolve helpers
+  // ---------------------------------------------------------------------------
+
+  /** manual-seeds: テキストから SeedOrigin[] を自動解決 */
+  const autoResolveSeeds = useCallback(
+    (text: string) => {
+      setResolveError(undefined);
+      const lines = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+      if (lines.length === 0) {
+        onOriginsChange([]);
         return;
       }
-      seeds.push(seed);
-    }
-    if (seeds.length === 0) {
-      setResolveError(t`Enter at least one seed`);
-      return;
-    }
-    void resolveSeedOrigins({ type: 'Seeds', seeds })
-      .then((resolved) => {
-        onOriginsChange(resolved);
-      })
-      .catch((error: unknown) => {
-        setResolveError(error instanceof Error ? error.message : String(error));
-      });
-  }, [seedText, onOriginsChange, t]);
+      const seeds: LcgSeed[] = [];
+      for (const line of lines) {
+        const seed = parseLcgSeed(line);
+        if (seed === undefined) {
+          // 入力途中: 解決せず origins はクリア
+          onOriginsChange([]);
+          return;
+        }
+        seeds.push(seed);
+      }
+      if (resolvingRef.current) return;
+      resolvingRef.current = true;
+      void resolveSeedOrigins({ type: 'Seeds', seeds })
+        .then((resolved) => onOriginsChange(resolved))
+        .catch((error: unknown) => {
+          setResolveError(error instanceof Error ? error.message : String(error));
+        })
+        .finally(() => {
+          resolvingRef.current = false;
+        });
+    },
+    [onOriginsChange]
+  );
 
-  // manual-startup: DS 設定 + 日時 + キー入力から SeedOrigin[] を生成
-  const handleResolveSeedsStartup = useCallback(() => {
-    setResolveError(undefined);
-    void resolveSeedOrigins({
-      type: 'Startup',
-      ds: dsConfig,
-      datetime,
-      ranges,
-      key_input: keyInput,
-    })
-      .then((resolved) => {
-        onOriginsChange(resolved);
+  /** manual-seeds: テキスト変更ハンドラ */
+  const handleSeedTextChange = useCallback(
+    (text: string) => {
+      setSeedText(text);
+      autoResolveSeeds(text);
+    },
+    [autoResolveSeeds]
+  );
+
+  /** manual-startup: DS 設定 + 日時 + キー入力から自動解決 */
+  const autoResolveStartup = useCallback(
+    (dt: Datetime, ki: KeyInput) => {
+      setResolveError(undefined);
+      if (resolvingRef.current) return;
+      resolvingRef.current = true;
+      void resolveSeedOrigins({
+        type: 'Startup',
+        ds: dsConfig,
+        datetime: dt,
+        ranges,
+        key_input: ki,
       })
-      .catch((error: unknown) => {
-        setResolveError(error instanceof Error ? error.message : String(error));
-      });
-  }, [dsConfig, datetime, ranges, keyInput, onOriginsChange]);
+        .then((resolved) => onOriginsChange(resolved))
+        .catch((error: unknown) => {
+          setResolveError(error instanceof Error ? error.message : String(error));
+        })
+        .finally(() => {
+          resolvingRef.current = false;
+        });
+    },
+    [dsConfig, ranges, onOriginsChange]
+  );
+
+  /** Startup datetime 変更 */
+  const handleDatetimeChange = useCallback(
+    (dt: Datetime) => {
+      setDatetime(dt);
+      autoResolveStartup(dt, keyInput);
+    },
+    [keyInput, autoResolveStartup]
+  );
+
+  /** Startup key input 変更 */
+  const handleKeyInputChange = useCallback(
+    (ki: KeyInput) => {
+      setKeyInput(ki);
+      autoResolveStartup(datetime, ki);
+    },
+    [datetime, autoResolveStartup]
+  );
 
   return (
     <section className="flex flex-col gap-2">
@@ -491,16 +543,67 @@ function SeedInputSection({
 
       <Tabs value={mode} onValueChange={handleTabChange}>
         <TabsList className="w-full">
-          <TabsTrigger value="search-results" className="flex-1 text-xs" disabled={disabled}>
-            {t`Search results`}
-          </TabsTrigger>
-          <TabsTrigger value="manual-seeds" className="flex-1 text-xs" disabled={disabled}>
-            {t`Manual seeds`}
-          </TabsTrigger>
           <TabsTrigger value="manual-startup" className="flex-1 text-xs" disabled={disabled}>
             {t`Startup`}
           </TabsTrigger>
+          <TabsTrigger value="manual-seeds" className="flex-1 text-xs" disabled={disabled}>
+            {t`Seeds`}
+          </TabsTrigger>
+          <TabsTrigger value="search-results" className="flex-1 text-xs" disabled={disabled}>
+            {t`Search results`}
+          </TabsTrigger>
         </TabsList>
+
+        {/* Startup */}
+        <TabsContent value="manual-startup">
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-muted-foreground">
+              <Trans>
+                DS config and Timer0/VCount ranges are loaded from the sidebar settings.
+              </Trans>
+            </p>
+
+            {/* Datetime */}
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">
+                <Trans>Date & time</Trans>
+              </Label>
+              <DatetimeInput value={datetime} onChange={handleDatetimeChange} disabled={disabled} />
+            </div>
+
+            {/* Key Input */}
+            <KeyInputSelector
+              value={keyInput}
+              onChange={handleKeyInputChange}
+              disabled={disabled}
+            />
+
+            {resolveError && <p className="text-xs text-destructive">{resolveError}</p>}
+            <p className="text-xs text-muted-foreground">
+              <Trans>Resolved seeds</Trans>: {origins.length}
+            </p>
+          </div>
+        </TabsContent>
+
+        {/* Seeds */}
+        <TabsContent value="manual-seeds">
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs">
+              <Trans>LCG Seeds (hex, one per line)</Trans>
+            </Label>
+            <textarea
+              className="h-24 w-full rounded-sm border border-input bg-background px-2 py-1 font-mono text-xs"
+              placeholder="0123456789ABCDEF"
+              value={seedText}
+              onChange={(e) => handleSeedTextChange(e.target.value)}
+              disabled={disabled}
+            />
+            {resolveError && <p className="text-xs text-destructive">{resolveError}</p>}
+            <p className="text-xs text-muted-foreground">
+              <Trans>Resolved seeds</Trans>: {origins.length}
+            </p>
+          </div>
+        </TabsContent>
 
         {/* Search Results */}
         <TabsContent value="search-results">
@@ -517,70 +620,7 @@ function SeedInputSection({
               <Trans>Load search results</Trans>
             </Button>
             <p className="text-xs text-muted-foreground">
-              <Trans>Loaded seeds</Trans>: {origins.length}
-            </p>
-          </div>
-        </TabsContent>
-
-        {/* Manual Seeds */}
-        <TabsContent value="manual-seeds">
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>LCG Seeds (hex, one per line)</Trans>
-            </Label>
-            <textarea
-              className="h-24 w-full rounded-sm border border-input bg-background px-2 py-1 font-mono text-xs"
-              placeholder="0123456789ABCDEF"
-              value={seedText}
-              onChange={(e) => setSeedText(e.target.value)}
-              disabled={disabled}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResolveSeedsManual}
-              disabled={disabled}
-            >
-              <Trans>Resolve seeds</Trans>
-            </Button>
-            {resolveError && <p className="text-xs text-destructive">{resolveError}</p>}
-            <p className="text-xs text-muted-foreground">
-              <Trans>Loaded seeds</Trans>: {origins.length}
-            </p>
-          </div>
-        </TabsContent>
-
-        {/* Startup */}
-        <TabsContent value="manual-startup">
-          <div className="flex flex-col gap-3">
-            <p className="text-xs text-muted-foreground">
-              <Trans>
-                DS config and Timer0/VCount ranges are loaded from the sidebar settings.
-              </Trans>
-            </p>
-
-            {/* Datetime */}
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs">
-                <Trans>Date & Time</Trans>
-              </Label>
-              <DatetimeInput value={datetime} onChange={setDatetime} disabled={disabled} />
-            </div>
-
-            {/* Key Input */}
-            <KeyInputSelector value={keyInput} onChange={setKeyInput} disabled={disabled} />
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResolveSeedsStartup}
-              disabled={disabled}
-            >
-              <Trans>Resolve seeds</Trans>
-            </Button>
-            {resolveError && <p className="text-xs text-destructive">{resolveError}</p>}
-            <p className="text-xs text-muted-foreground">
-              <Trans>Loaded seeds</Trans>: {origins.length}
+              <Trans>Resolved seeds</Trans>: {origins.length}
             </p>
           </div>
         </TabsContent>
