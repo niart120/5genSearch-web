@@ -62,3 +62,21 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 観察: 個体生成 (egg-generation) でも同じ `EggGenerationParams` の入力 UI が必要になる見込み。
 `SearchContextForm` や `KeySpecInput` と同様に `src/components/forms/` に昇格すれば複数機能で共有可能。
 当面の方針: 個体生成機能の仕様確定時に移動する。現状では props が `EggGenerationParams` + `GenerationConfig` で WASM 型ベースのため、移動時の変更は最小限で済む。`EggFilterForm` も同様に共有候補。
+
+## 2026-02-11: Rust/WASM と TypeScript のエンカウントデータ責務分担
+
+現状: エンカウントデータの管理は以下の通り分担されている。
+
+| 責務 | 担当 |
+|------|------|
+| エンカウントテーブルデータ保持 (場所 × スロット) | TypeScript (JSON) |
+| スロット確率分布 (乱数値 → スロット番号) | Rust (ハードコード) |
+| 乱数消費・個体値生成 | Rust |
+| エンカウント判定 (移動/特殊/釣り成功失敗) | Rust |
+| Item/Pokemon 振り分け (DustCloud/PokemonShadow) | Rust |
+| 種族メタデータ (種族値/性別比/特性) | Rust (`SPECIES_TABLE`) |
+| UI 向け場所・種族選択肢の構築 | TypeScript (helpers) |
+| `EncounterSlotConfig` 型定義 | Rust (tsify で TS 型自動生成) |
+
+観察: Rust 側に場所ごとのエンカウントテーブルは存在しない。`PokemonGenerationParams.slots` として TS から WASM に渡される。TS 側の `converter.ts` が JSON スキーマ → WASM 入力型の変換を担当する。`EncounterSlotConfig` や `EncounterType` の型は Rust がオーナーであり、TS 側で独自に定義・拡張しない。
+当面の方針: 現在の分担を維持する。TS 側は「どの場所にどのスロットがあるか」を管理し、Rust 側は「乱数からポケモン個体を決定する」計算を担当する。型の二重管理を避けるため、WASM バインディング型を TS 側で re-export する形を取る。

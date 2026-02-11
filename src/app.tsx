@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 import { ResponsiveContainer } from '@/components/layout/responsive-container';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { FeatureTabs } from '@/components/layout/feature-tabs';
@@ -40,6 +41,7 @@ function App() {
         </ResponsiveContainer>
       </Tabs>
       <BottomNav />
+      <Footer />
       <Toaster />
     </div>
   );

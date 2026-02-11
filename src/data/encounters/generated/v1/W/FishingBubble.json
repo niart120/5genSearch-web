@@ -1,0 +1,2431 @@
+{
+  "version": "W",
+  "method": "FishingBubble",
+  "source": {
+    "name": "Pokebook",
+    "url": "https://pokebook.jp/data/sp5/enc_w",
+    "retrievedAt": "2026-02-11"
+  },
+  "locations": {
+    "サンヨウシティ": {
+      "displayNameKey": "サンヨウシティ",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 119,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ホドモエシティ": {
+      "displayNameKey": "ホドモエシティ",
+      "slots": [
+        {
+          "speciesId": 170,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 99,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 171,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 171,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "セッカシティ(春)": {
+      "displayNameKey": "セッカシティ(春)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカシティ(夏)": {
+      "displayNameKey": "セッカシティ(夏)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカシティ(秋)": {
+      "displayNameKey": "セッカシティ(秋)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカシティ(冬)": {
+      "displayNameKey": "セッカシティ(冬)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ヤグルマの森": {
+      "displayNameKey": "ヤグルマの森",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 119,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(春)": {
+      "displayNameKey": "リュウラセンの塔(春)",
+      "slots": [
+        {
+          "speciesId": 147,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 149,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "リュウラセンの塔(夏)": {
+      "displayNameKey": "リュウラセンの塔(夏)",
+      "slots": [
+        {
+          "speciesId": 147,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 149,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "リュウラセンの塔(秋)": {
+      "displayNameKey": "リュウラセンの塔(秋)",
+      "slots": [
+        {
+          "speciesId": 147,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 149,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "リュウラセンの塔(冬)": {
+      "displayNameKey": "リュウラセンの塔(冬)",
+      "slots": [
+        {
+          "speciesId": 147,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 148,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 149,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "チャンピオンロード": {
+      "displayNameKey": "チャンピオンロード",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "ジャイアントホール": {
+      "displayNameKey": "ジャイアントホール",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "P2ラボ": {
+      "displayNameKey": "P2ラボ",
+      "slots": [
+        {
+          "speciesId": 117,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 211,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 457,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 230,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 230,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "サザナミ湾(春)": {
+      "displayNameKey": "サザナミ湾(春)",
+      "slots": [
+        {
+          "speciesId": 90,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 224,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 91,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 91,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "サザナミ湾(夏)": {
+      "displayNameKey": "サザナミ湾(夏)",
+      "slots": [
+        {
+          "speciesId": 90,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 224,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 91,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 91,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "サザナミ湾(秋)": {
+      "displayNameKey": "サザナミ湾(秋)",
+      "slots": [
+        {
+          "speciesId": 90,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 224,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 91,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 91,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "サザナミ湾(冬)": {
+      "displayNameKey": "サザナミ湾(冬)",
+      "slots": [
+        {
+          "speciesId": 90,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 224,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 91,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 91,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "ビレッジブリッジ": {
+      "displayNameKey": "ビレッジブリッジ",
+      "slots": [
+        {
+          "speciesId": 318,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 319,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 319,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 319,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "1番道路": {
+      "displayNameKey": "1番道路",
+      "slots": [
+        {
+          "speciesId": 349,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 350,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 350,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "3番道路": {
+      "displayNameKey": "3番道路",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 119,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "地下水脈の穴": {
+      "displayNameKey": "地下水脈の穴",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 4,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 1,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "4番道路": {
+      "displayNameKey": "4番道路",
+      "slots": [
+        {
+          "speciesId": 369,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 99,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 368,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 368,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(春)": {
+      "displayNameKey": "6番道路(春)",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(夏)": {
+      "displayNameKey": "6番道路(夏)",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(秋)": {
+      "displayNameKey": "6番道路(秋)",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(冬)": {
+      "displayNameKey": "6番道路(冬)",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 186,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "8番道路(春)": {
+      "displayNameKey": "8番道路(春)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "8番道路(夏)": {
+      "displayNameKey": "8番道路(夏)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "8番道路(秋)": {
+      "displayNameKey": "8番道路(秋)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "8番道路(冬)": {
+      "displayNameKey": "8番道路(冬)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカの湿原(春)": {
+      "displayNameKey": "セッカの湿原(春)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカの湿原(夏)": {
+      "displayNameKey": "セッカの湿原(夏)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカの湿原(秋)": {
+      "displayNameKey": "セッカの湿原(秋)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "セッカの湿原(冬)": {
+      "displayNameKey": "セッカの湿原(冬)",
+      "slots": [
+        {
+          "speciesId": 339,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 618,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 340,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 340,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "修行の岩屋": {
+      "displayNameKey": "修行の岩屋",
+      "slots": [
+        {
+          "speciesId": 61,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 61,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 62,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "11番道路": {
+      "displayNameKey": "11番道路",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 119,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "13番道路": {
+      "displayNameKey": "13番道路",
+      "slots": [
+        {
+          "speciesId": 90,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 99,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 91,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 91,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "14番道路": {
+      "displayNameKey": "14番道路",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 119,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ほうじょうの社": {
+      "displayNameKey": "ほうじょうの社",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 119,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 119,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "迷いの森": {
+      "displayNameKey": "迷いの森",
+      "slots": [
+        {
+          "speciesId": 118,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 550,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 118,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 118,
+          "rate": 4,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 118,
+          "rate": 1,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "18番道路": {
+      "displayNameKey": "18番道路",
+      "slots": [
+        {
+          "speciesId": 117,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 211,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 457,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 230,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 230,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "サザナミタウン": {
+      "displayNameKey": "サザナミタウン",
+      "slots": [
+        {
+          "speciesId": 90,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 370,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 224,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 91,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 91,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "17番水道": {
+      "displayNameKey": "17番水道",
+      "slots": [
+        {
+          "speciesId": 117,
+          "rate": 60,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 211,
+          "rate": 30,
+          "levelRange": {
+            "min": 35,
+            "max": 60
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 457,
+          "rate": 5,
+          "levelRange": {
+            "min": 35,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 230,
+          "rate": 4,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 230,
+          "rate": 1,
+          "levelRange": {
+            "min": 45,
+            "max": 70
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    }
+  }
+}

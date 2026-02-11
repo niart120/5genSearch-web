@@ -1,0 +1,736 @@
+#!/usr/bin/env node
+/**
+ * Encounter tables scraper for BW/BW2
+ *
+ * Source: pokebook.jp (static HTML tables)
+ * Output: src/data/encounters/generated/v1/<Version>/<Method>.json
+ *
+ * This script is for data acquisition in development. Do NOT fetch at runtime.
+ * Always commit generated JSON for reproducible builds.
+ *
+ * Usage:
+ *   node scripts/scrape-encounters.js
+ *   node scripts/scrape-encounters.js --version=B --method=Normal
+ */
+
+import fs from 'node:fs/promises';
+import { readFileSync, existsSync } from 'node:fs';
+import path from 'node:path';
+import { load as loadHtml } from 'cheerio';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+let MISSING_SPECIES = new Set();
+
+const METHODS = [
+  'Normal',
+  'ShakingGrass',
+  'DustCloud',
+  'Surfing',
+  'SurfingBubble',
+  'Fishing',
+  'FishingBubble',
+];
+
+const VERSIONS = ['B', 'W', 'B2', 'W2'];
+
+const VERSION_HELD_ITEM_KEY = {
+  B: 'black',
+  W: 'white',
+  B2: 'black-2',
+  W2: 'white-2',
+};
+
+const SOURCE_MAP = {
+  B: {
+    Normal: 'https://pokebook.jp/data/sp5/enc_b',
+    ShakingGrass: 'https://pokebook.jp/data/sp5/enc_b',
+    DustCloud: 'https://pokebook.jp/data/sp5/enc_b',
+    Surfing: 'https://pokebook.jp/data/sp5/enc_b',
+    SurfingBubble: 'https://pokebook.jp/data/sp5/enc_b',
+    Fishing: 'https://pokebook.jp/data/sp5/enc_b',
+    FishingBubble: 'https://pokebook.jp/data/sp5/enc_b',
+  },
+  W: {
+    Normal: 'https://pokebook.jp/data/sp5/enc_w',
+    ShakingGrass: 'https://pokebook.jp/data/sp5/enc_w',
+    DustCloud: 'https://pokebook.jp/data/sp5/enc_w',
+    Surfing: 'https://pokebook.jp/data/sp5/enc_w',
+    SurfingBubble: 'https://pokebook.jp/data/sp5/enc_w',
+    Fishing: 'https://pokebook.jp/data/sp5/enc_w',
+    FishingBubble: 'https://pokebook.jp/data/sp5/enc_w',
+  },
+  B2: {
+    Normal: 'https://pokebook.jp/data/sp5/enc_b2',
+    ShakingGrass: 'https://pokebook.jp/data/sp5/enc_b2',
+    DustCloud: 'https://pokebook.jp/data/sp5/enc_b2',
+    Surfing: 'https://pokebook.jp/data/sp5/enc_b2',
+    SurfingBubble: 'https://pokebook.jp/data/sp5/enc_b2',
+    Fishing: 'https://pokebook.jp/data/sp5/enc_b2',
+    FishingBubble: 'https://pokebook.jp/data/sp5/enc_b2',
+  },
+  W2: {
+    Normal: 'https://pokebook.jp/data/sp5/enc_w2',
+    ShakingGrass: 'https://pokebook.jp/data/sp5/enc_w2',
+    DustCloud: 'https://pokebook.jp/data/sp5/enc_w2',
+    Surfing: 'https://pokebook.jp/data/sp5/enc_w2',
+    SurfingBubble: 'https://pokebook.jp/data/sp5/enc_w2',
+    Fishing: 'https://pokebook.jp/data/sp5/enc_w2',
+    FishingBubble: 'https://pokebook.jp/data/sp5/enc_w2',
+  },
+};
+
+const SLOT_RATE_PRESETS = {
+  Normal: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
+  ShakingGrass: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
+  DustCloud: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
+  Surfing: [60, 30, 5, 4, 1],
+  SurfingBubble: [60, 30, 5, 4, 1],
+  Fishing: [60, 30, 5, 4, 1],
+  FishingBubble: [60, 30, 5, 4, 1],
+};
+
+// Locations where water tables should only keep a single unique row set
+const WATER_SINGLE_ROW_LOCATIONS = new Map([
+  ['チャンピオンロード', {}],
+  ['ジャイアントホール', {}],
+  ['地下水脈の穴', {}],
+  ['ヒウン下水道', {}],
+  ['サンギ牧場', {}],
+  ['ヤーコンロード', {}],
+  ['4番道路', {}],
+]);
+
+// Suffix rules for BW to disambiguate locations with multiple sub-areas
+const DUPLICATE_SUFFIX_RULES_BW = Object.freeze({
+  ヤグルマの森: ['外部', '内部'],
+  リゾートデザート: ['外部', '内部'],
+  古代の城: ['1F,B1F', 'B2F-B6F', '最下層', '小部屋'],
+  電気石の洞穴: ['1F', 'B1F', 'B2F'],
+  'ネジ山(春)': null,
+  'ネジ山(夏)': null,
+  'ネジ山(秋)': null,
+  'ネジ山(冬)': null,
+  'リュウラセンの塔(春)': ['外部(南)', '外部(北東)'],
+  'リュウラセンの塔(夏)': ['外部(南)', '外部(北東)'],
+  'リュウラセンの塔(秋)': ['外部(南)', '外部(北東)'],
+  'リュウラセンの塔(冬)': ['外部(南)', '外部(北東)'],
+  リュウラセンの塔: ['1F', '2F'],
+  チャンピオンロード: ['1F', '2F', '3F,4F,5F', '6F,7F'],
+});
+
+// Suffix rules for B2W2
+const DUPLICATE_SUFFIX_RULES_B2W2 = Object.freeze({
+  ヤグルマの森: ['外部', '内部'],
+  リゾートデザート: ['外部', '内部'],
+  古代の城: ['1F,B1F', '最下層', '小部屋'],
+  電気石の洞穴: ['1F', 'B1F', 'B2F'],
+  'ネジ山(春)': null,
+  'ネジ山(夏)': null,
+  'ネジ山(秋)': null,
+  'ネジ山(冬)': null,
+  'リュウラセンの塔(春)': ['外部(南)', '外部(北東)'],
+  'リュウラセンの塔(夏)': ['外部(南)', '外部(北東)'],
+  'リュウラセンの塔(秋)': ['外部(南)', '外部(北東)'],
+  'リュウラセンの塔(冬)': ['外部(南)', '外部(北東)'],
+  リュウラセンの塔: ['1F', '2F'],
+  チャンピオンロード: ['1F', '2F', '3F,4F,5F', '6F,7F'],
+  'リバースマウンテン(春)': null,
+  'リバースマウンテン(夏)': null,
+  'リバースマウンテン(秋)': null,
+  'リバースマウンテン(冬)': null,
+  ストレンジャーハウス: ['入口,B1F', '小部屋'],
+  古代の抜け道: ['南部', '北部', '中央部'],
+  ヤーコンロード: null,
+  地底遺跡: null,
+  海辺の洞穴: ['1F', 'B1F'],
+  '4番道路': null,
+  地下水脈の穴: null,
+  フキヨセの洞穴: null,
+  タワーオブヘブン: ['2F', '3F', '4F', '5F'],
+});
+
+const DUPLICATE_SUFFIX_RULES = Object.freeze({
+  B: DUPLICATE_SUFFIX_RULES_BW,
+  W: DUPLICATE_SUFFIX_RULES_BW,
+  B2: DUPLICATE_SUFFIX_RULES_B2W2,
+  W2: DUPLICATE_SUFFIX_RULES_B2W2,
+});
+
+// ---------------------------------------------------------------------------
+// Utility functions
+// ---------------------------------------------------------------------------
+
+function normalizeLocationKey(location) {
+  return location
+    .trim()
+    .replace(/[\u3000\s]+/g, '')
+    .replace(/[‐‑‒–—−\-_.]/g, '');
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function toInt(n, def = 0) {
+  const x = parseInt(String(n).trim(), 10);
+  return Number.isFinite(x) ? x : def;
+}
+
+function parseLevelRangeFromText(text) {
+  const m = String(text).match(/(\d+)\D+(\d+)/);
+  if (m) {
+    const min = toInt(m[1]);
+    const max = toInt(m[2]);
+    if (min && max) return { min, max };
+  }
+  const single = String(text).match(/(\d+)/);
+  if (single) {
+    const v = toInt(single[1]);
+    return { min: v, max: v };
+  }
+  return { min: 1, max: 1 };
+}
+
+function canonicalizeSpeciesName(raw) {
+  const t = String(raw).trim();
+  return t.replace(/\s*\([^)]*\)\s*$/, '').replace(/[\u3000\s]+/g, '');
+}
+
+async function fetchHtml(url) {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'encounter-scraper/1.0' },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  return await res.text();
+}
+
+async function ensureDir(dir) {
+  await fs.mkdir(dir, { recursive: true });
+}
+
+async function writeJson(file, data) {
+  await ensureDir(path.dirname(file));
+  await fs.writeFile(file, JSON.stringify(data, null, 2) + '\n', 'utf8');
+}
+
+// ---------------------------------------------------------------------------
+// Species data loading
+// ---------------------------------------------------------------------------
+
+const SPECIES_JSON_PATH = path.resolve('spec/agent/completed/local_029/gen5-species.json');
+const ALIAS_PATH = path.resolve('src/data/encounters/aliases/species-ja.json');
+
+let speciesDataCache = null;
+
+function loadSpeciesData() {
+  if (speciesDataCache) return speciesDataCache;
+  if (!existsSync(SPECIES_JSON_PATH)) {
+    throw new Error(`Species data not found: ${SPECIES_JSON_PATH}`);
+  }
+  speciesDataCache = JSON.parse(readFileSync(SPECIES_JSON_PATH, 'utf8'));
+  return speciesDataCache;
+}
+
+// Form aliases not in gen5-species.json but used on pokebook.jp
+const FORM_ALIASES = {
+  バスラオ赤: 550, // Basculin Red-Striped
+  バスラオ青: 550, // Basculin Blue-Striped
+};
+
+/**
+ * Generate species-ja.json mapping (Japanese name -> speciesId)
+ */
+async function generateSpeciesAliasJa() {
+  const data = loadSpeciesData();
+  const alias = {};
+  for (const [id, entry] of Object.entries(data)) {
+    const jaName = entry.names?.ja;
+    if (jaName) {
+      alias[jaName] = parseInt(id, 10);
+    }
+  }
+  // Add form aliases
+  for (const [name, id] of Object.entries(FORM_ALIASES)) {
+    alias[name] = id;
+  }
+  await ensureDir(path.dirname(ALIAS_PATH));
+  await writeJson(ALIAS_PATH, alias);
+  console.log(`[ok] Generated species-ja.json (${Object.keys(alias).length} entries)`);
+  return alias;
+}
+
+/**
+ * Load species-ja.json (generating if missing)
+ */
+async function loadSpeciesAliasJa() {
+  if (!existsSync(ALIAS_PATH)) {
+    const alias = await generateSpeciesAliasJa();
+    const m = new Map();
+    for (const [k, v] of Object.entries(alias)) m.set(k, v);
+    return m;
+  }
+  const txt = await fs.readFile(ALIAS_PATH, 'utf8');
+  const obj = JSON.parse(txt);
+  const m = new Map();
+  for (const [k, v] of Object.entries(obj)) m.set(k, v);
+  return m;
+}
+
+// ---------------------------------------------------------------------------
+// Species metadata resolution
+// ---------------------------------------------------------------------------
+
+function resolveGenderRatio(speciesId) {
+  const data = loadSpeciesData();
+  const entry = data[String(speciesId)];
+  if (!entry) return 'F1M1';
+
+  const gender = entry.gender;
+  if (!gender) return 'F1M1';
+
+  if (gender.type === 'genderless') return 'Genderless';
+  if (gender.type === 'male-only') return 'MaleOnly';
+  if (gender.type === 'female-only') return 'FemaleOnly';
+  if (gender.type === 'fixed') {
+    if (gender.fixed === 'male') return 'MaleOnly';
+    if (gender.fixed === 'female') return 'FemaleOnly';
+  }
+
+  const threshold = gender.femaleThreshold;
+  if (threshold === 32 || threshold === 31) return 'F1M7';
+  if (threshold === 64 || threshold === 63) return 'F1M3';
+  if (threshold === 128 || threshold === 127) return 'F1M1';
+  if (threshold === 192 || threshold === 191) return 'F3M1';
+
+  return 'F1M1';
+}
+
+function resolveHasHeldItem(speciesId, version) {
+  const data = loadSpeciesData();
+  const entry = data[String(speciesId)];
+  if (!entry) return false;
+
+  const key = VERSION_HELD_ITEM_KEY[version];
+  if (!key) return false;
+
+  const items = entry.heldItems?.[key];
+  return Array.isArray(items) && items.length > 0;
+}
+
+function enrichSlot(slot, version) {
+  return {
+    ...slot,
+    genderRatio: resolveGenderRatio(slot.speciesId),
+    hasHeldItem: resolveHasHeldItem(slot.speciesId, version),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// HTML parsing - section detection
+// ---------------------------------------------------------------------------
+
+function findSectionTables($, method) {
+  const headers = $('h1,h2,h3,h4,h5').toArray();
+  const textOf = (el) => ($(el).text() || '').replace(/[\s\u3000]+/g, '');
+  const matchers = {
+    Normal: (t) => t.includes('草むら') && t.includes('洞窟') && !t.includes('濃い草むら'),
+    ShakingGrass: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
+    DustCloud: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
+    Surfing: (t) => t.includes('なみのり') || t.includes('つり'),
+    SurfingBubble: (t) => t.includes('なみのり') || t.includes('つり'),
+    Fishing: (t) => t.includes('なみのり') || t.includes('つり'),
+    FishingBubble: (t) => t.includes('なみのり') || t.includes('つり'),
+  };
+  const isHeader = (el) => /^h[1-6]$/i.test(el.tagName || el.name || '');
+
+  let startIdx = -1;
+  for (let i = 0; i < headers.length; i++) {
+    const t = textOf(headers[i]);
+    if (matchers[method]?.(t)) {
+      if (method === 'Normal' && t.includes('濃い草むら')) continue;
+      startIdx = i;
+      break;
+    }
+  }
+
+  if (startIdx === -1) return [];
+
+  const tables = [];
+  let node = $(headers[startIdx]).next();
+  while (node && node.length) {
+    const name = node[0].name || node[0].tagName || '';
+    if (/^h[1-6]$/i.test(name)) break;
+    if (name === 'table') tables.push(node);
+    node = node.next();
+  }
+  return tables;
+}
+
+// ---------------------------------------------------------------------------
+// Row parsers
+// ---------------------------------------------------------------------------
+
+function parseWideRowIntoSlots($, tr, method, aliasJa) {
+  const tds = $(tr).find('td');
+  if (tds.length < 13) return null;
+  const locText = $(tds[0]).text().trim();
+  const locMatch = locText.match(/^\[([^\]]+)\]\s*(.*)$/);
+  const baseName = (locMatch ? locMatch[2] : locText.replace(/^\[[^\]]+\]\s*/, '')).trim();
+
+  const rates = SLOT_RATE_PRESETS[method] || SLOT_RATE_PRESETS.Normal;
+  const slots = [];
+  for (let i = 1; i <= 12 && i < tds.length; i++) {
+    const cell = $(tds[i]).text().trim();
+    if (!cell) continue;
+    const nameMatch = cell.match(/^([^()]+)\(([^)]+)\)$/);
+    if (!nameMatch) continue;
+    const rawName = canonicalizeSpeciesName(nameMatch[1]);
+    const lvlText = nameMatch[2];
+    const levelRange = parseLevelRangeFromText(lvlText);
+
+    const speciesId = aliasJa.get(rawName);
+    if (!speciesId) {
+      MISSING_SPECIES.add(rawName);
+      continue;
+    }
+
+    const rate = rates[i - 1] ?? 1;
+    slots.push({ speciesId, rate, levelRange });
+  }
+  if (!slots.length) return null;
+  return { baseName, slots };
+}
+
+// Species IDs for モグリュー (Drilbur) and ドリュウズ (Excadrill).
+// In Gen 5, cave dust cloud encounters produce exclusively these species.
+// Outdoor shaking grass encounters never include them.
+const DUST_CLOUD_SPECIES = new Set([529, 530]);
+
+function isDustCloudRow(parsedSlots) {
+  return parsedSlots.some((slot) => DUST_CLOUD_SPECIES.has(slot.speciesId));
+}
+
+function parseWaterRowSlots($, tr, method, aliasJa) {
+  const tds = $(tr).find('td');
+  const startIdx = tds.length === 6 ? 1 : 0;
+  const rates = SLOT_RATE_PRESETS[method] || SLOT_RATE_PRESETS.Surfing;
+  const slots = [];
+  for (let i = 0; i < 5 && startIdx + i < tds.length; i++) {
+    const cell = $(tds[startIdx + i])
+      .text()
+      .trim();
+    if (!cell) continue;
+    const m = cell.match(/^([^()]+)\(([^)]+)\)$/);
+    if (!m) continue;
+    const rawName = canonicalizeSpeciesName(m[1]);
+    const levelRange = parseLevelRangeFromText(m[2]);
+    const speciesId = aliasJa.get(rawName);
+    if (!speciesId) {
+      MISSING_SPECIES.add(rawName);
+      continue;
+    }
+    slots.push({ speciesId, rate: rates[i] ?? 1, levelRange });
+  }
+  return slots;
+}
+
+// ---------------------------------------------------------------------------
+// Signature-based deduplication
+// ---------------------------------------------------------------------------
+
+function makeSlotSignature(slot) {
+  if (!slot) return '';
+  const speciesId = slot.speciesId ?? 'null';
+  const rate = slot.rate ?? 'null';
+  const min = slot.levelRange?.min ?? 'null';
+  const max = slot.levelRange?.max ?? 'null';
+  return `${speciesId}:${rate}:${min}-${max}`;
+}
+
+function makeRowSignature(slots) {
+  if (!slots || !slots.length) return '';
+  return slots.map(makeSlotSignature).join('|');
+}
+
+function uniqueRowsBySignature(rows) {
+  const seen = new Set();
+  const uniques = [];
+  for (const row of rows) {
+    const signature = makeRowSignature(row.slots);
+    if (!signature) continue;
+    if (seen.has(signature)) continue;
+    seen.add(signature);
+    uniques.push(row);
+  }
+  return uniques;
+}
+
+// ---------------------------------------------------------------------------
+// Location group resolution
+// ---------------------------------------------------------------------------
+
+function resolveLocationGroup(baseName, rows, { version, method, suffixRules }) {
+  const uniques = uniqueRowsBySignature(rows);
+  if (!uniques.length) return [];
+
+  const plan = suffixRules ? suffixRules[baseName] : undefined;
+  if (plan === undefined) {
+    const merged = [];
+    for (const row of rows) merged.push(...row.slots);
+    return merged.length ? [{ displayName: baseName, slots: merged }] : [];
+  }
+
+  if (plan === null) {
+    if (uniques.length > 1) {
+      console.warn(
+        `[warn] Expected identical rows for ${version}/${method}/${baseName}, found ${uniques.length} variants; using first variant.`
+      );
+    }
+    return [{ displayName: baseName, slots: uniques[0].slots }];
+  }
+
+  if (!Array.isArray(plan) || !plan.length) {
+    console.warn(`[warn] No valid suffix plan for ${version}/${method}/${baseName}; merging rows.`);
+    const merged = [];
+    for (const row of rows) merged.push(...row.slots);
+    return merged.length ? [{ displayName: baseName, slots: merged }] : [];
+  }
+
+  if (uniques.length > plan.length) {
+    console.warn(
+      `[warn] Insufficient suffix entries for ${version}/${method}/${baseName}: need ${uniques.length}, have ${plan.length}. Extra variants reuse last suffix.`
+    );
+  }
+
+  const result = [];
+  for (let i = 0; i < uniques.length; i++) {
+    const suffix = plan[Math.min(i, plan.length - 1)] ?? null;
+    const displayName = suffix ? `${baseName} ${suffix}` : baseName;
+    result.push({ displayName, slots: uniques[i].slots });
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Water encounter page helpers
+// ---------------------------------------------------------------------------
+
+function isLocationRow($, tr) {
+  const td0 = $(tr).find('td').first();
+  if (!td0.length) return false;
+  const txt = td0.text().trim();
+  return /^\[[^\]]+\]/.test(txt) || (/\S/.test(txt) && $(tr).find('td').length >= 6);
+}
+
+function extractDisplayNameFromRow($, tr) {
+  const td0 = $(tr).find('td').first();
+  const locText = td0.text().trim();
+  return locText.replace(/^\[[^\]]+\]\s*/, '').trim();
+}
+
+// ---------------------------------------------------------------------------
+// Page parsers
+// ---------------------------------------------------------------------------
+
+function parseWaterEncounterPage(html, { version, method, url, aliasJa }) {
+  const $ = loadHtml(html);
+  const rawLocations = new Map();
+  const tables = findSectionTables($, method);
+  if (!tables.length) {
+    return {
+      version,
+      method,
+      source: { name: 'Pokebook', url, retrievedAt: todayISO() },
+      locations: {},
+    };
+  }
+
+  for (const tbl of tables) {
+    const rows = $(tbl).find('tbody tr, tr').toArray();
+    for (let i = 0; i < rows.length; i++) {
+      const tr = rows[i];
+      if (!isLocationRow($, tr)) continue;
+      const displayName = extractDisplayNameFromRow($, tr);
+      const group = [tr, rows[i + 1], rows[i + 2], rows[i + 3]].filter(Boolean);
+      const indexToMethod = ['Surfing', 'SurfingBubble', 'Fishing', 'FishingBubble'];
+
+      for (let gi = 0; gi < group.length; gi++) {
+        const targetMethod = indexToMethod[gi];
+        if (targetMethod !== method) continue;
+        const slots = parseWaterRowSlots($, group[gi], method, aliasJa);
+        if (!slots.length) continue;
+        if (!rawLocations.has(displayName)) rawLocations.set(displayName, []);
+        rawLocations.get(displayName).push(slots);
+      }
+      i += Math.max(0, group.length - 1);
+    }
+  }
+
+  const locations = {};
+  for (const [displayName, rows] of rawLocations) {
+    const seen = new Set();
+    const mergedSlots = [];
+    const options = WATER_SINGLE_ROW_LOCATIONS.get(displayName);
+    const limitToOne = options && options.keepAll !== true;
+    const enforceUnique = !options || options.keepAll !== true;
+
+    for (const rowSlots of rows) {
+      const signature = makeRowSignature(rowSlots);
+      if (enforceUnique) {
+        if (signature && seen.has(signature)) continue;
+        if (signature) seen.add(signature);
+      }
+      mergedSlots.push(...rowSlots);
+      if (limitToOne) break;
+    }
+    if (mergedSlots.length) {
+      const normalizedKey = normalizeLocationKey(displayName);
+      locations[normalizedKey] = {
+        displayNameKey: normalizedKey,
+        slots: mergedSlots.map((s) => enrichSlot(s, version)),
+      };
+    }
+  }
+
+  return {
+    version,
+    method,
+    source: { name: 'Pokebook', url, retrievedAt: todayISO() },
+    locations,
+  };
+}
+
+function parseEncounterPage(html, { version, method, url, aliasJa }) {
+  const waterMethods = new Set(['Surfing', 'SurfingBubble', 'Fishing', 'FishingBubble']);
+  if (waterMethods.has(method)) {
+    return parseWaterEncounterPage(html, { version, method, url, aliasJa });
+  }
+
+  const $ = loadHtml(html);
+  const locations = {};
+  const parsedRows = [];
+
+  const tables = findSectionTables($, method);
+  if (!tables.length) {
+    return {
+      version,
+      method,
+      source: { name: 'Pokebook', url, retrievedAt: todayISO() },
+      locations,
+    };
+  }
+
+  for (const tbl of tables) {
+    $(tbl)
+      .find('tbody tr, tr')
+      .each((_, tr) => {
+        const parsed = parseWideRowIntoSlots($, tr, method, aliasJa);
+        if (!parsed) return;
+
+        // In the "揺れる草むら, 土煙" section, cave/dungeon rows contain
+        // モグリュー/ドリュウズ exclusively; outdoor rows do not.
+        if (method === 'ShakingGrass' || method === 'DustCloud') {
+          const isDust = isDustCloudRow(parsed.slots);
+          if (method === 'ShakingGrass' && isDust) return;
+          if (method === 'DustCloud' && !isDust) return;
+        }
+
+        parsedRows.push(parsed);
+      });
+  }
+
+  const suffixRules = ['Normal', 'ShakingGrass', 'DustCloud'].includes(method)
+    ? DUPLICATE_SUFFIX_RULES[version]
+    : undefined;
+  const grouped = new Map();
+  for (const row of parsedRows) {
+    const key = row.baseName;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(row);
+  }
+
+  for (const [baseName, rows] of grouped) {
+    const resolved = resolveLocationGroup(baseName, rows, {
+      version,
+      method,
+      suffixRules,
+    });
+    for (const entry of resolved) {
+      if (!entry.displayName || !entry.slots?.length) continue;
+      const normalizedKey = normalizeLocationKey(entry.displayName);
+      locations[normalizedKey] = {
+        displayNameKey: normalizedKey,
+        slots: entry.slots.map((s) => enrichSlot(s, version)),
+      };
+    }
+  }
+
+  return {
+    version,
+    method,
+    source: { name: 'Pokebook', url, retrievedAt: todayISO() },
+    locations,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Main execution
+// ---------------------------------------------------------------------------
+
+async function scrapeVersionMethod(version, method, overrideUrl) {
+  MISSING_SPECIES = new Set();
+  const url = overrideUrl || SOURCE_MAP[version]?.[method];
+  if (!url) {
+    console.warn(`[skip] No source URL for ${version}/${method}`);
+    return;
+  }
+  if (!METHODS.includes(method)) {
+    console.warn(`[skip] Method ${method} not implemented yet`);
+    return;
+  }
+  console.log(`[fetch] ${version}/${method} -> ${url}`);
+  const html = await fetchHtml(url);
+  const aliasJa = await loadSpeciesAliasJa();
+  const json = parseEncounterPage(html, { version, method, url, aliasJa });
+  const outPath = path.resolve('src/data/encounters/generated/v1', version, `${method}.json`);
+  await writeJson(outPath, json);
+  console.log(`[ok] wrote ${outPath} (${Object.keys(json.locations).length} locations)`);
+  if (MISSING_SPECIES.size) {
+    console.warn(
+      `[warn] Unknown JP species (${MISSING_SPECIES.size}) for ${version}/${method}: ${[...MISSING_SPECIES].join(', ')}`
+    );
+  }
+}
+
+function parseArgs() {
+  const get = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1];
+  return {
+    version: get('version'),
+    method: get('method'),
+    url: get('url'),
+  };
+}
+
+async function main() {
+  const args = parseArgs();
+  const versions = args.version ? [args.version] : VERSIONS;
+  const methods = args.method ? [args.method] : METHODS;
+
+  for (const v of versions) {
+    for (const m of methods) {
+      try {
+        await scrapeVersionMethod(v, m, args.url);
+      } catch (e) {
+        console.error(`[error] ${v}/${m}:`, e.message);
+      }
+    }
+  }
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -1,0 +1,6996 @@
+{
+  "version": "B2",
+  "method": "ShakingGrass",
+  "source": {
+    "name": "Pokebook",
+    "url": "https://pokebook.jp/data/sp5/enc_b2",
+    "retrievedAt": "2026-02-11"
+  },
+  "locations": {
+    "ヒウンシティ": {
+      "displayNameKey": "ヒウンシティ",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 15,
+            "max": 15
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 15,
+            "max": 15
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 16,
+            "max": 16
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 16,
+            "max": 16
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 17,
+            "max": 17
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 17,
+            "max": 17
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 18,
+            "max": 18
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 18,
+            "max": 18
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 428,
+          "rate": 4,
+          "levelRange": {
+            "min": 18,
+            "max": 18
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 4,
+          "levelRange": {
+            "min": 18,
+            "max": 18
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 428,
+          "rate": 1,
+          "levelRange": {
+            "min": 18,
+            "max": 18
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 1,
+          "levelRange": {
+            "min": 18,
+            "max": 18
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "夢の跡地": {
+      "displayNameKey": "夢の跡地",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 40,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 169,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 518,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 169,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 518,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ヤグルマの森外部": {
+      "displayNameKey": "ヤグルマの森外部",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 469,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 537,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 538,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 538,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "ヤグルマの森内部": {
+      "displayNameKey": "ヤグルマの森内部",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 64,
+            "max": 64
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 511,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 513,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 515,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 545,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 289,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 547,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 289,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 547,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(春)外部(南)": {
+      "displayNameKey": "リュウラセンの塔(春)外部(南)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(春)外部(北東)": {
+      "displayNameKey": "リュウラセンの塔(春)外部(北東)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(夏)外部(南)": {
+      "displayNameKey": "リュウラセンの塔(夏)外部(南)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(夏)外部(北東)": {
+      "displayNameKey": "リュウラセンの塔(夏)外部(北東)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(秋)外部(南)": {
+      "displayNameKey": "リュウラセンの塔(秋)外部(南)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(秋)外部(北東)": {
+      "displayNameKey": "リュウラセンの塔(秋)外部(北東)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(冬)外部(南)": {
+      "displayNameKey": "リュウラセンの塔(冬)外部(南)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 584,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 584,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "リュウラセンの塔(冬)外部(北東)": {
+      "displayNameKey": "リュウラセンの塔(冬)外部(北東)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 584,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 584,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ジャイアントホール": {
+      "displayNameKey": "ジャイアントホール",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 44,
+            "max": 44
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 44,
+            "max": 44
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 45,
+            "max": 45
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 45,
+            "max": 45
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 46,
+            "max": 46
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 46,
+            "max": 46
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 36,
+          "rate": 5,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 584,
+          "rate": 4,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 465,
+          "rate": 4,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 584,
+          "rate": 1,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 465,
+          "rate": 1,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 44,
+            "max": 44
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 44,
+            "max": 44
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 45,
+            "max": 45
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 45,
+            "max": 45
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 46,
+            "max": 46
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 46,
+            "max": 46
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 473,
+          "rate": 5,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 36,
+          "rate": 4,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 376,
+          "rate": 4,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 36,
+          "rate": 1,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 376,
+          "rate": 1,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 44,
+            "max": 44
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 44,
+            "max": 44
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 45,
+            "max": 45
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 45,
+            "max": 45
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 46,
+            "max": 46
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 46,
+            "max": 46
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 473,
+          "rate": 5,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 36,
+          "rate": 4,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 376,
+          "rate": 4,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 36,
+          "rate": 1,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 376,
+          "rate": 1,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "P2ラボ": {
+      "displayNameKey": "P2ラボ",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 462,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 601,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 508,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 601,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "Genderless",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 508,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "サンギ牧場": {
+      "displayNameKey": "サンギ牧場",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 5,
+            "max": 5
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 5,
+            "max": 5
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 6,
+            "max": 6
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 6,
+            "max": 6
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 7,
+            "max": 7
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 7,
+            "max": 7
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 7,
+            "max": 7
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 7,
+            "max": 7
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 7,
+            "max": 7
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 7,
+            "max": 7
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "タチワキコンビナート": {
+      "displayNameKey": "タチワキコンビナート",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 10,
+            "max": 10
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 10,
+            "max": 10
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 11,
+            "max": 11
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 11,
+            "max": 11
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 12,
+            "max": 12
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 12,
+            "max": 12
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 10,
+            "max": 10
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 10,
+            "max": 10
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 11,
+            "max": 11
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 11,
+            "max": 11
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 12,
+            "max": 12
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 12,
+            "max": 12
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 13,
+            "max": 13
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "リバースマウンテン": {
+      "displayNameKey": "リバースマウンテン",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "チャンピオンロード1F": {
+      "displayNameKey": "チャンピオンロード1F",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 4,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 407,
+          "rate": 4,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 407,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "チャンピオンロード2F": {
+      "displayNameKey": "チャンピオンロード2F",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "チャンピオンロード3F,4F,5F": {
+      "displayNameKey": "チャンピオンロード3F,4F,5F",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 47,
+            "max": 47
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 539,
+          "rate": 4,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 539,
+          "rate": 1,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "自然保護区": {
+      "displayNameKey": "自然保護区",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 275,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 275,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "ホドモエの跳ね橋": {
+      "displayNameKey": "ホドモエの跳ね橋",
+      "slots": [
+        {
+          "speciesId": 580,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 10,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 10,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 5,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 580,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ビレッジブリッジ": {
+      "displayNameKey": "ビレッジブリッジ",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 184,
+          "rate": 4,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 184,
+          "rate": 1,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "ワンダーブリッジ": {
+      "displayNameKey": "ワンダーブリッジ",
+      "slots": [
+        {
+          "speciesId": 581,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 581,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "1番道路": {
+      "displayNameKey": "1番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 508,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 40,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 508,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 40,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "2番道路": {
+      "displayNameKey": "2番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 463,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 508,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 40,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 508,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 40,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "3番道路": {
+      "displayNameKey": "3番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 469,
+          "rate": 5,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 508,
+          "rate": 4,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 508,
+          "rate": 1,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "5番道路": {
+      "displayNameKey": "5番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 21,
+            "max": 21
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 21,
+            "max": 21
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 573,
+          "rate": 4,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 573,
+          "rate": 1,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(春)": {
+      "displayNameKey": "6番道路(春)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 184,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 351,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(夏)": {
+      "displayNameKey": "6番道路(夏)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 184,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 351,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(秋)": {
+      "displayNameKey": "6番道路(秋)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 184,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 351,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "6番道路(冬)": {
+      "displayNameKey": "6番道路(冬)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 25,
+            "max": 25
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 184,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 351,
+          "rate": 5,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 4,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 1,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "7番道路(春)": {
+      "displayNameKey": "7番道路(春)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "7番道路(夏)": {
+      "displayNameKey": "7番道路(夏)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "7番道路(秋)": {
+      "displayNameKey": "7番道路(秋)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "7番道路(冬)": {
+      "displayNameKey": "7番道路(冬)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "9番道路": {
+      "displayNameKey": "9番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 573,
+          "rate": 4,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 576,
+          "rate": 4,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 573,
+          "rate": 1,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 576,
+          "rate": 1,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "11番道路": {
+      "displayNameKey": "11番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 472,
+          "rate": 4,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 184,
+          "rate": 4,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 472,
+          "rate": 1,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 184,
+          "rate": 1,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "12番道路": {
+      "displayNameKey": "12番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 521,
+          "rate": 5,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 5,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 416,
+          "rate": 4,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "FemaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 407,
+          "rate": 4,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 416,
+          "rate": 1,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "FemaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 407,
+          "rate": 1,
+          "levelRange": {
+            "min": 38,
+            "max": 38
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "13番道路": {
+      "displayNameKey": "13番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 465,
+          "rate": 4,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 465,
+          "rate": 1,
+          "levelRange": {
+            "min": 37,
+            "max": 37
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "14番道路": {
+      "displayNameKey": "14番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "ほうじょうの社": {
+      "displayNameKey": "ほうじょうの社",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 34,
+            "max": 34
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 35,
+            "max": 35
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 4,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 38,
+          "rate": 4,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 1,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 38,
+          "rate": 1,
+          "levelRange": {
+            "min": 36,
+            "max": 36
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "15番道路": {
+      "displayNameKey": "15番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 54,
+            "max": 54
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 55,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 538,
+          "rate": 5,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 472,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 248,
+          "rate": 4,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 472,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 248,
+          "rate": 1,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "16番道路": {
+      "displayNameKey": "16番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 21,
+            "max": 21
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 21,
+            "max": 21
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 573,
+          "rate": 4,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 573,
+          "rate": 1,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F3M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "迷いの森": {
+      "displayNameKey": "迷いの森",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 21,
+            "max": 21
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 23,
+            "max": 23
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 511,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 513,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 515,
+          "rate": 10,
+          "levelRange": {
+            "min": 22,
+            "max": 22
+          },
+          "genderRatio": "F1M7",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 416,
+          "rate": 5,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "FemaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 407,
+          "rate": 5,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 542,
+          "rate": 4,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 4,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 542,
+          "rate": 1,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 547,
+          "rate": 1,
+          "levelRange": {
+            "min": 24,
+            "max": 24
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "18番道路": {
+      "displayNameKey": "18番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 56,
+            "max": 56
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 57,
+            "max": 57
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 58,
+            "max": 58
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 538,
+          "rate": 4,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 538,
+          "rate": 1,
+          "levelRange": {
+            "min": 59,
+            "max": 59
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "19番道路": {
+      "displayNameKey": "19番道路",
+      "slots": [
+        {
+          "speciesId": 504,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 504,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "20番道路(春)": {
+      "displayNameKey": "20番道路(春)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "20番道路(夏)": {
+      "displayNameKey": "20番道路(夏)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "20番道路(秋)": {
+      "displayNameKey": "20番道路(秋)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "20番道路(冬)": {
+      "displayNameKey": "20番道路(冬)",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 2,
+            "max": 2
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 206,
+          "rate": 10,
+          "levelRange": {
+            "min": 3,
+            "max": 3
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 4,
+            "max": 4
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "22番道路": {
+      "displayNameKey": "22番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 39,
+            "max": 39
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 40,
+            "max": 40
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 41,
+            "max": 41
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 41,
+            "max": 41
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 42,
+            "max": 42
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 42,
+            "max": 42
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 4,
+          "levelRange": {
+            "min": 42,
+            "max": 42
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 184,
+          "rate": 4,
+          "levelRange": {
+            "min": 42,
+            "max": 42
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 531,
+          "rate": 1,
+          "levelRange": {
+            "min": 42,
+            "max": 42
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 184,
+          "rate": 1,
+          "levelRange": {
+            "min": 42,
+            "max": 42
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "23番道路": {
+      "displayNameKey": "23番道路",
+      "slots": [
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 20,
+          "levelRange": {
+            "min": 48,
+            "max": 48
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 587,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 49,
+            "max": 49
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 10,
+          "levelRange": {
+            "min": 50,
+            "max": 50
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 51,
+            "max": 51
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 531,
+          "rate": 5,
+          "levelRange": {
+            "min": 51,
+            "max": 51
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 472,
+          "rate": 4,
+          "levelRange": {
+            "min": 51,
+            "max": 51
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 538,
+          "rate": 4,
+          "levelRange": {
+            "min": 51,
+            "max": 51
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 472,
+          "rate": 1,
+          "levelRange": {
+            "min": 51,
+            "max": 51
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 538,
+          "rate": 1,
+          "levelRange": {
+            "min": 51,
+            "max": 51
+          },
+          "genderRatio": "MaleOnly",
+          "hasHeldItem": true
+        }
+      ]
+    }
+  }
+}
