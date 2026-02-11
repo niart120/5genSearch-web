@@ -22,6 +22,7 @@ import { GenderSelect } from '@/components/forms/gender-select';
 import { ShinySelect } from '@/components/forms/shiny-select';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
 import { cn } from '@/lib/utils';
+import { IV_STAT_KEYS } from '@/lib/game-data-names';
 import { initMainThreadWasm } from '@/services/wasm-init';
 import { get_species_name } from '@/wasm/wasm_pkg.js';
 import { useUiStore } from '@/stores/settings/ui';
