@@ -7,8 +7,8 @@
     "retrievedAt": "2026-02-11"
   },
   "locations": {
-    "サンヨウシティ": {
-      "displayNameKey": "サンヨウシティ",
+    "striaton_city": {
+      "displayNameKey": "striaton_city",
       "slots": [
         {
           "speciesId": 550,
@@ -62,8 +62,8 @@
         }
       ]
     },
-    "ホドモエシティ": {
-      "displayNameKey": "ホドモエシティ",
+    "driftveil_city": {
+      "displayNameKey": "driftveil_city",
       "slots": [
         {
           "speciesId": 592,
@@ -117,8 +117,8 @@
         }
       ]
     },
-    "セッカシティ(春)": {
-      "displayNameKey": "セッカシティ(春)",
+    "icirrus_city_spring": {
+      "displayNameKey": "icirrus_city_spring",
       "slots": [
         {
           "speciesId": 618,
@@ -172,8 +172,8 @@
         }
       ]
     },
-    "セッカシティ(夏)": {
-      "displayNameKey": "セッカシティ(夏)",
+    "icirrus_city_summer": {
+      "displayNameKey": "icirrus_city_summer",
       "slots": [
         {
           "speciesId": 618,
@@ -227,8 +227,8 @@
         }
       ]
     },
-    "セッカシティ(秋)": {
-      "displayNameKey": "セッカシティ(秋)",
+    "icirrus_city_autumn": {
+      "displayNameKey": "icirrus_city_autumn",
       "slots": [
         {
           "speciesId": 618,
@@ -282,8 +282,8 @@
         }
       ]
     },
-    "セッカシティ(冬)": {
-      "displayNameKey": "セッカシティ(冬)",
+    "icirrus_city_winter": {
+      "displayNameKey": "icirrus_city_winter",
       "slots": [
         {
           "speciesId": 618,
@@ -337,8 +337,8 @@
         }
       ]
     },
-    "ヤグルマの森": {
-      "displayNameKey": "ヤグルマの森",
+    "pinwheel_forest": {
+      "displayNameKey": "pinwheel_forest",
       "slots": [
         {
           "speciesId": 550,
@@ -392,8 +392,8 @@
         }
       ]
     },
-    "リュウラセンの塔(春)": {
-      "displayNameKey": "リュウラセンの塔(春)",
+    "dragonspiral_tower_spring": {
+      "displayNameKey": "dragonspiral_tower_spring",
       "slots": [
         {
           "speciesId": 550,
@@ -447,8 +447,8 @@
         }
       ]
     },
-    "リュウラセンの塔(夏)": {
-      "displayNameKey": "リュウラセンの塔(夏)",
+    "dragonspiral_tower_summer": {
+      "displayNameKey": "dragonspiral_tower_summer",
       "slots": [
         {
           "speciesId": 550,
@@ -502,8 +502,8 @@
         }
       ]
     },
-    "リュウラセンの塔(秋)": {
-      "displayNameKey": "リュウラセンの塔(秋)",
+    "dragonspiral_tower_autumn": {
+      "displayNameKey": "dragonspiral_tower_autumn",
       "slots": [
         {
           "speciesId": 550,
@@ -557,8 +557,8 @@
         }
       ]
     },
-    "リュウラセンの塔(冬)": {
-      "displayNameKey": "リュウラセンの塔(冬)",
+    "dragonspiral_tower_winter": {
+      "displayNameKey": "dragonspiral_tower_winter",
       "slots": [
         {
           "speciesId": 550,
@@ -612,8 +612,8 @@
         }
       ]
     },
-    "チャンピオンロード": {
-      "displayNameKey": "チャンピオンロード",
+    "victory_road": {
+      "displayNameKey": "victory_road",
       "slots": [
         {
           "speciesId": 550,
@@ -667,8 +667,8 @@
         }
       ]
     },
-    "ジャイアントホール": {
-      "displayNameKey": "ジャイアントホール",
+    "giant_chasm": {
+      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 550,
@@ -722,8 +722,8 @@
         }
       ]
     },
-    "P2ラボ": {
-      "displayNameKey": "P2ラボ",
+    "p2_laboratory": {
+      "displayNameKey": "p2_laboratory",
       "slots": [
         {
           "speciesId": 592,
@@ -777,63 +777,8 @@
         }
       ]
     },
-    "サザナミ湾(春)": {
-      "displayNameKey": "サザナミ湾(春)",
-      "slots": [
-        {
-          "speciesId": 278,
-          "rate": 60,
-          "levelRange": {
-            "min": 25,
-            "max": 55
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 458,
-          "rate": 30,
-          "levelRange": {
-            "min": 25,
-            "max": 55
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 279,
-          "rate": 5,
-          "levelRange": {
-            "min": 25,
-            "max": 55
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 279,
-          "rate": 4,
-          "levelRange": {
-            "min": 25,
-            "max": 55
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 279,
-          "rate": 1,
-          "levelRange": {
-            "min": 25,
-            "max": 55
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        }
-      ]
-    },
-    "サザナミ湾(夏)": {
-      "displayNameKey": "サザナミ湾(夏)",
+    "undella_bay_spring": {
+      "displayNameKey": "undella_bay_spring",
       "slots": [
         {
           "speciesId": 278,
@@ -887,8 +832,8 @@
         }
       ]
     },
-    "サザナミ湾(秋)": {
-      "displayNameKey": "サザナミ湾(秋)",
+    "undella_bay_summer": {
+      "displayNameKey": "undella_bay_summer",
       "slots": [
         {
           "speciesId": 278,
@@ -942,8 +887,63 @@
         }
       ]
     },
-    "サザナミ湾(冬)": {
-      "displayNameKey": "サザナミ湾(冬)",
+    "undella_bay_autumn": {
+      "displayNameKey": "undella_bay_autumn",
+      "slots": [
+        {
+          "speciesId": 278,
+          "rate": 60,
+          "levelRange": {
+            "min": 25,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 458,
+          "rate": 30,
+          "levelRange": {
+            "min": 25,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 279,
+          "rate": 5,
+          "levelRange": {
+            "min": 25,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 279,
+          "rate": 4,
+          "levelRange": {
+            "min": 25,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 279,
+          "rate": 1,
+          "levelRange": {
+            "min": 25,
+            "max": 55
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "undella_bay_winter": {
+      "displayNameKey": "undella_bay_winter",
       "slots": [
         {
           "speciesId": 278,
@@ -997,8 +997,8 @@
         }
       ]
     },
-    "ビレッジブリッジ": {
-      "displayNameKey": "ビレッジブリッジ",
+    "village_bridge": {
+      "displayNameKey": "village_bridge",
       "slots": [
         {
           "speciesId": 550,
@@ -1052,8 +1052,8 @@
         }
       ]
     },
-    "1番道路": {
-      "displayNameKey": "1番道路",
+    "route_1": {
+      "displayNameKey": "route_1",
       "slots": [
         {
           "speciesId": 550,
@@ -1107,8 +1107,8 @@
         }
       ]
     },
-    "3番道路": {
-      "displayNameKey": "3番道路",
+    "route_3": {
+      "displayNameKey": "route_3",
       "slots": [
         {
           "speciesId": 550,
@@ -1162,8 +1162,8 @@
         }
       ]
     },
-    "地下水脈の穴": {
-      "displayNameKey": "地下水脈の穴",
+    "wellspring_cave": {
+      "displayNameKey": "wellspring_cave",
       "slots": [
         {
           "speciesId": 550,
@@ -1217,8 +1217,8 @@
         }
       ]
     },
-    "4番道路": {
-      "displayNameKey": "4番道路",
+    "route_4": {
+      "displayNameKey": "route_4",
       "slots": [
         {
           "speciesId": 592,
@@ -1272,8 +1272,8 @@
         }
       ]
     },
-    "6番道路(春)": {
-      "displayNameKey": "6番道路(春)",
+    "route_6_spring": {
+      "displayNameKey": "route_6_spring",
       "slots": [
         {
           "speciesId": 550,
@@ -1327,8 +1327,8 @@
         }
       ]
     },
-    "6番道路(夏)": {
-      "displayNameKey": "6番道路(夏)",
+    "route_6_summer": {
+      "displayNameKey": "route_6_summer",
       "slots": [
         {
           "speciesId": 550,
@@ -1382,8 +1382,8 @@
         }
       ]
     },
-    "6番道路(秋)": {
-      "displayNameKey": "6番道路(秋)",
+    "route_6_autumn": {
+      "displayNameKey": "route_6_autumn",
       "slots": [
         {
           "speciesId": 550,
@@ -1437,8 +1437,8 @@
         }
       ]
     },
-    "6番道路(冬)": {
-      "displayNameKey": "6番道路(冬)",
+    "route_6_winter": {
+      "displayNameKey": "route_6_winter",
       "slots": [
         {
           "speciesId": 550,
@@ -1492,8 +1492,8 @@
         }
       ]
     },
-    "8番道路(春)": {
-      "displayNameKey": "8番道路(春)",
+    "route_8_spring": {
+      "displayNameKey": "route_8_spring",
       "slots": [
         {
           "speciesId": 618,
@@ -1547,8 +1547,8 @@
         }
       ]
     },
-    "8番道路(夏)": {
-      "displayNameKey": "8番道路(夏)",
+    "route_8_summer": {
+      "displayNameKey": "route_8_summer",
       "slots": [
         {
           "speciesId": 618,
@@ -1602,8 +1602,8 @@
         }
       ]
     },
-    "8番道路(秋)": {
-      "displayNameKey": "8番道路(秋)",
+    "route_8_autumn": {
+      "displayNameKey": "route_8_autumn",
       "slots": [
         {
           "speciesId": 618,
@@ -1657,8 +1657,8 @@
         }
       ]
     },
-    "8番道路(冬)": {
-      "displayNameKey": "8番道路(冬)",
+    "route_8_winter": {
+      "displayNameKey": "route_8_winter",
       "slots": [
         {
           "speciesId": 618,
@@ -1712,8 +1712,8 @@
         }
       ]
     },
-    "セッカの湿原(春)": {
-      "displayNameKey": "セッカの湿原(春)",
+    "moor_of_icirrus_spring": {
+      "displayNameKey": "moor_of_icirrus_spring",
       "slots": [
         {
           "speciesId": 618,
@@ -1767,8 +1767,8 @@
         }
       ]
     },
-    "セッカの湿原(夏)": {
-      "displayNameKey": "セッカの湿原(夏)",
+    "moor_of_icirrus_summer": {
+      "displayNameKey": "moor_of_icirrus_summer",
       "slots": [
         {
           "speciesId": 618,
@@ -1822,8 +1822,8 @@
         }
       ]
     },
-    "セッカの湿原(秋)": {
-      "displayNameKey": "セッカの湿原(秋)",
+    "moor_of_icirrus_autumn": {
+      "displayNameKey": "moor_of_icirrus_autumn",
       "slots": [
         {
           "speciesId": 618,
@@ -1877,8 +1877,8 @@
         }
       ]
     },
-    "セッカの湿原(冬)": {
-      "displayNameKey": "セッカの湿原(冬)",
+    "moor_of_icirrus_winter": {
+      "displayNameKey": "moor_of_icirrus_winter",
       "slots": [
         {
           "speciesId": 618,
@@ -1932,8 +1932,8 @@
         }
       ]
     },
-    "修行の岩屋": {
-      "displayNameKey": "修行の岩屋",
+    "challengers_cave": {
+      "displayNameKey": "challengers_cave",
       "slots": [
         {
           "speciesId": 550,
@@ -1987,8 +1987,8 @@
         }
       ]
     },
-    "11番道路": {
-      "displayNameKey": "11番道路",
+    "route_11": {
+      "displayNameKey": "route_11",
       "slots": [
         {
           "speciesId": 550,
@@ -2042,8 +2042,8 @@
         }
       ]
     },
-    "13番道路": {
-      "displayNameKey": "13番道路",
+    "route_13": {
+      "displayNameKey": "route_13",
       "slots": [
         {
           "speciesId": 278,
@@ -2097,8 +2097,8 @@
         }
       ]
     },
-    "14番道路": {
-      "displayNameKey": "14番道路",
+    "route_14": {
+      "displayNameKey": "route_14",
       "slots": [
         {
           "speciesId": 550,
@@ -2152,8 +2152,8 @@
         }
       ]
     },
-    "ほうじょうの社": {
-      "displayNameKey": "ほうじょうの社",
+    "abundant_shrine": {
+      "displayNameKey": "abundant_shrine",
       "slots": [
         {
           "speciesId": 550,
@@ -2207,8 +2207,8 @@
         }
       ]
     },
-    "迷いの森": {
-      "displayNameKey": "迷いの森",
+    "lostlorn_forest": {
+      "displayNameKey": "lostlorn_forest",
       "slots": [
         {
           "speciesId": 550,
@@ -2262,8 +2262,8 @@
         }
       ]
     },
-    "18番道路": {
-      "displayNameKey": "18番道路",
+    "route_18": {
+      "displayNameKey": "route_18",
       "slots": [
         {
           "speciesId": 592,
@@ -2317,8 +2317,8 @@
         }
       ]
     },
-    "サザナミタウン": {
-      "displayNameKey": "サザナミタウン",
+    "undella_town": {
+      "displayNameKey": "undella_town",
       "slots": [
         {
           "speciesId": 278,
@@ -2372,8 +2372,8 @@
         }
       ]
     },
-    "17番水道": {
-      "displayNameKey": "17番水道",
+    "route_17": {
+      "displayNameKey": "route_17",
       "slots": [
         {
           "speciesId": 592,

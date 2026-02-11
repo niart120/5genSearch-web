@@ -16,8 +16,8 @@ describe('normalizeLocationKey', () => {
     expect(normalizeLocationKey('B2F—B6F')).toBe('B2FB6F');
   });
 
-  it('removes underscores', () => {
-    expect(normalizeLocationKey('test_location')).toBe('testlocation');
+  it('preserves underscores', () => {
+    expect(normalizeLocationKey('route_6_spring')).toBe('route_6_spring');
   });
 
   it('removes dots', () => {

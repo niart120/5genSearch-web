@@ -7,8 +7,8 @@
     "retrievedAt": "2026-02-11"
   },
   "locations": {
-    "電気石の洞穴1F": {
-      "displayNameKey": "電気石の洞穴1F",
+    "chargestone_cave_1f": {
+      "displayNameKey": "chargestone_cave_1f",
       "slots": [
         {
           "speciesId": 529,
@@ -132,8 +132,8 @@
         }
       ]
     },
-    "ネジ山(春)": {
-      "displayNameKey": "ネジ山(春)",
+    "twist_mountain_spring": {
+      "displayNameKey": "twist_mountain_spring",
       "slots": [
         {
           "speciesId": 529,
@@ -257,8 +257,8 @@
         }
       ]
     },
-    "ネジ山(夏)": {
-      "displayNameKey": "ネジ山(夏)",
+    "twist_mountain_summer": {
+      "displayNameKey": "twist_mountain_summer",
       "slots": [
         {
           "speciesId": 529,
@@ -382,8 +382,8 @@
         }
       ]
     },
-    "ネジ山(秋)": {
-      "displayNameKey": "ネジ山(秋)",
+    "twist_mountain_autumn": {
+      "displayNameKey": "twist_mountain_autumn",
       "slots": [
         {
           "speciesId": 529,
@@ -507,8 +507,8 @@
         }
       ]
     },
-    "ネジ山(冬)": {
-      "displayNameKey": "ネジ山(冬)",
+    "twist_mountain_winter": {
+      "displayNameKey": "twist_mountain_winter",
       "slots": [
         {
           "speciesId": 529,
@@ -632,8 +632,8 @@
         }
       ]
     },
-    "チャンピオンロード1F": {
-      "displayNameKey": "チャンピオンロード1F",
+    "victory_road_1f": {
+      "displayNameKey": "victory_road_1f",
       "slots": [
         {
           "speciesId": 530,
@@ -757,8 +757,8 @@
         }
       ]
     },
-    "チャンピオンロード2F": {
-      "displayNameKey": "チャンピオンロード2F",
+    "victory_road_2f": {
+      "displayNameKey": "victory_road_2f",
       "slots": [
         {
           "speciesId": 530,
@@ -882,8 +882,8 @@
         }
       ]
     },
-    "試練の室": {
-      "displayNameKey": "試練の室",
+    "trial_chamber": {
+      "displayNameKey": "trial_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -1007,8 +1007,8 @@
         }
       ]
     },
-    "ジャイアントホール": {
-      "displayNameKey": "ジャイアントホール",
+    "giant_chasm": {
+      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 530,
@@ -1252,8 +1252,8 @@
         }
       ]
     },
-    "地下水脈の穴": {
-      "displayNameKey": "地下水脈の穴",
+    "wellspring_cave": {
+      "displayNameKey": "wellspring_cave",
       "slots": [
         {
           "speciesId": 529,
@@ -1497,8 +1497,8 @@
         }
       ]
     },
-    "フキヨセの洞穴": {
-      "displayNameKey": "フキヨセの洞穴",
+    "mistralton_cave": {
+      "displayNameKey": "mistralton_cave",
       "slots": [
         {
           "speciesId": 529,
@@ -1742,8 +1742,8 @@
         }
       ]
     },
-    "導の間": {
-      "displayNameKey": "導の間",
+    "guidance_chamber": {
+      "displayNameKey": "guidance_chamber",
       "slots": [
         {
           "speciesId": 529,
@@ -1867,8 +1867,8 @@
         }
       ]
     },
-    "修行の岩屋": {
-      "displayNameKey": "修行の岩屋",
+    "challengers_cave": {
+      "displayNameKey": "challengers_cave",
       "slots": [
         {
           "speciesId": 530,

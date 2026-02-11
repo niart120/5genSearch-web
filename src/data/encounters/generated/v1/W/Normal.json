@@ -7,8 +7,8 @@
     "retrievedAt": "2026-02-11"
   },
   "locations": {
-    "セッカシティ(春)": {
-      "displayNameKey": "セッカシティ(春)",
+    "icirrus_city_spring": {
+      "displayNameKey": "icirrus_city_spring",
       "slots": [
         {
           "speciesId": 536,
@@ -132,8 +132,8 @@
         }
       ]
     },
-    "セッカシティ(夏)": {
-      "displayNameKey": "セッカシティ(夏)",
+    "icirrus_city_summer": {
+      "displayNameKey": "icirrus_city_summer",
       "slots": [
         {
           "speciesId": 536,
@@ -257,8 +257,8 @@
         }
       ]
     },
-    "セッカシティ(秋)": {
-      "displayNameKey": "セッカシティ(秋)",
+    "icirrus_city_autumn": {
+      "displayNameKey": "icirrus_city_autumn",
       "slots": [
         {
           "speciesId": 536,
@@ -382,8 +382,8 @@
         }
       ]
     },
-    "夢の跡地": {
-      "displayNameKey": "夢の跡地",
+    "dreamyard": {
+      "displayNameKey": "dreamyard",
       "slots": [
         {
           "speciesId": 504,
@@ -507,8 +507,8 @@
         }
       ]
     },
-    "ヤグルマの森外部": {
-      "displayNameKey": "ヤグルマの森外部",
+    "pinwheel_forest_exterior": {
+      "displayNameKey": "pinwheel_forest_exterior",
       "slots": [
         {
           "speciesId": 535,
@@ -632,8 +632,8 @@
         }
       ]
     },
-    "ヤグルマの森内部": {
-      "displayNameKey": "ヤグルマの森内部",
+    "pinwheel_forest_interior": {
+      "displayNameKey": "pinwheel_forest_interior",
       "slots": [
         {
           "speciesId": 548,
@@ -757,8 +757,8 @@
         }
       ]
     },
-    "リゾートデザート外部": {
-      "displayNameKey": "リゾートデザート外部",
+    "desert_resort_exterior": {
+      "displayNameKey": "desert_resort_exterior",
       "slots": [
         {
           "speciesId": 551,
@@ -882,8 +882,8 @@
         }
       ]
     },
-    "リゾートデザート内部": {
-      "displayNameKey": "リゾートデザート内部",
+    "desert_resort_interior": {
+      "displayNameKey": "desert_resort_interior",
       "slots": [
         {
           "speciesId": 551,
@@ -1007,8 +1007,8 @@
         }
       ]
     },
-    "古代の城1F,B1F": {
-      "displayNameKey": "古代の城1F,B1F",
+    "relic_castle_1f_b1f": {
+      "displayNameKey": "relic_castle_1f_b1f",
       "slots": [
         {
           "speciesId": 551,
@@ -1132,8 +1132,8 @@
         }
       ]
     },
-    "古代の城B2FB6F": {
-      "displayNameKey": "古代の城B2FB6F",
+    "relic_castle_b2f_b6f": {
+      "displayNameKey": "relic_castle_b2f_b6f",
       "slots": [
         {
           "speciesId": 552,
@@ -1257,8 +1257,8 @@
         }
       ]
     },
-    "古代の城最下層": {
-      "displayNameKey": "古代の城最下層",
+    "relic_castle_lowest_floor": {
+      "displayNameKey": "relic_castle_lowest_floor",
       "slots": [
         {
           "speciesId": 552,
@@ -1382,8 +1382,8 @@
         }
       ]
     },
-    "古代の城小部屋": {
-      "displayNameKey": "古代の城小部屋",
+    "relic_castle_small_room": {
+      "displayNameKey": "relic_castle_small_room",
       "slots": [
         {
           "speciesId": 344,
@@ -1507,8 +1507,8 @@
         }
       ]
     },
-    "冷凍コンテナ": {
-      "displayNameKey": "冷凍コンテナ",
+    "cold_storage": {
+      "displayNameKey": "cold_storage",
       "slots": [
         {
           "speciesId": 507,
@@ -1632,8 +1632,8 @@
         }
       ]
     },
-    "電気石の洞穴1F": {
-      "displayNameKey": "電気石の洞穴1F",
+    "chargestone_cave_1f": {
+      "displayNameKey": "chargestone_cave_1f",
       "slots": [
         {
           "speciesId": 595,
@@ -1757,8 +1757,8 @@
         }
       ]
     },
-    "電気石の洞穴B1F": {
-      "displayNameKey": "電気石の洞穴B1F",
+    "chargestone_cave_b1f": {
+      "displayNameKey": "chargestone_cave_b1f",
       "slots": [
         {
           "speciesId": 595,
@@ -1882,8 +1882,8 @@
         }
       ]
     },
-    "電気石の洞穴B2F": {
-      "displayNameKey": "電気石の洞穴B2F",
+    "chargestone_cave_b2f": {
+      "displayNameKey": "chargestone_cave_b2f",
       "slots": [
         {
           "speciesId": 595,
@@ -2007,8 +2007,8 @@
         }
       ]
     },
-    "ネジ山(春)": {
-      "displayNameKey": "ネジ山(春)",
+    "twist_mountain_spring": {
+      "displayNameKey": "twist_mountain_spring",
       "slots": [
         {
           "speciesId": 525,
@@ -2132,8 +2132,8 @@
         }
       ]
     },
-    "ネジ山(夏)": {
-      "displayNameKey": "ネジ山(夏)",
+    "twist_mountain_summer": {
+      "displayNameKey": "twist_mountain_summer",
       "slots": [
         {
           "speciesId": 525,
@@ -2257,8 +2257,8 @@
         }
       ]
     },
-    "ネジ山(秋)": {
-      "displayNameKey": "ネジ山(秋)",
+    "twist_mountain_autumn": {
+      "displayNameKey": "twist_mountain_autumn",
       "slots": [
         {
           "speciesId": 525,
@@ -2382,8 +2382,8 @@
         }
       ]
     },
-    "ネジ山(冬)": {
-      "displayNameKey": "ネジ山(冬)",
+    "twist_mountain_winter": {
+      "displayNameKey": "twist_mountain_winter",
       "slots": [
         {
           "speciesId": 613,
@@ -2507,8 +2507,8 @@
         }
       ]
     },
-    "リュウラセンの塔(春)外部(南)": {
-      "displayNameKey": "リュウラセンの塔(春)外部(南)",
+    "dragonspiral_tower_spring_exterior_south": {
+      "displayNameKey": "dragonspiral_tower_spring_exterior_south",
       "slots": [
         {
           "speciesId": 520,
@@ -2632,8 +2632,8 @@
         }
       ]
     },
-    "リュウラセンの塔(春)外部(北東)": {
-      "displayNameKey": "リュウラセンの塔(春)外部(北東)",
+    "dragonspiral_tower_spring_exterior_northeast": {
+      "displayNameKey": "dragonspiral_tower_spring_exterior_northeast",
       "slots": [
         {
           "speciesId": 520,
@@ -2757,8 +2757,8 @@
         }
       ]
     },
-    "リュウラセンの塔(夏)外部(南)": {
-      "displayNameKey": "リュウラセンの塔(夏)外部(南)",
+    "dragonspiral_tower_summer_exterior_south": {
+      "displayNameKey": "dragonspiral_tower_summer_exterior_south",
       "slots": [
         {
           "speciesId": 520,
@@ -2882,8 +2882,8 @@
         }
       ]
     },
-    "リュウラセンの塔(夏)外部(北東)": {
-      "displayNameKey": "リュウラセンの塔(夏)外部(北東)",
+    "dragonspiral_tower_summer_exterior_northeast": {
+      "displayNameKey": "dragonspiral_tower_summer_exterior_northeast",
       "slots": [
         {
           "speciesId": 520,
@@ -3007,8 +3007,8 @@
         }
       ]
     },
-    "リュウラセンの塔(秋)外部(南)": {
-      "displayNameKey": "リュウラセンの塔(秋)外部(南)",
+    "dragonspiral_tower_autumn_exterior_south": {
+      "displayNameKey": "dragonspiral_tower_autumn_exterior_south",
       "slots": [
         {
           "speciesId": 520,
@@ -3132,8 +3132,8 @@
         }
       ]
     },
-    "リュウラセンの塔(秋)外部(北東)": {
-      "displayNameKey": "リュウラセンの塔(秋)外部(北東)",
+    "dragonspiral_tower_autumn_exterior_northeast": {
+      "displayNameKey": "dragonspiral_tower_autumn_exterior_northeast",
       "slots": [
         {
           "speciesId": 520,
@@ -3257,133 +3257,8 @@
         }
       ]
     },
-    "リュウラセンの塔(冬)外部(南)": {
-      "displayNameKey": "リュウラセンの塔(冬)外部(南)",
-      "slots": [
-        {
-          "speciesId": 582,
-          "rate": 20,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 585,
-          "rate": 20,
-          "levelRange": {
-            "min": 30,
-            "max": 30
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 619,
-          "rate": 10,
-          "levelRange": {
-            "min": 30,
-            "max": 30
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 585,
-          "rate": 10,
-          "levelRange": {
-            "min": 32,
-            "max": 32
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 619,
-          "rate": 10,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 613,
-          "rate": 10,
-          "levelRange": {
-            "min": 33,
-            "max": 33
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 619,
-          "rate": 5,
-          "levelRange": {
-            "min": 32,
-            "max": 32
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 582,
-          "rate": 5,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 619,
-          "rate": 4,
-          "levelRange": {
-            "min": 33,
-            "max": 33
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 582,
-          "rate": 4,
-          "levelRange": {
-            "min": 32,
-            "max": 32
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 619,
-          "rate": 1,
-          "levelRange": {
-            "min": 33,
-            "max": 33
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 582,
-          "rate": 1,
-          "levelRange": {
-            "min": 33,
-            "max": 33
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        }
-      ]
-    },
-    "リュウラセンの塔(冬)外部(北東)": {
-      "displayNameKey": "リュウラセンの塔(冬)外部(北東)",
+    "dragonspiral_tower_winter_exterior_south": {
+      "displayNameKey": "dragonspiral_tower_winter_exterior_south",
       "slots": [
         {
           "speciesId": 582,
@@ -3459,6 +3334,131 @@
           "speciesId": 582,
           "rate": 5,
           "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 619,
+          "rate": 4,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 582,
+          "rate": 4,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 619,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 582,
+          "rate": 1,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        }
+      ]
+    },
+    "dragonspiral_tower_winter_exterior_northeast": {
+      "displayNameKey": "dragonspiral_tower_winter_exterior_northeast",
+      "slots": [
+        {
+          "speciesId": 582,
+          "rate": 20,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 585,
+          "rate": 20,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 619,
+          "rate": 10,
+          "levelRange": {
+            "min": 30,
+            "max": 30
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 585,
+          "rate": 10,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 619,
+          "rate": 10,
+          "levelRange": {
+            "min": 31,
+            "max": 31
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 613,
+          "rate": 10,
+          "levelRange": {
+            "min": 33,
+            "max": 33
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 619,
+          "rate": 5,
+          "levelRange": {
+            "min": 32,
+            "max": 32
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 582,
+          "rate": 5,
+          "levelRange": {
             "min": 32,
             "max": 32
           },
@@ -3507,8 +3507,8 @@
         }
       ]
     },
-    "リュウラセンの塔1F": {
-      "displayNameKey": "リュウラセンの塔1F",
+    "dragonspiral_tower_1f": {
+      "displayNameKey": "dragonspiral_tower_1f",
       "slots": [
         {
           "speciesId": 622,
@@ -3632,8 +3632,8 @@
         }
       ]
     },
-    "リュウラセンの塔2F": {
-      "displayNameKey": "リュウラセンの塔2F",
+    "dragonspiral_tower_2f": {
+      "displayNameKey": "dragonspiral_tower_2f",
       "slots": [
         {
           "speciesId": 622,
@@ -3757,8 +3757,8 @@
         }
       ]
     },
-    "チャンピオンロード1F": {
-      "displayNameKey": "チャンピオンロード1F",
+    "victory_road_1f": {
+      "displayNameKey": "victory_road_1f",
       "slots": [
         {
           "speciesId": 627,
@@ -3882,8 +3882,8 @@
         }
       ]
     },
-    "チャンピオンロード2F": {
-      "displayNameKey": "チャンピオンロード2F",
+    "victory_road_2f": {
+      "displayNameKey": "victory_road_2f",
       "slots": [
         {
           "speciesId": 632,
@@ -4007,8 +4007,8 @@
         }
       ]
     },
-    "チャンピオンロード3F,4F,5F": {
-      "displayNameKey": "チャンピオンロード3F,4F,5F",
+    "victory_road_3f_4f_5f": {
+      "displayNameKey": "victory_road_3f_4f_5f",
       "slots": [
         {
           "speciesId": 632,
@@ -4132,8 +4132,8 @@
         }
       ]
     },
-    "チャンピオンロード6F,7F": {
-      "displayNameKey": "チャンピオンロード6F,7F",
+    "victory_road_6f_7f": {
+      "displayNameKey": "victory_road_6f_7f",
       "slots": [
         {
           "speciesId": 632,
@@ -4257,8 +4257,8 @@
         }
       ]
     },
-    "試練の室": {
-      "displayNameKey": "試練の室",
+    "trial_chamber": {
+      "displayNameKey": "trial_chamber",
       "slots": [
         {
           "speciesId": 632,
@@ -4382,8 +4382,8 @@
         }
       ]
     },
-    "ジャイアントホール": {
-      "displayNameKey": "ジャイアントホール",
+    "giant_chasm": {
+      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 114,
@@ -4867,8 +4867,8 @@
         }
       ]
     },
-    "P2ラボ": {
-      "displayNameKey": "P2ラボ",
+    "p2_laboratory": {
+      "displayNameKey": "p2_laboratory",
       "slots": [
         {
           "speciesId": 505,
@@ -4992,8 +4992,8 @@
         }
       ]
     },
-    "ビレッジブリッジ": {
-      "displayNameKey": "ビレッジブリッジ",
+    "village_bridge": {
+      "displayNameKey": "village_bridge",
       "slots": [
         {
           "speciesId": 55,
@@ -5117,8 +5117,8 @@
         }
       ]
     },
-    "1番道路": {
-      "displayNameKey": "1番道路",
+    "route_1": {
+      "displayNameKey": "route_1",
       "slots": [
         {
           "speciesId": 504,
@@ -5242,8 +5242,8 @@
         }
       ]
     },
-    "2番道路": {
-      "displayNameKey": "2番道路",
+    "route_2": {
+      "displayNameKey": "route_2",
       "slots": [
         {
           "speciesId": 504,
@@ -5367,8 +5367,8 @@
         }
       ]
     },
-    "3番道路": {
-      "displayNameKey": "3番道路",
+    "route_3": {
+      "displayNameKey": "route_3",
       "slots": [
         {
           "speciesId": 504,
@@ -5492,8 +5492,8 @@
         }
       ]
     },
-    "地下水脈の穴": {
-      "displayNameKey": "地下水脈の穴",
+    "wellspring_cave": {
+      "displayNameKey": "wellspring_cave",
       "slots": [
         {
           "speciesId": 524,
@@ -5737,8 +5737,8 @@
         }
       ]
     },
-    "4番道路": {
-      "displayNameKey": "4番道路",
+    "route_4": {
+      "displayNameKey": "route_4",
       "slots": [
         {
           "speciesId": 551,
@@ -5862,8 +5862,8 @@
         }
       ]
     },
-    "5番道路": {
-      "displayNameKey": "5番道路",
+    "route_5": {
+      "displayNameKey": "route_5",
       "slots": [
         {
           "speciesId": 577,
@@ -5987,8 +5987,8 @@
         }
       ]
     },
-    "6番道路(春)": {
-      "displayNameKey": "6番道路(春)",
+    "route_6_spring": {
+      "displayNameKey": "route_6_spring",
       "slots": [
         {
           "speciesId": 585,
@@ -6112,8 +6112,8 @@
         }
       ]
     },
-    "6番道路(夏)": {
-      "displayNameKey": "6番道路(夏)",
+    "route_6_summer": {
+      "displayNameKey": "route_6_summer",
       "slots": [
         {
           "speciesId": 585,
@@ -6237,8 +6237,8 @@
         }
       ]
     },
-    "6番道路(秋)": {
-      "displayNameKey": "6番道路(秋)",
+    "route_6_autumn": {
+      "displayNameKey": "route_6_autumn",
       "slots": [
         {
           "speciesId": 585,
@@ -6362,8 +6362,8 @@
         }
       ]
     },
-    "6番道路(冬)": {
-      "displayNameKey": "6番道路(冬)",
+    "route_6_winter": {
+      "displayNameKey": "route_6_winter",
       "slots": [
         {
           "speciesId": 585,
@@ -6487,8 +6487,8 @@
         }
       ]
     },
-    "フキヨセの洞穴": {
-      "displayNameKey": "フキヨセの洞穴",
+    "mistralton_cave": {
+      "displayNameKey": "mistralton_cave",
       "slots": [
         {
           "speciesId": 525,
@@ -6732,8 +6732,8 @@
         }
       ]
     },
-    "導の間": {
-      "displayNameKey": "導の間",
+    "guidance_chamber": {
+      "displayNameKey": "guidance_chamber",
       "slots": [
         {
           "speciesId": 525,
@@ -6857,133 +6857,8 @@
         }
       ]
     },
-    "7番道路(春)": {
-      "displayNameKey": "7番道路(春)",
-      "slots": [
-        {
-          "speciesId": 520,
-          "rate": 20,
-          "levelRange": {
-            "min": 26,
-            "max": 26
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 585,
-          "rate": 20,
-          "levelRange": {
-            "min": 26,
-            "max": 26
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 505,
-          "rate": 10,
-          "levelRange": {
-            "min": 27,
-            "max": 27
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 523,
-          "rate": 10,
-          "levelRange": {
-            "min": 27,
-            "max": 27
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 520,
-          "rate": 10,
-          "levelRange": {
-            "min": 28,
-            "max": 28
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 523,
-          "rate": 10,
-          "levelRange": {
-            "min": 29,
-            "max": 29
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 505,
-          "rate": 5,
-          "levelRange": {
-            "min": 28,
-            "max": 28
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 590,
-          "rate": 5,
-          "levelRange": {
-            "min": 27,
-            "max": 27
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 505,
-          "rate": 4,
-          "levelRange": {
-            "min": 29,
-            "max": 29
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 590,
-          "rate": 4,
-          "levelRange": {
-            "min": 29,
-            "max": 29
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 505,
-          "rate": 1,
-          "levelRange": {
-            "min": 29,
-            "max": 29
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 590,
-          "rate": 1,
-          "levelRange": {
-            "min": 29,
-            "max": 29
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        }
-      ]
-    },
-    "7番道路(夏)": {
-      "displayNameKey": "7番道路(夏)",
+    "route_7_spring": {
+      "displayNameKey": "route_7_spring",
       "slots": [
         {
           "speciesId": 520,
@@ -7107,8 +6982,8 @@
         }
       ]
     },
-    "7番道路(秋)": {
-      "displayNameKey": "7番道路(秋)",
+    "route_7_summer": {
+      "displayNameKey": "route_7_summer",
       "slots": [
         {
           "speciesId": 520,
@@ -7232,8 +7107,133 @@
         }
       ]
     },
-    "7番道路(冬)": {
-      "displayNameKey": "7番道路(冬)",
+    "route_7_autumn": {
+      "displayNameKey": "route_7_autumn",
+      "slots": [
+        {
+          "speciesId": 520,
+          "rate": 20,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 585,
+          "rate": 20,
+          "levelRange": {
+            "min": 26,
+            "max": 26
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 505,
+          "rate": 10,
+          "levelRange": {
+            "min": 27,
+            "max": 27
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 523,
+          "rate": 10,
+          "levelRange": {
+            "min": 27,
+            "max": 27
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 520,
+          "rate": 10,
+          "levelRange": {
+            "min": 28,
+            "max": 28
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 523,
+          "rate": 10,
+          "levelRange": {
+            "min": 29,
+            "max": 29
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 505,
+          "rate": 5,
+          "levelRange": {
+            "min": 28,
+            "max": 28
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 590,
+          "rate": 5,
+          "levelRange": {
+            "min": 27,
+            "max": 27
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 505,
+          "rate": 4,
+          "levelRange": {
+            "min": 29,
+            "max": 29
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 590,
+          "rate": 4,
+          "levelRange": {
+            "min": 29,
+            "max": 29
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        },
+        {
+          "speciesId": 505,
+          "rate": 1,
+          "levelRange": {
+            "min": 29,
+            "max": 29
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": false
+        },
+        {
+          "speciesId": 590,
+          "rate": 1,
+          "levelRange": {
+            "min": 29,
+            "max": 29
+          },
+          "genderRatio": "F1M1",
+          "hasHeldItem": true
+        }
+      ]
+    },
+    "route_7_winter": {
+      "displayNameKey": "route_7_winter",
       "slots": [
         {
           "speciesId": 613,
@@ -7357,8 +7357,8 @@
         }
       ]
     },
-    "タワーオブヘブン": {
-      "displayNameKey": "タワーオブヘブン",
+    "celestial_tower": {
+      "displayNameKey": "celestial_tower",
       "slots": [
         {
           "speciesId": 607,
@@ -7842,8 +7842,8 @@
         }
       ]
     },
-    "8番道路(春)": {
-      "displayNameKey": "8番道路(春)",
+    "route_8_spring": {
+      "displayNameKey": "route_8_spring",
       "slots": [
         {
           "speciesId": 536,
@@ -7967,8 +7967,8 @@
         }
       ]
     },
-    "8番道路(夏)": {
-      "displayNameKey": "8番道路(夏)",
+    "route_8_summer": {
+      "displayNameKey": "route_8_summer",
       "slots": [
         {
           "speciesId": 536,
@@ -8092,8 +8092,8 @@
         }
       ]
     },
-    "8番道路(秋)": {
-      "displayNameKey": "8番道路(秋)",
+    "route_8_autumn": {
+      "displayNameKey": "route_8_autumn",
       "slots": [
         {
           "speciesId": 536,
@@ -8217,8 +8217,8 @@
         }
       ]
     },
-    "セッカの湿原(春)": {
-      "displayNameKey": "セッカの湿原(春)",
+    "moor_of_icirrus_spring": {
+      "displayNameKey": "moor_of_icirrus_spring",
       "slots": [
         {
           "speciesId": 536,
@@ -8342,8 +8342,8 @@
         }
       ]
     },
-    "セッカの湿原(夏)": {
-      "displayNameKey": "セッカの湿原(夏)",
+    "moor_of_icirrus_summer": {
+      "displayNameKey": "moor_of_icirrus_summer",
       "slots": [
         {
           "speciesId": 536,
@@ -8467,8 +8467,8 @@
         }
       ]
     },
-    "セッカの湿原(秋)": {
-      "displayNameKey": "セッカの湿原(秋)",
+    "moor_of_icirrus_autumn": {
+      "displayNameKey": "moor_of_icirrus_autumn",
       "slots": [
         {
           "speciesId": 536,
@@ -8592,8 +8592,8 @@
         }
       ]
     },
-    "9番道路": {
-      "displayNameKey": "9番道路",
+    "route_9": {
+      "displayNameKey": "route_9",
       "slots": [
         {
           "speciesId": 578,
@@ -8717,8 +8717,8 @@
         }
       ]
     },
-    "修行の岩屋": {
-      "displayNameKey": "修行の岩屋",
+    "challengers_cave": {
+      "displayNameKey": "challengers_cave",
       "slots": [
         {
           "speciesId": 525,
@@ -9082,8 +9082,8 @@
         }
       ]
     },
-    "10番道路": {
-      "displayNameKey": "10番道路",
+    "route_10": {
+      "displayNameKey": "route_10",
       "slots": [
         {
           "speciesId": 507,
@@ -9327,8 +9327,8 @@
         }
       ]
     },
-    "11番道路": {
-      "displayNameKey": "11番道路",
+    "route_11": {
+      "displayNameKey": "route_11",
       "slots": [
         {
           "speciesId": 627,
@@ -9452,8 +9452,8 @@
         }
       ]
     },
-    "12番道路": {
-      "displayNameKey": "12番道路",
+    "route_12": {
+      "displayNameKey": "route_12",
       "slots": [
         {
           "speciesId": 415,
@@ -9577,8 +9577,8 @@
         }
       ]
     },
-    "13番道路": {
-      "displayNameKey": "13番道路",
+    "route_13": {
+      "displayNameKey": "route_13",
       "slots": [
         {
           "speciesId": 114,
@@ -9702,8 +9702,8 @@
         }
       ]
     },
-    "14番道路": {
-      "displayNameKey": "14番道路",
+    "route_14": {
+      "displayNameKey": "route_14",
       "slots": [
         {
           "speciesId": 55,
@@ -9827,8 +9827,8 @@
         }
       ]
     },
-    "ほうじょうの社": {
-      "displayNameKey": "ほうじょうの社",
+    "abundant_shrine": {
+      "displayNameKey": "abundant_shrine",
       "slots": [
         {
           "speciesId": 37,
@@ -9952,8 +9952,8 @@
         }
       ]
     },
-    "15番道路": {
-      "displayNameKey": "15番道路",
+    "route_15": {
+      "displayNameKey": "route_15",
       "slots": [
         {
           "speciesId": 105,
@@ -10077,8 +10077,8 @@
         }
       ]
     },
-    "16番道路": {
-      "displayNameKey": "16番道路",
+    "route_16": {
+      "displayNameKey": "route_16",
       "slots": [
         {
           "speciesId": 577,
@@ -10202,8 +10202,8 @@
         }
       ]
     },
-    "迷いの森": {
-      "displayNameKey": "迷いの森",
+    "lostlorn_forest": {
+      "displayNameKey": "lostlorn_forest",
       "slots": [
         {
           "speciesId": 548,
@@ -10327,8 +10327,8 @@
         }
       ]
     },
-    "18番道路": {
-      "displayNameKey": "18番道路",
+    "route_18": {
+      "displayNameKey": "route_18",
       "slots": [
         {
           "speciesId": 559,

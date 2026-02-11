@@ -7,8 +7,8 @@
     "retrievedAt": "2026-02-11"
   },
   "locations": {
-    "電気石の洞穴1F": {
-      "displayNameKey": "電気石の洞穴1F",
+    "chargestone_cave_1f": {
+      "displayNameKey": "chargestone_cave_1f",
       "slots": [
         {
           "speciesId": 529,
@@ -132,8 +132,8 @@
         }
       ]
     },
-    "電気石の洞穴B1F": {
-      "displayNameKey": "電気石の洞穴B1F",
+    "chargestone_cave_b1f": {
+      "displayNameKey": "chargestone_cave_b1f",
       "slots": [
         {
           "speciesId": 529,
@@ -257,8 +257,8 @@
         }
       ]
     },
-    "ネジ山(春)": {
-      "displayNameKey": "ネジ山(春)",
+    "twist_mountain_spring": {
+      "displayNameKey": "twist_mountain_spring",
       "slots": [
         {
           "speciesId": 530,
@@ -382,8 +382,8 @@
         }
       ]
     },
-    "ネジ山(夏)": {
-      "displayNameKey": "ネジ山(夏)",
+    "twist_mountain_summer": {
+      "displayNameKey": "twist_mountain_summer",
       "slots": [
         {
           "speciesId": 530,
@@ -507,8 +507,8 @@
         }
       ]
     },
-    "ネジ山(秋)": {
-      "displayNameKey": "ネジ山(秋)",
+    "twist_mountain_autumn": {
+      "displayNameKey": "twist_mountain_autumn",
       "slots": [
         {
           "speciesId": 530,
@@ -632,8 +632,8 @@
         }
       ]
     },
-    "ネジ山(冬)": {
-      "displayNameKey": "ネジ山(冬)",
+    "twist_mountain_winter": {
+      "displayNameKey": "twist_mountain_winter",
       "slots": [
         {
           "speciesId": 530,
@@ -757,8 +757,8 @@
         }
       ]
     },
-    "チャンピオンロード1F": {
-      "displayNameKey": "チャンピオンロード1F",
+    "victory_road_1f": {
+      "displayNameKey": "victory_road_1f",
       "slots": [
         {
           "speciesId": 530,
@@ -882,8 +882,8 @@
         }
       ]
     },
-    "チャンピオンロード2F": {
-      "displayNameKey": "チャンピオンロード2F",
+    "victory_road_2f": {
+      "displayNameKey": "victory_road_2f",
       "slots": [
         {
           "speciesId": 530,
@@ -1007,8 +1007,8 @@
         }
       ]
     },
-    "チャンピオンロード3F,4F,5F": {
-      "displayNameKey": "チャンピオンロード3F,4F,5F",
+    "victory_road_3f_4f_5f": {
+      "displayNameKey": "victory_road_3f_4f_5f",
       "slots": [
         {
           "speciesId": 530,
@@ -1132,8 +1132,8 @@
         }
       ]
     },
-    "ジャイアントホール": {
-      "displayNameKey": "ジャイアントホール",
+    "giant_chasm": {
+      "displayNameKey": "giant_chasm",
       "slots": [
         {
           "speciesId": 530,
@@ -1377,8 +1377,8 @@
         }
       ]
     },
-    "リバースマウンテン": {
-      "displayNameKey": "リバースマウンテン",
+    "reversal_mountain": {
+      "displayNameKey": "reversal_mountain",
       "slots": [
         {
           "speciesId": 530,
@@ -2822,8 +2822,8 @@
         }
       ]
     },
-    "古代の抜け道南部": {
-      "displayNameKey": "古代の抜け道南部",
+    "relic_passage_south": {
+      "displayNameKey": "relic_passage_south",
       "slots": [
         {
           "speciesId": 529,
@@ -2947,8 +2947,8 @@
         }
       ]
     },
-    "古代の抜け道北部": {
-      "displayNameKey": "古代の抜け道北部",
+    "relic_passage_north": {
+      "displayNameKey": "relic_passage_north",
       "slots": [
         {
           "speciesId": 529,
@@ -3072,8 +3072,8 @@
         }
       ]
     },
-    "ヤーコンロード": {
-      "displayNameKey": "ヤーコンロード",
+    "clay_tunnel": {
+      "displayNameKey": "clay_tunnel",
       "slots": [
         {
           "speciesId": 530,
@@ -3197,8 +3197,8 @@
         }
       ]
     },
-    "地底遺跡": {
-      "displayNameKey": "地底遺跡",
+    "underground_ruins": {
+      "displayNameKey": "underground_ruins",
       "slots": [
         {
           "speciesId": 530,
@@ -3322,8 +3322,8 @@
         }
       ]
     },
-    "岩山の間": {
-      "displayNameKey": "岩山の間",
+    "rocky_mountain_chamber": {
+      "displayNameKey": "rocky_mountain_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -3447,8 +3447,8 @@
         }
       ]
     },
-    "氷山の間": {
-      "displayNameKey": "氷山の間",
+    "iceberg_chamber": {
+      "displayNameKey": "iceberg_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -3572,8 +3572,8 @@
         }
       ]
     },
-    "鉄の間": {
-      "displayNameKey": "鉄の間",
+    "iron_chamber": {
+      "displayNameKey": "iron_chamber",
       "slots": [
         {
           "speciesId": 530,
@@ -3697,8 +3697,8 @@
         }
       ]
     },
-    "海辺の洞穴1F": {
-      "displayNameKey": "海辺の洞穴1F",
+    "seaside_cave_1f": {
+      "displayNameKey": "seaside_cave_1f",
       "slots": [
         {
           "speciesId": 530,
@@ -3822,8 +3822,8 @@
         }
       ]
     },
-    "海辺の洞穴B1F": {
-      "displayNameKey": "海辺の洞穴B1F",
+    "seaside_cave_b1f": {
+      "displayNameKey": "seaside_cave_b1f",
       "slots": [
         {
           "speciesId": 530,
@@ -3947,8 +3947,8 @@
         }
       ]
     },
-    "地下水脈の穴": {
-      "displayNameKey": "地下水脈の穴",
+    "wellspring_cave": {
+      "displayNameKey": "wellspring_cave",
       "slots": [
         {
           "speciesId": 530,
@@ -4072,8 +4072,8 @@
         }
       ]
     },
-    "フキヨセの洞穴": {
-      "displayNameKey": "フキヨセの洞穴",
+    "mistralton_cave": {
+      "displayNameKey": "mistralton_cave",
       "slots": [
         {
           "speciesId": 529,
@@ -4197,8 +4197,8 @@
         }
       ]
     },
-    "導の間": {
-      "displayNameKey": "導の間",
+    "guidance_chamber": {
+      "displayNameKey": "guidance_chamber",
       "slots": [
         {
           "speciesId": 529,

@@ -167,7 +167,154 @@ function normalizeLocationKey(location) {
   return location
     .trim()
     .replace(/[\u3000\s]+/g, '')
-    .replace(/[‐‑‒–—−\-_.]/g, '');
+    .replace(/[‐‑‒–—−\-.]/g, '');
+}
+
+// ---------------------------------------------------------------------------
+// Japanese normalized key -> ASCII key mapping
+// ---------------------------------------------------------------------------
+
+const JA_TO_ASCII_KEY = {
+  '1番道路': 'route_1',
+  '2番道路': 'route_2',
+  '3番道路': 'route_3',
+  '4番道路': 'route_4',
+  '5番道路': 'route_5',
+  '6番道路(春)': 'route_6_spring',
+  '6番道路(夏)': 'route_6_summer',
+  '6番道路(秋)': 'route_6_autumn',
+  '6番道路(冬)': 'route_6_winter',
+  '7番道路(春)': 'route_7_spring',
+  '7番道路(夏)': 'route_7_summer',
+  '7番道路(秋)': 'route_7_autumn',
+  '7番道路(冬)': 'route_7_winter',
+  '8番道路(春)': 'route_8_spring',
+  '8番道路(夏)': 'route_8_summer',
+  '8番道路(秋)': 'route_8_autumn',
+  '8番道路(冬)': 'route_8_winter',
+  '9番道路': 'route_9',
+  '10番道路': 'route_10',
+  '11番道路': 'route_11',
+  '12番道路': 'route_12',
+  '13番道路': 'route_13',
+  '14番道路': 'route_14',
+  '15番道路': 'route_15',
+  '16番道路': 'route_16',
+  '17番水道': 'route_17',
+  '18番道路': 'route_18',
+  '19番道路': 'route_19',
+  '20番道路(春)': 'route_20_spring',
+  '20番道路(夏)': 'route_20_summer',
+  '20番道路(秋)': 'route_20_autumn',
+  '20番道路(冬)': 'route_20_winter',
+  '21番水道': 'route_21',
+  '22番道路': 'route_22',
+  '23番道路': 'route_23',
+  P2ラボ: 'p2_laboratory',
+  サザナミタウン: 'undella_town',
+  'サザナミ湾(春)': 'undella_bay_spring',
+  'サザナミ湾(夏)': 'undella_bay_summer',
+  'サザナミ湾(秋)': 'undella_bay_autumn',
+  'サザナミ湾(冬)': 'undella_bay_winter',
+  サンギ牧場: 'floccesy_ranch',
+  サンヨウシティ: 'striaton_city',
+  ジャイアントホール: 'giant_chasm',
+  'ストレンジャーハウス入口,B1F': 'strange_house_entrance_b1f',
+  ストレンジャーハウス小部屋: 'strange_house_small_room',
+  セイガイハシティ: 'humilau_city',
+  'セッカシティ(春)': 'icirrus_city_spring',
+  'セッカシティ(夏)': 'icirrus_city_summer',
+  'セッカシティ(秋)': 'icirrus_city_autumn',
+  'セッカシティ(冬)': 'icirrus_city_winter',
+  'セッカの湿原(春)': 'moor_of_icirrus_spring',
+  'セッカの湿原(夏)': 'moor_of_icirrus_summer',
+  'セッカの湿原(秋)': 'moor_of_icirrus_autumn',
+  'セッカの湿原(冬)': 'moor_of_icirrus_winter',
+  タチワキコンビナート: 'virbank_complex',
+  タチワキシティ: 'virbank_city',
+  タワーオブヘブン: 'celestial_tower',
+  タワーオブヘブン2F: 'celestial_tower_2f',
+  タワーオブヘブン3F: 'celestial_tower_3f',
+  タワーオブヘブン4F: 'celestial_tower_4f',
+  タワーオブヘブン5F: 'celestial_tower_5f',
+  チャンピオンロード: 'victory_road',
+  チャンピオンロード1F: 'victory_road_1f',
+  チャンピオンロード2F: 'victory_road_2f',
+  'チャンピオンロード3F,4F,5F': 'victory_road_3f_4f_5f',
+  'チャンピオンロード6F,7F': 'victory_road_6f_7f',
+  'ネジ山(春)': 'twist_mountain_spring',
+  'ネジ山(夏)': 'twist_mountain_summer',
+  'ネジ山(秋)': 'twist_mountain_autumn',
+  'ネジ山(冬)': 'twist_mountain_winter',
+  ヒウンシティ: 'castelia_city',
+  ヒウン下水道: 'castelia_sewers',
+  ヒオウギシティ: 'aspertia_city',
+  ビレッジブリッジ: 'village_bridge',
+  フキヨセの洞穴: 'mistralton_cave',
+  ほうじょうの社: 'abundant_shrine',
+  ホドモエシティ: 'driftveil_city',
+  ホドモエの跳ね橋: 'driftveil_drawbridge',
+  ヤーコンロード: 'clay_tunnel',
+  ヤグルマの森: 'pinwheel_forest',
+  ヤグルマの森外部: 'pinwheel_forest_exterior',
+  ヤグルマの森内部: 'pinwheel_forest_interior',
+  リゾートデザート外部: 'desert_resort_exterior',
+  リゾートデザート内部: 'desert_resort_interior',
+  リバースマウンテン: 'reversal_mountain',
+  'リュウラセンの塔(春)': 'dragonspiral_tower_spring',
+  'リュウラセンの塔(春)外部(南)': 'dragonspiral_tower_spring_exterior_south',
+  'リュウラセンの塔(春)外部(北東)': 'dragonspiral_tower_spring_exterior_northeast',
+  'リュウラセンの塔(夏)': 'dragonspiral_tower_summer',
+  'リュウラセンの塔(夏)外部(南)': 'dragonspiral_tower_summer_exterior_south',
+  'リュウラセンの塔(夏)外部(北東)': 'dragonspiral_tower_summer_exterior_northeast',
+  'リュウラセンの塔(秋)': 'dragonspiral_tower_autumn',
+  'リュウラセンの塔(秋)外部(南)': 'dragonspiral_tower_autumn_exterior_south',
+  'リュウラセンの塔(秋)外部(北東)': 'dragonspiral_tower_autumn_exterior_northeast',
+  'リュウラセンの塔(冬)': 'dragonspiral_tower_winter',
+  'リュウラセンの塔(冬)外部(南)': 'dragonspiral_tower_winter_exterior_south',
+  'リュウラセンの塔(冬)外部(北東)': 'dragonspiral_tower_winter_exterior_northeast',
+  リュウラセンの塔1F: 'dragonspiral_tower_1f',
+  リュウラセンの塔2F: 'dragonspiral_tower_2f',
+  ワンダーブリッジ: 'marvelous_bridge',
+  海辺の洞穴: 'seaside_cave',
+  海辺の洞穴1F: 'seaside_cave_1f',
+  海辺の洞穴B1F: 'seaside_cave_b1f',
+  岩山の間: 'rocky_mountain_chamber',
+  '古代の城1F,B1F': 'relic_castle_1f_b1f',
+  古代の城B2FB6F: 'relic_castle_b2f_b6f',
+  古代の城最下層: 'relic_castle_lowest_floor',
+  古代の城小部屋: 'relic_castle_small_room',
+  古代の抜け道: 'relic_passage',
+  古代の抜け道中央部: 'relic_passage_central',
+  古代の抜け道南部: 'relic_passage_south',
+  古代の抜け道北部: 'relic_passage_north',
+  試練の室: 'trial_chamber',
+  自然保護区: 'nature_preserve',
+  修行の岩屋: 'challengers_cave',
+  地下水脈の穴: 'wellspring_cave',
+  地底遺跡: 'underground_ruins',
+  鉄の間: 'iron_chamber',
+  電気石の洞穴1F: 'chargestone_cave_1f',
+  電気石の洞穴B1F: 'chargestone_cave_b1f',
+  電気石の洞穴B2F: 'chargestone_cave_b2f',
+  導の間: 'guidance_chamber',
+  氷山の間: 'iceberg_chamber',
+  夢の跡地: 'dreamyard',
+  迷いの森: 'lostlorn_forest',
+  冷凍コンテナ: 'cold_storage',
+};
+
+/**
+ * Convert a normalized Japanese location key to its ASCII equivalent.
+ * Falls back to the input key if no mapping exists (and warns).
+ */
+function toAsciiLocationKey(jaKey) {
+  const ascii = JA_TO_ASCII_KEY[jaKey];
+  if (!ascii) {
+    console.warn(`[warn] No ASCII key mapping for: ${jaKey}`);
+    return jaKey;
+  }
+  return ascii;
 }
 
 function todayISO() {
@@ -579,8 +726,9 @@ function parseWaterEncounterPage(html, { version, method, url, aliasJa }) {
     }
     if (mergedSlots.length) {
       const normalizedKey = normalizeLocationKey(displayName);
-      locations[normalizedKey] = {
-        displayNameKey: normalizedKey,
+      const asciiKey = toAsciiLocationKey(normalizedKey);
+      locations[asciiKey] = {
+        displayNameKey: asciiKey,
         slots: mergedSlots.map((s) => enrichSlot(s, version)),
       };
     }
@@ -652,8 +800,9 @@ function parseEncounterPage(html, { version, method, url, aliasJa }) {
     for (const entry of resolved) {
       if (!entry.displayName || !entry.slots?.length) continue;
       const normalizedKey = normalizeLocationKey(entry.displayName);
-      locations[normalizedKey] = {
-        displayNameKey: normalizedKey,
+      const asciiKey = toAsciiLocationKey(normalizedKey);
+      locations[asciiKey] = {
+        displayNameKey: asciiKey,
         slots: entry.slots.map((s) => enrichSlot(s, version)),
       };
     }

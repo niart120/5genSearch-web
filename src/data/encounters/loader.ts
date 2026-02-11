@@ -27,7 +27,7 @@ export function normalizeLocationKey(location: string): string {
   return location
     .trim()
     .replaceAll(/[\u3000\s]+/g, '')
-    .replaceAll(/[‐‑‒–—−\-_.]/g, '');
+    .replaceAll(/[‐‑‒–—−\-.]/g, '');
 }
 
 // ---------------------------------------------------------------------------

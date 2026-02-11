@@ -21,12 +21,6 @@
 観察: フックはリポジトリ管理外のため共有されず、生成物の整形漏れが CI で検知される。
 当面の方針: `src/i18n/locales/` をチェック対象に戻し、Husky でフック設定をリポジトリ管理に含める方針を検討する。
 
-## 2026-02-10: PC 版 FeatureContent 内部のレイアウト構成
-
-現状: design-system.md のレイアウト図および各機能 spec (DATETIME_SEARCH.md, EGG_SEARCH.md) では、FeatureContent 内部を「上: フォーム → 下: 結果テーブル」の縦積みで暗黙に前提としていた。
-観察: PC 版で縦積みにすると、フォーム量が多い機能 (egg-search 等) では 100dvh 制約内で結果テーブルに割ける高さが不足する。また「条件微調整 → 再検索 → 結果確認」の反復操作でフォームと結果が同時に視認できない。
-当面の方針: PC 版 (`lg+`) は FeatureContent 内を Controls | Results の横 2 ペインとする。`FeaturePageLayout` Compound Component で Controls / Results の 2 スロットを提供し、各 feature page がスロットに children を渡す設計。Controls ペイン内部の構成 (Accordion/grid 等) は各 feature が自由に決定する。モバイルは縦積み。関連ドキュメント (design-system.md, responsive-design.md, frontend-structure.md, DATETIME_SEARCH.md, EGG_SEARCH.md) を更新済み。
-
 ## 2026-02-10: 数値入力での IME 自動無効化
 
 現状: 数値系 input はブラウザと IME の状態に依存しており、入力時に日本語 IME が残る場合がある。
