@@ -60,8 +60,10 @@ wasm-bindgen 生成コードはモジュールスコープに Instance を保持
 | `MtseedDatetimeSearcher` | Worker | 重い計算 |
 | `MtseedSearcher` | Worker | 重い計算 |
 | `TrainerInfoSearcher` | Worker | 重い計算 |
+| `generate_pokemon_list` | Worker | 大量 Seed × advance 時の blocking 回避 |
 
 **原則**: Searcher クラスは Worker、それ以外はメインスレッド。
+`generate_pokemon_list` は Searcher ではないが、入力規模により数百 ms かかる可能性があるため例外的に Worker で実行する。
 
 ## 3. アーキテクチャ
 
@@ -182,6 +184,7 @@ type WorkerResponse =
   | { type: 'result'; taskId: string; resultType: 'mtseed'; results: MtseedResult[] }
   | { type: 'result'; taskId: string; resultType: 'egg'; results: EggDatetimeSearchResult[] }
   | { type: 'result'; taskId: string; resultType: 'trainer-info'; results: TrainerInfoSearchResult[] }
+  | { type: 'result'; taskId: string; resultType: 'pokemon-list'; results: GeneratedPokemonData[] }
   | { type: 'done'; taskId: string }
   | { type: 'error'; taskId: string; message: string };
 
@@ -203,7 +206,8 @@ type SearchTask =
   | { kind: 'mtseed-datetime'; params: MtseedDatetimeSearchParams }
   | { kind: 'gpu-mtseed'; context: DatetimeSearchContext; targetSeeds: MtSeed[] }
   | { kind: 'mtseed'; params: MtseedSearchParams }
-  | { kind: 'trainer-info'; params: TrainerInfoSearchParams };
+  | { kind: 'trainer-info'; params: TrainerInfoSearchParams }
+  | { kind: 'pokemon-list'; origins: SeedOrigin[]; params: PokemonGenerationParams; config: GenerationConfig; filter: PokemonFilter | undefined };
 ```
 
 ## 7. WorkerPool 実装
