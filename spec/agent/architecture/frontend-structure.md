@@ -31,6 +31,15 @@ src/
 │   ├── gpu.worker.ts       # GPU 検索用 Worker
 │   └── types.ts            # Worker メッセージ型定義
 │
+├── data/                   # 静的データ・データアクセス層
+│   ├── encounters/         # エンカウントデータ
+│   │   ├── schema.ts       # JSON スキーマ型定義
+│   │   ├── loader.ts       # レジストリ初期化・検索 API
+│   │   ├── converter.ts    # JSON → WASM 型変換
+│   │   ├── helpers.ts      # UI 向けヘルパー (ロケーション一覧・種族集約)
+│   │   └── generated/      # スクレイピング生成 JSON (v1/)
+│   └── timer0-vcount-defaults.ts  # Timer0/VCount デフォルト値
+│
 ├── services/               # 機能横断インフラサービス
 │   ├── worker-pool.ts      # Worker プール管理
 │   ├── progress.ts         # 進捗管理
@@ -89,6 +98,7 @@ src/
 | `components/forms/` | フォーム入力に特化した部品 (IvRangeInput, DateRangePicker など) |
 | `components/data-display/` | データ表示に特化した部品 (DataTable, ResultCardList, SearchProgress など) |
 | `workers/` | Web Worker エントリポイント。WASM 呼び出しを担当 (CPU/GPU 別) |
+| `data/` | 静的データとそのアクセス層。JSON スキーマ定義、レジストリ初期化、WASM 型変換、UI 向け集約 API を含む |
 | `services/` | 機能横断のインフラサービス (Worker 管理、進捗管理、タスク生成など) |
 | `stores/` | 状態管理。永続化対象の設定を含む |
 | `hooks/` | React カスタムフック |
@@ -133,6 +143,8 @@ stores/
   │           ↑
   │           └── workers/
   │
+  ├── data/
+  │
   ├── components/
   │     ↑
   │     └── features/
@@ -143,6 +155,7 @@ stores/
 ```
 
 - WASM 型は `@wasm` から直接インポート (re-export 層は設けない)
+- `data/` は静的データの保持と検索・変換 API を提供する。`services/` や `features/` から利用される
 - `services/` は `features/` に依存しない (逆方向のみ許可)
 - `components/` は `stores/`, `hooks/` に依存可能
 - `features/` は全モジュールを利用可能
