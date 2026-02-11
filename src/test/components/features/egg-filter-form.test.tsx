@@ -1,0 +1,88 @@
+import { render, screen, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { EggFilterForm } from '@/features/egg-search/components/egg-filter-form';
+import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
+import { useUiStore } from '@/stores/settings/ui';
+import type { EggFilter } from '@/wasm/wasm_pkg.js';
+
+const DEFAULT_FILTER: EggFilter = {
+  iv: undefined,
+  natures: undefined,
+  gender: undefined,
+  ability_slot: undefined,
+  shiny: undefined,
+  min_margin_frames: undefined,
+};
+
+function renderFilterForm(props: Partial<Parameters<typeof EggFilterForm>[0]> = {}) {
+  const onChange = props.onChange ?? vi.fn();
+  return {
+    onChange,
+    ...render(
+      <I18nTestWrapper>
+        <EggFilterForm value={DEFAULT_FILTER} onChange={onChange} {...props} />
+      </I18nTestWrapper>
+    ),
+  };
+}
+
+describe('EggFilterForm', () => {
+  beforeEach(() => {
+    act(() => {
+      setupTestI18n('ja');
+      useUiStore.setState({ language: 'ja' });
+    });
+  });
+
+  it('折りたたみヘッダーが表示される', () => {
+    renderFilterForm();
+    expect(screen.getByText('Filter (optional)')).toBeInTheDocument();
+  });
+
+  it('shiny チェックボックスが表示される', async () => {
+    const user = userEvent.setup();
+    renderFilterForm();
+    // 折りたたみを開く
+    await user.click(screen.getByText('Filter (optional)'));
+    expect(screen.getByText('Shiny only')).toBeInTheDocument();
+  });
+
+  it('shiny チェックボックス変更で onChange が呼ばれる', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderFilterForm({ onChange });
+    await user.click(screen.getByText('Filter (optional)'));
+
+    const shinyCheckbox = screen
+      .getByText('Shiny only')
+      .closest('label')
+      ?.querySelector('[role="checkbox"]');
+    expect(shinyCheckbox).toBeDefined();
+    if (shinyCheckbox) {
+      await user.click(shinyCheckbox);
+      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ shiny: 'Shiny' }));
+    }
+  });
+
+  it('min_margin_frames の入力フィールドが表示される', async () => {
+    const user = userEvent.setup();
+    renderFilterForm();
+    await user.click(screen.getByText('Filter (optional)'));
+    expect(screen.getByLabelText('Min margin frames')).toBeInTheDocument();
+  });
+
+  it('min_margin_frames 変更で onChange が呼ばれる', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderFilterForm({ onChange });
+    await user.click(screen.getByText('Filter (optional)'));
+
+    const marginInput = screen.getByLabelText('Min margin frames');
+    await user.clear(marginInput);
+    await user.type(marginInput, '5');
+    await user.tab();
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ min_margin_frames: 5 }));
+  });
+});
