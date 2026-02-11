@@ -40,6 +40,8 @@
 - Phase 3 の `datetime-search` が完了していること (SeedOrigin 供給元)
 - エンカウントデータサービス (local_062) が完了していること
 - 固定エンカウントデータ (local_063) が完了していること
+- トレーナー情報設定 UI (TID/SID) がサイドバーに実装されていること (別チケット)
+- WASM: `get_species_name(species_id, locale)` が wasm-bindgen で export されていること (種族フィルタ UI に必要)
 
 ---
 
@@ -434,6 +436,7 @@ FeaturePageLayout
 │   │   ├── user_offset / max_advance
 │   │   └── (トレーナー情報は DS 設定 / Trainer Store から自動取得)
 │   ├── PokemonFilterForm
+│   │   ├── 種族 (SpeciesMultiSelect: エンカウントスロット内から複数選択)
 │   │   ├── IV 範囲 (IvRangeInput)
 │   │   ├── 性格 (NatureSelect)
 │   │   ├── めざパタイプ (HiddenPowerSelect)
@@ -476,7 +479,38 @@ EncounterMethod の自動判定:
 | 固定系 (StaticSymbol, StaticStarter, ...) | `Stationary` 固定 (非表示) |
 | 野生系 (Normal, Surfing, ...) | ユーザー選択 (デフォルト: `Stationary`) |
 
-### 4.8 pokemon-result-columns.tsx — テーブルカラム定義
+### 4.8 PokemonFilterForm — フィルタ入力フォーム
+
+```typescript
+interface PokemonFilterFormProps {
+  value: PokemonFilter | undefined;
+  onChange: (filter: PokemonFilter | undefined) => void;
+  availableSpecies: EncounterSpeciesOption[];
+  disabled?: boolean;
+}
+```
+
+フィルター項目:
+
+| フィールド | 型 | UI 部品 | 備考 |
+|-----------|-----|---------|------|
+| 種族 | `number[] \| undefined` | マルチセレクト (Combobox) | `availableSpecies` から候補を生成。種族名表示には WASM export `get_species_name(species_id, locale)` を使用。空 = フィルターなし |
+| IV 範囲 | `IvFilter` | IvRangeInput (既存) | H/A/B/C/D/S 各 min-max |
+| 性格 | `Nature[]` | NatureSelect (複数選択) | 空 = フィルターなし |
+| めざパタイプ | `HiddenPowerType \| undefined` | Select | 指定なし = フィルターなし |
+| 色違い | `boolean` | Checkbox | |
+| 性別 | `Gender \| undefined` | Select | ♂ / ♀ / 指定なし |
+| 特性スロット | `AbilitySlot \| undefined` | Select | 第 1 / 第 2 / 夢 / 指定なし |
+
+フォーム全体は折りたたみ可能にし、デフォルトは閉じた状態とする。
+
+種族マルチセレクトの候補リスト:
+
+- ロケーションベース: `listSpecies(version, method, locationKey)` の結果から `speciesId` を抽出し、`get_species_name(speciesId, locale)` で表示名を解決
+- 固定エンカウント: `listSpecies(version, method)` の結果から `speciesId` + `displayNameKey` を使用
+- ロケーションやエンカウント種別の変更時に候補リストを再構築
+
+### 4.9 pokemon-result-columns.tsx — テーブルカラム定義
 
 `UiPokemonData` のフィールドを DataTable のカラムとして定義する。
 
@@ -492,13 +526,13 @@ EncounterMethod の自動判定:
 | めざパ | `hidden_power_type` | タイプ名 |
 | Lv | `level` | レベル |
 | PID | `pid` | 性格値 (hex) |
-| 同期 | `sync_applied` | 〇/× |
+| シンクロ | `sync_applied` | 〇/× |
 | 持ち物 | `held_item_name` | 持ち物名 (あれば) |
 | 詳細 | — | ダイアログ表示ボタン |
 
 モバイル表示では ResultCardList へ自動切替 (既存の DataTable/ResultCardList 機構)。
 
-### 4.9 result-detail-dialog.tsx — 結果詳細ダイアログ
+### 4.10 result-detail-dialog.tsx — 結果詳細ダイアログ
 
 `UiPokemonData` の全フィールドを表示するダイアログ。
 
@@ -508,7 +542,7 @@ EncounterMethod の自動判定:
 
 egg-search の `result-detail-dialog.tsx` を参考に実装する。
 
-### 4.10 stores/search/results.ts — 結果型拡張
+### 4.11 stores/search/results.ts — 結果型拡張
 
 ```typescript
 import type { GeneratedPokemonData } from '../../wasm/wasm_pkg.js';
