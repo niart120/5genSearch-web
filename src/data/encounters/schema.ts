@@ -79,4 +79,6 @@ export interface EncounterSpeciesJson {
 // EncounterMethodKey / StaticEncounterTypeKey must be subsets of WASM EncounterType.
 // If WASM adds/removes variants these lines will produce a compile error.
 export type _AssertEncounterMethodSubset = EncounterMethodKey extends EncounterType ? true : never;
-export type _AssertStaticEncounterSubset = StaticEncounterTypeKey extends EncounterType ? true : never;
+export type _AssertStaticEncounterSubset = StaticEncounterTypeKey extends EncounterType
+  ? true
+  : never;

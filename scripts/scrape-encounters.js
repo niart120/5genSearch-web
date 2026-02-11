@@ -101,10 +101,7 @@ const SLOT_RATE_PRESETS = {
 // Bridge locations where PokemonShadow (flying shadows) appear.
 // These are in the "揺れる草むら, 土煙" section on pokebook.jp but use
 // EncounterType::PokemonShadow in the game engine.
-const POKEMON_SHADOW_LOCATIONS = new Set([
-  'ホドモエの跳ね橋',
-  'ワンダーブリッジ',
-]);
+const POKEMON_SHADOW_LOCATIONS = new Set(['ホドモエの跳ね橋', 'ワンダーブリッジ']);
 
 // Locations where water tables should only keep a single unique row set
 const WATER_SINGLE_ROW_LOCATIONS = new Map([

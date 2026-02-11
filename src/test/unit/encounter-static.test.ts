@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { toEncounterSlotConfigFromEntry } from '@/data/encounters/converter';
 import type { EncounterSpeciesEntryJson } from '@/data/encounters/schema';
 
-const makeEntry = (overrides: Partial<EncounterSpeciesEntryJson> = {}): EncounterSpeciesEntryJson => ({
+const makeEntry = (
+  overrides: Partial<EncounterSpeciesEntryJson> = {}
+): EncounterSpeciesEntryJson => ({
   id: 'reshiram-n-castle',
   displayNameKey: 'reshiram_n_castle',
   speciesId: 643,

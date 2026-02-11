@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  isLocationBasedEncounter,
-  listLocations,
-  listSpecies,
-} from '@/data/encounters/helpers';
+import { isLocationBasedEncounter, listLocations, listSpecies } from '@/data/encounters/helpers';
 import {
   listLocations as listLocationsFromRegistry,
   getEncounterSlots,
@@ -178,9 +174,7 @@ describe('listSpecies', () => {
 
     const result = listSpecies('B', 'Normal', 'route_13');
 
-    expect(
-      result.map((s) => (s.kind === 'location' ? s.speciesId : -1))
-    ).toEqual([504, 508, 506]);
+    expect(result.map((s) => (s.kind === 'location' ? s.speciesId : -1))).toEqual([504, 508, 506]);
   });
 
   it('returns empty array when no slots found', () => {
@@ -238,9 +232,7 @@ describe('listSpecies', () => {
   });
 
   it('includes isShinyLocked in static entries', () => {
-    mockListStaticEntries.mockReturnValue([
-      makeStaticEntry({ isShinyLocked: true }),
-    ]);
+    mockListStaticEntries.mockReturnValue([makeStaticEntry({ isShinyLocked: true })]);
 
     const result = listSpecies('B2', 'StaticSymbol');
 

@@ -5,11 +5,7 @@
  * location-based (wild) and static (fixed) encounters.
  */
 
-import type {
-  EncounterMethodKey,
-  StaticEncounterTypeKey,
-  GameVersion,
-} from './schema';
+import type { EncounterMethodKey, StaticEncounterTypeKey, GameVersion } from './schema';
 import type { GenderRatio } from '../../wasm/wasm_pkg';
 import {
   listLocations as listLocationsFromRegistry,
@@ -84,11 +80,7 @@ function locCacheKey(version: string, method: string): string {
   return `L|${version}|${method}`;
 }
 
-function speciesCacheKey(
-  version: string,
-  method: string,
-  locationKey?: string
-): string {
+function speciesCacheKey(version: string, method: string, locationKey?: string): string {
   if (locationKey !== undefined) {
     return `L|${version}|${method}|${locationKey}`;
   }
@@ -103,10 +95,7 @@ function speciesCacheKey(
  * List encounter locations for a given version and wild encounter method.
  * Returns empty array for non-location-based types.
  */
-export function listLocations(
-  version: GameVersion,
-  method: EncounterMethodKey
-): LocationOption[] {
+export function listLocations(version: GameVersion, method: EncounterMethodKey): LocationOption[] {
   const key = locCacheKey(version, method);
   const cached = cacheLocations.get(key);
   if (cached) return cached;
@@ -185,10 +174,7 @@ function buildLocationSpecies(
   );
 }
 
-function buildStaticSpecies(
-  version: string,
-  method: string
-): EncounterSpeciesOption[] {
+function buildStaticSpecies(version: string, method: string): EncounterSpeciesOption[] {
   const entries = listStaticEncounterEntries(version, method);
   return entries.map((entry) => ({
     kind: 'static' as const,
