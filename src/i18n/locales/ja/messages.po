@@ -358,6 +358,11 @@ msgstr "検索"
 msgid "Second"
 msgstr "秒"
 
+#: src/features/ds-config/components/trainer-config-form.tsx:52
+#: src/features/ds-config/components/trainer-config-form.tsx:55
+msgid "Secret ID"
+msgstr "\u88CFID"
+
 #: src/components/forms/hidden-power-select.tsx:66
 #: src/components/forms/nature-select.tsx:66
 msgid "Select all"
@@ -381,6 +386,10 @@ msgstr "ひかるおまもり"
 #: src/features/egg-search/components/egg-filter-form.tsx:222
 msgid "Shiny only"
 msgstr "色違いのみ"
+
+#: src/features/ds-config/components/trainer-config-form.tsx:45
+msgid "SID"
+msgstr "SID (裏ID)"
 
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
@@ -416,6 +425,10 @@ msgstr "起動条件の詳細"
 msgid "This feature is under development."
 msgstr "この機能は準備中です。"
 
+#: src/features/ds-config/components/trainer-config-form.tsx:30
+msgid "TID"
+msgstr "TID (表ID)"
+
 #: src/components/layout/navigation-labels.tsx:17
 msgid "TID Adjust"
 msgstr "TID 調整"
@@ -440,6 +453,11 @@ msgstr "Timer0 min"
 #: src/components/layout/navigation-labels.tsx:8
 msgid "Tools"
 msgstr "ツール"
+
+#: src/features/ds-config/components/trainer-config-form.tsx:37
+#: src/features/ds-config/components/trainer-config-form.tsx:40
+msgid "Trainer ID"
+msgstr "\u30C8\u30EC\u30FC\u30CA\u30FCID"
 
 #: src/components/forms/iv-range-input.tsx:153
 #~ msgid "Unknown (any)"

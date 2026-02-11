@@ -378,6 +378,11 @@ msgstr "Search"
 msgid "Second"
 msgstr "Second"
 
+#: src/features/ds-config/components/trainer-config-form.tsx:52
+#: src/features/ds-config/components/trainer-config-form.tsx:55
+msgid "Secret ID"
+msgstr "Secret ID"
+
 #: src/components/forms/hidden-power-select.tsx:66
 #: src/components/forms/nature-select.tsx:66
 msgid "Select all"
@@ -401,6 +406,10 @@ msgstr "Shiny Charm"
 #: src/features/egg-search/components/egg-filter-form.tsx:222
 msgid "Shiny only"
 msgstr "Shiny only"
+
+#: src/features/ds-config/components/trainer-config-form.tsx:45
+msgid "SID"
+msgstr "SID"
 
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
@@ -436,6 +445,10 @@ msgstr "Startup condition details"
 msgid "This feature is under development."
 msgstr "This feature is under development."
 
+#: src/features/ds-config/components/trainer-config-form.tsx:30
+msgid "TID"
+msgstr "TID"
+
 #: src/components/layout/navigation-labels.tsx:17
 msgid "TID Adjust"
 msgstr "TID Adjust"
@@ -460,6 +473,11 @@ msgstr "Timer0 min"
 #: src/components/layout/navigation-labels.tsx:8
 msgid "Tools"
 msgstr "Tools"
+
+#: src/features/ds-config/components/trainer-config-form.tsx:37
+#: src/features/ds-config/components/trainer-config-form.tsx:40
+msgid "Trainer ID"
+msgstr "Trainer ID"
 
 #: src/components/forms/iv-range-input.tsx:153
 #~ msgid "Unknown (any)"
