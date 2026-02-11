@@ -78,8 +78,5 @@ export interface EncounterSpeciesJson {
 
 // EncounterMethodKey / StaticEncounterTypeKey must be subsets of WASM EncounterType.
 // If WASM adds/removes variants these lines will produce a compile error.
-type _AssertWild = EncounterMethodKey extends EncounterType ? true : never;
-type _AssertStatic = StaticEncounterTypeKey extends EncounterType ? true : never;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _SubsetCheck = _AssertWild & _AssertStatic;
+export type _AssertEncounterMethodSubset = EncounterMethodKey extends EncounterType ? true : never;
+export type _AssertStaticEncounterSubset = StaticEncounterTypeKey extends EncounterType ? true : never;

@@ -95,11 +95,25 @@ describe('Encounter Service Integration', () => {
       expect(isLocationBasedEncounter('PokemonShadow')).toBe(true);
     });
 
-    it('listLocations returns array (possibly empty) for PokemonShadow', () => {
+    it('has PokemonShadow locations for all versions', () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
         const locations = listLocationsFromLoader(version, 'PokemonShadow');
-        expect(Array.isArray(locations)).toBe(true);
+        expect(locations.length).toBeGreaterThan(0);
       }
+    });
+
+    it('includes driftveil_drawbridge and marvelous_bridge', () => {
+      const locations = listLocationsFromLoader('B', 'PokemonShadow');
+      const keys = locations.map((l) => l.key);
+      expect(keys).toContain('driftveil_drawbridge');
+      expect(keys).toContain('marvelous_bridge');
+    });
+
+    it('bridge locations are not in ShakingGrass', () => {
+      const locations = listLocationsFromLoader('B', 'ShakingGrass');
+      const keys = locations.map((l) => l.key);
+      expect(keys).not.toContain('driftveil_drawbridge');
+      expect(keys).not.toContain('marvelous_bridge');
     });
   });
 

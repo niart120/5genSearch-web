@@ -91,12 +91,20 @@ const SLOT_RATE_PRESETS = {
   Normal: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
   ShakingGrass: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
   DustCloud: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
-  PokemonShadow: [60, 30, 5, 4, 1],
+  PokemonShadow: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
   Surfing: [60, 30, 5, 4, 1],
   SurfingBubble: [60, 30, 5, 4, 1],
   Fishing: [60, 30, 5, 4, 1],
   FishingBubble: [60, 30, 5, 4, 1],
 };
+
+// Bridge locations where PokemonShadow (flying shadows) appear.
+// These are in the "揺れる草むら, 土煙" section on pokebook.jp but use
+// EncounterType::PokemonShadow in the game engine.
+const POKEMON_SHADOW_LOCATIONS = new Set([
+  'ホドモエの跳ね橋',
+  'ワンダーブリッジ',
+]);
 
 // Locations where water tables should only keep a single unique row set
 const WATER_SINGLE_ROW_LOCATIONS = new Map([
@@ -484,6 +492,7 @@ function findSectionTables($, method) {
     Normal: (t) => t.includes('草むら') && t.includes('洞窟') && !t.includes('濃い草むら'),
     ShakingGrass: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
     DustCloud: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
+    PokemonShadow: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
     Surfing: (t) => t.includes('なみのり') || t.includes('つり'),
     SurfingBubble: (t) => t.includes('なみのり') || t.includes('つり'),
     Fishing: (t) => t.includes('なみのり') || t.includes('つり'),
@@ -775,12 +784,16 @@ function parseEncounterPage(html, { version, method, url, aliasJa }) {
         const parsed = parseWideRowIntoSlots($, tr, method, aliasJa);
         if (!parsed) return;
 
-        // In the "揺れる草むら, 土煙" section, cave/dungeon rows contain
-        // モグリュー/ドリュウズ exclusively; outdoor rows do not.
-        if (method === 'ShakingGrass' || method === 'DustCloud') {
+        // In the "揺れる草むら, 土煙" section, rows are classified by:
+        //   - DustCloud: cave/dungeon rows with モグリュー/ドリュウズ exclusively
+        //   - PokemonShadow: bridge locations (ホドモエの跳ね橋, ワンダーブリッジ)
+        //   - ShakingGrass: everything else
+        if (method === 'ShakingGrass' || method === 'DustCloud' || method === 'PokemonShadow') {
           const isDust = isDustCloudRow(parsed.slots);
-          if (method === 'ShakingGrass' && isDust) return;
+          const isBridge = POKEMON_SHADOW_LOCATIONS.has(parsed.baseName);
+          if (method === 'ShakingGrass' && (isDust || isBridge)) return;
           if (method === 'DustCloud' && !isDust) return;
+          if (method === 'PokemonShadow' && !isBridge) return;
         }
 
         parsedRows.push(parsed);
