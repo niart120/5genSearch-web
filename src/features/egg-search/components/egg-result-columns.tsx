@@ -8,65 +8,19 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toHex, formatDatetime } from '@/lib/format';
+import {
+  toHex,
+  formatDatetime,
+  formatGender,
+  formatShiny,
+  formatAbilitySlot,
+  formatIvs,
+} from '@/lib/format';
 import { getNatureName } from '@/lib/game-data-names';
 import type { SupportedLocale } from '@/i18n';
-import type { EggDatetimeSearchResult, Gender, ShinyType, AbilitySlot } from '@/wasm/wasm_pkg.js';
+import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
 const columnHelper = createColumnHelper<EggDatetimeSearchResult>();
-
-function formatGender(gender: Gender): string {
-  switch (gender) {
-    case 'Male': {
-      return '♂';
-    }
-    case 'Female': {
-      return '♀';
-    }
-    case 'Genderless': {
-      return '-';
-    }
-  }
-}
-
-function formatShiny(shinyType: ShinyType): string {
-  switch (shinyType) {
-    case 'Star': {
-      return '☆';
-    }
-    case 'Square': {
-      return '◇';
-    }
-    case 'None': {
-      return '';
-    }
-  }
-}
-
-function formatAbilitySlot(slot: AbilitySlot): string {
-  switch (slot) {
-    case 'First': {
-      return '1';
-    }
-    case 'Second': {
-      return '2';
-    }
-    case 'Hidden': {
-      return 'H';
-    }
-  }
-}
-
-function formatIvs(ivs: {
-  hp: number;
-  atk: number;
-  def: number;
-  spa: number;
-  spd: number;
-  spe: number;
-}): string {
-  return `${ivs.hp}-${ivs.atk}-${ivs.def}-${ivs.spa}-${ivs.spd}-${ivs.spe}`;
-}
 
 /** Startup バリアントからの抽出ヘルパー */
 function getStartup(result: EggDatetimeSearchResult) {

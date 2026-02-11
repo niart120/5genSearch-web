@@ -16,10 +16,19 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
+import {
+  toBigintHex,
+  toHex,
+  formatDatetime,
+  formatKeyCode,
+  formatGender,
+  formatShinyDetailed,
+  formatAbilitySlot,
+  formatIvs,
+} from '@/lib/format';
 import { getNatureName } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
-import type { EggDatetimeSearchResult, AbilitySlot, Gender, ShinyType } from '@/wasm/wasm_pkg.js';
+import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
   open: boolean;
@@ -57,48 +66,6 @@ function DetailRow({ label, value }: DetailRowProps) {
   );
 }
 
-function formatGender(gender: Gender): string {
-  switch (gender) {
-    case 'Male': {
-      return '♂';
-    }
-    case 'Female': {
-      return '♀';
-    }
-    case 'Genderless': {
-      return '-';
-    }
-  }
-}
-
-function formatShiny(shinyType: ShinyType): string {
-  switch (shinyType) {
-    case 'Star': {
-      return '☆';
-    }
-    case 'Square': {
-      return '◇';
-    }
-    case 'None': {
-      return '-';
-    }
-  }
-}
-
-function formatAbilitySlot(slot: AbilitySlot): string {
-  switch (slot) {
-    case 'First': {
-      return '1';
-    }
-    case 'Second': {
-      return '2';
-    }
-    case 'Hidden': {
-      return 'H';
-    }
-  }
-}
-
 function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogProps) {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
@@ -110,8 +77,7 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
   const seed = 'Seed' in egg.source ? egg.source.Seed : undefined;
 
   const baseSeed = startup?.base_seed ?? seed?.base_seed;
-  const ivs = egg.core.ivs;
-  const ivsStr = `${ivs.hp}-${ivs.atk}-${ivs.def}-${ivs.spa}-${ivs.spd}-${ivs.spe}`;
+  const ivsStr = formatIvs(egg.core.ivs);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,7 +109,7 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
           <DetailRow label={t`Nature`} value={getNatureName(egg.core.nature, language)} />
           <DetailRow label={t`Ability`} value={formatAbilitySlot(egg.core.ability_slot)} />
           <DetailRow label={t`Gender`} value={formatGender(egg.core.gender)} />
-          <DetailRow label={t`Shiny`} value={formatShiny(egg.core.shiny_type)} />
+          <DetailRow label={t`Shiny`} value={formatShinyDetailed(egg.core.shiny_type)} />
 
           {/* 検索情報 */}
           <DetailRow label={t`Advance`} value={String(egg.advance)} />

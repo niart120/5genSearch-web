@@ -5,7 +5,7 @@
  * 表示順: 親個体値 → ♀親特性 → かわらずのいし → 性別比 → フラグ群 → offset/max_advance
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -19,9 +19,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
-import { NATURE_ORDER, getNatureName } from '@/lib/game-data-names';
+import {
+  IV_STAT_KEYS,
+  getStatLabel,
+  NATURE_ORDER,
+  getNatureName,
+  ABILITY_SLOT_ORDER,
+  getAbilitySlotName,
+  GENDER_RATIO_ORDER,
+  getGenderRatioName,
+} from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
+import { IV_VALUE_UNKNOWN } from '../types';
 import type {
   EggGenerationParams,
   GenerationConfig,
@@ -41,48 +51,6 @@ interface EggParamsFormProps {
   disabled?: boolean;
 }
 
-const GENDER_RATIO_ORDER: GenderRatio[] = [
-  'F1M1',
-  'F1M3',
-  'F3M1',
-  'F1M7',
-  'MaleOnly',
-  'FemaleOnly',
-  'Genderless',
-];
-
-const GENDER_RATIO_LABELS: Record<GenderRatio, Record<SupportedLocale, string>> = {
-  Genderless: { ja: '性別不明', en: 'Genderless' },
-  MaleOnly: { ja: '♂のみ', en: 'Male only' },
-  FemaleOnly: { ja: '♀のみ', en: 'Female only' },
-  F1M7: { ja: '♀1:♂7', en: '♀1:♂7' },
-  F1M3: { ja: '♀1:♂3', en: '♀1:♂3' },
-  F1M1: { ja: '♀1:♂1', en: '♀1:♂1' },
-  F3M1: { ja: '♀3:♂1', en: '♀3:♂1' },
-};
-
-const IV_STATS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
-
-/** WASM 側 IV_VALUE_UNKNOWN と一致するセンチネル値 */
-const IV_VALUE_UNKNOWN = 32;
-
-const STAT_SHORT_LABELS: Record<(typeof IV_STATS)[number], Record<SupportedLocale, string>> = {
-  hp: { ja: 'H', en: 'HP' },
-  atk: { ja: 'A', en: 'Atk' },
-  def: { ja: 'B', en: 'Def' },
-  spa: { ja: 'C', en: 'SpA' },
-  spd: { ja: 'D', en: 'SpD' },
-  spe: { ja: 'S', en: 'Spe' },
-};
-
-/** AbilitySlot の表示順と日英ラベル */
-const ABILITY_SLOT_ORDER: AbilitySlot[] = ['First', 'Second', 'Hidden'];
-const ABILITY_SLOT_LABELS: Record<AbilitySlot, Record<SupportedLocale, string>> = {
-  First: { ja: '特性1', en: 'Ability 1' },
-  Second: { ja: '特性2', en: 'Ability 2' },
-  Hidden: { ja: '隠れ特性', en: 'Hidden Ability' },
-};
-
 /** IV 値を表示用文字列に変換 (32 → "?") */
 function ivToDisplay(value: number): string {
   return value === IV_VALUE_UNKNOWN ? '?' : String(value);
@@ -96,18 +64,30 @@ interface ParentIvsInputProps {
   language: SupportedLocale;
 }
 
-function ParentIvsInput({ label, ivs, onChange, disabled, language }: ParentIvsInputProps) {
+const ParentIvsInput = memo(function ParentIvsInput({
+  label,
+  ivs,
+  onChange,
+  disabled,
+  language,
+}: ParentIvsInputProps) {
   const [localValues, setLocalValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(IV_STATS.map((stat) => [stat, ivToDisplay(ivs[stat])]))
+    Object.fromEntries(IV_STAT_KEYS.map((stat) => [stat, ivToDisplay(ivs[stat])]))
   );
 
-  const handleChange = useCallback((stat: (typeof IV_STATS)[number], raw: string) => {
+  // handleBlur から最新の localValues を参照するための ref
+  const localValuesRef = useRef(localValues);
+  useEffect(() => {
+    localValuesRef.current = localValues;
+  });
+
+  const handleChange = useCallback((stat: (typeof IV_STAT_KEYS)[number], raw: string) => {
     setLocalValues((prev) => ({ ...prev, [stat]: raw }));
   }, []);
 
   const handleBlur = useCallback(
-    (stat: (typeof IV_STATS)[number]) => {
-      const raw = (localValues[stat] ?? '').trim();
+    (stat: (typeof IV_STAT_KEYS)[number]) => {
+      const raw = (localValuesRef.current[stat] ?? '').trim();
       // 空欄 or "?" → 不明 (32)
       if (raw === '' || raw === '?') {
         setLocalValues((prev) => ({ ...prev, [stat]: '?' }));
@@ -122,17 +102,17 @@ function ParentIvsInput({ label, ivs, onChange, disabled, language }: ParentIvsI
       setLocalValues((prev) => ({ ...prev, [stat]: String(clamped) }));
       onChange({ ...ivs, [stat]: clamped });
     },
-    [localValues, ivs, onChange]
+    [ivs, onChange]
   );
 
   return (
     <div className="flex flex-col gap-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <div className="grid grid-cols-6 gap-1">
-        {IV_STATS.map((stat) => (
+        {IV_STAT_KEYS.map((stat) => (
           <div key={stat} className="flex flex-col items-center gap-0.5">
             <span className="text-[0.65rem] font-mono text-muted-foreground">
-              {STAT_SHORT_LABELS[stat][language]}
+              {getStatLabel(stat, language)}
             </span>
             <Input
               type="text"
@@ -143,14 +123,14 @@ function ParentIvsInput({ label, ivs, onChange, disabled, language }: ParentIvsI
               onBlur={() => handleBlur(stat)}
               onFocus={handleFocusSelectAll}
               disabled={disabled}
-              aria-label={`${label} ${STAT_SHORT_LABELS[stat][language]}`}
+              aria-label={`${label} ${getStatLabel(stat, language)}`}
             />
           </div>
         ))}
       </div>
     </div>
   );
-}
+});
 
 function EggParamsForm({
   value,
@@ -189,12 +169,9 @@ function EggParamsForm({
     return '__none__';
   };
 
-  /** AbilitySlot → female_has_hidden マッピング */
-  const femaleAbilitySlot = (): AbilitySlot => (value.female_has_hidden ? 'Hidden' : 'First');
-
   const handleFemaleAbilityChange = useCallback(
     (slot: string) => {
-      update({ female_has_hidden: slot === 'Hidden' });
+      update({ female_ability_slot: slot as AbilitySlot });
     },
     [update]
   );
@@ -253,7 +230,7 @@ function EggParamsForm({
               <Trans>♀ parent ability</Trans>
             </Label>
             <Select
-              value={femaleAbilitySlot()}
+              value={value.female_ability_slot}
               onValueChange={handleFemaleAbilityChange}
               disabled={disabled}
             >
@@ -263,7 +240,7 @@ function EggParamsForm({
               <SelectContent>
                 {ABILITY_SLOT_ORDER.map((slot) => (
                   <SelectItem key={slot} value={slot}>
-                    {ABILITY_SLOT_LABELS[slot][language]}
+                    {getAbilitySlotName(slot, language)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -310,7 +287,7 @@ function EggParamsForm({
               <SelectContent>
                 {GENDER_RATIO_ORDER.map((ratio) => (
                   <SelectItem key={ratio} value={ratio}>
-                    {GENDER_RATIO_LABELS[ratio][language]}
+                    {getGenderRatioName(ratio, language)}
                   </SelectItem>
                 ))}
               </SelectContent>

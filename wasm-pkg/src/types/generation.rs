@@ -392,8 +392,8 @@ pub struct EggGenerationParams {
     pub trainer: TrainerInfo,
     /// かわらずのいし効果
     pub everstone: EverstonePlan,
-    /// メス親が夢特性か
-    pub female_has_hidden: bool,
+    /// メス親の特性スロット
+    pub female_ability_slot: AbilitySlot,
     /// メタモン使用
     pub uses_ditto: bool,
     /// 性別比率

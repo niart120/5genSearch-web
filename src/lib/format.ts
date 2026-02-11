@@ -7,7 +7,7 @@
 
 import type { SupportedLocale } from '@/i18n';
 import type { AggregatedProgress } from '@/services/progress';
-import type { Datetime } from '@/wasm/wasm_pkg';
+import type { AbilitySlot, Datetime, Gender, Ivs, ShinyType } from '@/wasm/wasm_pkg';
 
 /**
  * rem 値をピクセル値に変換する。
@@ -166,6 +166,81 @@ function formatKeyCode(keyCode: number): string {
   return pressed.length === 0 ? 'なし' : pressed.join(' + ');
 }
 
+/**
+ * 性別を表示用文字列にフォーマット
+ */
+function formatGender(gender: Gender): string {
+  switch (gender) {
+    case 'Male': {
+      return '♂';
+    }
+    case 'Female': {
+      return '♀';
+    }
+    case 'Genderless': {
+      return '-';
+    }
+  }
+}
+
+/**
+ * 色違い種別を表示用文字列にフォーマット
+ */
+function formatShiny(shinyType: ShinyType): string {
+  switch (shinyType) {
+    case 'Star': {
+      return '☆';
+    }
+    case 'Square': {
+      return '◇';
+    }
+    case 'None': {
+      return '';
+    }
+  }
+}
+
+/**
+ * 色違い種別を表示用文字列にフォーマット (詳細ダイアログ用: None → "-")
+ */
+function formatShinyDetailed(shinyType: ShinyType): string {
+  switch (shinyType) {
+    case 'Star': {
+      return '☆';
+    }
+    case 'Square': {
+      return '◇';
+    }
+    case 'None': {
+      return '-';
+    }
+  }
+}
+
+/**
+ * 特性スロットを表示用文字列にフォーマット
+ */
+function formatAbilitySlot(slot: AbilitySlot): string {
+  switch (slot) {
+    case 'First': {
+      return '1';
+    }
+    case 'Second': {
+      return '2';
+    }
+    case 'Hidden': {
+      return 'H';
+    }
+  }
+}
+
+/**
+ * 個体値を "H-A-B-C-D-S" 形式にフォーマット
+ */
+function formatIvs(ivs: Ivs): string {
+  return `${ivs.hp}-${ivs.atk}-${ivs.def}-${ivs.spa}-${ivs.spd}-${ivs.spe}`;
+}
+
 export {
   remToPx,
   formatElapsedTime,
@@ -177,4 +252,9 @@ export {
   toHex,
   formatDatetime,
   formatKeyCode,
+  formatGender,
+  formatShiny,
+  formatShinyDetailed,
+  formatAbilitySlot,
+  formatIvs,
 };

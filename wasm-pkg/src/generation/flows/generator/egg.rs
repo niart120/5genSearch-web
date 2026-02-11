@@ -128,8 +128,8 @@ impl EggGenerator {
 mod tests {
     use super::*;
     use crate::types::{
-        EverstonePlan, GameStartConfig, GenderRatio, Ivs, LcgSeed, MemoryLinkState, RomVersion,
-        SavePresence, SeedOrigin, ShinyCharmState, StartMode, TrainerInfo,
+        AbilitySlot, EverstonePlan, GameStartConfig, GenderRatio, Ivs, LcgSeed, MemoryLinkState,
+        RomVersion, SavePresence, SeedOrigin, ShinyCharmState, StartMode, TrainerInfo,
     };
 
     fn make_game_start() -> GameStartConfig {
@@ -168,7 +168,7 @@ mod tests {
         let params = EggGenerationParams {
             trainer: make_trainer(),
             everstone: EverstonePlan::None,
-            female_has_hidden: false,
+            female_ability_slot: AbilitySlot::First,
             uses_ditto: false,
             gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,
@@ -198,7 +198,7 @@ mod tests {
         let params = EggGenerationParams {
             trainer: make_trainer(),
             everstone: EverstonePlan::None,
-            female_has_hidden: false,
+            female_ability_slot: AbilitySlot::First,
             uses_ditto: false,
             gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,

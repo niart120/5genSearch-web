@@ -7,9 +7,10 @@ use std::time::Duration;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::{EggDatetimeSearcher, MtseedDatetimeSearcher};
 use wasm_pkg::types::{
-    DsConfig, EggGenerationParams, EverstonePlan, GameStartConfig, GenderRatio, GenerationConfig,
-    Hardware, Ivs, KeyCode, MemoryLinkState, MtSeed, RomRegion, RomVersion, SavePresence,
-    SearchRangeParams, ShinyCharmState, StartMode, StartupCondition, TimeRangeParams, TrainerInfo,
+    AbilitySlot, DsConfig, EggGenerationParams, EverstonePlan, GameStartConfig, GenderRatio,
+    GenerationConfig, Hardware, Ivs, KeyCode, MemoryLinkState, MtSeed, RomRegion, RomVersion,
+    SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition, TimeRangeParams,
+    TrainerInfo,
 };
 use wasm_pkg::{EggDatetimeSearchParams, MtseedDatetimeSearchParams};
 
@@ -76,7 +77,7 @@ fn create_egg_searcher() -> EggDatetimeSearcher {
                 sid: 54321,
             },
             everstone: EverstonePlan::None,
-            female_has_hidden: false,
+            female_ability_slot: AbilitySlot::First,
             uses_ditto: false,
             gender_ratio: GenderRatio::Genderless,
             nidoran_flag: false,

@@ -30,7 +30,7 @@ function createDefaultForm(overrides?: Partial<EggSearchFormState>): EggSearchFo
     eggParams: {
       trainer: { tid: 0, sid: 0 },
       everstone: 'None',
-      female_has_hidden: false,
+      female_ability_slot: 'First',
       uses_ditto: false,
       gender_ratio: 'F1M1',
       nidoran_flag: false,

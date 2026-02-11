@@ -44,7 +44,7 @@ pub fn generate_egg(lcg: &mut Lcg64, params: &EggGenerationParams) -> RawEggData
 
     // 8. 特性スロット決定
     let ability_slot =
-        determine_ability_slot(pid, ha_roll, params.uses_ditto, params.female_has_hidden);
+        determine_ability_slot(pid, ha_roll, params.uses_ditto, params.female_ability_slot);
 
     RawEggData {
         pid,
@@ -87,13 +87,14 @@ fn determine_ability_slot(
     pid: Pid,
     ha_roll: u32,
     uses_ditto: bool,
-    female_has_hidden: bool,
+    female_ability_slot: AbilitySlot,
 ) -> AbilitySlot {
     // 夢特性条件判定
     // - メタモンを使用していない
     // - ♀親が夢特性
     // - 乱数判定成功 (60%)
-    let ha_candidate = !uses_ditto && female_has_hidden && roll_fraction(ha_roll, 5) >= 2;
+    let ha_candidate =
+        !uses_ditto && female_ability_slot == AbilitySlot::Hidden && roll_fraction(ha_roll, 5) >= 2;
 
     if ha_candidate {
         AbilitySlot::Hidden
@@ -105,7 +106,7 @@ fn determine_ability_slot(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EverstonePlan, GenderRatio, Ivs, Nature, TrainerInfo};
+    use crate::types::{AbilitySlot, EverstonePlan, GenderRatio, Ivs, Nature, TrainerInfo};
 
     fn make_params() -> EggGenerationParams {
         EggGenerationParams {
@@ -114,7 +115,7 @@ mod tests {
                 sid: 54321,
             },
             everstone: EverstonePlan::None,
-            female_has_hidden: false,
+            female_ability_slot: AbilitySlot::First,
             uses_ditto: false,
             gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,
@@ -202,24 +203,24 @@ mod tests {
     fn test_determine_ability_slot() {
         // 夢特性条件を満たさない場合: PID bit16 で判定
         assert_eq!(
-            determine_ability_slot(Pid(0x0001_0000), 0, false, false),
+            determine_ability_slot(Pid(0x0001_0000), 0, false, AbilitySlot::First),
             AbilitySlot::Second
         );
         assert_eq!(
-            determine_ability_slot(Pid(0x0000_0000), 0, false, false),
+            determine_ability_slot(Pid(0x0000_0000), 0, false, AbilitySlot::First),
             AbilitySlot::First
         );
 
         // 夢特性条件を満たす場合 (60% 成功)
         // roll_fraction(0xFFFF_FFFF, 5) = 4 >= 2 → 成功
         assert_eq!(
-            determine_ability_slot(Pid(0x0001_0000), 0xFFFF_FFFF, false, true),
+            determine_ability_slot(Pid(0x0001_0000), 0xFFFF_FFFF, false, AbilitySlot::Hidden),
             AbilitySlot::Hidden
         );
 
         // メタモン使用時は夢特性不可
         assert_eq!(
-            determine_ability_slot(Pid(0x0001_0000), 0xFFFF_FFFF, true, true),
+            determine_ability_slot(Pid(0x0001_0000), 0xFFFF_FFFF, true, AbilitySlot::Hidden),
             AbilitySlot::Second
         );
     }

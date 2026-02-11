@@ -11,7 +11,7 @@ const DEFAULT_IVS: Ivs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const DEFAULT_EGG_PARAMS: EggGenerationParams = {
   trainer: { tid: 0, sid: 0 },
   everstone: 'None',
-  female_has_hidden: false,
+  female_ability_slot: 'First',
   uses_ditto: false,
   gender_ratio: 'F1M1',
   nidoran_flag: false,

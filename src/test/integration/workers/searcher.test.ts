@@ -208,7 +208,7 @@ describe('EggDatetimeSearcher', () => {
         egg_params: {
           trainer: { tid: 1, sid: 2 },
           everstone: 'None',
-          female_has_hidden: false,
+          female_ability_slot: 'First',
           uses_ditto: false,
           gender_ratio: 'F1M1',
           nidoran_flag: false,
