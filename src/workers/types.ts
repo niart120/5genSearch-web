@@ -235,7 +235,7 @@ export interface PokemonListTask {
   origins: SeedOrigin[];
   params: PokemonGenerationParams;
   config: GenerationConfig;
-  filter: PokemonFilter | undefined;
+  filter?: PokemonFilter;
 }
 
 /**

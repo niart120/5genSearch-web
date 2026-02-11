@@ -29,7 +29,7 @@ function createDefaultForm(overrides?: Partial<PokemonListFormState>): PokemonLi
         },
       },
     ],
-    encounterType: 'GrassDouble',
+    encounterType: 'Normal',
     encounterMethod: 'Stationary',
     genConfig: {
       user_offset: 0,

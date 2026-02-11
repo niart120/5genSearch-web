@@ -41,8 +41,8 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     for (const batch of search.results) {
       if (Array.isArray(batch) && batch.length > 0) {
         const first = batch[0];
-        if (first && 'core' in first && 'advance' in first) {
-          flat.push(...(batch as GeneratedPokemonData[]));
+        if (first && typeof first === 'object' && 'core' in first && 'advance' in first) {
+          flat.push(...(batch as unknown as GeneratedPokemonData[]));
         }
       }
     }
