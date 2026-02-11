@@ -206,18 +206,18 @@ export function listEncounterSpecies(
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/data/encounters/schema.ts` 作成
-- [ ] `src/data/encounters/loader.ts` 作成
-  - [ ] `normalizeLocationKey` 実装
-  - [ ] `initRegistry` 実装 (import.meta.glob)
-  - [ ] `getEncounterSlots` 実装
-  - [ ] `listLocations` 実装
-- [ ] `src/data/encounters/converter.ts` 作成
-  - [ ] `toEncounterSlotConfigs` 実装
-- [ ] `src/data/encounters/helpers.ts` 作成
-  - [ ] `listEncounterLocations` 実装
-  - [ ] `listEncounterSpecies` 実装
-- [ ] `src/test/unit/encounter-converter.test.ts` 作成
-- [ ] `src/test/unit/encounter-loader.test.ts` 作成
-- [ ] `src/test/unit/encounter-helpers.test.ts` 作成
-- [ ] JSON 生成後の統合テスト実行・確認
+- [x] `src/data/encounters/schema.ts` 作成
+- [x] `src/data/encounters/loader.ts` 作成
+  - [x] `normalizeLocationKey` 実装
+  - [x] `initRegistry` 実装 (import.meta.glob)
+  - [x] `getEncounterSlots` 実装
+  - [x] `listLocations` 実装
+- [x] `src/data/encounters/converter.ts` 作成
+  - [x] `toEncounterSlotConfigs` 実装
+- [x] `src/data/encounters/helpers.ts` 作成
+  - [x] `listEncounterLocations` 実装
+  - [x] `listEncounterSpecies` 実装
+- [x] `src/test/unit/encounter-converter.test.ts` 作成
+- [x] `src/test/unit/encounter-loader.test.ts` 作成
+- [x] `src/test/unit/encounter-helpers.test.ts` 作成
+- [x] JSON 生成後の統合テスト実行・確認
