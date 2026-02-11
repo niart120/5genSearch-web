@@ -1,0 +1,18 @@
+{
+  "version": "B",
+  "method": "Roamer",
+  "source": {
+    "name": "niart120/pokemon-gen5-initseed",
+    "url": "https://github.com/niart120/pokemon-gen5-initseed",
+    "retrievedAt": "2026-02-11"
+  },
+  "entries": [
+    {
+      "id": "tornadus-roamer",
+      "displayNameKey": "tornadus_roamer",
+      "speciesId": 641,
+      "level": 40,
+      "genderRatio": "MaleOnly"
+    }
+  ]
+}

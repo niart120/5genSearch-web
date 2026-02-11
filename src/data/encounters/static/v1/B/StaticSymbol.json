@@ -1,0 +1,68 @@
+{
+  "version": "B",
+  "method": "StaticSymbol",
+  "source": {
+    "name": "niart120/pokemon-gen5-initseed",
+    "url": "https://github.com/niart120/pokemon-gen5-initseed",
+    "retrievedAt": "2026-02-11"
+  },
+  "entries": [
+    {
+      "id": "reshiram-n-castle",
+      "displayNameKey": "reshiram_n_castle",
+      "speciesId": 643,
+      "level": 50,
+      "genderRatio": "Genderless",
+      "isShinyLocked": true
+    },
+    {
+      "id": "cobalion-guidance-chamber",
+      "displayNameKey": "cobalion_guidance_chamber",
+      "speciesId": 638,
+      "level": 42,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "terrakion-trial-chamber",
+      "displayNameKey": "terrakion_trial_chamber",
+      "speciesId": 639,
+      "level": 42,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "virizion-rumination-field",
+      "displayNameKey": "virizion_rumination_field",
+      "speciesId": 640,
+      "level": 42,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "kyurem-giant-chasm",
+      "displayNameKey": "kyurem_giant_chasm",
+      "speciesId": 646,
+      "level": 75,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "landorus-abundant-shrine",
+      "displayNameKey": "landorus_abundant_shrine",
+      "speciesId": 645,
+      "level": 70,
+      "genderRatio": "MaleOnly"
+    },
+    {
+      "id": "volcarona-relic-castle",
+      "displayNameKey": "volcarona_relic_castle",
+      "speciesId": 637,
+      "level": 70,
+      "genderRatio": "F1M1"
+    },
+    {
+      "id": "musharna-dreamyard",
+      "displayNameKey": "musharna_dreamyard",
+      "speciesId": 518,
+      "level": 50,
+      "genderRatio": "F1M1"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "version": "B2",
+  "method": "StaticStarter",
+  "source": {
+    "name": "niart120/pokemon-gen5-initseed",
+    "url": "https://github.com/niart120/pokemon-gen5-initseed",
+    "retrievedAt": "2026-02-11"
+  },
+  "entries": [
+    {
+      "id": "snivy-starter",
+      "displayNameKey": "snivy_starter",
+      "speciesId": 495,
+      "level": 5,
+      "genderRatio": "F1M7"
+    },
+    {
+      "id": "tepig-starter",
+      "displayNameKey": "tepig_starter",
+      "speciesId": 498,
+      "level": 5,
+      "genderRatio": "F1M7"
+    },
+    {
+      "id": "oshawott-starter",
+      "displayNameKey": "oshawott_starter",
+      "speciesId": 501,
+      "level": 5,
+      "genderRatio": "F1M7"
+    }
+  ]
+}
