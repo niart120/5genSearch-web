@@ -3,11 +3,15 @@ import { CATEGORIES, type FeatureId } from '@/lib/navigation';
 import { TabsContent } from '@/components/ui/tabs';
 import { PlaceholderPage } from './placeholder-page';
 import { DatetimeSearchPage } from '@/features/datetime-search';
+import { EggSearchPage } from '@/features/egg-search';
 
 function renderFeature(featureId: FeatureId) {
   switch (featureId) {
     case 'datetime-search': {
       return <DatetimeSearchPage />;
+    }
+    case 'egg-search': {
+      return <EggSearchPage />;
     }
     default: {
       return <PlaceholderPage featureId={featureId} />;
