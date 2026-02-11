@@ -52,6 +52,7 @@
 | `src/features/egg-search/components/result-detail-dialog.tsx` | 新規 | 結果詳細ダイアログ |
 | `src/features/egg-search/hooks/use-egg-search.ts` | 新規 | 検索実行ロジック |
 | `src/components/layout/feature-content.tsx` | 変更 | `egg-search` の `case` を実ページに差し替え |
+| `src/components/forms/iv-range-input.tsx` | 変更 | `allowUnknown` 時のラベルを `Unknown (any)` → `任意` / `Any` に変更 |
 
 ## 3. 設計方針
 
@@ -220,8 +221,8 @@ interface EggParamsFormProps {
 
 | フィールド | 型 | UI 部品 | 備考 |
 |-----------|-----|---------|------|
-| 親個体値 (♂) | `Ivs` | 6 つの TextInput (0-31 / `?`) | 空欄 / `?` = 不明 (32) |
-| 親個体値 (♀) | `Ivs` | 6 つの TextInput (0-31 / `?`) | 空欄 / `?` = 不明 (32) |
+| 親個体値 (♂) | `Ivs` | 6 つの TextInput (0-31) + stat 毎の `[?]` Checkbox | Checkbox ON → 値 32 (`IV_VALUE_UNKNOWN`) + 入力 disabled |
+| 親個体値 (♀) | `Ivs` | 6 つの TextInput (0-31) + stat 毎の `[?]` Checkbox | Checkbox ON → 値 32 (`IV_VALUE_UNKNOWN`) + 入力 disabled |
 | ♀親の特性 | `AbilitySlot` | Select | 特性1 / 特性2 / 隠れ特性 → `female_ability_slot` に直接設定 |
 | かわらずのいし | `Nature \| undefined` | Select (性格一覧 + なし) | `undefined` = 不使用 |
 | 性別比 | `GenderRatio` | Select | 1:1, 1:3, 3:1, 7:1, 性別不明 等 |
@@ -236,7 +237,10 @@ interface EggParamsFormProps {
 
 - WASM 側 `Ivs` は各フィールド 0-31 の通常値に加え 32 (`IV_VALUE_UNKNOWN`) を受け付ける
 - 値 32 は遺伝アルゴリズム内でそのまま子に伝播し、表示解決層で `"?"` として出力される
-- UI: 入力フィールドが空欄または `?` の状態でフォーカスアウトすると値 32 をセットする
+- UI: 各 stat ラベル行 (H, A, B, C, D, S) に `[?]` チェックボックスを隣接配置する
+  - Checkbox ON → テキスト入力を `disabled` にし、値を `IV_VALUE_UNKNOWN` (32) に固定
+  - Checkbox OFF → テキスト入力を有効化し、値を `0` にリセット
+  - チェックボックスによる明示的な切り替えにより、Unknown 指定の Discovery を担保する
 - AbilitySlot Select: UI 値がそのまま `female_ability_slot: AbilitySlot` として WASM API に渡される（不可逆マッピング廃止）
 
 ### 4.3 EggFilterForm (`egg-filter-form.tsx`)
@@ -253,7 +257,7 @@ interface EggFilterFormProps {
 
 | フィールド | 型 | UI 部品 | 備考 |
 |-----------|-----|---------|------|
-| IV 範囲 | `IvFilter` | IvRangeInput (既存) | H/A/B/C/D/S 各 min-max |
+| IV 範囲 | `IvFilter` | IvRangeInput (既存, `allowUnknown={true}`) | H/A/B/C/D/S 各 min-max + `[任意]` Checkbox (Unknown 含む全範囲許容) |
 | 性格 | `Nature[]` | NatureSelect (複数選択) | 空 = フィルターなし |
 | 性別 | `Gender \| undefined` | Select | ♂ / ♀ / 指定なし |
 | 特性スロット | `AbilitySlot \| undefined` | Select | 第 1 / 第 2 / 夢 / 指定なし |
@@ -446,6 +450,14 @@ CI 環境制約: GPU なし環境では GPU 関連テストをスキップ (`des
 ### 統合
 
 - [x] `components/layout/feature-content.tsx` — `egg-search` case 追加
+
+### IV Unknown UI 改善
+
+- [ ] `features/egg-search/components/egg-params-form.tsx` — `ParentIvsInput` に stat 毎の `[?]` Checkbox 追加
+- [ ] `features/egg-search/components/egg-filter-form.tsx` — `IvRangeInput` に `allowUnknown` prop を渡す
+- [ ] `components/forms/iv-range-input.tsx` — ラベル `Unknown (any)` → `任意` / `Any` に変更
+- [ ] `test/components/egg-params-form.test.tsx` — Checkbox トグルのテスト追加
+- [ ] `test/components/egg-filter-form.test.tsx` — `allowUnknown` 表示のテスト追加
 
 ### テスト
 
