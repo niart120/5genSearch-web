@@ -80,3 +80,49 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 
 観察: Rust 側に場所ごとのエンカウントテーブルは存在しない。`PokemonGenerationParams.slots` として TS から WASM に渡される。TS 側の `converter.ts` が JSON スキーマ → WASM 入力型の変換を担当する。`EncounterSlotConfig` や `EncounterType` の型は Rust がオーナーであり、TS 側で独自に定義・拡張しない。
 当面の方針: 現在の分担を維持する。TS 側は「どの場所にどのスロットがあるか」を管理し、Rust 側は「乱数からポケモン個体を決定する」計算を担当する。型の二重管理を避けるため、WASM バインディング型を TS 側で re-export する形を取る。
+
+## 2026-02-11: About ページの新設計画
+
+経緯: pokebook.jp の出典表記をフッターに配置したが、フッターは常時表示されるため画面領域を圧迫する。出典情報は「About」タブ (独立ページ) にまとめたほうが適切。
+方針: navigation.ts にカテゴリまたはスタンドアロンページとして `about` を追加し、BottomNav とサイドバーからアクセスする形を検討する。
+
+About ページに掲載する内容候補 (別途検討):
+
+- アプリ概要 (何ができるツールか、対象タイトル)
+- データの出典 (pokebook.jp「ポケモンの友」+ niart120 参照実装)
+- 使用技術・ライセンス情報
+- リポジトリへのリンク
+- 免責事項・利用条件
+
+当面の方針: About ページの実装は別タスクとする。フッターコンポーネントは廃止済み (footer.tsx 削除、app.tsx から除去)。
+
+## 2026-02-11: エンカウントデータの i18n 戦略
+
+### 現状
+
+エンカウントデータに関する i18n 対象は以下の 3 カテゴリ:
+
+1. **ロケーション名** (`displayNameKey`): 生成 JSON に日本語テキストがハードコードされている (例: `"電気石の洞穴1F"`)
+2. **種族名**: Rust 側 `SPECIES_NAMES_JA` / `SPECIES_NAMES_EN` で管理。Lingui 経由ではない
+3. **メソッド名** (Normal, ShakingGrass 等): UI ラベルとして Lingui で管理すべき
+
+### バスラオ (speciesId: 550) のフォーム問題
+
+pokebook.jp では「バスラオ赤」「バスラオ青」と区別されるが、スクレイパーの `FORM_ALIASES` で両方とも `speciesId: 550` に解決される。以下の問題がある:
+
+- `EncounterSlotJson` に `formId` がない → フォーム情報が不可逆的に消失
+- `helpers.ts` の `listEncounterSpecies` は speciesId でグルーピングするため赤・青が合算される
+- Rust 側 `EncounterSlotConfig` にもフォーム情報がない
+
+Gen 5 のゲーム仕様上、バスラオのフォーム (赤/青) はバージョンによって固定 (B/B2=赤縞、W/W2=青縞) であり、乱数で決まるわけではない。したがって、エンカウントスロットの計算結果に直接影響しない。表示上の区別が必要かどうかは UI 設計次第。
+
+### species-ja.json の位置づけ
+
+`species-ja.json` はスクレイパー専用。ランタイムでは未使用。ランタイムの種族名解決は Rust 側 `get_species_name()` が担当する。
+
+### 当面の方針
+
+- ロケーション名: `displayNameKey` を Lingui メッセージカタログのキーとして使用する方向を検討。英語訳は別途用意が必要
+- 種族名: 現状の Rust 側管理を維持。フォーム名が必要になった場合は Rust に `get_species_form_name()` を追加する方向
+- メソッド名: Lingui の `<Trans>` で UI ラベルを管理
+- バスラオのフォーム情報: 当面は `speciesId` のみで管理し、必要に応じて `formId` フィールドを全レイヤー (JSON schema → TS 型 → Rust `EncounterSlotConfig`) に追加する

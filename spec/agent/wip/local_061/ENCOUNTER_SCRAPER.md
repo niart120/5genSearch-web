@@ -101,7 +101,13 @@ pokebook.jp では同一ロケーション名で複数の行 (エリア区分) �
 | Normal / ShakingGrass / DustCloud | `parseWideRowIntoSlots` | 1行 = ロケーション名 + 12 セル (名前(Lv)) |
 | Surfing / SurfingBubble / Fishing / FishingBubble | `parseWaterRowSlots` | ロケーション行 + 4 連続行 (各メソッド 5 セル) |
 
-ShakingGrass と DustCloud は同一セクション内に混在するため `rowLooksLikeDust` で判別する。
+ShakingGrass と DustCloud は pokebook.jp 上の「揺れる草むら, 土煙」セクション内に混在する。
+屋外行 (タブンネ等) と洞窟行 (モグリュー/ドリュウズ) が同一テーブルに含まれるため、
+パース後にスロット内の種族 ID で判別する (`isDustCloudRow`)。
+
+判定基準: `DUST_CLOUD_SPECIES = new Set([529, 530])` — モグリュー (#529) またはドリュウズ (#530) が
+スロットに 1 体でも含まれていれば DustCloud 行、含まれなければ ShakingGrass 行とする。
+Gen 5 の仕様上、洞窟の土煙エンカウントはこの 2 種専用であり、屋外の揺れる草むらには出現しないため信頼性が高い。
 
 ---
 
@@ -187,6 +193,7 @@ node scripts/scrape-encounters.js --version=B2 --url=https://example.com/test
 | `parseWideRowIntoSlots($, tr, method, aliasJa, speciesData, version)` | 12 枠行のパース |
 | `parseWaterRowSlots($, tr, method, aliasJa, speciesData, version)` | 5 枠行のパース |
 | `findSectionTables($, method)` | HTML の見出しからセクションテーブルを抽出 |
+| `isDustCloudRow(parsedSlots)` | スロット内の種族 ID で DustCloud 行か判定 |
 | `resolveLocationGroup(baseName, rows, opts)` | 同一ロケーション名の重複解決 |
 | `loadSpeciesAliasJa()` | species-ja.json をロード |
 | `generateSpeciesAliasJa()` | gen5-species.json から species-ja.json を生成 |
@@ -216,17 +223,40 @@ node scripts/scrape-encounters.js --version=B2 --url=https://example.com/test
 
 ## 6. 実装チェックリスト
 
-- [ ] `cheerio` を devDependencies に追加
-- [ ] `species-ja.json` 生成ロジック実装
-- [ ] `scripts/scrape-encounters.js` 実装
-  - [ ] SOURCE_MAP 定義
-  - [ ] SLOT_RATE_PRESETS 定義
-  - [ ] DUPLICATE_SUFFIX_RULES (BW / B2W2) 定義
-  - [ ] HTML パーサー (Normal 系 / Water 系)
-  - [ ] genderRatio 解決
-  - [ ] hasHeldItem 解決
-  - [ ] ロケーション重複解決
-  - [ ] CLI 引数パース
-- [ ] 全 28 ファイルの生成確認
-- [ ] サンプルデータの目視検証
-- [ ] `package.json` に `scrape:encounters` スクリプト追加
+- [x] `cheerio` を devDependencies に追加
+- [x] `species-ja.json` 生成ロジック実装
+- [x] `scripts/scrape-encounters.js` 実装
+  - [x] SOURCE_MAP 定義
+  - [x] SLOT_RATE_PRESETS 定義
+  - [x] DUPLICATE_SUFFIX_RULES (BW / B2W2) 定義
+  - [x] HTML パーサー (Normal 系 / Water 系)
+  - [x] genderRatio 解決
+  - [x] hasHeldItem 解決
+  - [x] ロケーション重複解決
+  - [x] CLI 引数パース
+  - [x] DustCloud 判定 (種族 ID ベース: isDustCloudRow)
+- [x] 全 28 ファイルの生成確認
+- [x] サンプルデータの目視検証
+- [x] `package.json` に `scrape:encounters` スクリプト追加
+
+---
+
+## 7. 実装後の補足事項
+
+### 7.1 DustCloud 判定方式の変更
+
+当初の設計では `rowLooksLikeDust` (テーブル行内のアイテムテキストで判定) を想定していたが、pokebook.jp の HTML 構造上、アイテム情報はテーブルに含まれていなかった。
+
+最終実装では `isDustCloudRow(parsedSlots)` を採用。パース済みスロットの `speciesId` でモグリュー (#529) / ドリュウズ (#530) の存在を判定する方式に変更した。Gen 5 の仕様上、洞窟の土煙エンカウントはこの 2 種専用であるため、誤判定のリスクは低い。
+
+### 7.2 `displayNameKey` の正規化
+
+`displayNameKey` はスクレイパー側で `normalizeLocationKey()` を適用した正規化済み文字列を格納している。空白・全角スペース・ハイフン系記号を除去する。この値はランタイム側 `loader.ts` の `normalizeLocationKey()` と同一ロジックであるため、スクレイパーで正規化済みの値をそのまま使用できる。
+
+### 7.3 バスラオのフォーム (FORM_ALIASES)
+
+pokebook.jp では「バスラオ赤」「バスラオ青」と表記されるが、Gen 5 ではフォームはバージョン固定 (B/B2=赤縞、W/W2=青縞) であり乱数消費に影響しない。現状は両方とも `speciesId: 550` に正規化しておりフォーム情報は保持していない。UI でフォーム表示が必要になった場合は `EncounterSlotJson` への `formId` 追加が必要。
+
+### 7.4 水系メソッドの重複排除
+
+水系 (Surfing/SurfingBubble/Fishing/FishingBubble) のテーブルでは同一ロケーション名で複数の行 (季節・階層別) が並ぶ場合がある。`WATER_SINGLE_ROW_LOCATIONS` に登録されたロケーションは重複するスロット構成を自動排除する。シグネチャベースの重複判定 (`makeRowSignature`) を使用するため、スロット構成が異なる場合は保持される。
