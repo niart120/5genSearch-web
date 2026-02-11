@@ -68,7 +68,7 @@ export function createEggSearchTasks(
   context: DatetimeSearchContext,
   eggParams: EggGenerationParams,
   genConfig: GenerationConfig,
-  filter: EggFilter | null,
+  filter: EggFilter | undefined,
   workerCount: number
 ): EggDatetimeSearchTask[] {
   const paramsList = generate_egg_search_tasks(context, eggParams, genConfig, filter, workerCount);

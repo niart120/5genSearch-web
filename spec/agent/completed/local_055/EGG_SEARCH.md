@@ -52,6 +52,7 @@
 | `src/features/egg-search/components/result-detail-dialog.tsx` | 新規 | 結果詳細ダイアログ |
 | `src/features/egg-search/hooks/use-egg-search.ts` | 新規 | 検索実行ロジック |
 | `src/components/layout/feature-content.tsx` | 変更 | `egg-search` の `case` を実ページに差し替え |
+| `src/components/forms/iv-range-input.tsx` | 変更 | `allowUnknown` 時のラベルを `Unknown (any)` → `任意` / `Any` に変更 |
 
 ## 3. 設計方針
 
@@ -151,7 +152,7 @@ GPU 対応: 孵化検索は現時点で `GpuDatetimeSearchIterator` (MT Seed 用
 | 時刻範囲 | 各フィールド範囲内 | 時刻の範囲が無効です |
 | max_advance | `max_advance` ≥ `user_offset` | 検索終了位置は開始位置以上を指定してください |
 | user_offset | $\ge 0$ | 開始位置は 0 以上を指定してください |
-| 親個体値 | 各値 0-31 | 個体値は 0〜31 の範囲で指定してください |
+| 親個体値 | 各値 0-31 または 32 (不明) | 個体値は 0〜31 の範囲で指定してください |
 
 IV フィルターの min ≤ max はフォーム部品側 (IvRangeInput) でクランプ済み。
 
@@ -216,21 +217,31 @@ interface EggParamsFormProps {
 }
 ```
 
-入力フィールド:
+入力フィールド (表示順):
 
 | フィールド | 型 | UI 部品 | 備考 |
 |-----------|-----|---------|------|
+| 親個体値 (♂) | `Ivs` | 6 つの TextInput (0-31) + stat 毎の `[?]` Checkbox | Checkbox ON → 値 32 (`IV_VALUE_UNKNOWN`) + 入力 disabled |
+| 親個体値 (♀) | `Ivs` | 6 つの TextInput (0-31) + stat 毎の `[?]` Checkbox | Checkbox ON → 値 32 (`IV_VALUE_UNKNOWN`) + 入力 disabled |
+| ♀親の特性 | `AbilitySlot` | Select | 特性1 / 特性2 / 隠れ特性 → `female_ability_slot` に直接設定 |
 | かわらずのいし | `Nature \| undefined` | Select (性格一覧 + なし) | `undefined` = 不使用 |
-| メス親夢特性 | `boolean` | Checkbox | |
-| メタモン使用 | `boolean` | Checkbox | |
 | 性別比 | `GenderRatio` | Select | 1:1, 1:3, 3:1, 7:1, 性別不明 等 |
+| メタモン使用 | `boolean` | Checkbox | |
 | ニドラン♀ | `boolean` | Checkbox | ニドラン♀孵化時のみ |
 | 国際孵化 | `boolean` | Checkbox | |
-| 親個体値 (♂) | `[u8; 6]` | 6 つの NumberInput (0-31) | H-A-B-C-D-S |
-| 親個体値 (♀) | `[u8; 6]` | 6 つの NumberInput (0-31) | H-A-B-C-D-S |
 | NPC 消費 | `boolean` | Checkbox | |
 | user_offset | `number` | NumberInput | 消費開始位置 |
 | max_advance | `number` | NumberInput | 探索終了位置 |
+
+親個体値の Unknown (32) サポート:
+
+- WASM 側 `Ivs` は各フィールド 0-31 の通常値に加え 32 (`IV_VALUE_UNKNOWN`) を受け付ける
+- 値 32 は遺伝アルゴリズム内でそのまま子に伝播し、表示解決層で `"?"` として出力される
+- UI: 各 stat ラベル行 (H, A, B, C, D, S) に `[?]` チェックボックスを隣接配置する
+  - Checkbox ON → テキスト入力を `disabled` にし、値を `IV_VALUE_UNKNOWN` (32) に固定
+  - Checkbox OFF → テキスト入力を有効化し、値を `0` にリセット
+  - チェックボックスによる明示的な切り替えにより、Unknown 指定の Discovery を担保する
+- AbilitySlot Select: UI 値がそのまま `female_ability_slot: AbilitySlot` として WASM API に渡される（不可逆マッピング廃止）
 
 ### 4.3 EggFilterForm (`egg-filter-form.tsx`)
 
@@ -246,7 +257,7 @@ interface EggFilterFormProps {
 
 | フィールド | 型 | UI 部品 | 備考 |
 |-----------|-----|---------|------|
-| IV 範囲 | `IvFilter` | IvRangeInput (既存) | H/A/B/C/D/S 各 min-max |
+| IV 範囲 | `IvFilter` | IvRangeInput (既存, `allowUnknown={true}`) | H/A/B/C/D/S 各 min-max + `[任意]` Checkbox (Unknown 含む全範囲許容) |
 | 性格 | `Nature[]` | NatureSelect (複数選択) | 空 = フィルターなし |
 | 性別 | `Gender \| undefined` | Select | ♂ / ♀ / 指定なし |
 | 特性スロット | `AbilitySlot \| undefined` | Select | 第 1 / 第 2 / 夢 / 指定なし |
@@ -427,22 +438,30 @@ CI 環境制約: GPU なし環境では GPU 関連テストをスキップ (`des
 
 ### Feature: egg-search
 
-- [ ] `features/egg-search/types.ts` — 型定義 + バリデーション関数
-- [ ] `features/egg-search/hooks/use-egg-search.ts` — 検索実行ロジック
-- [ ] `features/egg-search/components/egg-params-form.tsx` — 孵化パラメータフォーム
-- [ ] `features/egg-search/components/egg-filter-form.tsx` — 孵化フィルターフォーム
-- [ ] `features/egg-search/components/egg-search-page.tsx` — ページコンポーネント
-- [ ] `features/egg-search/components/egg-result-columns.tsx` — 結果テーブル列定義
-- [ ] `features/egg-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
-- [ ] `features/egg-search/index.ts` — re-export
+- [x] `features/egg-search/types.ts` — 型定義 + バリデーション関数
+- [x] `features/egg-search/hooks/use-egg-search.ts` — 検索実行ロジック
+- [x] `features/egg-search/components/egg-params-form.tsx` — 孵化パラメータフォーム
+- [x] `features/egg-search/components/egg-filter-form.tsx` — 孵化フィルターフォーム
+- [x] `features/egg-search/components/egg-search-page.tsx` — ページコンポーネント
+- [x] `features/egg-search/components/egg-result-columns.tsx` — 結果テーブル列定義
+- [x] `features/egg-search/components/result-detail-dialog.tsx` — 詳細ダイアログ
+- [x] `features/egg-search/index.ts` — re-export
 
 ### 統合
 
-- [ ] `components/layout/feature-content.tsx` — `egg-search` case 追加
+- [x] `components/layout/feature-content.tsx` — `egg-search` case 追加
+
+### IV Unknown UI 改善
+
+- [x] `features/egg-search/components/egg-params-form.tsx` — `ParentIvsInput` に stat 毎の `[?]` Checkbox 追加
+- [x] `features/egg-search/components/egg-filter-form.tsx` — `IvRangeInput` に `allowUnknown` prop を渡す
+- [x] `components/forms/iv-range-input.tsx` — ラベル `Unknown (any)` → `任意` / `Any` に変更
+- [x] `test/components/egg-params-form.test.tsx` — Checkbox トグルのテスト追加
+- [x] `test/components/egg-filter-form.test.tsx` — `allowUnknown` 表示のテスト追加
 
 ### テスト
 
-- [ ] `test/unit/egg-search-validation.test.ts` — バリデーション
-- [ ] `test/components/egg-params-form.test.tsx` — 孵化パラメータフォーム
-- [ ] `test/components/egg-filter-form.test.tsx` — フィルターフォーム
-- [ ] `test/integration/egg-datetime-search.test.ts` — Worker/WASM 統合
+- [x] `test/unit/egg-search-validation.test.ts` — バリデーション
+- [x] `test/components/egg-params-form.test.tsx` — 孵化パラメータフォーム
+- [x] `test/components/egg-filter-form.test.tsx` — フィルターフォーム
+- [x] `test/integration/egg-datetime-search.test.ts` — Worker/WASM 統合

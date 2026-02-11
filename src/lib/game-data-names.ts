@@ -8,6 +8,8 @@ import type {
   SavePresence,
   MemoryLinkState,
   ShinyCharmState,
+  AbilitySlot,
+  GenderRatio,
 } from '@/wasm/wasm_pkg';
 import type { SupportedLocale } from '@/i18n';
 
@@ -291,6 +293,50 @@ function getShinyCharmStateName(state: ShinyCharmState, locale: SupportedLocale)
   return SHINY_CHARM_STATE_NAMES[state][locale];
 }
 
+// ---------------------------------------------------------------------------
+// AbilitySlot
+// ---------------------------------------------------------------------------
+
+const ABILITY_SLOT_ORDER: AbilitySlot[] = ['First', 'Second', 'Hidden'];
+
+const ABILITY_SLOT_NAMES: Record<AbilitySlot, Record<SupportedLocale, string>> = {
+  First: { ja: '特性1', en: 'Ability 1' },
+  Second: { ja: '特性2', en: 'Ability 2' },
+  Hidden: { ja: '隠れ特性', en: 'Hidden Ability' },
+};
+
+function getAbilitySlotName(slot: AbilitySlot, locale: SupportedLocale): string {
+  return ABILITY_SLOT_NAMES[slot][locale];
+}
+
+// ---------------------------------------------------------------------------
+// GenderRatio
+// ---------------------------------------------------------------------------
+
+const GENDER_RATIO_ORDER: GenderRatio[] = [
+  'F1M1',
+  'F1M3',
+  'F3M1',
+  'F1M7',
+  'MaleOnly',
+  'FemaleOnly',
+  'Genderless',
+];
+
+const GENDER_RATIO_NAMES: Record<GenderRatio, Record<SupportedLocale, string>> = {
+  Genderless: { ja: '性別不明', en: 'Genderless' },
+  MaleOnly: { ja: '♂のみ', en: 'Male only' },
+  FemaleOnly: { ja: '♀のみ', en: 'Female only' },
+  F1M7: { ja: '♀1:♂7', en: '♀1:♂7' },
+  F1M3: { ja: '♀1:♂3', en: '♀1:♂3' },
+  F1M1: { ja: '♀1:♂1', en: '♀1:♂1' },
+  F3M1: { ja: '♀3:♂1', en: '♀3:♂1' },
+};
+
+function getGenderRatioName(ratio: GenderRatio, locale: SupportedLocale): string {
+  return GENDER_RATIO_NAMES[ratio][locale];
+}
+
 export type { IvStatKey };
 export {
   IV_STAT_KEYS,
@@ -313,4 +359,8 @@ export {
   getMemoryLinkStateName,
   SHINY_CHARM_STATE_ORDER,
   getShinyCharmStateName,
+  ABILITY_SLOT_ORDER,
+  getAbilitySlotName,
+  GENDER_RATIO_ORDER,
+  getGenderRatioName,
 };

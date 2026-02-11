@@ -19,14 +19,99 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0} selected"
 
-#: src/components/layout/header.tsx:25
+#: src/features/egg-search/components/egg-params-form.tsx:257
+msgid "♀ parent ability"
+msgstr "♀ parent ability"
+
+#: src/components/layout/header.tsx:33
 msgid "5genSearch"
 msgstr ""
 
-#: src/features/ds-config/components/timer0-vcount-section.tsx:23
+#: src/features/egg-search/components/egg-result-columns.tsx:98
+#: src/features/egg-search/components/result-detail-dialog.tsx:110
+msgid "Ability"
+msgstr "Ability"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:208
+msgid "Ability 1"
+msgstr "Ability 1"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:209
+msgid "Ability 2"
+msgstr "Ability 2"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:196
+msgid "Ability slot"
+msgstr "Ability slot"
+
+#: src/features/egg-search/components/egg-result-columns.tsx:113
+#: src/features/egg-search/components/result-detail-dialog.tsx:115
+msgid "Advance"
+msgstr "Advance"
+
+#: src/components/forms/iv-range-input.tsx:153
+msgid "Any"
+msgstr "Any"
+
+#: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
 msgid "Auto"
 msgstr "Auto"
+
+#. placeholder {0}: BUTTON_LABELS['L']
+#. placeholder {0}: BUTTON_LABELS['R']
+#. placeholder {0}: BUTTON_LABELS['Select']
+#: src/components/forms/key-spec-input.tsx:129
+#: src/components/forms/key-spec-input.tsx:153
+#: src/components/forms/key-spec-input.tsx:161
+#: src/components/forms/key-spec-input.tsx:182
+#: src/components/forms/key-spec-input.tsx:190
+msgid "Button {0}"
+msgstr "Button {0}"
+
+#: src/components/forms/key-spec-input.tsx:153
+#~ msgid "Button L"
+#~ msgstr "Button L"
+
+#: src/components/forms/key-spec-input.tsx:161
+#~ msgid "Button R"
+#~ msgstr "Button R"
+
+#: src/components/forms/key-spec-input.tsx:182
+#~ msgid "Button Select"
+#~ msgstr "Button Select"
+
+#: src/components/forms/key-spec-input.tsx:190
+#~ msgid "Button Start"
+#~ msgstr "Button Start"
+
+#: src/components/forms/search-controls.tsx:53
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/components/forms/key-spec-input.tsx:197
+msgid "Combinations"
+msgstr "Combinations"
+
+#: src/features/egg-search/components/egg-params-form.tsx:359
+msgid "Consider NPC"
+msgstr "Consider NPC"
+
+#: src/features/datetime-search/components/result-detail-dialog.tsx:49
+#: src/features/egg-search/components/result-detail-dialog.tsx:60
+msgid "Copy {label}"
+msgstr "Copy {label}"
+
+#: src/components/forms/search-context-form.tsx:41
+msgid "Date range"
+msgstr "Date range"
+
+#: src/features/datetime-search/components/result-detail-dialog.tsx:83
+#: src/features/datetime-search/components/seed-origin-columns.tsx:46
+#: src/features/egg-search/components/egg-result-columns.tsx:59
+#: src/features/egg-search/components/result-detail-dialog.tsx:97
+msgid "Date/Time"
+msgstr "Date/Time"
 
 #: src/components/layout/navigation-labels.tsx:12
 msgid "Datetime Search"
@@ -37,6 +122,11 @@ msgstr "Datetime Search"
 msgid "Deselect all"
 msgstr "Deselect all"
 
+#: src/features/datetime-search/components/seed-origin-columns.tsx:33
+#: src/features/egg-search/components/egg-result-columns.tsx:46
+msgid "Details"
+msgstr "Details"
+
 #: src/components/layout/navigation-labels.tsx:15
 msgid "Egg"
 msgstr "Egg"
@@ -46,17 +136,55 @@ msgstr "Egg"
 #~ msgid "Egg Generation"
 #~ msgstr "Egg Generation"
 
+#: src/features/egg-search/components/egg-params-form.tsx:233
+msgid "Egg parameters"
+msgstr "Egg parameters"
+
 #: src/components/layout/navigation-labels.tsx:13
 msgid "Egg Search"
 msgstr "Egg Search"
 
-#: src/components/data-display/search-progress.tsx:47
+#: src/features/egg-search/components/result-detail-dialog.tsx:90
+msgid "Egg search result details"
+msgstr "Egg search result details"
+
+#: src/components/data-display/search-progress.tsx:57
 msgid "Elapsed"
 msgstr "Elapsed"
 
-#: src/components/forms/date-range-picker.tsx:130
+#: src/components/forms/date-range-picker.tsx:132
 msgid "End date"
 msgstr "End date"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:93
+msgid "Enter a hex value in the range 0 to FFFFFFFF"
+msgstr "Enter a hex value in the range 0 to FFFFFFFF"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:84
+msgid "Enter at least one MT Seed"
+msgstr "Enter at least one MT Seed"
+
+#: src/features/egg-search/components/egg-params-form.tsx:280
+msgid "Everstone"
+msgstr "Everstone"
+
+#: src/features/egg-search/components/egg-params-form.tsx:233
+#~ msgid "Female has HA"
+#~ msgstr "Female has HA"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:152
+msgid "Filter (optional)"
+msgstr "Filter (optional)"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:175
+#: src/features/egg-search/components/egg-result-columns.tsx:103
+#: src/features/egg-search/components/result-detail-dialog.tsx:111
+msgid "Gender"
+msgstr "Gender"
+
+#: src/features/egg-search/components/egg-params-form.tsx:304
+msgid "Gender ratio"
+msgstr "Gender ratio"
 
 #: src/components/layout/navigation-labels.tsx:7
 msgid "Generation"
@@ -72,6 +200,10 @@ msgstr "Generation"
 msgid "Hardware"
 msgstr "Hardware"
 
+#: src/features/egg-search/components/egg-filter-form.tsx:210
+msgid "Hidden Ability"
+msgstr "Hidden Ability"
+
 #: src/components/forms/hidden-power-select.tsx:48
 msgid "Hidden Power"
 msgstr "Hidden Power"
@@ -80,16 +212,57 @@ msgstr "Hidden Power"
 msgid "Hour"
 msgstr "Hour"
 
+#: src/features/egg-search/components/egg-search-page.tsx:125
+msgid "IVs must be in the range 0 to 31"
+msgstr "IVs must be in the range 0 to 31"
+
+#: src/features/datetime-search/components/seed-origin-columns.tsx:79
+msgid "Key"
+msgstr "Key"
+
+#: src/components/forms/key-spec-input.tsx:141
+#: src/features/datetime-search/components/result-detail-dialog.tsx:86
+#: src/features/egg-search/components/result-detail-dialog.tsx:100
+msgid "Key input"
+msgstr "Key input"
+
+#. placeholder {0}: err.line
+#. placeholder {1}: err.value
+#. placeholder {2}: err.message
+#: src/components/forms/target-seeds-input.tsx:52
+msgid "Line {0}: \"{1}\" — {2}"
+msgstr "Line {0}: \"{1}\" — {2}"
+
 #: src/features/ds-config/components/ds-config-form.tsx:118
 msgid "MAC address"
 msgstr "MAC address"
+
+#: src/features/egg-search/components/egg-result-columns.tsx:118
+msgid "Margin"
+msgstr "Margin"
+
+#: src/features/egg-search/components/result-detail-dialog.tsx:117
+msgid "Margin frames"
+msgstr "Margin frames"
+
+#: src/features/egg-search/components/egg-params-form.tsx:350
+msgid "Masuda Method"
+msgstr "Masuda Method"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:89
 #: src/components/forms/timer0-vcount-range-input.tsx:129
 msgid "Max"
 msgstr "Max"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:79
+#: src/features/egg-search/components/egg-params-form.tsx:384
+msgid "Max advance"
+msgstr "Max advance"
+
+#: src/features/egg-search/components/egg-search-page.tsx:123
+msgid "Max advance must be ≥ start offset"
+msgstr "Max advance must be ≥ start offset"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
 msgid "Memory Link"
 msgstr "Memory Link"
@@ -99,21 +272,39 @@ msgstr "Memory Link"
 msgid "Min"
 msgstr "Min"
 
+#: src/features/egg-search/components/egg-filter-form.tsx:228
+msgid "Min margin frames"
+msgstr "Min margin frames"
+
 #: src/components/forms/time-range-picker.tsx:111
 msgid "Minute"
 msgstr "Minute"
+
+#: src/components/forms/target-seeds-input.tsx:34
+msgid "MT Seed"
+msgstr "MT Seed"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:85
+msgid "MT Seed must be in the range 0 to FFFFFFFF"
+msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 
 #: src/components/layout/navigation-labels.tsx:16
 msgid "MT Seed Search"
 msgstr "MT Seed Search"
 
 #: src/components/forms/nature-select.tsx:48
+#: src/features/egg-search/components/egg-result-columns.tsx:87
+#: src/features/egg-search/components/result-detail-dialog.tsx:109
 msgid "Nature"
 msgstr "Nature"
 
 #: src/components/layout/navigation-labels.tsx:18
 msgid "Needle"
 msgstr "Needle"
+
+#: src/features/egg-search/components/egg-params-form.tsx:341
+msgid "Nidoran♀"
+msgstr "Nidoran♀"
 
 #: src/features/ds-config/components/ds-config-form.tsx:39
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
@@ -123,10 +314,33 @@ msgstr "No default Timer0/VCount data for this combination. Switched to manual m
 msgid "No results"
 msgstr "No results"
 
+#: src/features/egg-search/components/egg-search-page.tsx:239
+msgid "No results found. Configure parameters and start searching."
+msgstr "No results found. Configure parameters and start searching."
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:187
+msgid "No results found. Please enter MT Seeds and start searching."
+msgstr "No results found. Please enter MT Seeds and start searching."
+
 #: src/components/forms/hidden-power-select.tsx:37
 #: src/components/forms/nature-select.tsx:37
+#: src/features/egg-search/components/egg-filter-form.tsx:186
+#: src/features/egg-search/components/egg-filter-form.tsx:207
+#: src/features/egg-search/components/egg-filter-form.tsx:235
 msgid "Not specified"
 msgstr "Not specified"
+
+#: src/features/egg-search/components/egg-params-form.tsx:291
+msgid "Not used"
+msgstr "Not used"
+
+#: src/features/egg-search/components/egg-params-form.tsx:247
+msgid "Parent ♀ IVs"
+msgstr "Parent ♀ IVs"
+
+#: src/features/egg-search/components/egg-params-form.tsx:240
+msgid "Parent ♂ IVs"
+msgstr "Parent ♂ IVs"
 
 #: src/components/layout/navigation-labels.tsx:14
 msgid "Pokemon"
@@ -141,10 +355,21 @@ msgstr "Pokemon"
 msgid "Region"
 msgstr "Region"
 
-#: src/components/data-display/search-progress.tsx:50
+#: src/components/data-display/search-progress.tsx:60
 msgid "Remaining"
 msgstr "Remaining"
 
+#: src/features/datetime-search/components/result-detail-dialog.tsx:74
+#: src/features/egg-search/components/result-detail-dialog.tsx:87
+msgid "Result details"
+msgstr "Result details"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:181
+#: src/features/egg-search/components/egg-search-page.tsx:233
+msgid "Results"
+msgstr "Results"
+
+#: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
 msgid "Search"
 msgstr "Search"
@@ -163,19 +388,45 @@ msgstr "Select all"
 msgid "Settings"
 msgstr "Settings"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:97
+#: src/features/egg-search/components/egg-result-columns.tsx:108
+#: src/features/egg-search/components/result-detail-dialog.tsx:112
+msgid "Shiny"
+msgstr "Shiny"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:89
 #: src/features/ds-config/components/game-start-config-form.tsx:100
 msgid "Shiny Charm"
 msgstr "Shiny Charm"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:222
+msgid "Shiny only"
+msgstr "Shiny only"
 
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
 msgstr "Start date"
 
+#: src/features/datetime-search/components/datetime-search-page.tsx:82
+#: src/features/egg-search/components/egg-search-page.tsx:121
+msgid "Start date must be on or before end date"
+msgstr "Start date must be on or before end date"
+
 #: src/features/ds-config/components/game-start-config-form.tsx:30
 #: src/features/ds-config/components/game-start-config-form.tsx:36
 msgid "Start mode"
 msgstr "Start mode"
+
+#: src/features/egg-search/components/egg-params-form.tsx:367
+msgid "Start offset"
+msgstr "Start offset"
+
+#: src/features/egg-search/components/egg-search-page.tsx:124
+msgid "Start offset must be ≥ 0"
+msgstr "Start offset must be ≥ 0"
+
+#: src/features/datetime-search/components/result-detail-dialog.tsx:77
+msgid "Startup condition details"
+msgstr "Startup condition details"
 
 #: src/components/layout/welcome-page.tsx:14
 #~ msgid "Tap the menu icon at the top left to configure search settings."
@@ -188,6 +439,15 @@ msgstr "This feature is under development."
 #: src/components/layout/navigation-labels.tsx:17
 msgid "TID Adjust"
 msgstr "TID Adjust"
+
+#: src/components/forms/search-context-form.tsx:48
+msgid "Time range"
+msgstr "Time range"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:83
+#: src/features/egg-search/components/egg-search-page.tsx:122
+msgid "Time range is invalid"
+msgstr "Time range is invalid"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:100
 msgid "Timer0 max"
@@ -202,8 +462,16 @@ msgid "Tools"
 msgstr "Tools"
 
 #: src/components/forms/iv-range-input.tsx:153
-msgid "Unknown (any)"
-msgstr "Unknown (any)"
+#~ msgid "Unknown (any)"
+#~ msgstr "Unknown (any)"
+
+#: src/features/egg-search/components/egg-params-form.tsx:332
+msgid "Uses Ditto"
+msgstr "Uses Ditto"
+
+#: src/components/forms/target-seeds-input.tsx:46
+msgid "Valid seeds"
+msgstr "Valid seeds"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:140
 msgid "VCount max"
@@ -218,7 +486,7 @@ msgstr "VCount min"
 msgid "Version"
 msgstr "Version"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:61
+#: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
 msgid "With save"
 msgstr "With save"

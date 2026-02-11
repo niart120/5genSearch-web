@@ -199,9 +199,9 @@ pub fn generate_egg_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, DsConfig, EggDatetimeSearchParams, EverstonePlan, GameStartConfig,
-        GenderRatio, Hardware, KeyCode, KeySpec, MemoryLinkState, RomRegion, RomVersion,
-        SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition,
+        AbilitySlot, DateRangeParams, DsConfig, EggDatetimeSearchParams, EverstonePlan,
+        GameStartConfig, GenderRatio, Hardware, KeyCode, KeySpec, MemoryLinkState, RomRegion,
+        RomVersion, SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition,
         TimeRangeParams, Timer0VCountRange, TrainerInfo,
     };
 
@@ -237,7 +237,7 @@ mod tests {
                     sid: 54321,
                 },
                 everstone: EverstonePlan::None,
-                female_has_hidden: false,
+                female_ability_slot: AbilitySlot::First,
                 uses_ditto: false,
                 gender_ratio: GenderRatio::F1M1,
                 nidoran_flag: false,
@@ -318,7 +318,7 @@ mod tests {
                 sid: 54321,
             },
             everstone: EverstonePlan::None,
-            female_has_hidden: false,
+            female_ability_slot: AbilitySlot::First,
             uses_ditto: false,
             gender_ratio: GenderRatio::F1M1,
             nidoran_flag: false,

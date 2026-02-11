@@ -19,14 +19,83 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
-#: src/components/layout/header.tsx:25
+#: src/features/egg-search/components/egg-params-form.tsx:257
+msgid "♀ parent ability"
+msgstr "♀親の特性"
+
+#: src/components/layout/header.tsx:33
 msgid "5genSearch"
 msgstr "5genSearch"
 
-#: src/features/ds-config/components/timer0-vcount-section.tsx:23
+#: src/features/egg-search/components/egg-result-columns.tsx:98
+#: src/features/egg-search/components/result-detail-dialog.tsx:110
+msgid "Ability"
+msgstr "特性"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:208
+msgid "Ability 1"
+msgstr "特性1"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:209
+msgid "Ability 2"
+msgstr "特性2"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:196
+msgid "Ability slot"
+msgstr "特性スロット"
+
+#: src/features/egg-search/components/egg-result-columns.tsx:113
+#: src/features/egg-search/components/result-detail-dialog.tsx:115
+msgid "Advance"
+msgstr "消費数"
+
+#: src/components/forms/iv-range-input.tsx:153
+msgid "Any"
+msgstr "任意"
+
+#: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
 msgid "Auto"
 msgstr "自動"
+
+#. placeholder {0}: BUTTON_LABELS['L']
+#. placeholder {0}: BUTTON_LABELS['R']
+#. placeholder {0}: BUTTON_LABELS['Select']
+#: src/components/forms/key-spec-input.tsx:129
+#: src/components/forms/key-spec-input.tsx:153
+#: src/components/forms/key-spec-input.tsx:161
+#: src/components/forms/key-spec-input.tsx:182
+#: src/components/forms/key-spec-input.tsx:190
+msgid "Button {0}"
+msgstr "{0}ボタン"
+
+#: src/components/forms/search-controls.tsx:53
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: src/components/forms/key-spec-input.tsx:197
+msgid "Combinations"
+msgstr "組み合わせ"
+
+#: src/features/egg-search/components/egg-params-form.tsx:359
+msgid "Consider NPC"
+msgstr "NPC消費考慮"
+
+#: src/features/datetime-search/components/result-detail-dialog.tsx:49
+#: src/features/egg-search/components/result-detail-dialog.tsx:60
+msgid "Copy {label}"
+msgstr "{label}をコピー"
+
+#: src/components/forms/search-context-form.tsx:41
+msgid "Date range"
+msgstr "日付範囲"
+
+#: src/features/datetime-search/components/result-detail-dialog.tsx:83
+#: src/features/datetime-search/components/seed-origin-columns.tsx:46
+#: src/features/egg-search/components/egg-result-columns.tsx:59
+#: src/features/egg-search/components/result-detail-dialog.tsx:97
+msgid "Date/Time"
+msgstr "日時"
 
 #: src/components/layout/navigation-labels.tsx:12
 msgid "Datetime Search"
@@ -37,6 +106,11 @@ msgstr "起動時刻検索"
 msgid "Deselect all"
 msgstr "全解除"
 
+#: src/features/datetime-search/components/seed-origin-columns.tsx:33
+#: src/features/egg-search/components/egg-result-columns.tsx:46
+msgid "Details"
+msgstr "詳細"
+
 #: src/components/layout/navigation-labels.tsx:15
 msgid "Egg"
 msgstr "タマゴ"
@@ -46,17 +120,51 @@ msgstr "タマゴ"
 #~ msgid "Egg Generation"
 #~ msgstr "孵化個体生成"
 
+#: src/features/egg-search/components/egg-params-form.tsx:233
+msgid "Egg parameters"
+msgstr "孵化パラメータ"
+
 #: src/components/layout/navigation-labels.tsx:13
 msgid "Egg Search"
 msgstr "孵化検索"
 
-#: src/components/data-display/search-progress.tsx:47
+#: src/features/egg-search/components/result-detail-dialog.tsx:90
+msgid "Egg search result details"
+msgstr "孵化検索結果の詳細"
+
+#: src/components/data-display/search-progress.tsx:57
 msgid "Elapsed"
 msgstr "経過"
 
-#: src/components/forms/date-range-picker.tsx:130
+#: src/components/forms/date-range-picker.tsx:132
 msgid "End date"
 msgstr "終了日"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:93
+msgid "Enter a hex value in the range 0 to FFFFFFFF"
+msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:84
+msgid "Enter at least one MT Seed"
+msgstr "MT Seedを最低1つ入力してください"
+
+#: src/features/egg-search/components/egg-params-form.tsx:280
+msgid "Everstone"
+msgstr "かわらずのいし"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:152
+msgid "Filter (optional)"
+msgstr "フィルター (任意)"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:175
+#: src/features/egg-search/components/egg-result-columns.tsx:103
+#: src/features/egg-search/components/result-detail-dialog.tsx:111
+msgid "Gender"
+msgstr "性別"
+
+#: src/features/egg-search/components/egg-params-form.tsx:304
+msgid "Gender ratio"
+msgstr "性別比"
 
 #: src/components/layout/navigation-labels.tsx:7
 msgid "Generation"
@@ -72,6 +180,10 @@ msgstr "個体生成"
 msgid "Hardware"
 msgstr "ハードウェア"
 
+#: src/features/egg-search/components/egg-filter-form.tsx:210
+msgid "Hidden Ability"
+msgstr "夢特性"
+
 #: src/components/forms/hidden-power-select.tsx:48
 msgid "Hidden Power"
 msgstr "めざパ"
@@ -80,16 +192,57 @@ msgstr "めざパ"
 msgid "Hour"
 msgstr "時"
 
+#: src/features/egg-search/components/egg-search-page.tsx:125
+msgid "IVs must be in the range 0 to 31"
+msgstr "個体値は0から31の範囲で入力してください"
+
+#: src/features/datetime-search/components/seed-origin-columns.tsx:79
+msgid "Key"
+msgstr "キー"
+
+#: src/components/forms/key-spec-input.tsx:141
+#: src/features/datetime-search/components/result-detail-dialog.tsx:86
+#: src/features/egg-search/components/result-detail-dialog.tsx:100
+msgid "Key input"
+msgstr "キー入力"
+
+#. placeholder {0}: err.line
+#. placeholder {1}: err.value
+#. placeholder {2}: err.message
+#: src/components/forms/target-seeds-input.tsx:52
+msgid "Line {0}: \"{1}\" — {2}"
+msgstr "{0}行目: \"{1}\" — {2}"
+
 #: src/features/ds-config/components/ds-config-form.tsx:118
 msgid "MAC address"
 msgstr "MACアドレス"
+
+#: src/features/egg-search/components/egg-result-columns.tsx:118
+msgid "Margin"
+msgstr "猶予"
+
+#: src/features/egg-search/components/result-detail-dialog.tsx:117
+msgid "Margin frames"
+msgstr "猶予フレーム"
+
+#: src/features/egg-search/components/egg-params-form.tsx:350
+msgid "Masuda Method"
+msgstr "国際孵化"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:89
 #: src/components/forms/timer0-vcount-range-input.tsx:129
 msgid "Max"
 msgstr "Max"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:79
+#: src/features/egg-search/components/egg-params-form.tsx:384
+msgid "Max advance"
+msgstr "最大消費数"
+
+#: src/features/egg-search/components/egg-search-page.tsx:123
+msgid "Max advance must be ≥ start offset"
+msgstr "最大消費数は開始オフセット以上である必要があります"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
 msgid "Memory Link"
 msgstr "思い出リンク"
@@ -99,21 +252,39 @@ msgstr "思い出リンク"
 msgid "Min"
 msgstr "Min"
 
+#: src/features/egg-search/components/egg-filter-form.tsx:228
+msgid "Min margin frames"
+msgstr "最低猶予フレーム"
+
 #: src/components/forms/time-range-picker.tsx:111
 msgid "Minute"
 msgstr "分"
+
+#: src/components/forms/target-seeds-input.tsx:34
+msgid "MT Seed"
+msgstr "MT Seed"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:85
+msgid "MT Seed must be in the range 0 to FFFFFFFF"
+msgstr "MT Seedは0からFFFFFFFFの範囲で入力してください"
 
 #: src/components/layout/navigation-labels.tsx:16
 msgid "MT Seed Search"
 msgstr "MT Seed 検索"
 
 #: src/components/forms/nature-select.tsx:48
+#: src/features/egg-search/components/egg-result-columns.tsx:87
+#: src/features/egg-search/components/result-detail-dialog.tsx:109
 msgid "Nature"
 msgstr "性格"
 
 #: src/components/layout/navigation-labels.tsx:18
 msgid "Needle"
 msgstr "針読み"
+
+#: src/features/egg-search/components/egg-params-form.tsx:341
+msgid "Nidoran♀"
+msgstr "ニドラン♀"
 
 #: src/features/ds-config/components/ds-config-form.tsx:39
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
@@ -123,10 +294,33 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 msgid "No results"
 msgstr "結果なし"
 
+#: src/features/egg-search/components/egg-search-page.tsx:239
+msgid "No results found. Configure parameters and start searching."
+msgstr "結果が見つかりませんでした。パラメータを設定して検索を開始してください。"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:187
+msgid "No results found. Please enter MT Seeds and start searching."
+msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
+
 #: src/components/forms/hidden-power-select.tsx:37
 #: src/components/forms/nature-select.tsx:37
+#: src/features/egg-search/components/egg-filter-form.tsx:186
+#: src/features/egg-search/components/egg-filter-form.tsx:207
+#: src/features/egg-search/components/egg-filter-form.tsx:235
 msgid "Not specified"
 msgstr "指定なし"
+
+#: src/features/egg-search/components/egg-params-form.tsx:291
+msgid "Not used"
+msgstr "使用しない"
+
+#: src/features/egg-search/components/egg-params-form.tsx:247
+msgid "Parent ♀ IVs"
+msgstr "♀親の個体値"
+
+#: src/features/egg-search/components/egg-params-form.tsx:240
+msgid "Parent ♂ IVs"
+msgstr "♂親の個体値"
 
 #: src/components/layout/navigation-labels.tsx:14
 msgid "Pokemon"
@@ -141,10 +335,21 @@ msgstr "ポケモン"
 msgid "Region"
 msgstr "リージョン"
 
-#: src/components/data-display/search-progress.tsx:50
+#: src/components/data-display/search-progress.tsx:60
 msgid "Remaining"
 msgstr "残り"
 
+#: src/features/datetime-search/components/result-detail-dialog.tsx:74
+#: src/features/egg-search/components/result-detail-dialog.tsx:87
+msgid "Result details"
+msgstr "結果の詳細"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:181
+#: src/features/egg-search/components/egg-search-page.tsx:233
+msgid "Results"
+msgstr "検索結果"
+
+#: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
 msgid "Search"
 msgstr "検索"
@@ -163,19 +368,45 @@ msgstr "全選択"
 msgid "Settings"
 msgstr "設定"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:97
+#: src/features/egg-search/components/egg-result-columns.tsx:108
+#: src/features/egg-search/components/result-detail-dialog.tsx:112
+msgid "Shiny"
+msgstr "色違い"
+
+#: src/features/ds-config/components/game-start-config-form.tsx:89
 #: src/features/ds-config/components/game-start-config-form.tsx:100
 msgid "Shiny Charm"
 msgstr "ひかるおまもり"
+
+#: src/features/egg-search/components/egg-filter-form.tsx:222
+msgid "Shiny only"
+msgstr "色違いのみ"
 
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
 msgstr "開始日"
 
+#: src/features/datetime-search/components/datetime-search-page.tsx:82
+#: src/features/egg-search/components/egg-search-page.tsx:121
+msgid "Start date must be on or before end date"
+msgstr "開始日は終了日以前である必要があります"
+
 #: src/features/ds-config/components/game-start-config-form.tsx:30
 #: src/features/ds-config/components/game-start-config-form.tsx:36
 msgid "Start mode"
 msgstr "起動モード"
+
+#: src/features/egg-search/components/egg-params-form.tsx:367
+msgid "Start offset"
+msgstr "開始オフセット"
+
+#: src/features/egg-search/components/egg-search-page.tsx:124
+msgid "Start offset must be ≥ 0"
+msgstr "開始オフセットは0以上である必要があります"
+
+#: src/features/datetime-search/components/result-detail-dialog.tsx:77
+msgid "Startup condition details"
+msgstr "起動条件の詳細"
 
 #: src/components/layout/welcome-page.tsx:14
 #~ msgid "Tap the menu icon at the top left to configure search settings."
@@ -188,6 +419,15 @@ msgstr "この機能は準備中です。"
 #: src/components/layout/navigation-labels.tsx:17
 msgid "TID Adjust"
 msgstr "TID 調整"
+
+#: src/components/forms/search-context-form.tsx:48
+msgid "Time range"
+msgstr "時刻範囲"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:83
+#: src/features/egg-search/components/egg-search-page.tsx:122
+msgid "Time range is invalid"
+msgstr "時刻範囲が不正です"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:100
 msgid "Timer0 max"
@@ -202,8 +442,16 @@ msgid "Tools"
 msgstr "ツール"
 
 #: src/components/forms/iv-range-input.tsx:153
-msgid "Unknown (any)"
-msgstr "不明(任意)"
+#~ msgid "Unknown (any)"
+#~ msgstr "不明(任意)"
+
+#: src/features/egg-search/components/egg-params-form.tsx:332
+msgid "Uses Ditto"
+msgstr "メタモン使用"
+
+#: src/components/forms/target-seeds-input.tsx:46
+msgid "Valid seeds"
+msgstr "有効なSeed"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:140
 msgid "VCount max"
@@ -218,7 +466,7 @@ msgstr "VCount min"
 msgid "Version"
 msgstr "バージョン"
 
-#: src/features/ds-config/components/game-start-config-form.tsx:61
+#: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
 msgid "With save"
 msgstr "セーブあり"

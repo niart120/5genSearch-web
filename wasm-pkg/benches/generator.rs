@@ -7,8 +7,8 @@ use std::time::Duration;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::generation::flows::generator::{EggGenerator, PokemonGenerator};
 use wasm_pkg::types::{
-    EggGenerationParams, EncounterMethod, EncounterSlotConfig, EncounterType, EverstonePlan,
-    GameStartConfig, GenderRatio, GenerationConfig, Ivs, LcgSeed, LeadAbilityEffect,
+    AbilitySlot, EggGenerationParams, EncounterMethod, EncounterSlotConfig, EncounterType,
+    EverstonePlan, GameStartConfig, GenderRatio, GenerationConfig, Ivs, LcgSeed, LeadAbilityEffect,
     MemoryLinkState, PokemonGenerationParams, RomVersion, SavePresence, SeedOrigin,
     ShinyCharmState, StartMode, TrainerInfo,
 };
@@ -65,7 +65,7 @@ fn create_egg_params() -> EggGenerationParams {
     EggGenerationParams {
         trainer: create_trainer(),
         everstone: EverstonePlan::None,
-        female_has_hidden: false,
+        female_ability_slot: AbilitySlot::First,
         uses_ditto: false,
         gender_ratio: GenderRatio::F1M1,
         nidoran_flag: false,
