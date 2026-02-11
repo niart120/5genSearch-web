@@ -404,6 +404,16 @@ const ENCOUNTER_LOCATION_NAMES: Record<string, Record<SupportedLocale, string>> 
   floccesy_ranch: { ja: 'サンギ牧場', en: 'Floccesy Ranch' },
   striaton_city: { ja: 'サンヨウシティ', en: 'Striaton City' },
   giant_chasm: { ja: 'ジャイアントホール', en: 'Giant Chasm' },
+  giant_chasm_exterior: { ja: 'ジャイアントホール 外部', en: 'Giant Chasm Exterior' },
+  giant_chasm_cave: { ja: 'ジャイアントホール 洞窟', en: 'Giant Chasm Cave' },
+  giant_chasm_crater_forest: {
+    ja: 'ジャイアントホール 森(クレーター)',
+    en: 'Giant Chasm Crater Forest',
+  },
+  giant_chasm_cave_depths: {
+    ja: 'ジャイアントホール 洞窟(最深部)',
+    en: 'Giant Chasm Cave Depths',
+  },
   strange_house_entrance_b1f: {
     ja: 'ストレンジャーハウス 入口, B1F',
     en: 'Strange House Entrance, B1F',
@@ -419,8 +429,9 @@ const ENCOUNTER_LOCATION_NAMES: Record<string, Record<SupportedLocale, string>> 
   moor_of_icirrus_autumn: { ja: 'セッカの湿原(秋)', en: 'Moor of Icirrus (Autumn)' },
   moor_of_icirrus_winter: { ja: 'セッカの湿原(冬)', en: 'Moor of Icirrus (Winter)' },
   virbank_complex: { ja: 'タチワキコンビナート', en: 'Virbank Complex' },
+  virbank_complex_exterior: { ja: 'タチワキコンビナート 外部', en: 'Virbank Complex Exterior' },
+  virbank_complex_interior: { ja: 'タチワキコンビナート 内部', en: 'Virbank Complex Interior' },
   virbank_city: { ja: 'タチワキシティ', en: 'Virbank City' },
-  celestial_tower: { ja: 'タワーオブヘブン', en: 'Celestial Tower' },
   celestial_tower_2f: { ja: 'タワーオブヘブン 2F', en: 'Celestial Tower 2F' },
   celestial_tower_3f: { ja: 'タワーオブヘブン 3F', en: 'Celestial Tower 3F' },
   celestial_tower_4f: { ja: 'タワーオブヘブン 4F', en: 'Celestial Tower 4F' },
@@ -449,6 +460,15 @@ const ENCOUNTER_LOCATION_NAMES: Record<string, Record<SupportedLocale, string>> 
   desert_resort_exterior: { ja: 'リゾートデザート 外部', en: 'Desert Resort Exterior' },
   desert_resort_interior: { ja: 'リゾートデザート 内部', en: 'Desert Resort Interior' },
   reversal_mountain: { ja: 'リバースマウンテン', en: 'Reversal Mountain' },
+  reversal_mountain_exterior: { ja: 'リバースマウンテン 外部', en: 'Reversal Mountain Exterior' },
+  reversal_mountain_interior_entrance: {
+    ja: 'リバースマウンテン 内部(入口)',
+    en: 'Reversal Mountain Interior Entrance',
+  },
+  reversal_mountain_interior_main: {
+    ja: 'リバースマウンテン 内部(奥)',
+    en: 'Reversal Mountain Interior Main',
+  },
   dragonspiral_tower_spring: { ja: 'リュウラセンの塔(春)', en: 'Dragonspiral Tower (Spring)' },
   dragonspiral_tower_spring_exterior_south: {
     ja: 'リュウラセンの塔(春) 外部(南)',
@@ -503,6 +523,9 @@ const ENCOUNTER_LOCATION_NAMES: Record<string, Record<SupportedLocale, string>> 
   trial_chamber: { ja: '試練の室', en: 'Trial Chamber' },
   nature_preserve: { ja: '自然保護区', en: 'Nature Preserve' },
   challengers_cave: { ja: '修行の岩屋', en: "Challenger's Cave" },
+  challengers_cave_1f: { ja: '修行の岩屋 1F', en: "Challenger's Cave 1F" },
+  challengers_cave_b1f: { ja: '修行の岩屋 B1F', en: "Challenger's Cave B1F" },
+  challengers_cave_b2f: { ja: '修行の岩屋 B2F', en: "Challenger's Cave B2F" },
   wellspring_cave: { ja: '地下水脈の穴', en: 'Wellspring Cave' },
   underground_ruins: { ja: '地底遺跡', en: 'Underground Ruins' },
   iron_chamber: { ja: '鉄の間', en: 'Iron Chamber' },
