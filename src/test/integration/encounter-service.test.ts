@@ -1,26 +1,65 @@
 import { describe, it, expect } from 'vitest';
-import { getEncounterSlots, listLocations } from '@/data/encounters/loader';
-import { toEncounterSlotConfigs } from '@/data/encounters/converter';
-import { listEncounterLocations, listEncounterSpecies } from '@/data/encounters/helpers';
+import {
+  getEncounterSlots,
+  listLocations as listLocationsFromLoader,
+  listStaticEncounterEntries,
+} from '@/data/encounters/loader';
+import {
+  toEncounterSlotConfigs,
+  toEncounterSlotConfigFromEntry,
+} from '@/data/encounters/converter';
+import { listLocations, listSpecies, isLocationBasedEncounter } from '@/data/encounters/helpers';
 
 describe('Encounter Service Integration', () => {
   describe('registry initialization', () => {
-    it('loads JSON via import.meta.glob', () => {
-      const locations = listLocations('B', 'Normal');
+    it('loads wild encounter JSON via import.meta.glob', () => {
+      const locations = listLocationsFromLoader('B', 'Normal');
       expect(locations.length).toBeGreaterThan(0);
     });
 
-    it('loads all four game versions', () => {
+    it('loads all four game versions for wild encounters', () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
-        const locations = listLocations(version, 'Normal');
+        const locations = listLocationsFromLoader(version, 'Normal');
         expect(locations.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('loads static encounter JSON for StaticSymbol', () => {
+      for (const version of ['B', 'W', 'B2', 'W2'] as const) {
+        const entries = listStaticEncounterEntries(version, 'StaticSymbol');
+        expect(entries.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('loads static encounter JSON for StaticStarter', () => {
+      for (const version of ['B', 'W', 'B2', 'W2'] as const) {
+        const entries = listStaticEncounterEntries(version, 'StaticStarter');
+        expect(entries).toHaveLength(3);
+      }
+    });
+
+    it('loads static encounter JSON for StaticFossil', () => {
+      for (const version of ['B', 'W', 'B2', 'W2'] as const) {
+        const entries = listStaticEncounterEntries(version, 'StaticFossil');
+        expect(entries.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('loads Roamer data only for B and W', () => {
+      for (const version of ['B', 'W'] as const) {
+        const entries = listStaticEncounterEntries(version, 'Roamer');
+        expect(entries).toHaveLength(1);
+      }
+      for (const version of ['B2', 'W2'] as const) {
+        const entries = listStaticEncounterEntries(version, 'Roamer');
+        expect(entries).toHaveLength(0);
       }
     });
   });
 
   describe('getEncounterSlots', () => {
     it('returns slots for a known location', () => {
-      const locations = listLocations('B', 'Normal');
+      const locations = listLocationsFromLoader('B', 'Normal');
       expect(locations.length).toBeGreaterThan(0);
 
       const firstLoc = locations[0];
@@ -30,7 +69,7 @@ describe('Encounter Service Integration', () => {
     });
 
     it('returns slots with valid structure', () => {
-      const locations = listLocations('B', 'Normal');
+      const locations = listLocationsFromLoader('B', 'Normal');
       const firstLoc = locations[0];
       const slots = getEncounterSlots('B', firstLoc.key, 'Normal')!;
 
@@ -51,9 +90,36 @@ describe('Encounter Service Integration', () => {
     });
   });
 
-  describe('listLocations', () => {
+  describe('PokemonShadow encounter data', () => {
+    it('PokemonShadow is a valid location-based encounter method', () => {
+      expect(isLocationBasedEncounter('PokemonShadow')).toBe(true);
+    });
+
+    it('has PokemonShadow locations for all versions', () => {
+      for (const version of ['B', 'W', 'B2', 'W2'] as const) {
+        const locations = listLocationsFromLoader(version, 'PokemonShadow');
+        expect(locations.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('includes driftveil_drawbridge and marvelous_bridge', () => {
+      const locations = listLocationsFromLoader('B', 'PokemonShadow');
+      const keys = locations.map((l) => l.key);
+      expect(keys).toContain('driftveil_drawbridge');
+      expect(keys).toContain('marvelous_bridge');
+    });
+
+    it('bridge locations are not in ShakingGrass', () => {
+      const locations = listLocationsFromLoader('B', 'ShakingGrass');
+      const keys = locations.map((l) => l.key);
+      expect(keys).not.toContain('driftveil_drawbridge');
+      expect(keys).not.toContain('marvelous_bridge');
+    });
+  });
+
+  describe('listLocations (loader)', () => {
     it('returns non-empty list for known version and method', () => {
-      const locations = listLocations('B', 'Normal');
+      const locations = listLocationsFromLoader('B', 'Normal');
       expect(locations.length).toBeGreaterThan(0);
 
       for (const loc of locations) {
@@ -65,14 +131,14 @@ describe('Encounter Service Integration', () => {
     });
 
     it('returns empty list for unknown method', () => {
-      const locations = listLocations('B', 'UnknownMethod');
+      const locations = listLocationsFromLoader('B', 'UnknownMethod');
       expect(locations).toEqual([]);
     });
   });
 
   describe('converter pipeline', () => {
-    it('converts real JSON slots to WASM format', () => {
-      const locations = listLocations('B', 'Normal');
+    it('converts real JSON slots to WASM format (wild)', () => {
+      const locations = listLocationsFromLoader('B', 'Normal');
       const firstLoc = locations[0];
       const slots = getEncounterSlots('B', firstLoc.key, 'Normal')!;
 
@@ -88,11 +154,23 @@ describe('Encounter Service Integration', () => {
         expect(config.shiny_locked).toBe(false);
       }
     });
+
+    it('converts real static entry to WASM format', () => {
+      const entries = listStaticEncounterEntries('B', 'StaticSymbol');
+      expect(entries.length).toBeGreaterThan(0);
+
+      const config = toEncounterSlotConfigFromEntry(entries[0]);
+      expect(config.species_id).toBe(entries[0].speciesId);
+      expect(config.level_min).toBe(entries[0].level);
+      expect(config.level_max).toBe(entries[0].level);
+      expect(config.gender_ratio).toBe(entries[0].genderRatio);
+      expect(config.has_held_item).toBe(false);
+    });
   });
 
-  describe('helpers with real data', () => {
-    it('listEncounterLocations returns location options', () => {
-      const options = listEncounterLocations('B', 'Normal');
+  describe('unified helpers with real data', () => {
+    it('listLocations returns location options for wild encounters', () => {
+      const options = listLocations('B', 'Normal');
       expect(options.length).toBeGreaterThan(0);
 
       for (const opt of options) {
@@ -101,19 +179,42 @@ describe('Encounter Service Integration', () => {
       }
     });
 
-    it('listEncounterSpecies aggregates species from real data', () => {
-      const locations = listEncounterLocations('B', 'Normal');
+    it('listSpecies aggregates wild species from real data', () => {
+      const locations = listLocations('B', 'Normal');
       const firstLoc = locations[0];
-      const species = listEncounterSpecies('B', 'Normal', firstLoc.key);
+      const species = listSpecies('B', 'Normal', firstLoc.key);
       expect(species.length).toBeGreaterThan(0);
 
       for (const sp of species) {
-        expect(sp.speciesId).toBeTypeOf('number');
-        expect(sp.speciesId).toBeGreaterThan(0);
-        expect(sp.appearances).toBeGreaterThanOrEqual(1);
-        expect(sp.totalRate).toBeGreaterThan(0);
-        expect(sp.minLevel).toBeLessThanOrEqual(sp.maxLevel);
+        expect(sp.kind).toBe('location');
+        if (sp.kind === 'location') {
+          expect(sp.speciesId).toBeGreaterThan(0);
+          expect(sp.appearances).toBeGreaterThanOrEqual(1);
+          expect(sp.totalRate).toBeGreaterThan(0);
+          expect(sp.minLevel).toBeLessThanOrEqual(sp.maxLevel);
+        }
       }
+    });
+
+    it('listSpecies returns static entries for StaticSymbol', () => {
+      const species = listSpecies('B', 'StaticSymbol');
+      expect(species.length).toBeGreaterThan(0);
+
+      for (const sp of species) {
+        expect(sp.kind).toBe('static');
+        if (sp.kind === 'static') {
+          expect(sp.id).toBeTypeOf('string');
+          expect(sp.speciesId).toBeGreaterThan(0);
+          expect(sp.level).toBeGreaterThan(0);
+          expect(sp.genderRatio).toBeTypeOf('string');
+        }
+      }
+    });
+
+    it('isLocationBasedEncounter distinguishes wild from static', () => {
+      expect(isLocationBasedEncounter('Normal')).toBe(true);
+      expect(isLocationBasedEncounter('StaticSymbol')).toBe(false);
+      expect(isLocationBasedEncounter('Roamer')).toBe(false);
     });
   });
 });

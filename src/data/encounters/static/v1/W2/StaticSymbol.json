@@ -1,0 +1,116 @@
+{
+  "version": "W2",
+  "method": "StaticSymbol",
+  "source": {
+    "name": "niart120/pokemon-gen5-initseed",
+    "url": "https://github.com/niart120/pokemon-gen5-initseed",
+    "retrievedAt": "2026-02-11"
+  },
+  "entries": [
+    {
+      "id": "reshiram-dragonspiral-tower",
+      "displayNameKey": "reshiram_dragonspiral_tower",
+      "speciesId": 643,
+      "level": 70,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "cobalion-route-13",
+      "displayNameKey": "cobalion_route_13",
+      "speciesId": 638,
+      "level": 45,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "terrakion-route-22",
+      "displayNameKey": "terrakion_route_22",
+      "speciesId": 639,
+      "level": 45,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "virizion-route-11",
+      "displayNameKey": "virizion_route_11",
+      "speciesId": 640,
+      "level": 45,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "kyurem-giant-chasm",
+      "displayNameKey": "kyurem_giant_chasm",
+      "speciesId": 646,
+      "level": 70,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "latias-dreamyard",
+      "displayNameKey": "latias_dreamyard",
+      "speciesId": 380,
+      "level": 68,
+      "genderRatio": "FemaleOnly"
+    },
+    {
+      "id": "uxie-nacrene-city",
+      "displayNameKey": "uxie_nacrene_city",
+      "speciesId": 480,
+      "level": 65,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "mesprit-celestial-tower",
+      "displayNameKey": "mesprit_celestial_tower",
+      "speciesId": 481,
+      "level": 65,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "azelf-route-23",
+      "displayNameKey": "azelf_route_23",
+      "speciesId": 482,
+      "level": 65,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "heatran-reversal-mountain",
+      "displayNameKey": "heatran_reversal_mountain",
+      "speciesId": 485,
+      "level": 68,
+      "genderRatio": "F1M1"
+    },
+    {
+      "id": "cresselia-marvelous-bridge",
+      "displayNameKey": "cresselia_marvelous_bridge",
+      "speciesId": 488,
+      "level": 68,
+      "genderRatio": "FemaleOnly"
+    },
+    {
+      "id": "regice-iceberg-chamber",
+      "displayNameKey": "regice_iceberg_chamber",
+      "speciesId": 378,
+      "level": 65,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "registeel-iron-chamber",
+      "displayNameKey": "registeel_iron_chamber",
+      "speciesId": 379,
+      "level": 65,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "regigigas-twist-mountain",
+      "displayNameKey": "regigigas_twist_mountain",
+      "speciesId": 486,
+      "level": 68,
+      "genderRatio": "Genderless"
+    },
+    {
+      "id": "volcarona-relic-castle",
+      "displayNameKey": "volcarona_relic_castle",
+      "speciesId": 637,
+      "level": 35,
+      "genderRatio": "F1M1"
+    }
+  ]
+}

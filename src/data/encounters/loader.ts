@@ -2,10 +2,15 @@
  * Encounter registry loader.
  *
  * Loads generated JSON files via import.meta.glob (eager) at build time
- * and provides lookup APIs for encounter data.
+ * and provides lookup APIs for encounter data (wild + static).
  */
 
-import type { EncounterLocationsJson, EncounterSlotJson } from './schema';
+import type {
+  EncounterLocationsJson,
+  EncounterSlotJson,
+  EncounterSpeciesEntryJson,
+  EncounterSpeciesJson,
+} from './schema';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -66,6 +71,36 @@ function ensureRegistry(): Registry {
 }
 
 // ---------------------------------------------------------------------------
+// Static encounter registry
+// ---------------------------------------------------------------------------
+
+/** version_method -> EncounterSpeciesEntryJson[] */
+type StaticRegistry = Record<string, EncounterSpeciesEntryJson[]>;
+
+let staticRegistry: StaticRegistry | undefined;
+
+function initStaticRegistry(): StaticRegistry {
+  const modules = import.meta.glob<EncounterSpeciesJson>('./static/v1/**/*.json', {
+    eager: true,
+    import: 'default',
+  });
+
+  const acc: StaticRegistry = {};
+  for (const [, data] of Object.entries(modules)) {
+    const key = `${data.version}_${data.method}`;
+    acc[key] = data.entries;
+  }
+  return acc;
+}
+
+function ensureStaticRegistry(): StaticRegistry {
+  if (!staticRegistry) {
+    staticRegistry = initStaticRegistry();
+  }
+  return staticRegistry;
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -120,4 +155,32 @@ export function getLocationEntry(
 
   const normalizedLoc = normalizeLocationKey(location);
   return bucket[normalizedLoc];
+}
+
+// ---------------------------------------------------------------------------
+// Static encounter public API
+// ---------------------------------------------------------------------------
+
+/**
+ * List all static encounter entries for a given version and method.
+ */
+export function listStaticEncounterEntries(
+  version: string,
+  method: string
+): EncounterSpeciesEntryJson[] {
+  const reg = ensureStaticRegistry();
+  const key = `${version}_${method}`;
+  return reg[key] ?? [];
+}
+
+/**
+ * Get a single static encounter entry by id.
+ */
+export function getStaticEncounterEntry(
+  version: string,
+  method: string,
+  entryId: string
+): EncounterSpeciesEntryJson | undefined {
+  const entries = listStaticEncounterEntries(version, method);
+  return entries.find((e) => e.id === entryId);
 }

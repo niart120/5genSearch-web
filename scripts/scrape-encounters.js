@@ -28,6 +28,7 @@ const METHODS = [
   'Normal',
   'ShakingGrass',
   'DustCloud',
+  'PokemonShadow',
   'Surfing',
   'SurfingBubble',
   'Fishing',
@@ -48,6 +49,7 @@ const SOURCE_MAP = {
     Normal: 'https://pokebook.jp/data/sp5/enc_b',
     ShakingGrass: 'https://pokebook.jp/data/sp5/enc_b',
     DustCloud: 'https://pokebook.jp/data/sp5/enc_b',
+    PokemonShadow: 'https://pokebook.jp/data/sp5/enc_b',
     Surfing: 'https://pokebook.jp/data/sp5/enc_b',
     SurfingBubble: 'https://pokebook.jp/data/sp5/enc_b',
     Fishing: 'https://pokebook.jp/data/sp5/enc_b',
@@ -57,6 +59,7 @@ const SOURCE_MAP = {
     Normal: 'https://pokebook.jp/data/sp5/enc_w',
     ShakingGrass: 'https://pokebook.jp/data/sp5/enc_w',
     DustCloud: 'https://pokebook.jp/data/sp5/enc_w',
+    PokemonShadow: 'https://pokebook.jp/data/sp5/enc_w',
     Surfing: 'https://pokebook.jp/data/sp5/enc_w',
     SurfingBubble: 'https://pokebook.jp/data/sp5/enc_w',
     Fishing: 'https://pokebook.jp/data/sp5/enc_w',
@@ -66,6 +69,7 @@ const SOURCE_MAP = {
     Normal: 'https://pokebook.jp/data/sp5/enc_b2',
     ShakingGrass: 'https://pokebook.jp/data/sp5/enc_b2',
     DustCloud: 'https://pokebook.jp/data/sp5/enc_b2',
+    PokemonShadow: 'https://pokebook.jp/data/sp5/enc_b2',
     Surfing: 'https://pokebook.jp/data/sp5/enc_b2',
     SurfingBubble: 'https://pokebook.jp/data/sp5/enc_b2',
     Fishing: 'https://pokebook.jp/data/sp5/enc_b2',
@@ -75,6 +79,7 @@ const SOURCE_MAP = {
     Normal: 'https://pokebook.jp/data/sp5/enc_w2',
     ShakingGrass: 'https://pokebook.jp/data/sp5/enc_w2',
     DustCloud: 'https://pokebook.jp/data/sp5/enc_w2',
+    PokemonShadow: 'https://pokebook.jp/data/sp5/enc_w2',
     Surfing: 'https://pokebook.jp/data/sp5/enc_w2',
     SurfingBubble: 'https://pokebook.jp/data/sp5/enc_w2',
     Fishing: 'https://pokebook.jp/data/sp5/enc_w2',
@@ -86,11 +91,20 @@ const SLOT_RATE_PRESETS = {
   Normal: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
   ShakingGrass: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
   DustCloud: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
+  PokemonShadow: [20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1],
   Surfing: [60, 30, 5, 4, 1],
   SurfingBubble: [60, 30, 5, 4, 1],
   Fishing: [60, 30, 5, 4, 1],
   FishingBubble: [60, 30, 5, 4, 1],
 };
+
+// Bridge locations where PokemonShadow (flying shadows) appear.
+// These are in the "揺れる草むら, 土煙" section on pokebook.jp but use
+// EncounterType::PokemonShadow in the game engine.
+const POKEMON_SHADOW_LOCATIONS = new Set([
+  'ホドモエの跳ね橋',
+  'ワンダーブリッジ',
+]);
 
 // Locations where water tables should only keep a single unique row set
 const WATER_SINGLE_ROW_LOCATIONS = new Map([
@@ -119,6 +133,19 @@ const DUPLICATE_SUFFIX_RULES_BW = Object.freeze({
   'リュウラセンの塔(冬)': ['外部(南)', '外部(北東)'],
   リュウラセンの塔: ['1F', '2F'],
   チャンピオンロード: ['1F', '2F', '3F,4F,5F', '6F,7F'],
+  ジャイアントホール: {
+    Normal: ['外部', '洞窟', '森(クレーター)', '洞窟(最深部)'],
+    ShakingGrass: ['外部', '森(クレーター)'],
+    DustCloud: null,
+  },
+  地下水脈の穴: null,
+  フキヨセの洞穴: null,
+  タワーオブヘブン: ['2F', '3F', '4F', '5F'],
+  修行の岩屋: {
+    Normal: ['1F', 'B1F', 'B2F'],
+    DustCloud: null,
+  },
+  '10番道路': null,
 });
 
 // Suffix rules for B2W2
@@ -137,10 +164,10 @@ const DUPLICATE_SUFFIX_RULES_B2W2 = Object.freeze({
   'リュウラセンの塔(冬)': ['外部(南)', '外部(北東)'],
   リュウラセンの塔: ['1F', '2F'],
   チャンピオンロード: ['1F', '2F', '3F,4F,5F', '6F,7F'],
-  'リバースマウンテン(春)': null,
-  'リバースマウンテン(夏)': null,
-  'リバースマウンテン(秋)': null,
-  'リバースマウンテン(冬)': null,
+  リバースマウンテン: {
+    Normal: ['外部', '内部(入口)', '内部(奥)'],
+    DustCloud: null,
+  },
   ストレンジャーハウス: ['入口,B1F', '小部屋'],
   古代の抜け道: ['南部', '北部', '中央部'],
   ヤーコンロード: null,
@@ -150,6 +177,16 @@ const DUPLICATE_SUFFIX_RULES_B2W2 = Object.freeze({
   地下水脈の穴: null,
   フキヨセの洞穴: null,
   タワーオブヘブン: ['2F', '3F', '4F', '5F'],
+  ジャイアントホール: {
+    Normal: ['外部', '洞窟', '森(クレーター)', '洞窟(最深部)'],
+    ShakingGrass: ['外部', '森(クレーター)'],
+    DustCloud: null,
+  },
+  ヒウン下水道: null,
+  タチワキコンビナート: {
+    Normal: ['外部', '内部'],
+    ShakingGrass: null,
+  },
 });
 
 const DUPLICATE_SUFFIX_RULES = Object.freeze({
@@ -220,6 +257,10 @@ const JA_TO_ASCII_KEY = {
   サンギ牧場: 'floccesy_ranch',
   サンヨウシティ: 'striaton_city',
   ジャイアントホール: 'giant_chasm',
+  ジャイアントホール外部: 'giant_chasm_exterior',
+  ジャイアントホール洞窟: 'giant_chasm_cave',
+  'ジャイアントホール森(クレーター)': 'giant_chasm_crater_forest',
+  'ジャイアントホール洞窟(最深部)': 'giant_chasm_cave_depths',
   'ストレンジャーハウス入口,B1F': 'strange_house_entrance_b1f',
   ストレンジャーハウス小部屋: 'strange_house_small_room',
   セイガイハシティ: 'humilau_city',
@@ -232,6 +273,8 @@ const JA_TO_ASCII_KEY = {
   'セッカの湿原(秋)': 'moor_of_icirrus_autumn',
   'セッカの湿原(冬)': 'moor_of_icirrus_winter',
   タチワキコンビナート: 'virbank_complex',
+  タチワキコンビナート外部: 'virbank_complex_exterior',
+  タチワキコンビナート内部: 'virbank_complex_interior',
   タチワキシティ: 'virbank_city',
   タワーオブヘブン: 'celestial_tower',
   タワーオブヘブン2F: 'celestial_tower_2f',
@@ -262,6 +305,9 @@ const JA_TO_ASCII_KEY = {
   リゾートデザート外部: 'desert_resort_exterior',
   リゾートデザート内部: 'desert_resort_interior',
   リバースマウンテン: 'reversal_mountain',
+  リバースマウンテン外部: 'reversal_mountain_exterior',
+  'リバースマウンテン内部(入口)': 'reversal_mountain_interior_entrance',
+  'リバースマウンテン内部(奥)': 'reversal_mountain_interior_main',
   'リュウラセンの塔(春)': 'dragonspiral_tower_spring',
   'リュウラセンの塔(春)外部(南)': 'dragonspiral_tower_spring_exterior_south',
   'リュウラセンの塔(春)外部(北東)': 'dragonspiral_tower_spring_exterior_northeast',
@@ -292,6 +338,9 @@ const JA_TO_ASCII_KEY = {
   試練の室: 'trial_chamber',
   自然保護区: 'nature_preserve',
   修行の岩屋: 'challengers_cave',
+  修行の岩屋1F: 'challengers_cave_1f',
+  修行の岩屋B1F: 'challengers_cave_b1f',
+  修行の岩屋B2F: 'challengers_cave_b2f',
   地下水脈の穴: 'wellspring_cave',
   地底遺跡: 'underground_ruins',
   鉄の間: 'iron_chamber',
@@ -478,6 +527,7 @@ function findSectionTables($, method) {
     Normal: (t) => t.includes('草むら') && t.includes('洞窟') && !t.includes('濃い草むら'),
     ShakingGrass: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
     DustCloud: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
+    PokemonShadow: (t) => t.includes('揺れる草むら') || t.includes('土煙'),
     Surfing: (t) => t.includes('なみのり') || t.includes('つり'),
     SurfingBubble: (t) => t.includes('なみのり') || t.includes('つり'),
     Fishing: (t) => t.includes('なみのり') || t.includes('つり'),
@@ -615,7 +665,13 @@ function resolveLocationGroup(baseName, rows, { version, method, suffixRules }) 
   const uniques = uniqueRowsBySignature(rows);
   if (!uniques.length) return [];
 
-  const plan = suffixRules ? suffixRules[baseName] : undefined;
+  let plan = suffixRules ? suffixRules[baseName] : undefined;
+
+  // Support method-specific overrides: { Normal: [...], DustCloud: null }
+  if (plan !== null && plan !== undefined && typeof plan === 'object' && !Array.isArray(plan)) {
+    plan = method in plan ? plan[method] : undefined;
+  }
+
   if (plan === undefined) {
     const merged = [];
     for (const row of rows) merged.push(...row.slots);
@@ -769,12 +825,16 @@ function parseEncounterPage(html, { version, method, url, aliasJa }) {
         const parsed = parseWideRowIntoSlots($, tr, method, aliasJa);
         if (!parsed) return;
 
-        // In the "揺れる草むら, 土煙" section, cave/dungeon rows contain
-        // モグリュー/ドリュウズ exclusively; outdoor rows do not.
-        if (method === 'ShakingGrass' || method === 'DustCloud') {
+        // In the "揺れる草むら, 土煙" section, rows are classified by:
+        //   - DustCloud: cave/dungeon rows with モグリュー/ドリュウズ exclusively
+        //   - PokemonShadow: bridge locations (ホドモエの跳ね橋, ワンダーブリッジ)
+        //   - ShakingGrass: everything else
+        if (method === 'ShakingGrass' || method === 'DustCloud' || method === 'PokemonShadow') {
           const isDust = isDustCloudRow(parsed.slots);
-          if (method === 'ShakingGrass' && isDust) return;
+          const isBridge = POKEMON_SHADOW_LOCATIONS.has(parsed.baseName);
+          if (method === 'ShakingGrass' && (isDust || isBridge)) return;
           if (method === 'DustCloud' && !isDust) return;
+          if (method === 'PokemonShadow' && !isBridge) return;
         }
 
         parsedRows.push(parsed);

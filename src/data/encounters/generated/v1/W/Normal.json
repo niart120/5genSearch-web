@@ -4347,7 +4347,7 @@
         }
       ]
     },
-    "giant_chasm": {
+    "giant_chasm_exterior": {
       "slots": [
         {
           "speciesId": 114,
@@ -4468,7 +4468,11 @@
           },
           "genderRatio": "F1M1",
           "hasHeldItem": false
-        },
+        }
+      ]
+    },
+    "giant_chasm_cave": {
+      "slots": [
         {
           "speciesId": 42,
           "rate": 20,
@@ -4588,7 +4592,11 @@
           },
           "genderRatio": "FemaleOnly",
           "hasHeldItem": true
-        },
+        }
+      ]
+    },
+    "giant_chasm_crater_forest": {
+      "slots": [
         {
           "speciesId": 35,
           "rate": 20,
@@ -4708,7 +4716,11 @@
           },
           "genderRatio": "Genderless",
           "hasHeldItem": true
-        },
+        }
+      ]
+    },
+    "giant_chasm_cave_depths": {
+      "slots": [
         {
           "speciesId": 42,
           "rate": 20,
@@ -5453,126 +5465,6 @@
     },
     "wellspring_cave": {
       "slots": [
-        {
-          "speciesId": 524,
-          "rate": 20,
-          "levelRange": {
-            "min": 10,
-            "max": 10
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 20,
-          "levelRange": {
-            "min": 10,
-            "max": 10
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 524,
-          "rate": 10,
-          "levelRange": {
-            "min": 11,
-            "max": 11
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 10,
-          "levelRange": {
-            "min": 11,
-            "max": 11
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 524,
-          "rate": 10,
-          "levelRange": {
-            "min": 11,
-            "max": 11
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 10,
-          "levelRange": {
-            "min": 11,
-            "max": 11
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 524,
-          "rate": 5,
-          "levelRange": {
-            "min": 12,
-            "max": 12
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 5,
-          "levelRange": {
-            "min": 12,
-            "max": 12
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 524,
-          "rate": 4,
-          "levelRange": {
-            "min": 13,
-            "max": 13
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 4,
-          "levelRange": {
-            "min": 13,
-            "max": 13
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 524,
-          "rate": 1,
-          "levelRange": {
-            "min": 13,
-            "max": 13
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 1,
-          "levelRange": {
-            "min": 13,
-            "max": 13
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
         {
           "speciesId": 524,
           "rate": 20,
@@ -6560,126 +6452,6 @@
           },
           "genderRatio": "F1M1",
           "hasHeldItem": false
-        },
-        {
-          "speciesId": 525,
-          "rate": 20,
-          "levelRange": {
-            "min": 28,
-            "max": 28
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 20,
-          "levelRange": {
-            "min": 28,
-            "max": 28
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 525,
-          "rate": 10,
-          "levelRange": {
-            "min": 29,
-            "max": 29
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 527,
-          "rate": 10,
-          "levelRange": {
-            "min": 30,
-            "max": 30
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 525,
-          "rate": 10,
-          "levelRange": {
-            "min": 30,
-            "max": 30
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 610,
-          "rate": 10,
-          "levelRange": {
-            "min": 30,
-            "max": 30
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 525,
-          "rate": 5,
-          "levelRange": {
-            "min": 30,
-            "max": 30
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 610,
-          "rate": 5,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 525,
-          "rate": 4,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 610,
-          "rate": 4,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 525,
-          "rate": 1,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 610,
-          "rate": 1,
-          "levelRange": {
-            "min": 31,
-            "max": 31
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
         }
       ]
     },
@@ -7303,7 +7075,7 @@
         }
       ]
     },
-    "celestial_tower": {
+    "celestial_tower_2f": {
       "slots": [
         {
           "speciesId": 607,
@@ -7424,7 +7196,11 @@
           },
           "genderRatio": "F1M1",
           "hasHeldItem": false
-        },
+        }
+      ]
+    },
+    "celestial_tower_3f": {
+      "slots": [
         {
           "speciesId": 607,
           "rate": 20,
@@ -7544,7 +7320,11 @@
           },
           "genderRatio": "F1M1",
           "hasHeldItem": false
-        },
+        }
+      ]
+    },
+    "celestial_tower_4f": {
+      "slots": [
         {
           "speciesId": 607,
           "rate": 20,
@@ -7664,7 +7444,11 @@
           },
           "genderRatio": "F1M1",
           "hasHeldItem": false
-        },
+        }
+      ]
+    },
+    "celestial_tower_5f": {
+      "slots": [
         {
           "speciesId": 607,
           "rate": 20,
@@ -8655,7 +8439,7 @@
         }
       ]
     },
-    "challengers_cave": {
+    "challengers_cave_1f": {
       "slots": [
         {
           "speciesId": 525,
@@ -8776,7 +8560,11 @@
           },
           "genderRatio": "F1M1",
           "hasHeldItem": true
-        },
+        }
+      ]
+    },
+    "challengers_cave_b1f": {
+      "slots": [
         {
           "speciesId": 525,
           "rate": 20,
@@ -8896,7 +8684,11 @@
           },
           "genderRatio": "F1M7",
           "hasHeldItem": false
-        },
+        }
+      ]
+    },
+    "challengers_cave_b2f": {
+      "slots": [
         {
           "speciesId": 525,
           "rate": 20,
@@ -9087,126 +8879,6 @@
           "levelRange": {
             "min": 34,
             "max": 34
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 538,
-          "rate": 5,
-          "levelRange": {
-            "min": 33,
-            "max": 33
-          },
-          "genderRatio": "MaleOnly",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 590,
-          "rate": 4,
-          "levelRange": {
-            "min": 34,
-            "max": 34
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 538,
-          "rate": 4,
-          "levelRange": {
-            "min": 36,
-            "max": 36
-          },
-          "genderRatio": "MaleOnly",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 590,
-          "rate": 1,
-          "levelRange": {
-            "min": 35,
-            "max": 35
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 538,
-          "rate": 1,
-          "levelRange": {
-            "min": 36,
-            "max": 36
-          },
-          "genderRatio": "MaleOnly",
-          "hasHeldItem": true
-        },
-        {
-          "speciesId": 507,
-          "rate": 20,
-          "levelRange": {
-            "min": 33,
-            "max": 33
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 627,
-          "rate": 20,
-          "levelRange": {
-            "min": 34,
-            "max": 34
-          },
-          "genderRatio": "MaleOnly",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 507,
-          "rate": 10,
-          "levelRange": {
-            "min": 34,
-            "max": 34
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 627,
-          "rate": 10,
-          "levelRange": {
-            "min": 36,
-            "max": 36
-          },
-          "genderRatio": "MaleOnly",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 626,
-          "rate": 10,
-          "levelRange": {
-            "min": 34,
-            "max": 34
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 626,
-          "rate": 10,
-          "levelRange": {
-            "min": 35,
-            "max": 35
-          },
-          "genderRatio": "F1M1",
-          "hasHeldItem": false
-        },
-        {
-          "speciesId": 590,
-          "rate": 5,
-          "levelRange": {
-            "min": 33,
-            "max": 33
           },
           "genderRatio": "F1M1",
           "hasHeldItem": true

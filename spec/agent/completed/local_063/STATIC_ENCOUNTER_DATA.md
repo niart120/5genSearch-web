@@ -351,26 +351,26 @@ const mockListStaticEntries = vi.mocked(listStaticEncounterEntries);
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/data/encounters/schema.ts` 変更
-  - [ ] `EncounterMethodKey` に `PokemonShadow` 追加
-  - [ ] `StaticEncounterTypeKey`, `EncounterSpeciesEntryJson`, `EncounterSpeciesJson` 追加
-  - [ ] サブセット制約 (`_AssertWild`, `_AssertStatic`) 追加
-- [ ] `src/data/encounters/static/v1/` に固定エンカウント JSON 配置
-  - [ ] B/StaticSymbol.json
-  - [ ] W/StaticSymbol.json
-  - [ ] B2/StaticSymbol.json
-  - [ ] W2/StaticSymbol.json
-  - [ ] 御三家・化石・イベント等 (対象範囲は着手時に判断)
-- [ ] `scripts/scrape-encounters.js` に `PokemonShadow` 追加・再実行
-- [ ] `src/data/encounters/loader.ts` に固定レジストリ初期化・検索 API 追加
-- [ ] `src/data/encounters/converter.ts` に `toEncounterSlotConfigFromEntry` 追加
-- [ ] `src/data/encounters/helpers.ts` を破壊的に再設計
-  - [ ] 既存 `listEncounterLocations` / `listEncounterSpecies` 破棄
-  - [ ] `EncounterSpeciesOption` 判別共用型
-  - [ ] `isLocationBasedEncounter` (型ガード)
-  - [ ] `listLocations` / `listSpecies` 統一 API
-  - [ ] キャッシュキー設計 (wild: locationKey 含む, static: 含まない)
-- [ ] `src/test/unit/encounter-static.test.ts` 作成
-- [ ] `src/test/unit/encounter-helpers.test.ts` 新 API に追従
-- [ ] `src/test/integration/encounter-service.test.ts` に固定エンカウント・PokemonShadow テスト追加
-- [ ] 既存テストが引き続きパスすることを確認
+- [x] `src/data/encounters/schema.ts` 変更
+  - [x] `EncounterMethodKey` に `PokemonShadow` 追加
+  - [x] `StaticEncounterTypeKey`, `EncounterSpeciesEntryJson`, `EncounterSpeciesJson` 追加
+  - [x] サブセット制約 (`_AssertWild`, `_AssertStatic`) 追加
+- [x] `src/data/encounters/static/v1/` に固定エンカウント JSON 配置
+  - [x] B/StaticSymbol.json
+  - [x] W/StaticSymbol.json
+  - [x] B2/StaticSymbol.json
+  - [x] W2/StaticSymbol.json
+  - [x] 御三家・化石・イベント等 (対象範囲は着手時に判断)
+- [x] `scripts/scrape-encounters.js` に `PokemonShadow` 追加・再実行
+- [x] `src/data/encounters/loader.ts` に固定レジストリ初期化・検索 API 追加
+- [x] `src/data/encounters/converter.ts` に `toEncounterSlotConfigFromEntry` 追加
+- [x] `src/data/encounters/helpers.ts` を破壊的に再設計
+  - [x] 既存 `listEncounterLocations` / `listEncounterSpecies` 破棄
+  - [x] `EncounterSpeciesOption` 判別共用型
+  - [x] `isLocationBasedEncounter` (型ガード)
+  - [x] `listLocations` / `listSpecies` 統一 API
+  - [x] キャッシュキー設計 (wild: locationKey 含む, static: 含まない)
+- [x] `src/test/unit/encounter-static.test.ts` 作成
+- [x] `src/test/unit/encounter-helpers.test.ts` 新 API に追従
+- [x] `src/test/integration/encounter-service.test.ts` に固定エンカウント・PokemonShadow テスト追加
+- [x] 既存テストが引き続きパスすることを確認
