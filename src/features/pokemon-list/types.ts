@@ -9,6 +9,16 @@ import type {
 /** Seed 入力モード */
 export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
 
+/** ステータスフィルター (クライアントサイド post-filter) */
+export interface StatsFilter {
+  hp: [number, number];
+  atk: [number, number];
+  def: [number, number];
+  spa: [number, number];
+  spd: [number, number];
+  spe: [number, number];
+}
+
 /** ポケモンリスト生成フォーム状態 */
 export interface PokemonListFormState {
   seedInputMode: SeedInputMode;

@@ -17,7 +17,7 @@ import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
 import { usePokemonList } from '../hooks/use-pokemon-list';
 import { validatePokemonListForm } from '../types';
-import type { PokemonListValidationErrorCode, SeedInputMode } from '../types';
+import type { PokemonListValidationErrorCode, SeedInputMode, StatsFilter } from '../types';
 import { SeedInputSection } from './seed-input-section';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
@@ -75,6 +75,7 @@ function PokemonListPage(): ReactElement {
 
   // フィルタ
   const [filter, setFilter] = useState<PokemonFilter | undefined>();
+  const [statsFilter, setStatsFilter] = useState<StatsFilter | undefined>();
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
@@ -125,6 +126,19 @@ function PokemonListPage(): ReactElement {
 
   // ステータス/IV 表示切替
   const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
+
+  // クライアントサイド Stats フィルタ適用
+  const filteredResults = useMemo(() => {
+    if (!statsFilter) return uiResults;
+    const keys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
+    return uiResults.filter((r) =>
+      keys.every((key, i) => {
+        const v = Number(r.stats[i]);
+        if (Number.isNaN(v)) return true; // '?' は通過
+        return v >= statsFilter[key][0] && v <= statsFilter[key][1];
+      })
+    );
+  }, [uiResults, statsFilter]);
 
   const handleSelectResult = useCallback((result: UiPokemonData) => {
     setSelectedResult(result);
@@ -218,6 +232,9 @@ function PokemonListPage(): ReactElement {
           <PokemonFilterForm
             value={filter}
             onChange={setFilter}
+            statsFilter={statsFilter}
+            onStatsFilterChange={setStatsFilter}
+            statMode={statMode}
             availableSpecies={availableSpecies}
             disabled={isLoading}
           />
@@ -235,7 +252,7 @@ function PokemonListPage(): ReactElement {
         <FeaturePageLayout.Results>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
+              <Trans>Results</Trans>: {filteredResults.length.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
@@ -253,7 +270,7 @@ function PokemonListPage(): ReactElement {
           </div>
           <DataTable
             columns={columns}
-            data={uiResults}
+            data={filteredResults}
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}

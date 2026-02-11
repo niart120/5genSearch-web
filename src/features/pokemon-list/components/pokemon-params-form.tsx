@@ -380,49 +380,44 @@ function PokemonParamsForm({
         <Trans>Encounter settings</Trans>
       </h3>
 
-      {/* エンカウント大分類 */}
+      {/* エンカウント大分類 + 中分類 (1行レイアウト) */}
       <div className="flex flex-col gap-1">
         <Label className="text-xs">
-          <Trans>Encounter category</Trans>
+          <Trans>Encounter type</Trans>
         </Label>
-        <Select value={selectedCategory} onValueChange={handleCategoryChange} disabled={disabled}>
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ENCOUNTER_CATEGORIES.map((cat) => (
-              <SelectItem key={cat.labelKey} value={cat.labelKey}>
-                {cat.labels[language]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* エンカウント中分類 (サブタイプが 2 つ以上ある場合のみ表示) */}
-      {categorySubTypes.length > 1 && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">
-            <Trans>Encounter type</Trans>
-          </Label>
-          <Select
-            value={encounterType}
-            onValueChange={handleEncounterTypeChange}
-            disabled={disabled}
-          >
-            <SelectTrigger className="h-8 text-xs">
+        <div className="flex gap-2">
+          <Select value={selectedCategory} onValueChange={handleCategoryChange} disabled={disabled}>
+            <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {categorySubTypes.map((et) => (
-                <SelectItem key={et} value={et}>
-                  {getEncounterTypeLabel(et, language)}
+              {ENCOUNTER_CATEGORIES.map((cat) => (
+                <SelectItem key={cat.labelKey} value={cat.labelKey}>
+                  {cat.labels[language]}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {categorySubTypes.length > 1 && (
+            <Select
+              value={encounterType}
+              onValueChange={handleEncounterTypeChange}
+              disabled={disabled}
+            >
+              <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categorySubTypes.map((et) => (
+                  <SelectItem key={et} value={et}>
+                    {getEncounterTypeLabel(et, language)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
-      )}
+      </div>
 
       {/* ロケーション (ロケーションベースのみ) */}
       {isLocationBased && (

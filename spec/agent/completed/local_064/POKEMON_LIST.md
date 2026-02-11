@@ -136,23 +136,18 @@ Tabs (Radix UI) で 3 つのタブを切り替える:
 
 ### 3.4 エンカウント選択の UI フロー
 
-2 段階セレクト方式を採用する:
+2 段階セレクト方式を1 行レイアウトで採用する:
 
 ```
-① エンカウント大分類 (Select: ENCOUNTER_CATEGORIES)
-   野生 / 伝説・準伝説 / 徘徊 / 御三家 / 化石 / かくしあな
-      │
-      ▼
-② エンカウント中分類 (Select: categorySubTypes)  ※ サブタイプが 2 つ以上の場合のみ表示
-   例: 野生 → [草むら・洞窟, 揺れる草むら, 土煙, ポケモンの影, なみのり, ...]
-   例: 伝説 → [シンボル, イベント]
-   ※ サブタイプが 1 つのカテゴリは自動選択
+① エンカウント大分類 + 中分類 (1 行に並ぶ 2 つの Select)
+   [野生 ▼] [草むら・洞窟 ▼]      ← サブタイプが 2 つ以上の場合のみ中分類表示
+   [御三家 ▼]                     ← サブタイプが 1 つの場合は大分類のみ
       │
       ├── ロケーションベース (Normal, ShakingGrass, ...):
-      │   ├── ③ ロケーション (Select)
+      │   ├── ② ロケーション (Select)
       │   └── → スロット自動決定 (toEncounterSlotConfigs)
       └── 固定エンカウント (StaticSymbol, StaticStarter, ...):
-          ├── ③ ポケモン選択 (Select) — 種族名を WASM `get_species_name` で解決して表示
+          ├── ② ポケモン選択 (Select) — 種族名を WASM `get_species_name` で解決して表示
           └── → スロット自動決定 (toEncounterSlotConfigFromEntry)
 ```
 
@@ -529,31 +524,60 @@ EncounterMethod の自動判定:
 ```typescript
 interface PokemonFilterFormProps {
   value: PokemonFilter | undefined;
-  onChange: (filter: PokemonFilter | undefined) => void;
+  onChange: (filter?: PokemonFilter) => void;
+  statsFilter: StatsFilter | undefined;
+  onStatsFilterChange: (filter?: StatsFilter) => void;
+  statMode: StatDisplayMode;  // 'stats' | 'ivs' — 表示モードに応じたフィルタ切替
   availableSpecies: EncounterSpeciesOption[];
   disabled?: boolean;
 }
 ```
 
-フィルター項目:
+フィルター有効/無効トグル (`Switch`) とリセットボタン (`RotateCcw`) をヘッダーに配置。
+トグル OFF 時は内部状態を保持したまま `onChange(undefined)` でフィルタ解除。
 
-| フィールド | 型 | UI 部品 | 備考 |
-|-----------|-----|---------|------|
-| 種族 | `number[] \| undefined` | マルチセレクト (Combobox) | `availableSpecies` から候補を生成。種族名表示には WASM export `get_species_name(species_id, locale)` を使用。空 = フィルターなし |
-| IV 範囲 | `IvFilter` | IvRangeInput (既存) | H/A/B/C/D/S 各 min-max |
-| 性格 | `Nature[]` | NatureSelect (複数選択) | 空 = フィルターなし |
-| めざパタイプ | `HiddenPowerType \| undefined` | Select | 指定なし = フィルターなし |
-| 色違い | `boolean` | Checkbox | |
-| 性別 | `Gender \| undefined` | Select | ♂ / ♀ / 指定なし |
-| 特性スロット | `AbilitySlot \| undefined` | Select | 第 1 / 第 2 / 夢 / 指定なし |
+フィルター項目 (上からの表示順序):
 
-フォーム全体は折りたたみ可能にし、デフォルトは閉じた状態とする。
+| # | フィールド | 型 | UI 部品 | 備考 |
+|---|-----------|-----|---------|------|
+| 1 | 特性スロット | `AbilitySlot \| undefined` | Select | 第1 / 第2 / 夢 / 指定なし |
+| 2 | 性別 | `Gender \| undefined` | Select | ♂ / ♀ / - (性別不明) / 指定なし |
+| 3 | 性格 | `Nature[]` | NatureSelect (Popover) | Popover式 5×5 グリッド選択 |
+| 4 | 色違い | `ShinyFilter \| undefined` | Select | 指定なし / ☆ / ◇ / ☆&◇ |
+| 5a | 実ステータス | `StatsFilter` | StatsRangeInput | `statMode === 'stats'` 時のみ表示。クライアントサイド post-filter |
+| 5b | IV 範囲 | `IvFilter` | IvRangeInput (既存) | `statMode === 'ivs'` 時のみ表示。WASM 側フィルタ |
+| 6 | めざパタイプ | `HiddenPowerType[]` | Popover 4×4 グリッド | IV モード時のみ有効 |
+| 7 | めざパ威力下限 | `number \| undefined` | Input (30-70) | IV モード時のみ有効 |
+| 8 | 種族 | `number[]` | SpeciesSelect (Popover) | Popover式開閉チェックボックスリスト |
 
-種族マルチセレクトの候補リスト:
+StatsFilter は WASM ではなくクライアントサイド post-filter として適用:
 
-- ロケーションベース: `listSpecies(version, method, locationKey)` の結果から `speciesId` を抽出し、`get_species_name(speciesId, locale)` で表示名を解決
-- 固定エンカウント: `listSpecies(version, method)` の結果から `speciesId` + `displayNameKey` を使用
-- ロケーションやエンカウント種別の変更時に候補リストを再構築
+```typescript
+// types.ts
+export interface StatsFilter {
+  hp: [number, number];   // 0-999
+  atk: [number, number];
+  def: [number, number];
+  spa: [number, number];
+  spd: [number, number];
+  spe: [number, number];
+}
+```
+
+`pokemon-list-page.tsx` 内で `useMemo` によるフィルタリング:
+
+```typescript
+const filteredResults = useMemo(() => {
+  if (!statsFilter) return uiResults;
+  return uiResults.filter(r =>
+    keys.every((key, i) => {
+      const v = Number(r.stats[i]);
+      if (Number.isNaN(v)) return true;  // '?' は通過
+      return v >= statsFilter[key][0] && v <= statsFilter[key][1];
+    })
+  );
+}, [uiResults, statsFilter]);
+```
 
 ### 4.9 pokemon-result-columns.tsx — テーブルカラム定義
 
@@ -574,6 +598,7 @@ interface PokemonResultColumnsOptions {
 |--------|-----------|------|
 | 詳細 | — | ダイアログ表示ボタン |
 | Advance | `advance` | フレーム消費数 |
+| 針 | `needle_direction` | レポート針方向 (0-7 → ↑↗→↘↓↙←↖) |
 | 種族 | `species_name` | ポケモン名 |
 | 性格 | `nature_name` | 性格名 |
 | 特性 | `ability_name` | 特性名 |
@@ -591,6 +616,13 @@ interface PokemonResultColumnsOptions {
 | シンクロ | `sync_applied` | 〇/× |
 | 持ち物 | `held_item_name` | 持ち物名 (あれば) |
 
+針方向の矢印マッピング:
+
+```typescript
+const NEEDLE_ARROWS = ['\u2191', '\u2197', '\u2192', '\u2198', '\u2193', '\u2199', '\u2190', '\u2196'];
+// 0=N(↑), 1=NE(↗), 2=E(→), 3=SE(↘), 4=S(↓), 5=SW(↙), 6=W(←), 7=NW(↖)
+```
+
 ヘッダー表記はロケールに応じて切替:
 - ja: `H / A / B / C / D / S`
 - en: `HP / Atk / Def / SpA / SpD / Spe`
@@ -602,6 +634,7 @@ interface PokemonResultColumnsOptions {
 `UiPokemonData` の全フィールドを表示するダイアログ。
 
 - Seed 情報 (base_seed, mt_seed, datetime_iso, timer0, vcount, key_input)
+- 針方向 (needle_direction → 矢印記号)
 - 個体情報 (種族, 性格, 特性, 性別, 色違い, IV, ステータス, めざパ, PID)
 - エンカウント情報 (移動エンカウント判定, 特殊エンカウント判定)
 

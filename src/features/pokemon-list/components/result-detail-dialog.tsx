@@ -87,6 +87,14 @@ function ResultDetailDialog({
           )}
 
           {/* 個体データ */}
+          <DetailRow
+            label={t`Needle`}
+            value={
+              ['\u2191', '\u2197', '\u2192', '\u2198', '\u2193', '\u2199', '\u2190', '\u2196'][
+                result.needle_direction
+              ] ?? '?'
+            }
+          />
           <DetailRow label={t`Species`} value={result.species_name} />
           <DetailRow label={t`Nature`} value={result.nature_name} />
           <DetailRow label={t`Ability`} value={result.ability_name} />
