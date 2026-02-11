@@ -547,10 +547,24 @@ function getEncounterLocationName(key: string, locale: SupportedLocale): string 
   return ENCOUNTER_LOCATION_NAMES[key]?.[locale] ?? key;
 }
 
+// ---------------------------------------------------------------------------
+// Needle Direction
+// ---------------------------------------------------------------------------
+
+/** レポート針方向 (0-7) → 矢印記号。Rust 側 NeedleDirection::arrow() と同等 */
+const NEEDLE_ARROWS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'] as const;
+
+/** needle_direction (u8) を矢印記号に変換 */
+function getNeedleArrow(direction: number): string {
+  return NEEDLE_ARROWS[direction] ?? '?';
+}
+
 export type { IvStatKey };
 export {
   IV_STAT_KEYS,
   getStatLabel,
+  NEEDLE_ARROWS,
+  getNeedleArrow,
   NATURE_ORDER,
   getNatureName,
   HIDDEN_POWER_ORDER,

@@ -4,10 +4,33 @@ import type {
   SeedOrigin,
   EncounterType,
   EncounterMethod,
+  EncounterSlotConfig,
+  LeadAbilityEffect,
 } from '../../wasm/wasm_pkg.js';
+import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
 
 /** Seed 入力モード */
 export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
+
+/** PokemonParamsForm が親に報告するエンカウントパラメータ集約 */
+export interface EncounterParamsOutput {
+  encounterType: EncounterType;
+  encounterMethod: EncounterMethod;
+  slots: EncounterSlotConfig[];
+  leadAbility: LeadAbilityEffect;
+  availableSpecies: EncounterSpeciesOption[];
+  genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
+}
+
+/** EncounterParamsOutput の初期値 */
+export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
+  encounterType: 'Normal',
+  encounterMethod: 'Stationary',
+  slots: [],
+  leadAbility: 'None',
+  availableSpecies: [],
+  genConfig: { user_offset: 0, max_advance: 100 },
+};
 
 /** ステータスフィルター (クライアントサイド post-filter, 固定値指定) */
 export interface StatsFilter {

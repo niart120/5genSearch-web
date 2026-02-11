@@ -554,13 +554,14 @@ StatsFilter は WASM ではなくクライアントサイド post-filter とし�
 
 ```typescript
 // types.ts
+/** ステータスフィルター (固定値指定、undefined は任意の値にマッチ) */
 export interface StatsFilter {
-  hp: [number, number];   // 0-999
-  atk: [number, number];
-  def: [number, number];
-  spa: [number, number];
-  spd: [number, number];
-  spe: [number, number];
+  hp: number | undefined;
+  atk: number | undefined;
+  def: number | undefined;
+  spa: number | undefined;
+  spd: number | undefined;
+  spe: number | undefined;
 }
 ```
 
@@ -569,11 +570,14 @@ export interface StatsFilter {
 ```typescript
 const filteredResults = useMemo(() => {
   if (!statsFilter) return uiResults;
-  return uiResults.filter(r =>
+  const keys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
+  return uiResults.filter((r) =>
     keys.every((key, i) => {
+      const expected = statsFilter[key];
+      if (expected === undefined) return true; // 未指定は任意の値にマッチ
       const v = Number(r.stats[i]);
       if (Number.isNaN(v)) return true;  // '?' は通過
-      return v >= statsFilter[key][0] && v <= statsFilter[key][1];
+      return v === expected;
     })
   );
 }, [uiResults, statsFilter]);

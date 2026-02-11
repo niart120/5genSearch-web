@@ -9,16 +9,11 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { IvRangeInput } from '@/components/forms/iv-range-input';
 import { NatureSelect } from '@/components/forms/nature-select';
+import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
+import { GenderSelect } from '@/components/forms/gender-select';
+import { ShinySelect } from '@/components/forms/shiny-select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { cn } from '@/lib/utils';
 import type {
@@ -105,22 +100,22 @@ function EggFilterForm({ value, onChange, disabled }: EggFilterFormProps) {
   );
 
   const handleGenderChange = useCallback(
-    (gender: string) => {
-      update({ gender: gender === '__none__' ? undefined : (gender as Gender) });
+    (gender: Gender | undefined) => {
+      update({ gender });
     },
     [update]
   );
 
   const handleAbilitySlotChange = useCallback(
-    (slot: string) => {
-      update({ ability_slot: slot === '__none__' ? undefined : (slot as AbilitySlot) });
+    (slot: AbilitySlot | undefined) => {
+      update({ ability_slot: slot });
     },
     [update]
   );
 
   const handleShinyChange = useCallback(
-    (checked: boolean) => {
-      update({ shiny: checked ? ('Shiny' as ShinyFilter) : undefined });
+    (shiny: ShinyFilter | undefined) => {
+      update({ shiny });
     },
     [update]
   );
@@ -170,57 +165,22 @@ function EggFilterForm({ value, onChange, disabled }: EggFilterFormProps) {
           />
 
           {/* 性別 */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>Gender</Trans>
-            </Label>
-            <Select
-              value={filter.gender ?? '__none__'}
-              onValueChange={handleGenderChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">{t`Not specified`}</SelectItem>
-                <SelectItem value="Male">♂</SelectItem>
-                <SelectItem value="Female">♀</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <GenderSelect
+            value={filter.gender}
+            onChange={handleGenderChange}
+            showGenderless={false}
+            disabled={disabled}
+          />
 
           {/* 特性スロット */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>Ability slot</Trans>
-            </Label>
-            <Select
-              value={filter.ability_slot ?? '__none__'}
-              onValueChange={handleAbilitySlotChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">{t`Not specified`}</SelectItem>
-                <SelectItem value="First">{t`Ability 1`}</SelectItem>
-                <SelectItem value="Second">{t`Ability 2`}</SelectItem>
-                <SelectItem value="Hidden">{t`Hidden Ability`}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <AbilitySlotSelect
+            value={filter.ability_slot}
+            onChange={handleAbilitySlotChange}
+            disabled={disabled}
+          />
 
           {/* 色違い */}
-          <label className="flex items-center gap-2 text-xs">
-            <Checkbox
-              checked={filter.shiny !== undefined}
-              onCheckedChange={(checked) => handleShinyChange(checked === true)}
-              disabled={disabled}
-            />
-            <Trans>Shiny only</Trans>
-          </label>
+          <ShinySelect value={filter.shiny} onChange={handleShinyChange} disabled={disabled} />
 
           {/* 猶予フレーム下限 */}
           <div className="flex flex-col gap-1">

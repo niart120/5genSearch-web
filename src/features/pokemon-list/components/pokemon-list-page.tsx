@@ -16,35 +16,26 @@ import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
 import { usePokemonList } from '../hooks/use-pokemon-list';
-import { validatePokemonListForm } from '../types';
-import type { PokemonListValidationErrorCode, SeedInputMode, StatsFilter } from '../types';
+import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
+import type {
+  PokemonListValidationErrorCode,
+  SeedInputMode,
+  StatsFilter,
+  EncounterParamsOutput,
+} from '../types';
 import { SeedInputSection } from './seed-input-section';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
 import type { StatDisplayMode } from './pokemon-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
-import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
 import type {
-  EncounterType,
-  EncounterMethod,
-  EncounterSlotConfig,
   GenerationConfig,
   PokemonFilter,
   PokemonGenerationParams,
-  LeadAbilityEffect,
   SeedOrigin,
   UiPokemonData,
 } from '@/wasm/wasm_pkg.js';
-
-// ---------------------------------------------------------------------------
-// Defaults
-// ---------------------------------------------------------------------------
-
-const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> = {
-  user_offset: 0,
-  max_advance: 100,
-};
 
 // ---------------------------------------------------------------------------
 // Page Component
@@ -62,16 +53,9 @@ function PokemonListPage(): ReactElement {
   const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('search-results');
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
-  // エンカウント設定
-  const [encounterType, setEncounterType] = useState<EncounterType>('Normal');
-  const [encounterMethod, setEncounterMethod] = useState<EncounterMethod>('Stationary');
-  const [encounterSlots, setEncounterSlots] = useState<EncounterSlotConfig[]>([]);
-  const [leadAbility, setLeadAbility] = useState<LeadAbilityEffect>('None');
-  const [availableSpecies, setAvailableSpecies] = useState<EncounterSpeciesOption[]>([]);
-
-  // 生成設定
-  const [genConfigPartial, setGenConfigPartial] =
-    useState<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>(DEFAULT_GEN_CONFIG);
+  // エンカウント設定 (PokemonParamsForm の controlled state)
+  const [encounterParams, setEncounterParams] =
+    useState<EncounterParamsOutput>(DEFAULT_ENCOUNTER_PARAMS);
 
   // フィルタ
   const [filter, setFilter] = useState<PokemonFilter | undefined>();
@@ -90,22 +74,14 @@ function PokemonListPage(): ReactElement {
         {
           seedInputMode,
           seedOrigins,
-          encounterType,
-          encounterMethod,
-          genConfig: genConfigPartial,
+          encounterType: encounterParams.encounterType,
+          encounterMethod: encounterParams.encounterMethod,
+          genConfig: encounterParams.genConfig,
           filter,
         },
-        encounterSlots.length > 0
+        encounterParams.slots.length > 0
       ),
-    [
-      seedInputMode,
-      seedOrigins,
-      encounterType,
-      encounterMethod,
-      genConfigPartial,
-      filter,
-      encounterSlots.length,
-    ]
+    [seedInputMode, seedOrigins, encounterParams, filter]
   );
 
   // バリデーションメッセージ
@@ -162,33 +138,20 @@ function PokemonListPage(): ReactElement {
     const fullGenConfig: GenerationConfig = {
       version: dsConfig.version,
       game_start: gameStart,
-      user_offset: genConfigPartial.user_offset,
-      max_advance: genConfigPartial.max_advance,
+      user_offset: encounterParams.genConfig.user_offset,
+      max_advance: encounterParams.genConfig.max_advance,
     };
 
     const params: PokemonGenerationParams = {
       trainer: { tid: tid ?? 0, sid: sid ?? 0 },
-      encounter_type: encounterType,
-      encounter_method: encounterMethod,
-      lead_ability: leadAbility,
-      slots: encounterSlots,
+      encounter_type: encounterParams.encounterType,
+      encounter_method: encounterParams.encounterMethod,
+      lead_ability: encounterParams.leadAbility,
+      slots: encounterParams.slots,
     };
 
     generate(seedOrigins, params, fullGenConfig, filter);
-  }, [
-    dsConfig.version,
-    gameStart,
-    genConfigPartial,
-    tid,
-    sid,
-    encounterType,
-    encounterMethod,
-    leadAbility,
-    encounterSlots,
-    seedOrigins,
-    filter,
-    generate,
-  ]);
+  }, [dsConfig.version, gameStart, encounterParams, tid, sid, seedOrigins, filter, generate]);
 
   return (
     <>
@@ -217,17 +180,9 @@ function PokemonListPage(): ReactElement {
           />
 
           <PokemonParamsForm
-            encounterType={encounterType}
-            encounterMethod={encounterMethod}
-            genConfig={genConfigPartial}
-            leadAbility={leadAbility}
+            value={encounterParams}
+            onChange={setEncounterParams}
             version={dsConfig.version}
-            onEncounterTypeChange={setEncounterType}
-            onEncounterMethodChange={setEncounterMethod}
-            onGenConfigChange={setGenConfigPartial}
-            onLeadAbilityChange={setLeadAbility}
-            onSlotsChange={setEncounterSlots}
-            onAvailableSpeciesChange={setAvailableSpecies}
             disabled={isLoading}
           />
 
@@ -237,7 +192,7 @@ function PokemonListPage(): ReactElement {
             statsFilter={statsFilter}
             onStatsFilterChange={setStatsFilter}
             statMode={statMode}
-            availableSpecies={availableSpecies}
+            availableSpecies={encounterParams.availableSpecies}
             disabled={isLoading}
           />
 

@@ -8,21 +8,10 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getNeedleArrow } from '@/lib/game-data-names';
 import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
 const columnHelper = createColumnHelper<UiPokemonData>();
-
-/** レポート針方向 (0-7) → 矢印記号 */
-const NEEDLE_ARROWS = [
-  '\u2191',
-  '\u2197',
-  '\u2192',
-  '\u2198',
-  '\u2193',
-  '\u2199',
-  '\u2190',
-  '\u2196',
-] as const;
 
 /** ステータス順序: H, A, B, C, D, S */
 const STAT_HEADERS_JA = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
@@ -62,7 +51,7 @@ function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
       header: () => t`Advance`,
       size: 70,
     }),
-    columnHelper.accessor((row) => NEEDLE_ARROWS[row.needle_direction] ?? '?', {
+    columnHelper.accessor((row) => getNeedleArrow(row.needle_direction), {
       id: 'needle',
       header: () => t`Needle`,
       size: 36,
