@@ -22,7 +22,7 @@ function TrainerConfigForm() {
   const setSid = useTrainerStore((s) => s.setSid);
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <Label htmlFor="tid" className="text-xs">
           <Trans>TID</Trans>
