@@ -19,6 +19,10 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
+#: src/features/egg-search/components/egg-params-form.tsx:253
+msgid "♀ parent ability"
+msgstr "♀親の特性"
+
 #: src/components/layout/header.tsx:33
 msgid "5genSearch"
 msgstr "5genSearch"
@@ -50,26 +54,16 @@ msgstr "消費数"
 msgid "Auto"
 msgstr "自動"
 
-#. placeholder {0}: BUTTON_LABELS[btn]
+#. placeholder {0}: BUTTON_LABELS['L']
+#. placeholder {0}: BUTTON_LABELS['R']
+#. placeholder {0}: BUTTON_LABELS['Select']
 #: src/components/forms/key-spec-input.tsx:129
-msgid "Button {0}"
-msgstr "ボタン {0}"
-
 #: src/components/forms/key-spec-input.tsx:153
-msgid "Button L"
-msgstr "Lボタン"
-
 #: src/components/forms/key-spec-input.tsx:161
-msgid "Button R"
-msgstr "Rボタン"
-
 #: src/components/forms/key-spec-input.tsx:182
-msgid "Button Select"
-msgstr "Selectボタン"
-
 #: src/components/forms/key-spec-input.tsx:190
-msgid "Button Start"
-msgstr "Startボタン"
+msgid "Button {0}"
+msgstr "{0}ボタン"
 
 #: src/components/forms/search-controls.tsx:53
 msgid "Cancel"
@@ -79,7 +73,7 @@ msgstr "キャンセル"
 msgid "Combinations"
 msgstr "組み合わせ"
 
-#: src/features/egg-search/components/egg-params-form.tsx:269
+#: src/features/egg-search/components/egg-params-form.tsx:355
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
 
@@ -122,7 +116,7 @@ msgstr "タマゴ"
 #~ msgid "Egg Generation"
 #~ msgstr "孵化個体生成"
 
-#: src/features/egg-search/components/egg-params-form.tsx:196
+#: src/features/egg-search/components/egg-params-form.tsx:229
 msgid "Egg parameters"
 msgstr "孵化パラメータ"
 
@@ -150,13 +144,9 @@ msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
-#: src/features/egg-search/components/egg-params-form.tsx:204
+#: src/features/egg-search/components/egg-params-form.tsx:276
 msgid "Everstone"
 msgstr "かわらずのいし"
-
-#: src/features/egg-search/components/egg-params-form.tsx:233
-msgid "Female has HA"
-msgstr "♀親が夢特性"
 
 #: src/features/egg-search/components/egg-filter-form.tsx:152
 msgid "Filter (optional)"
@@ -168,7 +158,7 @@ msgstr "フィルター (任意)"
 msgid "Gender"
 msgstr "性別"
 
-#: src/features/egg-search/components/egg-params-form.tsx:276
+#: src/features/egg-search/components/egg-params-form.tsx:300
 msgid "Gender ratio"
 msgstr "性別比"
 
@@ -231,7 +221,7 @@ msgstr "猶予"
 msgid "Margin frames"
 msgstr "猶予フレーム"
 
-#: src/features/egg-search/components/egg-params-form.tsx:260
+#: src/features/egg-search/components/egg-params-form.tsx:346
 msgid "Masuda Method"
 msgstr "国際孵化"
 
@@ -240,7 +230,7 @@ msgstr "国際孵化"
 msgid "Max"
 msgstr "Max"
 
-#: src/features/egg-search/components/egg-params-form.tsx:333
+#: src/features/egg-search/components/egg-params-form.tsx:380
 msgid "Max advance"
 msgstr "最大消費数"
 
@@ -288,7 +278,7 @@ msgstr "性格"
 msgid "Needle"
 msgstr "針読み"
 
-#: src/features/egg-search/components/egg-params-form.tsx:251
+#: src/features/egg-search/components/egg-params-form.tsx:337
 msgid "Nidoran♀"
 msgstr "ニドラン♀"
 
@@ -316,15 +306,15 @@ msgstr "結果が見つかりませんでした。MT Seedを入力して検索�
 msgid "Not specified"
 msgstr "指定なし"
 
-#: src/features/egg-search/components/egg-params-form.tsx:215
+#: src/features/egg-search/components/egg-params-form.tsx:287
 msgid "Not used"
 msgstr "使用しない"
 
-#: src/features/egg-search/components/egg-params-form.tsx:305
+#: src/features/egg-search/components/egg-params-form.tsx:243
 msgid "Parent ♀ IVs"
 msgstr "♀親の個体値"
 
-#: src/features/egg-search/components/egg-params-form.tsx:298
+#: src/features/egg-search/components/egg-params-form.tsx:236
 msgid "Parent ♂ IVs"
 msgstr "♂親の個体値"
 
@@ -402,7 +392,7 @@ msgstr "開始日は終了日以前である必要があります"
 msgid "Start mode"
 msgstr "起動モード"
 
-#: src/features/egg-search/components/egg-params-form.tsx:316
+#: src/features/egg-search/components/egg-params-form.tsx:363
 msgid "Start offset"
 msgstr "開始オフセット"
 
@@ -451,7 +441,7 @@ msgstr "ツール"
 msgid "Unknown (any)"
 msgstr "不明(任意)"
 
-#: src/features/egg-search/components/egg-params-form.tsx:242
+#: src/features/egg-search/components/egg-params-form.tsx:328
 msgid "Uses Ditto"
 msgstr "メタモン使用"
 

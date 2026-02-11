@@ -119,9 +119,16 @@ describe('validateEggSearchForm', () => {
     expect(result.isValid).toBe(true);
   });
 
-  it('親個体値が範囲外の場合はエラーを返す', () => {
+  it('親個体値が 32 (Unknown) の場合は valid を返す', () => {
     const form = createDefaultForm();
-    form.eggParams.parent_male = { hp: 32, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    form.eggParams.parent_male = { hp: 32, atk: 32, def: 32, spa: 32, spd: 32, spe: 32 };
+    const result = validateEggSearchForm(form);
+    expect(result.isValid).toBe(true);
+  });
+
+  it('親個体値が 33 以上の場合はエラーを返す', () => {
+    const form = createDefaultForm();
+    form.eggParams.parent_male = { hp: 33, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
     const result = validateEggSearchForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('IV_OUT_OF_RANGE');

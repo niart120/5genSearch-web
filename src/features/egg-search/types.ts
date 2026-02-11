@@ -64,11 +64,14 @@ function isTimeRangeValid(range: TimeRangeParams): boolean {
   );
 }
 
+/** WASM 側 IV_VALUE_UNKNOWN と一致するセンチネル値 */
+const IV_VALUE_UNKNOWN = 32;
+
 /**
- * 親個体値の範囲チェック (各値 0-31)
+ * 親個体値の範囲チェック (各値 0-31 または 32 = 不明)
  */
 function isIvsValid(ivs: readonly number[]): boolean {
-  return ivs.every((v) => v >= 0 && v <= 31);
+  return ivs.every((v) => (v >= 0 && v <= 31) || v === IV_VALUE_UNKNOWN);
 }
 
 /**

@@ -151,7 +151,7 @@ GPU 対応: 孵化検索は現時点で `GpuDatetimeSearchIterator` (MT Seed 用
 | 時刻範囲 | 各フィールド範囲内 | 時刻の範囲が無効です |
 | max_advance | `max_advance` ≥ `user_offset` | 検索終了位置は開始位置以上を指定してください |
 | user_offset | $\ge 0$ | 開始位置は 0 以上を指定してください |
-| 親個体値 | 各値 0-31 | 個体値は 0〜31 の範囲で指定してください |
+| 親個体値 | 各値 0-31 または 32 (不明) | 個体値は 0〜31 の範囲で指定してください |
 
 IV フィルターの min ≤ max はフォーム部品側 (IvRangeInput) でクランプ済み。
 
@@ -216,21 +216,28 @@ interface EggParamsFormProps {
 }
 ```
 
-入力フィールド:
+入力フィールド (表示順):
 
 | フィールド | 型 | UI 部品 | 備考 |
 |-----------|-----|---------|------|
+| 親個体値 (♂) | `Ivs` | 6 つの TextInput (0-31 / `?`) | 空欄 / `?` = 不明 (32) |
+| 親個体値 (♀) | `Ivs` | 6 つの TextInput (0-31 / `?`) | 空欄 / `?` = 不明 (32) |
+| ♀親の特性 | `AbilitySlot` | Select | 特性1 / 特性2 / 隠れ特性 → `female_has_hidden` にマッピング |
 | かわらずのいし | `Nature \| undefined` | Select (性格一覧 + なし) | `undefined` = 不使用 |
-| メス親夢特性 | `boolean` | Checkbox | |
-| メタモン使用 | `boolean` | Checkbox | |
 | 性別比 | `GenderRatio` | Select | 1:1, 1:3, 3:1, 7:1, 性別不明 等 |
+| メタモン使用 | `boolean` | Checkbox | |
 | ニドラン♀ | `boolean` | Checkbox | ニドラン♀孵化時のみ |
 | 国際孵化 | `boolean` | Checkbox | |
-| 親個体値 (♂) | `[u8; 6]` | 6 つの NumberInput (0-31) | H-A-B-C-D-S |
-| 親個体値 (♀) | `[u8; 6]` | 6 つの NumberInput (0-31) | H-A-B-C-D-S |
 | NPC 消費 | `boolean` | Checkbox | |
 | user_offset | `number` | NumberInput | 消費開始位置 |
 | max_advance | `number` | NumberInput | 探索終了位置 |
+
+親個体値の Unknown (32) サポート:
+
+- WASM 側 `Ivs` は各フィールド 0-31 の通常値に加え 32 (`IV_VALUE_UNKNOWN`) を受け付ける
+- 値 32 は遺伝アルゴリズム内でそのまま子に伝播し、表示解決層で `"?"` として出力される
+- UI: 入力フィールドが空欄または `?` の状態でフォーカスアウトすると値 32 をセットする
+- AbilitySlot Select: UI 値 `'Hidden'` → `female_has_hidden: true`、`'First'` / `'Second'` → `false` にマッピング
 
 ### 4.3 EggFilterForm (`egg-filter-form.tsx`)
 

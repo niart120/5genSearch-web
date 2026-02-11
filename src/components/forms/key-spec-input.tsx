@@ -150,7 +150,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             onToggle={(pressed) => handleToggle('L', pressed)}
             disabled={disabled}
             label="L"
-            ariaLabel={t`Button L`}
+            ariaLabel={t`Button ${BUTTON_LABELS['L']}`}
             className="h-7 w-12 rounded-t-lg text-xs"
           />
           <ToggleButton
@@ -158,7 +158,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             onToggle={(pressed) => handleToggle('R', pressed)}
             disabled={disabled}
             label="R"
-            ariaLabel={t`Button R`}
+            ariaLabel={t`Button ${BUTTON_LABELS['R']}`}
             className="h-7 w-12 rounded-t-lg text-xs"
           />
         </div>
@@ -179,7 +179,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             onToggle={(pressed) => handleToggle('Select', pressed)}
             disabled={disabled}
             label="Select"
-            ariaLabel={t`Button Select`}
+            ariaLabel={t`Button ${BUTTON_LABELS['Select']}`}
             className="h-6 w-14 rounded-full text-[10px]"
           />
           <ToggleButton
@@ -187,7 +187,7 @@ function KeySpecInput({ value, onChange, disabled, combinationCount }: KeySpecIn
             onToggle={(pressed) => handleToggle('Start', pressed)}
             disabled={disabled}
             label="Start"
-            ariaLabel={t`Button Start`}
+            ariaLabel={t`Button ${BUTTON_LABELS['Start']}`}
             className="h-6 w-14 rounded-full text-[10px]"
           />
         </div>

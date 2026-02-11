@@ -2,6 +2,7 @@
  * 孵化パラメータ入力フォーム
  *
  * EggGenerationParams + GenerationConfig の入力 UI を提供する。
+ * 表示順: 親個体値 → ♀親特性 → かわらずのいし → 性別比 → フラグ群 → offset/max_advance
  */
 
 import { useState, useCallback } from 'react';
@@ -28,6 +29,7 @@ import type {
   GenderRatio,
   Ivs,
   EverstonePlan,
+  AbilitySlot,
 } from '@/wasm/wasm_pkg.js';
 import type { SupportedLocale } from '@/i18n';
 
@@ -61,6 +63,9 @@ const GENDER_RATIO_LABELS: Record<GenderRatio, Record<SupportedLocale, string>> 
 
 const IV_STATS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 
+/** WASM 側 IV_VALUE_UNKNOWN と一致するセンチネル値 */
+const IV_VALUE_UNKNOWN = 32;
+
 const STAT_SHORT_LABELS: Record<(typeof IV_STATS)[number], Record<SupportedLocale, string>> = {
   hp: { ja: 'H', en: 'HP' },
   atk: { ja: 'A', en: 'Atk' },
@@ -69,6 +74,19 @@ const STAT_SHORT_LABELS: Record<(typeof IV_STATS)[number], Record<SupportedLocal
   spd: { ja: 'D', en: 'SpD' },
   spe: { ja: 'S', en: 'Spe' },
 };
+
+/** AbilitySlot の表示順と日英ラベル */
+const ABILITY_SLOT_ORDER: AbilitySlot[] = ['First', 'Second', 'Hidden'];
+const ABILITY_SLOT_LABELS: Record<AbilitySlot, Record<SupportedLocale, string>> = {
+  First: { ja: '特性1', en: 'Ability 1' },
+  Second: { ja: '特性2', en: 'Ability 2' },
+  Hidden: { ja: '隠れ特性', en: 'Hidden Ability' },
+};
+
+/** IV 値を表示用文字列に変換 (32 → "?") */
+function ivToDisplay(value: number): string {
+  return value === IV_VALUE_UNKNOWN ? '?' : String(value);
+}
 
 interface ParentIvsInputProps {
   label: string;
@@ -80,7 +98,7 @@ interface ParentIvsInputProps {
 
 function ParentIvsInput({ label, ivs, onChange, disabled, language }: ParentIvsInputProps) {
   const [localValues, setLocalValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(IV_STATS.map((stat) => [stat, String(ivs[stat])]))
+    Object.fromEntries(IV_STATS.map((stat) => [stat, ivToDisplay(ivs[stat])]))
   );
 
   const handleChange = useCallback((stat: (typeof IV_STATS)[number], raw: string) => {
@@ -89,7 +107,14 @@ function ParentIvsInput({ label, ivs, onChange, disabled, language }: ParentIvsI
 
   const handleBlur = useCallback(
     (stat: (typeof IV_STATS)[number]) => {
-      const clamped = clampOrDefault(localValues[stat] ?? '0', {
+      const raw = (localValues[stat] ?? '').trim();
+      // 空欄 or "?" → 不明 (32)
+      if (raw === '' || raw === '?') {
+        setLocalValues((prev) => ({ ...prev, [stat]: '?' }));
+        onChange({ ...ivs, [stat]: IV_VALUE_UNKNOWN });
+        return;
+      }
+      const clamped = clampOrDefault(raw, {
         defaultValue: 0,
         min: 0,
         max: 31,
@@ -110,15 +135,13 @@ function ParentIvsInput({ label, ivs, onChange, disabled, language }: ParentIvsI
               {STAT_SHORT_LABELS[stat][language]}
             </span>
             <Input
-              type="number"
+              type="text"
               inputMode="numeric"
               className="h-7 w-full text-center text-xs tabular-nums px-1"
               value={localValues[stat]}
               onChange={(e) => handleChange(stat, e.target.value)}
               onBlur={() => handleBlur(stat)}
               onFocus={handleFocusSelectAll}
-              min={0}
-              max={31}
               disabled={disabled}
               aria-label={`${label} ${STAT_SHORT_LABELS[stat][language]}`}
             />
@@ -166,6 +189,16 @@ function EggParamsForm({
     return '__none__';
   };
 
+  /** AbilitySlot → female_has_hidden マッピング */
+  const femaleAbilitySlot = (): AbilitySlot => (value.female_has_hidden ? 'Hidden' : 'First');
+
+  const handleFemaleAbilityChange = useCallback(
+    (slot: string) => {
+      update({ female_has_hidden: slot === 'Hidden' });
+    },
+    [update]
+  );
+
   const handleGenderRatioChange = useCallback(
     (ratio: string) => {
       update({ gender_ratio: ratio as GenderRatio });
@@ -198,6 +231,45 @@ function EggParamsForm({
 
       {isOpen && (
         <div className="flex flex-col gap-3 pl-1">
+          {/* 親個体値 */}
+          <ParentIvsInput
+            label={t`Parent ♂ IVs`}
+            ivs={value.parent_male}
+            onChange={(ivs) => update({ parent_male: ivs })}
+            disabled={disabled}
+            language={language}
+          />
+          <ParentIvsInput
+            label={t`Parent ♀ IVs`}
+            ivs={value.parent_female}
+            onChange={(ivs) => update({ parent_female: ivs })}
+            disabled={disabled}
+            language={language}
+          />
+
+          {/* ♀親の特性 */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs">
+              <Trans>♀ parent ability</Trans>
+            </Label>
+            <Select
+              value={femaleAbilitySlot()}
+              onValueChange={handleFemaleAbilityChange}
+              disabled={disabled}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ABILITY_SLOT_ORDER.map((slot) => (
+                  <SelectItem key={slot} value={slot}>
+                    {ABILITY_SLOT_LABELS[slot][language]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* かわらずのいし */}
           <div className="flex flex-col gap-1">
             <Label className="text-xs">
@@ -222,17 +294,31 @@ function EggParamsForm({
             </Select>
           </div>
 
+          {/* 性別比 */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs">
+              <Trans>Gender ratio</Trans>
+            </Label>
+            <Select
+              value={value.gender_ratio}
+              onValueChange={handleGenderRatioChange}
+              disabled={disabled}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GENDER_RATIO_ORDER.map((ratio) => (
+                  <SelectItem key={ratio} value={ratio}>
+                    {GENDER_RATIO_LABELS[ratio][language]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* チェックボックス群 */}
           <div className="grid grid-cols-2 gap-2">
-            <label className="flex items-center gap-2 text-xs">
-              <Checkbox
-                checked={value.female_has_hidden}
-                onCheckedChange={(checked) => update({ female_has_hidden: checked === true })}
-                disabled={disabled}
-              />
-              <Trans>Female has HA</Trans>
-            </label>
-
             <label className="flex items-center gap-2 text-xs">
               <Checkbox
                 checked={value.uses_ditto}
@@ -269,45 +355,6 @@ function EggParamsForm({
               <Trans>Consider NPC</Trans>
             </label>
           </div>
-
-          {/* 性別比 */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>Gender ratio</Trans>
-            </Label>
-            <Select
-              value={value.gender_ratio}
-              onValueChange={handleGenderRatioChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {GENDER_RATIO_ORDER.map((ratio) => (
-                  <SelectItem key={ratio} value={ratio}>
-                    {GENDER_RATIO_LABELS[ratio][language]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 親個体値 */}
-          <ParentIvsInput
-            label={t`Parent ♂ IVs`}
-            ivs={value.parent_male}
-            onChange={(ivs) => update({ parent_male: ivs })}
-            disabled={disabled}
-            language={language}
-          />
-          <ParentIvsInput
-            label={t`Parent ♀ IVs`}
-            ivs={value.parent_female}
-            onChange={(ivs) => update({ parent_female: ivs })}
-            disabled={disabled}
-            language={language}
-          />
 
           {/* user_offset / max_advance */}
           <div className="grid grid-cols-2 gap-2">

@@ -59,11 +59,15 @@ describe('EggParamsForm', () => {
 
   it('チェックボックスが表示される', () => {
     renderForm();
-    expect(screen.getByText('Female has HA')).toBeInTheDocument();
     expect(screen.getByText('Uses Ditto')).toBeInTheDocument();
     expect(screen.getByText('Nidoran♀')).toBeInTheDocument();
     expect(screen.getByText('Masuda Method')).toBeInTheDocument();
     expect(screen.getByText('Consider NPC')).toBeInTheDocument();
+  });
+
+  it('♀親の特性セレクトが表示される', () => {
+    renderForm();
+    expect(screen.getByText('♀ parent ability')).toBeInTheDocument();
   });
 
   it('チェックボックス変更で onChange が呼ばれる', async () => {
