@@ -155,7 +155,12 @@ function EggFilterForm({ value, onChange, disabled }: EggFilterFormProps) {
       {isOpen && (
         <div className="flex flex-col gap-3 pl-1">
           {/* IV フィルター */}
-          <IvRangeInput value={ivValue} onChange={handleIvChange} disabled={disabled} />
+          <IvRangeInput
+            value={ivValue}
+            onChange={handleIvChange}
+            allowUnknown
+            disabled={disabled}
+          />
 
           {/* 性格 */}
           <NatureSelect

@@ -19,7 +19,7 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0} selected"
 
-#: src/features/egg-search/components/egg-params-form.tsx:253
+#: src/features/egg-search/components/egg-params-form.tsx:257
 msgid "♀ parent ability"
 msgstr "♀ parent ability"
 
@@ -27,27 +27,31 @@ msgstr "♀ parent ability"
 msgid "5genSearch"
 msgstr ""
 
-#: src/features/egg-search/components/egg-result-columns.tsx:144
-#: src/features/egg-search/components/result-detail-dialog.tsx:144
+#: src/features/egg-search/components/egg-result-columns.tsx:98
+#: src/features/egg-search/components/result-detail-dialog.tsx:110
 msgid "Ability"
 msgstr "Ability"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:203
+#: src/features/egg-search/components/egg-filter-form.tsx:208
 msgid "Ability 1"
 msgstr "Ability 1"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:204
+#: src/features/egg-search/components/egg-filter-form.tsx:209
 msgid "Ability 2"
 msgstr "Ability 2"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:191
+#: src/features/egg-search/components/egg-filter-form.tsx:196
 msgid "Ability slot"
 msgstr "Ability slot"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:159
-#: src/features/egg-search/components/result-detail-dialog.tsx:149
+#: src/features/egg-search/components/egg-result-columns.tsx:113
+#: src/features/egg-search/components/result-detail-dialog.tsx:115
 msgid "Advance"
 msgstr "Advance"
+
+#: src/components/forms/iv-range-input.tsx:153
+msgid "Any"
+msgstr "Any"
 
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
@@ -89,12 +93,12 @@ msgstr "Cancel"
 msgid "Combinations"
 msgstr "Combinations"
 
-#: src/features/egg-search/components/egg-params-form.tsx:355
+#: src/features/egg-search/components/egg-params-form.tsx:359
 msgid "Consider NPC"
 msgstr "Consider NPC"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:49
-#: src/features/egg-search/components/result-detail-dialog.tsx:51
+#: src/features/egg-search/components/result-detail-dialog.tsx:60
 msgid "Copy {label}"
 msgstr "Copy {label}"
 
@@ -104,8 +108,8 @@ msgstr "Date range"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:83
 #: src/features/datetime-search/components/seed-origin-columns.tsx:46
-#: src/features/egg-search/components/egg-result-columns.tsx:105
-#: src/features/egg-search/components/result-detail-dialog.tsx:131
+#: src/features/egg-search/components/egg-result-columns.tsx:59
+#: src/features/egg-search/components/result-detail-dialog.tsx:97
 msgid "Date/Time"
 msgstr "Date/Time"
 
@@ -119,7 +123,7 @@ msgid "Deselect all"
 msgstr "Deselect all"
 
 #: src/features/datetime-search/components/seed-origin-columns.tsx:33
-#: src/features/egg-search/components/egg-result-columns.tsx:92
+#: src/features/egg-search/components/egg-result-columns.tsx:46
 msgid "Details"
 msgstr "Details"
 
@@ -132,7 +136,7 @@ msgstr "Egg"
 #~ msgid "Egg Generation"
 #~ msgstr "Egg Generation"
 
-#: src/features/egg-search/components/egg-params-form.tsx:229
+#: src/features/egg-search/components/egg-params-form.tsx:233
 msgid "Egg parameters"
 msgstr "Egg parameters"
 
@@ -140,7 +144,7 @@ msgstr "Egg parameters"
 msgid "Egg Search"
 msgstr "Egg Search"
 
-#: src/features/egg-search/components/result-detail-dialog.tsx:124
+#: src/features/egg-search/components/result-detail-dialog.tsx:90
 msgid "Egg search result details"
 msgstr "Egg search result details"
 
@@ -160,7 +164,7 @@ msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
-#: src/features/egg-search/components/egg-params-form.tsx:276
+#: src/features/egg-search/components/egg-params-form.tsx:280
 msgid "Everstone"
 msgstr "Everstone"
 
@@ -172,13 +176,13 @@ msgstr "Everstone"
 msgid "Filter (optional)"
 msgstr "Filter (optional)"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:170
-#: src/features/egg-search/components/egg-result-columns.tsx:149
-#: src/features/egg-search/components/result-detail-dialog.tsx:145
+#: src/features/egg-search/components/egg-filter-form.tsx:175
+#: src/features/egg-search/components/egg-result-columns.tsx:103
+#: src/features/egg-search/components/result-detail-dialog.tsx:111
 msgid "Gender"
 msgstr "Gender"
 
-#: src/features/egg-search/components/egg-params-form.tsx:300
+#: src/features/egg-search/components/egg-params-form.tsx:304
 msgid "Gender ratio"
 msgstr "Gender ratio"
 
@@ -196,7 +200,7 @@ msgstr "Generation"
 msgid "Hardware"
 msgstr "Hardware"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:205
+#: src/features/egg-search/components/egg-filter-form.tsx:210
 msgid "Hidden Ability"
 msgstr "Hidden Ability"
 
@@ -218,7 +222,7 @@ msgstr "Key"
 
 #: src/components/forms/key-spec-input.tsx:141
 #: src/features/datetime-search/components/result-detail-dialog.tsx:86
-#: src/features/egg-search/components/result-detail-dialog.tsx:134
+#: src/features/egg-search/components/result-detail-dialog.tsx:100
 msgid "Key input"
 msgstr "Key input"
 
@@ -233,15 +237,15 @@ msgstr "Line {0}: \"{1}\" — {2}"
 msgid "MAC address"
 msgstr "MAC address"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:164
+#: src/features/egg-search/components/egg-result-columns.tsx:118
 msgid "Margin"
 msgstr "Margin"
 
-#: src/features/egg-search/components/result-detail-dialog.tsx:151
+#: src/features/egg-search/components/result-detail-dialog.tsx:117
 msgid "Margin frames"
 msgstr "Margin frames"
 
-#: src/features/egg-search/components/egg-params-form.tsx:346
+#: src/features/egg-search/components/egg-params-form.tsx:350
 msgid "Masuda Method"
 msgstr "Masuda Method"
 
@@ -250,7 +254,7 @@ msgstr "Masuda Method"
 msgid "Max"
 msgstr "Max"
 
-#: src/features/egg-search/components/egg-params-form.tsx:380
+#: src/features/egg-search/components/egg-params-form.tsx:384
 msgid "Max advance"
 msgstr "Max advance"
 
@@ -268,7 +272,7 @@ msgstr "Memory Link"
 msgid "Min"
 msgstr "Min"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:223
+#: src/features/egg-search/components/egg-filter-form.tsx:228
 msgid "Min margin frames"
 msgstr "Min margin frames"
 
@@ -289,8 +293,8 @@ msgid "MT Seed Search"
 msgstr "MT Seed Search"
 
 #: src/components/forms/nature-select.tsx:48
-#: src/features/egg-search/components/egg-result-columns.tsx:133
-#: src/features/egg-search/components/result-detail-dialog.tsx:143
+#: src/features/egg-search/components/egg-result-columns.tsx:87
+#: src/features/egg-search/components/result-detail-dialog.tsx:109
 msgid "Nature"
 msgstr "Nature"
 
@@ -298,7 +302,7 @@ msgstr "Nature"
 msgid "Needle"
 msgstr "Needle"
 
-#: src/features/egg-search/components/egg-params-form.tsx:337
+#: src/features/egg-search/components/egg-params-form.tsx:341
 msgid "Nidoran♀"
 msgstr "Nidoran♀"
 
@@ -320,21 +324,21 @@ msgstr "No results found. Please enter MT Seeds and start searching."
 
 #: src/components/forms/hidden-power-select.tsx:37
 #: src/components/forms/nature-select.tsx:37
-#: src/features/egg-search/components/egg-filter-form.tsx:181
-#: src/features/egg-search/components/egg-filter-form.tsx:202
-#: src/features/egg-search/components/egg-filter-form.tsx:230
+#: src/features/egg-search/components/egg-filter-form.tsx:186
+#: src/features/egg-search/components/egg-filter-form.tsx:207
+#: src/features/egg-search/components/egg-filter-form.tsx:235
 msgid "Not specified"
 msgstr "Not specified"
 
-#: src/features/egg-search/components/egg-params-form.tsx:287
+#: src/features/egg-search/components/egg-params-form.tsx:291
 msgid "Not used"
 msgstr "Not used"
 
-#: src/features/egg-search/components/egg-params-form.tsx:243
+#: src/features/egg-search/components/egg-params-form.tsx:247
 msgid "Parent ♀ IVs"
 msgstr "Parent ♀ IVs"
 
-#: src/features/egg-search/components/egg-params-form.tsx:236
+#: src/features/egg-search/components/egg-params-form.tsx:240
 msgid "Parent ♂ IVs"
 msgstr "Parent ♂ IVs"
 
@@ -356,7 +360,7 @@ msgid "Remaining"
 msgstr "Remaining"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:74
-#: src/features/egg-search/components/result-detail-dialog.tsx:121
+#: src/features/egg-search/components/result-detail-dialog.tsx:87
 msgid "Result details"
 msgstr "Result details"
 
@@ -384,8 +388,8 @@ msgstr "Select all"
 msgid "Settings"
 msgstr "Settings"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:154
-#: src/features/egg-search/components/result-detail-dialog.tsx:146
+#: src/features/egg-search/components/egg-result-columns.tsx:108
+#: src/features/egg-search/components/result-detail-dialog.tsx:112
 msgid "Shiny"
 msgstr "Shiny"
 
@@ -394,7 +398,7 @@ msgstr "Shiny"
 msgid "Shiny Charm"
 msgstr "Shiny Charm"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:217
+#: src/features/egg-search/components/egg-filter-form.tsx:222
 msgid "Shiny only"
 msgstr "Shiny only"
 
@@ -412,7 +416,7 @@ msgstr "Start date must be on or before end date"
 msgid "Start mode"
 msgstr "Start mode"
 
-#: src/features/egg-search/components/egg-params-form.tsx:363
+#: src/features/egg-search/components/egg-params-form.tsx:367
 msgid "Start offset"
 msgstr "Start offset"
 
@@ -458,10 +462,10 @@ msgid "Tools"
 msgstr "Tools"
 
 #: src/components/forms/iv-range-input.tsx:153
-msgid "Unknown (any)"
-msgstr "Unknown (any)"
+#~ msgid "Unknown (any)"
+#~ msgstr "Unknown (any)"
 
-#: src/features/egg-search/components/egg-params-form.tsx:328
+#: src/features/egg-search/components/egg-params-form.tsx:332
 msgid "Uses Ditto"
 msgstr "Uses Ditto"
 

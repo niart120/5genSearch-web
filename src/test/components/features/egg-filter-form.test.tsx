@@ -85,4 +85,14 @@ describe('EggFilterForm', () => {
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ min_margin_frames: 5 }));
   });
+
+  it('IV フィルターに任意 (allowUnknown) チェックボックスが表示される', async () => {
+    const user = userEvent.setup();
+    renderFilterForm();
+    await user.click(screen.getByText('Filter (optional)'));
+
+    // allowUnknown=true により 6 stat 分の unknown チェックボックスが表示される
+    const unknownCheckboxes = screen.getAllByRole('checkbox', { name: /unknown/ });
+    expect(unknownCheckboxes).toHaveLength(6);
+  });
 });

@@ -92,6 +92,58 @@ describe('EggParamsForm', () => {
     expect(screen.getByText('Parent ♀ IVs')).toBeInTheDocument();
   });
 
+  it('親個体値の ? チェックボックスが表示される', () => {
+    renderForm();
+    // 各親で 6 stat = 12 個の unknown チェックボックス + 4 個のフラグチェックボックス
+    const unknownCheckboxes = screen.getAllByRole('checkbox', { name: /unknown/ });
+    expect(unknownCheckboxes).toHaveLength(12);
+  });
+
+  it('? チェックボックス ON で IV が IV_VALUE_UNKNOWN (32) になる', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderForm({ onChange });
+
+    const hpUnknown = screen.getByRole('checkbox', { name: 'Parent ♂ IVs H unknown' });
+    await user.click(hpUnknown);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent_male: expect.objectContaining({ hp: 32 }),
+      })
+    );
+  });
+
+  it('? チェックボックス OFF で IV が 0 に戻る', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const paramsWithUnknown = {
+      ...DEFAULT_EGG_PARAMS,
+      parent_male: { ...DEFAULT_IVS, hp: 32 },
+    };
+    renderForm({ value: paramsWithUnknown, onChange });
+
+    const hpUnknown = screen.getByRole('checkbox', { name: 'Parent ♂ IVs H unknown' });
+    await user.click(hpUnknown);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parent_male: expect.objectContaining({ hp: 0 }),
+      })
+    );
+  });
+
+  it('? チェックボックス ON で入力フィールドが disabled になる', () => {
+    const paramsWithUnknown = {
+      ...DEFAULT_EGG_PARAMS,
+      parent_male: { ...DEFAULT_IVS, hp: 32 },
+    };
+    renderForm({ value: paramsWithUnknown });
+
+    const hpInput = screen.getByRole('textbox', { name: 'Parent ♂ IVs H' });
+    expect(hpInput).toBeDisabled();
+  });
+
   it('offset / max_advance の入力フィールドが表示される', () => {
     renderForm();
     expect(screen.getByLabelText('Start offset')).toBeInTheDocument();

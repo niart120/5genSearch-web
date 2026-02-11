@@ -105,28 +105,55 @@ const ParentIvsInput = memo(function ParentIvsInput({
     [ivs, onChange]
   );
 
+  const handleUnknownToggle = useCallback(
+    (stat: (typeof IV_STAT_KEYS)[number], checked: boolean) => {
+      if (checked) {
+        setLocalValues((prev) => ({ ...prev, [stat]: '?' }));
+        onChange({ ...ivs, [stat]: IV_VALUE_UNKNOWN });
+      } else {
+        setLocalValues((prev) => ({ ...prev, [stat]: '0' }));
+        onChange({ ...ivs, [stat]: 0 });
+      }
+    },
+    [ivs, onChange]
+  );
+
   return (
     <div className="flex flex-col gap-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <div className="grid grid-cols-6 gap-1">
-        {IV_STAT_KEYS.map((stat) => (
-          <div key={stat} className="flex flex-col items-center gap-0.5">
-            <span className="text-[0.65rem] font-mono text-muted-foreground">
-              {getStatLabel(stat, language)}
-            </span>
-            <Input
-              type="text"
-              inputMode="numeric"
-              className="h-7 w-full text-center text-xs tabular-nums px-1"
-              value={localValues[stat]}
-              onChange={(e) => handleChange(stat, e.target.value)}
-              onBlur={() => handleBlur(stat)}
-              onFocus={handleFocusSelectAll}
-              disabled={disabled}
-              aria-label={`${label} ${getStatLabel(stat, language)}`}
-            />
-          </div>
-        ))}
+        {IV_STAT_KEYS.map((stat) => {
+          const isUnknown = ivs[stat] === IV_VALUE_UNKNOWN;
+          return (
+            <div key={stat} className="flex flex-col items-center gap-0.5">
+              <div className="flex items-center gap-0.5">
+                <span className="text-[0.65rem] font-mono text-muted-foreground">
+                  {getStatLabel(stat, language)}
+                </span>
+                <Checkbox
+                  className="size-3"
+                  checked={isUnknown}
+                  onCheckedChange={(checked) => handleUnknownToggle(stat, checked === true)}
+                  disabled={disabled}
+                  aria-label={`${label} ${getStatLabel(stat, language)} unknown`}
+                  title="?"
+                />
+              </div>
+              <Input
+                type="text"
+                inputMode="numeric"
+                className="h-7 w-full text-center text-xs tabular-nums px-1"
+                value={localValues[stat]}
+                onChange={(e) => handleChange(stat, e.target.value)}
+                onBlur={() => handleBlur(stat)}
+                onFocus={handleFocusSelectAll}
+                disabled={disabled || isUnknown}
+                placeholder={isUnknown ? '?' : '0'}
+                aria-label={`${label} ${getStatLabel(stat, language)}`}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

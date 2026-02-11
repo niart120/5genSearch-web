@@ -19,7 +19,7 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
-#: src/features/egg-search/components/egg-params-form.tsx:253
+#: src/features/egg-search/components/egg-params-form.tsx:257
 msgid "♀ parent ability"
 msgstr "♀親の特性"
 
@@ -27,27 +27,31 @@ msgstr "♀親の特性"
 msgid "5genSearch"
 msgstr "5genSearch"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:144
-#: src/features/egg-search/components/result-detail-dialog.tsx:144
+#: src/features/egg-search/components/egg-result-columns.tsx:98
+#: src/features/egg-search/components/result-detail-dialog.tsx:110
 msgid "Ability"
 msgstr "特性"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:203
+#: src/features/egg-search/components/egg-filter-form.tsx:208
 msgid "Ability 1"
 msgstr "特性1"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:204
+#: src/features/egg-search/components/egg-filter-form.tsx:209
 msgid "Ability 2"
 msgstr "特性2"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:191
+#: src/features/egg-search/components/egg-filter-form.tsx:196
 msgid "Ability slot"
 msgstr "特性スロット"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:159
-#: src/features/egg-search/components/result-detail-dialog.tsx:149
+#: src/features/egg-search/components/egg-result-columns.tsx:113
+#: src/features/egg-search/components/result-detail-dialog.tsx:115
 msgid "Advance"
 msgstr "消費数"
+
+#: src/components/forms/iv-range-input.tsx:153
+msgid "Any"
+msgstr "任意"
 
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
@@ -73,12 +77,12 @@ msgstr "キャンセル"
 msgid "Combinations"
 msgstr "組み合わせ"
 
-#: src/features/egg-search/components/egg-params-form.tsx:355
+#: src/features/egg-search/components/egg-params-form.tsx:359
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:49
-#: src/features/egg-search/components/result-detail-dialog.tsx:51
+#: src/features/egg-search/components/result-detail-dialog.tsx:60
 msgid "Copy {label}"
 msgstr "{label}をコピー"
 
@@ -88,8 +92,8 @@ msgstr "日付範囲"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:83
 #: src/features/datetime-search/components/seed-origin-columns.tsx:46
-#: src/features/egg-search/components/egg-result-columns.tsx:105
-#: src/features/egg-search/components/result-detail-dialog.tsx:131
+#: src/features/egg-search/components/egg-result-columns.tsx:59
+#: src/features/egg-search/components/result-detail-dialog.tsx:97
 msgid "Date/Time"
 msgstr "日時"
 
@@ -103,7 +107,7 @@ msgid "Deselect all"
 msgstr "全解除"
 
 #: src/features/datetime-search/components/seed-origin-columns.tsx:33
-#: src/features/egg-search/components/egg-result-columns.tsx:92
+#: src/features/egg-search/components/egg-result-columns.tsx:46
 msgid "Details"
 msgstr "詳細"
 
@@ -116,7 +120,7 @@ msgstr "タマゴ"
 #~ msgid "Egg Generation"
 #~ msgstr "孵化個体生成"
 
-#: src/features/egg-search/components/egg-params-form.tsx:229
+#: src/features/egg-search/components/egg-params-form.tsx:233
 msgid "Egg parameters"
 msgstr "孵化パラメータ"
 
@@ -124,7 +128,7 @@ msgstr "孵化パラメータ"
 msgid "Egg Search"
 msgstr "孵化検索"
 
-#: src/features/egg-search/components/result-detail-dialog.tsx:124
+#: src/features/egg-search/components/result-detail-dialog.tsx:90
 msgid "Egg search result details"
 msgstr "孵化検索結果の詳細"
 
@@ -144,7 +148,7 @@ msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
-#: src/features/egg-search/components/egg-params-form.tsx:276
+#: src/features/egg-search/components/egg-params-form.tsx:280
 msgid "Everstone"
 msgstr "かわらずのいし"
 
@@ -152,13 +156,13 @@ msgstr "かわらずのいし"
 msgid "Filter (optional)"
 msgstr "フィルター (任意)"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:170
-#: src/features/egg-search/components/egg-result-columns.tsx:149
-#: src/features/egg-search/components/result-detail-dialog.tsx:145
+#: src/features/egg-search/components/egg-filter-form.tsx:175
+#: src/features/egg-search/components/egg-result-columns.tsx:103
+#: src/features/egg-search/components/result-detail-dialog.tsx:111
 msgid "Gender"
 msgstr "性別"
 
-#: src/features/egg-search/components/egg-params-form.tsx:300
+#: src/features/egg-search/components/egg-params-form.tsx:304
 msgid "Gender ratio"
 msgstr "性別比"
 
@@ -176,7 +180,7 @@ msgstr "個体生成"
 msgid "Hardware"
 msgstr "ハードウェア"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:205
+#: src/features/egg-search/components/egg-filter-form.tsx:210
 msgid "Hidden Ability"
 msgstr "夢特性"
 
@@ -198,7 +202,7 @@ msgstr "キー"
 
 #: src/components/forms/key-spec-input.tsx:141
 #: src/features/datetime-search/components/result-detail-dialog.tsx:86
-#: src/features/egg-search/components/result-detail-dialog.tsx:134
+#: src/features/egg-search/components/result-detail-dialog.tsx:100
 msgid "Key input"
 msgstr "キー入力"
 
@@ -213,15 +217,15 @@ msgstr "{0}行目: \"{1}\" — {2}"
 msgid "MAC address"
 msgstr "MACアドレス"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:164
+#: src/features/egg-search/components/egg-result-columns.tsx:118
 msgid "Margin"
 msgstr "猶予"
 
-#: src/features/egg-search/components/result-detail-dialog.tsx:151
+#: src/features/egg-search/components/result-detail-dialog.tsx:117
 msgid "Margin frames"
 msgstr "猶予フレーム"
 
-#: src/features/egg-search/components/egg-params-form.tsx:346
+#: src/features/egg-search/components/egg-params-form.tsx:350
 msgid "Masuda Method"
 msgstr "国際孵化"
 
@@ -230,7 +234,7 @@ msgstr "国際孵化"
 msgid "Max"
 msgstr "Max"
 
-#: src/features/egg-search/components/egg-params-form.tsx:380
+#: src/features/egg-search/components/egg-params-form.tsx:384
 msgid "Max advance"
 msgstr "最大消費数"
 
@@ -248,7 +252,7 @@ msgstr "思い出リンク"
 msgid "Min"
 msgstr "Min"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:223
+#: src/features/egg-search/components/egg-filter-form.tsx:228
 msgid "Min margin frames"
 msgstr "最低猶予フレーム"
 
@@ -269,8 +273,8 @@ msgid "MT Seed Search"
 msgstr "MT Seed 検索"
 
 #: src/components/forms/nature-select.tsx:48
-#: src/features/egg-search/components/egg-result-columns.tsx:133
-#: src/features/egg-search/components/result-detail-dialog.tsx:143
+#: src/features/egg-search/components/egg-result-columns.tsx:87
+#: src/features/egg-search/components/result-detail-dialog.tsx:109
 msgid "Nature"
 msgstr "性格"
 
@@ -278,7 +282,7 @@ msgstr "性格"
 msgid "Needle"
 msgstr "針読み"
 
-#: src/features/egg-search/components/egg-params-form.tsx:337
+#: src/features/egg-search/components/egg-params-form.tsx:341
 msgid "Nidoran♀"
 msgstr "ニドラン♀"
 
@@ -300,21 +304,21 @@ msgstr "結果が見つかりませんでした。MT Seedを入力して検索�
 
 #: src/components/forms/hidden-power-select.tsx:37
 #: src/components/forms/nature-select.tsx:37
-#: src/features/egg-search/components/egg-filter-form.tsx:181
-#: src/features/egg-search/components/egg-filter-form.tsx:202
-#: src/features/egg-search/components/egg-filter-form.tsx:230
+#: src/features/egg-search/components/egg-filter-form.tsx:186
+#: src/features/egg-search/components/egg-filter-form.tsx:207
+#: src/features/egg-search/components/egg-filter-form.tsx:235
 msgid "Not specified"
 msgstr "指定なし"
 
-#: src/features/egg-search/components/egg-params-form.tsx:287
+#: src/features/egg-search/components/egg-params-form.tsx:291
 msgid "Not used"
 msgstr "使用しない"
 
-#: src/features/egg-search/components/egg-params-form.tsx:243
+#: src/features/egg-search/components/egg-params-form.tsx:247
 msgid "Parent ♀ IVs"
 msgstr "♀親の個体値"
 
-#: src/features/egg-search/components/egg-params-form.tsx:236
+#: src/features/egg-search/components/egg-params-form.tsx:240
 msgid "Parent ♂ IVs"
 msgstr "♂親の個体値"
 
@@ -336,7 +340,7 @@ msgid "Remaining"
 msgstr "残り"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:74
-#: src/features/egg-search/components/result-detail-dialog.tsx:121
+#: src/features/egg-search/components/result-detail-dialog.tsx:87
 msgid "Result details"
 msgstr "結果の詳細"
 
@@ -364,8 +368,8 @@ msgstr "全選択"
 msgid "Settings"
 msgstr "設定"
 
-#: src/features/egg-search/components/egg-result-columns.tsx:154
-#: src/features/egg-search/components/result-detail-dialog.tsx:146
+#: src/features/egg-search/components/egg-result-columns.tsx:108
+#: src/features/egg-search/components/result-detail-dialog.tsx:112
 msgid "Shiny"
 msgstr "色違い"
 
@@ -374,7 +378,7 @@ msgstr "色違い"
 msgid "Shiny Charm"
 msgstr "ひかるおまもり"
 
-#: src/features/egg-search/components/egg-filter-form.tsx:217
+#: src/features/egg-search/components/egg-filter-form.tsx:222
 msgid "Shiny only"
 msgstr "色違いのみ"
 
@@ -392,7 +396,7 @@ msgstr "開始日は終了日以前である必要があります"
 msgid "Start mode"
 msgstr "起動モード"
 
-#: src/features/egg-search/components/egg-params-form.tsx:363
+#: src/features/egg-search/components/egg-params-form.tsx:367
 msgid "Start offset"
 msgstr "開始オフセット"
 
@@ -438,10 +442,10 @@ msgid "Tools"
 msgstr "ツール"
 
 #: src/components/forms/iv-range-input.tsx:153
-msgid "Unknown (any)"
-msgstr "不明(任意)"
+#~ msgid "Unknown (any)"
+#~ msgstr "不明(任意)"
 
-#: src/features/egg-search/components/egg-params-form.tsx:328
+#: src/features/egg-search/components/egg-params-form.tsx:332
 msgid "Uses Ditto"
 msgstr "メタモン使用"
 
