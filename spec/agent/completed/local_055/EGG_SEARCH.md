@@ -222,7 +222,7 @@ interface EggParamsFormProps {
 |-----------|-----|---------|------|
 | 親個体値 (♂) | `Ivs` | 6 つの TextInput (0-31 / `?`) | 空欄 / `?` = 不明 (32) |
 | 親個体値 (♀) | `Ivs` | 6 つの TextInput (0-31 / `?`) | 空欄 / `?` = 不明 (32) |
-| ♀親の特性 | `AbilitySlot` | Select | 特性1 / 特性2 / 隠れ特性 → `female_has_hidden` にマッピング |
+| ♀親の特性 | `AbilitySlot` | Select | 特性1 / 特性2 / 隠れ特性 → `female_ability_slot` に直接設定 |
 | かわらずのいし | `Nature \| undefined` | Select (性格一覧 + なし) | `undefined` = 不使用 |
 | 性別比 | `GenderRatio` | Select | 1:1, 1:3, 3:1, 7:1, 性別不明 等 |
 | メタモン使用 | `boolean` | Checkbox | |
@@ -237,7 +237,7 @@ interface EggParamsFormProps {
 - WASM 側 `Ivs` は各フィールド 0-31 の通常値に加え 32 (`IV_VALUE_UNKNOWN`) を受け付ける
 - 値 32 は遺伝アルゴリズム内でそのまま子に伝播し、表示解決層で `"?"` として出力される
 - UI: 入力フィールドが空欄または `?` の状態でフォーカスアウトすると値 32 をセットする
-- AbilitySlot Select: UI 値 `'Hidden'` → `female_has_hidden: true`、`'First'` / `'Second'` → `false` にマッピング
+- AbilitySlot Select: UI 値がそのまま `female_ability_slot: AbilitySlot` として WASM API に渡される（不可逆マッピング廃止）
 
 ### 4.3 EggFilterForm (`egg-filter-form.tsx`)
 
