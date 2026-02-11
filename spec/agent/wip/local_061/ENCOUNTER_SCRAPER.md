@@ -14,7 +14,7 @@ pokebook.jp の静的 HTML テーブルから BW/BW2 のエンカウントデー
 | EncounterSlotJson | 1 スロット分のデータ (speciesId, rate, levelRange + 拡張フィールド) |
 | メソッド | エンカウント種別: Normal, ShakingGrass, DustCloud, Surfing, SurfingBubble, Fishing, FishingBubble |
 | バージョン | B, W, B2, W2 |
-| species-ja.json | 日本語種族名 → speciesId のマッピングファイル |
+| speciesAliasJa | 日本語種族名 → speciesId のインメモリマッピング (スクレイパー実行時に `gen5-species.json` から構築) |
 | gen5-species.json | PokeAPI から取得済みの全 649 種族データ |
 | suffixRules | 同一ロケーション名の重複行を区別するためのサフィックス定義 |
 
@@ -45,7 +45,7 @@ pokebook.jp の静的 HTML テーブルから BW/BW2 のエンカウントデー
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `scripts/scrape-encounters.js` | 新規 | スクレイピングスクリプト本体 |
-| `src/data/encounters/aliases/species-ja.json` | 新規 | 日本語種族名 → speciesId マッピング |
+| (インメモリ) speciesAliasJa | - | 日本語種族名 → speciesId マッピング。ファイル永続化せずスクレイパー実行時に構築 |
 | `src/data/encounters/generated/v1/{version}/{method}.json` | 新規 (自動生成) | スクレイピング結果の JSON |
 | `package.json` | 修正 | `cheerio` を devDependencies に追加、`scrape:encounters` スクリプト追加 |
 
@@ -57,9 +57,9 @@ pokebook.jp の静的 HTML テーブルから BW/BW2 のエンカウントデー
 
 リファレンスの `scripts/scrape-encounters.js` をベースにし、以下を変更する:
 
-1. **種名解決**: リファレンスは `pokemon-species.ts` からパース。本リポジトリでは `gen5-species.json` から日本語名 → ID マッピングを生成し `species-ja.json` に永続化する
+1. **種名解決**: リファレンスは `pokemon-species.ts` からパース。本リポジトリでは `gen5-species.json` から日本語名 → ID マッピングをインメモリで構築する (`buildSpeciesAliasJa()`)
 2. **出力スキーマ拡張**: `EncounterSlotJson` に `genderRatio`, `hasHeldItem` フィールドを追加。`gen5-species.json` から性別比・所持アイテム情報を参照して埋め込む
-3. **表示名辞書**: リファレンスの i18n display-names 辞書は移植しない。本リポジトリは lingui ベースの i18n を使用するため、ロケーション名は別途対応する
+3. **表示名辞書**: ロケーション名・メソッド名の日本語/英語辞書を `src/lib/game-data-names.ts` に `ENCOUNTER_LOCATION_NAMES` / `ENCOUNTER_METHOD_NAMES` として配置。生成 JSON 内の `displayNameKey` (正規化キー) から `getEncounterLocationName(key, locale)` で引く。Lingui ではなく辞書方式を採用した理由は Section 7.5 を参照
 4. **ESM**: `import` 構文を使用 (既存スクリプトに準拠)
 
 ### 3.2 スクレイピング対象
@@ -135,17 +135,13 @@ interface EncounterSlotJson {
 }
 ```
 
-### 4.2 species-ja.json 生成
+### 4.2 speciesAliasJa 構築
 
-`gen5-species.json` の日本語名をキーとし speciesId を値とする JSON を生成する。
-スクリプト初回実行時に自動生成し、`src/data/encounters/aliases/species-ja.json` に保存する。
+`gen5-species.json` の日本語名をキーとし speciesId を値とするマッピングをインメモリで構築する (`buildSpeciesAliasJa()`)。ファイルには永続化しない。
 
-```json
-{
-  "フシギダネ": 1,
-  "フシギソウ": 2,
-  "フシギバナ": 3
-}
+```javascript
+// 実行時のメモリ上の構造
+{ "フシギダネ": 1, "フシギソウ": 2, "フシギバナ": 3, ... }
 ```
 
 ### 4.3 genderRatio 解決
@@ -195,8 +191,7 @@ node scripts/scrape-encounters.js --version=B2 --url=https://example.com/test
 | `findSectionTables($, method)` | HTML の見出しからセクションテーブルを抽出 |
 | `isDustCloudRow(parsedSlots)` | スロット内の種族 ID で DustCloud 行か判定 |
 | `resolveLocationGroup(baseName, rows, opts)` | 同一ロケーション名の重複解決 |
-| `loadSpeciesAliasJa()` | species-ja.json をロード |
-| `generateSpeciesAliasJa()` | gen5-species.json から species-ja.json を生成 |
+| `buildSpeciesAliasJa()` | gen5-species.json からインメモリマッピングを構築 |
 | `resolveGenderRatio(speciesData, speciesId)` | speciesId → GenderRatio 文字列 |
 | `resolveHasHeldItem(speciesData, speciesId, version)` | speciesId + version → boolean |
 
@@ -260,3 +255,21 @@ pokebook.jp では「バスラオ赤」「バスラオ青」と表記される�
 ### 7.4 水系メソッドの重複排除
 
 水系 (Surfing/SurfingBubble/Fishing/FishingBubble) のテーブルでは同一ロケーション名で複数の行 (季節・階層別) が並ぶ場合がある。`WATER_SINGLE_ROW_LOCATIONS` に登録されたロケーションは重複するスロット構成を自動排除する。シグネチャベースの重複判定 (`makeRowSignature`) を使用するため、スロット構成が異なる場合は保持される。
+
+### 7.5 i18n 表示名辞書の方式
+
+ロケーション名 (127 件) とメソッド名 (7 件) の日本語/英語辞書を `src/lib/game-data-names.ts` に配置する。
+
+| 定数 / 関数 | 用途 |
+|------------|------|
+| `ENCOUNTER_LOCATION_NAMES` | `Record<string, Record<SupportedLocale, string>>` — 正規化キー → ロケール別名称 |
+| `getEncounterLocationName(key, locale)` | 辞書引き。キー未登録時は生キーをフォールバック |
+| `ENCOUNTER_METHOD_NAMES` | `Record<string, Record<SupportedLocale, string>>` — メソッドキー → ロケール別名称 |
+| `getEncounterMethodName(method, locale)` | 辞書引き。キー未登録時は生キーをフォールバック |
+
+Lingui を使わず辞書方式とした理由:
+
+- ロケーション名はソースコード中の UI 文字列ではなくスクレイパーが生成するデータ由来
+- Lingui の `extract` は動的キーを検出できず、PO ファイルから自動削除される
+- `game-data-names.ts` に既存の NatureName/HiddenPowerName 等と同一パターンで配置でき、プロジェクト全体の一貫性が保たれる
+- 参照実装 (niart120/pokemon-gen5-initseed) も同じ辞書方式を採用

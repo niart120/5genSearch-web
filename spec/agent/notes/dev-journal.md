@@ -63,24 +63,6 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 `SearchContextForm` や `KeySpecInput` と同様に `src/components/forms/` に昇格すれば複数機能で共有可能。
 当面の方針: 個体生成機能の仕様確定時に移動する。現状では props が `EggGenerationParams` + `GenerationConfig` で WASM 型ベースのため、移動時の変更は最小限で済む。`EggFilterForm` も同様に共有候補。
 
-## 2026-02-11: Rust/WASM と TypeScript のエンカウントデータ責務分担
-
-現状: エンカウントデータの管理は以下の通り分担されている。
-
-| 責務 | 担当 |
-|------|------|
-| エンカウントテーブルデータ保持 (場所 × スロット) | TypeScript (JSON) |
-| スロット確率分布 (乱数値 → スロット番号) | Rust (ハードコード) |
-| 乱数消費・個体値生成 | Rust |
-| エンカウント判定 (移動/特殊/釣り成功失敗) | Rust |
-| Item/Pokemon 振り分け (DustCloud/PokemonShadow) | Rust |
-| 種族メタデータ (種族値/性別比/特性) | Rust (`SPECIES_TABLE`) |
-| UI 向け場所・種族選択肢の構築 | TypeScript (helpers) |
-| `EncounterSlotConfig` 型定義 | Rust (tsify で TS 型自動生成) |
-
-観察: Rust 側に場所ごとのエンカウントテーブルは存在しない。`PokemonGenerationParams.slots` として TS から WASM に渡される。TS 側の `converter.ts` が JSON スキーマ → WASM 入力型の変換を担当する。`EncounterSlotConfig` や `EncounterType` の型は Rust がオーナーであり、TS 側で独自に定義・拡張しない。
-当面の方針: 現在の分担を維持する。TS 側は「どの場所にどのスロットがあるか」を管理し、Rust 側は「乱数からポケモン個体を決定する」計算を担当する。型の二重管理を避けるため、WASM バインディング型を TS 側で re-export する形を取る。
-
 ## 2026-02-11: About ページの新設計画
 
 経緯: pokebook.jp の出典表記をフッターに配置したが、フッターは常時表示されるため画面領域を圧迫する。出典情報は「About」タブ (独立ページ) にまとめたほうが適切。
@@ -96,26 +78,3 @@ About ページに掲載する内容候補 (別途検討):
 
 当面の方針: About ページの実装は別タスクとする。フッターコンポーネントは廃止済み (footer.tsx 削除、app.tsx から除去)。
 
-## 2026-02-11: エンカウントデータの i18n 戦略
-
-### 現状
-
-エンカウントデータのロケーション名・メソッド名を多言語対応するため、辞書ベースの仕組みを導入した。
-
-### 実装済み
-
-1. **`display-names.json`** (`src/data/encounters/i18n/`): 127 ロケーション + 7 メソッドの `{ ja, en }` 辞書。スクレイパーの生成 JSON 内 `displayNameKey` (正規化キー) から引く
-2. **`display-name-resolver.ts`**: `resolveLocationName(key, locale)` / `resolveMethodName(method, locale)` を提供
-3. **スクレイパー**: `species-ja.json` のファイル永続化を廃止しインメモリ化。末尾に `validateDisplayNames()` を追加し、生成 JSON のキーと辞書の整合性を検証
-4. **`species-ja.json`**: 削除。`aliases/` ディレクトリも削除
-
-### Lingui ではなく辞書方式を採用した理由
-
-- ロケーション名はソースコード中の UI 文字列ではなく、スクレイパーが生成するデータ由来
-- Lingui の `extract` は動的キーを検出できず、PO ファイルから自動削除される
-- 辞書方式なら JSON を直接編集するだけで翻訳管理が完結する
-- 参照実装 (niart120/pokemon-gen5-initseed) も同じ辞書方式を採用
-
-### バスラオのフォーム情報
-
-UI 上の区別不要と判断。`FORM_ALIASES` で `speciesId: 550` に統合されるまま維持。
