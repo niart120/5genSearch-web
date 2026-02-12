@@ -33,6 +33,7 @@ import type {
   EggDatetimeSearchTask,
   TrainerInfoSearchTask,
   PokemonListTask,
+  EggGenerationTask,
 } from '../workers/types';
 
 /**
@@ -107,6 +108,21 @@ export function createPokemonListTask(
 ): PokemonListTask {
   return {
     kind: 'pokemon-list',
+    origins,
+    params,
+    config,
+    filter,
+  };
+}
+
+export function createEggGenerationTask(
+  origins: SeedOrigin[],
+  params: EggGenerationParams,
+  config: GenerationConfig,
+  filter: EggFilter | undefined
+): EggGenerationTask {
+  return {
+    kind: 'egg-generation',
     origins,
     params,
     config,

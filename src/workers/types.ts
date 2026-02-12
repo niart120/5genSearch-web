@@ -20,6 +20,9 @@ import type {
   GenerationConfig,
   PokemonFilter,
   GeneratedPokemonData,
+  EggGenerationParams,
+  EggFilter,
+  GeneratedEggData,
 } from '../wasm/wasm_pkg.js';
 
 // =============================================================================
@@ -239,6 +242,17 @@ export interface PokemonListTask {
 }
 
 /**
+ * タマゴ個体生成タスク
+ */
+export interface EggGenerationTask {
+  kind: 'egg-generation';
+  origins: SeedOrigin[];
+  params: EggGenerationParams;
+  config: GenerationConfig;
+  filter: EggFilter | undefined;
+}
+
+/**
  * 検索タスク (Union)
  */
 export type SearchTask =
@@ -247,7 +261,8 @@ export type SearchTask =
   | GpuMtseedSearchTask
   | MtseedSearchTask
   | TrainerInfoSearchTask
-  | PokemonListTask;
+  | PokemonListTask
+  | EggGenerationTask;
 
 // =============================================================================
 // Search Result Type Mapping
@@ -268,4 +283,6 @@ export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-date
           ? TrainerInfoSearchResult[]
           : T extends 'pokemon-list'
             ? GeneratedPokemonData[]
-            : never;
+            : T extends 'egg-generation'
+              ? GeneratedEggData[]
+              : never;
