@@ -46,8 +46,8 @@
 | `src/features/egg-search/index.ts` | 新規 | 公開 API (re-export) |
 | `src/features/egg-search/types.ts` | 新規 | 型定義 + バリデーション関数 |
 | `src/features/egg-search/components/egg-search-page.tsx` | 新規 | ページコンポーネント |
-| `src/features/egg-search/components/egg-params-form.tsx` | 新規 | 孵化パラメータ入力フォーム |
-| `src/features/egg-search/components/egg-filter-form.tsx` | 新規 | 孵化フィルター入力フォーム |
+| `src/features/egg-search/components/egg-params-form.tsx` | 新規 → 共通化 | 孵化パラメータ入力フォーム (**後日 `src/components/forms/egg-params-form.tsx` へ移動済み**) |
+| `src/features/egg-search/components/egg-filter-form.tsx` | 新規 → 共通化 | 孵化フィルターフォーム (**後日 `src/components/forms/egg-filter-form.tsx` へ共通化済み。めざパフィルター追加**) |
 | `src/features/egg-search/components/egg-result-columns.tsx` | 新規 | 結果テーブル列定義 |
 | `src/features/egg-search/components/result-detail-dialog.tsx` | 新規 | 結果詳細ダイアログ |
 | `src/features/egg-search/hooks/use-egg-search.ts` | 新規 | 検索実行ロジック |
@@ -243,12 +243,18 @@ interface EggParamsFormProps {
   - チェックボックスによる明示的な切り替えにより、Unknown 指定の Discovery を担保する
 - AbilitySlot Select: UI 値がそのまま `female_ability_slot: AbilitySlot` として WASM API に渡される（不可逆マッピング廃止）
 
-### 4.3 EggFilterForm (`egg-filter-form.tsx`)
+### 4.3 EggFilterForm (`src/components/forms/egg-filter-form.tsx`)
+
+**後日のリファクタリングで `src/components/forms/` へ共通化済み。egg-generation / egg-search 両方で共用。**
 
 ```typescript
 interface EggFilterFormProps {
   value: EggFilter | undefined;
   onChange: (filter: EggFilter | undefined) => void;
+  /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
+  statMode?: StatDisplayMode;
+  statsFilter?: StatsFixedValues | undefined;
+  onStatsFilterChange?: (filter: StatsFixedValues | undefined) => void;
   disabled?: boolean;
 }
 ```
@@ -257,14 +263,16 @@ interface EggFilterFormProps {
 
 | フィールド | 型 | UI 部品 | 備考 |
 |-----------|-----|---------|------|
-| IV 範囲 | `IvFilter` | IvRangeInput (既存, `allowUnknown={true}`) | H/A/B/C/D/S 各 min-max + `[任意]` Checkbox (Unknown 含む全範囲許容) |
+| IV 範囲 | `IvFilter` | IvRangeInput (既存, `allowUnknown={true}`) | `statMode !== 'stats'` で表示 |
+| めざパタイプ + 威力下限 | `HiddenPowerType[]` + `number?` | HiddenPowerSelect | `statMode !== 'stats'` で表示。`IvFilter.hidden_power_types` / `hidden_power_min_power` に格納 |
 | 性格 | `Nature[]` | NatureSelect (複数選択) | 空 = フィルターなし |
-| 性別 | `Gender \| undefined` | Select | ♂ / ♀ / 指定なし |
-| 特性スロット | `AbilitySlot \| undefined` | Select | 第 1 / 第 2 / 夢 / 指定なし |
-| 色違い | `boolean` | Checkbox | |
-| 猶予フレーム下限 | `number \| undefined` | NumberInput | `undefined` = 制限なし |
+| 性別 | `Gender \| undefined` | GenderSelect | ♂ / ♀ / 指定なし |
+| 特性スロット | `AbilitySlot \| undefined` | AbilitySlotSelect | 第 1 / 第 2 / 夢 / 指定なし |
+| 色違い | `ShinyFilter \| undefined` | ShinySelect | 指定なし / ☆ / ◇ / ☆&◇ |
+| 猶予フレーム下限 | `number \| undefined` | Input | `undefined` = 制限なし |
 
 フォーム全体は折りたたみ可能にし、デフォルトは閉じた状態とする。
+egg-search では `statMode` を渡さずに使用するため、常に IV フィルター + めざパフィルターが表示される。
 
 ### 4.4 結果テーブル列定義 (`egg-result-columns.tsx`)
 
@@ -274,7 +282,7 @@ interface EggFilterFormProps {
 | Timer0 | `source.Startup.condition.timer0` | 16 進 4 桁 |
 | VCount | `source.Startup.condition.vcount` | 16 進 2 桁 |
 | 性格 | `core.nature` | 性格名 (ロケール依存) |
-| IV | `core.ivs` | `H-A-B-C-D-S` (6 値) |
+| H/A/B/C/D/S | `core.ivs` | 個別ステータス列 (6 列) |
 | 特性 | `core.ability_slot` | スロット表示 |
 | 性別 | `core.gender` | `♂` / `♀` / `-` |
 | 色違い | `core.shiny_type` | `☆` / `◇` / (空) |
@@ -465,3 +473,10 @@ CI 環境制約: GPU なし環境では GPU 関連テストをスキップ (`des
 - [x] `test/components/egg-params-form.test.tsx` — 孵化パラメータフォーム
 - [x] `test/components/egg-filter-form.test.tsx` — フィルターフォーム
 - [x] `test/integration/egg-datetime-search.test.ts` — Worker/WASM 統合
+
+### 後日リファクタリング (local_067 で実施)
+
+- [x] `features/egg-search/components/egg-params-form.tsx` → `src/components/forms/egg-params-form.tsx` へ共通化
+- [x] `features/egg-search/components/egg-filter-form.tsx` → `src/components/forms/egg-filter-form.tsx` へ共通化 + めざパフィルター追加
+- [x] `features/egg-search/types.ts` — `validateGenConfig` / `isIvValid` を `src/lib/validation.ts` から使用
+- [x] `features/egg-search/components/egg-result-columns.tsx` — IV 表示を `formatIvs` 連結から個別 H/A/B/C/D/S カラムに変更

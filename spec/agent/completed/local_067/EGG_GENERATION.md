@@ -54,7 +54,8 @@
 | `src/services/seed-resolve.ts` | 新規 | `resolveSeedOrigins` を共通ユーティリティとして抽出 |
 | `src/components/forms/seed-input-section.tsx` | 移動 | `src/features/pokemon-list/components/` から移動。import を `seed-resolve.ts` に変更 |
 | `src/components/forms/egg-params-form.tsx` | 移動 | `src/features/egg-search/components/` から移動・共通化 |
-| `src/lib/game-data-names.ts` | 変更 | `STAT_HEADERS_JA` / `STAT_HEADERS_EN` 定数を追加 |
+| `src/lib/game-data-names.ts` | 変更 | `STAT_HEADERS_JA` / `STAT_HEADERS_EN` 定数を追加、`StatDisplayMode` 型を集約 |
+| `src/lib/validation.ts` | 新規 | `validateGenConfig` / `isIvValid` 共通バリデーションヘルパー |
 | `src/features/pokemon-list/components/seed-input-section.tsx` | 削除 | 共通化に伴い削除 |
 | `src/features/pokemon-list/components/pokemon-list-page.tsx` | 変更 | import パス更新 |
 | `src/features/pokemon-list/components/pokemon-result-columns.tsx` | 変更 | `STAT_HEADERS_*` を `game-data-names.ts` からの import に変更 |
@@ -72,10 +73,10 @@
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `src/features/egg-generation/index.ts` | 新規 | re-export |
-| `src/features/egg-generation/types.ts` | 新規 | フォーム状態型 + バリデーション (`StatsFixedValues` import) |
+| `src/features/egg-generation/types.ts` | 新規 | フォーム状態型 + バリデーション (`StatsFixedValues` import、`validateGenConfig` / `isIvValid` 使用) |
 | `src/features/egg-generation/hooks/use-egg-generation.ts` | 新規 | 生成実行フック |
 | `src/features/egg-generation/components/egg-generation-page.tsx` | 新規 | ページコンポーネント |
-| `src/features/egg-generation/components/egg-filter-form.tsx` | 新規 | フィルタ入力フォーム |
+| `src/components/forms/egg-filter-form.tsx` | 新規→共通化 | フィルタ入力フォーム (egg-generation / egg-search 両方で共用、めざパフィルター付き) |
 | `src/features/egg-generation/components/egg-result-columns.tsx` | 新規 | DataTable カラム定義 |
 | `src/features/egg-generation/components/result-detail-dialog.tsx` | 新規 | 結果詳細ダイアログ |
 | `src/workers/types.ts` | 変更 | `EggGenerationTask` タスク型追加 |
@@ -183,15 +184,12 @@ import type {
   EggFilter,
   SeedOrigin,
 } from '../../wasm/wasm_pkg.js';
-
-/** Seed 入力モード */
-export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
-
-/** IV/ステータス表示モード */
-export type StatDisplayMode = 'stats' | 'ivs';
-
-/** 実ステータス固定値フィルタ — StatsFixedValues (共通型) を使用 */
+import type { SeedInputMode } from '@/components/forms/seed-input-section';
 import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
+import { validateGenConfig, isIvValid } from '@/lib/validation';
+
+// StatDisplayMode は src/lib/game-data-names.ts に一元化済み
+// import type { StatDisplayMode } from '@/lib/game-data-names';
 
 /** タマゴ生成フォーム状態 */
 export interface EggGenerationFormState {
@@ -218,11 +216,8 @@ export interface EggGenerationValidationResult {
 }
 
 /**
- * IV 値が範囲内か検証 (0-31 または 32 = 不明)
+ * IV 値が有効範囲内か判定 — src/lib/validation.ts の isIvValid を使用
  */
-function isIvValid(value: number): boolean {
-  return (value >= 0 && value <= 31) || value === 32;
-}
 
 export function validateEggGenerationForm(
   form: EggGenerationFormState
@@ -232,17 +227,12 @@ export function validateEggGenerationForm(
   if (form.seedOrigins.length === 0) {
     errors.push('SEEDS_EMPTY');
   }
-  if (form.genConfig.user_offset < 0) {
-    errors.push('OFFSET_NEGATIVE');
-  }
-  if (form.genConfig.max_advance < form.genConfig.user_offset) {
-    errors.push('ADVANCE_RANGE_INVALID');
-  }
+  errors.push(...validateGenConfig(form.genConfig));
 
   // 親個体値の範囲チェック
   const maleIvs = Object.values(form.eggParams.parent_male);
   const femaleIvs = Object.values(form.eggParams.parent_female);
-  if (!maleIvs.every(isIvValid) || !femaleIvs.every(isIvValid)) {
+  if (!maleIvs.every((v) => isIvValid(v)) || !femaleIvs.every((v) => isIvValid(v))) {
     errors.push('IV_OUT_OF_RANGE');
   }
 
@@ -483,13 +473,14 @@ FeaturePageLayout
 │   │   ├── フラグ群 (メタモン使用, ニドラン♀, 国際孵化, NPC考慮)
 │   │   ├── user_offset / max_advance
 │   │   └── (トレーナー情報は DS 設定 / Trainer Store から自動取得)
-│   ├── EggFilterForm (折りたたみ可)
-│   │   ├── IV 範囲 / 実ステータス固定値 (statMode で切替)
+│   ├── EggFilterForm (src/components/forms/ 共通コンポーネント, 折りたたみ可)
+│   │   ├── 実ステータス固定値 (StatsFixedInput, statMode=stats 時)
+│   │   ├── IV 範囲 (IvRangeInput, statMode≠stats 時)
+│   │   ├── めざパタイプ + 威力下限 (HiddenPowerSelect, statMode≠stats 時)
 │   │   ├── 性格 (NatureSelect)
-│   │   ├── めざパタイプ (HiddenPowerSelect)
-│   │   ├── 色違い (ShinyFilter)
-│   │   ├── 性別 (Gender)
-│   │   ├── 特性スロット (AbilitySlot)
+│   │   ├── 性別 (GenderSelect)
+│   │   ├── 特性スロット (AbilitySlotSelect)
+│   │   ├── 色違い (ShinySelect)
 │   │   └── 猶予フレーム最小値 (min_margin_frames)
 │   ├── IV/ステータス表示切替 Switch (statMode)
 │   └── バリデーションエラー表示
@@ -609,32 +600,40 @@ function SpeciesCombobox({ value, onChange, disabled }: SpeciesComboboxProps) {
 
 ### 4.7 EggFilterForm — フィルタ入力フォーム
 
+**配置**: `src/components/forms/egg-filter-form.tsx` (egg-generation / egg-search 共用)
+
 ```typescript
 interface EggFilterFormProps {
   value: EggFilter | undefined;
-  onChange: (filter?: EggFilter) => void;
-  statsFilter: StatsFilter | undefined;
-  onStatsFilterChange: (filter?: StatsFilter) => void;
-  statMode: StatDisplayMode;
+  onChange: (filter: EggFilter | undefined) => void;
+  /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
+  statMode?: StatDisplayMode;
+  statsFilter?: StatsFixedValues | undefined;
+  onStatsFilterChange?: (filter: StatsFixedValues | undefined) => void;
   disabled?: boolean;
 }
 ```
 
-フィルター有効/無効トグル (`Switch`) とリセットボタン (`RotateCcw`) をヘッダーに配置。トグル OFF 時は内部状態を保持したまま `onChange(undefined)` でフィルタ解除。
+折りたたみヘッダー (ChevronDown) のクリックで展開する。デフォルトは閉じた状態。
 
 フィルター項目 (上からの表示順序):
 
 | # | フィールド | 型 | UI 部品 | 備考 |
 |---|-----------|-----|---------|------|
-| 1 | 特性スロット | `AbilitySlot \| undefined` | Select | 第1 / 第2 / 夢 / 指定なし |
-| 2 | 性別 | `Gender \| undefined` | Select | ♂ / ♀ / - (性別不明) / 指定なし |
-| 3 | 性格 | `Nature[]` | NatureSelect (Popover) | Popover式 5×5 グリッド選択 |
-| 4 | 色違い | `ShinyFilter \| undefined` | Select | 指定なし / ☆ / ◇ / ☆&◇ |
-| 5 | IV 範囲 | `IvFilter` | IvRangeInput (既存) | `statMode === 'ivs'` の時のみ表示。`allowUnknown` 有効 |
-| 6 | 実ステータス | `StatsFilter` | StatsFixedInput (既存) | `statMode === 'stats'` の時のみ表示 |
-| 7 | めざパタイプ | `HiddenPowerType[]` | Popover 4×4 グリッド | |
-| 8 | めざパ威力下限 | `number \| undefined` | Input (30-70) | |
-| 9 | 猶予フレーム最小値 | `number \| undefined` | Input (0-) | NPC消費考慮時に有効 |
+| 1 | 実ステータス固定値 | `StatsFixedValues` | StatsFixedInput | `statMode === 'stats'` の時のみ表示 |
+| 2 | IV 範囲 | `IvFilter` | IvRangeInput | `statMode !== 'stats'` の時。`allowUnknown` 有効 |
+| 3 | めざパタイプ + 威力下限 | `HiddenPowerType[]` + `number?` | HiddenPowerSelect (Popover 4×4 グリッド) | `statMode !== 'stats'` の時のみ表示。`IvFilter.hidden_power_types` / `hidden_power_min_power` に格納 |
+| 4 | 性格 | `Nature[]` | NatureSelect (Popover) | Popover式 5×5 グリッド選択 |
+| 5 | 性別 | `Gender \| undefined` | GenderSelect | ♂ / ♀ / 指定なし |
+| 6 | 特性スロット | `AbilitySlot \| undefined` | AbilitySlotSelect | 第1 / 第2 / 夢 / 指定なし |
+| 7 | 色違い | `ShinyFilter \| undefined` | ShinySelect | 指定なし / ☆ / ◇ / ☆&◇ |
+| 8 | 猶予フレーム最小値 | `number \| undefined` | Input (0-) | NPC消費考慮時に有効 |
+
+**めざパフィルターの実装詳細**:
+- `HiddenPowerSelect` コンポーネント (`src/components/forms/hidden-power-select.tsx`) を使用
+- めざパタイプ・威力下限は `IvFilter.hidden_power_types` / `IvFilter.hidden_power_min_power` に格納
+- IV 範囲スライダー変更時、既存の `hidden_power` 設定を保持する (リセットされない)
+- `statMode === 'stats'` の場合は IV フィルタもめざパフィルタも非表示 (ステータスからめざパは計算不能)
 
 #### IV フィルタと Unknown (?) のハンドリング方針
 
@@ -876,46 +875,58 @@ export const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as cons
 
 ### Phase 0: 事前共通化
 
-- [ ] `src/components/data-display/detail-row.tsx` — DetailRow 抽出
-- [ ] `src/features/pokemon-list/components/result-detail-dialog.tsx` — DetailRow import 更新
-- [ ] `src/features/egg-search/components/result-detail-dialog.tsx` — DetailRow import 更新
-- [ ] `src/services/seed-resolve.ts` — `resolveSeedOrigins` 抽出
-- [ ] `src/components/forms/seed-input-section.tsx` — SeedInputSection 移動 + import 更新
-- [ ] `src/features/pokemon-list/hooks/use-pokemon-list.ts` — `resolveSeedOrigins` 削除 (re-export は seed-resolve から)
-- [ ] `src/features/pokemon-list/index.ts` — re-export パス更新
-- [ ] `src/features/pokemon-list/components/pokemon-list-page.tsx` — SeedInputSection import 更新
-- [ ] `src/components/forms/egg-params-form.tsx` — EggParamsForm 移動 + 種族セレクタ追加
-- [ ] `src/features/egg-search/components/egg-search-page.tsx` — EggParamsForm import 更新
-- [ ] `src/lib/game-data-names.ts` — `STAT_HEADERS_JA` / `STAT_HEADERS_EN` 追加
-- [ ] `src/features/pokemon-list/components/pokemon-result-columns.tsx` — STAT_HEADERS import 更新
-- [ ] `src/services/batch-utils.ts` — `flattenBatchResults` 抽出
-- [ ] `src/features/pokemon-list/hooks/use-pokemon-list.ts` — `flattenBatchResults` 使用に変更
-- [ ] `src/lib/stats-filter.ts` — `filterByStats` 共通ユーティリティ抽出
-- [ ] `src/features/pokemon-list/types.ts` — `StatsFilter` 削除、`StatsFixedValues` の import に統一
-- [ ] `src/features/pokemon-list/components/pokemon-list-page.tsx` — `filterByStats` 使用に変更
+- [x] `src/components/data-display/detail-row.tsx` — DetailRow 抽出
+- [x] `src/features/pokemon-list/components/result-detail-dialog.tsx` — DetailRow import 更新
+- [x] `src/features/egg-search/components/result-detail-dialog.tsx` — DetailRow import 更新
+- [x] `src/services/seed-resolve.ts` — `resolveSeedOrigins` 抽出
+- [x] `src/components/forms/seed-input-section.tsx` — SeedInputSection 移動 + import 更新
+- [x] `src/features/pokemon-list/hooks/use-pokemon-list.ts` — `resolveSeedOrigins` 削除 (re-export は seed-resolve から)
+- [x] `src/features/pokemon-list/index.ts` — re-export パス更新
+- [x] `src/features/pokemon-list/components/pokemon-list-page.tsx` — SeedInputSection import 更新
+- [x] `src/components/forms/egg-params-form.tsx` — EggParamsForm 移動 + 種族セレクタ (SpeciesCombobox) 追加
+- [x] `src/features/egg-search/components/egg-search-page.tsx` — EggParamsForm import 更新
+- [x] `src/lib/game-data-names.ts` — `STAT_HEADERS_JA` / `STAT_HEADERS_EN` 追加 + `StatDisplayMode` 一元化
+- [x] `src/features/pokemon-list/components/pokemon-result-columns.tsx` — STAT_HEADERS import 更新 + `StatDisplayMode` ローカル定義削除
+- [x] `src/services/batch-utils.ts` — `flattenBatchResults` 抽出
+- [x] `src/features/pokemon-list/hooks/use-pokemon-list.ts` — `flattenBatchResults` 使用に変更
+- [x] `src/lib/stats-filter.ts` — `filterByStats` 共通ユーティリティ抽出
+- [x] `src/features/pokemon-list/types.ts` — `StatsFilter` 削除、`StatsFixedValues` の import に統一
+- [x] `src/features/pokemon-list/components/pokemon-list-page.tsx` — `filterByStats` 使用に変更
+
+### Phase 0.5: 追加共通化 (実装中に実施)
+
+- [x] `src/lib/validation.ts` — `validateGenConfig` / `isIvValid` 共通バリデーションヘルパー抽出
+- [x] `src/features/pokemon-list/types.ts` — `validateGenConfig` 使用に変更
+- [x] `src/features/egg-search/types.ts` — `validateGenConfig` / `isIvValid` 使用に変更
+- [x] `src/components/forms/egg-filter-form.tsx` — egg-generation / egg-search 共通化 + `StatDisplayMode` 一元化
+- [x] `src/features/egg-generation/components/egg-result-columns.tsx` — `StatDisplayMode` import を `@/lib/game-data-names` に変更
+- [x] `src/features/pokemon-list/components/pokemon-filter-form.tsx` — `StatDisplayMode` import を `@/lib/game-data-names` に変更
+- [x] `src/features/pokemon-list/components/pokemon-list-page.tsx` — `StatDisplayMode` import を `@/lib/game-data-names` に変更
+- [x] `src/features/egg-generation/index.ts` — `StatDisplayMode` re-export 削除 (game-data-names から直接 import)
+- [x] `src/features/egg-search/components/egg-result-columns.tsx` — IV 表示を個別 H/A/B/C/D/S カラムに変更
 
 ### Phase 1: WASM 側変更
 
-- [ ] `wasm-pkg/src/types/filter.rs` — `IvFilter::matches()` に Unknown IV ハンドリング追加
-- [ ] `wasm-pkg/src/types/filter.rs` — `IvFilter::check_stat()` ヘルパー追加
-- [ ] Rust ユニットテスト追加 (Unknown IV フィルタテスト)
+- [x] `wasm-pkg/src/types/filter.rs` — `IvFilter::matches()` に Unknown IV ハンドリング追加
+- [x] `wasm-pkg/src/types/filter.rs` — `IvFilter::check_stat()` ヘルパー追加
+- [x] Rust ユニットテスト追加 (Unknown IV フィルタテスト)
 
 ### Phase 2: 本機能実装
 
-- [ ] `src/features/egg-generation/types.ts` — フォーム状態型 + バリデーション (`StatsFixedValues` import)
-- [ ] `src/features/egg-generation/index.ts` — re-export
-- [ ] `src/workers/types.ts` — `EggGenerationTask` + `EggGenerationResultResponse` 追加
-- [ ] `src/workers/search.worker.ts` — `egg-generation` タスク処理追加
-- [ ] `src/services/search-tasks.ts` — `createEggGenerationTask` 追加
-- [ ] `src/features/egg-generation/hooks/use-egg-generation.ts` — 生成フック
-- [ ] `src/features/egg-generation/components/egg-filter-form.tsx` — フィルタ入力 (IV/Stats 切替対応)
-- [ ] `src/features/egg-generation/components/egg-result-columns.tsx` — カラム定義 (IV/Stats 切替対応)
-- [ ] `src/features/egg-generation/components/result-detail-dialog.tsx` — 詳細ダイアログ (共通 DetailRow 使用)
-- [ ] `src/features/egg-generation/components/egg-generation-page.tsx` — ページ統合 (StatsFilter + statMode 対応)
-- [ ] `src/test/unit/egg-generation-validation.test.ts` — バリデーションテスト
-- [ ] `src/test/integration/egg-generation-worker.test.ts` — Worker 統合テスト
-- [ ] `feature-content.tsx` — `egg-list` ルートにページコンポーネントを登録
-- [ ] 翻訳カタログ更新 (`pnpm lingui:extract`)
+- [x] `src/features/egg-generation/types.ts` — フォーム状態型 + バリデーション (`validateGenConfig` / `isIvValid` 使用)
+- [x] `src/features/egg-generation/index.ts` — re-export
+- [x] `src/workers/types.ts` — `EggGenerationTask` + `EggGenerationResultResponse` 追加
+- [x] `src/workers/search.worker.ts` — `egg-generation` タスク処理追加
+- [x] `src/services/search-tasks.ts` — `createEggGenerationTask` 追加
+- [x] `src/features/egg-generation/hooks/use-egg-generation.ts` — 生成フック
+- [x] `src/components/forms/egg-filter-form.tsx` — 共通フィルタ入力 (IV/Stats 切替 + めざパフィルター対応)
+- [x] `src/features/egg-generation/components/egg-result-columns.tsx` — カラム定義 (IV/Stats 切替対応)
+- [x] `src/features/egg-generation/components/result-detail-dialog.tsx` — 詳細ダイアログ (共通 DetailRow 使用)
+- [x] `src/features/egg-generation/components/egg-generation-page.tsx` — ページ統合 (StatsFilter + statMode 対応)
+- [x] `src/test/unit/egg-generation-validation.test.ts` — バリデーションテスト
+- [x] `src/test/integration/egg-generation-worker.test.ts` — Worker 統合テスト
+- [x] `feature-content.tsx` — `egg-list` ルートにページコンポーネントを登録
+- [x] 翻訳カタログ更新 (`pnpm lingui:extract`)
 
 ---
 
@@ -933,16 +944,19 @@ export const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as cons
 | DetailRow | pokemon-list, egg-search | - | `src/components/data-display/` へ抽出して共通化 |
 | StatsFixedInput | 共通 (forms/) | - | そのまま再利用 |
 | StatsFixedValues (型) | 共通 (forms/) | - | `StatsFilter` を廃止し `StatsFixedValues` に統一 |
+| StatDisplayMode (型) | - | - | `src/lib/game-data-names.ts` に一元化 (4箇所のローカル定義を統合) |
+| validateGenConfig | - | - | `src/lib/validation.ts` に抽出 (3 feature の共通バリデーション) |
+| isIvValid | - | - | `src/lib/validation.ts` に抽出 (IV 値の有効範囲判定) |
 | filterByStats | - | - | `src/lib/stats-filter.ts` へ新規抽出 (pokemon-list のインライン実装を共通化) |
 | IvRangeInput | 共通 (forms/) | - | そのまま再利用 (`allowUnknown` 有効) |
 | NatureSelect | 共通 (forms/) | - | そのまま再利用 |
-| HiddenPowerSelect | 共通 (forms/) | - | そのまま再利用 |
+| HiddenPowerSelect | 共通 (forms/) | - | そのまま再利用 (egg-filter-form に追加) |
 | SearchControls | 共通 (forms/) | - | そのまま再利用 |
 | getNeedleArrow | 共通 (game-data-names.ts) | - | そのまま再利用 |
 | STAT_HEADERS_* | pokemon-list | - | `game-data-names.ts` へ移動して共通化 |
 | flattenBatchResults | pokemon-list | - | `src/services/batch-utils.ts` へ抽出 |
 | resolveSeedOrigins | pokemon-list | - | `src/services/seed-resolve.ts` へ抽出 |
-| EggFilterForm | - | ✓ | 新規実装 (PokemonFilterForm の Switch/Reset パターン + IV/Stats 切替) |
+| EggFilterForm | - | ✓ | 新規実装 → `src/components/forms/` へ共通化 (egg-generation / egg-search 共用、めざパフィルター付き) |
 | EggResultColumns | - | ✓ | 新規実装 (PokemonResultColumns を参考 + statMode 対応) |
 | ResultDetailDialog | - | ✓ | 新規実装 (UiEggData 用、共通 DetailRow 使用) |
 
