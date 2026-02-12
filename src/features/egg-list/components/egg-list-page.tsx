@@ -81,8 +81,10 @@ function EggListPage(): ReactElement {
   const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
 
   // 生成フック
-  const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } =
-    useEggList(language, speciesId);
+  const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = useEggList(
+    language,
+    speciesId
+  );
 
   // バリデーション
   const validation = useMemo(

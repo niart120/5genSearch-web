@@ -36,9 +36,7 @@ export interface EggListValidationResult {
   isValid: boolean;
 }
 
-export function validateEggListForm(
-  form: EggListFormState
-): EggListValidationResult {
+export function validateEggListForm(form: EggListFormState): EggListValidationResult {
   const errors: EggListValidationErrorCode[] = [];
 
   if (form.seedOrigins.length === 0) {
