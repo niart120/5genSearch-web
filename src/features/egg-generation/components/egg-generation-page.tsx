@@ -12,6 +12,8 @@ import { DataTable } from '@/components/data-display/data-table';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useUiStore } from '@/stores/settings/ui';
+import { useTrainer } from '@/hooks/use-trainer';
+import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useEggGeneration } from '../hooks/use-egg-generation';
 import { validateEggGenerationForm } from '../types';
 import type { EggGenerationValidationErrorCode, StatDisplayMode } from '../types';
@@ -28,34 +30,44 @@ import type {
   EggGenerationParams,
   SeedOrigin,
   UiEggData,
+  Ivs,
 } from '@/wasm/wasm_pkg.js';
+
+const DEFAULT_IVS: Ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
+
+const DEFAULT_EGG_PARAMS: EggGenerationParams = {
+  trainer: { tid: 0, sid: 0 },
+  everstone: 'None',
+  female_ability_slot: 'First',
+  uses_ditto: false,
+  gender_ratio: 'F1M1',
+  nidoran_flag: false,
+  masuda_method: false,
+  parent_male: { ...DEFAULT_IVS },
+  parent_female: { ...DEFAULT_IVS },
+  consider_npc: false,
+  species_id: undefined,
+};
+
+const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> = {
+  user_offset: 0,
+  max_advance: 100,
+};
 
 function EggGenerationPage(): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
+  const { tid, sid } = useTrainer();
+  const { config: dsConfig, gameStart } = useDsConfigReadonly();
 
   // Seed 入力
   const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('manual-startup');
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
   // パラメータ
-  const [eggParams, setEggParams] = useState<EggGenerationParams>({
-    parent_male: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
-    parent_female: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
-    female_ability_slot: 'Slot1',
-    everstone_plan: 'None',
-    gender_ratio: 'Equal',
-    uses_ditto: false,
-    nidoran_flag: false,
-    masuda_method: false,
-    consider_npc: false,
-  });
-  const [genConfig, setGenConfig] = useState<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>(
-    {
-      user_offset: 0,
-      max_advance: 100,
-    }
-  );
+  const [eggParams, setEggParams] = useState<EggGenerationParams>(DEFAULT_EGG_PARAMS);
+  const [genConfig, setGenConfig] =
+    useState<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>(DEFAULT_GEN_CONFIG);
   const [speciesId, setSpeciesId] = useState<number | undefined>();
 
   // フィルタ
@@ -101,8 +113,32 @@ function EggGenerationPage(): ReactElement {
   }, []);
 
   const handleGenerate = useCallback(() => {
-    generate(seedOrigins, eggParams, genConfig, filter);
-  }, [generate, seedOrigins, eggParams, genConfig, filter]);
+    const paramsWithTrainer: EggGenerationParams = {
+      ...eggParams,
+      trainer: { tid: tid ?? 0, sid: sid ?? 0 },
+      species_id: speciesId,
+    };
+
+    const fullGenConfig: GenerationConfig = {
+      version: dsConfig.version,
+      game_start: gameStart,
+      user_offset: genConfig.user_offset,
+      max_advance: genConfig.max_advance,
+    };
+
+    generate(seedOrigins, paramsWithTrainer, fullGenConfig, filter);
+  }, [
+    generate,
+    seedOrigins,
+    eggParams,
+    genConfig,
+    filter,
+    tid,
+    sid,
+    speciesId,
+    dsConfig.version,
+    gameStart,
+  ]);
 
   const errorMessages = useMemo(() => {
     const messages: Record<EggGenerationValidationErrorCode, string> = {
