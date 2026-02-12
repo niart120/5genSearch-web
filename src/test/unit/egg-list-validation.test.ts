@@ -9,17 +9,19 @@ import type { EggListFormState } from '@/features/egg-list/types';
 describe('validateEggListForm', () => {
   const baseForm: EggListFormState = {
     seedInputMode: 'manual-seeds',
-    seedOrigins: [{ Seed: { base_seed: 0n, mt_seed: 0n } }],
+    seedOrigins: [{ Seed: { base_seed: 0n, mt_seed: 0 } }],
     eggParams: {
+      trainer: { tid: 0, sid: 0 },
       parent_male: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
       parent_female: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
-      female_ability_slot: 'Slot1',
-      everstone_plan: 'None',
-      gender_ratio: 'Equal',
+      female_ability_slot: 'First',
+      everstone: 'None',
+      gender_ratio: 'F1M1',
       uses_ditto: false,
       nidoran_flag: false,
       masuda_method: false,
       consider_npc: false,
+      species_id: undefined,
     },
     genConfig: { user_offset: 0, max_advance: 100 },
     filter: undefined,

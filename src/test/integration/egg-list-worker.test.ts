@@ -54,7 +54,7 @@ function executeTask(pool: WorkerPool, task: EggListTask): Promise<GeneratedEggD
     const results: GeneratedEggData[] = [];
     const timeout = setTimeout(() => reject(new Error('Test timeout')), 10_000);
 
-    pool.onResult((r) => results.push(...(r as GeneratedEggData[])));
+    pool.onResult((r) => results.push(...(r as unknown as GeneratedEggData[])));
     pool.onComplete(() => {
       clearTimeout(timeout);
       resolve(results);

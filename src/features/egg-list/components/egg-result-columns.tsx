@@ -1,7 +1,7 @@
 /**
  * UiEggData テーブル列定義
  *
- * ポケモンリスト生成結果を DataTable で表示するための ColumnDef。
+ * タマゴ個体生成結果を DataTable で表示するための ColumnDef。
  */
 
 import { createColumnHelper } from '@tanstack/react-table';
@@ -91,26 +91,16 @@ function createEggResultColumns(options: EggResultColumnsOptions = {}) {
       header: () => t`Hidden Power`,
       size: 80,
     }),
-    columnHelper.accessor((row) => row.level, {
-      id: 'level',
-      header: () => 'Lv',
-      size: 40,
-    }),
     columnHelper.accessor((row) => row.pid, {
       id: 'pid',
       header: () => 'PID',
       size: 80,
       cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
     }),
-    columnHelper.accessor((row) => (row.sync_applied ? '〇' : '×'), {
-      id: 'sync',
-      header: () => t`Sync`,
-      size: 40,
-    }),
-    columnHelper.accessor((row) => row.held_item_name ?? '-', {
-      id: 'held_item',
-      header: () => t`Held item`,
-      size: 80,
+    columnHelper.accessor((row) => row.margin_frames ?? '-', {
+      id: 'margin_frames',
+      header: () => t`Margin`,
+      size: 60,
     }),
   ];
 }

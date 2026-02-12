@@ -108,7 +108,7 @@ jobs:
         run: pnpm format:check:ts
 
       - name: TypeScript check
-        run: pnpm exec tsc --noEmit
+        run: pnpm exec tsc -b --noEmit
 
   lint-rust:
     name: Lint (Rust)

@@ -66,7 +66,7 @@
 - Lint: `pnpm lint` / `cargo clippy --all-targets -- -D warnings`
 - Lint (GPU含む): `cargo clippy --all-targets --features gpu -- -D warnings`
 - フォーマット: `pnpm format` / `pnpm format:check` / `cargo fmt --check`
-- 型チェック: `pnpm exec tsc --noEmit`
+- 型チェック: `pnpm exec tsc -b --noEmit`
 - ベンチマーク: `cargo bench --package wasm-pkg` / `cargo bench --package wasm-pkg --features gpu`
 
 ## TypeScript テスト方針

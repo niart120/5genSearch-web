@@ -1,5 +1,5 @@
 /**
- * ポケモンリスト結果詳細ダイアログ
+ * タマゴ個体生成結果詳細ダイアログ
  *
  * UiEggData の全フィールドを表示する Radix Dialog。
  */
@@ -58,7 +58,7 @@ function ResultDetailDialog({
 
           {/* 個体データ */}
           <DetailRow label={t`Needle`} value={getNeedleArrow(result.needle_direction)} />
-          <DetailRow label={t`Species`} value={result.species_name} />
+          <DetailRow label={t`Species`} value={result.species_name ?? '-'} />
           <DetailRow label={t`Nature`} value={result.nature_name} />
           <DetailRow label={t`Ability`} value={result.ability_name} />
           <DetailRow label={t`Gender`} value={result.gender_symbol} />
@@ -78,24 +78,12 @@ function ResultDetailDialog({
             value={`${result.hidden_power_type} (${result.hidden_power_power})`}
           />
           <DetailRow label="PID" value={result.pid} />
-          <DetailRow label="Lv" value={String(result.level)} />
-          <DetailRow label={t`Sync`} value={result.sync_applied ? '〇' : '×'} />
-          {result.held_item_name !== undefined && (
-            <DetailRow label={t`Held item`} value={result.held_item_name} />
-          )}
 
-          {/* エンカウント情報 */}
+          {/* 孵化情報 */}
           <DetailRow label={t`Advance`} value={String(result.advance)} />
-          {result.moving_encounter_guaranteed !== undefined && (
-            <DetailRow label={t`Moving encounter`} value={result.moving_encounter_guaranteed} />
+          {result.margin_frames !== undefined && (
+            <DetailRow label={t`Margin frames`} value={String(result.margin_frames)} />
           )}
-          {result.special_encounter_triggered !== undefined && (
-            <DetailRow label={t`Special encounter`} value={result.special_encounter_triggered} />
-          )}
-          {result.special_encounter_direction !== undefined && (
-            <DetailRow label={t`Special direction`} value={result.special_encounter_direction} />
-          )}
-          <DetailRow label={t`Encounter result`} value={result.encounter_result} />
         </div>
       </DialogContent>
     </Dialog>

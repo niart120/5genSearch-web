@@ -24,6 +24,15 @@ import { ShinySelect } from '@/components/forms/shiny-select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { cn } from '@/lib/utils';
 import type { StatDisplayMode } from '@/lib/game-data-names';
+
+const EMPTY_STATS_FIXED: StatsFixedValues = {
+  hp: undefined,
+  atk: undefined,
+  def: undefined,
+  spa: undefined,
+  spd: undefined,
+  spe: undefined,
+};
 import type {
   EggFilter,
   IvFilter,
@@ -325,16 +334,7 @@ function EggFilterForm({
                 <Trans>Stats filter</Trans>
               </Label>
               <StatsFixedInput
-                value={
-                  effectiveStats ?? {
-                    hp: undefined,
-                    atk: undefined,
-                    def: undefined,
-                    spa: undefined,
-                    spd: undefined,
-                    spe: undefined,
-                  }
-                }
+                value={effectiveStats ?? EMPTY_STATS_FIXED}
                 onChange={handleStatsChange}
                 disabled={filterDisabled}
               />
