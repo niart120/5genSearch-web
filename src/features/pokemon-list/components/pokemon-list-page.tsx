@@ -17,10 +17,7 @@ import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
 import { usePokemonList } from '../hooks/use-pokemon-list';
 import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
-import type {
-  PokemonListValidationErrorCode,
-  EncounterParamsOutput,
-} from '../types';
+import type { PokemonListValidationErrorCode, EncounterParamsOutput } from '../types';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { filterByStats } from '@/lib/stats-filter';
