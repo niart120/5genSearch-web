@@ -19,10 +19,11 @@ import { usePokemonList } from '../hooks/use-pokemon-list';
 import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
 import type {
   PokemonListValidationErrorCode,
-  StatsFilter,
   EncounterParamsOutput,
 } from '../types';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
+import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
+import { filterByStats } from '@/lib/stats-filter';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
@@ -58,7 +59,7 @@ function PokemonListPage(): ReactElement {
 
   // フィルタ
   const [filter, setFilter] = useState<PokemonFilter | undefined>();
-  const [statsFilter, setStatsFilter] = useState<StatsFilter | undefined>();
+  const [statsFilter, setStatsFilter] = useState<StatsFixedValues | undefined>();
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
@@ -103,19 +104,10 @@ function PokemonListPage(): ReactElement {
   const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
 
   // クライアントサイド Stats フィルタ適用
-  const filteredResults = useMemo(() => {
-    if (!statsFilter) return uiResults;
-    const keys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
-    return uiResults.filter((r) =>
-      keys.every((key, i) => {
-        const expected = statsFilter[key];
-        if (expected === undefined) return true; // 未指定は任意の値にマッチ
-        const v = Number(r.stats[i]);
-        if (Number.isNaN(v)) return true; // '?' は通過
-        return v === expected;
-      })
-    );
-  }, [uiResults, statsFilter]);
+  const filteredResults = useMemo(
+    () => filterByStats(uiResults, statsFilter),
+    [uiResults, statsFilter]
+  );
 
   const handleSelectResult = useCallback((result: UiPokemonData) => {
     setSelectedResult(result);

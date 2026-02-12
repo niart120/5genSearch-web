@@ -8,14 +8,10 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getNeedleArrow } from '@/lib/game-data-names';
+import { getNeedleArrow, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
 const columnHelper = createColumnHelper<UiPokemonData>();
-
-/** ステータス順序: H, A, B, C, D, S */
-const STAT_HEADERS_JA = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
-const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as const;
 
 type StatDisplayMode = 'stats' | 'ivs';
 

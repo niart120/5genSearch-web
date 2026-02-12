@@ -31,6 +31,12 @@ function getStatLabel(stat: IvStatKey, locale: SupportedLocale): string {
   return STAT_LABELS[stat][locale];
 }
 
+/** ステータス列ヘッダー (日本語) */
+const STAT_HEADERS_JA = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
+
+/** ステータス列ヘッダー (英語) */
+const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as const;
+
 const NATURE_ORDER: Nature[] = [
   'Hardy',
   'Lonely',
@@ -586,6 +592,8 @@ export type { IvStatKey };
 export {
   IV_STAT_KEYS,
   getStatLabel,
+  STAT_HEADERS_JA,
+  STAT_HEADERS_EN,
   NEEDLE_ARROWS,
   getNeedleArrow,
   NATURE_ORDER,

@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
 import { createPokemonListTask } from '@/services/search-tasks';
+import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
 import type {
   SeedOrigin,
@@ -34,18 +35,10 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
   const config = useSearchConfig(false);
   const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
-  const rawResults = useMemo(() => {
-    const flat: GeneratedPokemonData[] = [];
-    for (const batch of results) {
-      if (Array.isArray(batch) && batch.length > 0) {
-        const first = batch[0];
-        if (first && typeof first === 'object' && 'core' in first && 'advance' in first) {
-          flat.push(...(batch as unknown as GeneratedPokemonData[]));
-        }
-      }
-    }
-    return flat;
-  }, [results]);
+  const rawResults = useMemo(
+    () => flattenBatchResults<GeneratedPokemonData>(results, isGeneratedPokemonData),
+    [results]
+  );
 
   const uiResults = useMemo(() => {
     if (rawResults.length === 0) return [];

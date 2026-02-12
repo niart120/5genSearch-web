@@ -20,7 +20,7 @@ export interface EncounterParamsOutput {
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
 }
 
-/** EncounterParamsOutput の初期値 */
+/** DEFAULT_ENCOUNTER_PARAMS の初期値 */
 export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   encounterType: 'Normal',
   encounterMethod: 'Stationary',
@@ -29,16 +29,6 @@ export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   availableSpecies: [],
   genConfig: { user_offset: 0, max_advance: 100 },
 };
-
-/** ステータスフィルター (クライアントサイド post-filter, 固定値指定) */
-export interface StatsFilter {
-  hp: number | undefined;
-  atk: number | undefined;
-  def: number | undefined;
-  spa: number | undefined;
-  spd: number | undefined;
-  spe: number | undefined;
-}
 
 /** ポケモンリスト生成フォーム状態 */
 export interface PokemonListFormState {
