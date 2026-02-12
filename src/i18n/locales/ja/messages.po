@@ -21,7 +21,7 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
-#: src/components/forms/egg-params-form.tsx:261
+#: src/components/forms/egg-params-form.tsx:262
 msgid "♀ parent ability"
 msgstr "♀親の特性"
 
@@ -59,7 +59,7 @@ msgstr "特性スロット"
 msgid "Advance"
 msgstr "消費数"
 
-#: src/features/egg-generation/components/egg-generation-page.tsx:113
+#: src/features/egg-generation/components/egg-generation-page.tsx:146
 msgid "Advance range invalid"
 msgstr "消費範囲が不正です"
 
@@ -111,7 +111,7 @@ msgstr "組み合わせ"
 msgid "Compound Eyes"
 msgstr "ふくがん"
 
-#: src/components/forms/egg-params-form.tsx:395
+#: src/components/forms/egg-params-form.tsx:381
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
 
@@ -174,7 +174,7 @@ msgstr "タマゴ"
 msgid "Egg generation result details"
 msgstr "孵化個体生成の結果詳細"
 
-#: src/components/forms/egg-params-form.tsx:237
+#: src/components/forms/egg-params-form.tsx:238
 msgid "Egg parameters"
 msgstr "孵化パラメータ"
 
@@ -227,7 +227,7 @@ msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
-#: src/components/forms/egg-params-form.tsx:284
+#: src/components/forms/egg-params-form.tsx:285
 msgid "Everstone"
 msgstr "かわらずのいし"
 
@@ -250,7 +250,7 @@ msgstr "フィルター (任意)"
 msgid "Gender"
 msgstr "性別"
 
-#: src/components/forms/egg-params-form.tsx:308
+#: src/components/forms/egg-params-form.tsx:309
 msgid "Gender ratio"
 msgstr "性別比"
 
@@ -331,7 +331,7 @@ msgstr "LCG Seed (16進数、1行に1つ)"
 msgid "Lead ability"
 msgstr "先頭特性"
 
-#: src/components/forms/egg-params-form.tsx:355
+#: src/components/forms/egg-params-form.tsx:341
 msgid "Leave empty to show \"?\" for stats"
 msgstr "空欄にすると個体値が「?」で表示されます"
 
@@ -362,7 +362,7 @@ msgstr "猶予"
 msgid "Margin frames"
 msgstr "猶予フレーム"
 
-#: src/components/forms/egg-params-form.tsx:386
+#: src/components/forms/egg-params-form.tsx:372
 msgid "Masuda Method"
 msgstr "国際孵化"
 
@@ -371,13 +371,13 @@ msgstr "国際孵化"
 msgid "Max"
 msgstr "Max"
 
-#: src/components/forms/egg-params-form.tsx:420
+#: src/components/forms/egg-params-form.tsx:406
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:386
 msgid "Max advance"
 msgstr "最大消費数"
 
 #: src/features/egg-search/components/egg-search-page.tsx:123
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:93
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:90
 msgid "Max advance must be ≥ start offset"
 msgstr "最大消費数は開始オフセット以上である必要があります"
 
@@ -443,7 +443,7 @@ msgstr "性格"
 msgid "Needle"
 msgstr "針読み"
 
-#: src/components/forms/egg-params-form.tsx:377
+#: src/components/forms/egg-params-form.tsx:363
 msgid "Nidoran♀"
 msgstr "ニドラン♀"
 
@@ -455,8 +455,8 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 msgid "No results"
 msgstr "結果なし"
 
-#: src/features/egg-generation/components/egg-generation-page.tsx:205
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:223
+#: src/features/egg-generation/components/egg-generation-page.tsx:234
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:220
 msgid "No results found. Configure parameters and start generating."
 msgstr "結果が見つかりませんでした。パラメータを設定して生成を開始してください。"
 
@@ -468,9 +468,13 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/egg-generation/components/egg-generation-page.tsx:112
+#: src/features/egg-generation/components/egg-generation-page.tsx:145
 msgid "No seeds specified"
 msgstr "Seedが指定されていません"
+
+#: src/components/forms/species-combobox.tsx:91
+msgid "No species found"
+msgstr "種族が見つかりません"
 
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
 msgid "None"
@@ -481,33 +485,35 @@ msgstr "なし"
 #: src/components/forms/hidden-power-select.tsx:51
 #: src/components/forms/nature-select.tsx:37
 #: src/components/forms/shiny-select.tsx:44
+#: src/components/forms/species-combobox.tsx:82
+#: src/components/forms/species-combobox.tsx:103
 #: src/features/egg-generation/components/egg-filter-form.tsx:195
 #: src/features/egg-search/components/egg-filter-form.tsx:195
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:109
 msgid "Not specified"
 msgstr "指定なし"
 
-#: src/components/forms/egg-params-form.tsx:295
+#: src/components/forms/egg-params-form.tsx:296
 msgid "Not used"
 msgstr "使用しない"
 
-#: src/features/egg-generation/components/egg-generation-page.tsx:114
+#: src/features/egg-generation/components/egg-generation-page.tsx:147
 msgid "Offset must be non-negative"
 msgstr "オフセットは0以上で指定してください"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:91
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:88
 msgid "One or more seeds are invalid"
 msgstr "無効なSeedが含まれています"
 
-#: src/components/forms/egg-params-form.tsx:251
+#: src/components/forms/egg-params-form.tsx:252
 msgid "Parent ♀ IVs"
 msgstr "♀親の個体値"
 
-#: src/components/forms/egg-params-form.tsx:244
+#: src/components/forms/egg-params-form.tsx:245
 msgid "Parent ♂ IVs"
 msgstr "♂親の個体値"
 
-#: src/features/egg-generation/components/egg-generation-page.tsx:115
+#: src/features/egg-generation/components/egg-generation-page.tsx:148
 msgid "Parent IV out of range"
 msgstr "親の個体値が範囲外です"
 
@@ -554,9 +560,9 @@ msgid "Result details"
 msgstr "結果の詳細"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:181
-#: src/features/egg-generation/components/egg-generation-page.tsx:185
+#: src/features/egg-generation/components/egg-generation-page.tsx:214
 #: src/features/egg-search/components/egg-search-page.tsx:233
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:203
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:200
 msgid "Results"
 msgstr "検索結果"
 
@@ -568,6 +574,10 @@ msgstr "検索"
 #: src/components/forms/seed-input-section.tsx:244
 msgid "Search results"
 msgstr "検索結果"
+
+#: src/components/forms/species-combobox.tsx:89
+msgid "Search species..."
+msgstr "種族を検索..."
 
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"
@@ -590,7 +600,7 @@ msgstr "Seed 入力"
 msgid "Seeds from search results"
 msgstr "検索結果のSeed"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:92
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:89
 msgid "Select a location or Pokémon"
 msgstr "場所またはポケモンを選択してください"
 
@@ -603,7 +613,7 @@ msgstr "全選択"
 msgid "Select location"
 msgstr "場所を選択"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:90
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:87
 msgid "Select or enter at least one seed"
 msgstr "Seedを1つ以上選択または入力してください"
 
@@ -661,13 +671,17 @@ msgstr "特殊エンカウント"
 msgid "Species"
 msgstr "種族"
 
+#: src/components/forms/egg-params-form.tsx:333
+msgid "Species (optional)"
+msgstr "種族 (任意)"
+
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:259
 #~ msgid "Species filter"
 #~ msgstr "種族フィルター"
 
 #: src/components/forms/egg-params-form.tsx:332
-msgid "Species ID (optional)"
-msgstr "種族番号（任意）"
+#~ msgid "Species ID (optional)"
+#~ msgstr "種族番号（任意）"
 
 #: src/components/forms/date-range-picker.tsx:111
 msgid "Start date"
@@ -683,13 +697,13 @@ msgstr "開始日は終了日以前である必要があります"
 msgid "Start mode"
 msgstr "起動モード"
 
-#: src/components/forms/egg-params-form.tsx:403
+#: src/components/forms/egg-params-form.tsx:389
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:369
 msgid "Start offset"
 msgstr "開始オフセット"
 
 #: src/features/egg-search/components/egg-search-page.tsx:124
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:94
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:91
 msgid "Start offset must be ≥ 0"
 msgstr "開始オフセットは0以上である必要があります"
 
@@ -705,9 +719,9 @@ msgstr "起動条件の詳細"
 msgid "Stationary"
 msgstr "固定"
 
-#: src/features/egg-generation/components/egg-generation-page.tsx:197
+#: src/features/egg-generation/components/egg-generation-page.tsx:226
 #: src/features/egg-generation/components/result-detail-dialog.tsx:71
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:215
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:212
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:71
 msgid "Stats"
 msgstr "ステータス"
@@ -781,7 +795,7 @@ msgstr "表ID"
 #~ msgid "Unknown (any)"
 #~ msgstr "不明(任意)"
 
-#: src/components/forms/egg-params-form.tsx:368
+#: src/components/forms/egg-params-form.tsx:354
 msgid "Uses Ditto"
 msgstr "メタモン使用"
 

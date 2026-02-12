@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SpeciesCombobox } from '@/components/forms/species-combobox';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import {
   IV_STAT_KEYS,
@@ -325,32 +326,13 @@ function EggParamsForm({
             </Select>
           </div>
 
-          {/* 種族ID (オプション) */}
+          {/* 種族 (オプション) */}
           {onSpeciesIdChange && (
             <div className="flex flex-col gap-1">
               <Label className="text-xs">
-                <Trans>Species ID (optional)</Trans>
+                <Trans>Species (optional)</Trans>
               </Label>
-              <Input
-                type="number"
-                className="h-8 text-xs"
-                placeholder="1-649"
-                value={speciesId ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value.trim();
-                  if (val === '') {
-                    // eslint-disable-next-line unicorn/no-useless-undefined -- 明示的に undefined を渡してリセット
-                    onSpeciesIdChange(undefined);
-                  } else {
-                    const num = Number(val);
-                    if (!Number.isNaN(num) && num >= 1 && num <= 649) {
-                      onSpeciesIdChange(num);
-                    }
-                  }
-                }}
-                onFocus={handleFocusSelectAll}
-                disabled={disabled}
-              />
+              <SpeciesCombobox value={speciesId} onChange={onSpeciesIdChange} disabled={disabled} />
               <p className="text-xs text-muted-foreground">
                 <Trans>Leave empty to show "?" for stats</Trans>
               </p>
