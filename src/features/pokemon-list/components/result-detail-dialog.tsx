@@ -4,9 +4,8 @@
  * UiPokemonData の全フィールドを表示する Radix Dialog。
  */
 
-import { useCallback, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { Copy } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { DetailRow } from '@/components/data-display/detail-row';
 import { getNeedleArrow } from '@/lib/game-data-names';
 import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
@@ -22,36 +21,6 @@ interface ResultDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   result: UiPokemonData | undefined;
-}
-
-interface DetailRowProps {
-  label: string;
-  value: string;
-}
-
-function DetailRow({ label, value }: DetailRowProps): ReactElement {
-  const { t } = useLingui();
-  const handleCopy = useCallback(() => {
-    void navigator.clipboard.writeText(value);
-  }, [value]);
-
-  return (
-    <div className="flex items-center justify-between gap-2 py-1">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-1">
-        <span className="font-mono text-sm">{value}</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6"
-          onClick={handleCopy}
-          aria-label={t`Copy ${label}`}
-        >
-          <Copy className="size-3" />
-        </Button>
-      </div>
-    </div>
-  );
 }
 
 function ResultDetailDialog({

@@ -8,9 +8,7 @@ import type {
   LeadAbilityEffect,
 } from '../../wasm/wasm_pkg.js';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
-
-/** Seed 入力モード */
-export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
+import type { SeedInputMode } from '@/components/forms/seed-input-section';
 
 /** PokemonParamsForm が親に報告するエンカウントパラメータ集約 */
 export interface EncounterParamsOutput {

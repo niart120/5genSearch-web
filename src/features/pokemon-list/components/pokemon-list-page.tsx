@@ -19,11 +19,10 @@ import { usePokemonList } from '../hooks/use-pokemon-list';
 import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
 import type {
   PokemonListValidationErrorCode,
-  SeedInputMode,
   StatsFilter,
   EncounterParamsOutput,
 } from '../types';
-import { SeedInputSection } from './seed-input-section';
+import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';

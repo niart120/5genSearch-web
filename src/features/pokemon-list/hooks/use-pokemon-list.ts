@@ -1,11 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
-import { initMainThreadWasm } from '@/services/wasm-init';
 import { createPokemonListTask } from '@/services/search-tasks';
-import { resolve_pokemon_data_batch, resolve_seeds } from '@/wasm/wasm_pkg.js';
+import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
 import type {
   SeedOrigin,
-  SeedSpec,
   PokemonGenerationParams,
   GenerationConfig,
   PokemonFilter,
@@ -77,14 +75,4 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     generate,
     cancel,
   };
-}
-
-/**
- * SeedSpec を SeedOrigin[] に変換するヘルパー
- *
- * メインスレッドの WASM 初期化が必要。
- */
-export async function resolveSeedOrigins(spec: SeedSpec): Promise<SeedOrigin[]> {
-  await initMainThreadWasm();
-  return resolve_seeds(spec);
 }
