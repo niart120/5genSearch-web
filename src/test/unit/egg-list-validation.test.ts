@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateEggGenerationForm } from '@/features/egg-generation/types';
-import type { EggGenerationFormState } from '@/features/egg-generation/types';
+import { validateEggListForm } from '@/features/egg-list/types';
+import type { EggListFormState } from '@/features/egg-list/types';
 
-describe('validateEggGenerationForm', () => {
-  const baseForm: EggGenerationFormState = {
+describe('validateEggListForm', () => {
+  const baseForm: EggListFormState = {
     seedInputMode: 'manual-seeds',
     seedOrigins: [{ Seed: { base_seed: 0n, mt_seed: 0n } }],
     eggParams: {
@@ -28,28 +28,28 @@ describe('validateEggGenerationForm', () => {
   };
 
   it('should pass validation for valid form', () => {
-    const result = validateEggGenerationForm(baseForm);
+    const result = validateEggListForm(baseForm);
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it('should fail when seeds are empty', () => {
     const form = { ...baseForm, seedOrigins: [] };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('SEEDS_EMPTY');
   });
 
   it('should fail when user_offset is negative', () => {
     const form = { ...baseForm, genConfig: { user_offset: -1, max_advance: 100 } };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('OFFSET_NEGATIVE');
   });
 
   it('should fail when max_advance < user_offset', () => {
     const form = { ...baseForm, genConfig: { user_offset: 50, max_advance: 30 } };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('ADVANCE_RANGE_INVALID');
   });
@@ -62,7 +62,7 @@ describe('validateEggGenerationForm', () => {
         parent_male: { hp: 35, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
       },
     };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('IV_OUT_OF_RANGE');
   });
@@ -75,7 +75,7 @@ describe('validateEggGenerationForm', () => {
         parent_male: { hp: 32, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
       },
     };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(true);
   });
 
@@ -87,7 +87,7 @@ describe('validateEggGenerationForm', () => {
         parent_female: { hp: 31, atk: 33, def: 31, spa: 31, spd: 31, spe: 31 },
       },
     };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('IV_OUT_OF_RANGE');
   });
@@ -100,14 +100,14 @@ describe('validateEggGenerationForm', () => {
         parent_male: { hp: -1, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
       },
     };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('IV_OUT_OF_RANGE');
   });
 
   it('should pass when max_advance equals user_offset', () => {
     const form = { ...baseForm, genConfig: { user_offset: 50, max_advance: 50 } };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(true);
   });
 
@@ -121,7 +121,7 @@ describe('validateEggGenerationForm', () => {
       },
       genConfig: { user_offset: -1, max_advance: 100 },
     };
-    const result = validateEggGenerationForm(form);
+    const result = validateEggListForm(form);
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain('SEEDS_EMPTY');
     expect(result.errors).toContain('OFFSET_NEGATIVE');

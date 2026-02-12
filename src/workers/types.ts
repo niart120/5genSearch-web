@@ -150,6 +150,16 @@ export interface PokemonListResultResponse {
   results: GeneratedPokemonData[];
 }
 
+/**
+ * 検索結果レスポンス (EggList)
+ */
+export interface EggListResultResponse {
+  type: 'result';
+  taskId: string;
+  resultType: 'egg-list';
+  results: GeneratedEggData[];
+}
+
 export type WorkerResponse =
   | ReadyResponse
   | ProgressResponse
@@ -158,6 +168,7 @@ export type WorkerResponse =
   | EggResultResponse
   | TrainerInfoResultResponse
   | PokemonListResultResponse
+  | EggListResultResponse
   | DoneResponse
   | ErrorResponse;
 
@@ -244,8 +255,8 @@ export interface PokemonListTask {
 /**
  * タマゴ個体生成タスク
  */
-export interface EggGenerationTask {
-  kind: 'egg-generation';
+export interface EggListTask {
+  kind: 'egg-list';
   origins: SeedOrigin[];
   params: EggGenerationParams;
   config: GenerationConfig;
@@ -262,7 +273,7 @@ export type SearchTask =
   | MtseedSearchTask
   | TrainerInfoSearchTask
   | PokemonListTask
-  | EggGenerationTask;
+  | EggListTask;
 
 // =============================================================================
 // Search Result Type Mapping
@@ -283,6 +294,6 @@ export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-date
           ? TrainerInfoSearchResult[]
           : T extends 'pokemon-list'
             ? GeneratedPokemonData[]
-            : T extends 'egg-generation'
+            : T extends 'egg-list'
               ? GeneratedEggData[]
               : never;

@@ -14,9 +14,9 @@ import { Label } from '@/components/ui/label';
 import { useUiStore } from '@/stores/settings/ui';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { useEggGeneration } from '../hooks/use-egg-generation';
-import { validateEggGenerationForm } from '../types';
-import type { EggGenerationValidationErrorCode } from '../types';
+import { useEggList } from '../hooks/use-egg-list';
+import { validateEggListForm } from '../types';
+import type { EggListValidationErrorCode } from '../types';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import { EggParamsForm } from '@/components/forms/egg-params-form';
@@ -55,7 +55,7 @@ const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> 
   max_advance: 100,
 };
 
-function EggGenerationPage(): ReactElement {
+function EggListPage(): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
   const { tid, sid } = useTrainer();
@@ -82,12 +82,12 @@ function EggGenerationPage(): ReactElement {
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } =
-    useEggGeneration(language, speciesId);
+    useEggList(language, speciesId);
 
   // バリデーション
   const validation = useMemo(
     () =>
-      validateEggGenerationForm({
+      validateEggListForm({
         seedInputMode,
         seedOrigins,
         eggParams,
@@ -142,7 +142,7 @@ function EggGenerationPage(): ReactElement {
   ]);
 
   const errorMessages = useMemo(() => {
-    const messages: Record<EggGenerationValidationErrorCode, string> = {
+    const messages: Record<EggListValidationErrorCode, string> = {
       SEEDS_EMPTY: t`No seeds specified`,
       ADVANCE_RANGE_INVALID: t`Advance range invalid`,
       OFFSET_NEGATIVE: t`Offset must be non-negative`,
@@ -269,4 +269,4 @@ function EggGenerationPage(): ReactElement {
   );
 }
 
-export { EggGenerationPage };
+export { EggListPage };

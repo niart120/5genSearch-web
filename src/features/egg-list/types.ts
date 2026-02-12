@@ -13,7 +13,7 @@ import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { validateGenConfig, isIvValid } from '@/lib/validation';
 
 /** タマゴ生成フォーム状態 */
-export interface EggGenerationFormState {
+export interface EggListFormState {
   seedInputMode: SeedInputMode;
   seedOrigins: SeedOrigin[];
   eggParams: EggGenerationParams;
@@ -24,22 +24,22 @@ export interface EggGenerationFormState {
 }
 
 /** バリデーションエラーコード */
-export type EggGenerationValidationErrorCode =
+export type EggListValidationErrorCode =
   | 'SEEDS_EMPTY'
   | 'ADVANCE_RANGE_INVALID'
   | 'OFFSET_NEGATIVE'
   | 'IV_OUT_OF_RANGE';
 
 /** バリデーション結果 */
-export interface EggGenerationValidationResult {
-  errors: EggGenerationValidationErrorCode[];
+export interface EggListValidationResult {
+  errors: EggListValidationErrorCode[];
   isValid: boolean;
 }
 
-export function validateEggGenerationForm(
-  form: EggGenerationFormState
-): EggGenerationValidationResult {
-  const errors: EggGenerationValidationErrorCode[] = [];
+export function validateEggListForm(
+  form: EggListFormState
+): EggListValidationResult {
+  const errors: EggListValidationErrorCode[] = [];
 
   if (form.seedOrigins.length === 0) {
     errors.push('SEEDS_EMPTY');

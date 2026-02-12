@@ -6,7 +6,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
-import { createEggGenerationTask } from '@/services/search-tasks';
+import { createEggListTask } from '@/services/search-tasks';
 import { flattenBatchResults, isGeneratedEggData } from '@/services/batch-utils';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
 import type {
@@ -20,7 +20,7 @@ import type {
 import type { AggregatedProgress } from '@/services/progress';
 import type { SupportedLocale } from '@/i18n';
 
-interface UseEggGenerationReturn {
+interface UseEggListReturn {
   isLoading: boolean;
   isInitialized: boolean;
   progress: AggregatedProgress | undefined;
@@ -36,10 +36,10 @@ interface UseEggGenerationReturn {
   cancel: () => void;
 }
 
-export function useEggGeneration(
+export function useEggList(
   locale: SupportedLocale,
   speciesId: number | undefined
-): UseEggGenerationReturn {
+): UseEggListReturn {
   const config = useSearchConfig(false);
   const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
@@ -51,7 +51,7 @@ export function useEggGeneration(
 
   const uiResults = useMemo(() => {
     if (rawResults.length === 0) return [];
-    return resolve_egg_data_batch(rawResults, locale, speciesId ?? null);
+    return resolve_egg_data_batch(rawResults, locale, speciesId);
   }, [rawResults, locale, speciesId]);
 
   const generate = useCallback(
@@ -61,7 +61,7 @@ export function useEggGeneration(
       genConfig: GenerationConfig,
       filter: EggFilter | undefined
     ) => {
-      const task = createEggGenerationTask(origins, params, genConfig, filter);
+      const task = createEggListTask(origins, params, genConfig, filter);
       start([task]);
     },
     [start]

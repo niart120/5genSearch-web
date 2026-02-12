@@ -58,9 +58,9 @@ describe('FeatureContent', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('egg-list がアクティブのとき EggGenerationPage が表示される', () => {
+  it('egg-list がアクティブのとき EggListPage が表示される', () => {
     renderFeatureContent('egg-list');
-    // EggGenerationPage はフォームを含む — Search ボタンが表示される
+    // EggListPage はフォームを含む — Search ボタンが表示される
     const buttons = screen.getAllByRole('button', { name: /Search/i });
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });

@@ -8,7 +8,7 @@ import { describe, it, expect, afterEach, beforeAll } from 'vitest';
 import { initMainThreadWasm } from '@/services/wasm-init';
 import { WorkerPool } from '@/services/worker-pool';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
-import type { EggGenerationTask } from '@/workers/types';
+import type { EggListTask } from '@/workers/types';
 import type {
   SeedOrigin,
   EggGenerationParams,
@@ -49,7 +49,7 @@ const TEST_CONFIG: GenerationConfig = {
 /**
  * WorkerPool でタスクを実行し、結果を Promise で返すヘルパー
  */
-function executeTask(pool: WorkerPool, task: EggGenerationTask): Promise<GeneratedEggData[]> {
+function executeTask(pool: WorkerPool, task: EggListTask): Promise<GeneratedEggData[]> {
   return new Promise((resolve, reject) => {
     const results: GeneratedEggData[] = [];
     const timeout = setTimeout(() => reject(new Error('Test timeout')), 10_000);
@@ -68,7 +68,7 @@ function executeTask(pool: WorkerPool, task: EggGenerationTask): Promise<Generat
   });
 }
 
-describe('Egg Generation Worker Integration', () => {
+describe('Egg List Worker Integration', () => {
   let pool: WorkerPool | undefined;
 
   beforeAll(async () => {
@@ -84,8 +84,8 @@ describe('Egg Generation Worker Integration', () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 1 });
     await pool.initialize();
 
-    const task: EggGenerationTask = {
-      kind: 'egg-generation',
+    const task: EggListTask = {
+      kind: 'egg-list',
       origins: TEST_ORIGINS,
       params: TEST_PARAMS,
       config: TEST_CONFIG,
@@ -107,8 +107,8 @@ describe('Egg Generation Worker Integration', () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 1 });
     await pool.initialize();
 
-    const task: EggGenerationTask = {
-      kind: 'egg-generation',
+    const task: EggListTask = {
+      kind: 'egg-list',
       origins: TEST_ORIGINS,
       params: TEST_PARAMS,
       config: { ...TEST_CONFIG, max_advance: 2 },
@@ -128,8 +128,8 @@ describe('Egg Generation Worker Integration', () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 1 });
     await pool.initialize();
 
-    const task: EggGenerationTask = {
-      kind: 'egg-generation',
+    const task: EggListTask = {
+      kind: 'egg-list',
       origins: TEST_ORIGINS,
       params: TEST_PARAMS,
       config: { ...TEST_CONFIG, max_advance: 2 },
@@ -149,8 +149,8 @@ describe('Egg Generation Worker Integration', () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 1 });
     await pool.initialize();
 
-    const task: EggGenerationTask = {
-      kind: 'egg-generation',
+    const task: EggListTask = {
+      kind: 'egg-list',
       origins: TEST_ORIGINS,
       params: TEST_PARAMS,
       config: { ...TEST_CONFIG, max_advance: 2 },

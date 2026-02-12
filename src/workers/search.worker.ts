@@ -25,7 +25,7 @@ import type {
   WorkerResponse,
   SearchTask,
   PokemonListTask,
-  EggGenerationTask,
+  EggListTask,
   ProgressInfo,
 } from './types';
 
@@ -129,8 +129,8 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
         runPokemonListGeneration(taskId, task);
         break;
       }
-      case 'egg-generation': {
-        runEggGeneration(taskId, task);
+      case 'egg-list': {
+        runEggList(taskId, task);
         break;
       }
     }
@@ -321,16 +321,16 @@ function runPokemonListGeneration(taskId: string, task: PokemonListTask): void {
 }
 
 // =============================================================================
-// Egg Generation
+// Egg List Generation
 // =============================================================================
 
-function runEggGeneration(taskId: string, task: EggGenerationTask): void {
+function runEggList(taskId: string, task: EggListTask): void {
   const results = generate_egg_list(task.origins, task.params, task.config, task.filter);
 
   postResponse({
     type: 'result',
     taskId,
-    resultType: 'egg-generation',
+    resultType: 'egg-list',
     results,
   });
 
