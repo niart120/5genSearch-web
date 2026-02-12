@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SpeciesCombobox } from '@/components/forms/species-combobox';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import {
   IV_STAT_KEYS,
@@ -28,10 +29,10 @@ import {
   getAbilitySlotName,
   GENDER_RATIO_ORDER,
   getGenderRatioName,
+  IV_VALUE_UNKNOWN,
 } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
-import { IV_VALUE_UNKNOWN } from '../types';
 import type {
   EggGenerationParams,
   GenerationConfig,
@@ -48,6 +49,8 @@ interface EggParamsFormProps {
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
   onChange: (params: EggGenerationParams) => void;
   onGenConfigChange: (config: Pick<GenerationConfig, 'user_offset' | 'max_advance'>) => void;
+  speciesId?: number | undefined;
+  onSpeciesIdChange?: (speciesId: number | undefined) => void;
   disabled?: boolean;
 }
 
@@ -164,6 +167,8 @@ function EggParamsForm({
   genConfig,
   onChange,
   onGenConfigChange,
+  speciesId,
+  onSpeciesIdChange,
   disabled,
 }: EggParamsFormProps) {
   const { t } = useLingui();
@@ -320,6 +325,19 @@ function EggParamsForm({
               </SelectContent>
             </Select>
           </div>
+
+          {/* 種族 (オプション) */}
+          {onSpeciesIdChange && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">
+                <Trans>Species (optional)</Trans>
+              </Label>
+              <SpeciesCombobox value={speciesId} onChange={onSpeciesIdChange} disabled={disabled} />
+              <p className="text-xs text-muted-foreground">
+                <Trans>Leave empty to show "?" for stats</Trans>
+              </p>
+            </div>
+          )}
 
           {/* チェックボックス群 */}
           <div className="grid grid-cols-2 gap-2">

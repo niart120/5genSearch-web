@@ -7,10 +7,9 @@ import type {
   EncounterSlotConfig,
   LeadAbilityEffect,
 } from '../../wasm/wasm_pkg.js';
+import { validateGenConfig } from '@/lib/validation';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
-
-/** Seed 入力モード */
-export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
+import type { SeedInputMode } from '@/components/forms/seed-input-section';
 
 /** PokemonParamsForm が親に報告するエンカウントパラメータ集約 */
 export interface EncounterParamsOutput {
@@ -22,7 +21,7 @@ export interface EncounterParamsOutput {
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
 }
 
-/** EncounterParamsOutput の初期値 */
+/** DEFAULT_ENCOUNTER_PARAMS の初期値 */
 export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   encounterType: 'Normal',
   encounterMethod: 'Stationary',
@@ -31,16 +30,6 @@ export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   availableSpecies: [],
   genConfig: { user_offset: 0, max_advance: 100 },
 };
-
-/** ステータスフィルター (クライアントサイド post-filter, 固定値指定) */
-export interface StatsFilter {
-  hp: number | undefined;
-  atk: number | undefined;
-  def: number | undefined;
-  spa: number | undefined;
-  spd: number | undefined;
-  spe: number | undefined;
-}
 
 /** ポケモンリスト生成フォーム状態 */
 export interface PokemonListFormState {
@@ -78,12 +67,7 @@ export function validatePokemonListForm(
   if (!hasSlots) {
     errors.push('ENCOUNTER_SLOTS_EMPTY');
   }
-  if (form.genConfig.user_offset < 0) {
-    errors.push('OFFSET_NEGATIVE');
-  }
-  if (form.genConfig.max_advance < form.genConfig.user_offset) {
-    errors.push('ADVANCE_RANGE_INVALID');
-  }
+  errors.push(...validateGenConfig(form.genConfig));
 
   return { errors, isValid: errors.length === 0 };
 }

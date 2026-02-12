@@ -1,7 +1,7 @@
 /**
- * UiPokemonData テーブル列定義
+ * UiEggData テーブル列定義
  *
- * ポケモンリスト生成結果を DataTable で表示するための ColumnDef。
+ * タマゴ個体生成結果を DataTable で表示するための ColumnDef。
  */
 
 import { createColumnHelper } from '@tanstack/react-table';
@@ -9,19 +9,19 @@ import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNeedleArrow, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
-import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
+import type { UiEggData } from '@/wasm/wasm_pkg.js';
 
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
-const columnHelper = createColumnHelper<UiPokemonData>();
+const columnHelper = createColumnHelper<UiEggData>();
 
-interface PokemonResultColumnsOptions {
-  onSelect?: (result: UiPokemonData) => void;
+interface EggResultColumnsOptions {
+  onSelect?: (result: UiEggData) => void;
   statMode?: StatDisplayMode;
   locale?: string;
 }
 
-function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
+function createEggResultColumns(options: EggResultColumnsOptions = {}) {
   const { onSelect, statMode = 'stats', locale = 'ja' } = options;
   const headers = locale === 'ja' ? STAT_HEADERS_JA : STAT_HEADERS_EN;
   const dataKey = statMode === 'stats' ? 'stats' : 'ivs';
@@ -91,29 +91,19 @@ function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
       header: () => t`Hidden Power`,
       size: 80,
     }),
-    columnHelper.accessor((row) => row.level, {
-      id: 'level',
-      header: () => 'Lv',
-      size: 40,
-    }),
     columnHelper.accessor((row) => row.pid, {
       id: 'pid',
       header: () => 'PID',
       size: 80,
       cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
     }),
-    columnHelper.accessor((row) => (row.sync_applied ? '〇' : '×'), {
-      id: 'sync',
-      header: () => t`Sync`,
-      size: 40,
-    }),
-    columnHelper.accessor((row) => row.held_item_name ?? '-', {
-      id: 'held_item',
-      header: () => t`Held item`,
-      size: 80,
+    columnHelper.accessor((row) => row.margin_frames ?? '-', {
+      id: 'margin_frames',
+      header: () => t`Margin`,
+      size: 60,
     }),
   ];
 }
 
-export { createPokemonResultColumns };
-export type { PokemonResultColumnsOptions };
+export { createEggResultColumns };
+export type { EggResultColumnsOptions };

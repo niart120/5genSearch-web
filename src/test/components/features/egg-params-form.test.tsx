@@ -1,7 +1,7 @@
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { EggParamsForm } from '@/features/egg-search/components/egg-params-form';
+import { EggParamsForm } from '@/components/forms/egg-params-form';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EggGenerationParams, Ivs } from '@/wasm/wasm_pkg.js';

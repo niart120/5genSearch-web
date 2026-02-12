@@ -18,6 +18,9 @@ type IvStatKey = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 
 const IV_STAT_KEYS: IvStatKey[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
+/** WASM 側 IV_VALUE_UNKNOWN (pokemon.rs) と一致するセンチネル値 */
+const IV_VALUE_UNKNOWN = 32;
+
 const STAT_LABELS: Record<IvStatKey, Record<SupportedLocale, string>> = {
   hp: { ja: 'H', en: 'HP' },
   atk: { ja: 'A', en: 'Atk' },
@@ -30,6 +33,12 @@ const STAT_LABELS: Record<IvStatKey, Record<SupportedLocale, string>> = {
 function getStatLabel(stat: IvStatKey, locale: SupportedLocale): string {
   return STAT_LABELS[stat][locale];
 }
+
+/** ステータス列ヘッダー (日本語) */
+const STAT_HEADERS_JA = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
+
+/** ステータス列ヘッダー (英語) */
+const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as const;
 
 const NATURE_ORDER: Nature[] = [
   'Hardy',
@@ -582,10 +591,16 @@ function toGameVersion(version: RomVersion): GameVersion {
   return map[version];
 }
 
+/** IV / 実ステータス表示モード */
+export type StatDisplayMode = 'stats' | 'ivs';
+
 export type { IvStatKey };
 export {
+  IV_VALUE_UNKNOWN,
   IV_STAT_KEYS,
   getStatLabel,
+  STAT_HEADERS_JA,
+  STAT_HEADERS_EN,
   NEEDLE_ARROWS,
   getNeedleArrow,
   NATURE_ORDER,

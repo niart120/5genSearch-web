@@ -10,6 +10,7 @@ import type {
   GenerationConfig,
   EggFilter,
 } from '../../wasm/wasm_pkg.js';
+import { validateGenConfig, isIvValid } from '@/lib/validation';
 
 /** 孵化検索フォーム状態 */
 export interface EggSearchFormState {
@@ -64,16 +65,6 @@ function isTimeRangeValid(range: TimeRangeParams): boolean {
   );
 }
 
-/** WASM 側 IV_VALUE_UNKNOWN と一致するセンチネル値 */
-export const IV_VALUE_UNKNOWN = 32;
-
-/**
- * 親個体値の範囲チェック (各値 0-31 または 32 = 不明)
- */
-function isIvsValid(ivs: readonly number[]): boolean {
-  return ivs.every((v) => (v >= 0 && v <= 31) || v === IV_VALUE_UNKNOWN);
-}
-
 /**
  * 孵化検索フォームのバリデーション
  */
@@ -88,31 +79,12 @@ export function validateEggSearchForm(form: EggSearchFormState): ValidationResul
     errors.push('TIME_RANGE_INVALID');
   }
 
-  if (form.genConfig.user_offset < 0) {
-    errors.push('OFFSET_NEGATIVE');
-  }
+  errors.push(...validateGenConfig(form.genConfig));
 
-  if (form.genConfig.max_advance < form.genConfig.user_offset) {
-    errors.push('ADVANCE_RANGE_INVALID');
-  }
-
-  const maleIvs = [
-    form.eggParams.parent_male.hp,
-    form.eggParams.parent_male.atk,
-    form.eggParams.parent_male.def,
-    form.eggParams.parent_male.spa,
-    form.eggParams.parent_male.spd,
-    form.eggParams.parent_male.spe,
-  ];
-  const femaleIvs = [
-    form.eggParams.parent_female.hp,
-    form.eggParams.parent_female.atk,
-    form.eggParams.parent_female.def,
-    form.eggParams.parent_female.spa,
-    form.eggParams.parent_female.spd,
-    form.eggParams.parent_female.spe,
-  ];
-  if (!isIvsValid(maleIvs) || !isIvsValid(femaleIvs)) {
+  // 親個体値の範囲チェック
+  const maleIvs = Object.values(form.eggParams.parent_male);
+  const femaleIvs = Object.values(form.eggParams.parent_female);
+  if (!maleIvs.every((v) => isIvValid(v)) || !femaleIvs.every((v) => isIvValid(v))) {
     errors.push('IV_OUT_OF_RANGE');
   }
 

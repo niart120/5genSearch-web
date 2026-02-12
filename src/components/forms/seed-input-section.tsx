@@ -16,9 +16,11 @@ import { DatetimeInput, DEFAULT_DATETIME } from '@/components/forms/datetime-inp
 import { KeyInputSelector } from '@/components/forms/key-input-selector';
 import { useSearchResultsReadonly } from '@/hooks/use-search-results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { resolveSeedOrigins } from '../hooks/use-pokemon-list';
-import type { SeedInputMode } from '../types';
+import { resolveSeedOrigins } from '@/services/seed-resolve';
 import type { SeedOrigin, LcgSeed, Datetime, KeyInput } from '@/wasm/wasm_pkg.js';
+
+/** Seed 入力モード */
+export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
 
 // ---------------------------------------------------------------------------
 // Props

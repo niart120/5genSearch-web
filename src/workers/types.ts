@@ -20,6 +20,9 @@ import type {
   GenerationConfig,
   PokemonFilter,
   GeneratedPokemonData,
+  EggGenerationParams,
+  EggFilter,
+  GeneratedEggData,
 } from '../wasm/wasm_pkg.js';
 
 // =============================================================================
@@ -147,6 +150,16 @@ export interface PokemonListResultResponse {
   results: GeneratedPokemonData[];
 }
 
+/**
+ * 検索結果レスポンス (EggList)
+ */
+export interface EggListResultResponse {
+  type: 'result';
+  taskId: string;
+  resultType: 'egg-list';
+  results: GeneratedEggData[];
+}
+
 export type WorkerResponse =
   | ReadyResponse
   | ProgressResponse
@@ -155,6 +168,7 @@ export type WorkerResponse =
   | EggResultResponse
   | TrainerInfoResultResponse
   | PokemonListResultResponse
+  | EggListResultResponse
   | DoneResponse
   | ErrorResponse;
 
@@ -239,6 +253,17 @@ export interface PokemonListTask {
 }
 
 /**
+ * タマゴ個体生成タスク
+ */
+export interface EggListTask {
+  kind: 'egg-list';
+  origins: SeedOrigin[];
+  params: EggGenerationParams;
+  config: GenerationConfig;
+  filter: EggFilter | undefined;
+}
+
+/**
  * 検索タスク (Union)
  */
 export type SearchTask =
@@ -247,7 +272,8 @@ export type SearchTask =
   | GpuMtseedSearchTask
   | MtseedSearchTask
   | TrainerInfoSearchTask
-  | PokemonListTask;
+  | PokemonListTask
+  | EggListTask;
 
 // =============================================================================
 // Search Result Type Mapping
@@ -268,4 +294,6 @@ export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-date
           ? TrainerInfoSearchResult[]
           : T extends 'pokemon-list'
             ? GeneratedPokemonData[]
-            : never;
+            : T extends 'egg-list'
+              ? GeneratedEggData[]
+              : never;

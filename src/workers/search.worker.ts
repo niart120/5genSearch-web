@@ -11,6 +11,7 @@ import initWasm, {
   MtseedSearcher,
   TrainerInfoSearcher,
   generate_pokemon_list,
+  generate_egg_list,
   health_check,
 } from '../wasm/wasm_pkg.js';
 import type {
@@ -24,6 +25,7 @@ import type {
   WorkerResponse,
   SearchTask,
   PokemonListTask,
+  EggListTask,
   ProgressInfo,
 } from './types';
 
@@ -125,6 +127,10 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
       }
       case 'pokemon-list': {
         runPokemonListGeneration(taskId, task);
+        break;
+      }
+      case 'egg-list': {
+        runEggList(taskId, task);
         break;
       }
     }
@@ -308,6 +314,23 @@ function runPokemonListGeneration(taskId: string, task: PokemonListTask): void {
     type: 'result',
     taskId,
     resultType: 'pokemon-list',
+    results,
+  });
+
+  postResponse({ type: 'done', taskId });
+}
+
+// =============================================================================
+// Egg List Generation
+// =============================================================================
+
+function runEggList(taskId: string, task: EggListTask): void {
+  const results = generate_egg_list(task.origins, task.params, task.config, task.filter);
+
+  postResponse({
+    type: 'result',
+    taskId,
+    resultType: 'egg-list',
     results,
   });
 

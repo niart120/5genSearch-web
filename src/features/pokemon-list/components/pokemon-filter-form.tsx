@@ -36,8 +36,8 @@ import type {
   ShinyFilter,
   HiddenPowerType,
 } from '@/wasm/wasm_pkg.js';
-import type { StatDisplayMode } from './pokemon-result-columns';
-import type { StatsFilter } from '../types';
+import type { StatDisplayMode } from '@/lib/game-data-names';
+import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -46,8 +46,8 @@ import type { StatsFilter } from '../types';
 interface PokemonFilterFormProps {
   value: PokemonFilter | undefined;
   onChange: (filter?: PokemonFilter) => void;
-  statsFilter: StatsFilter | undefined;
-  onStatsFilterChange: (filter?: StatsFilter) => void;
+  statsFilter: StatsFixedValues | undefined;
+  onStatsFilterChange: (filter?: StatsFixedValues) => void;
   statMode: StatDisplayMode;
   availableSpecies: EncounterSpeciesOption[];
   disabled?: boolean;
@@ -66,7 +66,7 @@ const DEFAULT_IV_FILTER: IvFilter = {
   spe: [0, 31],
 };
 
-const DEFAULT_STATS_FILTER: StatsFilter = {
+const DEFAULT_STATS_FILTER: StatsFixedValues = {
   hp: undefined,
   atk: undefined,
   def: undefined,
@@ -181,7 +181,7 @@ function PokemonFilterForm({
 
   // 内部フィルタ状態 (トグル OFF 時も保持)
   const [internalFilter, setInternalFilter] = useState<PokemonFilter>(value ?? DEFAULT_FILTER);
-  const [internalStats, setInternalStats] = useState<StatsFilter>(
+  const [internalStats, setInternalStats] = useState<StatsFixedValues>(
     statsFilter ?? DEFAULT_STATS_FILTER
   );
 
@@ -219,12 +219,12 @@ function PokemonFilterForm({
     );
   }, []);
 
-  const isStatsDefault = useCallback((s: StatsFilter): boolean => {
+  const isStatsDefault = useCallback((s: StatsFixedValues): boolean => {
     return IV_STAT_KEYS.every((k) => s[k] === undefined);
   }, []);
 
   const propagate = useCallback(
-    (f: PokemonFilter, s: StatsFilter, enabled: boolean) => {
+    (f: PokemonFilter, s: StatsFixedValues, enabled: boolean) => {
       if (!enabled) {
         onChange();
         onStatsFilterChange();
@@ -248,7 +248,7 @@ function PokemonFilterForm({
   );
 
   const updateStats = useCallback(
-    (next: StatsFilter) => {
+    (next: StatsFixedValues) => {
       setInternalStats(next);
       propagate(internalFilter, next, filterEnabled);
     },

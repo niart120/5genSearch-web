@@ -1,58 +1,67 @@
+/**
+ * タマゴ個体生成フック
+ *
+ * Seed + 孵化パラメータからタマゴ個体を一括生成する。
+ */
+
 import { useCallback, useMemo } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
-import { createPokemonListTask } from '@/services/search-tasks';
-import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
-import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
+import { createEggListTask } from '@/services/search-tasks';
+import { flattenBatchResults, isGeneratedEggData } from '@/services/batch-utils';
+import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
 import type {
   SeedOrigin,
-  PokemonGenerationParams,
+  EggGenerationParams,
   GenerationConfig,
-  PokemonFilter,
-  GeneratedPokemonData,
-  UiPokemonData,
-  RomVersion,
+  EggFilter,
+  GeneratedEggData,
+  UiEggData,
 } from '@/wasm/wasm_pkg.js';
 import type { AggregatedProgress } from '@/services/progress';
 import type { SupportedLocale } from '@/i18n';
 
-interface UsePokemonListReturn {
+interface UseEggListReturn {
   isLoading: boolean;
   isInitialized: boolean;
   progress: AggregatedProgress | undefined;
-  rawResults: GeneratedPokemonData[];
-  uiResults: UiPokemonData[];
+  rawResults: GeneratedEggData[];
+  uiResults: UiEggData[];
   error: Error | undefined;
   generate: (
     origins: SeedOrigin[],
-    params: PokemonGenerationParams,
+    params: EggGenerationParams,
     config: GenerationConfig,
-    filter: PokemonFilter | undefined
+    filter: EggFilter | undefined
   ) => void;
   cancel: () => void;
 }
 
-export function usePokemonList(version: RomVersion, locale: SupportedLocale): UsePokemonListReturn {
+export function useEggList(
+  locale: SupportedLocale,
+  speciesId: number | undefined
+): UseEggListReturn {
   const config = useSearchConfig(false);
   const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
+  // バッチ結果の flat 化
   const rawResults = useMemo(
-    () => flattenBatchResults<GeneratedPokemonData>(results, isGeneratedPokemonData),
+    () => flattenBatchResults<GeneratedEggData>(results, isGeneratedEggData),
     [results]
   );
 
   const uiResults = useMemo(() => {
     if (rawResults.length === 0) return [];
-    return resolve_pokemon_data_batch(rawResults, version, locale);
-  }, [rawResults, version, locale]);
+    return resolve_egg_data_batch(rawResults, locale, speciesId);
+  }, [rawResults, locale, speciesId]);
 
   const generate = useCallback(
     (
       origins: SeedOrigin[],
-      params: PokemonGenerationParams,
+      params: EggGenerationParams,
       genConfig: GenerationConfig,
-      filter: PokemonFilter | undefined
+      filter: EggFilter | undefined
     ) => {
-      const task = createPokemonListTask(origins, params, genConfig, filter);
+      const task = createEggListTask(origins, params, genConfig, filter);
       start([task]);
     },
     [start]

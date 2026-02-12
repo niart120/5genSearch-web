@@ -17,8 +17,8 @@ import { useUiStore } from '@/stores/settings/ui';
 import { useEggSearch } from '../hooks/use-egg-search';
 import { validateEggSearchForm } from '../types';
 import type { EggValidationErrorCode } from '../types';
-import { EggParamsForm } from './egg-params-form';
-import { EggFilterForm } from './egg-filter-form';
+import { EggParamsForm } from '@/components/forms/egg-params-form';
+import { EggFilterForm } from '@/components/forms/egg-filter-form';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import type {
@@ -216,7 +216,7 @@ function EggSearchPage(): ReactElement {
             disabled={isLoading}
           />
 
-          <EggFilterForm value={filter} onChange={setFilter} disabled={isLoading} />
+          <EggFilterForm value={filter} onChange={setFilter} disabled={isLoading} showReset />
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (

@@ -75,6 +75,7 @@ describe('PokemonList Worker Integration', () => {
       origins: [TEST_ORIGIN],
       params: TEST_PARAMS,
       config: TEST_CONFIG,
+      filter: undefined,
     };
 
     const results = await runSearchInWorker(task, { timeout: 30_000 });
