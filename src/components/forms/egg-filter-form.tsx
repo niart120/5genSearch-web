@@ -10,6 +10,8 @@ import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { IvRangeInput } from '@/components/forms/iv-range-input';
+import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
+import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { NatureSelect } from '@/components/forms/nature-select';
 import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
 import { GenderSelect } from '@/components/forms/gender-select';
@@ -25,9 +27,15 @@ import type {
   ShinyFilter,
 } from '@/wasm/wasm_pkg.js';
 
+type StatDisplayMode = 'stats' | 'ivs';
+
 interface EggFilterFormProps {
   value: EggFilter | undefined;
   onChange: (filter: EggFilter | undefined) => void;
+  /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
+  statMode?: StatDisplayMode;
+  statsFilter?: StatsFixedValues | undefined;
+  onStatsFilterChange?: (filter: StatsFixedValues | undefined) => void;
   disabled?: boolean;
 }
 
@@ -49,7 +57,14 @@ const DEFAULT_FILTER: EggFilter = {
   min_margin_frames: undefined,
 };
 
-function EggFilterForm({ value, onChange, disabled }: EggFilterFormProps) {
+function EggFilterForm({
+  value,
+  onChange,
+  statMode,
+  statsFilter,
+  onStatsFilterChange,
+  disabled,
+}: EggFilterFormProps) {
   const { t } = useLingui();
   const [isOpen, setIsOpen] = useState(false);
   const [localMarginFrames, setLocalMarginFrames] = useState('');
@@ -149,13 +164,41 @@ function EggFilterForm({ value, onChange, disabled }: EggFilterFormProps) {
 
       {isOpen && (
         <div className="flex flex-col gap-3 pl-1">
-          {/* IV フィルター */}
-          <IvRangeInput
-            value={ivValue}
-            onChange={handleIvChange}
-            allowUnknown
-            disabled={disabled}
-          />
+          {/* 実ステータスフィルター (Stats モード時) */}
+          {statMode === 'stats' && onStatsFilterChange && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">
+                <Trans>Stats filter</Trans>
+              </Label>
+              <StatsFixedInput
+                value={
+                  statsFilter ?? {
+                    hp: undefined,
+                    atk: undefined,
+                    def: undefined,
+                    spa: undefined,
+                    spd: undefined,
+                    spe: undefined,
+                  }
+                }
+                onChange={(v) => {
+                  const hasAny = Object.values(v).some((val) => val !== undefined);
+                  onStatsFilterChange(hasAny ? v : undefined);
+                }}
+                disabled={disabled}
+              />
+            </div>
+          )}
+
+          {/* IV フィルター (IV モード時 or statMode 未指定時) */}
+          {statMode !== 'stats' && (
+            <IvRangeInput
+              value={ivValue}
+              onChange={handleIvChange}
+              allowUnknown
+              disabled={disabled}
+            />
+          )}
 
           {/* 性格 */}
           <NatureSelect

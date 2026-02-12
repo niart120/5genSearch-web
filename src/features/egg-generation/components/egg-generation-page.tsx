@@ -23,7 +23,7 @@ import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { filterByStats } from '@/lib/stats-filter';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
-import { EggFilterForm } from './egg-filter-form';
+import { EggFilterForm } from '@/components/forms/egg-filter-form';
 import type {
   GenerationConfig,
   EggFilter,
@@ -73,8 +73,8 @@ function EggGenerationPage(): ReactElement {
   // フィルタ
   const [filter, setFilter] = useState<EggFilter | undefined>();
 
-  // TODO: StatsFixedInput UI を追加後に state 化する
-  const statsFilter: StatsFixedValues | undefined = undefined;
+  // 実ステータスフィルタ
+  const [statsFilter, setStatsFilter] = useState<StatsFixedValues | undefined>();
 
   // 表示モード
   const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
@@ -196,7 +196,14 @@ function EggGenerationPage(): ReactElement {
             disabled={isLoading}
           />
 
-          <EggFilterForm value={filter} onChange={setFilter} disabled={isLoading} />
+          <EggFilterForm
+            value={filter}
+            onChange={setFilter}
+            statMode={statMode}
+            statsFilter={statsFilter}
+            onStatsFilterChange={setStatsFilter}
+            disabled={isLoading}
+          />
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (

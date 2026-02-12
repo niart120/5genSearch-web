@@ -8,15 +8,8 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  toHex,
-  formatDatetime,
-  formatGender,
-  formatShiny,
-  formatAbilitySlot,
-  formatIvs,
-} from '@/lib/format';
-import { getNatureName } from '@/lib/game-data-names';
+import { toHex, formatDatetime, formatGender, formatShiny, formatAbilitySlot } from '@/lib/format';
+import { getNatureName, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { SupportedLocale } from '@/i18n';
 import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
@@ -33,6 +26,9 @@ function createEggResultColumns(
   locale: SupportedLocale,
   onSelect?: (result: EggDatetimeSearchResult) => void
 ) {
+  const headers = locale === 'ja' ? STAT_HEADERS_JA : STAT_HEADERS_EN;
+  const ivKeys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
+
   return [
     columnHelper.display({
       id: 'detail',
@@ -87,12 +83,15 @@ function createEggResultColumns(
       header: () => t`Nature`,
       size: 80,
     }),
-    columnHelper.accessor((row) => formatIvs(row.egg.core.ivs), {
-      id: 'ivs',
-      header: () => 'IV',
-      size: 120,
-      cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
-    }),
+    // 個別 IV 列 (H/A/B/C/D/S)
+    ...headers.map((header, i) =>
+      columnHelper.accessor((row) => row.egg.core.ivs[ivKeys[i]], {
+        id: `iv_${i}`,
+        header: () => header,
+        size: 40,
+        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+      })
+    ),
     columnHelper.accessor((row) => formatAbilitySlot(row.egg.core.ability_slot), {
       id: 'ability',
       header: () => t`Ability`,

@@ -22,9 +22,8 @@ import {
   formatGender,
   formatShinyDetailed,
   formatAbilitySlot,
-  formatIvs,
 } from '@/lib/format';
-import { getNatureName } from '@/lib/game-data-names';
+import { getNatureName, getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
@@ -45,7 +44,8 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
   const seed = 'Seed' in egg.source ? egg.source.Seed : undefined;
 
   const baseSeed = startup?.base_seed ?? seed?.base_seed;
-  const ivsStr = formatIvs(egg.core.ivs);
+  const ivs = egg.core.ivs;
+  const ivsStr = IV_STAT_KEYS.map((key) => `${getStatLabel(key, language)}:${ivs[key]}`).join(' ');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

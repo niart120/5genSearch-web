@@ -37,7 +37,7 @@ import type {
   HiddenPowerType,
 } from '@/wasm/wasm_pkg.js';
 import type { StatDisplayMode } from './pokemon-result-columns';
-import type { StatsFilter } from '../types';
+import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -46,8 +46,8 @@ import type { StatsFilter } from '../types';
 interface PokemonFilterFormProps {
   value: PokemonFilter | undefined;
   onChange: (filter?: PokemonFilter) => void;
-  statsFilter: StatsFilter | undefined;
-  onStatsFilterChange: (filter?: StatsFilter) => void;
+  statsFilter: StatsFixedValues | undefined;
+  onStatsFilterChange: (filter?: StatsFixedValues) => void;
   statMode: StatDisplayMode;
   availableSpecies: EncounterSpeciesOption[];
   disabled?: boolean;
