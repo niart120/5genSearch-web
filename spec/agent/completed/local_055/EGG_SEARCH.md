@@ -250,12 +250,15 @@ interface EggParamsFormProps {
 ```typescript
 interface EggFilterFormProps {
   value: EggFilter | undefined;
-  onChange: (filter: EggFilter | undefined) => void;
-  /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
+  onChange: (filter?: EggFilter) => void;
   statMode?: StatDisplayMode;
   statsFilter?: StatsFixedValues | undefined;
-  onStatsFilterChange?: (filter: StatsFixedValues | undefined) => void;
+  onStatsFilterChange?: (filter?: StatsFixedValues) => void;
   disabled?: boolean;
+  /** フィルター有効/無効 Switch を表示する */
+  showToggle?: boolean;
+  /** リセットボタンを表示する */
+  showReset?: boolean;
 }
 ```
 
@@ -272,7 +275,7 @@ interface EggFilterFormProps {
 | 猶予フレーム下限 | `number \| undefined` | Input | `undefined` = 制限なし |
 
 フォーム全体は折りたたみ可能にし、デフォルトは閉じた状態とする。
-egg-search では `statMode` を渡さずに使用するため、常に IV フィルター + めざパフィルターが表示される。
+egg-search では `showReset` のみ有効にして使用する (`showToggle` なし)。`statMode` を渡さないため、常に IV フィルター + めざパフィルターが表示される。
 
 ### 4.4 結果テーブル列定義 (`egg-result-columns.tsx`)
 

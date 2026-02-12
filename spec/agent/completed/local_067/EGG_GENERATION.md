@@ -605,16 +605,25 @@ function SpeciesCombobox({ value, onChange, disabled }: SpeciesComboboxProps) {
 ```typescript
 interface EggFilterFormProps {
   value: EggFilter | undefined;
-  onChange: (filter: EggFilter | undefined) => void;
+  onChange: (filter?: EggFilter) => void;
   /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
   statMode?: StatDisplayMode;
   statsFilter?: StatsFixedValues | undefined;
-  onStatsFilterChange?: (filter: StatsFixedValues | undefined) => void;
+  onStatsFilterChange?: (filter?: StatsFixedValues) => void;
   disabled?: boolean;
+  /** フィルター有効/無効 Switch を表示する。内部状態を保持したまま切り替える */
+  showToggle?: boolean;
+  /** リセットボタンを表示する */
+  showReset?: boolean;
 }
 ```
 
-折りたたみヘッダー (ChevronDown) のクリックで展開する。デフォルトは閉じた状態。
+ヘッダーには折りたたみ (ChevronDown) に加え、`showToggle` で有効/無効 Switch、`showReset` でリセットボタン (RotateCcw) を表示する。
+
+- **egg-generation**: `showToggle` + `showReset` — PokemonFilterForm と同様のフィルター有効/無効トグル + リセット
+- **egg-search**: `showReset` のみ — リセットボタンだけ表示 (トグルなし)
+
+Toggle OFF 時は内部状態を保持したまま `onChange()` で親に `undefined` を伝播する。Toggle ON で内部保持値を復元する。リセットは全フィルター値をデフォルトに戻し、Toggle がある場合は OFF にする。
 
 フィルター項目 (上からの表示順序):
 

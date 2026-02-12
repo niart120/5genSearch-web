@@ -204,6 +204,8 @@ function EggGenerationPage(): ReactElement {
             statsFilter={statsFilter}
             onStatsFilterChange={setStatsFilter}
             disabled={isLoading}
+            showToggle
+            showReset
           />
 
           {/* バリデーションエラー */}

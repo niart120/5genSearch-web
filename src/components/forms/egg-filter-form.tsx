@@ -2,13 +2,17 @@
  * 孵化フィルター入力フォーム
  *
  * EggFilter の入力 UI。折りたたみ可能で、デフォルトは閉じた状態。
+ * showToggle: フィルター有効/無効トグル (内部状態を保持したまま切り替え)
+ * showReset: リセットボタン (全フィルターをデフォルトに戻す)
  */
 
 import { useState, useCallback } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { IvRangeInput } from '@/components/forms/iv-range-input';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
 import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
@@ -32,12 +36,16 @@ import type {
 
 interface EggFilterFormProps {
   value: EggFilter | undefined;
-  onChange: (filter: EggFilter | undefined) => void;
+  onChange: (filter?: EggFilter) => void;
   /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
   statMode?: StatDisplayMode;
   statsFilter?: StatsFixedValues | undefined;
-  onStatsFilterChange?: (filter: StatsFixedValues | undefined) => void;
+  onStatsFilterChange?: (filter?: StatsFixedValues) => void;
   disabled?: boolean;
+  /** フィルター有効/無効 Switch を表示する。内部状態を保持したまま切り替える */
+  showToggle?: boolean;
+  /** リセットボタンを表示する */
+  showReset?: boolean;
 }
 
 const DEFAULT_IV_FILTER: IvFilter = {
@@ -65,28 +73,109 @@ function EggFilterForm({
   statsFilter,
   onStatsFilterChange,
   disabled,
+  showToggle = false,
+  showReset = false,
 }: EggFilterFormProps) {
   const { t } = useLingui();
   const [isOpen, setIsOpen] = useState(false);
   const [localMarginFrames, setLocalMarginFrames] = useState('');
 
-  const filter = value ?? DEFAULT_FILTER;
+  // --- Toggle mode: internal state management ---
+  const [filterEnabled, setFilterEnabled] = useState(
+    !showToggle || value !== undefined || statsFilter !== undefined
+  );
+  const [internalFilter, setInternalFilter] = useState<EggFilter>(value ?? DEFAULT_FILTER);
+  const [internalStats, setInternalStats] = useState<StatsFixedValues | undefined>(statsFilter);
+
+  // Toggle mode uses internal state; otherwise props directly
+  const filter = showToggle ? internalFilter : (value ?? DEFAULT_FILTER);
+  const effectiveStats = showToggle ? internalStats : statsFilter;
+
+  // --- Propagation helpers ---
+
+  const hasAnyFilter = useCallback((f: EggFilter): boolean => {
+    return (
+      f.iv !== undefined ||
+      (f.natures !== undefined && f.natures.length > 0) ||
+      f.gender !== undefined ||
+      f.ability_slot !== undefined ||
+      f.shiny !== undefined ||
+      f.min_margin_frames !== undefined
+    );
+  }, []);
+
+  /** Toggle mode: propagate or suppress based on enabled state */
+  const propagateToggle = useCallback(
+    (f: EggFilter, stats: StatsFixedValues | undefined, enabled: boolean) => {
+      if (!enabled) {
+        onChange();
+        onStatsFilterChange?.();
+        return;
+      }
+      onChange(hasAnyFilter(f) ? f : undefined);
+      if (onStatsFilterChange) {
+        const hasStats = stats !== undefined && Object.values(stats).some((v) => v !== undefined);
+        onStatsFilterChange(hasStats ? stats : undefined);
+      }
+    },
+    [onChange, onStatsFilterChange, hasAnyFilter]
+  );
+
+  // --- Update helpers ---
 
   const update = useCallback(
     (partial: Partial<EggFilter>) => {
       const updated = { ...filter, ...partial };
-      // 全て undefined の場合は filter 自体を undefined に
-      const hasAny =
-        updated.iv !== undefined ||
-        (updated.natures !== undefined && updated.natures.length > 0) ||
-        updated.gender !== undefined ||
-        updated.ability_slot !== undefined ||
-        updated.shiny !== undefined ||
-        updated.min_margin_frames !== undefined;
-      onChange(hasAny ? updated : undefined);
+      if (showToggle) {
+        setInternalFilter(updated);
+        propagateToggle(updated, internalStats, filterEnabled);
+      } else {
+        onChange(hasAnyFilter(updated) ? updated : undefined);
+      }
     },
-    [filter, onChange]
+    [filter, showToggle, internalStats, filterEnabled, propagateToggle, hasAnyFilter, onChange]
   );
+
+  // --- Toggle / Reset handlers ---
+
+  const handleToggleEnabled = useCallback(
+    (checked: boolean) => {
+      setFilterEnabled(checked);
+      propagateToggle(internalFilter, internalStats, checked);
+    },
+    [internalFilter, internalStats, propagateToggle]
+  );
+
+  const handleReset = useCallback(() => {
+    setLocalMarginFrames('');
+    if (showToggle) {
+      setInternalFilter(DEFAULT_FILTER);
+      setInternalStats(undefined);
+      setFilterEnabled(false);
+    }
+    onChange();
+    onStatsFilterChange?.();
+  }, [showToggle, onChange, onStatsFilterChange]);
+
+  // --- Stats handler ---
+
+  const handleStatsChange = useCallback(
+    (v: StatsFixedValues) => {
+      const hasAny = Object.values(v).some((val) => val !== undefined);
+      const next = hasAny ? v : undefined;
+      if (showToggle) {
+        setInternalStats(next);
+        if (filterEnabled) {
+          onStatsFilterChange?.(next);
+        }
+      } else {
+        onStatsFilterChange?.(next);
+      }
+    },
+    [showToggle, filterEnabled, onStatsFilterChange]
+  );
+
+  // --- Field handlers ---
 
   const handleIvChange = useCallback(
     (ivs: Pick<IvFilter, 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'>) => {
@@ -190,20 +279,45 @@ function EggFilterForm({
   }, [localMarginFrames, update]);
 
   const ivValue = filter.iv ?? DEFAULT_IV_FILTER;
+  const filterDisabled = disabled || (showToggle && !filterEnabled);
 
   return (
     <section className="flex flex-col gap-2">
-      <button
-        type="button"
-        className="flex items-center gap-1 text-sm font-medium"
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        <ChevronDown className={cn('size-4 transition-transform', !isOpen && '-rotate-90')} />
-        <Trans>Filter (optional)</Trans>
-      </button>
+      {/* ヘッダー: 開閉 + (Toggle) + (Reset) */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="flex flex-1 items-center gap-1 text-sm font-medium"
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          <ChevronDown className={cn('size-4 transition-transform', !isOpen && '-rotate-90')} />
+          <Trans>Filter</Trans>
+        </button>
+        {showToggle && (
+          <Switch
+            id="egg-filter-toggle"
+            checked={filterEnabled}
+            onCheckedChange={handleToggleEnabled}
+            disabled={disabled}
+            aria-label={t`Enable filter`}
+          />
+        )}
+        {showReset && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            onClick={handleReset}
+            disabled={disabled}
+            aria-label={t`Reset filter`}
+          >
+            <RotateCcw className="size-3.5" />
+          </Button>
+        )}
+      </div>
 
       {isOpen && (
-        <div className="flex flex-col gap-3 pl-1">
+        <div className={cn('flex flex-col gap-3 pl-1', filterDisabled && 'opacity-50')}>
           {/* 実ステータスフィルター (Stats モード時) */}
           {statMode === 'stats' && onStatsFilterChange && (
             <div className="flex flex-col gap-1">
@@ -212,7 +326,7 @@ function EggFilterForm({
               </Label>
               <StatsFixedInput
                 value={
-                  statsFilter ?? {
+                  effectiveStats ?? {
                     hp: undefined,
                     atk: undefined,
                     def: undefined,
@@ -221,11 +335,8 @@ function EggFilterForm({
                     spe: undefined,
                   }
                 }
-                onChange={(v) => {
-                  const hasAny = Object.values(v).some((val) => val !== undefined);
-                  onStatsFilterChange(hasAny ? v : undefined);
-                }}
-                disabled={disabled}
+                onChange={handleStatsChange}
+                disabled={filterDisabled}
               />
             </div>
           )}
@@ -237,7 +348,7 @@ function EggFilterForm({
                 value={ivValue}
                 onChange={handleIvChange}
                 allowUnknown
-                disabled={disabled}
+                disabled={filterDisabled}
               />
 
               {/* めざパタイプ + 威力下限 */}
@@ -246,7 +357,7 @@ function EggFilterForm({
                 onChange={handleHiddenPowerTypesChange}
                 minPower={filter.iv?.hidden_power_min_power}
                 onMinPowerChange={handleHiddenPowerMinPowerChange}
-                disabled={disabled}
+                disabled={filterDisabled}
               />
             </>
           )}
@@ -255,7 +366,7 @@ function EggFilterForm({
           <NatureSelect
             value={filter.natures ?? []}
             onChange={handleNaturesChange}
-            disabled={disabled}
+            disabled={filterDisabled}
           />
 
           {/* 性別 */}
@@ -263,18 +374,22 @@ function EggFilterForm({
             value={filter.gender}
             onChange={handleGenderChange}
             showGenderless={false}
-            disabled={disabled}
+            disabled={filterDisabled}
           />
 
           {/* 特性スロット */}
           <AbilitySlotSelect
             value={filter.ability_slot}
             onChange={handleAbilitySlotChange}
-            disabled={disabled}
+            disabled={filterDisabled}
           />
 
           {/* 色違い */}
-          <ShinySelect value={filter.shiny} onChange={handleShinyChange} disabled={disabled} />
+          <ShinySelect
+            value={filter.shiny}
+            onChange={handleShinyChange}
+            disabled={filterDisabled}
+          />
 
           {/* 猶予フレーム下限 */}
           <div className="flex flex-col gap-1">
@@ -292,7 +407,7 @@ function EggFilterForm({
               onBlur={handleMarginFramesBlur}
               onFocus={handleFocusSelectAll}
               min={0}
-              disabled={disabled}
+              disabled={filterDisabled}
             />
           </div>
         </div>

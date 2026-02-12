@@ -216,7 +216,7 @@ function EggSearchPage(): ReactElement {
             disabled={isLoading}
           />
 
-          <EggFilterForm value={filter} onChange={setFilter} disabled={isLoading} />
+          <EggFilterForm value={filter} onChange={setFilter} disabled={isLoading} showReset />
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (
