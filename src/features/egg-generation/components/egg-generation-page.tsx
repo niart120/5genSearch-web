@@ -1,8 +1,7 @@
 /**
- * ポケモンリスト生成ページコンポーネント
+ * タマゴ個体生成ページコンポーネント
  *
- * Seed + エンカウント条件からポケモン個体を一括生成し、一覧表示する。
- * FeaturePageLayout による Controls / Results 2 ペイン構成。
+ * Seed + 孵化パラメータからタマゴ個体を一括生成し、一覧表示する。
  */
 
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
@@ -12,96 +11,82 @@ import { SearchControls } from '@/components/forms/search-controls';
 import { DataTable } from '@/components/data-display/data-table';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
-import { usePokemonList } from '../hooks/use-pokemon-list';
-import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
+import { useEggGeneration } from '../hooks/use-egg-generation';
+import { validateEggGenerationForm } from '../types';
 import type {
-  PokemonListValidationErrorCode,
-  EncounterParamsOutput,
+  EggGenerationValidationErrorCode,
+  StatDisplayMode,
 } from '../types';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
+import { EggParamsForm } from '@/components/forms/egg-params-form';
 import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { filterByStats } from '@/lib/stats-filter';
-import { PokemonParamsForm } from './pokemon-params-form';
-import { PokemonFilterForm } from './pokemon-filter-form';
-import { createPokemonResultColumns } from './pokemon-result-columns';
-import type { StatDisplayMode } from './pokemon-result-columns';
+import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import type {
   GenerationConfig,
-  PokemonFilter,
-  PokemonGenerationParams,
+  EggFilter,
+  EggGenerationParams,
   SeedOrigin,
-  UiPokemonData,
+  UiEggData,
 } from '@/wasm/wasm_pkg.js';
 
-// ---------------------------------------------------------------------------
-// Page Component
-// ---------------------------------------------------------------------------
-
-function PokemonListPage(): ReactElement {
+function EggGenerationPage(): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
-
-  // DS 設定 / トレーナー情報
-  const { config: dsConfig, gameStart } = useDsConfigReadonly();
   const { tid, sid } = useTrainer();
 
   // Seed 入力
-  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('search-results');
+  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('manual-startup');
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
-  // エンカウント設定 (PokemonParamsForm の controlled state)
-  const [encounterParams, setEncounterParams] =
-    useState<EncounterParamsOutput>(DEFAULT_ENCOUNTER_PARAMS);
+  // パラメータ
+  const [eggParams, setEggParams] = useState<EggGenerationParams>({
+    parent_male: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+    parent_female: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+    female_ability_slot: 'Slot1',
+    everstone_plan: 'None',
+    gender_ratio: 'Equal',
+    uses_ditto: false,
+    nidoran_flag: false,
+    masuda_method: false,
+    consider_npc: false,
+  });
+  const [genConfig, setGenConfig] = useState<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>({
+    user_offset: 0,
+    max_advance: 100,
+  });
+  const [speciesId, setSpeciesId] = useState<number | undefined>();
 
   // フィルタ
-  const [filter, setFilter] = useState<PokemonFilter | undefined>();
+  const [filter, setFilter] = useState<EggFilter | undefined>();
   const [statsFilter, setStatsFilter] = useState<StatsFixedValues | undefined>();
 
+  // 表示モード
+  const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
+
   // 生成フック
-  const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
-    dsConfig.version,
-    language
+  const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = useEggGeneration(
+    language,
+    speciesId
   );
 
   // バリデーション
   const validation = useMemo(
     () =>
-      validatePokemonListForm(
-        {
-          seedInputMode,
-          seedOrigins,
-          encounterType: encounterParams.encounterType,
-          encounterMethod: encounterParams.encounterMethod,
-          genConfig: encounterParams.genConfig,
-          filter,
-        },
-        encounterParams.slots.length > 0
-      ),
-    [seedInputMode, seedOrigins, encounterParams, filter]
+      validateEggGenerationForm({
+        seedInputMode,
+        seedOrigins,
+        eggParams,
+        genConfig,
+        filter,
+        statsFilter,
+        speciesId,
+      }),
+    [seedInputMode, seedOrigins, eggParams, genConfig, filter, statsFilter, speciesId]
   );
-
-  // バリデーションメッセージ
-  const validationMessages = useMemo(
-    (): Record<PokemonListValidationErrorCode, string> => ({
-      SEEDS_EMPTY: t`Select or enter at least one seed`,
-      SEEDS_INVALID: t`One or more seeds are invalid`,
-      ENCOUNTER_SLOTS_EMPTY: t`Select a location or Pokémon`,
-      ADVANCE_RANGE_INVALID: t`Max advance must be ≥ start offset`,
-      OFFSET_NEGATIVE: t`Start offset must be ≥ 0`,
-    }),
-    [t]
-  );
-
-  // 詳細ダイアログ
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedResult, setSelectedResult] = useState<UiPokemonData | undefined>();
-
-  // ステータス/IV 表示切替
-  const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
 
   // クライアントサイド Stats フィルタ適用
   const filteredResults = useMemo(
@@ -109,14 +94,31 @@ function PokemonListPage(): ReactElement {
     [uiResults, statsFilter]
   );
 
-  const handleSelectResult = useCallback((result: UiPokemonData) => {
+  const [selectedResult, setSelectedResult] = useState<UiEggData | undefined>();
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const handleSelectResult = useCallback((result: UiEggData) => {
     setSelectedResult(result);
     setDetailOpen(true);
   }, []);
 
+  const handleGenerate = useCallback(() => {
+    generate(seedOrigins, eggParams, genConfig, filter);
+  }, [generate, seedOrigins, eggParams, genConfig, filter]);
+
+  const errorMessages = useMemo(() => {
+    const messages: Record<EggGenerationValidationErrorCode, string> = {
+      SEEDS_EMPTY: t`No seeds specified`,
+      ADVANCE_RANGE_INVALID: t`Advance range invalid`,
+      OFFSET_NEGATIVE: t`Offset must be non-negative`,
+      IV_OUT_OF_RANGE: t`Parent IV out of range`,
+    };
+    return validation.errors.map((code) => messages[code]);
+  }, [validation.errors, t]);
+
   const columns = useMemo(
     () =>
-      createPokemonResultColumns({
+      createEggResultColumns({
         onSelect: handleSelectResult,
         statMode,
         locale: language,
@@ -124,44 +126,12 @@ function PokemonListPage(): ReactElement {
     [handleSelectResult, statMode, language]
   );
 
-  // 生成開始
-  const handleGenerate = useCallback(() => {
-    const fullGenConfig: GenerationConfig = {
-      version: dsConfig.version,
-      game_start: gameStart,
-      user_offset: encounterParams.genConfig.user_offset,
-      max_advance: encounterParams.genConfig.max_advance,
-    };
-
-    const params: PokemonGenerationParams = {
-      trainer: { tid: tid ?? 0, sid: sid ?? 0 },
-      encounter_type: encounterParams.encounterType,
-      encounter_method: encounterParams.encounterMethod,
-      lead_ability: encounterParams.leadAbility,
-      slots: encounterParams.slots,
-    };
-
-    generate(seedOrigins, params, fullGenConfig, filter);
-  }, [dsConfig.version, gameStart, encounterParams, tid, sid, seedOrigins, filter, generate]);
-
   return (
-    <>
-      <FeaturePageLayout className="pb-32 lg:pb-4">
-        <FeaturePageLayout.Controls>
-          {/* PC: 検索コントロール */}
-          <div className="hidden lg:flex lg:flex-col lg:gap-2">
-            <SearchControls
-              layout="desktop"
-              isLoading={isLoading}
-              isInitialized={isInitialized}
-              isValid={validation.isValid}
-              progress={progress}
-              error={error}
-              onSearch={handleGenerate}
-              onCancel={cancel}
-            />
-          </div>
-
+    <FeaturePageLayout
+      title={t`Egg generation`}
+      description={t`Generate egg individuals from seed origins`}
+      controls={
+        <div className="flex flex-col gap-4">
           <SeedInputSection
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
@@ -170,36 +140,31 @@ function PokemonListPage(): ReactElement {
             disabled={isLoading}
           />
 
-          <PokemonParamsForm
-            value={encounterParams}
-            onChange={setEncounterParams}
-            version={dsConfig.version}
+          <EggParamsForm
+            value={eggParams}
+            genConfig={genConfig}
+            onChange={setEggParams}
+            onGenConfigChange={setGenConfig}
+            speciesId={speciesId}
+            onSpeciesIdChange={setSpeciesId}
             disabled={isLoading}
           />
 
-          <PokemonFilterForm
-            value={filter}
-            onChange={setFilter}
-            statsFilter={statsFilter}
-            onStatsFilterChange={setStatsFilter}
-            statMode={statMode}
-            availableSpecies={encounterParams.availableSpecies}
-            disabled={isLoading}
+          <SearchControls
+            onStart={handleGenerate}
+            onCancel={cancel}
+            isLoading={isLoading}
+            isInitialized={isInitialized}
+            progress={progress}
+            disabled={!validation.isValid}
+            errorMessages={errorMessages}
           />
-
-          {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
-        </FeaturePageLayout.Controls>
-
-        <FeaturePageLayout.Results>
+        </div>
+      }
+      results={
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               <Trans>Results</Trans>: {filteredResults.length.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
@@ -216,36 +181,24 @@ function PokemonListPage(): ReactElement {
               </Label>
             </div>
           </div>
+
+          {error && <p className="text-sm text-destructive">{error.message}</p>}
+
           <DataTable
             columns={columns}
             data={filteredResults}
-            className="flex-1"
-            emptyMessage={t`No results found. Configure parameters and start generating.`}
-            getRowId={(_row, index) => String(index)}
+            emptyMessage={t`No results`}
           />
+
           <ResultDetailDialog
             open={detailOpen}
             onOpenChange={setDetailOpen}
             result={selectedResult}
           />
-        </FeaturePageLayout.Results>
-      </FeaturePageLayout>
-
-      {/* モバイル: 下部固定 検索バー */}
-      <div className="fixed bottom-14 left-0 right-0 z-40 border-t border-border bg-background p-3 lg:hidden">
-        <SearchControls
-          layout="mobile"
-          isLoading={isLoading}
-          isInitialized={isInitialized}
-          isValid={validation.isValid}
-          progress={progress}
-          error={error}
-          onSearch={handleGenerate}
-          onCancel={cancel}
-        />
-      </div>
-    </>
+        </div>
+      }
+    />
   );
 }
 
-export { PokemonListPage };
+export { EggGenerationPage };
