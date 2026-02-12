@@ -11,6 +11,7 @@
     "lint": "eslint . && cargo clippy -p wasm-pkg --all-targets -- -D warnings",
     "lint:ts": "eslint .",
     "format": "prettier --write . && cargo fmt",
+    "format:ts": "prettier --write .",
     "format:check": "prettier --check . && cargo fmt --check",
     "format:check:ts": "prettier --check .",
     "preview": "vite preview",
