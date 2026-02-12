@@ -28,10 +28,10 @@ import {
   getAbilitySlotName,
   GENDER_RATIO_ORDER,
   getGenderRatioName,
+  IV_VALUE_UNKNOWN,
 } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
-import { IV_VALUE_UNKNOWN } from '../types';
 import type {
   EggGenerationParams,
   GenerationConfig,
@@ -339,6 +339,7 @@ function EggParamsForm({
                 onChange={(e) => {
                   const val = e.target.value.trim();
                   if (val === '') {
+                    // eslint-disable-next-line unicorn/no-useless-undefined -- 明示的に undefined を渡してリセット
                     onSpeciesIdChange(undefined);
                   } else {
                     const num = Number(val);

@@ -70,7 +70,7 @@ impl IvFilter {
     /// 指定 IV が条件を満たすか判定
     ///
     /// IV が `IV_VALUE_UNKNOWN` (32) の場合の特別扱い:
-    /// - 範囲が (0, 31) なら通過
+    /// - 範囲が任意 (min=0, max>=31) なら通過
     /// - それ以外 (特定範囲指定) なら不通過
     /// - めざパフィルタがある場合、Unknown IV が含まれていればめざパチェックをスキップ
     #[inline]
@@ -118,15 +118,15 @@ impl IvFilter {
 
     /// 単一ステータスの範囲チェック (Unknown 対応)
     ///
-    /// - `value == IV_VALUE_UNKNOWN` かつ `range == (0, 31)` なら通過
-    /// - `value == IV_VALUE_UNKNOWN` かつ それ以外なら不通過
+    /// - `value == IV_VALUE_UNKNOWN` かつ 任意範囲 (min=0, max>=31) なら通過
+    /// - `value == IV_VALUE_UNKNOWN` かつ 特定範囲指定なら不通過
     /// - それ以外は通常の範囲チェック
     #[inline]
     fn check_stat(value: u8, range: (u8, u8)) -> bool {
         use super::pokemon::IV_VALUE_UNKNOWN;
         if value == IV_VALUE_UNKNOWN {
-            // Unknown は任意範囲 (0, 31) のみ通過
-            range == (0, 31)
+            // Unknown は任意範囲 (min=0, max>=31) のみ通過
+            range.0 == 0 && range.1 >= 31
         } else {
             value >= range.0 && value <= range.1
         }
@@ -1017,5 +1017,66 @@ mod tests {
         // ATK が Unknown → 不通過 (ATK は特定範囲)
         let ivs_atk_unknown = Ivs::new(25, IV_VALUE_UNKNOWN, 20, 15, 10, 5);
         assert!(!filter.matches(&ivs_atk_unknown));
+    }
+
+    #[test]
+    fn test_iv_filter_unknown_max32_range() {
+        use super::super::pokemon::IV_VALUE_UNKNOWN;
+
+        // allowUnknown により max=32 (0, 32) となる範囲のフィルタ
+        let filter = IvFilter {
+            hp: (0, 32), // Unknown 許容の任意範囲
+            atk: (0, 32),
+            def: (0, 32),
+            spa: (0, 32),
+            spd: (0, 32),
+            spe: (0, 32),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        };
+
+        // Unknown IV → 通過 (max >= 31 なので任意扱い)
+        let ivs_unknown = Ivs::new(IV_VALUE_UNKNOWN, 20, 25, 30, 15, 10);
+        assert!(filter.matches(&ivs_unknown));
+
+        // 通常値も通過
+        let ivs_normal = Ivs::new(15, 20, 25, 30, 10, 5);
+        assert!(filter.matches(&ivs_normal));
+
+        // 全て Unknown でも通過
+        let ivs_all_unknown = Ivs::new(
+            IV_VALUE_UNKNOWN,
+            IV_VALUE_UNKNOWN,
+            IV_VALUE_UNKNOWN,
+            IV_VALUE_UNKNOWN,
+            IV_VALUE_UNKNOWN,
+            IV_VALUE_UNKNOWN,
+        );
+        assert!(filter.matches(&ivs_all_unknown));
+    }
+
+    #[test]
+    fn test_iv_filter_unknown_mixed_max32_and_specific() {
+        use super::super::pokemon::IV_VALUE_UNKNOWN;
+
+        // HP は (0, 32) で Unknown 許容、ATK は (31, 31) で特定範囲
+        let filter = IvFilter {
+            hp: (0, 32),
+            atk: (31, 31),
+            def: (0, 31),
+            spa: (0, 31),
+            spd: (0, 31),
+            spe: (0, 31),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        };
+
+        // HP Unknown + ATK 31 → 通過
+        let ivs_hp_unknown = Ivs::new(IV_VALUE_UNKNOWN, 31, 20, 15, 10, 5);
+        assert!(filter.matches(&ivs_hp_unknown));
+
+        // HP Unknown + ATK Unknown → 不通過 (ATK は特定範囲)
+        let ivs_both_unknown = Ivs::new(IV_VALUE_UNKNOWN, IV_VALUE_UNKNOWN, 20, 15, 10, 5);
+        assert!(!filter.matches(&ivs_both_unknown));
     }
 }

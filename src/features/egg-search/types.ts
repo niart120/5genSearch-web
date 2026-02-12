@@ -64,8 +64,7 @@ function isTimeRangeValid(range: TimeRangeParams): boolean {
   );
 }
 
-/** WASM 側 IV_VALUE_UNKNOWN と一致するセンチネル値 */
-export const IV_VALUE_UNKNOWN = 32;
+import { IV_VALUE_UNKNOWN } from '@/lib/game-data-names';
 
 /**
  * 親個体値の範囲チェック (各値 0-31 または 32 = 不明)

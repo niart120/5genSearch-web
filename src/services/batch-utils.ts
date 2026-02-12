@@ -34,22 +34,20 @@ export function flattenBatchResults<T>(
  * GeneratedPokemonData 型ガード
  */
 export function isGeneratedPokemonData(value: unknown): boolean {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'core' in value &&
-    'advance' in value
-  );
+  return typeof value === 'object' && value !== null && 'core' in value && 'advance' in value;
 }
 
 /**
  * GeneratedEggData 型ガード
+ *
+ * GeneratedPokemonData との区別に `inheritance` フィールドの存在を使用する。
  */
 export function isGeneratedEggData(value: unknown): boolean {
   return (
     typeof value === 'object' &&
     value !== null &&
     'core' in value &&
-    'advance' in value
+    'advance' in value &&
+    'inheritance' in value
   );
 }

@@ -28,10 +28,10 @@ import {
   getAbilitySlotName,
   GENDER_RATIO_ORDER,
   getGenderRatioName,
+  IV_VALUE_UNKNOWN,
 } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
-import { IV_VALUE_UNKNOWN } from '../types';
 import type {
   EggGenerationParams,
   GenerationConfig,

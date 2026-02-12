@@ -18,6 +18,9 @@ type IvStatKey = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 
 const IV_STAT_KEYS: IvStatKey[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
+/** WASM 側 IV_VALUE_UNKNOWN (pokemon.rs) と一致するセンチネル値 */
+const IV_VALUE_UNKNOWN = 32;
+
 const STAT_LABELS: Record<IvStatKey, Record<SupportedLocale, string>> = {
   hp: { ja: 'H', en: 'HP' },
   atk: { ja: 'A', en: 'Atk' },
@@ -590,6 +593,7 @@ function toGameVersion(version: RomVersion): GameVersion {
 
 export type { IvStatKey };
 export {
+  IV_VALUE_UNKNOWN,
   IV_STAT_KEYS,
   getStatLabel,
   STAT_HEADERS_JA,
