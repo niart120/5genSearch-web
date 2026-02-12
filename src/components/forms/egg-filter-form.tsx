@@ -13,6 +13,7 @@ import { IvRangeInput } from '@/components/forms/iv-range-input';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
 import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { NatureSelect } from '@/components/forms/nature-select';
+import { HiddenPowerSelect } from '@/components/forms/hidden-power-select';
 import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
 import { GenderSelect } from '@/components/forms/gender-select';
 import { ShinySelect } from '@/components/forms/shiny-select';
@@ -26,6 +27,7 @@ import type {
   Gender,
   AbilitySlot,
   ShinyFilter,
+  HiddenPowerType,
 } from '@/wasm/wasm_pkg.js';
 
 interface EggFilterFormProps {
@@ -101,9 +103,22 @@ function EggFilterForm({
         ivs.spd[1] === 31 &&
         ivs.spe[0] === 0 &&
         ivs.spe[1] === 31;
-      update({ iv: allDefault ? undefined : { ...DEFAULT_IV_FILTER, ...ivs } });
+      // 既存の hidden_power 設定を保持
+      const existingIv = filter.iv;
+      const nextIv =
+        allDefault &&
+        !existingIv?.hidden_power_types &&
+        existingIv?.hidden_power_min_power === undefined
+          ? undefined
+          : {
+              ...DEFAULT_IV_FILTER,
+              ...ivs,
+              hidden_power_types: existingIv?.hidden_power_types,
+              hidden_power_min_power: existingIv?.hidden_power_min_power,
+            };
+      update({ iv: nextIv });
     },
-    [update]
+    [filter.iv, update]
   );
 
   const handleNaturesChange = useCallback(
@@ -132,6 +147,32 @@ function EggFilterForm({
       update({ shiny });
     },
     [update]
+  );
+
+  const handleHiddenPowerTypesChange = useCallback(
+    (types: HiddenPowerType[]) => {
+      const existing = filter.iv ?? DEFAULT_IV_FILTER;
+      update({
+        iv: {
+          ...existing,
+          hidden_power_types: types.length > 0 ? types : undefined,
+        },
+      });
+    },
+    [filter.iv, update]
+  );
+
+  const handleHiddenPowerMinPowerChange = useCallback(
+    (minPower?: number) => {
+      const existing = filter.iv ?? DEFAULT_IV_FILTER;
+      update({
+        iv: {
+          ...existing,
+          hidden_power_min_power: minPower,
+        },
+      });
+    },
+    [filter.iv, update]
   );
 
   const handleMarginFramesBlur = useCallback(() => {
@@ -191,12 +232,23 @@ function EggFilterForm({
 
           {/* IV フィルター (IV モード時 or statMode 未指定時) */}
           {statMode !== 'stats' && (
-            <IvRangeInput
-              value={ivValue}
-              onChange={handleIvChange}
-              allowUnknown
-              disabled={disabled}
-            />
+            <>
+              <IvRangeInput
+                value={ivValue}
+                onChange={handleIvChange}
+                allowUnknown
+                disabled={disabled}
+              />
+
+              {/* めざパタイプ + 威力下限 */}
+              <HiddenPowerSelect
+                value={filter.iv?.hidden_power_types ?? []}
+                onChange={handleHiddenPowerTypesChange}
+                minPower={filter.iv?.hidden_power_min_power}
+                onMinPowerChange={handleHiddenPowerMinPowerChange}
+                disabled={disabled}
+              />
+            </>
           )}
 
           {/* 性格 */}
