@@ -475,7 +475,7 @@ FeaturePageLayout
 │   │   ├── [manual-seeds] LCG Seed テキスト入力 → autoResolveSeeds
 │   │   └── [search-results] Store から SeedOrigin[] を表示 + "Load" ボタン
 │   ├── EggParamsForm (src/components/forms/ 共通コンポーネント)
-│   │   ├── 種族セレクタ (新規追加: species_id 指定)
+│   │   ├── 種族セレクタ (SpeciesCombobox: cmdk + Radix Popover による検索付き)
 │   │   ├── 親個体値 (オス・メス)
 │   │   ├── メス親特性 (AbilitySlot)
 │   │   ├── かわらずのいし (EverstonePlan: None / Male / Female)
@@ -542,48 +542,70 @@ pokemon-list 側もインライン実装を `filterByStats` の呼び出しに�
 
 #### 種族セレクタの実装
 
+種族リストは649件と長いため、`cmdk` + Radix Popover による検索付き Combobox (`SpeciesCombobox`) として実装する。
+
+実装ファイル:
+- `src/components/ui/popover.tsx` — Radix Popover ラッパー
+- `src/components/ui/command.tsx` — cmdk ラッパー (CommandInput, CommandList, CommandEmpty, CommandItem)
+- `src/components/forms/species-combobox.tsx` — 種族選択 Combobox 本体
+
 ```typescript
-// egg-generation-page.tsx 内部または egg-params-form.tsx に追加
+// src/components/forms/species-combobox.tsx (概要)
 
-const [speciesOptions, setSpeciesOptions] = useState<Array<{id: number, name: string}>>([]);
+const SPECIES_COUNT = 649;
 
-useEffect(() => {
-  // 全種族名を取得 (1-649)
-  void initMainThreadWasm().then(() => {
-    const options = Array.from({ length: 649 }, (_, i) => {
-      const id = i + 1;
-      return {
-        id,
-        name: get_species_name(id, locale),
-      };
+interface SpeciesOption {
+  readonly id: number;
+  readonly label: string;      // "#001 フシギダネ" 形式
+  readonly searchValue: string; // "001 1 フシギダネ" (検索用)
+}
+
+function SpeciesCombobox({ value, onChange, disabled }: SpeciesComboboxProps) {
+  const language = useUiStore((s) => s.language);
+  const [options, setOptions] = useState<SpeciesOption[]>([]);
+
+  useEffect(() => {
+    void initMainThreadWasm().then(() => {
+      const list = Array.from({ length: SPECIES_COUNT }, (_, i) => {
+        const id = i + 1;
+        const name = get_species_name(id, language);
+        const idStr = id.toString().padStart(3, '0');
+        return { id, label: `#${idStr} ${name}`, searchValue: `${idStr} ${id} ${name}` };
+      });
+      setOptions(list);
     });
-    setSpeciesOptions(options);
-  });
-}, [locale]);
+  }, [language]);
 
-// Select UI
-<Select
-  value={eggParams.species_id?.toString() ?? 'none'}
-  onValueChange={(value) => {
-    const speciesId = value === 'none' ? undefined : Number(value);
-    onEggParamsChange({ ...eggParams, species_id: speciesId });
-  }}
->
-  <SelectTrigger>
-    <SelectValue placeholder={t`種族を選択`} />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem value="none">{t`指定なし`}</SelectItem>
-    {speciesOptions.map((opt) => (
-      <SelectItem key={opt.id} value={opt.id.toString()}>
-        #{opt.id.toString().padStart(3, '0')} {opt.name}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox">
+          {selectedLabel ?? t`Not specified`}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <Command>
+          <CommandInput placeholder={t`Search species...`} />
+          <CommandList>
+            <CommandEmpty>{t`No species found`}</CommandEmpty>
+            <CommandItem value="__none__" onSelect={() => onChange(undefined)}>
+              {t`Not specified`}
+            </CommandItem>
+            {options.map((opt) => (
+              <CommandItem key={opt.id} value={opt.searchValue}
+                onSelect={() => onChange(opt.id)}>
+                {opt.label}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 ```
 
-種族リストが長いため、Combobox (検索機能付き) への変更を検討してもよい。
+`EggParamsForm` 内で `<SpeciesCombobox value={speciesId} onChange={onSpeciesIdChange} />` として使用する。
 
 ### 4.7 EggFilterForm — フィルタ入力フォーム
 
@@ -904,7 +926,10 @@ export const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as cons
 | SeedInputSection | pokemon-list | - | `src/components/forms/` へ移動して共通化 |
 | DatetimeInput | 共通 (forms/) | - | そのまま再利用 |
 | KeyInputSelector | 共通 (forms/) | - | そのまま再利用 |
-| EggParamsForm | egg-search | - | `src/components/forms/` へ移動 + 種族セレクタ追加 |
+| EggParamsForm | egg-search | - | `src/components/forms/` へ移動 + SpeciesCombobox 追加 |
+| SpeciesCombobox | - | ✓ | 新規実装 (cmdk + Radix Popover, `src/components/forms/species-combobox.tsx`) |
+| Popover (UI) | - | ✓ | 新規実装 (Radix Popover ラッパー, `src/components/ui/popover.tsx`) |
+| Command (UI) | - | ✓ | 新規実装 (cmdk ラッパー, `src/components/ui/command.tsx`) |
 | DetailRow | pokemon-list, egg-search | - | `src/components/data-display/` へ抽出して共通化 |
 | StatsFixedInput | 共通 (forms/) | - | そのまま再利用 |
 | StatsFixedValues (型) | 共通 (forms/) | - | `StatsFilter` を廃止し `StatsFixedValues` に統一 |
