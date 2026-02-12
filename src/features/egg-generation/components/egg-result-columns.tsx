@@ -11,9 +11,9 @@ import { Button } from '@/components/ui/button';
 import { getNeedleArrow, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { UiEggData } from '@/wasm/wasm_pkg.js';
 
-const columnHelper = createColumnHelper<UiEggData>();
+import type { StatDisplayMode } from '@/lib/game-data-names';
 
-type StatDisplayMode = 'stats' | 'ivs';
+const columnHelper = createColumnHelper<UiEggData>();
 
 interface EggResultColumnsOptions {
   onSelect?: (result: UiEggData) => void;
@@ -116,4 +116,4 @@ function createEggResultColumns(options: EggResultColumnsOptions = {}) {
 }
 
 export { createEggResultColumns };
-export type { StatDisplayMode, EggResultColumnsOptions };
+export type { EggResultColumnsOptions };

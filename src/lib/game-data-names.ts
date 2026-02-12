@@ -591,6 +591,9 @@ function toGameVersion(version: RomVersion): GameVersion {
   return map[version];
 }
 
+/** IV / 実ステータス表示モード */
+export type StatDisplayMode = 'stats' | 'ivs';
+
 export type { IvStatKey };
 export {
   IV_VALUE_UNKNOWN,

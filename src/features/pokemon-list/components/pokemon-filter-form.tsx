@@ -36,7 +36,7 @@ import type {
   ShinyFilter,
   HiddenPowerType,
 } from '@/wasm/wasm_pkg.js';
-import type { StatDisplayMode } from './pokemon-result-columns';
+import type { StatDisplayMode } from '@/lib/game-data-names';
 import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 
 // ---------------------------------------------------------------------------

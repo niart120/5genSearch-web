@@ -7,6 +7,7 @@ import type {
   EncounterSlotConfig,
   LeadAbilityEffect,
 } from '../../wasm/wasm_pkg.js';
+import { validateGenConfig } from '@/lib/validation';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
 import type { SeedInputMode } from '@/components/forms/seed-input-section';
 
@@ -66,12 +67,7 @@ export function validatePokemonListForm(
   if (!hasSlots) {
     errors.push('ENCOUNTER_SLOTS_EMPTY');
   }
-  if (form.genConfig.user_offset < 0) {
-    errors.push('OFFSET_NEGATIVE');
-  }
-  if (form.genConfig.max_advance < form.genConfig.user_offset) {
-    errors.push('ADVANCE_RANGE_INVALID');
-  }
+  errors.push(...validateGenConfig(form.genConfig));
 
   return { errors, isValid: errors.length === 0 };
 }

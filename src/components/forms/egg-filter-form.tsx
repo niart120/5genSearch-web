@@ -18,6 +18,7 @@ import { GenderSelect } from '@/components/forms/gender-select';
 import { ShinySelect } from '@/components/forms/shiny-select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { cn } from '@/lib/utils';
+import type { StatDisplayMode } from '@/lib/game-data-names';
 import type {
   EggFilter,
   IvFilter,
@@ -26,8 +27,6 @@ import type {
   AbilitySlot,
   ShinyFilter,
 } from '@/wasm/wasm_pkg.js';
-
-type StatDisplayMode = 'stats' | 'ivs';
 
 interface EggFilterFormProps {
   value: EggFilter | undefined;

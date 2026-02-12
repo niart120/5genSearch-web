@@ -24,7 +24,7 @@ import { filterByStats } from '@/lib/stats-filter';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
-import type { StatDisplayMode } from './pokemon-result-columns';
+import type { StatDisplayMode } from '@/lib/game-data-names';
 import { ResultDetailDialog } from './result-detail-dialog';
 import type {
   GenerationConfig,

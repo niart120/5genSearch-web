@@ -3,6 +3,5 @@ export type {
   EggGenerationFormState,
   EggGenerationValidationResult,
   EggGenerationValidationErrorCode,
-  StatDisplayMode,
 } from './types';
 export { validateEggGenerationForm } from './types';

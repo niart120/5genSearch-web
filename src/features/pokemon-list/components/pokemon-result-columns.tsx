@@ -11,9 +11,9 @@ import { Button } from '@/components/ui/button';
 import { getNeedleArrow, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
-const columnHelper = createColumnHelper<UiPokemonData>();
+import type { StatDisplayMode } from '@/lib/game-data-names';
 
-type StatDisplayMode = 'stats' | 'ivs';
+const columnHelper = createColumnHelper<UiPokemonData>();
 
 interface PokemonResultColumnsOptions {
   onSelect?: (result: UiPokemonData) => void;
@@ -116,4 +116,4 @@ function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
 }
 
 export { createPokemonResultColumns };
-export type { StatDisplayMode, PokemonResultColumnsOptions };
+export type { PokemonResultColumnsOptions };
