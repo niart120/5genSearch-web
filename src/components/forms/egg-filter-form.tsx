@@ -23,7 +23,16 @@ import { ShinySelect } from '@/components/forms/shiny-select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { cn } from '@/lib/utils';
 import type { StatDisplayMode } from '@/lib/game-data-names';
-import type { StatsFilter } from '@/wasm/wasm_pkg.js';
+import type {
+  EggFilter,
+  IvFilter,
+  Nature,
+  Gender,
+  AbilitySlot,
+  ShinyFilter,
+  HiddenPowerType,
+  StatsFilter,
+} from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_STATS_FILTER: StatsFilter = {
   hp: undefined,
@@ -33,15 +42,6 @@ const DEFAULT_STATS_FILTER: StatsFilter = {
   spd: undefined,
   spe: undefined,
 };
-import type {
-  EggFilter,
-  IvFilter,
-  Nature,
-  Gender,
-  AbilitySlot,
-  ShinyFilter,
-  HiddenPowerType,
-} from '@/wasm/wasm_pkg.js';
 
 interface EggFilterFormProps {
   value: EggFilter | undefined;

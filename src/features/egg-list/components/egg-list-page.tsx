@@ -123,7 +123,7 @@ function EggListPage(): ReactElement {
     };
 
     const mergedFilter: EggFilter | undefined = (() => {
-      if (!filter && !statsFilter) return undefined;
+      if (!filter && !statsFilter) return;
       return {
         iv: filter?.iv,
         natures: filter?.natures,

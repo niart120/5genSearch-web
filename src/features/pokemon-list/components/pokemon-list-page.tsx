@@ -133,7 +133,7 @@ function PokemonListPage(): ReactElement {
 
     // statsFilter を PokemonFilter.stats に統合
     const mergedFilter: PokemonFilter | undefined = (() => {
-      if (!filter && !statsFilter) return undefined;
+      if (!filter && !statsFilter) return;
       return {
         iv: filter?.iv,
         natures: filter?.natures,
