@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 import type { StatsFilter } from '@/wasm/wasm_pkg.js';
 
-const EMPTY_STATS_FIXED: StatsFilter = {
+const DEFAULT_STATS_FILTER: StatsFilter = {
   hp: undefined,
   atk: undefined,
   def: undefined,
@@ -335,7 +335,7 @@ function EggFilterForm({
                 <Trans>Stats filter</Trans>
               </Label>
               <StatsFixedInput
-                value={effectiveStats ?? EMPTY_STATS_FIXED}
+                value={effectiveStats ?? DEFAULT_STATS_FILTER}
                 onChange={handleStatsChange}
                 disabled={filterDisabled}
               />

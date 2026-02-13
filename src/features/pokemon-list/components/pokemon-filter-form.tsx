@@ -1,7 +1,7 @@
 /**
  * ポケモンフィルター入力フォーム
  *
- * PokemonFilter (WASM 用) と StatsFilter (クライアントサイド) の入力 UI。
+ * PokemonFilter (WASM 用) と StatsFilter (WASM 用) の入力 UI。
  * フィルター有効/無効トグル、リセットボタン付き。
  * statMode に応じて IV / 実ステータスフィルターを切り替える。
  */
