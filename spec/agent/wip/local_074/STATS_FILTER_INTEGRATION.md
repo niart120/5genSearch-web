@@ -288,7 +288,7 @@ pub struct CorePokemonData {
     pub gender: Gender,
     pub shiny_type: ShinyType,
     pub ivs: Ivs,
-    pub stats: Stats,       // 新規追加
+    pub stats: Stats,
     // 種族・レベル
     pub species_id: u16,
     pub level: u8,
