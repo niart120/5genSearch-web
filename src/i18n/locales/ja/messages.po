@@ -784,7 +784,7 @@ msgstr "この機能は準備中です。"
 
 #: src/features/about/components/about-page.tsx:76
 msgid "This is an unofficial tool and is not affiliated with or endorsed by Nintendo, Game Freak, or The Pokemon Company."
-msgstr "これは非公式のツールであり、任天堂、ゲームフリーク、株式会社ポケモンとは一切関係ありません。"
+msgstr "本アプリは非公式のツールであり、任天堂、ゲームフリーク、株式会社ポケモンとは一切関係ありません。"
 
 #: src/features/about/components/about-page.tsx:43
 msgid "This project is open source."

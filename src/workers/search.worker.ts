@@ -50,6 +50,7 @@ globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
     }
 
     case 'start': {
+      // auto-init パターンでは到達しない防御的ガード
       if (!initialized) {
         postResponse({
           type: 'error',

@@ -5,7 +5,7 @@
  * WebGPU リソースの排他制御のため、単一インスタンスで運用する。
  */
 
-import { GpuDatetimeSearchIterator } from '../wasm/wasm_pkg.js';
+import { GpuDatetimeSearchIterator, health_check } from '../wasm/wasm_pkg.js';
 import type { WorkerRequest, WorkerResponse, GpuMtseedSearchTask } from './types';
 import type { GpuSearchBatch } from '../wasm/wasm_pkg.js';
 
@@ -31,6 +31,7 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
     }
 
     case 'start': {
+      // auto-init パターンでは到達しない防御的ガード
       if (!initialized) {
         postResponse({
           type: 'error',
@@ -79,6 +80,11 @@ function handleInit(): void {
   if (initialized) return;
 
   try {
+    const healthResult = health_check();
+    if (healthResult !== 'wasm-pkg is ready') {
+      throw new Error(`Health check failed: ${healthResult}`);
+    }
+
     initialized = true;
     postResponse({ type: 'ready' });
   } catch (error) {

@@ -171,7 +171,7 @@ fn bw2_initial_rand_count(memory_link: MemoryLinkState, save: SavePresence) -> u
 
 /// BW2 `NewGame` の TID/SID 決定直前まで LCG を進める
 ///
-/// 共通: Rand(1) → PT(1) → Rand(N) → PT(1) → [`NoSave`: Rand(4) → PT(1)] → Rand(4)
+/// 共通: Rand(1) → PT(1) → Rand(N) → PT(1) → [`NoSave`: Rand(4) → PT(1)] → Rand(2)[チラチーノPID] + Rand(2)[チラチーノID]
 fn bw2_new_game_before_tid_sid(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
     // BW2 共通プレフィックス: Rand(1) → PT(1)
     let mut advances = consume_random(lcg, 1);
