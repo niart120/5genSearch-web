@@ -15,12 +15,6 @@
 - `calculate_game_offset` と `calculate_trainer_info` で重複する前半処理を共通化する
 - ただしパターン数が有限かつコメントで元実装との対応が明示されているため、可読性とのトレードオフがある
 
-## 2026-02-10: pre-commit と Lingui 生成物の整合
-
-現状: `.git/hooks/pre-commit.ps1` で `src/i18n/locales/` を除外し、CI は `pnpm format:check` で全体を検査している。
-観察: フックはリポジトリ管理外のため共有されず、生成物の整形漏れが CI で検知される。
-当面の方針: `src/i18n/locales/` をチェック対象に戻し、Husky でフック設定をリポジトリ管理に含める方針を検討する。
-
 ## 2026-02-11: WASM ビルドターゲットの `bundler` 移行検討
 
 現状: `wasm-pack build --target web` で生成し、メインスレッド・Worker ともに手動で `initWasm()` を呼んで初期化している。`--target web` ではインポートだけでは WASM が使えず、初期化漏れによるバグが local_060 で発生した。
@@ -43,11 +37,6 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 1. `wasm-pkg/.cargo/config.toml` を追加し `-C target-feature=+simd128` を有効化 → 効果測定
 2. 効果不十分なら SHA-1 実装を `core::arch::wasm32` intrinsics (`v128`, `u32x4_shl` 等) に書き換え
 3. wasm-opt オプションに `--enable-simd` を追加
-
-## ~~2026-02-11: エンカウントデータの eager 読み込みとバンドルサイズ~~ (local_070 で対応済み)
-
-`import.meta.glob` を lazy 化し、全 encounter JSON を独立チャンクに分割。初期バンドルから約 2.5 MB の JSON データを除外した。
-詳細: `spec/agent/wip/local_070/ENCOUNTER_LAZY_LOADING.md`
 
 ## 2026-02-11: About ページの新設計画
 

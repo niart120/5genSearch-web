@@ -40,8 +40,10 @@ export function normalizeLocationKey(location: string): string {
 // Glob path parsing
 // ---------------------------------------------------------------------------
 
+const RE_MODULE_PATH = /\/v1\/(\w+)\/(\w+)\.json$/;
+
 function parseModulePath(path: string): { version: string; method: string } | undefined {
-  const match = path.match(/\/v1\/(\w+)\/(\w+)\.json$/);
+  const match = path.match(RE_MODULE_PATH);
   if (!match) return undefined;
   return { version: match[1], method: match[2] };
 }
