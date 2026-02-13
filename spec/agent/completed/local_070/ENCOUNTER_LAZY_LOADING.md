@@ -168,12 +168,13 @@ async function listLocations(
 スロットと種族の取得をひとつの `useEffect` に統合し、`Promise.all` で並列取得する。
 これにより `handleLocationChange` と species effect の重複呼び出しを排除する。
 
-```tsx
-// stale closure 回避用 ref (render 外で更新)
-const valueRef = useRef(value);
-useEffect(() => { valueRef.current = value; });
+`onChange` の型を `Dispatch<SetStateAction<EncounterParamsOutput>>` とし、
+functional update (`prev => ({ ...prev, ... })`) で更新する。
+これにより `useRef` による stale closure 回避が不要になり、
+effect 宣言順への暗黙の依存も排除される。
 
-// スロット + 種族一覧: 単一 effect で一括取得
+```tsx
+// スロット + 種族一覧: 単一 effect で一括取得 (functional update)
 useEffect(() => {
   let cancelled = false;
   const load = async (): Promise<void> => {
@@ -184,7 +185,7 @@ useEffect(() => {
       ]);
       if (!cancelled) {
         setSpeciesOptions(species);
-        onChange({ ...valueRef.current, slots: toSlotConfigs(slots), availableSpecies: species });
+        onChange((prev) => ({ ...prev, slots: toSlotConfigs(slots), availableSpecies: species }));
       }
     }
   };
@@ -220,7 +221,7 @@ const handleLocationChange = useCallback(
 - [x] `loader.ts`: レジストリキャッシュ + 非同期ロード関数
 - [x] `loader.ts`: 公開 API (`getEncounterSlots`, `listLocations`, `getLocationEntry`, `listStaticEncounterEntries`, `getStaticEncounterEntry`) を `async` に変更
 - [x] `helpers.ts`: loader 呼び出しを `async`/`await` に変更 (キャッシュ層は除去済み)
-- [x] コンポーネント: スロット+種族を単一 effect で並列取得 (`Promise.all`)、`handleLocationChange` は同期化
+- [x] コンポーネント: スロット+種族を単一 effect で並列取得 (`Promise.all`)、`handleLocationChange` は同期化、`onChange` は functional update (`Dispatch<SetStateAction>`) で ref 不要
 - [x] テスト: 既存テストを非同期対応に修正 (helpers キャッシュテストは除去)
 - [x] `pnpm build` が正常に完了すること (チャンク分割の確認)
 - [x] `pnpm test:run` 通過
