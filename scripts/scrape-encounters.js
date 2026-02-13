@@ -414,7 +414,7 @@ async function writeJson(file, data) {
 // Species data loading
 // ---------------------------------------------------------------------------
 
-const SPECIES_JSON_PATH = path.resolve('spec/agent/completed/local_029/gen5-species.json');
+const SPECIES_JSON_PATH = path.resolve('spec/agent/complete/local_029/gen5-species.json');
 
 let speciesDataCache = null;
 

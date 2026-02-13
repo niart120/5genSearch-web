@@ -973,7 +973,7 @@ export const STAT_HEADERS_EN = ['HP', 'Atk', 'Def', 'SpA', 'SpD', 'Spe'] as cons
 
 ## 9. 関連ドキュメント
 
-- [個体生成(ポケモン) 仕様書](../../completed/local_064/POKEMON_LIST.md)
+- [個体生成(ポケモン) 仕様書](../../complete/local_064/POKEMON_LIST.md)
 - [フロントエンド構成](../../architecture/frontend-structure.md)
 - [Worker 設計](../../architecture/worker-design.md)
 - [状態管理方針](../../architecture/state-management.md)

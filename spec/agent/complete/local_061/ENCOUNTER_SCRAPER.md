@@ -34,7 +34,7 @@ pokebook.jp の静的 HTML テーブルから BW/BW2 のエンカウントデー
 
 ### 1.5 着手条件
 
-- `gen5-species.json` が存在すること (既に `spec/agent/completed/local_029/` に配置済み)
+- `gen5-species.json` が存在すること (既に `spec/agent/complete/local_029/` に配置済み)
 - Node.js 実行環境があること
 - `cheerio` パッケージが利用可能であること
 
