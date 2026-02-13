@@ -72,36 +72,25 @@ describe('listLocations', () => {
     vi.clearAllMocks();
   });
 
-  it('returns locations from loader', () => {
+  it('returns locations from loader', async () => {
     const locations = [
       { key: 'route_1', displayNameKey: 'route_1' },
       { key: 'route_2', displayNameKey: 'route_2' },
     ];
-    mockListLocations.mockReturnValue(locations);
+    mockListLocations.mockResolvedValue(locations);
 
-    const result = listLocations('B', 'Normal');
+    const result = await listLocations('B', 'Normal');
 
     expect(result).toEqual(locations);
     expect(mockListLocations).toHaveBeenCalledWith('B', 'Normal');
   });
 
-  it('returns empty array when no locations exist', () => {
-    mockListLocations.mockReturnValue([]);
+  it('returns empty array when no locations exist', async () => {
+    mockListLocations.mockResolvedValue([]);
 
-    const result = listLocations('B', 'DustCloud');
+    const result = await listLocations('B', 'DustCloud');
 
     expect(result).toEqual([]);
-  });
-
-  it('caches results for repeated calls', () => {
-    const locations = [{ key: 'route_3', displayNameKey: 'route_3' }];
-    mockListLocations.mockReturnValue(locations);
-
-    const first = listLocations('W', 'Fishing');
-    const second = listLocations('W', 'Fishing');
-
-    expect(first).toBe(second);
-    expect(mockListLocations).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -110,10 +99,10 @@ describe('listSpecies', () => {
     vi.clearAllMocks();
   });
 
-  it('aggregates single species correctly (location)', () => {
-    mockGetEncounterSlots.mockReturnValue([makeSlot()]);
+  it('aggregates single species correctly (location)', async () => {
+    mockGetEncounterSlots.mockResolvedValue([makeSlot()]);
 
-    const result = listSpecies('B', 'Normal', 'route_10');
+    const result = await listSpecies('B', 'Normal', 'route_10');
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
@@ -127,14 +116,14 @@ describe('listSpecies', () => {
     });
   });
 
-  it('sums rates and counts appearances for duplicate species', () => {
-    mockGetEncounterSlots.mockReturnValue([
+  it('sums rates and counts appearances for duplicate species', async () => {
+    mockGetEncounterSlots.mockResolvedValue([
       makeSlot({ speciesId: 504, rate: 20, levelRange: { min: 2, max: 4 } }),
       makeSlot({ speciesId: 506, rate: 10, levelRange: { min: 3, max: 5 } }),
       makeSlot({ speciesId: 504, rate: 10, levelRange: { min: 5, max: 7 } }),
     ]);
 
-    const result = listSpecies('B', 'Normal', 'route_11');
+    const result = await listSpecies('B', 'Normal', 'route_11');
 
     const species504 = result.find((s) => s.kind === 'location' && s.speciesId === 504);
     expect(species504).toEqual({
@@ -148,14 +137,14 @@ describe('listSpecies', () => {
     });
   });
 
-  it('computes min/max level range across appearances', () => {
-    mockGetEncounterSlots.mockReturnValue([
+  it('computes min/max level range across appearances', async () => {
+    mockGetEncounterSlots.mockResolvedValue([
       makeSlot({ speciesId: 504, levelRange: { min: 10, max: 15 } }),
       makeSlot({ speciesId: 504, levelRange: { min: 5, max: 20 } }),
       makeSlot({ speciesId: 504, levelRange: { min: 8, max: 12 } }),
     ]);
 
-    const result = listSpecies('B', 'Normal', 'route_12');
+    const result = await listSpecies('B', 'Normal', 'route_12');
 
     const opt = result[0];
     expect(opt.kind).toBe('location');
@@ -165,43 +154,33 @@ describe('listSpecies', () => {
     }
   });
 
-  it('sorts by totalRate descending then speciesId ascending', () => {
-    mockGetEncounterSlots.mockReturnValue([
+  it('sorts by totalRate descending then speciesId ascending', async () => {
+    mockGetEncounterSlots.mockResolvedValue([
       makeSlot({ speciesId: 506, rate: 10 }),
       makeSlot({ speciesId: 504, rate: 20 }),
       makeSlot({ speciesId: 508, rate: 20 }),
     ]);
 
-    const result = listSpecies('B', 'Normal', 'route_13');
+    const result = await listSpecies('B', 'Normal', 'route_13');
 
     expect(result.map((s) => (s.kind === 'location' ? s.speciesId : -1))).toEqual([504, 508, 506]);
   });
 
-  it('returns empty array when no slots found', () => {
-    mockGetEncounterSlots.mockReturnValue(undefined as unknown as EncounterSlotJson[]);
+  it('returns empty array when no slots found', async () => {
+    mockGetEncounterSlots.mockResolvedValue(undefined as unknown as EncounterSlotJson[]);
 
-    const result = listSpecies('B', 'Normal', 'route_14');
+    const result = await listSpecies('B', 'Normal', 'route_14');
 
     expect(result).toEqual([]);
   });
 
-  it('caches results for repeated calls (location)', () => {
-    mockGetEncounterSlots.mockReturnValue([makeSlot()]);
-
-    const first = listSpecies('W', 'Normal', 'route_15');
-    const second = listSpecies('W', 'Normal', 'route_15');
-
-    expect(first).toBe(second);
-    expect(mockGetEncounterSlots).toHaveBeenCalledTimes(1);
-  });
-
-  it('returns static entries with kind: static', () => {
-    mockListStaticEntries.mockReturnValue([
+  it('returns static entries with kind: static', async () => {
+    mockListStaticEntries.mockResolvedValue([
       makeStaticEntry({ id: 'reshiram-n-castle', speciesId: 643, level: 50 }),
       makeStaticEntry({ id: 'cobalion-guidance', speciesId: 638, level: 42 }),
     ]);
 
-    const result = listSpecies('B', 'StaticSymbol');
+    const result = await listSpecies('B', 'StaticSymbol');
 
     expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({
@@ -213,28 +192,18 @@ describe('listSpecies', () => {
     });
   });
 
-  it('returns empty array for static type with no data', () => {
-    mockListStaticEntries.mockReturnValue([]);
+  it('returns empty array for static type with no data', async () => {
+    mockListStaticEntries.mockResolvedValue([]);
 
-    const result = listSpecies('B', 'StaticEvent');
+    const result = await listSpecies('B', 'StaticEvent');
 
     expect(result).toEqual([]);
   });
 
-  it('caches results for repeated calls (static)', () => {
-    mockListStaticEntries.mockReturnValue([makeStaticEntry()]);
+  it('includes isShinyLocked in static entries', async () => {
+    mockListStaticEntries.mockResolvedValue([makeStaticEntry({ isShinyLocked: true })]);
 
-    const first = listSpecies('W', 'StaticFossil');
-    const second = listSpecies('W', 'StaticFossil');
-
-    expect(first).toBe(second);
-    expect(mockListStaticEntries).toHaveBeenCalledTimes(1);
-  });
-
-  it('includes isShinyLocked in static entries', () => {
-    mockListStaticEntries.mockReturnValue([makeStaticEntry({ isShinyLocked: true })]);
-
-    const result = listSpecies('B2', 'StaticSymbol');
+    const result = await listSpecies('B2', 'StaticSymbol');
 
     expect(result[0].kind).toBe('static');
     if (result[0].kind === 'static') {

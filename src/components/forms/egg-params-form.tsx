@@ -5,7 +5,7 @@
  * 表示順: 親個体値 → ♀親特性 → かわらずのいし → 性別比 → フラグ群 → offset/max_advance
  */
 
-import { useState, useCallback, useRef, useEffect, memo } from 'react';
+import { useState, useCallback, memo, type Dispatch, type SetStateAction } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -47,8 +47,10 @@ import type { SupportedLocale } from '@/i18n';
 interface EggParamsFormProps {
   value: EggGenerationParams;
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
-  onChange: (params: EggGenerationParams) => void;
-  onGenConfigChange: (config: Pick<GenerationConfig, 'user_offset' | 'max_advance'>) => void;
+  onChange: Dispatch<SetStateAction<EggGenerationParams>>;
+  onGenConfigChange: Dispatch<
+    SetStateAction<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>
+  >;
   speciesId?: number | undefined;
   onSpeciesIdChange?: (speciesId: number | undefined) => void;
   disabled?: boolean;
@@ -78,19 +80,13 @@ const ParentIvsInput = memo(function ParentIvsInput({
     Object.fromEntries(IV_STAT_KEYS.map((stat) => [stat, ivToDisplay(ivs[stat])]))
   );
 
-  // handleBlur から最新の localValues を参照するための ref
-  const localValuesRef = useRef(localValues);
-  useEffect(() => {
-    localValuesRef.current = localValues;
-  });
-
   const handleChange = useCallback((stat: (typeof IV_STAT_KEYS)[number], raw: string) => {
     setLocalValues((prev) => ({ ...prev, [stat]: raw }));
   }, []);
 
   const handleBlur = useCallback(
     (stat: (typeof IV_STAT_KEYS)[number]) => {
-      const raw = (localValuesRef.current[stat] ?? '').trim();
+      const raw = (localValues[stat] ?? '').trim();
       // 空欄 or "?" → 不明 (32)
       if (raw === '' || raw === '?') {
         setLocalValues((prev) => ({ ...prev, [stat]: '?' }));
@@ -105,7 +101,7 @@ const ParentIvsInput = memo(function ParentIvsInput({
       setLocalValues((prev) => ({ ...prev, [stat]: String(clamped) }));
       onChange({ ...ivs, [stat]: clamped });
     },
-    [ivs, onChange]
+    [ivs, onChange, localValues]
   );
 
   const handleUnknownToggle = useCallback(
@@ -181,9 +177,9 @@ function EggParamsForm({
 
   const update = useCallback(
     (partial: Partial<EggGenerationParams>) => {
-      onChange({ ...value, ...partial });
+      onChange((prev) => ({ ...prev, ...partial }));
     },
-    [value, onChange]
+    [onChange]
   );
 
   const handleEverstoneChange = useCallback(
@@ -218,14 +214,14 @@ function EggParamsForm({
   const handleOffsetBlur = useCallback(() => {
     const clamped = clampOrDefault(localOffset, { defaultValue: 0, min: 0, max: 999_999 });
     setLocalOffset(String(clamped));
-    onGenConfigChange({ ...genConfig, user_offset: clamped });
-  }, [localOffset, genConfig, onGenConfigChange]);
+    onGenConfigChange((prev) => ({ ...prev, user_offset: clamped }));
+  }, [localOffset, onGenConfigChange]);
 
   const handleMaxAdvanceBlur = useCallback(() => {
     const clamped = clampOrDefault(localMaxAdvance, { defaultValue: 100, min: 0, max: 999_999 });
     setLocalMaxAdvance(String(clamped));
-    onGenConfigChange({ ...genConfig, max_advance: clamped });
-  }, [localMaxAdvance, genConfig, onGenConfigChange]);
+    onGenConfigChange((prev) => ({ ...prev, max_advance: clamped }));
+  }, [localMaxAdvance, onGenConfigChange]);
 
   return (
     <section className="flex flex-col gap-2">

@@ -12,66 +12,66 @@ import { listLocations, listSpecies, isLocationBasedEncounter } from '@/data/enc
 
 describe('Encounter Service Integration', () => {
   describe('registry initialization', () => {
-    it('loads wild encounter JSON via import.meta.glob', () => {
-      const locations = listLocationsFromLoader('B', 'Normal');
+    it('loads wild encounter JSON via import.meta.glob', async () => {
+      const locations = await listLocationsFromLoader('B', 'Normal');
       expect(locations.length).toBeGreaterThan(0);
     });
 
-    it('loads all four game versions for wild encounters', () => {
+    it('loads all four game versions for wild encounters', async () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
-        const locations = listLocationsFromLoader(version, 'Normal');
+        const locations = await listLocationsFromLoader(version, 'Normal');
         expect(locations.length).toBeGreaterThan(0);
       }
     });
 
-    it('loads static encounter JSON for StaticSymbol', () => {
+    it('loads static encounter JSON for StaticSymbol', async () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
-        const entries = listStaticEncounterEntries(version, 'StaticSymbol');
+        const entries = await listStaticEncounterEntries(version, 'StaticSymbol');
         expect(entries.length).toBeGreaterThan(0);
       }
     });
 
-    it('loads static encounter JSON for StaticStarter', () => {
+    it('loads static encounter JSON for StaticStarter', async () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
-        const entries = listStaticEncounterEntries(version, 'StaticStarter');
+        const entries = await listStaticEncounterEntries(version, 'StaticStarter');
         expect(entries).toHaveLength(3);
       }
     });
 
-    it('loads static encounter JSON for StaticFossil', () => {
+    it('loads static encounter JSON for StaticFossil', async () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
-        const entries = listStaticEncounterEntries(version, 'StaticFossil');
+        const entries = await listStaticEncounterEntries(version, 'StaticFossil');
         expect(entries.length).toBeGreaterThan(0);
       }
     });
 
-    it('loads Roamer data only for B and W', () => {
+    it('loads Roamer data only for B and W', async () => {
       for (const version of ['B', 'W'] as const) {
-        const entries = listStaticEncounterEntries(version, 'Roamer');
+        const entries = await listStaticEncounterEntries(version, 'Roamer');
         expect(entries).toHaveLength(1);
       }
       for (const version of ['B2', 'W2'] as const) {
-        const entries = listStaticEncounterEntries(version, 'Roamer');
+        const entries = await listStaticEncounterEntries(version, 'Roamer');
         expect(entries).toHaveLength(0);
       }
     });
   });
 
   describe('getEncounterSlots', () => {
-    it('returns slots for a known location', () => {
-      const locations = listLocationsFromLoader('B', 'Normal');
+    it('returns slots for a known location', async () => {
+      const locations = await listLocationsFromLoader('B', 'Normal');
       expect(locations.length).toBeGreaterThan(0);
 
       const firstLoc = locations[0];
-      const slots = getEncounterSlots('B', firstLoc.key, 'Normal');
+      const slots = await getEncounterSlots('B', firstLoc.key, 'Normal');
       expect(slots).toBeDefined();
       expect(slots!.length).toBeGreaterThan(0);
     });
 
-    it('returns slots with valid structure', () => {
-      const locations = listLocationsFromLoader('B', 'Normal');
+    it('returns slots with valid structure', async () => {
+      const locations = await listLocationsFromLoader('B', 'Normal');
       const firstLoc = locations[0];
-      const slots = getEncounterSlots('B', firstLoc.key, 'Normal')!;
+      const slots = (await getEncounterSlots('B', firstLoc.key, 'Normal'))!;
 
       for (const slot of slots) {
         expect(slot.speciesId).toBeTypeOf('number');
@@ -84,8 +84,8 @@ describe('Encounter Service Integration', () => {
       }
     });
 
-    it('returns undefined for unknown location', () => {
-      const slots = getEncounterSlots('B', 'nonexistent_location', 'Normal');
+    it('returns undefined for unknown location', async () => {
+      const slots = await getEncounterSlots('B', 'nonexistent_location', 'Normal');
       expect(slots).toBeUndefined();
     });
   });
@@ -95,22 +95,22 @@ describe('Encounter Service Integration', () => {
       expect(isLocationBasedEncounter('PokemonShadow')).toBe(true);
     });
 
-    it('has PokemonShadow locations for all versions', () => {
+    it('has PokemonShadow locations for all versions', async () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
-        const locations = listLocationsFromLoader(version, 'PokemonShadow');
+        const locations = await listLocationsFromLoader(version, 'PokemonShadow');
         expect(locations.length).toBeGreaterThan(0);
       }
     });
 
-    it('includes driftveil_drawbridge and marvelous_bridge', () => {
-      const locations = listLocationsFromLoader('B', 'PokemonShadow');
+    it('includes driftveil_drawbridge and marvelous_bridge', async () => {
+      const locations = await listLocationsFromLoader('B', 'PokemonShadow');
       const keys = locations.map((l) => l.key);
       expect(keys).toContain('driftveil_drawbridge');
       expect(keys).toContain('marvelous_bridge');
     });
 
-    it('bridge locations are not in ShakingGrass', () => {
-      const locations = listLocationsFromLoader('B', 'ShakingGrass');
+    it('bridge locations are not in ShakingGrass', async () => {
+      const locations = await listLocationsFromLoader('B', 'ShakingGrass');
       const keys = locations.map((l) => l.key);
       expect(keys).not.toContain('driftveil_drawbridge');
       expect(keys).not.toContain('marvelous_bridge');
@@ -118,8 +118,8 @@ describe('Encounter Service Integration', () => {
   });
 
   describe('listLocations (loader)', () => {
-    it('returns non-empty list for known version and method', () => {
-      const locations = listLocationsFromLoader('B', 'Normal');
+    it('returns non-empty list for known version and method', async () => {
+      const locations = await listLocationsFromLoader('B', 'Normal');
       expect(locations.length).toBeGreaterThan(0);
 
       for (const loc of locations) {
@@ -130,17 +130,17 @@ describe('Encounter Service Integration', () => {
       }
     });
 
-    it('returns empty list for unknown method', () => {
-      const locations = listLocationsFromLoader('B', 'UnknownMethod');
+    it('returns empty list for unknown method', async () => {
+      const locations = await listLocationsFromLoader('B', 'UnknownMethod');
       expect(locations).toEqual([]);
     });
   });
 
   describe('converter pipeline', () => {
-    it('converts real JSON slots to WASM format (wild)', () => {
-      const locations = listLocationsFromLoader('B', 'Normal');
+    it('converts real JSON slots to WASM format (wild)', async () => {
+      const locations = await listLocationsFromLoader('B', 'Normal');
       const firstLoc = locations[0];
-      const slots = getEncounterSlots('B', firstLoc.key, 'Normal')!;
+      const slots = (await getEncounterSlots('B', firstLoc.key, 'Normal'))!;
 
       const configs = toEncounterSlotConfigs(slots);
       expect(configs).toHaveLength(slots.length);
@@ -155,8 +155,8 @@ describe('Encounter Service Integration', () => {
       }
     });
 
-    it('converts real static entry to WASM format', () => {
-      const entries = listStaticEncounterEntries('B', 'StaticSymbol');
+    it('converts real static entry to WASM format', async () => {
+      const entries = await listStaticEncounterEntries('B', 'StaticSymbol');
       expect(entries.length).toBeGreaterThan(0);
 
       const config = toEncounterSlotConfigFromEntry(entries[0]);
@@ -169,8 +169,8 @@ describe('Encounter Service Integration', () => {
   });
 
   describe('unified helpers with real data', () => {
-    it('listLocations returns location options for wild encounters', () => {
-      const options = listLocations('B', 'Normal');
+    it('listLocations returns location options for wild encounters', async () => {
+      const options = await listLocations('B', 'Normal');
       expect(options.length).toBeGreaterThan(0);
 
       for (const opt of options) {
@@ -179,10 +179,10 @@ describe('Encounter Service Integration', () => {
       }
     });
 
-    it('listSpecies aggregates wild species from real data', () => {
-      const locations = listLocations('B', 'Normal');
+    it('listSpecies aggregates wild species from real data', async () => {
+      const locations = await listLocations('B', 'Normal');
       const firstLoc = locations[0];
-      const species = listSpecies('B', 'Normal', firstLoc.key);
+      const species = await listSpecies('B', 'Normal', firstLoc.key);
       expect(species.length).toBeGreaterThan(0);
 
       for (const sp of species) {
@@ -196,8 +196,8 @@ describe('Encounter Service Integration', () => {
       }
     });
 
-    it('listSpecies returns static entries for StaticSymbol', () => {
-      const species = listSpecies('B', 'StaticSymbol');
+    it('listSpecies returns static entries for StaticSymbol', async () => {
+      const species = await listSpecies('B', 'StaticSymbol');
       expect(species.length).toBeGreaterThan(0);
 
       for (const sp of species) {

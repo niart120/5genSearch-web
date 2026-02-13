@@ -5,7 +5,15 @@
  * フォーム内でエンカウント関連の状態をすべて管理し、onChange で集約結果を親に報告する。
  */
 
-import { useState, useCallback, useEffect, useMemo, type ReactElement } from 'react';
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  type Dispatch,
+  type ReactElement,
+  type SetStateAction,
+} from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,7 +57,7 @@ import type { EncounterType, EncounterMethod, RomVersion } from '@/wasm/wasm_pkg
 
 interface PokemonParamsFormProps {
   value: EncounterParamsOutput;
-  onChange: (params: EncounterParamsOutput) => void;
+  onChange: Dispatch<SetStateAction<EncounterParamsOutput>>;
   version: RomVersion;
   disabled?: boolean;
 }
@@ -90,20 +98,58 @@ function PokemonParamsForm({
     encounterType as EncounterMethodKey | StaticEncounterTypeKey
   );
 
-  // ロケーション一覧
-  const locations = useMemo<LocationOption[]>(() => {
-    if (!isLocationBased) return [];
-    return listLocations(gameVersion, encounterType as EncounterMethodKey);
+  // ロケーション一覧 (非同期ロード)
+  const [locations, setLocations] = useState<LocationOption[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async (): Promise<void> => {
+      const result = isLocationBased
+        ? await listLocations(gameVersion, encounterType as EncounterMethodKey)
+        : [];
+      if (!cancelled) setLocations(result);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [gameVersion, encounterType, isLocationBased]);
 
-  // 種族一覧
-  const speciesOptions = useMemo<EncounterSpeciesOption[]>(() => {
-    if (isLocationBased) {
-      if (!selectedLocation) return [];
-      return listSpecies(gameVersion, encounterType as EncounterMethodKey, selectedLocation);
-    }
-    return listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
-  }, [gameVersion, encounterType, isLocationBased, selectedLocation]);
+  // スロット + 種族一覧 (非同期ロード — 単一 effect で一括取得)
+  // ロケーション変更時のスロット取得もここで行い、handleLocationChange との重複を排除する。
+  const [speciesOptions, setSpeciesOptions] = useState<EncounterSpeciesOption[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async (): Promise<void> => {
+      if (isLocationBased) {
+        if (!selectedLocation) {
+          if (!cancelled) {
+            setSpeciesOptions([]);
+            onChange((prev) => ({ ...prev, slots: [], availableSpecies: [] }));
+          }
+          return;
+        }
+        const [slots, species] = await Promise.all([
+          getEncounterSlots(gameVersion, selectedLocation, encounterType),
+          listSpecies(gameVersion, encounterType as EncounterMethodKey, selectedLocation),
+        ]);
+        if (!cancelled) {
+          const newSlots = slots ? toEncounterSlotConfigs(slots) : [];
+          setSpeciesOptions(species);
+          onChange((prev) => ({ ...prev, slots: newSlots, availableSpecies: species }));
+        }
+      } else {
+        const species = await listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
+        if (!cancelled) {
+          setSpeciesOptions(species);
+          onChange((prev) => ({ ...prev, availableSpecies: species }));
+        }
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [gameVersion, encounterType, isLocationBased, selectedLocation, onChange]);
 
   // 固定エンカウントの種族名解決 (WASM 経由)
   // 解決対象の speciesId リストをキー化し、effect 内では非同期 setState のみ行う
@@ -150,65 +196,64 @@ function PokemonParamsForm({
 
       const firstType = cat.types[0];
       const newType = firstType as EncounterType;
-      const newMethod = isLocationBasedEncounter(firstType)
-        ? value.encounterMethod
-        : ('Stationary' as EncounterMethod);
       setSelectedLocation('');
       setSelectedStaticEntry('');
-      onChange({
-        ...value,
-        encounterType: newType,
-        encounterMethod: newMethod,
-        slots: [],
-        availableSpecies: [],
+      onChange((prev) => {
+        const newMethod = isLocationBasedEncounter(firstType)
+          ? prev.encounterMethod
+          : ('Stationary' as EncounterMethod);
+        return {
+          ...prev,
+          encounterType: newType,
+          encounterMethod: newMethod,
+          slots: [],
+          availableSpecies: [],
+        };
       });
     },
-    [value, onChange]
+    [onChange]
   );
 
   // エンカウントサブタイプ変更
   const handleEncounterTypeChange = useCallback(
     (newValue: string) => {
       const newType = newValue as EncounterType;
-      const newMethod = isLocationBasedEncounter(
-        newValue as EncounterMethodKey | StaticEncounterTypeKey
-      )
-        ? value.encounterMethod
-        : ('Stationary' as EncounterMethod);
       setSelectedLocation('');
       setSelectedStaticEntry('');
-      onChange({
-        ...value,
-        encounterType: newType,
-        encounterMethod: newMethod,
-        slots: [],
-        availableSpecies: [],
+      onChange((prev) => {
+        const newMethod = isLocationBasedEncounter(
+          newValue as EncounterMethodKey | StaticEncounterTypeKey
+        )
+          ? prev.encounterMethod
+          : ('Stationary' as EncounterMethod);
+        return {
+          ...prev,
+          encounterType: newType,
+          encounterMethod: newMethod,
+          slots: [],
+          availableSpecies: [],
+        };
       });
     },
-    [value, onChange]
+    [onChange]
   );
 
-  // ロケーション変更
-  const handleLocationChange = useCallback(
-    (locationKey: string) => {
-      setSelectedLocation(locationKey);
-      const slots = getEncounterSlots(gameVersion, locationKey, encounterType);
-      const newSlots = slots ? toEncounterSlotConfigs(slots) : [];
-      const newSpecies = listSpecies(gameVersion, encounterType as EncounterMethodKey, locationKey);
-      onChange({ ...value, slots: newSlots, availableSpecies: newSpecies });
-    },
-    [gameVersion, encounterType, value, onChange]
-  );
+  // ロケーション変更 — state 更新のみ。スロット・種族の取得は effect に委譲。
+  const handleLocationChange = useCallback((locationKey: string) => {
+    setSelectedLocation(locationKey);
+  }, []);
 
   // 固定ポケモン変更
   const handleStaticEntryChange = useCallback(
     (entryId: string) => {
       setSelectedStaticEntry(entryId);
-      const entry = getStaticEncounterEntry(gameVersion, encounterType, entryId);
-      const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
-      onChange({ ...value, slots: newSlots });
+      void (async () => {
+        const entry = await getStaticEncounterEntry(gameVersion, encounterType, entryId);
+        const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
+        onChange((prev) => ({ ...prev, slots: newSlots }));
+      })();
     },
-    [gameVersion, encounterType, value, onChange]
+    [gameVersion, encounterType, onChange]
   );
 
   // offset / max_advance blur handlers
@@ -219,8 +264,8 @@ function PokemonParamsForm({
       max: 999_999,
     });
     setLocalOffset(String(clamped));
-    onChange({ ...value, genConfig: { ...value.genConfig, user_offset: clamped } });
-  }, [localOffset, value, onChange]);
+    onChange((prev) => ({ ...prev, genConfig: { ...prev.genConfig, user_offset: clamped } }));
+  }, [localOffset, onChange]);
 
   const handleMaxAdvBlur = useCallback(() => {
     const clamped = clampOrDefault(localMaxAdv, {
@@ -229,8 +274,8 @@ function PokemonParamsForm({
       max: 999_999,
     });
     setLocalMaxAdv(String(clamped));
-    onChange({ ...value, genConfig: { ...value.genConfig, max_advance: clamped } });
-  }, [localMaxAdv, value, onChange]);
+    onChange((prev) => ({ ...prev, genConfig: { ...prev.genConfig, max_advance: clamped } }));
+  }, [localMaxAdv, onChange]);
 
   return (
     <section className="flex flex-col gap-3">
@@ -340,7 +385,9 @@ function PokemonParamsForm({
           </Label>
           <Select
             value={encounterMethod}
-            onValueChange={(v) => onChange({ ...value, encounterMethod: v as EncounterMethod })}
+            onValueChange={(v) =>
+              onChange((prev) => ({ ...prev, encounterMethod: v as EncounterMethod }))
+            }
             disabled={disabled}
           >
             <SelectTrigger className="h-8 text-xs">
@@ -357,7 +404,7 @@ function PokemonParamsForm({
       {/* 先頭特性 */}
       <LeadAbilitySection
         leadAbility={leadAbility}
-        onChange={(newAbility) => onChange({ ...value, leadAbility: newAbility })}
+        onChange={(newAbility) => onChange((prev) => ({ ...prev, leadAbility: newAbility }))}
         language={language}
         disabled={disabled}
       />
