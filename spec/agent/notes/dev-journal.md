@@ -50,12 +50,9 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 2. 効果不十分なら SHA-1 実装を `core::arch::wasm32` intrinsics (`v128`, `u32x4_shl` 等) に書き換え
 3. wasm-opt オプションに `--enable-simd` を追加
 
-## 2026-02-11: EggParamsForm の配置先
+## 2026-02-11: EggParamsForm の配置先 (対処済み)
 
-現状: `src/features/egg-search/components/egg-params-form.tsx` に配置。孵化検索専用コンポーネント。
-観察: 個体生成 (egg-generation) でも同じ `EggGenerationParams` の入力 UI が必要になる見込み。
-`SearchContextForm` や `KeySpecInput` と同様に `src/components/forms/` に昇格すれば複数機能で共有可能。
-当面の方針: 個体生成機能の仕様確定時に移動する。現状では props が `EggGenerationParams` + `GenerationConfig` で WASM 型ベースのため、移動時の変更は最小限で済む。`EggFilterForm` も同様に共有候補。
+対処済み: `src/components/forms/egg-params-form.tsx` に移動済み。`EggFilterForm` も `src/components/forms/egg-filter-form.tsx` に配置済み。
 
 ## 2026-02-11: エンカウントデータの eager 読み込みとバンドルサイズ
 
