@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import wasmInit, {
+import { describe, it, expect } from 'vitest';
+import {
   health_check,
   resolve_seeds,
   generate_pokemon_list,
@@ -35,11 +35,6 @@ async function checkGpuDeviceAvailable(): Promise<boolean> {
 }
 
 describe('WASM Binding Verification', () => {
-  beforeAll(async () => {
-    // Browser Mode では fetch ベースで WASM を読み込む
-    await wasmInit();
-  });
-
   describe('health_check', () => {
     it('should return ready message', () => {
       const result = health_check();

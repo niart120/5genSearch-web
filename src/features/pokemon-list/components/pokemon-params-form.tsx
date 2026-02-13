@@ -30,7 +30,7 @@ import {
   getEncounterMethodName,
   toGameVersion,
 } from '@/lib/game-data-names';
-import { initMainThreadWasm } from '@/services/wasm-init';
+
 import { useUiStore } from '@/stores/settings/ui';
 import {
   isLocationBasedEncounter,
@@ -164,24 +164,14 @@ function PokemonParamsForm({
             .map((s) => s.speciesId),
     [speciesOptions, isLocationBased]
   );
-  const [resolvedNames, setResolvedNames] = useState<Map<number, string>>(new Map());
-  useEffect(() => {
-    if (staticSpeciesIds.length === 0) return;
-    let cancelled = false;
-    void initMainThreadWasm().then(() => {
-      if (cancelled) return;
-      const map = new Map<number, string>();
-      for (const id of staticSpeciesIds) {
-        map.set(id, get_species_name(id, language));
-      }
-      setResolvedNames(map);
-    });
-    return () => {
-      cancelled = true;
-    };
+  const speciesNames = useMemo(() => {
+    if (staticSpeciesIds.length === 0) return new Map<number, string>();
+    const map = new Map<number, string>();
+    for (const id of staticSpeciesIds) {
+      map.set(id, get_species_name(id, language));
+    }
+    return map;
   }, [staticSpeciesIds, language]);
-  // staticSpeciesIds が空の場合は resolvedNames を使わず空 Map を返す
-  const speciesNames = staticSpeciesIds.length > 0 ? resolvedNames : new Map<number, string>();
 
   // offset / max_advance ローカル state
   const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));

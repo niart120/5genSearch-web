@@ -74,7 +74,7 @@ describe('Header', () => {
       );
       const nav = screen.getByRole('navigation', { name: 'Category navigation' });
       const buttons = nav.querySelectorAll('button');
-      expect(buttons).toHaveLength(3);
+      expect(buttons).toHaveLength(4);
     });
 
     it('Search, Generation, Tools ラベルが表示される', () => {

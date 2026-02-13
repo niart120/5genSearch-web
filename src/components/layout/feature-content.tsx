@@ -6,6 +6,7 @@ import { DatetimeSearchPage } from '@/features/datetime-search';
 import { EggSearchPage } from '@/features/egg-search';
 import { PokemonListPage } from '@/features/pokemon-list';
 import { EggListPage } from '@/features/egg-list';
+import { AboutPage } from '@/features/about';
 
 function renderFeature(featureId: FeatureId) {
   switch (featureId) {
@@ -20,6 +21,9 @@ function renderFeature(featureId: FeatureId) {
     }
     case 'egg-list': {
       return <EggListPage />;
+    }
+    case 'about': {
+      return <AboutPage />;
     }
     default: {
       return <PlaceholderPage featureId={featureId} />;

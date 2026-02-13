@@ -5,11 +5,8 @@
  * 既知の MT Seed に対して期待する SeedOrigin が返ることを検証する。
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import wasmInit, {
-  generate_mtseed_search_tasks,
-  MtseedDatetimeSearcher,
-} from '../../wasm/wasm_pkg.js';
+import { describe, it, expect } from 'vitest';
+import { generate_mtseed_search_tasks, MtseedDatetimeSearcher } from '../../wasm/wasm_pkg.js';
 import type { DatetimeSearchContext, MtSeed, SeedOrigin } from '../../wasm/wasm_pkg.js';
 
 /** 仕様書 5.3 のテストデータ */
@@ -48,10 +45,6 @@ const testContext: DatetimeSearchContext = {
 };
 
 describe('MtseedDatetimeSearch Integration', () => {
-  beforeAll(async () => {
-    await wasmInit();
-  });
-
   it('タスク生成で複数タスクに分割される', () => {
     const targetSeeds: MtSeed[] = [0x12_34_56_78];
     const tasks = generate_mtseed_search_tasks(testContext, targetSeeds, 4);

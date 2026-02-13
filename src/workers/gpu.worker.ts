@@ -5,12 +5,9 @@
  * WebGPU リソースの排他制御のため、単一インスタンスで運用する。
  */
 
-import initWasm, { GpuDatetimeSearchIterator } from '../wasm/wasm_pkg.js';
+import { GpuDatetimeSearchIterator, health_check } from '../wasm/wasm_pkg.js';
 import type { WorkerRequest, WorkerResponse, GpuMtseedSearchTask } from './types';
 import type { GpuSearchBatch } from '../wasm/wasm_pkg.js';
-
-// WASM バイナリの絶対パス（public/wasm/ から配信）
-const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
 
 // =============================================================================
 // State
@@ -29,11 +26,12 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
 
   switch (data.type) {
     case 'init': {
-      await handleInit();
+      handleInit();
       break;
     }
 
     case 'start': {
+      // auto-init パターンでは到達しない防御的ガード
       if (!initialized) {
         postResponse({
           type: 'error',
@@ -69,14 +67,24 @@ globalThis.addEventListener('message', async (e: MessageEvent<WorkerRequest>) =>
   }
 });
 
+// bundler target では WASM はモジュール読み込み時に自動初期化される。
+// module Worker の top-level await 中に postMessage が消失する問題を回避するため、
+// message listener 登録後に自動で初期化を実行する。
+handleInit();
+
 // =============================================================================
 // Init Handler
 // =============================================================================
 
-async function handleInit(): Promise<void> {
+function handleInit(): void {
+  if (initialized) return;
+
   try {
-    // Worker 内で独立して WASM を初期化
-    await initWasm({ module_or_path: WASM_URL });
+    const healthResult = health_check();
+    if (healthResult !== 'wasm-pkg is ready') {
+      throw new Error(`Health check failed: ${healthResult}`);
+    }
+
     initialized = true;
     postResponse({ type: 'ready' });
   } catch (error) {

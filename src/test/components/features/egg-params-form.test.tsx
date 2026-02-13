@@ -4,6 +4,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EggParamsForm } from '@/components/forms/egg-params-form';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { useUiStore } from '@/stores/settings/ui';
+
+// jsdom 環境では WASM をロードできないため、値 import をモックする
+vi.mock('@/wasm/wasm_pkg.js', () => ({
+  get_species_name: vi.fn(() => 'Bulbasaur'),
+}));
 import type { EggGenerationParams, Ivs } from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_IVS: Ivs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };

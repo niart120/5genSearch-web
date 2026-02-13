@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Search, ListOrdered, Wrench } from 'lucide-react';
+import { Search, ListOrdered, Wrench, Info } from 'lucide-react';
 import { CATEGORIES } from '@/lib/navigation';
 import type { Category } from '@/lib/navigation';
 import { CATEGORY_LABELS } from './navigation-labels';
@@ -10,6 +10,7 @@ const CATEGORY_ICONS: Record<Category, ReactElement> = {
   search: <Search className="size-5" />,
   generation: <ListOrdered className="size-5" />,
   tools: <Wrench className="size-5" />,
+  about: <Info className="size-5" />,
 };
 
 function BottomNav(): ReactElement {

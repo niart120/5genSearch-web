@@ -102,107 +102,138 @@ fn extra_process(lcg: &mut Lcg64) -> u32 {
     advances
 }
 
-// ===== BW パターン (元実装準拠) =====
+// ===== BW 系オフセット計算 =====
 
-fn bw_new_game_with_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW 始めから（セーブ有り）- リファレンス実装準拠
-    advances += probability_table_multiple(lcg, 2); // PT×2
-    advances += consume_random(lcg, 1); // チラーミィPID決定
-    advances += consume_random(lcg, 1); // チラーミィID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    // 住人決定は別途計算されるためoffsetには含めない
+/// BW `NewGame` の TID/SID 決定直前まで LCG を進める
+///
+/// - `WithSave`: PT(2) → Rand(2)
+/// - `NoSave`:   PT(3) → Rand(2)
+fn bw_new_game_before_tid_sid(lcg: &mut Lcg64, save: SavePresence) -> u32 {
+    let pt_count = match save {
+        SavePresence::WithSave => 2,
+        SavePresence::NoSave => 3,
+    };
+    let mut advances = probability_table_multiple(lcg, pt_count);
+    // チラーミィ PID + ID
+    advances += consume_random(lcg, 2);
     advances
 }
 
-fn bw_new_game_no_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW 始めから（セーブ無し）- リファレンス実装準拠
-    advances += probability_table_multiple(lcg, 3); // PT×3
-    advances += consume_random(lcg, 1); // チラーミィPID決定
-    advances += consume_random(lcg, 1); // チラーミィID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    // 住人決定は別途計算されるためoffsetには含めない
+/// BW のゲームオフセットを計算
+fn bw_game_offset(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
+    match config.start_mode {
+        StartMode::Continue => {
+            // Rand(1) → PT(5)
+            let mut advances = consume_random(lcg, 1);
+            advances += probability_table_multiple(lcg, 5);
+            advances
+        }
+        StartMode::NewGame => {
+            let mut advances = bw_new_game_before_tid_sid(lcg, config.save);
+            // TID/SID 決定
+            advances += consume_random(lcg, 1);
+            // Post-TidSid
+            match config.save {
+                SavePresence::WithSave => {
+                    advances += probability_table_multiple(lcg, 4);
+                }
+                SavePresence::NoSave => {
+                    advances += consume_random(lcg, 1);
+                    advances += probability_table_multiple(lcg, 4);
+                }
+            }
+            advances
+        }
+    }
+}
+
+/// BW の `TrainerInfo` を計算
+fn bw_trainer_info(lcg: &mut Lcg64, save: SavePresence) -> TrainerInfo {
+    bw_new_game_before_tid_sid(lcg, save);
+    trainer_info_from_lcg(lcg)
+}
+
+// ===== BW2 系オフセット計算 =====
+
+/// BW2 共通プレフィックス直後の Rand 消費回数を決定
+///
+/// | MemoryLink | Save     | Rand |
+/// |------------|----------|------|
+/// | Enabled    | *        | 2    |
+/// | Disabled   | WithSave | 3    |
+/// | Disabled   | NoSave   | 2    |
+fn bw2_initial_rand_count(memory_link: MemoryLinkState, save: SavePresence) -> u32 {
+    match (memory_link, save) {
+        (MemoryLinkState::Disabled, SavePresence::WithSave) => 3,
+        (MemoryLinkState::Enabled, _) | (MemoryLinkState::Disabled, SavePresence::NoSave) => 2,
+    }
+}
+
+/// BW2 `NewGame` の TID/SID 決定直前まで LCG を進める
+///
+/// 共通: Rand(1) → PT(1) → Rand(N) → PT(1) → [`NoSave`: Rand(4) → PT(1)] → Rand(2)[チラチーノPID] + Rand(2)[チラチーノID]
+fn bw2_new_game_before_tid_sid(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
+    // BW2 共通プレフィックス: Rand(1) → PT(1)
+    let mut advances = consume_random(lcg, 1);
+    advances += probability_table_process(lcg);
+
+    // MemoryLink / Save による初期 Rand 消費
+    advances += consume_random(lcg, bw2_initial_rand_count(config.memory_link, config.save));
+
+    // PT(1)
+    advances += probability_table_process(lcg);
+
+    // NoSave: 追加の Rand(4) → PT(1)
+    if config.save == SavePresence::NoSave {
+        advances += consume_random(lcg, 4);
+        advances += probability_table_process(lcg);
+    }
+
+    // チラチーノ PID + ID
+    advances += consume_random(lcg, 2);
+    advances += consume_random(lcg, 2);
+
     advances
 }
 
-fn bw_continue(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW 続きから - リファレンス実装準拠
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 5); // PT×5
-    advances
+/// BW2 のゲームオフセットを計算
+fn bw2_game_offset(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
+    match config.start_mode {
+        StartMode::Continue => {
+            // Rand(1) → PT(1) → Rand(N) → PT(4) → Extra
+            let mut advances = consume_random(lcg, 1);
+            advances += probability_table_process(lcg);
+            advances +=
+                consume_random(lcg, bw2_initial_rand_count(config.memory_link, config.save));
+            advances += probability_table_multiple(lcg, 4);
+            advances += extra_process(lcg);
+            advances
+        }
+        StartMode::NewGame => {
+            let mut advances = bw2_new_game_before_tid_sid(lcg, config);
+            // TID/SID 決定
+            advances += consume_random(lcg, 1);
+            advances
+        }
+    }
 }
 
-// ===== BW2 パターン (元実装準拠) =====
-
-fn bw2_new_game_with_memory_link(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 始めから（思い出リンク済みセーブ有り）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += consume_random(lcg, 1); // チラチーノPID決定
-    advances += consume_random(lcg, 1); // チラチーノID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances
+/// BW2 の `TrainerInfo` を計算
+fn bw2_trainer_info(lcg: &mut Lcg64, config: GameStartConfig) -> TrainerInfo {
+    bw2_new_game_before_tid_sid(lcg, config);
+    trainer_info_from_lcg(lcg)
 }
 
-fn bw2_new_game_with_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 始めから（思い出リンク無しセーブ有り）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 3); // Rand×3
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += consume_random(lcg, 1); // チラチーノPID決定
-    advances += consume_random(lcg, 1); // チラチーノID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances
-}
+// ===== 共通ヘルパー =====
 
-fn bw2_new_game_no_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 始めから（セーブ無し）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 4); // Rand×4
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += consume_random(lcg, 1); // チラチーノPID決定
-    advances += consume_random(lcg, 1); // チラチーノID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances
-}
-
-fn bw2_continue_with_memory_link(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 続きから（思い出リンク済み）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    advances += extra_process(lcg); // Extra処理
-    advances
-}
-
-fn bw2_continue_no_memory_link(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 続きから（思い出リンク無し）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 3); // Rand×3
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    advances += extra_process(lcg); // Extra処理
-    advances
+/// LCG の次の乱数値から TID/SID を算出
+fn trainer_info_from_lcg(lcg: &mut Lcg64) -> TrainerInfo {
+    let rand_value = lcg.next().unwrap_or(0);
+    let combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
+    TrainerInfo {
+        tid: (combined & 0xFFFF) as u16,
+        sid: ((combined >> 16) & 0xFFFF) as u16,
+    }
 }
 
 /// Game Offset を計算
@@ -217,45 +248,12 @@ pub fn calculate_game_offset(
     config: GameStartConfig,
 ) -> Result<u32, String> {
     config.validate(version)?;
-
     let mut lcg = Lcg64::new(seed);
-
-    let advances = match (
-        version.is_bw2(),
-        config.start_mode,
-        config.save,
-        config.memory_link,
-    ) {
-        // BW
-        (false, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            bw_new_game_with_save(&mut lcg)
-        }
-        (false, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            bw_new_game_no_save(&mut lcg)
-        }
-        (false, StartMode::Continue, _, MemoryLinkState::Disabled) => bw_continue(&mut lcg),
-
-        // BW2
-        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Enabled) => {
-            bw2_new_game_with_memory_link(&mut lcg)
-        }
-        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            bw2_new_game_with_save(&mut lcg)
-        }
-        (true, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            bw2_new_game_no_save(&mut lcg)
-        }
-        (true, StartMode::Continue, _, MemoryLinkState::Enabled) => {
-            bw2_continue_with_memory_link(&mut lcg)
-        }
-        (true, StartMode::Continue, _, MemoryLinkState::Disabled) => {
-            bw2_continue_no_memory_link(&mut lcg)
-        }
-
-        _ => return Err("Invalid combination".into()),
-    };
-
-    Ok(advances)
+    if version.is_bw2() {
+        Ok(bw2_game_offset(&mut lcg, config))
+    } else {
+        Ok(bw_game_offset(&mut lcg, config))
+    }
 }
 
 // ===== MT オフセット計算 =====
@@ -283,62 +281,6 @@ pub const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterT
     }
 }
 
-// ===== TrainerInfo 算出 =====
-
-/// TID/SID 決定直前まで LCG を進める (BW)
-fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save: SavePresence) {
-    match save {
-        SavePresence::WithSave => {
-            // PT×2 + チラーミィPID + チラーミィID
-            probability_table_multiple(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        SavePresence::NoSave => {
-            // PT×3 + チラーミィPID + チラーミィID
-            probability_table_multiple(lcg, 3);
-            consume_random(lcg, 2);
-        }
-    }
-}
-
-/// TID/SID 決定直前まで LCG を進める (BW2)
-fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save: SavePresence, memory_link: MemoryLinkState) {
-    match (save, memory_link) {
-        (SavePresence::WithSave, MemoryLinkState::Enabled) => {
-            // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
-            consume_random(lcg, 1);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        (SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            // Rand×1 + PT×1 + Rand×3 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
-            consume_random(lcg, 1);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 3);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        (SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×4 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
-            consume_random(lcg, 1);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 4);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        (SavePresence::NoSave, MemoryLinkState::Enabled) => {
-            unreachable!("validated: memory_link requires save")
-        }
-    }
-}
-
 /// `LcgSeed` から `TrainerInfo` を算出
 ///
 /// ゲーム初期化処理を経て TID/SID が決定されるポイントまで LCG を進め、
@@ -358,23 +300,12 @@ pub fn calculate_trainer_info(
     }
 
     config.validate(version)?;
-
     let mut lcg = Lcg64::new(seed);
-
-    // TID/SID 決定直前まで進める
     if version.is_bw2() {
-        advance_to_tid_sid_point_bw2(&mut lcg, config.save, config.memory_link);
+        Ok(bw2_trainer_info(&mut lcg, config))
     } else {
-        advance_to_tid_sid_point_bw(&mut lcg, config.save);
+        Ok(bw_trainer_info(&mut lcg, config.save))
     }
-
-    // TID/SID 算出 (元実装準拠)
-    let rand_value = lcg.next().unwrap_or(0);
-    let tid_sid_combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
-    let tid = (tid_sid_combined & 0xFFFF) as u16;
-    let sid = ((tid_sid_combined >> 16) & 0xFFFF) as u16;
-
-    Ok(TrainerInfo { tid, sid })
 }
 
 #[cfg(test)]

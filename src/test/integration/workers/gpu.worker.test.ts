@@ -491,56 +491,11 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
     expect(errorMessage).toContain('gpu-mtseed');
   });
 
-  it('should return error when WASM is not initialized', async () => {
-    worker = createGpuWorker();
-
-    // 初期化をスキップして直接検索を開始
-    const errorPromise = new Promise<string>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('Timeout waiting for error response'));
-      }, 5000);
-
-      worker!.addEventListener('message', (e: MessageEvent<WorkerResponse>) => {
-        if (e.data.type === 'error') {
-          clearTimeout(timeoutId);
-          resolve(e.data.message);
-        }
-      });
-    });
-
-    const request: WorkerRequest = {
-      type: 'start',
-      taskId: 'test-not-initialized',
-      task: {
-        kind: 'mtseed-datetime',
-        params: {
-          target_seeds: [0x14_b1_1b_a6],
-          ds: createTestDsConfig(),
-          time_range: {
-            hour_start: 0,
-            hour_end: 23,
-            minute_start: 0,
-            minute_end: 59,
-            second_start: 0,
-            second_end: 59,
-          },
-          search_range: {
-            start_year: 2025,
-            start_month: 8,
-            start_day: 20,
-            start_second_offset: 0,
-            range_seconds: 86_400,
-          },
-          condition: createTestStartupCondition(),
-        },
-      },
-    };
-
-    worker.postMessage(request);
-
-    const errorMessage = await errorPromise;
-    expect(errorMessage).toContain('not initialized');
-  });
+  // Note: bundler target 移行に伴い、Worker はモジュール評価完了後に auto-init する。
+  // 「WASM 未初期化で start を送るとエラーになる」テストは、
+  // auto-init パターンでは Worker 起動 = 初期化完了のため再現不可能。
+  // Worker 側の !initialized ガードは start メッセージが auto-init より先に
+  // 届くことがないため、実質的にデッドコードとなるが防御的に残している。
 
   // ---------------------------------------------------------------------------
 });

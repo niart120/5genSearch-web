@@ -12,7 +12,7 @@ describe('BottomNav', () => {
     useUiStore.setState(getUiInitialState());
   });
 
-  it('3 カテゴリが描画される', () => {
+  it('4 カテゴリが描画される', () => {
     render(
       <I18nTestWrapper>
         <BottomNav />
@@ -20,7 +20,7 @@ describe('BottomNav', () => {
     );
     const nav = screen.getByRole('navigation', { name: 'Category navigation' });
     const buttons = nav.querySelectorAll('button');
-    expect(buttons).toHaveLength(3);
+    expect(buttons).toHaveLength(4);
   });
 
   it('各カテゴリのラベルが表示される', () => {

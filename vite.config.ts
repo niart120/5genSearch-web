@@ -3,10 +3,12 @@ import react from '@vitejs/plugin-react';
 import { lingui } from '@lingui/vite-plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
+import wasm from 'vite-plugin-wasm';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    wasm(),
     tailwindcss(),
     react({
       babel: {
@@ -16,4 +18,8 @@ export default defineConfig({
     lingui(),
     tsconfigPaths(),
   ],
+  worker: {
+    format: 'es',
+    plugins: () => [wasm()],
+  },
 });

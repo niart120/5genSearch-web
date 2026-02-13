@@ -1,11 +1,7 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import wasmInit, { get_species_name } from '../../wasm/wasm_pkg.js';
+import { describe, it, expect } from 'vitest';
+import { get_species_name } from '../../wasm/wasm_pkg.js';
 
 describe('get_species_name WASM export', () => {
-  beforeAll(async () => {
-    await wasmInit();
-  });
-
   it('日本語ロケールで種族名を取得できる', () => {
     expect(get_species_name(25, 'ja')).toBe('ピカチュウ');
   });

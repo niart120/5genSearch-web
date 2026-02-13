@@ -6,7 +6,7 @@
  * インクリメンタル検索で絞り込める。
  */
 
-import { useState, useEffect, useMemo, type ReactElement } from 'react';
+import { useState, useMemo, type ReactElement } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { initMainThreadWasm } from '@/services/wasm-init';
 import { get_species_name } from '@/wasm/wasm_pkg.js';
 import { useUiStore } from '@/stores/settings/ui';
 
@@ -44,14 +43,9 @@ function SpeciesCombobox({ value, onChange, disabled }: SpeciesComboboxProps): R
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<SpeciesOption[]>([]);
-
-  // WASM 初期化後に種族リストを構築
-  useEffect(() => {
-    let cancelled = false;
-    void initMainThreadWasm().then(() => {
-      if (cancelled) return;
-      const list: SpeciesOption[] = Array.from({ length: SPECIES_COUNT }, (_, i) => {
+  const options = useMemo<SpeciesOption[]>(
+    () =>
+      Array.from({ length: SPECIES_COUNT }, (_, i) => {
         const id = i + 1;
         const name = get_species_name(id, language);
         const idStr = id.toString().padStart(3, '0');
@@ -60,13 +54,9 @@ function SpeciesCombobox({ value, onChange, disabled }: SpeciesComboboxProps): R
           label: `#${idStr} ${name}`,
           searchValue: `${idStr} ${id} ${name}`,
         };
-      });
-      setOptions(list);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [language]);
+      }),
+    [language]
+  );
 
   // 現在選択中のラベル
   const selectedLabel = useMemo(() => options.find((o) => o.id === value)?.label, [value, options]);
