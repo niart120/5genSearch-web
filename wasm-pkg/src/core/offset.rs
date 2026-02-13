@@ -102,176 +102,137 @@ fn extra_process(lcg: &mut Lcg64) -> u32 {
     advances
 }
 
-// ===== ステップ列によるデータ駆動パターン定義 =====
+// ===== BW 系オフセット計算 =====
 
-/// 乱数消費の 1 単位
-enum Step {
-    /// 固定回数の乱数消費
-    Rand(u32),
-    /// Probability Table 処理を指定回数実行
-    Pt(u32),
-    /// BW2 Continue 専用の Extra 処理
-    Extra,
-    /// TID/SID 決定 (1 回の乱数消費)
-    TidSid,
-}
-
-// ----- BW パターン (元実装準拠) -----
-
-/// BW 始めから（セーブ有り）
-const BW_NEW_GAME_WITH_SAVE: &[Step] = &[
-    Step::Pt(2),   // PT×2
-    Step::Rand(2), // チラーミィ PID + ID
-    Step::TidSid,  // TID/SID 決定
-    Step::Pt(4),   // PT×4
-];
-
-/// BW 始めから（セーブ無し）
-const BW_NEW_GAME_NO_SAVE: &[Step] = &[
-    Step::Pt(3),   // PT×3
-    Step::Rand(2), // チラーミィ PID + ID
-    Step::TidSid,  // TID/SID 決定
-    Step::Rand(1), // Rand×1
-    Step::Pt(4),   // PT×4
-];
-
-/// BW 続きから
-const BW_CONTINUE: &[Step] = &[
-    Step::Rand(1), // Rand×1
-    Step::Pt(5),   // PT×5
-];
-
-// ----- BW2 パターン (元実装準拠) -----
-
-/// BW2 始めから（思い出リンク済みセーブ有り）
-const BW2_NEW_GAME_WITH_MEMORY_LINK: &[Step] = &[
-    Step::Rand(1), // Rand×1
-    Step::Pt(1),   // PT×1
-    Step::Rand(2), // Rand×2
-    Step::Pt(1),   // PT×1
-    Step::Rand(2), // Rand×2
-    Step::Rand(2), // チラチーノ PID + ID
-    Step::TidSid,  // TID/SID 決定
-];
-
-/// BW2 始めから（思い出リンク無しセーブ有り）
-const BW2_NEW_GAME_WITH_SAVE: &[Step] = &[
-    Step::Rand(1), // Rand×1
-    Step::Pt(1),   // PT×1
-    Step::Rand(3), // Rand×3
-    Step::Pt(1),   // PT×1
-    Step::Rand(2), // Rand×2
-    Step::Rand(2), // チラチーノ PID + ID
-    Step::TidSid,  // TID/SID 決定
-];
-
-/// BW2 始めから（セーブ無し）
-const BW2_NEW_GAME_NO_SAVE: &[Step] = &[
-    Step::Rand(1), // Rand×1
-    Step::Pt(1),   // PT×1
-    Step::Rand(2), // Rand×2
-    Step::Pt(1),   // PT×1
-    Step::Rand(4), // Rand×4
-    Step::Pt(1),   // PT×1
-    Step::Rand(2), // Rand×2
-    Step::Rand(2), // チラチーノ PID + ID
-    Step::TidSid,  // TID/SID 決定
-];
-
-/// BW2 続きから（思い出リンク済み）
-const BW2_CONTINUE_WITH_MEMORY_LINK: &[Step] = &[
-    Step::Rand(1), // Rand×1
-    Step::Pt(1),   // PT×1
-    Step::Rand(2), // Rand×2
-    Step::Pt(4),   // PT×4
-    Step::Extra,   // Extra 処理
-];
-
-/// BW2 続きから（思い出リンク無し）
-const BW2_CONTINUE_NO_MEMORY_LINK: &[Step] = &[
-    Step::Rand(1), // Rand×1
-    Step::Pt(1),   // PT×1
-    Step::Rand(3), // Rand×3
-    Step::Pt(4),   // PT×4
-    Step::Extra,   // Extra 処理
-];
-
-/// ステップ列を全実行し、合計消費数を返す
-fn execute_steps(lcg: &mut Lcg64, steps: &[Step]) -> u32 {
-    let mut advances = 0;
-    for step in steps {
-        advances += match step {
-            Step::Rand(n) => consume_random(lcg, *n),
-            Step::Pt(n) => probability_table_multiple(lcg, *n),
-            Step::Extra => extra_process(lcg),
-            Step::TidSid => consume_random(lcg, 1),
-        };
-    }
+/// BW `NewGame` の TID/SID 決定直前まで LCG を進める
+///
+/// - `WithSave`: PT(2) → Rand(2)
+/// - `NoSave`:   PT(3) → Rand(2)
+fn bw_new_game_before_tid_sid(lcg: &mut Lcg64, save: SavePresence) -> u32 {
+    let pt_count = match save {
+        SavePresence::WithSave => 2,
+        SavePresence::NoSave => 3,
+    };
+    let mut advances = probability_table_multiple(lcg, pt_count);
+    // チラーミィ PID + ID
+    advances += consume_random(lcg, 2);
     advances
 }
 
-/// `TidSid` ステップの直前まで実行し、乱数値から TID/SID を算出する
-fn execute_until_tid_sid(lcg: &mut Lcg64, steps: &[Step]) -> Option<TrainerInfo> {
-    for step in steps {
-        if matches!(step, Step::TidSid) {
-            let rand_value = lcg.next().unwrap_or(0);
-            let combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
-            return Some(TrainerInfo {
-                tid: (combined & 0xFFFF) as u16,
-                sid: ((combined >> 16) & 0xFFFF) as u16,
-            });
+/// BW のゲームオフセットを計算
+fn bw_game_offset(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
+    match config.start_mode {
+        StartMode::Continue => {
+            // Rand(1) → PT(5)
+            let mut advances = consume_random(lcg, 1);
+            advances += probability_table_multiple(lcg, 5);
+            advances
         }
-        match step {
-            Step::Rand(n) => {
-                consume_random(lcg, *n);
+        StartMode::NewGame => {
+            let mut advances = bw_new_game_before_tid_sid(lcg, config.save);
+            // TID/SID 決定
+            advances += consume_random(lcg, 1);
+            // Post-TidSid
+            match config.save {
+                SavePresence::WithSave => {
+                    advances += probability_table_multiple(lcg, 4);
+                }
+                SavePresence::NoSave => {
+                    advances += consume_random(lcg, 1);
+                    advances += probability_table_multiple(lcg, 4);
+                }
             }
-            Step::Pt(n) => {
-                probability_table_multiple(lcg, *n);
-            }
-            Step::Extra => {
-                extra_process(lcg);
-            }
-            Step::TidSid => unreachable!(),
+            advances
         }
     }
-    None // Continue パターンには TidSid がない
 }
 
-/// ゲームバージョンと起動設定からパターンを選択する
-fn select_pattern(version: RomVersion, config: GameStartConfig) -> Result<&'static [Step], String> {
-    match (
-        version.is_bw2(),
-        config.start_mode,
-        config.save,
-        config.memory_link,
-    ) {
-        // BW
-        (false, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            Ok(BW_NEW_GAME_WITH_SAVE)
-        }
-        (false, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            Ok(BW_NEW_GAME_NO_SAVE)
-        }
-        (false, StartMode::Continue, _, MemoryLinkState::Disabled) => Ok(BW_CONTINUE),
+/// BW の `TrainerInfo` を計算
+fn bw_trainer_info(lcg: &mut Lcg64, save: SavePresence) -> TrainerInfo {
+    bw_new_game_before_tid_sid(lcg, save);
+    trainer_info_from_lcg(lcg)
+}
 
-        // BW2
-        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Enabled) => {
-            Ok(BW2_NEW_GAME_WITH_MEMORY_LINK)
-        }
-        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            Ok(BW2_NEW_GAME_WITH_SAVE)
-        }
-        (true, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            Ok(BW2_NEW_GAME_NO_SAVE)
-        }
-        (true, StartMode::Continue, _, MemoryLinkState::Enabled) => {
-            Ok(BW2_CONTINUE_WITH_MEMORY_LINK)
-        }
-        (true, StartMode::Continue, _, MemoryLinkState::Disabled) => {
-            Ok(BW2_CONTINUE_NO_MEMORY_LINK)
-        }
+// ===== BW2 系オフセット計算 =====
 
-        _ => Err("Invalid combination".into()),
+/// BW2 共通プレフィックス直後の Rand 消費回数を決定
+///
+/// | MemoryLink | Save     | Rand |
+/// |------------|----------|------|
+/// | Enabled    | *        | 2    |
+/// | Disabled   | WithSave | 3    |
+/// | Disabled   | NoSave   | 2    |
+fn bw2_initial_rand_count(memory_link: MemoryLinkState, save: SavePresence) -> u32 {
+    match (memory_link, save) {
+        (MemoryLinkState::Disabled, SavePresence::WithSave) => 3,
+        (MemoryLinkState::Enabled, _) | (MemoryLinkState::Disabled, SavePresence::NoSave) => 2,
+    }
+}
+
+/// BW2 `NewGame` の TID/SID 決定直前まで LCG を進める
+///
+/// 共通: Rand(1) → PT(1) → Rand(N) → PT(1) → [`NoSave`: Rand(4) → PT(1)] → Rand(4)
+fn bw2_new_game_before_tid_sid(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
+    // BW2 共通プレフィックス: Rand(1) → PT(1)
+    let mut advances = consume_random(lcg, 1);
+    advances += probability_table_process(lcg);
+
+    // MemoryLink / Save による初期 Rand 消費
+    advances += consume_random(lcg, bw2_initial_rand_count(config.memory_link, config.save));
+
+    // PT(1)
+    advances += probability_table_process(lcg);
+
+    // NoSave: 追加の Rand(4) → PT(1)
+    if config.save == SavePresence::NoSave {
+        advances += consume_random(lcg, 4);
+        advances += probability_table_process(lcg);
+    }
+
+    // チラチーノ PID + ID
+    advances += consume_random(lcg, 2);
+    advances += consume_random(lcg, 2);
+
+    advances
+}
+
+/// BW2 のゲームオフセットを計算
+fn bw2_game_offset(lcg: &mut Lcg64, config: GameStartConfig) -> u32 {
+    match config.start_mode {
+        StartMode::Continue => {
+            // Rand(1) → PT(1) → Rand(N) → PT(4) → Extra
+            let mut advances = consume_random(lcg, 1);
+            advances += probability_table_process(lcg);
+            advances +=
+                consume_random(lcg, bw2_initial_rand_count(config.memory_link, config.save));
+            advances += probability_table_multiple(lcg, 4);
+            advances += extra_process(lcg);
+            advances
+        }
+        StartMode::NewGame => {
+            let mut advances = bw2_new_game_before_tid_sid(lcg, config);
+            // TID/SID 決定
+            advances += consume_random(lcg, 1);
+            advances
+        }
+    }
+}
+
+/// BW2 の `TrainerInfo` を計算
+fn bw2_trainer_info(lcg: &mut Lcg64, config: GameStartConfig) -> TrainerInfo {
+    bw2_new_game_before_tid_sid(lcg, config);
+    trainer_info_from_lcg(lcg)
+}
+
+// ===== 共通ヘルパー =====
+
+/// LCG の次の乱数値から TID/SID を算出
+fn trainer_info_from_lcg(lcg: &mut Lcg64) -> TrainerInfo {
+    let rand_value = lcg.next().unwrap_or(0);
+    let combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
+    TrainerInfo {
+        tid: (combined & 0xFFFF) as u16,
+        sid: ((combined >> 16) & 0xFFFF) as u16,
     }
 }
 
@@ -287,9 +248,12 @@ pub fn calculate_game_offset(
     config: GameStartConfig,
 ) -> Result<u32, String> {
     config.validate(version)?;
-    let pattern = select_pattern(version, config)?;
     let mut lcg = Lcg64::new(seed);
-    Ok(execute_steps(&mut lcg, pattern))
+    if version.is_bw2() {
+        Ok(bw2_game_offset(&mut lcg, config))
+    } else {
+        Ok(bw_game_offset(&mut lcg, config))
+    }
 }
 
 // ===== MT オフセット計算 =====
@@ -336,9 +300,12 @@ pub fn calculate_trainer_info(
     }
 
     config.validate(version)?;
-    let pattern = select_pattern(version, config)?;
     let mut lcg = Lcg64::new(seed);
-    execute_until_tid_sid(&mut lcg, pattern).ok_or_else(|| "No TidSid step in pattern".into())
+    if version.is_bw2() {
+        Ok(bw2_trainer_info(&mut lcg, config))
+    } else {
+        Ok(bw_trainer_info(&mut lcg, config.save))
+    }
 }
 
 #[cfg(test)]
