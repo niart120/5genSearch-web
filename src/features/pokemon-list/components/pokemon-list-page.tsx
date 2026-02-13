@@ -19,8 +19,6 @@ import { usePokemonList } from '../hooks/use-pokemon-list';
 import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
 import type { PokemonListValidationErrorCode, EncounterParamsOutput } from '../types';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
-import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
-import { filterByStats } from '@/lib/stats-filter';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
@@ -31,6 +29,7 @@ import type {
   PokemonFilter,
   PokemonGenerationParams,
   SeedOrigin,
+  StatsFilter,
   UiPokemonData,
 } from '@/wasm/wasm_pkg.js';
 
@@ -56,7 +55,7 @@ function PokemonListPage(): ReactElement {
 
   // フィルタ
   const [filter, setFilter] = useState<PokemonFilter | undefined>();
-  const [statsFilter, setStatsFilter] = useState<StatsFixedValues | undefined>();
+  const [statsFilter, setStatsFilter] = useState<StatsFilter | undefined>();
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
@@ -100,12 +99,6 @@ function PokemonListPage(): ReactElement {
   // ステータス/IV 表示切替
   const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
 
-  // クライアントサイド Stats フィルタ適用
-  const filteredResults = useMemo(
-    () => filterByStats(uiResults, statsFilter),
-    [uiResults, statsFilter]
-  );
-
   const handleSelectResult = useCallback((result: UiPokemonData) => {
     setSelectedResult(result);
     setDetailOpen(true);
@@ -138,8 +131,33 @@ function PokemonListPage(): ReactElement {
       slots: encounterParams.slots,
     };
 
-    generate(seedOrigins, params, fullGenConfig, filter);
-  }, [dsConfig.version, gameStart, encounterParams, tid, sid, seedOrigins, filter, generate]);
+    // statsFilter を PokemonFilter.stats に統合
+    const mergedFilter: PokemonFilter | undefined = (() => {
+      if (!filter && !statsFilter) return undefined;
+      return {
+        iv: filter?.iv,
+        natures: filter?.natures,
+        gender: filter?.gender,
+        ability_slot: filter?.ability_slot,
+        shiny: filter?.shiny,
+        species_ids: filter?.species_ids,
+        level_range: filter?.level_range,
+        stats: statsFilter,
+      };
+    })();
+
+    generate(seedOrigins, params, fullGenConfig, mergedFilter);
+  }, [
+    dsConfig.version,
+    gameStart,
+    encounterParams,
+    tid,
+    sid,
+    seedOrigins,
+    filter,
+    statsFilter,
+    generate,
+  ]);
 
   return (
     <>
@@ -197,7 +215,7 @@ function PokemonListPage(): ReactElement {
         <FeaturePageLayout.Results>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              <Trans>Results</Trans>: {filteredResults.length.toLocaleString()}
+              <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
@@ -215,7 +233,7 @@ function PokemonListPage(): ReactElement {
           </div>
           <DataTable
             columns={columns}
-            data={filteredResults}
+            data={uiResults}
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}

@@ -5,10 +5,7 @@
 #![allow(clippy::too_many_lines)]
 
 use super::format_hidden_power_type;
-use crate::data::{
-    calculate_stats, get_ability_name, get_held_item_name, get_nature_name, get_species_entry,
-    get_species_name,
-};
+use crate::data::{get_ability_name, get_held_item_name, get_nature_name, get_species_name};
 use crate::types::{GeneratedPokemonData, IV_VALUE_UNKNOWN, RomVersion, SeedOrigin, UiPokemonData};
 
 /// ポケモンデータを表示用に解決
@@ -23,8 +20,6 @@ pub fn resolve_pokemon_data(
     version: RomVersion,
     locale: &str,
 ) -> UiPokemonData {
-    let species_entry = get_species_entry(data.core.species_id);
-
     // Seed情報展開
     let base_seed = format!("{:016X}", data.source.base_seed().value());
     let mt_seed = format!("{:08X}", data.source.mt_seed().value());
@@ -83,14 +78,8 @@ pub fn resolve_pokemon_data(
         }
     });
 
-    // ステータス計算
-    let stats_result = calculate_stats(
-        species_entry.base_stats,
-        data.core.ivs,
-        data.core.nature,
-        data.core.level,
-    );
-    let stats_arr = stats_result.to_array();
+    // ステータス (CorePokemonData.stats から取得)
+    let stats_arr = data.core.stats.to_array();
     let stats: [String; 6] =
         std::array::from_fn(|i| stats_arr[i].map_or("?".to_string(), |v| v.to_string()));
 
@@ -200,12 +189,20 @@ fn format_encounter_result(result: crate::types::EncounterResult, _locale: &str)
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::{calculate_stats, get_species_entry};
     use crate::types::{
         AbilitySlot, CorePokemonData, Datetime, EncounterResult, Gender, HeldItemSlot, Ivs,
         KeyCode, LcgSeed, MtSeed, Nature, NeedleDirection, Pid, ShinyType, StartupCondition,
     };
 
     fn make_test_data() -> GeneratedPokemonData {
+        let ivs = Ivs::new(31, 31, 31, 31, 31, 31);
+        let species_id = 25u16;
+        let level = 50u8;
+        let nature = Nature::Adamant;
+        let entry = get_species_entry(species_id);
+        let stats = calculate_stats(entry.base_stats, ivs, nature, level);
+
         GeneratedPokemonData {
             advance: 100,
             needle_direction: NeedleDirection::from_value(0),
@@ -228,13 +225,14 @@ mod tests {
             },
             core: CorePokemonData {
                 pid: Pid(0x1234_5678),
-                nature: Nature::Adamant,
+                nature,
                 ability_slot: AbilitySlot::First,
                 gender: Gender::Male,
                 shiny_type: ShinyType::None,
-                ivs: Ivs::new(31, 31, 31, 31, 31, 31),
-                species_id: 25, // ピカチュウ
-                level: 50,
+                ivs,
+                stats,
+                species_id,
+                level,
             },
             sync_applied: false,
             held_item_slot: HeldItemSlot::None,

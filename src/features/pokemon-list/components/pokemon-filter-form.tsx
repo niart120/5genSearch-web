@@ -1,7 +1,7 @@
 /**
  * ポケモンフィルター入力フォーム
  *
- * PokemonFilter (WASM 用) と StatsFilter (クライアントサイド) の入力 UI。
+ * PokemonFilter (WASM 用) と StatsFilter (WASM 用) の入力 UI。
  * フィルター有効/無効トグル、リセットボタン付き。
  * statMode に応じて IV / 実ステータスフィルターを切り替える。
  */
@@ -35,9 +35,9 @@ import type {
   AbilitySlot,
   ShinyFilter,
   HiddenPowerType,
+  StatsFilter,
 } from '@/wasm/wasm_pkg.js';
 import type { StatDisplayMode } from '@/lib/game-data-names';
-import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -46,8 +46,8 @@ import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 interface PokemonFilterFormProps {
   value: PokemonFilter | undefined;
   onChange: (filter?: PokemonFilter) => void;
-  statsFilter: StatsFixedValues | undefined;
-  onStatsFilterChange: (filter?: StatsFixedValues) => void;
+  statsFilter: StatsFilter | undefined;
+  onStatsFilterChange: (filter?: StatsFilter) => void;
   statMode: StatDisplayMode;
   availableSpecies: EncounterSpeciesOption[];
   disabled?: boolean;
@@ -66,7 +66,7 @@ const DEFAULT_IV_FILTER: IvFilter = {
   spe: [0, 31],
 };
 
-const DEFAULT_STATS_FILTER: StatsFixedValues = {
+const DEFAULT_STATS_FILTER: StatsFilter = {
   hp: undefined,
   atk: undefined,
   def: undefined,
@@ -83,6 +83,7 @@ const DEFAULT_FILTER: PokemonFilter = {
   shiny: undefined,
   species_ids: undefined,
   level_range: undefined,
+  stats: undefined,
 };
 
 // ---------------------------------------------------------------------------
@@ -181,7 +182,7 @@ function PokemonFilterForm({
 
   // 内部フィルタ状態 (トグル OFF 時も保持)
   const [internalFilter, setInternalFilter] = useState<PokemonFilter>(value ?? DEFAULT_FILTER);
-  const [internalStats, setInternalStats] = useState<StatsFixedValues>(
+  const [internalStats, setInternalStats] = useState<StatsFilter>(
     statsFilter ?? DEFAULT_STATS_FILTER
   );
 
@@ -210,12 +211,12 @@ function PokemonFilterForm({
     );
   }, []);
 
-  const isStatsDefault = useCallback((s: StatsFixedValues): boolean => {
+  const isStatsDefault = useCallback((s: StatsFilter): boolean => {
     return IV_STAT_KEYS.every((k) => s[k] === undefined);
   }, []);
 
   const propagate = useCallback(
-    (f: PokemonFilter, s: StatsFixedValues, enabled: boolean) => {
+    (f: PokemonFilter, s: StatsFilter, enabled: boolean) => {
       if (!enabled) {
         onChange();
         onStatsFilterChange();
@@ -239,7 +240,7 @@ function PokemonFilterForm({
   );
 
   const updateStats = useCallback(
-    (next: StatsFixedValues) => {
+    (next: StatsFilter) => {
       setInternalStats(next);
       propagate(internalFilter, next, filterEnabled);
     },

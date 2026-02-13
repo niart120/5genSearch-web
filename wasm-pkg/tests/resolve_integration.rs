@@ -2,11 +2,12 @@
 //!
 //! ポケモン/卵データの解決処理をエンドツーエンドでテスト。
 
+use wasm_pkg::data::{calculate_stats, get_species_entry};
 use wasm_pkg::resolve::{resolve_egg_data, resolve_pokemon_data};
 use wasm_pkg::types::{
     AbilitySlot, CorePokemonData, Datetime, EncounterResult, Gender, GeneratedEggData,
     GeneratedPokemonData, HeldItemSlot, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed, Nature,
-    NeedleDirection, Pid, RomVersion, SeedOrigin, ShinyType, StartupCondition,
+    NeedleDirection, Pid, RomVersion, SeedOrigin, ShinyType, StartupCondition, Stats,
 };
 
 /// テスト用のポケモンデータを生成
@@ -31,15 +32,24 @@ fn create_test_pokemon_data() -> GeneratedPokemonData {
                 key_code: KeyCode::NONE,
             },
         },
-        core: CorePokemonData {
-            pid: Pid(0x1234_5678),
-            nature: Nature::Adamant,
-            ability_slot: AbilitySlot::First,
-            gender: Gender::Male,
-            shiny_type: ShinyType::None,
-            ivs: Ivs::new(31, 31, 31, 31, 31, 31),
-            species_id: 25, // ピカチュウ
-            level: 50,
+        core: {
+            let ivs = Ivs::new(31, 31, 31, 31, 31, 31);
+            let species_id = 25u16; // ピカチュウ
+            let level = 50u8;
+            let nature = Nature::Adamant;
+            let entry = get_species_entry(species_id);
+            let stats = calculate_stats(entry.base_stats, ivs, nature, level);
+            CorePokemonData {
+                pid: Pid(0x1234_5678),
+                nature,
+                ability_slot: AbilitySlot::First,
+                gender: Gender::Male,
+                shiny_type: ShinyType::None,
+                ivs,
+                stats,
+                species_id,
+                level,
+            }
         },
         sync_applied: false,
         held_item_slot: HeldItemSlot::Common, // オレンのみ
@@ -78,7 +88,8 @@ fn create_test_egg_data() -> GeneratedEggData {
             gender: Gender::Female,
             shiny_type: ShinyType::Star,
             ivs: Ivs::new(31, 31, 31, 31, 31, 31),
-            species_id: 0, // 卵は種族ID未定義
+            stats: Stats::UNKNOWN, // 卵は種族ID未定義のため不明
+            species_id: 0,
             level: 1,
         },
         inheritance: [

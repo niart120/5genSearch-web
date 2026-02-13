@@ -3,6 +3,7 @@
 //! 生成フロー内部でのみ使用される設定型・中間データ型を定義。
 //! TS 公開型は `crate::types` に配置。
 
+use crate::data::{Stats, calculate_stats, get_species_entry};
 use crate::types::{
     AbilitySlot, CorePokemonData, EncounterResult, Gender, GeneratedEggData, GeneratedPokemonData,
     HeldItemSlot, InheritanceSlot, Ivs, MovingEncounterInfo, Nature, NeedleDirection, Pid,
@@ -82,6 +83,13 @@ impl GeneratedPokemonData {
         moving_encounter: Option<MovingEncounterInfo>,
         special_encounter: Option<SpecialEncounterInfo>,
     ) -> Self {
+        let stats = if raw.species_id > 0 {
+            let entry = get_species_entry(raw.species_id);
+            calculate_stats(entry.base_stats, ivs, raw.nature, raw.level)
+        } else {
+            Stats::UNKNOWN
+        };
+
         Self {
             advance,
             needle_direction,
@@ -93,6 +101,7 @@ impl GeneratedPokemonData {
                 gender: raw.gender,
                 shiny_type: raw.shiny_type,
                 ivs,
+                stats,
                 species_id: raw.species_id,
                 level: raw.level,
             },
@@ -128,6 +137,13 @@ impl GeneratedEggData {
             None => 0,
         };
 
+        let stats = if resolved_species_id > 0 {
+            let entry = get_species_entry(resolved_species_id);
+            calculate_stats(entry.base_stats, ivs, raw.nature, 1) // 卵は常にLv.1
+        } else {
+            Stats::UNKNOWN
+        };
+
         Self {
             advance,
             needle_direction,
@@ -139,6 +155,7 @@ impl GeneratedEggData {
                 gender: raw.gender,
                 shiny_type: raw.shiny_type,
                 ivs,
+                stats,
                 species_id: resolved_species_id,
                 level: 1, // 卵は常にLv.1
             },

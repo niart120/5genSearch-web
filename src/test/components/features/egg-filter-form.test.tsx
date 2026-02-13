@@ -13,6 +13,7 @@ const DEFAULT_FILTER: EggFilter = {
   ability_slot: undefined,
   shiny: undefined,
   min_margin_frames: undefined,
+  stats: undefined,
 };
 
 function renderFilterForm(props: Partial<Parameters<typeof EggFilterForm>[0]> = {}) {

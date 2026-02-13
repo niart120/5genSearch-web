@@ -11,20 +11,11 @@ import { handleFocusSelectAll } from './input-helpers';
 import { getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
 import type { IvStatKey } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
-
-/** 6ステータスの固定値フィルター */
-interface StatsFixedValues {
-  hp: number | undefined;
-  atk: number | undefined;
-  def: number | undefined;
-  spa: number | undefined;
-  spd: number | undefined;
-  spe: number | undefined;
-}
+import type { StatsFilter } from '@/wasm/wasm_pkg.js';
 
 interface StatsFixedInputProps {
-  value: StatsFixedValues;
-  onChange: (v: StatsFixedValues) => void;
+  value: StatsFilter;
+  onChange: (v: StatsFilter) => void;
   disabled?: boolean;
 }
 
@@ -91,4 +82,4 @@ function StatsFixedInput({ value, onChange, disabled }: StatsFixedInputProps) {
 }
 
 export { StatsFixedInput };
-export type { StatsFixedInputProps, StatsFixedValues };
+export type { StatsFixedInputProps };

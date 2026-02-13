@@ -5,9 +5,7 @@
 #![allow(clippy::too_many_lines)]
 
 use super::format_hidden_power_type;
-use crate::data::{
-    calculate_stats, get_ability_name, get_nature_name, get_species_entry, get_species_name,
-};
+use crate::data::{get_ability_name, get_nature_name, get_species_name};
 use crate::types::{AbilitySlot, GeneratedEggData, IV_VALUE_UNKNOWN, SeedOrigin, UiEggData};
 
 /// 卵データを表示用に解決
@@ -88,21 +86,10 @@ pub fn resolve_egg_data(
         }
     });
 
-    // ステータス計算 (species_id 指定時のみ)
-    let level = 1; // 卵は常にLv.1
-    let stats: [String; 6] = if let Some(id) = species_id {
-        let species_entry = get_species_entry(id);
-        let stats_result = calculate_stats(
-            species_entry.base_stats,
-            data.core.ivs,
-            data.core.nature,
-            level,
-        );
-        let stats_arr = stats_result.to_array();
-        std::array::from_fn(|i| stats_arr[i].map_or("?".to_string(), |v| v.to_string()))
-    } else {
-        std::array::from_fn(|_| "?".to_string())
-    };
+    // ステータス (CorePokemonData.stats から取得)
+    let stats_arr = data.core.stats.to_array();
+    let stats: [String; 6] =
+        std::array::from_fn(|i| stats_arr[i].map_or("?".to_string(), |v| v.to_string()));
 
     // めざパ
     let has_unknown_iv = data.core.ivs.has_unknown();
@@ -134,7 +121,7 @@ pub fn resolve_egg_data(
         ability_name,
         gender_symbol,
         shiny_symbol,
-        level,
+        level: data.core.level,
         ivs,
         stats,
         hidden_power_type,
@@ -163,6 +150,7 @@ fn format_ability_slot_name(slot: AbilitySlot, locale: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::Stats;
     use crate::types::{
         CorePokemonData, Datetime, Gender, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed, Nature,
         NeedleDirection, Pid, ShinyType, StartupCondition,
@@ -196,7 +184,8 @@ mod tests {
                 gender: Gender::Female,
                 shiny_type: ShinyType::Star,
                 ivs: Ivs::new(31, 31, 31, 31, 31, 31),
-                species_id: 0, // 卵は種族ID未定義
+                stats: Stats::UNKNOWN, // 卵は種族ID未定義のため不明
+                species_id: 0,
                 level: 1,
             },
             inheritance: [
@@ -225,13 +214,34 @@ mod tests {
 
     #[test]
     fn test_resolve_egg_data_with_species() {
+        // stats は CorePokemonData に事前計算済み (species_id=0 の場合は UNKNOWN)
         let data = make_test_egg_data();
         let ui = resolve_egg_data(data, "ja", Some(25)); // ピカチュウ
 
         assert_eq!(ui.species_name, Some("ピカチュウ".to_string()));
         // 特性名が解決される
         assert!(!ui.ability_name.is_empty());
-        // ステータスも計算される
+        // species_id=0 で生成されたデータのため stats は "?"
+        assert!(ui.stats.iter().all(|s| s == "?"));
+    }
+
+    #[test]
+    fn test_resolve_egg_data_with_precomputed_stats() {
+        use crate::data::{calculate_stats, get_species_entry};
+
+        let species_id = 25u16; // ピカチュウ
+        let ivs = Ivs::new(31, 31, 31, 31, 31, 31);
+        let nature = Nature::Jolly;
+        let entry = get_species_entry(species_id);
+        let stats = calculate_stats(entry.base_stats, ivs, nature, 1);
+
+        let mut data = make_test_egg_data();
+        data.core.stats = stats;
+        data.core.species_id = species_id;
+
+        let ui = resolve_egg_data(data, "ja", Some(species_id));
+        assert_eq!(ui.species_name, Some("ピカチュウ".to_string()));
+        // stats が事前計算済みのため "?" でない
         assert!(ui.stats[0] != "?"); // HP
     }
 
