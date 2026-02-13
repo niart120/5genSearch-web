@@ -36,8 +36,9 @@ pub use types::{
     MtseedSearchContext, MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,
     PokemonGenerationParams, RomVersion, SavePresence, SearchRangeParams, SeedOrigin, SeedSpec,
     ShinyCharmState, ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
-    TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
-    TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData, UiPokemonData,
+    Stats, StatsFilter, TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter,
+    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData,
+    UiPokemonData,
 };
 
 // Re-export core functions

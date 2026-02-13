@@ -12,6 +12,7 @@ use super::pokemon::{
     Nature, Pid, ShinyType, TrainerInfo,
 };
 use super::seeds::SeedOrigin;
+use crate::data::Stats;
 
 // ===== エンカウント結果 =====
 
@@ -280,6 +281,8 @@ pub struct CorePokemonData {
     pub shiny_type: ShinyType,
     /// 個体値
     pub ivs: Ivs,
+    /// 実ステータス
+    pub stats: Stats,
     /// 種族 ID
     /// - ポケモン: 常に設定
     /// - 卵: 常に 0 (外部指定が必要)

@@ -9,6 +9,7 @@ use super::generation::{CorePokemonData, GeneratedEggData, GeneratedPokemonData}
 use super::pokemon::{
     AbilitySlot, Gender, HiddenPowerType, Ivs, Nature, Pid, ShinyType, TrainerInfo,
 };
+use crate::data::Stats;
 
 // ===== IvFilter =====
 
@@ -159,6 +160,60 @@ impl ShinyFilter {
     }
 }
 
+// ===== StatsFilter =====
+
+/// 実ステータスフィルター
+///
+/// 各フィールドが `Some(v)` の場合、stats の対応する値が `Some(v)` に一致する場合のみ通過。
+/// stats 側が `None` (IV 不明等) の場合、フィルタ条件の有無にかかわらず通過する。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct StatsFilter {
+    pub hp: Option<u16>,
+    pub atk: Option<u16>,
+    pub def: Option<u16>,
+    pub spa: Option<u16>,
+    pub spd: Option<u16>,
+    pub spe: Option<u16>,
+}
+
+impl StatsFilter {
+    /// 条件なしフィルター
+    pub const fn any() -> Self {
+        Self {
+            hp: None,
+            atk: None,
+            def: None,
+            spa: None,
+            spd: None,
+            spe: None,
+        }
+    }
+
+    /// 指定した Stats が条件に一致するか判定
+    pub fn matches(&self, stats: &Stats) -> bool {
+        Self::check(self.hp, stats.hp)
+            && Self::check(self.atk, stats.attack)
+            && Self::check(self.def, stats.defense)
+            && Self::check(self.spa, stats.special_attack)
+            && Self::check(self.spd, stats.special_defense)
+            && Self::check(self.spe, stats.speed)
+    }
+
+    /// 単一ステータスのマッチング
+    ///
+    /// - フィルタ `None`: 無条件通過
+    /// - stats `None` (不明): フィルタ値に依らず通過
+    /// - 両方 `Some`: 値の一致判定
+    #[inline]
+    fn check(filter: Option<u16>, actual: Option<u16>) -> bool {
+        match (filter, actual) {
+            (None, _) | (Some(_), None) => true,
+            (Some(f), Some(a)) => f == a,
+        }
+    }
+}
+
 // ===== TrainerInfoFilter =====
 
 /// `TrainerInfo` 検索フィルタ
@@ -221,6 +276,8 @@ pub struct CoreDataFilter {
     pub ability_slot: Option<AbilitySlot>,
     /// 色違い
     pub shiny: Option<ShinyFilter>,
+    /// 実ステータスフィルター
+    pub stats: Option<StatsFilter>,
 }
 
 impl CoreDataFilter {
@@ -232,6 +289,7 @@ impl CoreDataFilter {
             gender: None,
             ability_slot: None,
             shiny: None,
+            stats: None,
         }
     }
 
@@ -269,6 +327,13 @@ impl CoreDataFilter {
         // 色違い
         if let Some(ref shiny_filter) = self.shiny
             && !shiny_filter.matches(core.shiny_type)
+        {
+            return false;
+        }
+
+        // 実ステータスフィルター
+        if let Some(ref stats_filter) = self.stats
+            && !stats_filter.matches(&core.stats)
         {
             return false;
         }
@@ -388,6 +453,7 @@ impl EggFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::Stats;
     use crate::types::{HiddenPowerType, InheritanceSlot, Ivs, NeedleDirection, Pid, SeedOrigin};
 
     // テスト用ヘルパー: GeneratedPokemonData を生成
@@ -411,6 +477,7 @@ mod tests {
                 gender,
                 shiny_type,
                 ivs,
+                stats: Stats::UNKNOWN,
                 species_id,
                 level,
             },
@@ -442,6 +509,7 @@ mod tests {
                 gender,
                 shiny_type,
                 ivs,
+                stats: Stats::UNKNOWN,
                 species_id: 0, // 卵は種族ID未定義
                 level: 1,
             },
@@ -1078,5 +1146,160 @@ mod tests {
         // HP Unknown + ATK Unknown → 不通過 (ATK は特定範囲)
         let ivs_both_unknown = Ivs::new(IV_VALUE_UNKNOWN, IV_VALUE_UNKNOWN, 20, 15, 10, 5);
         assert!(!filter.matches(&ivs_both_unknown));
+    }
+
+    // === StatsFilter Tests ===
+
+    #[test]
+    fn test_stats_filter_any_passes_all() {
+        let filter = StatsFilter::any();
+        let stats = Stats {
+            hp: Some(110),
+            attack: Some(82),
+            defense: Some(60),
+            special_attack: Some(72),
+            special_defense: Some(72),
+            speed: Some(130),
+        };
+        assert!(filter.matches(&stats));
+    }
+
+    #[test]
+    fn test_stats_filter_any_passes_unknown() {
+        let filter = StatsFilter::any();
+        assert!(filter.matches(&Stats::UNKNOWN));
+    }
+
+    #[test]
+    fn test_stats_filter_exact_match() {
+        let filter = StatsFilter {
+            hp: Some(110),
+            atk: None,
+            def: None,
+            spa: None,
+            spd: None,
+            spe: None,
+        };
+        let stats = Stats {
+            hp: Some(110),
+            attack: Some(82),
+            defense: Some(60),
+            special_attack: Some(72),
+            special_defense: Some(72),
+            speed: Some(130),
+        };
+        assert!(filter.matches(&stats));
+    }
+
+    #[test]
+    fn test_stats_filter_mismatch() {
+        let filter = StatsFilter {
+            hp: Some(999),
+            atk: None,
+            def: None,
+            spa: None,
+            spd: None,
+            spe: None,
+        };
+        let stats = Stats {
+            hp: Some(110),
+            attack: Some(82),
+            defense: Some(60),
+            special_attack: Some(72),
+            special_defense: Some(72),
+            speed: Some(130),
+        };
+        assert!(!filter.matches(&stats));
+    }
+
+    #[test]
+    fn test_stats_filter_unknown_stats_passes() {
+        // stats 側が None (不明) の場合、フィルタ条件の有無にかかわらず通過
+        let filter = StatsFilter {
+            hp: Some(110),
+            atk: Some(82),
+            def: Some(60),
+            spa: Some(72),
+            spd: Some(72),
+            spe: Some(130),
+        };
+        assert!(filter.matches(&Stats::UNKNOWN));
+    }
+
+    #[test]
+    fn test_stats_filter_partial_unknown_passes() {
+        let filter = StatsFilter {
+            hp: Some(110),
+            atk: None,
+            def: None,
+            spa: None,
+            spd: None,
+            spe: None,
+        };
+        let stats = Stats {
+            hp: None, // 不明 → 通過
+            attack: Some(82),
+            defense: Some(60),
+            special_attack: Some(72),
+            special_defense: Some(72),
+            speed: Some(130),
+        };
+        assert!(filter.matches(&stats));
+    }
+
+    #[test]
+    fn test_stats_filter_all_fields() {
+        let filter = StatsFilter {
+            hp: Some(110),
+            atk: Some(82),
+            def: Some(60),
+            spa: Some(72),
+            spd: Some(72),
+            spe: Some(130),
+        };
+        let stats = Stats {
+            hp: Some(110),
+            attack: Some(82),
+            defense: Some(60),
+            special_attack: Some(72),
+            special_defense: Some(72),
+            speed: Some(130),
+        };
+        assert!(filter.matches(&stats));
+
+        // 1つでも不一致なら不通過
+        let stats_mismatch = Stats {
+            hp: Some(110),
+            attack: Some(82),
+            defense: Some(60),
+            special_attack: Some(72),
+            special_defense: Some(72),
+            speed: Some(131), // 不一致
+        };
+        assert!(!filter.matches(&stats_mismatch));
+    }
+
+    // === CoreDataFilter + stats Tests ===
+
+    #[test]
+    fn test_core_data_filter_with_stats() {
+        let filter = CoreDataFilter {
+            stats: Some(StatsFilter {
+                hp: Some(110),
+                ..StatsFilter::any()
+            }),
+            ..Default::default()
+        };
+        let pokemon = make_pokemon(
+            Ivs::uniform(31),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+        );
+        // make_pokemon は Stats::UNKNOWN を使うため通過 (不明は通過)
+        assert!(filter.matches_pokemon(&pokemon));
     }
 }

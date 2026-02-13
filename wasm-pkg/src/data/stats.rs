@@ -2,6 +2,9 @@
 //!
 //! 種族値、個体値、性格、レベルからステータス実数値を計算。
 
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+
 use super::species::BaseStats;
 use crate::types::{IV_VALUE_UNKNOWN, Ivs, Nature};
 
@@ -9,7 +12,8 @@ use crate::types::{IV_VALUE_UNKNOWN, Ivs, Nature};
 ///
 /// 各ステータスは `Option<u16>` で表現。
 /// IV が不明 (`IV_VALUE_UNKNOWN`) の場合は `None` を返す。
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Stats {
     pub hp: Option<u16>,
     pub attack: Option<u16>,

@@ -33,7 +33,7 @@ pub use search::{
 
 // filter
 pub use filter::{
-    CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter, TrainerInfoFilter,
+    CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter, StatsFilter, TrainerInfoFilter,
 };
 
 // generation
@@ -59,3 +59,6 @@ pub use seeds::{LcgSeed, MtSeed, SeedOrigin};
 
 // ui
 pub use ui::{UiEggData, UiPokemonData};
+
+// data (re-export for convenience)
+pub use crate::data::Stats;
