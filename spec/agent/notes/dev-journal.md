@@ -44,11 +44,10 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 2. 効果不十分なら SHA-1 実装を `core::arch::wasm32` intrinsics (`v128`, `u32x4_shl` 等) に書き換え
 3. wasm-opt オプションに `--enable-simd` を追加
 
-## 2026-02-11: エンカウントデータの eager 読み込みとバンドルサイズ
+## ~~2026-02-11: エンカウントデータの eager 読み込みとバンドルサイズ~~ (local_070 で対応済み)
 
-現状: `import.meta.glob('./generated/v1/**/*.json', { eager: true })` により 28 JSON ファイル全量がバンドルに含まれる。
-観察: ユーザは通常 1 バージョン + 1 メソッドの組み合わせしか選択しない。dynamic import に切り替えれば未使用 JSON を遅延読み込みでき、初期バンドルサイズを削減できる。ただし現時点では JSON は tree-shaking 対象外で実害は軽微。
-当面の方針: ファイル数が増加した場合やパフォーマンス計測で問題が確認された場合に、`eager: false` (dynamic import) への移行を検討する。
+`import.meta.glob` を lazy 化し、全 encounter JSON を独立チャンクに分割。初期バンドルから約 2.5 MB の JSON データを除外した。
+詳細: `spec/agent/wip/local_070/ENCOUNTER_LAZY_LOADING.md`
 
 ## 2026-02-11: About ページの新設計画
 

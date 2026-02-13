@@ -35,12 +35,11 @@
 
 | ファイル | 変更種別 | 変更内容 |
 |--------|---------|---------|
-| `src/data/encounters/loader.ts` | 変更 | `eager: true` → `eager: false` に変更、API を非同期化 |
-| `src/data/encounters/helpers.ts` | 変更 | loader 呼び出しを非同期対応 |
-| `src/features/pokemon-list/components/pokemon-list-page.tsx` | 変更 | エンカウントデータの非同期取得対応 |
-| `src/features/egg-list/components/egg-list-page.tsx` | 変更 | 同上 (エンカウントデータを使用している場合) |
-| `src/test/unit/encounter-loader.test.ts` | 変更 | 非同期 API に合わせたテスト修正 |
-| `src/test/unit/encounter-helpers.test.ts` | 変更 | 非同期 API に合わせたテスト修正 |
+| `src/data/encounters/loader.ts` | 変更 | `eager: true` → lazy に変更、API を非同期化、キャッシュ付き |
+| `src/data/encounters/helpers.ts` | 変更 | loader 呼び出しを非同期対応、`listLocations` / `listSpecies` を `async` に |
+| `src/features/pokemon-list/components/pokemon-params-form.tsx` | 変更 | `useMemo` → `useEffect` + `useState` 非同期パターンに変更、ハンドラ非同期化 |
+| `src/test/unit/encounter-helpers.test.ts` | 変更 | `mockReturnValue` → `mockResolvedValue`、テスト関数に `async`/`await` 追加 |
+| `src/test/integration/encounter-service.test.ts` | 変更 | 全テストに `async`/`await` 追加 |
 
 ## 3. 設計方針
 
@@ -199,14 +198,14 @@ function useEncounterLocations(version: string, method: string) {
 
 ## 6. 実装チェックリスト
 
-- [ ] `loader.ts`: `import.meta.glob` の `eager: true` を削除 (generated)
-- [ ] `loader.ts`: `import.meta.glob` の `eager: true` を削除 (static)
-- [ ] `loader.ts`: `parseModulePath` ヘルパー追加
-- [ ] `loader.ts`: レジストリキャッシュ + 非同期ロード関数
-- [ ] `loader.ts`: 公開 API (`getEncounterSlots`, `listLocations`, `getLocationEntry`, `listStaticEncounterEntries`, `getStaticEncounterEntry`) を `async` に変更
-- [ ] `helpers.ts`: loader 呼び出しを `async`/`await` に変更
-- [ ] コンポーネント: 非同期取得 + ローディング表示対応
-- [ ] テスト: 既存テストを非同期対応に修正
-- [ ] `pnpm build` が正常に完了すること (チャンク分割の確認)
-- [ ] `pnpm test:run` 通過
-- [ ] `pnpm lint` / `pnpm format:check:ts` 通過
+- [x] `loader.ts`: `import.meta.glob` の `eager: true` を削除 (generated)
+- [x] `loader.ts`: `import.meta.glob` の `eager: true` を削除 (static)
+- [x] `loader.ts`: `parseModulePath` ヘルパー追加
+- [x] `loader.ts`: レジストリキャッシュ + 非同期ロード関数
+- [x] `loader.ts`: 公開 API (`getEncounterSlots`, `listLocations`, `getLocationEntry`, `listStaticEncounterEntries`, `getStaticEncounterEntry`) を `async` に変更
+- [x] `helpers.ts`: loader 呼び出しを `async`/`await` に変更
+- [x] コンポーネント: 非同期取得 + ローディング表示対応
+- [x] テスト: 既存テストを非同期対応に修正
+- [x] `pnpm build` が正常に完了すること (チャンク分割の確認)
+- [x] `pnpm test:run` 通過
+- [x] `pnpm lint` / `pnpm format:check:ts` 通過

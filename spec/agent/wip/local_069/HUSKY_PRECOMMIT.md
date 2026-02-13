@@ -117,4 +117,4 @@ pnpm exec lint-staged
 - [x] `.lintstagedrc.json` ファイルを作成
 - [x] `pnpm install` を実行して Husky をセットアップ
 - [x] 未整形ファイルのコミットで lint-staged が動作することを手動確認
-- [ ] CI が引き続き正常に動作することを確認
+- [x] CI が引き続き正常に動作することを確認
