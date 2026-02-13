@@ -102,107 +102,177 @@ fn extra_process(lcg: &mut Lcg64) -> u32 {
     advances
 }
 
-// ===== BW パターン (元実装準拠) =====
+// ===== ステップ列によるデータ駆動パターン定義 =====
 
-fn bw_new_game_with_save(lcg: &mut Lcg64) -> u32 {
+/// 乱数消費の 1 単位
+enum Step {
+    /// 固定回数の乱数消費
+    Rand(u32),
+    /// Probability Table 処理を指定回数実行
+    Pt(u32),
+    /// BW2 Continue 専用の Extra 処理
+    Extra,
+    /// TID/SID 決定 (1 回の乱数消費)
+    TidSid,
+}
+
+// ----- BW パターン (元実装準拠) -----
+
+/// BW 始めから（セーブ有り）
+const BW_NEW_GAME_WITH_SAVE: &[Step] = &[
+    Step::Pt(2),   // PT×2
+    Step::Rand(2), // チラーミィ PID + ID
+    Step::TidSid,  // TID/SID 決定
+    Step::Pt(4),   // PT×4
+];
+
+/// BW 始めから（セーブ無し）
+const BW_NEW_GAME_NO_SAVE: &[Step] = &[
+    Step::Pt(3),   // PT×3
+    Step::Rand(2), // チラーミィ PID + ID
+    Step::TidSid,  // TID/SID 決定
+    Step::Rand(1), // Rand×1
+    Step::Pt(4),   // PT×4
+];
+
+/// BW 続きから
+const BW_CONTINUE: &[Step] = &[
+    Step::Rand(1), // Rand×1
+    Step::Pt(5),   // PT×5
+];
+
+// ----- BW2 パターン (元実装準拠) -----
+
+/// BW2 始めから（思い出リンク済みセーブ有り）
+const BW2_NEW_GAME_WITH_MEMORY_LINK: &[Step] = &[
+    Step::Rand(1), // Rand×1
+    Step::Pt(1),   // PT×1
+    Step::Rand(2), // Rand×2
+    Step::Pt(1),   // PT×1
+    Step::Rand(2), // Rand×2
+    Step::Rand(2), // チラチーノ PID + ID
+    Step::TidSid,  // TID/SID 決定
+];
+
+/// BW2 始めから（思い出リンク無しセーブ有り）
+const BW2_NEW_GAME_WITH_SAVE: &[Step] = &[
+    Step::Rand(1), // Rand×1
+    Step::Pt(1),   // PT×1
+    Step::Rand(3), // Rand×3
+    Step::Pt(1),   // PT×1
+    Step::Rand(2), // Rand×2
+    Step::Rand(2), // チラチーノ PID + ID
+    Step::TidSid,  // TID/SID 決定
+];
+
+/// BW2 始めから（セーブ無し）
+const BW2_NEW_GAME_NO_SAVE: &[Step] = &[
+    Step::Rand(1), // Rand×1
+    Step::Pt(1),   // PT×1
+    Step::Rand(2), // Rand×2
+    Step::Pt(1),   // PT×1
+    Step::Rand(4), // Rand×4
+    Step::Pt(1),   // PT×1
+    Step::Rand(2), // Rand×2
+    Step::Rand(2), // チラチーノ PID + ID
+    Step::TidSid,  // TID/SID 決定
+];
+
+/// BW2 続きから（思い出リンク済み）
+const BW2_CONTINUE_WITH_MEMORY_LINK: &[Step] = &[
+    Step::Rand(1), // Rand×1
+    Step::Pt(1),   // PT×1
+    Step::Rand(2), // Rand×2
+    Step::Pt(4),   // PT×4
+    Step::Extra,   // Extra 処理
+];
+
+/// BW2 続きから（思い出リンク無し）
+const BW2_CONTINUE_NO_MEMORY_LINK: &[Step] = &[
+    Step::Rand(1), // Rand×1
+    Step::Pt(1),   // PT×1
+    Step::Rand(3), // Rand×3
+    Step::Pt(4),   // PT×4
+    Step::Extra,   // Extra 処理
+];
+
+/// ステップ列を全実行し、合計消費数を返す
+fn execute_steps(lcg: &mut Lcg64, steps: &[Step]) -> u32 {
     let mut advances = 0;
-    // BW 始めから（セーブ有り）- リファレンス実装準拠
-    advances += probability_table_multiple(lcg, 2); // PT×2
-    advances += consume_random(lcg, 1); // チラーミィPID決定
-    advances += consume_random(lcg, 1); // チラーミィID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    // 住人決定は別途計算されるためoffsetには含めない
+    for step in steps {
+        advances += match step {
+            Step::Rand(n) => consume_random(lcg, *n),
+            Step::Pt(n) => probability_table_multiple(lcg, *n),
+            Step::Extra => extra_process(lcg),
+            Step::TidSid => consume_random(lcg, 1),
+        };
+    }
     advances
 }
 
-fn bw_new_game_no_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW 始めから（セーブ無し）- リファレンス実装準拠
-    advances += probability_table_multiple(lcg, 3); // PT×3
-    advances += consume_random(lcg, 1); // チラーミィPID決定
-    advances += consume_random(lcg, 1); // チラーミィID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    // 住人決定は別途計算されるためoffsetには含めない
-    advances
+/// `TidSid` ステップの直前まで実行し、乱数値から TID/SID を算出する
+fn execute_until_tid_sid(lcg: &mut Lcg64, steps: &[Step]) -> Option<TrainerInfo> {
+    for step in steps {
+        if matches!(step, Step::TidSid) {
+            let rand_value = lcg.next().unwrap_or(0);
+            let combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
+            return Some(TrainerInfo {
+                tid: (combined & 0xFFFF) as u16,
+                sid: ((combined >> 16) & 0xFFFF) as u16,
+            });
+        }
+        match step {
+            Step::Rand(n) => {
+                consume_random(lcg, *n);
+            }
+            Step::Pt(n) => {
+                probability_table_multiple(lcg, *n);
+            }
+            Step::Extra => {
+                extra_process(lcg);
+            }
+            Step::TidSid => unreachable!(),
+        }
+    }
+    None // Continue パターンには TidSid がない
 }
 
-fn bw_continue(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW 続きから - リファレンス実装準拠
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 5); // PT×5
-    advances
-}
+/// ゲームバージョンと起動設定からパターンを選択する
+fn select_pattern(version: RomVersion, config: GameStartConfig) -> Result<&'static [Step], String> {
+    match (
+        version.is_bw2(),
+        config.start_mode,
+        config.save,
+        config.memory_link,
+    ) {
+        // BW
+        (false, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
+            Ok(BW_NEW_GAME_WITH_SAVE)
+        }
+        (false, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
+            Ok(BW_NEW_GAME_NO_SAVE)
+        }
+        (false, StartMode::Continue, _, MemoryLinkState::Disabled) => Ok(BW_CONTINUE),
 
-// ===== BW2 パターン (元実装準拠) =====
+        // BW2
+        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Enabled) => {
+            Ok(BW2_NEW_GAME_WITH_MEMORY_LINK)
+        }
+        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
+            Ok(BW2_NEW_GAME_WITH_SAVE)
+        }
+        (true, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
+            Ok(BW2_NEW_GAME_NO_SAVE)
+        }
+        (true, StartMode::Continue, _, MemoryLinkState::Enabled) => {
+            Ok(BW2_CONTINUE_WITH_MEMORY_LINK)
+        }
+        (true, StartMode::Continue, _, MemoryLinkState::Disabled) => {
+            Ok(BW2_CONTINUE_NO_MEMORY_LINK)
+        }
 
-fn bw2_new_game_with_memory_link(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 始めから（思い出リンク済みセーブ有り）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += consume_random(lcg, 1); // チラチーノPID決定
-    advances += consume_random(lcg, 1); // チラチーノID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances
-}
-
-fn bw2_new_game_with_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 始めから（思い出リンク無しセーブ有り）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 3); // Rand×3
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += consume_random(lcg, 1); // チラチーノPID決定
-    advances += consume_random(lcg, 1); // チラチーノID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances
-}
-
-fn bw2_new_game_no_save(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 始めから（セーブ無し）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 4); // Rand×4
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += consume_random(lcg, 1); // チラチーノPID決定
-    advances += consume_random(lcg, 1); // チラチーノID決定
-    advances += consume_random(lcg, 1); // TID/SID決定
-    advances
-}
-
-fn bw2_continue_with_memory_link(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 続きから（思い出リンク済み）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 2); // Rand×2
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    advances += extra_process(lcg); // Extra処理
-    advances
-}
-
-fn bw2_continue_no_memory_link(lcg: &mut Lcg64) -> u32 {
-    let mut advances = 0;
-    // BW2 続きから（思い出リンク無し）
-    advances += consume_random(lcg, 1); // Rand×1
-    advances += probability_table_multiple(lcg, 1); // PT×1
-    advances += consume_random(lcg, 3); // Rand×3
-    advances += probability_table_multiple(lcg, 4); // PT×4
-    advances += extra_process(lcg); // Extra処理
-    advances
+        _ => Err("Invalid combination".into()),
+    }
 }
 
 /// Game Offset を計算
@@ -217,45 +287,9 @@ pub fn calculate_game_offset(
     config: GameStartConfig,
 ) -> Result<u32, String> {
     config.validate(version)?;
-
+    let pattern = select_pattern(version, config)?;
     let mut lcg = Lcg64::new(seed);
-
-    let advances = match (
-        version.is_bw2(),
-        config.start_mode,
-        config.save,
-        config.memory_link,
-    ) {
-        // BW
-        (false, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            bw_new_game_with_save(&mut lcg)
-        }
-        (false, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            bw_new_game_no_save(&mut lcg)
-        }
-        (false, StartMode::Continue, _, MemoryLinkState::Disabled) => bw_continue(&mut lcg),
-
-        // BW2
-        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Enabled) => {
-            bw2_new_game_with_memory_link(&mut lcg)
-        }
-        (true, StartMode::NewGame, SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            bw2_new_game_with_save(&mut lcg)
-        }
-        (true, StartMode::NewGame, SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            bw2_new_game_no_save(&mut lcg)
-        }
-        (true, StartMode::Continue, _, MemoryLinkState::Enabled) => {
-            bw2_continue_with_memory_link(&mut lcg)
-        }
-        (true, StartMode::Continue, _, MemoryLinkState::Disabled) => {
-            bw2_continue_no_memory_link(&mut lcg)
-        }
-
-        _ => return Err("Invalid combination".into()),
-    };
-
-    Ok(advances)
+    Ok(execute_steps(&mut lcg, pattern))
 }
 
 // ===== MT オフセット計算 =====
@@ -283,62 +317,6 @@ pub const fn calculate_mt_offset(version: RomVersion, encounter_type: EncounterT
     }
 }
 
-// ===== TrainerInfo 算出 =====
-
-/// TID/SID 決定直前まで LCG を進める (BW)
-fn advance_to_tid_sid_point_bw(lcg: &mut Lcg64, save: SavePresence) {
-    match save {
-        SavePresence::WithSave => {
-            // PT×2 + チラーミィPID + チラーミィID
-            probability_table_multiple(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        SavePresence::NoSave => {
-            // PT×3 + チラーミィPID + チラーミィID
-            probability_table_multiple(lcg, 3);
-            consume_random(lcg, 2);
-        }
-    }
-}
-
-/// TID/SID 決定直前まで LCG を進める (BW2)
-fn advance_to_tid_sid_point_bw2(lcg: &mut Lcg64, save: SavePresence, memory_link: MemoryLinkState) {
-    match (save, memory_link) {
-        (SavePresence::WithSave, MemoryLinkState::Enabled) => {
-            // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
-            consume_random(lcg, 1);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        (SavePresence::WithSave, MemoryLinkState::Disabled) => {
-            // Rand×1 + PT×1 + Rand×3 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
-            consume_random(lcg, 1);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 3);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        (SavePresence::NoSave, MemoryLinkState::Disabled) => {
-            // Rand×1 + PT×1 + Rand×2 + PT×1 + Rand×4 + PT×1 + Rand×2 + チラチーノPID + チラチーノID
-            consume_random(lcg, 1);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 4);
-            probability_table_multiple(lcg, 1);
-            consume_random(lcg, 2);
-            consume_random(lcg, 2);
-        }
-        (SavePresence::NoSave, MemoryLinkState::Enabled) => {
-            unreachable!("validated: memory_link requires save")
-        }
-    }
-}
-
 /// `LcgSeed` から `TrainerInfo` を算出
 ///
 /// ゲーム初期化処理を経て TID/SID が決定されるポイントまで LCG を進め、
@@ -358,23 +336,9 @@ pub fn calculate_trainer_info(
     }
 
     config.validate(version)?;
-
+    let pattern = select_pattern(version, config)?;
     let mut lcg = Lcg64::new(seed);
-
-    // TID/SID 決定直前まで進める
-    if version.is_bw2() {
-        advance_to_tid_sid_point_bw2(&mut lcg, config.save, config.memory_link);
-    } else {
-        advance_to_tid_sid_point_bw(&mut lcg, config.save);
-    }
-
-    // TID/SID 算出 (元実装準拠)
-    let rand_value = lcg.next().unwrap_or(0);
-    let tid_sid_combined = ((u64::from(rand_value) * 0xFFFF_FFFF) >> 32) as u32;
-    let tid = (tid_sid_combined & 0xFFFF) as u16;
-    let sid = ((tid_sid_combined >> 16) & 0xFFFF) as u16;
-
-    Ok(TrainerInfo { tid, sid })
+    execute_until_tid_sid(&mut lcg, pattern).ok_or_else(|| "No TidSid step in pattern".into())
 }
 
 #[cfg(test)]
