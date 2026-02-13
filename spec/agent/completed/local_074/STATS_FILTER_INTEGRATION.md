@@ -423,27 +423,27 @@ import type { StatsFilter } from '@/wasm/wasm_pkg';
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/data/stats.rs` — `Stats` に `Tsify`/`Serialize`/`Deserialize` derive 追加
-- [ ] `wasm-pkg/src/data/mod.rs` — `Stats` の再エクスポート確認
-- [ ] `wasm-pkg/src/types/generation.rs` — `CorePokemonData` に `stats: Stats` 追加
-- [ ] `wasm-pkg/src/types/filter.rs` — `StatsFilter` 新設 + `CoreDataFilter` に `stats` 追加
-- [ ] `wasm-pkg/src/types/filter.rs` — `CoreDataFilter::matches` に stats チェック追加
-- [ ] `wasm-pkg/src/types/filter.rs` — `StatsFilter` ユニットテスト追加
-- [ ] `wasm-pkg/src/types/mod.rs` — `Stats`/`StatsFilter` 再エクスポート
-- [ ] `wasm-pkg/src/generation/flows/types.rs` — `from_raw` で stats 算出
-- [ ] `wasm-pkg/src/generation/flows/types.rs` — `from_raw` テスト追加
-- [ ] `wasm-pkg/src/resolve/pokemon.rs` — `calculate_stats` 呼び出し削除、`core.stats` 使用
-- [ ] `wasm-pkg/src/resolve/egg.rs` — 同上
-- [ ] `wasm-pkg/src/lib.rs` — `StatsFilter` エクスポート追加
-- [ ] `wasm-pkg/tests/resolve_integration.rs` — `CorePokemonData` に `stats` フィールド追加
-- [ ] `cargo test` — 全 Rust テスト通過
-- [ ] `cargo clippy --all-targets -- -D warnings` — 警告なし
-- [ ] WASM ビルド (`pnpm build:wasm`) — 成功
-- [ ] `src/lib/stats-filter.ts` — 削除
-- [ ] `src/features/pokemon-list/components/pokemon-list-page.tsx` — `filterByStats` 削除
-- [ ] `src/features/egg-list/components/egg-list-page.tsx` — `filterByStats` 削除
-- [ ] `src/features/pokemon-list/components/pokemon-filter-form.tsx` — `StatsFilter` 型に移行
-- [ ] `src/components/forms/egg-filter-form.tsx` — `StatsFilter` 型に移行
-- [ ] `src/features/egg-list/types.ts` — `statsFilter` 型更新
-- [ ] `pnpm exec tsc -b --noEmit` — 型チェック通過
-- [ ] `pnpm test:run` — 全 TS テスト通過
+- [x] `wasm-pkg/src/data/stats.rs` — `Stats` に `Tsify`/`Serialize`/`Deserialize` derive 追加
+- [x] `wasm-pkg/src/data/mod.rs` — `Stats` の再エクスポート確認
+- [x] `wasm-pkg/src/types/generation.rs` — `CorePokemonData` に `stats: Stats` 追加
+- [x] `wasm-pkg/src/types/filter.rs` — `StatsFilter` 新設 + `CoreDataFilter` に `stats` 追加
+- [x] `wasm-pkg/src/types/filter.rs` — `CoreDataFilter::matches` に stats チェック追加
+- [x] `wasm-pkg/src/types/filter.rs` — `StatsFilter` ユニットテスト追加
+- [x] `wasm-pkg/src/types/mod.rs` — `Stats`/`StatsFilter` 再エクスポート
+- [x] `wasm-pkg/src/generation/flows/types.rs` — `from_raw` で stats 算出
+- [x] `wasm-pkg/src/generation/flows/types.rs` — `from_raw` テスト追加
+- [x] `wasm-pkg/src/resolve/pokemon.rs` — `calculate_stats` 呼び出し削除、`core.stats` 使用
+- [x] `wasm-pkg/src/resolve/egg.rs` — 同上
+- [x] `wasm-pkg/src/lib.rs` — `StatsFilter` エクスポート追加
+- [x] `wasm-pkg/tests/resolve_integration.rs` — `CorePokemonData` に `stats` フィールド追加
+- [x] `cargo test` — 全 Rust テスト通過
+- [x] `cargo clippy --all-targets -- -D warnings` — 警告なし
+- [x] WASM ビルド (`pnpm build:wasm`) — 成功
+- [x] `src/lib/stats-filter.ts` — 削除
+- [x] `src/features/pokemon-list/components/pokemon-list-page.tsx` — `filterByStats` 削除
+- [x] `src/features/egg-list/components/egg-list-page.tsx` — `filterByStats` 削除
+- [x] `src/features/pokemon-list/components/pokemon-filter-form.tsx` — `StatsFilter` 型に移行
+- [x] `src/components/forms/egg-filter-form.tsx` — `StatsFilter` 型に移行
+- [x] `src/features/egg-list/types.ts` — `statsFilter` 型更新
+- [x] `pnpm exec tsc -b --noEmit` — 型チェック通過
+- [x] `pnpm test:run` — 全 TS テスト通過

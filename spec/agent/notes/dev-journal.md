@@ -34,10 +34,6 @@ Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より
 
 当面の方針: 今回は手動で 12 件を追加し、不要な `celestial_tower` を削除して整合をとった。将来的にはスクレイピング後にキーの過不足を自動検出するスクリプト（または CI チェック）の導入を検討する。
 
-## 2026-02-12: 実ステータスフィルタの責務境界
-
-→ 仕様書として再構築: `spec/agent/wip/local_074/STATS_FILTER_INTEGRATION.md`
-
 ## 2026-02-13: pokemon-filter-form 内部状態同期の複雑性
 
 現状: `pokemon-filter-form.tsx` はフィルタの有効/無効トグルを持ち、無効時でもフォーム入力値を保持するために3つの内部状態を管理している。
