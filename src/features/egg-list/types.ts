@@ -7,9 +7,9 @@ import type {
   GenerationConfig,
   EggFilter,
   SeedOrigin,
+  StatsFilter,
 } from '../../wasm/wasm_pkg.js';
 import type { SeedInputMode } from '@/components/forms/seed-input-section';
-import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { validateGenConfig, isIvValid } from '@/lib/validation';
 
 /** タマゴ生成フォーム状態 */
@@ -19,7 +19,7 @@ export interface EggListFormState {
   eggParams: EggGenerationParams;
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
   filter: EggFilter | undefined;
-  statsFilter: StatsFixedValues | undefined;
+  statsFilter: StatsFilter | undefined;
   speciesId: number | undefined;
 }
 

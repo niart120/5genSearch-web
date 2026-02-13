@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { IvRangeInput } from '@/components/forms/iv-range-input';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
-import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
 import { NatureSelect } from '@/components/forms/nature-select';
 import { HiddenPowerSelect } from '@/components/forms/hidden-power-select';
 import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
@@ -24,8 +23,9 @@ import { ShinySelect } from '@/components/forms/shiny-select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { cn } from '@/lib/utils';
 import type { StatDisplayMode } from '@/lib/game-data-names';
+import type { StatsFilter } from '@/wasm/wasm_pkg.js';
 
-const EMPTY_STATS_FIXED: StatsFixedValues = {
+const EMPTY_STATS_FIXED: StatsFilter = {
   hp: undefined,
   atk: undefined,
   def: undefined,
@@ -48,8 +48,8 @@ interface EggFilterFormProps {
   onChange: (filter?: EggFilter) => void;
   /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
   statMode?: StatDisplayMode;
-  statsFilter?: StatsFixedValues | undefined;
-  onStatsFilterChange?: (filter?: StatsFixedValues) => void;
+  statsFilter?: StatsFilter | undefined;
+  onStatsFilterChange?: (filter?: StatsFilter) => void;
   disabled?: boolean;
   /** フィルター有効/無効 Switch を表示する。内部状態を保持したまま切り替える */
   showToggle?: boolean;
@@ -73,6 +73,7 @@ const DEFAULT_FILTER: EggFilter = {
   ability_slot: undefined,
   shiny: undefined,
   min_margin_frames: undefined,
+  stats: undefined,
 };
 
 function EggFilterForm({
@@ -94,7 +95,7 @@ function EggFilterForm({
     !showToggle || value !== undefined || statsFilter !== undefined
   );
   const [internalFilter, setInternalFilter] = useState<EggFilter>(value ?? DEFAULT_FILTER);
-  const [internalStats, setInternalStats] = useState<StatsFixedValues | undefined>(statsFilter);
+  const [internalStats, setInternalStats] = useState<StatsFilter | undefined>(statsFilter);
 
   // Toggle mode uses internal state; otherwise props directly
   const filter = showToggle ? internalFilter : (value ?? DEFAULT_FILTER);
@@ -115,7 +116,7 @@ function EggFilterForm({
 
   /** Toggle mode: propagate or suppress based on enabled state */
   const propagateToggle = useCallback(
-    (f: EggFilter, stats: StatsFixedValues | undefined, enabled: boolean) => {
+    (f: EggFilter, stats: StatsFilter | undefined, enabled: boolean) => {
       if (!enabled) {
         onChange();
         onStatsFilterChange?.();
@@ -169,7 +170,7 @@ function EggFilterForm({
   // --- Stats handler ---
 
   const handleStatsChange = useCallback(
-    (v: StatsFixedValues) => {
+    (v: StatsFilter) => {
       const hasAny = Object.values(v).some((val) => val !== undefined);
       const next = hasAny ? v : undefined;
       if (showToggle) {

@@ -20,8 +20,6 @@ import type { EggListValidationErrorCode } from '../types';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import { EggParamsForm } from '@/components/forms/egg-params-form';
-import type { StatsFixedValues } from '@/components/forms/stats-fixed-input';
-import { filterByStats } from '@/lib/stats-filter';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import { EggFilterForm } from '@/components/forms/egg-filter-form';
@@ -30,6 +28,7 @@ import type {
   EggFilter,
   EggGenerationParams,
   SeedOrigin,
+  StatsFilter,
   UiEggData,
   Ivs,
 } from '@/wasm/wasm_pkg.js';
@@ -75,7 +74,7 @@ function EggListPage(): ReactElement {
   const [filter, setFilter] = useState<EggFilter | undefined>();
 
   // 実ステータスフィルタ
-  const [statsFilter, setStatsFilter] = useState<StatsFixedValues | undefined>();
+  const [statsFilter, setStatsFilter] = useState<StatsFilter | undefined>();
 
   // 表示モード
   const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
@@ -101,12 +100,6 @@ function EggListPage(): ReactElement {
     [seedInputMode, seedOrigins, eggParams, genConfig, filter, statsFilter, speciesId]
   );
 
-  // クライアントサイド Stats フィルタ適用
-  const filteredResults = useMemo(
-    () => filterByStats(uiResults, statsFilter),
-    [uiResults, statsFilter]
-  );
-
   const [selectedResult, setSelectedResult] = useState<UiEggData | undefined>();
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -129,13 +122,27 @@ function EggListPage(): ReactElement {
       max_advance: genConfig.max_advance,
     };
 
-    generate(seedOrigins, paramsWithTrainer, fullGenConfig, filter);
+    const mergedFilter: EggFilter | undefined = (() => {
+      if (!filter && !statsFilter) return undefined;
+      return {
+        iv: filter?.iv,
+        natures: filter?.natures,
+        gender: filter?.gender,
+        ability_slot: filter?.ability_slot,
+        shiny: filter?.shiny,
+        min_margin_frames: filter?.min_margin_frames,
+        stats: statsFilter,
+      };
+    })();
+
+    generate(seedOrigins, paramsWithTrainer, fullGenConfig, mergedFilter);
   }, [
     generate,
     seedOrigins,
     eggParams,
     genConfig,
     filter,
+    statsFilter,
     tid,
     sid,
     speciesId,
@@ -223,7 +230,7 @@ function EggListPage(): ReactElement {
         <FeaturePageLayout.Results>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              <Trans>Results</Trans>: {filteredResults.length.toLocaleString()}
+              <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
@@ -241,7 +248,7 @@ function EggListPage(): ReactElement {
           </div>
           <DataTable
             columns={columns}
-            data={filteredResults}
+            data={uiResults}
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}

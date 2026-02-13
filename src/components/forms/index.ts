@@ -5,7 +5,7 @@ export type { GenderSelectProps } from './gender-select';
 export { ShinySelect } from './shiny-select';
 export type { ShinySelectProps } from './shiny-select';
 export { StatsFixedInput } from './stats-fixed-input';
-export type { StatsFixedInputProps, StatsFixedValues } from './stats-fixed-input';
+export type { StatsFixedInputProps } from './stats-fixed-input';
 export { IvRangeInput } from './iv-range-input';
 export type { IvRangeInputProps } from './iv-range-input';
 export { DateRangePicker } from './date-range-picker';

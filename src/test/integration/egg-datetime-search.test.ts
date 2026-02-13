@@ -116,6 +116,7 @@ describe('EggDatetimeSearch Integration', () => {
         ability_slot: undefined,
         shiny: undefined,
         min_margin_frames: undefined,
+        stats: undefined,
       },
       1
     );

@@ -126,7 +126,7 @@ describe('Egg List Worker Integration', () => {
     const task: EggListTask = {
       kind: 'egg-list',
       origins: TEST_ORIGINS,
-      params: TEST_PARAMS,
+      params: { ...TEST_PARAMS, species_id: 25 },
       config: { ...TEST_CONFIG, max_advance: 2 },
       filter: undefined,
     };
@@ -134,7 +134,7 @@ describe('Egg List Worker Integration', () => {
     const results = await executeTask(pool, task);
     const resolved = resolve_egg_data_batch(results, 'ja', 25);
     const stats = resolved[0].stats;
-    // species_id 指定時は全て数値文字列
+    // species_id 指定時は全て数値文字列 (stats は from_raw で事前計算済み)
     for (const s of stats) {
       expect(Number.isNaN(Number(s))).toBe(false);
     }
