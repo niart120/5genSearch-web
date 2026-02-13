@@ -102,7 +102,7 @@ import { health_check, ... } from '../wasm/wasm_pkg.js';
 // initWasm 不要 — import 時に自動初期化される
 ```
 
-Worker の `init` メッセージハンドラは WASM 初期化が不要になるが、Worker の ready 通知としての役割は残すか検討する。
+Worker の `init` メッセージハンドラは WASM 初期化が不要になるが、Worker の ready 通知としての役割は残す。
 
 ### 3.4 メインスレッド初期化の変更
 

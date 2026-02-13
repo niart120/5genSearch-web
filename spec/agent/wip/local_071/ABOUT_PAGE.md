@@ -24,7 +24,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| 出典の明示 | pokebook.jp、niart120/pokemon-gen5-initseed への適切なクレジット表示 |
+| 出典の明示 | pokebook.jp への適切なクレジット表示 |
 | 画面領域確保 | フッター廃止後の代替として情報を About ページに集約 |
 
 ### 1.5 着手条件
@@ -74,15 +74,14 @@ About ページは既存カテゴリ (`search`, `generation`, `tools`) のいず
 About ページに掲載するセクション:
 
 1. **アプリ概要**: 対象タイトル（BW/BW2）と機能の説明
-2. **データの出典**: pokebook.jp「ポケモンの友」、niart120/pokemon-gen5-initseed
-3. **使用技術**: React, Rust/WASM, WebGPU 等の技術スタック概要
-4. **ライセンス**: リポジトリの LICENSE ファイルへのリンク
-5. **リポジトリリンク**: GitHub リポジトリ URL
-6. **免責事項**: 非公式ツールである旨
+2. **データの出典**: pokebook.jp「ポケモンの友」
+3. **ライセンス**: リポジトリの LICENSE ファイルへのリンク
+4. **リポジトリリンク**: GitHub リポジトリ URL
+5. **免責事項**: 非公式ツールである旨
 
 ### 3.3 FeatureTabs の扱い
 
-About カテゴリには feature が1つしかないため、FeatureTabs（カテゴリ内のサブタブ）は非表示にする。`FeatureTabs` コンポーネントで `features.length <= 1` の場合に描画をスキップするか、About カテゴリの場合のみ条件分岐する。
+About カテゴリには feature が1つしかないため、FeatureTabs（カテゴリ内のサブタブ）は非表示にする。`FeatureTabs` コンポーネントで `features.length <= 1` の場合に描画をスキップする。
 
 ## 4. 実装仕様
 
