@@ -1,4 +1,0 @@
-{
-  "*.{ts,tsx,js,jsx,json,css,html}": "prettier --write",
-  "*.rs": "cargo fmt --"
-}
