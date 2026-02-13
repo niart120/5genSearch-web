@@ -44,6 +44,12 @@ function renderForm(props: Partial<Parameters<typeof EggParamsForm>[0]> = {}) {
   };
 }
 
+/** functional updater を取り出して base に適用し結果を返す */
+function applyLastUpdate<T>(mock: ReturnType<typeof vi.fn>, base: T): T {
+  const arg = mock.mock.lastCall?.[0] as ((prev: T) => T) | T;
+  return typeof arg === 'function' ? (arg as (prev: T) => T)(base) : arg;
+}
+
 describe('EggParamsForm', () => {
   beforeEach(() => {
     act(() => {
@@ -82,7 +88,9 @@ describe('EggParamsForm', () => {
     expect(masudaCheckbox).toBeDefined();
     if (masudaCheckbox) {
       await user.click(masudaCheckbox);
-      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ masuda_method: true }));
+      expect(onChange).toHaveBeenCalled();
+      const result = applyLastUpdate(onChange, DEFAULT_EGG_PARAMS);
+      expect(result).toEqual(expect.objectContaining({ masuda_method: true }));
     }
   });
 
@@ -107,7 +115,9 @@ describe('EggParamsForm', () => {
     const hpUnknown = screen.getByRole('checkbox', { name: 'Parent ♂ IVs H unknown' });
     await user.click(hpUnknown);
 
-    expect(onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalled();
+    const result = applyLastUpdate(onChange, DEFAULT_EGG_PARAMS);
+    expect(result).toEqual(
       expect.objectContaining({
         parent_male: expect.objectContaining({ hp: 32 }),
       })
@@ -126,7 +136,9 @@ describe('EggParamsForm', () => {
     const hpUnknown = screen.getByRole('checkbox', { name: 'Parent ♂ IVs H unknown' });
     await user.click(hpUnknown);
 
-    expect(onChange).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenCalled();
+    const result = applyLastUpdate(onChange, paramsWithUnknown);
+    expect(result).toEqual(
       expect.objectContaining({
         parent_male: expect.objectContaining({ hp: 0 }),
       })
@@ -160,6 +172,8 @@ describe('EggParamsForm', () => {
     await user.type(offsetInput, '10');
     await user.tab();
 
-    expect(onGenConfigChange).toHaveBeenCalledWith(expect.objectContaining({ user_offset: 10 }));
+    expect(onGenConfigChange).toHaveBeenCalled();
+    const result = applyLastUpdate(onGenConfigChange, DEFAULT_GEN_CONFIG);
+    expect(result).toEqual(expect.objectContaining({ user_offset: 10 }));
   });
 });
