@@ -35,5 +35,8 @@ src/wasm/*
 !src/wasm/wasm_pkg_bg.wasm.d.ts
 public/wasm/
 
+# Vitest Browser Mode screenshots
+__screenshots__/
+
 # ローカル開発用設定
 wasm-pkg/.cargo/
