@@ -7,7 +7,6 @@
 
 import { useCallback, useMemo } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
-import { initMainThreadWasm } from '@/services/wasm-init';
 import { createEggSearchTasks } from '@/services/search-tasks';
 import type {
   DatetimeSearchContext,
@@ -48,10 +47,8 @@ export function useEggSearch(): UseEggSearchReturn {
       filter: EggFilter | undefined
     ) => {
       const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
-      void initMainThreadWasm().then(() => {
-        const tasks = createEggSearchTasks(context, eggParams, genConfig, filter, workerCount);
-        search.start(tasks);
-      });
+      const tasks = createEggSearchTasks(context, eggParams, genConfig, filter, workerCount);
+      search.start(tasks);
     },
     [config.workerCount, search]
   );

@@ -5,8 +5,8 @@
  * 検索がパニックせず完走することを検証する。
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import wasmInit, { generate_egg_search_tasks, EggDatetimeSearcher } from '../../wasm/wasm_pkg.js';
+import { describe, it, expect } from 'vitest';
+import { generate_egg_search_tasks, EggDatetimeSearcher } from '../../wasm/wasm_pkg.js';
 import type {
   DatetimeSearchContext,
   EggGenerationParams,
@@ -75,10 +75,6 @@ const genConfig: GenerationConfig = {
 };
 
 describe('EggDatetimeSearch Integration', () => {
-  beforeAll(async () => {
-    await wasmInit();
-  });
-
   it('タスク生成で複数タスクに分割される', () => {
     const tasks = generate_egg_search_tasks(testContext, eggParams, genConfig, undefined, 4);
     expect(tasks.length).toBeGreaterThanOrEqual(1);

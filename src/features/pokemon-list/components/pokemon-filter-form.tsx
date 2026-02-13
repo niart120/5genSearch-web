@@ -6,7 +6,7 @@
  * statMode に応じて IV / 実ステータスフィルターを切り替える。
  */
 
-import { useState, useCallback, useMemo, useEffect, type ReactElement } from 'react';
+import { useState, useCallback, useMemo, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
@@ -23,7 +23,7 @@ import { ShinySelect } from '@/components/forms/shiny-select';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
 import { cn } from '@/lib/utils';
 import { IV_STAT_KEYS } from '@/lib/game-data-names';
-import { initMainThreadWasm } from '@/services/wasm-init';
+
 import { get_species_name } from '@/wasm/wasm_pkg.js';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
@@ -187,23 +187,14 @@ function PokemonFilterForm({
 
   // species 名前解決 (WASM 経由)
   const speciesIds = useMemo(() => availableSpecies.map((s) => s.speciesId), [availableSpecies]);
-  const [speciesNames, setSpeciesNames] = useState<Map<number, string>>(new Map());
-  useEffect(() => {
-    if (speciesIds.length === 0) return;
-    let cancelled = false;
-    void initMainThreadWasm().then(() => {
-      if (cancelled) return;
-      const map = new Map<number, string>();
-      for (const id of speciesIds) {
-        map.set(id, get_species_name(id, language));
-      }
-      setSpeciesNames(map);
-    });
-    return () => {
-      cancelled = true;
-    };
+  const effectiveSpeciesNames = useMemo(() => {
+    if (speciesIds.length === 0) return new Map<number, string>();
+    const map = new Map<number, string>();
+    for (const id of speciesIds) {
+      map.set(id, get_species_name(id, language));
+    }
+    return map;
   }, [speciesIds, language]);
-  const effectiveSpeciesNames = speciesIds.length === 0 ? new Map<number, string>() : speciesNames;
 
   // --- propagation helpers ---
 

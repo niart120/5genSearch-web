@@ -3,9 +3,11 @@ import react from '@vitejs/plugin-react';
 import { lingui } from '@lingui/vite-plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { playwright } from '@vitest/browser-playwright';
+import wasm from 'vite-plugin-wasm';
 
 export default defineConfig({
   plugins: [
+    wasm(),
     react({
       babel: {
         plugins: ['@lingui/babel-plugin-lingui-macro'],
@@ -14,6 +16,10 @@ export default defineConfig({
     lingui(),
     tsconfigPaths(),
   ],
+  worker: {
+    format: 'es',
+    plugins: () => [wasm()],
+  },
   test: {
     globals: true,
     coverage: {

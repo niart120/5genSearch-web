@@ -113,15 +113,14 @@ function SeedInputSection({
         seeds.push(seed);
       }
       const id = ++resolveIdRef.current;
-      void resolveSeedOrigins({ type: 'Seeds', seeds })
-        .then((resolved) => {
-          if (resolveIdRef.current === id) onOriginsChange(resolved);
-        })
-        .catch((error: unknown) => {
-          if (resolveIdRef.current === id) {
-            setResolveError(error instanceof Error ? error.message : String(error));
-          }
-        });
+      try {
+        const resolved = resolveSeedOrigins({ type: 'Seeds', seeds });
+        if (resolveIdRef.current === id) onOriginsChange(resolved);
+      } catch (error: unknown) {
+        if (resolveIdRef.current === id) {
+          setResolveError(error instanceof Error ? error.message : String(error));
+        }
+      }
     },
     [onOriginsChange]
   );
@@ -131,21 +130,20 @@ function SeedInputSection({
     (dt: Datetime, ki: KeyInput) => {
       setResolveError(undefined);
       const id = ++resolveIdRef.current;
-      void resolveSeedOrigins({
-        type: 'Startup',
-        ds: dsConfig,
-        datetime: dt,
-        ranges,
-        key_input: ki,
-      })
-        .then((resolved) => {
-          if (resolveIdRef.current === id) onOriginsChange(resolved);
-        })
-        .catch((error: unknown) => {
-          if (resolveIdRef.current === id) {
-            setResolveError(error instanceof Error ? error.message : String(error));
-          }
+      try {
+        const resolved = resolveSeedOrigins({
+          type: 'Startup',
+          ds: dsConfig,
+          datetime: dt,
+          ranges,
+          key_input: ki,
         });
+        if (resolveIdRef.current === id) onOriginsChange(resolved);
+      } catch (error: unknown) {
+        if (resolveIdRef.current === id) {
+          setResolveError(error instanceof Error ? error.message : String(error));
+        }
+      }
     },
     [dsConfig, ranges, onOriginsChange]
   );

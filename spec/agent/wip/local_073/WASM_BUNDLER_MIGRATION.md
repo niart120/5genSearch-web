@@ -4,7 +4,7 @@
 
 ### 1.1 目的
 
-WASM ビルドターゲットを `--target web` から `--target bundler` に切り替え、`vite-plugin-wasm` + `vite-plugin-top-level-await` を導入することで、WASM の手動初期化コードと `public/wasm/` への配信パイプラインを廃止する。
+WASM ビルドターゲットを `--target web` から `--target bundler` に切り替え、`vite-plugin-wasm` を導入することで、WASM の手動初期化コードと `public/wasm/` への配信パイプラインを廃止する。
 
 ### 1.2 用語定義
 
@@ -13,7 +13,7 @@ WASM ビルドターゲットを `--target web` から `--target bundler` に切
 | `--target web` | wasm-pack のビルドターゲット。ES モジュールを生成し、`initWasm()` の手動呼び出しが必要 |
 | `--target bundler` | wasm-pack のビルドターゲット。バンドラ連携を前提とし、import 時に自動初期化可能 |
 | `vite-plugin-wasm` | Vite プラグイン。`.wasm` インポートを処理し、`WebAssembly.instantiate` を自動実行 |
-| `vite-plugin-top-level-await` | Vite プラグイン。トップレベル await を ES2022 未対応環境で動作させる |
+| top-level await | ES2022 で導入された構文。モジュールスコープで `await` を使用可能にする。WASM 自動初期化に必須 |
 | グルーコード | wasm-bindgen が生成する JS ファイル (`wasm_pkg.js`) |
 
 ### 1.3 背景・問題
@@ -40,8 +40,8 @@ WASM ビルドターゲットを `--target web` から `--target bundler` に切
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `package.json` | 変更 | `vite-plugin-wasm`, `vite-plugin-top-level-await` を devDependencies に追加、`build:wasm`/`build:wasm:dev` スクリプトの `--target` 変更、`copy-wasm` ステップ削除 |
-| `vite.config.ts` | 変更 | `wasm()`, `topLevelAwait()` プラグイン追加、Worker 向け plugin 設定 |
+| `package.json` | 変更 | `vite-plugin-wasm` を devDependencies に追加、`build:wasm`/`build:wasm:dev` スクリプトの `--target` 変更、`copy-wasm` ステップ削除 |
+| `vite.config.ts` | 変更 | `wasm()` プラグイン追加、`worker.format: 'es'` + `worker.plugins` 設定 |
 | `src/services/wasm-init.ts` | 削除 | 不要になる |
 | `src/workers/search.worker.ts` | 変更 | `initWasm()` 呼び出し削除、import 文変更 |
 | `src/workers/gpu.worker.ts` | 変更 | 同上 |
@@ -67,27 +67,25 @@ wasm-pack build wasm-pkg --target bundler --out-dir ../src/wasm --release -- --f
 
 ```ts
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 
 export default defineConfig({
   plugins: [
     wasm(),
-    topLevelAwait(),
     tailwindcss(),
     react({ /* ... */ }),
     lingui(),
     tsconfigPaths(),
   ],
   worker: {
-    plugins: () => [
-      wasm(),
-      topLevelAwait(),
-    ],
+    format: 'es',
+    plugins: () => [wasm()],
   },
 });
 ```
 
 `worker.plugins` に同じプラグインを設定することで Worker 内でも WASM import が自動初期化される。
+
+`worker.format: 'es'` は必須。デフォルトの IIFE 形式では top-level await がサポートされない。`vite-plugin-top-level-await` は `rolldown-vite` と非互換（内部で `rollup` モジュールを要求）のため使用しない。モダンブラウザ（Chrome 89+, Safari 15+, Firefox 89+）は ES module Worker + top-level await を native でサポートしている。
 
 ### 3.3 Worker の変更
 
@@ -104,20 +102,54 @@ import { health_check, ... } from '../wasm/wasm_pkg.js';
 
 Worker の `init` メッセージハンドラは WASM 初期化が不要になるが、Worker の ready 通知としての役割は残す。
 
-### 3.4 メインスレッド初期化の変更
+### 3.4 Module Worker と top-level await によるメッセージ消失問題
+
+`--target bundler` で生成されるグルーコードは `import * as wasm from "./wasm_pkg_bg.wasm"` の形式を取り、`vite-plugin-wasm` がこれを `await WebAssembly.instantiate(...)` に変換する。この結果、Worker のモジュール評価に top-level await が含まれることになる。
+
+Chromium の Module Worker 実装では、top-level await により非同期になったモジュール評価中に event loop が進行する。この間に `postMessage()` で送信されたメッセージは、`addEventListener('message', ...)` が登録される前に dispatch されるため、ハンドラ不在のまま消失する。
+
+```
+時系列:
+Main: new Worker(url, {type:'module'})  →  worker.postMessage({type:'init'})
+     │                                       │
+Worker:                                      │  ← message dispatch（ハンドラ未登録）
+     ├── import env.mjs                      │
+     ├── import wasm_pkg.js                  │
+     │     └── await WebAssembly.instantiate ← event loop 進行
+     ├── addEventListener('message', ...)    ← ここでようやく登録
+     └── (init メッセージは既に消失)
+```
+
+対策として、Worker はモジュール評価完了・リスナー登録の直後に `handleInit()` を自動呼び出しする。これにより `worker-pool.ts` からの `init` コマンドに依存しない。`handleInit()` は冪等に実装し、`init` メッセージが届いた場合でも二重初期化しない。
+
+```ts
+// message listener 登録
+globalThis.addEventListener('message', (e) => { /* ... */ });
+
+// モジュール評価完了後に自動初期化
+handleInit();
+
+function handleInit(): void {
+  if (initialized) return; // 冪等性保証
+  // ...
+}
+```
+
+### 3.5 メインスレッド初期化の変更
 
 `src/services/wasm-init.ts` を削除し、WASM 関数を使うモジュールで直接 import する。メインスレッドで WASM を使用する箇所（`seed-resolve.ts` 等）から `await initMainThreadWasm()` の呼び出しを削除する。
 
-### 3.5 optimize-wasm.js の扱い
+### 3.6 optimize-wasm.js の扱い
 
 `scripts/optimize-wasm.js`（`wasm-opt -O4`）はビルド後の最適化として引き続き必要。出力パスが `src/wasm/wasm_pkg_bg.wasm` のままであれば変更不要。
 
-### 3.6 リスクと検証項目
+### 3.7 リスクと検証項目
 
 | リスク | 影響 | 対策 |
 |--------|------|------|
-| `rolldown-vite` との互換性 | プラグインが動作しない | 着手前に互換性を検証 |
-| Worker 内 WASM 初期化タイミング | import 順序によるエラー | Worker 起動テストで検証 |
+| `rolldown-vite` との互換性 | プラグインが動作しない | 着手前に互換性を検証。`vite-plugin-top-level-await` は非互換と判明し除外 |
+| Module Worker + top-level await | `postMessage` がモジュール評価完了前に消失 | Worker 側で auto-init（3.4 節参照） |
+| Worker バンドル形式 | IIFE では top-level await 不可 | `worker.format: 'es'` を設定 |
 | HMR 時の WASM リロード | 開発体験の劣化 | `pnpm dev` での動作確認 |
 | バンドルサイズ | `.wasm` の配信方法変更 | ビルド出力サイズの比較 |
 
@@ -128,8 +160,7 @@ Worker の `init` メッセージハンドラは WASM 初期化が不要にな�
 ```json
 {
   "devDependencies": {
-    "vite-plugin-wasm": "^3.4.1",
-    "vite-plugin-top-level-await": "^1.4.4"
+    "vite-plugin-wasm": "^3.5.0"
   },
   "scripts": {
     "build:wasm": "wasm-pack build wasm-pkg --target bundler --out-dir ../src/wasm --release -- --features gpu && node scripts/optimize-wasm.js",
@@ -148,6 +179,8 @@ Worker の `init` メッセージハンドラは WASM 初期化が不要にな�
 
 Worker の `init` メッセージは WASM 初期化の責務がなくなるが、Worker の起動完了を通知するシグナルとして残す。`initWasm()` 呼び出しを削除し、`initialized = true` + `ready` 応答のみとする。
 
+ただし、3.4 節で述べたメッセージ消失問題への対策として、Worker はモジュール評価完了後に `handleInit()` を自動呼び出しする。`handleInit()` は冪等に実装するため、`init` メッセージが正常に届いた場合でも問題は生じない。
+
 ## 5. テスト方針
 
 | テスト種別 | 対象 | 検証内容 |
@@ -160,18 +193,19 @@ Worker の `init` メッセージは WASM 初期化の責務がなくなるが�
 
 ## 6. 実装チェックリスト
 
-- [ ] `rolldown-vite` と `vite-plugin-wasm` の互換性検証
-- [ ] `pnpm add -D vite-plugin-wasm vite-plugin-top-level-await`
-- [ ] `vite.config.ts` にプラグイン追加 (`plugins` + `worker.plugins`)
-- [ ] `package.json` の `build:wasm` / `build:wasm:dev` を `--target bundler` に変更
-- [ ] `scripts/copy-wasm.js` 削除
-- [ ] `public/wasm/` ディレクトリ削除
-- [ ] `src/services/wasm-init.ts` 削除
-- [ ] `initMainThreadWasm()` の全呼び出し箇所を削除
-- [ ] `search.worker.ts` から `initWasm` import と呼び出しを削除
-- [ ] `gpu.worker.ts` から `initWasm` import と呼び出しを削除
-- [ ] `pnpm build:wasm` で `--target bundler` ビルド成功を確認
-- [ ] `pnpm dev` で開発サーバ正常起動を確認
-- [ ] `pnpm build && pnpm preview` で本番ビルド動作確認
-- [ ] `pnpm test:run` で全テスト通過
+- [x] `rolldown-vite` と `vite-plugin-wasm` の互換性検証
+- [x] `pnpm add -D vite-plugin-wasm`（`vite-plugin-top-level-await` は `rolldown-vite` と非互換のため除外）
+- [x] `vite.config.ts` にプラグイン追加 (`plugins` + `worker.format: 'es'` + `worker.plugins`)
+- [x] `vitest.config.ts` にも同様のプラグイン追加
+- [x] `package.json` の `build:wasm` / `build:wasm:dev` を `--target bundler` に変更
+- [x] `scripts/copy-wasm.js` 削除
+- [x] `public/wasm/` ディレクトリ削除
+- [x] `src/services/wasm-init.ts` 削除
+- [x] `initMainThreadWasm()` の全呼び出し箇所を削除
+- [x] `search.worker.ts` から `initWasm` import と呼び出しを削除、auto-init 追加
+- [x] `gpu.worker.ts` から `initWasm` import と呼び出しを削除、auto-init 追加
+- [x] `pnpm build:wasm` で `--target bundler` ビルド成功を確認
+- [x] `pnpm dev` で開発サーバ正常起動・Worker 初期化を確認
+- [x] `pnpm build` で本番ビルド成功を確認
+- [x] `pnpm test:run` で全テスト通過
 - [ ] ビルド出力サイズの比較記録

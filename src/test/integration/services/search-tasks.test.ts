@@ -5,15 +5,10 @@
  * search-tasks.ts の各関数が WASM を呼び出して正しい SearchTask[] を生成することを検証する。
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import { initMainThreadWasm } from '../../../services/wasm-init';
+import { describe, it, expect } from 'vitest';
 import { createMtseedIvSearchTasks } from '../../../services/search-tasks';
 
 describe('search-tasks', () => {
-  beforeAll(async () => {
-    await initMainThreadWasm();
-  });
-
   describe('createMtseedIvSearchTasks', () => {
     it('should generate tasks with correct kind', () => {
       const tasks = createMtseedIvSearchTasks(

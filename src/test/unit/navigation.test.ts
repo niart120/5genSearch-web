@@ -8,8 +8,8 @@ import {
 
 describe('navigation', () => {
   describe('CATEGORIES', () => {
-    it('3 カテゴリが定義されている', () => {
-      expect(CATEGORIES).toHaveLength(3);
+    it('4 カテゴリが定義されている', () => {
+      expect(CATEGORIES).toHaveLength(4);
     });
 
     it('各カテゴリに features と defaultFeature が存在する', () => {

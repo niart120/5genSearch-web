@@ -5,7 +5,7 @@
  * 各 Worker インスタンスは独立した WASM インスタンスを持つ。
  */
 
-import initWasm, {
+import {
   EggDatetimeSearcher,
   MtseedDatetimeSearcher,
   MtseedSearcher,
@@ -29,9 +29,6 @@ import type {
   ProgressInfo,
 } from './types';
 
-// WASM バイナリの絶対パス（public/wasm/ から配信）
-const WASM_URL = '/wasm/wasm_pkg_bg.wasm';
-
 // =============================================================================
 // State
 // =============================================================================
@@ -48,7 +45,7 @@ globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
 
   switch (data.type) {
     case 'init': {
-      void handleInit();
+      handleInit();
       break;
     }
 
@@ -73,16 +70,19 @@ globalThis.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
   }
 });
 
+// bundler target では WASM はモジュール読み込み時に自動初期化される。
+// module Worker の top-level await 中に postMessage が消失する問題を回避するため、
+// message listener 登録後に自動で初期化を実行する。
+handleInit();
+
 // =============================================================================
 // Init Handler
 // =============================================================================
 
-async function handleInit(): Promise<void> {
-  try {
-    // Worker 内で独立して WASM を初期化
-    // 絶対パスで public/wasm/ から WASM バイナリを取得
-    await initWasm({ module_or_path: WASM_URL });
+function handleInit(): void {
+  if (initialized) return;
 
+  try {
     // WASM が正しく初期化されたか確認
     const healthResult = health_check();
     if (healthResult !== 'wasm-pkg is ready') {

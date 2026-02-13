@@ -5,10 +5,10 @@
  * Worker 経由で pokemon-list タスクを実行し、GeneratedPokemonData[] が返ることを検証する。
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { runSearchInWorker } from './helpers/worker-test-utils';
 import type { PokemonListTask } from '../../workers/types';
-import wasmInit, { generate_pokemon_list } from '../../wasm/wasm_pkg.js';
+import { generate_pokemon_list } from '../../wasm/wasm_pkg.js';
 import type { SeedOrigin, PokemonGenerationParams, GenerationConfig } from '../../wasm/wasm_pkg.js';
 
 const TEST_ORIGIN: SeedOrigin = {
@@ -48,10 +48,6 @@ const TEST_CONFIG: GenerationConfig = {
 };
 
 describe('PokemonList Direct WASM', () => {
-  beforeAll(async () => {
-    await wasmInit();
-  });
-
   it('generate_pokemon_list で結果が返る', () => {
     const results = generate_pokemon_list([TEST_ORIGIN], TEST_PARAMS, TEST_CONFIG);
 

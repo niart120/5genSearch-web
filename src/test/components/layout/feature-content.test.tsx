@@ -6,10 +6,6 @@ import { Tabs } from '@/components/ui/tabs';
 import { useUiStore, getUiInitialState } from '@/stores/settings/ui';
 
 // jsdom 環境では WASM バイナリをロードできないためモック
-vi.mock('@/services/wasm-init', () => ({
-  initMainThreadWasm: vi.fn(() => Promise.resolve()),
-}));
-
 vi.mock('@/wasm/wasm_pkg.js', () => ({
   get_species_name: vi.fn((id: number) => `Species #${id}`),
   resolve_seeds: vi.fn(() => []),

@@ -4,8 +4,7 @@
  * Worker 経由でタマゴ個体生成タスクを実行し、正常に結果が返ることを検証する。
  */
 
-import { describe, it, expect, afterEach, beforeAll } from 'vitest';
-import { initMainThreadWasm } from '@/services/wasm-init';
+import { describe, it, expect, afterEach } from 'vitest';
 import { WorkerPool } from '@/services/worker-pool';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
 import type { EggListTask } from '@/workers/types';
@@ -70,10 +69,6 @@ function executeTask(pool: WorkerPool, task: EggListTask): Promise<GeneratedEggD
 
 describe('Egg List Worker Integration', () => {
   let pool: WorkerPool | undefined;
-
-  beforeAll(async () => {
-    await initMainThreadWasm();
-  });
 
   afterEach(() => {
     pool?.dispose();
