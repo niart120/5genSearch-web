@@ -533,6 +533,10 @@ export interface CorePokemonData {
      */
     ivs: Ivs;
     /**
+     * 実ステータス
+     */
+    stats: Stats;
+    /**
      * 種族 ID
      * - ポケモン: 常に設定
      * - 卵: 常に 0 (外部指定が必要)
@@ -832,6 +836,21 @@ export interface GeneratedEggData {
 }
 
 /**
+ * 実ステータスフィルター
+ *
+ * 各フィールドが `Some(v)` の場合、stats の対応する値が `Some(v)` に一致する場合のみ通過。
+ * stats 側が `None` (IV 不明等) の場合、フィルタ条件の有無にかかわらず通過する。
+ */
+export interface StatsFilter {
+    hp: number | undefined;
+    atk: number | undefined;
+    def: number | undefined;
+    spa: number | undefined;
+    spd: number | undefined;
+    spe: number | undefined;
+}
+
+/**
  * 思い出リンクの状態 (BW2 のみ有効)
  */
 export type MemoryLinkState = "Disabled" | "Enabled";
@@ -996,6 +1015,10 @@ export interface CoreDataFilter {
      * 色違い
      */
     shiny: ShinyFilter | undefined;
+    /**
+     * 実ステータスフィルター
+     */
+    stats: StatsFilter | undefined;
 }
 
 /**
@@ -1174,6 +1197,21 @@ export interface UiEggData {
      */
     pid: string;
     margin_frames: number | undefined;
+}
+
+/**
+ * 計算済みステータス
+ *
+ * 各ステータスは `Option<u16>` で表現。
+ * IV が不明 (`IV_VALUE_UNKNOWN`) の場合は `None` を返す。
+ */
+export interface Stats {
+    hp: number | undefined;
+    attack: number | undefined;
+    defense: number | undefined;
+    special_attack: number | undefined;
+    special_defense: number | undefined;
+    speed: number | undefined;
 }
 
 /**
