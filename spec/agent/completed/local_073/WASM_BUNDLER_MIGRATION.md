@@ -151,7 +151,21 @@ function handleInit(): void {
 | Module Worker + top-level await | `postMessage` がモジュール評価完了前に消失 | Worker 側で auto-init（3.4 節参照） |
 | Worker バンドル形式 | IIFE では top-level await 不可 | `worker.format: 'es'` を設定 |
 | HMR 時の WASM リロード | 開発体験の劣化 | `pnpm dev` での動作確認 |
-| バンドルサイズ | `.wasm` の配信方法変更 | ビルド出力サイズの比較 |
+| バンドルサイズ | `.wasm` の配信方法変更 | ビルド出力サイズの比較（3.8 節） |
+
+### 3.8 ビルド出力サイズ
+
+bundler ターゲット移行後の主要ファイルサイズ（`pnpm build` 出力）:
+
+| ファイル | サイズ | gzip |
+|----------|--------|------|
+| `wasm_pkg_bg.wasm` | 1,016.24 kB | 498.46 kB |
+| `index.js` (メインバンドル) | 594.17 kB | 178.99 kB |
+| `index.css` | 153.16 kB | 50.80 kB |
+| `search.worker.js` | 32.86 kB | — |
+| `gpu.worker.js` | 30.67 kB | — |
+
+WASM バイナリは `dist/assets/` 内にハッシュ付きで配置される。`--target web` 時は `public/wasm/` からの配信だったが、bundler ターゲットではバンドラが `.wasm` を asset として処理するため、キャッシュバスティングが自動適用される。
 
 ## 4. 実装仕様
 
@@ -208,4 +222,4 @@ Worker の `init` メッセージは WASM 初期化の責務がなくなるが�
 - [x] `pnpm dev` で開発サーバ正常起動・Worker 初期化を確認
 - [x] `pnpm build` で本番ビルド成功を確認
 - [x] `pnpm test:run` で全テスト通過
-- [ ] ビルド出力サイズの比較記録
+- [x] ビルド出力サイズの比較記録（3.8 節）
