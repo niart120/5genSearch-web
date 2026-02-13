@@ -12,6 +12,7 @@ applyTo: spec/agent/notes/**
 
 - `spec/agent/notes/dev-journal.md` に時系列で追記する
 - テーマが大きくなった場合は別途仕様書として再構築する (例: `spec/agent/wip/STATE_MANAGEMENT.md`) 
+  - その場合、該当エントリは完全削除し、以降の詳細はそちらに記載する
 
 ## エントリ形式
 
