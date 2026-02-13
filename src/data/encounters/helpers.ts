@@ -6,6 +6,10 @@
  *
  * All data-fetching functions are async because the underlying
  * loader lazily imports encounter JSON on demand.
+ *
+ * Caching is handled by the loader layer (per version×method).
+ * This layer does not add a second cache — re-derivation cost
+ * is negligible (O(slots), typically ~12 elements).
  */
 
 import type { EncounterMethodKey, StaticEncounterTypeKey, GameVersion } from './schema';
@@ -73,24 +77,6 @@ export function isLocationBasedEncounter(
 }
 
 // ---------------------------------------------------------------------------
-// Caches
-// ---------------------------------------------------------------------------
-
-const cacheLocations = new Map<string, LocationOption[]>();
-const cacheSpecies = new Map<string, EncounterSpeciesOption[]>();
-
-function locCacheKey(version: string, method: string): string {
-  return `L|${version}|${method}`;
-}
-
-function speciesCacheKey(version: string, method: string, locationKey?: string): string {
-  if (locationKey !== undefined) {
-    return `L|${version}|${method}|${locationKey}`;
-  }
-  return `S|${version}|${method}`;
-}
-
-// ---------------------------------------------------------------------------
 // Public API (async)
 // ---------------------------------------------------------------------------
 
@@ -102,13 +88,7 @@ export async function listLocations(
   version: GameVersion,
   method: EncounterMethodKey
 ): Promise<LocationOption[]> {
-  const key = locCacheKey(version, method);
-  const cached = cacheLocations.get(key);
-  if (cached) return cached;
-
-  const result = await listLocationsFromRegistry(version, method);
-  cacheLocations.set(key, result);
-  return result;
+  return listLocationsFromRegistry(version, method);
 }
 
 /**
@@ -125,16 +105,9 @@ export async function listSpecies(
   method: EncounterMethodKey | StaticEncounterTypeKey,
   locationKey?: string
 ): Promise<EncounterSpeciesOption[]> {
-  const key = speciesCacheKey(version, method, locationKey);
-  const cached = cacheSpecies.get(key);
-  if (cached) return cached;
-
-  const result = isLocationBasedEncounter(method)
-    ? await buildLocationSpecies(version, method, locationKey ?? '')
-    : await buildStaticSpecies(version, method);
-
-  cacheSpecies.set(key, result);
-  return result;
+  return isLocationBasedEncounter(method)
+    ? buildLocationSpecies(version, method, locationKey ?? '')
+    : buildStaticSpecies(version, method);
 }
 
 // ---------------------------------------------------------------------------

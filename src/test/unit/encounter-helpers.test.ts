@@ -92,17 +92,6 @@ describe('listLocations', () => {
 
     expect(result).toEqual([]);
   });
-
-  it('caches results for repeated calls', async () => {
-    const locations = [{ key: 'route_3', displayNameKey: 'route_3' }];
-    mockListLocations.mockResolvedValue(locations);
-
-    const first = await listLocations('W', 'Fishing');
-    const second = await listLocations('W', 'Fishing');
-
-    expect(first).toBe(second);
-    expect(mockListLocations).toHaveBeenCalledTimes(1);
-  });
 });
 
 describe('listSpecies', () => {
@@ -185,16 +174,6 @@ describe('listSpecies', () => {
     expect(result).toEqual([]);
   });
 
-  it('caches results for repeated calls (location)', async () => {
-    mockGetEncounterSlots.mockResolvedValue([makeSlot()]);
-
-    const first = await listSpecies('W', 'Normal', 'route_15');
-    const second = await listSpecies('W', 'Normal', 'route_15');
-
-    expect(first).toBe(second);
-    expect(mockGetEncounterSlots).toHaveBeenCalledTimes(1);
-  });
-
   it('returns static entries with kind: static', async () => {
     mockListStaticEntries.mockResolvedValue([
       makeStaticEntry({ id: 'reshiram-n-castle', speciesId: 643, level: 50 }),
@@ -219,16 +198,6 @@ describe('listSpecies', () => {
     const result = await listSpecies('B', 'StaticEvent');
 
     expect(result).toEqual([]);
-  });
-
-  it('caches results for repeated calls (static)', async () => {
-    mockListStaticEntries.mockResolvedValue([makeStaticEntry()]);
-
-    const first = await listSpecies('W', 'StaticFossil');
-    const second = await listSpecies('W', 'StaticFossil');
-
-    expect(first).toBe(second);
-    expect(mockListStaticEntries).toHaveBeenCalledTimes(1);
   });
 
   it('includes isShinyLocked in static entries', async () => {

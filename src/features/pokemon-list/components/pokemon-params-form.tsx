@@ -5,7 +5,7 @@
  * フォーム内でエンカウント関連の状態をすべて管理し、onChange で集約結果を親に報告する。
  */
 
-import { useState, useCallback, useEffect, useMemo, type ReactElement } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,6 +71,13 @@ function PokemonParamsForm({
   // value から読み出し (controlled component)
   const { encounterType, encounterMethod, leadAbility, genConfig } = value;
 
+  // 非同期コールバックで stale closure を回避するための ref
+  // (宣言順で後続の effect より先に実行される)
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  });
+
   // カテゴリ / サブタイプ選択状態
   const [selectedCategory, setSelectedCategory] = useState<string>(
     () => findCategoryForType(encounterType) ?? 'wild'
@@ -106,23 +113,42 @@ function PokemonParamsForm({
     };
   }, [gameVersion, encounterType, isLocationBased]);
 
-  // 種族一覧 (非同期ロード)
+  // スロット + 種族一覧 (非同期ロード — 単一 effect で一括取得)
+  // ロケーション変更時のスロット取得もここで行い、handleLocationChange との重複を排除する。
   const [speciesOptions, setSpeciesOptions] = useState<EncounterSpeciesOption[]>([]);
   useEffect(() => {
     let cancelled = false;
     const load = async (): Promise<void> => {
-      const result = isLocationBased
-        ? selectedLocation
-          ? await listSpecies(gameVersion, encounterType as EncounterMethodKey, selectedLocation)
-          : []
-        : await listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
-      if (!cancelled) setSpeciesOptions(result);
+      if (isLocationBased) {
+        if (!selectedLocation) {
+          if (!cancelled) {
+            setSpeciesOptions([]);
+            onChange({ ...valueRef.current, slots: [], availableSpecies: [] });
+          }
+          return;
+        }
+        const [slots, species] = await Promise.all([
+          getEncounterSlots(gameVersion, selectedLocation, encounterType),
+          listSpecies(gameVersion, encounterType as EncounterMethodKey, selectedLocation),
+        ]);
+        if (!cancelled) {
+          const newSlots = slots ? toEncounterSlotConfigs(slots) : [];
+          setSpeciesOptions(species);
+          onChange({ ...valueRef.current, slots: newSlots, availableSpecies: species });
+        }
+      } else {
+        const species = await listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
+        if (!cancelled) {
+          setSpeciesOptions(species);
+          onChange({ ...valueRef.current, availableSpecies: species });
+        }
+      }
     };
     void load();
     return () => {
       cancelled = true;
     };
-  }, [gameVersion, encounterType, isLocationBased, selectedLocation]);
+  }, [gameVersion, encounterType, isLocationBased, selectedLocation, onChange]);
 
   // 固定エンカウントの種族名解決 (WASM 経由)
   // 解決対象の speciesId リストをキー化し、effect 内では非同期 setState のみ行う
@@ -207,23 +233,10 @@ function PokemonParamsForm({
     [value, onChange]
   );
 
-  // ロケーション変更
-  const handleLocationChange = useCallback(
-    (locationKey: string) => {
-      setSelectedLocation(locationKey);
-      void (async () => {
-        const slots = await getEncounterSlots(gameVersion, locationKey, encounterType);
-        const newSlots = slots ? toEncounterSlotConfigs(slots) : [];
-        const newSpecies = await listSpecies(
-          gameVersion,
-          encounterType as EncounterMethodKey,
-          locationKey
-        );
-        onChange({ ...value, slots: newSlots, availableSpecies: newSpecies });
-      })();
-    },
-    [gameVersion, encounterType, value, onChange]
-  );
+  // ロケーション変更 — state 更新のみ。スロット・種族の取得は effect に委譲。
+  const handleLocationChange = useCallback((locationKey: string) => {
+    setSelectedLocation(locationKey);
+  }, []);
 
   // 固定ポケモン変更
   const handleStaticEntryChange = useCallback(
@@ -232,10 +245,10 @@ function PokemonParamsForm({
       void (async () => {
         const entry = await getStaticEncounterEntry(gameVersion, encounterType, entryId);
         const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
-        onChange({ ...value, slots: newSlots });
+        onChange({ ...valueRef.current, slots: newSlots });
       })();
     },
-    [gameVersion, encounterType, value, onChange]
+    [gameVersion, encounterType, onChange]
   );
 
   // offset / max_advance blur handlers

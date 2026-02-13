@@ -161,27 +161,43 @@ async function listLocations(
 
 `helpers.ts` の公開関数で `loader.ts` を呼び出している箇所を `async` に変更する。
 
+**キャッシュ戦略**: helpers.ts 自体はキャッシュ層を持たない。loader.ts のレジストリキャッシュが一次キャッシュとして機能し、helpers.ts は毎回 loader から導出する。再導出コストは O(slots) (通常 ~12 要素) で無視できる。
+
 ### 4.3 コンポーネント側の非同期対応パターン
 
+スロットと種族の取得をひとつの `useEffect` に統合し、`Promise.all` で並列取得する。
+これにより `handleLocationChange` と species effect の重複呼び出しを排除する。
+
 ```tsx
-function useEncounterLocations(version: string, method: string) {
-  const [locations, setLocations] = React.useState<LocationEntry[]>([]);
-  const [loading, setLoading] = React.useState(false);
+// stale closure 回避用 ref (render 外で更新)
+const valueRef = useRef(value);
+useEffect(() => { valueRef.current = value; });
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    listLocations(version, method).then((result) => {
+// スロット + 種族一覧: 単一 effect で一括取得
+useEffect(() => {
+  let cancelled = false;
+  const load = async (): Promise<void> => {
+    if (isLocationBased && selectedLocation) {
+      const [slots, species] = await Promise.all([
+        getEncounterSlots(version, selectedLocation, method),
+        listSpecies(version, method, selectedLocation),
+      ]);
       if (!cancelled) {
-        setLocations(result);
-        setLoading(false);
+        setSpeciesOptions(species);
+        onChange({ ...valueRef.current, slots: toSlotConfigs(slots), availableSpecies: species });
       }
-    });
-    return () => { cancelled = true; };
-  }, [version, method]);
+    }
+  };
+  void load();
+  return () => { cancelled = true; };
+}, [version, method, isLocationBased, selectedLocation, onChange]);
 
-  return { locations, loading };
-}
+// handleLocationChange は setSelectedLocation のみ (同期)
+const handleLocationChange = useCallback(
+  (key: string) => { setSelectedLocation(key); },
+  []
+);
+```
 ```
 
 ## 5. テスト方針
@@ -190,7 +206,7 @@ function useEncounterLocations(version: string, method: string) {
 |-------|------|---------|
 | `loadRegistryEntry` | unit | 指定した version/method のデータのみがロードされること |
 | `parseModulePath` | unit | glob パスから version/method が正しく抽出されること |
-| キャッシュ動作 | unit | 同一 version/method の 2 回目呼び出しでモジュールローダが再実行されないこと |
+| キャッシュ動作 (loader) | unit | 同一 version/method の 2 回目呼び出しでモジュールローダが再実行されないこと (helpers.ts はキャッシュを持たない) |
 | `listLocations` (async) | unit | 既存テストを非同期に変更して検証 |
 | `getEncounterSlots` (async) | unit | 既存テストを非同期に変更して検証 |
 
@@ -203,9 +219,9 @@ function useEncounterLocations(version: string, method: string) {
 - [x] `loader.ts`: `parseModulePath` ヘルパー追加
 - [x] `loader.ts`: レジストリキャッシュ + 非同期ロード関数
 - [x] `loader.ts`: 公開 API (`getEncounterSlots`, `listLocations`, `getLocationEntry`, `listStaticEncounterEntries`, `getStaticEncounterEntry`) を `async` に変更
-- [x] `helpers.ts`: loader 呼び出しを `async`/`await` に変更
-- [x] コンポーネント: 非同期取得 + ローディング表示対応
-- [x] テスト: 既存テストを非同期対応に修正
+- [x] `helpers.ts`: loader 呼び出しを `async`/`await` に変更 (キャッシュ層は除去済み)
+- [x] コンポーネント: スロット+種族を単一 effect で並列取得 (`Promise.all`)、`handleLocationChange` は同期化
+- [x] テスト: 既存テストを非同期対応に修正 (helpers キャッシュテストは除去)
 - [x] `pnpm build` が正常に完了すること (チャンク分割の確認)
 - [x] `pnpm test:run` 通過
 - [x] `pnpm lint` / `pnpm format:check:ts` 通過
