@@ -1,5 +1,5 @@
 /** 第 1 層: カテゴリ */
-export type Category = 'search' | 'generation' | 'tools';
+export type Category = 'search' | 'generation' | 'tools' | 'about';
 
 /** 第 2 層: 機能 ID */
 export type FeatureId =
@@ -9,7 +9,8 @@ export type FeatureId =
   | 'egg-list'
   | 'mtseed-search'
   | 'tid-adjust'
-  | 'needle';
+  | 'needle'
+  | 'about';
 
 export interface CategoryDef {
   readonly id: Category;
@@ -32,6 +33,11 @@ export const CATEGORIES: readonly CategoryDef[] = [
     id: 'tools',
     features: ['mtseed-search', 'tid-adjust', 'needle'],
     defaultFeature: 'mtseed-search',
+  },
+  {
+    id: 'about',
+    features: ['about'],
+    defaultFeature: 'about',
   },
 ] as const;
 

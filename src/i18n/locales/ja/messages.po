@@ -21,13 +21,17 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
-#: src/components/forms/egg-params-form.tsx:262
+#: src/components/forms/egg-params-form.tsx:258
 msgid "♀ parent ability"
 msgstr "♀親の特性"
 
 #: src/components/layout/header.tsx:33
 msgid "5genSearch"
 msgstr "5genSearch"
+
+#: src/features/about/components/about-page.tsx:14
+msgid "5genSearch is a tool for RNG manipulation in Pokemon Black / White / Black 2 / White 2."
+msgstr "5genSearch はポケットモンスター ブラック・ホワイト / ブラック2・ホワイト2 の乱数調整ツールです。"
 
 #: src/features/egg-list/components/egg-result-columns.tsx:67
 #: src/features/egg-list/components/result-detail-dialog.tsx:63
@@ -50,8 +54,17 @@ msgstr "特性2"
 msgid "Ability slot"
 msgstr "特性スロット"
 
+#: src/components/layout/navigation-labels.tsx:9
+#: src/components/layout/navigation-labels.tsx:20
+msgid "About"
+msgstr "アプリについて"
+
+#: src/features/about/components/about-page.tsx:11
+msgid "About this app"
+msgstr "このアプリについて"
+
 #: src/features/egg-list/components/egg-result-columns.tsx:47
-#: src/features/egg-list/components/result-detail-dialog.tsx:88
+#: src/features/egg-list/components/result-detail-dialog.tsx:83
 #: src/features/egg-search/components/egg-result-columns.tsx:112
 #: src/features/egg-search/components/result-detail-dialog.tsx:83
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:47
@@ -59,7 +72,7 @@ msgstr "特性スロット"
 msgid "Advance"
 msgstr "消費数"
 
-#: src/features/egg-list/components/egg-list-page.tsx:147
+#: src/features/egg-list/components/egg-list-page.tsx:149
 msgid "Advance range invalid"
 msgstr "消費範囲が不正です"
 
@@ -111,7 +124,7 @@ msgstr "組み合わせ"
 msgid "Compound Eyes"
 msgstr "ふくがん"
 
-#: src/components/forms/egg-params-form.tsx:377
+#: src/components/forms/egg-params-form.tsx:373
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
 
@@ -119,6 +132,10 @@ msgstr "NPC消費考慮"
 #: src/features/datetime-search/components/result-detail-dialog.tsx:49
 msgid "Copy {label}"
 msgstr "{label}をコピー"
+
+#: src/features/about/components/about-page.tsx:22
+msgid "Data sources"
+msgstr "データの出典"
 
 #: src/components/forms/seed-input-section.tsx:260
 msgid "Date & time"
@@ -137,7 +154,7 @@ msgstr "日付範囲"
 msgid "Date/Time"
 msgstr "日時"
 
-#: src/components/layout/navigation-labels.tsx:12
+#: src/components/layout/navigation-labels.tsx:13
 msgid "Datetime Search"
 msgstr "起動時刻検索"
 
@@ -153,11 +170,15 @@ msgstr "全解除"
 msgid "Details"
 msgstr "詳細"
 
+#: src/features/about/components/about-page.tsx:73
+msgid "Disclaimer"
+msgstr "免責事項"
+
 #: src/components/forms/seed-input-section.tsx:252
 msgid "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 msgstr "DS設定とTimer0/VCount範囲はサイドバーの設定から読み込まれます。"
 
-#: src/components/layout/navigation-labels.tsx:15
+#: src/components/layout/navigation-labels.tsx:16
 msgid "Egg"
 msgstr "タマゴ"
 
@@ -174,11 +195,11 @@ msgstr "タマゴ"
 msgid "Egg generation result details"
 msgstr "孵化個体生成の結果詳細"
 
-#: src/components/forms/egg-params-form.tsx:238
+#: src/components/forms/egg-params-form.tsx:234
 msgid "Egg parameters"
 msgstr "孵化パラメータ"
 
-#: src/components/layout/navigation-labels.tsx:13
+#: src/components/layout/navigation-labels.tsx:14
 msgid "Egg Search"
 msgstr "孵化検索"
 
@@ -190,7 +211,7 @@ msgstr "孵化検索結果の詳細"
 msgid "Elapsed"
 msgstr "経過"
 
-#: src/components/forms/egg-filter-form.tsx:302
+#: src/components/forms/egg-filter-form.tsx:311
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:403
 msgid "Enable filter"
 msgstr "フィルター有効"
@@ -199,20 +220,19 @@ msgstr "フィルター有効"
 #~ msgid "Encounter category"
 #~ msgstr "エンカウント分類"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:339
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:384
 msgid "Encounter method"
 msgstr "エンカウント方法"
 
-#: src/features/egg-list/components/result-detail-dialog.tsx:98
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:98
 msgid "Encounter result"
 msgstr "エンカウント結果"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:238
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:283
 msgid "Encounter settings"
 msgstr "エンカウント設定"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:244
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:289
 msgid "Encounter type"
 msgstr "エンカウント種別"
 
@@ -228,11 +248,11 @@ msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
-#: src/components/forms/egg-params-form.tsx:285
+#: src/components/forms/egg-params-form.tsx:281
 msgid "Everstone"
 msgstr "かわらずのいし"
 
-#: src/components/forms/egg-filter-form.tsx:294
+#: src/components/forms/egg-filter-form.tsx:303
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:396
 msgid "Filter"
 msgstr "フィルター"
@@ -252,7 +272,7 @@ msgstr "フィルター"
 msgid "Gender"
 msgstr "性別"
 
-#: src/components/forms/egg-params-form.tsx:309
+#: src/components/forms/egg-params-form.tsx:305
 msgid "Gender ratio"
 msgstr "性別比"
 
@@ -274,8 +294,6 @@ msgstr "個体生成"
 msgid "Hardware"
 msgstr "ハードウェア"
 
-#: src/features/egg-list/components/egg-result-columns.tsx:112
-#: src/features/egg-list/components/result-detail-dialog.tsx:84
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:112
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:84
 msgid "Held item"
@@ -333,9 +351,13 @@ msgstr "LCG Seed (16進数、1行に1つ)"
 msgid "Lead ability"
 msgstr "先頭特性"
 
-#: src/components/forms/egg-params-form.tsx:337
+#: src/components/forms/egg-params-form.tsx:333
 msgid "Leave empty to show \"?\" for stats"
 msgstr "空欄にすると個体値が「?」で表示されます"
+
+#: src/features/about/components/about-page.tsx:40
+msgid "License"
+msgstr "ライセンス"
 
 #. placeholder {0}: err.line
 #. placeholder {1}: err.value
@@ -348,7 +370,7 @@ msgstr "{0}行目: \"{1}\" — {2}"
 msgid "Load search results"
 msgstr "検索結果を読み込む"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:284
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:329
 msgid "Location"
 msgstr "場所"
 
@@ -356,15 +378,17 @@ msgstr "場所"
 msgid "MAC address"
 msgstr "MACアドレス"
 
+#: src/features/egg-list/components/egg-result-columns.tsx:102
 #: src/features/egg-search/components/egg-result-columns.tsx:117
 msgid "Margin"
 msgstr "猶予"
 
+#: src/features/egg-list/components/result-detail-dialog.tsx:85
 #: src/features/egg-search/components/result-detail-dialog.tsx:85
 msgid "Margin frames"
 msgstr "猶予フレーム"
 
-#: src/components/forms/egg-params-form.tsx:368
+#: src/components/forms/egg-params-form.tsx:364
 msgid "Masuda Method"
 msgstr "国際孵化"
 
@@ -373,8 +397,8 @@ msgstr "国際孵化"
 msgid "Max"
 msgstr "Max"
 
-#: src/components/forms/egg-params-form.tsx:402
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:386
+#: src/components/forms/egg-params-form.tsx:398
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:433
 msgid "Max advance"
 msgstr "最大消費数"
 
@@ -405,11 +429,10 @@ msgstr "最低威力"
 msgid "Minute"
 msgstr "分"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:351
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:398
 msgid "Moving"
 msgstr "移動"
 
-#: src/features/egg-list/components/result-detail-dialog.tsx:90
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:90
 msgid "Moving encounter"
 msgstr "移動エンカウント"
@@ -422,7 +445,7 @@ msgstr "MT Seed"
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seedは0からFFFFFFFFの範囲で入力してください"
 
-#: src/components/layout/navigation-labels.tsx:16
+#: src/components/layout/navigation-labels.tsx:17
 msgid "MT Seed Search"
 msgstr "MT Seed 検索"
 
@@ -436,7 +459,7 @@ msgstr "MT Seed 検索"
 msgid "Nature"
 msgstr "性格"
 
-#: src/components/layout/navigation-labels.tsx:18
+#: src/components/layout/navigation-labels.tsx:19
 #: src/features/egg-list/components/egg-result-columns.tsx:52
 #: src/features/egg-list/components/result-detail-dialog.tsx:60
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:52
@@ -444,7 +467,7 @@ msgstr "性格"
 msgid "Needle"
 msgstr "針読み"
 
-#: src/components/forms/egg-params-form.tsx:359
+#: src/components/forms/egg-params-form.tsx:355
 msgid "Nidoran♀"
 msgstr "ニドラン♀"
 
@@ -456,7 +479,7 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 msgid "No results"
 msgstr "結果なし"
 
-#: src/features/egg-list/components/egg-list-page.tsx:244
+#: src/features/egg-list/components/egg-list-page.tsx:246
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:220
 msgid "No results found. Configure parameters and start generating."
 msgstr "結果が見つかりませんでした。パラメータを設定して生成を開始してください。"
@@ -469,7 +492,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/egg-list/components/egg-list-page.tsx:146
+#: src/features/egg-list/components/egg-list-page.tsx:148
 msgid "No seeds specified"
 msgstr "Seedが指定されていません"
 
@@ -493,11 +516,11 @@ msgstr "なし"
 msgid "Not specified"
 msgstr "指定なし"
 
-#: src/components/forms/egg-params-form.tsx:296
+#: src/components/forms/egg-params-form.tsx:292
 msgid "Not used"
 msgstr "使用しない"
 
-#: src/features/egg-list/components/egg-list-page.tsx:148
+#: src/features/egg-list/components/egg-list-page.tsx:150
 msgid "Offset must be non-negative"
 msgstr "オフセットは0以上で指定してください"
 
@@ -505,23 +528,23 @@ msgstr "オフセットは0以上で指定してください"
 msgid "One or more seeds are invalid"
 msgstr "無効なSeedが含まれています"
 
-#: src/components/forms/egg-params-form.tsx:252
+#: src/components/forms/egg-params-form.tsx:248
 msgid "Parent ♀ IVs"
 msgstr "♀親の個体値"
 
-#: src/components/forms/egg-params-form.tsx:245
+#: src/components/forms/egg-params-form.tsx:241
 msgid "Parent ♂ IVs"
 msgstr "♂親の個体値"
 
-#: src/features/egg-list/components/egg-list-page.tsx:149
+#: src/features/egg-list/components/egg-list-page.tsx:151
 msgid "Parent IV out of range"
 msgstr "親の個体値が範囲外です"
 
-#: src/components/layout/navigation-labels.tsx:14
+#: src/components/layout/navigation-labels.tsx:15
 msgid "Pokemon"
 msgstr "ポケモン"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:309
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:354
 msgid "Pokémon"
 msgstr "ポケモン"
 
@@ -542,7 +565,11 @@ msgstr "リージョン"
 msgid "Remaining"
 msgstr "残り"
 
-#: src/components/forms/egg-filter-form.tsx:312
+#: src/features/about/components/about-page.tsx:57
+msgid "Repository"
+msgstr "リポジトリ"
+
+#: src/components/forms/egg-filter-form.tsx:321
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:411
 msgid "Reset filter"
 msgstr "フィルターリセット"
@@ -561,7 +588,7 @@ msgid "Result details"
 msgstr "結果の詳細"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:181
-#: src/features/egg-list/components/egg-list-page.tsx:224
+#: src/features/egg-list/components/egg-list-page.tsx:226
 #: src/features/egg-search/components/egg-search-page.tsx:233
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:200
 msgid "Results"
@@ -610,7 +637,7 @@ msgstr "場所またはポケモンを選択してください"
 msgid "Select all"
 msgstr "全選択"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:292
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:337
 msgid "Select location"
 msgstr "場所を選択"
 
@@ -618,7 +645,7 @@ msgstr "場所を選択"
 msgid "Select or enter at least one seed"
 msgstr "Seedを1つ以上選択または入力してください"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:317
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:362
 msgid "Select Pokémon"
 msgstr "ポケモンを選択"
 
@@ -654,12 +681,10 @@ msgstr "ひかるおまもり"
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/egg-list/components/result-detail-dialog.tsx:96
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:96
 msgid "Special direction"
 msgstr "特殊方向"
 
-#: src/features/egg-list/components/result-detail-dialog.tsx:93
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:93
 msgid "Special encounter"
 msgstr "特殊エンカウント"
@@ -672,7 +697,7 @@ msgstr "特殊エンカウント"
 msgid "Species"
 msgstr "種族"
 
-#: src/components/forms/egg-params-form.tsx:333
+#: src/components/forms/egg-params-form.tsx:329
 msgid "Species (optional)"
 msgstr "種族 (任意)"
 
@@ -698,8 +723,8 @@ msgstr "開始日は終了日以前である必要があります"
 msgid "Start mode"
 msgstr "起動モード"
 
-#: src/components/forms/egg-params-form.tsx:385
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:369
+#: src/components/forms/egg-params-form.tsx:381
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:416
 msgid "Start offset"
 msgstr "開始オフセット"
 
@@ -716,18 +741,18 @@ msgstr "起動条件"
 msgid "Startup condition details"
 msgstr "起動条件の詳細"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:350
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:397
 msgid "Stationary"
 msgstr "固定"
 
-#: src/features/egg-list/components/egg-list-page.tsx:236
+#: src/features/egg-list/components/egg-list-page.tsx:238
 #: src/features/egg-list/components/result-detail-dialog.tsx:71
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:212
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:71
 msgid "Stats"
 msgstr "ステータス"
 
-#: src/components/forms/egg-filter-form.tsx:325
+#: src/components/forms/egg-filter-form.tsx:334
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:451
 msgid "Stats filter"
 msgstr "ステータス指定"
@@ -736,8 +761,6 @@ msgstr "ステータス指定"
 #~ msgid "Stats range"
 #~ msgstr "ステータス範囲"
 
-#: src/features/egg-list/components/egg-result-columns.tsx:107
-#: src/features/egg-list/components/result-detail-dialog.tsx:82
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:107
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:82
 msgid "Sync"
@@ -759,11 +782,19 @@ msgstr "シンクロ性格"
 msgid "This feature is under development."
 msgstr "この機能は準備中です。"
 
+#: src/features/about/components/about-page.tsx:76
+msgid "This is an unofficial tool and is not affiliated with or endorsed by Nintendo, Game Freak, or The Pokemon Company."
+msgstr "これは非公式のツールであり、任天堂、ゲームフリーク、株式会社ポケモンとは一切関係ありません。"
+
+#: src/features/about/components/about-page.tsx:43
+msgid "This project is open source."
+msgstr "このプロジェクトはオープンソースです。"
+
 #: src/features/ds-config/components/trainer-config-form.tsx:28
 msgid "TID"
 msgstr "TID (表ID)"
 
-#: src/components/layout/navigation-labels.tsx:17
+#: src/components/layout/navigation-labels.tsx:18
 msgid "TID Adjust"
 msgstr "TID 調整"
 
@@ -797,7 +828,7 @@ msgstr "表ID"
 #~ msgid "Unknown (any)"
 #~ msgstr "不明(任意)"
 
-#: src/components/forms/egg-params-form.tsx:350
+#: src/components/forms/egg-params-form.tsx:346
 msgid "Uses Ditto"
 msgstr "メタモン使用"
 
