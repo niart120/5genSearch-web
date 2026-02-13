@@ -90,19 +90,38 @@ function PokemonParamsForm({
     encounterType as EncounterMethodKey | StaticEncounterTypeKey
   );
 
-  // ロケーション一覧
-  const locations = useMemo<LocationOption[]>(() => {
-    if (!isLocationBased) return [];
-    return listLocations(gameVersion, encounterType as EncounterMethodKey);
+  // ロケーション一覧 (非同期ロード)
+  const [locations, setLocations] = useState<LocationOption[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async (): Promise<void> => {
+      const result = isLocationBased
+        ? await listLocations(gameVersion, encounterType as EncounterMethodKey)
+        : [];
+      if (!cancelled) setLocations(result);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [gameVersion, encounterType, isLocationBased]);
 
-  // 種族一覧
-  const speciesOptions = useMemo<EncounterSpeciesOption[]>(() => {
-    if (isLocationBased) {
-      if (!selectedLocation) return [];
-      return listSpecies(gameVersion, encounterType as EncounterMethodKey, selectedLocation);
-    }
-    return listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
+  // 種族一覧 (非同期ロード)
+  const [speciesOptions, setSpeciesOptions] = useState<EncounterSpeciesOption[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async (): Promise<void> => {
+      const result = isLocationBased
+        ? selectedLocation
+          ? await listSpecies(gameVersion, encounterType as EncounterMethodKey, selectedLocation)
+          : []
+        : await listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
+      if (!cancelled) setSpeciesOptions(result);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [gameVersion, encounterType, isLocationBased, selectedLocation]);
 
   // 固定エンカウントの種族名解決 (WASM 経由)
@@ -192,10 +211,16 @@ function PokemonParamsForm({
   const handleLocationChange = useCallback(
     (locationKey: string) => {
       setSelectedLocation(locationKey);
-      const slots = getEncounterSlots(gameVersion, locationKey, encounterType);
-      const newSlots = slots ? toEncounterSlotConfigs(slots) : [];
-      const newSpecies = listSpecies(gameVersion, encounterType as EncounterMethodKey, locationKey);
-      onChange({ ...value, slots: newSlots, availableSpecies: newSpecies });
+      void (async () => {
+        const slots = await getEncounterSlots(gameVersion, locationKey, encounterType);
+        const newSlots = slots ? toEncounterSlotConfigs(slots) : [];
+        const newSpecies = await listSpecies(
+          gameVersion,
+          encounterType as EncounterMethodKey,
+          locationKey
+        );
+        onChange({ ...value, slots: newSlots, availableSpecies: newSpecies });
+      })();
     },
     [gameVersion, encounterType, value, onChange]
   );
@@ -204,9 +229,11 @@ function PokemonParamsForm({
   const handleStaticEntryChange = useCallback(
     (entryId: string) => {
       setSelectedStaticEntry(entryId);
-      const entry = getStaticEncounterEntry(gameVersion, encounterType, entryId);
-      const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
-      onChange({ ...value, slots: newSlots });
+      void (async () => {
+        const entry = await getStaticEncounterEntry(gameVersion, encounterType, entryId);
+        const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
+        onChange({ ...value, slots: newSlots });
+      })();
     },
     [gameVersion, encounterType, value, onChange]
   );

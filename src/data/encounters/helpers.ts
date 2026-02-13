@@ -3,6 +3,9 @@
  *
  * Provides discriminated-union based API that handles both
  * location-based (wild) and static (fixed) encounters.
+ *
+ * All data-fetching functions are async because the underlying
+ * loader lazily imports encounter JSON on demand.
  */
 
 import type { EncounterMethodKey, StaticEncounterTypeKey, GameVersion } from './schema';
@@ -88,19 +91,22 @@ function speciesCacheKey(version: string, method: string, locationKey?: string):
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Public API (async)
 // ---------------------------------------------------------------------------
 
 /**
  * List encounter locations for a given version and wild encounter method.
  * Returns empty array for non-location-based types.
  */
-export function listLocations(version: GameVersion, method: EncounterMethodKey): LocationOption[] {
+export async function listLocations(
+  version: GameVersion,
+  method: EncounterMethodKey
+): Promise<LocationOption[]> {
   const key = locCacheKey(version, method);
   const cached = cacheLocations.get(key);
   if (cached) return cached;
 
-  const result = listLocationsFromRegistry(version, method);
+  const result = await listLocationsFromRegistry(version, method);
   cacheLocations.set(key, result);
   return result;
 }
@@ -114,18 +120,18 @@ export function listLocations(version: GameVersion, method: EncounterMethodKey):
  * For static types, entries from the static registry are returned
  * directly (kind: 'static').
  */
-export function listSpecies(
+export async function listSpecies(
   version: GameVersion,
   method: EncounterMethodKey | StaticEncounterTypeKey,
   locationKey?: string
-): EncounterSpeciesOption[] {
+): Promise<EncounterSpeciesOption[]> {
   const key = speciesCacheKey(version, method, locationKey);
   const cached = cacheSpecies.get(key);
   if (cached) return cached;
 
   const result = isLocationBasedEncounter(method)
-    ? buildLocationSpecies(version, method, locationKey ?? '')
-    : buildStaticSpecies(version, method);
+    ? await buildLocationSpecies(version, method, locationKey ?? '')
+    : await buildStaticSpecies(version, method);
 
   cacheSpecies.set(key, result);
   return result;
@@ -135,12 +141,12 @@ export function listSpecies(
 // Internal builders
 // ---------------------------------------------------------------------------
 
-function buildLocationSpecies(
+async function buildLocationSpecies(
   version: string,
   method: string,
   locationKey: string
-): EncounterSpeciesOption[] {
-  const slots = getEncounterSlots(version, locationKey, method);
+): Promise<EncounterSpeciesOption[]> {
+  const slots = await getEncounterSlots(version, locationKey, method);
   if (!slots) return [];
 
   const map = new Map<number, EncounterSpeciesOption & { kind: 'location' }>();
@@ -174,8 +180,11 @@ function buildLocationSpecies(
   );
 }
 
-function buildStaticSpecies(version: string, method: string): EncounterSpeciesOption[] {
-  const entries = listStaticEncounterEntries(version, method);
+async function buildStaticSpecies(
+  version: string,
+  method: string
+): Promise<EncounterSpeciesOption[]> {
+  const entries = await listStaticEncounterEntries(version, method);
   return entries.map((entry) => ({
     kind: 'static' as const,
     id: entry.id,

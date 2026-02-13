@@ -1,8 +1,9 @@
 /**
  * Encounter registry loader.
  *
- * Loads generated JSON files via import.meta.glob (eager) at build time
- * and provides lookup APIs for encounter data (wild + static).
+ * Loads generated JSON files via import.meta.glob (lazy) and
+ * provides async lookup APIs for encounter data (wild + static).
+ * Each version × method combination is loaded on demand and cached.
  */
 
 import type {
@@ -21,8 +22,8 @@ export interface RegistryEntry {
   slots: EncounterSlotJson[];
 }
 
-/** version_method -> normalizedLocationKey -> RegistryEntry */
-type Registry = Record<string, Record<string, RegistryEntry>>;
+/** normalizedLocationKey -> RegistryEntry */
+type RegistryBucket = Record<string, RegistryEntry>;
 
 // ---------------------------------------------------------------------------
 // Location key normalization
@@ -36,85 +37,93 @@ export function normalizeLocationKey(location: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Registry initialization
+// Glob path parsing
 // ---------------------------------------------------------------------------
 
-let registry: Registry | undefined;
+function parseModulePath(path: string): { version: string; method: string } | undefined {
+  const match = path.match(/\/v1\/(\w+)\/(\w+)\.json$/);
+  if (!match) return undefined;
+  return { version: match[1], method: match[2] };
+}
 
-function initRegistry(): Registry {
-  const modules = import.meta.glob<EncounterLocationsJson>('./generated/v1/**/*.json', {
-    eager: true,
-    import: 'default',
+// ---------------------------------------------------------------------------
+// Dynamic import modules (lazy)
+// ---------------------------------------------------------------------------
+
+const generatedModules = import.meta.glob<EncounterLocationsJson>('./generated/v1/**/*.json', {
+  import: 'default',
+});
+
+const staticModules = import.meta.glob<EncounterSpeciesJson>('./static/v1/**/*.json', {
+  import: 'default',
+});
+
+// ---------------------------------------------------------------------------
+// Registry cache + async loaders
+// ---------------------------------------------------------------------------
+
+const registryCache: Record<string, RegistryBucket> = {};
+
+async function loadRegistryEntry(
+  version: string,
+  method: string
+): Promise<RegistryBucket | undefined> {
+  const key = `${version}_${method}`;
+  if (registryCache[key]) return registryCache[key];
+
+  const targetPath = Object.keys(generatedModules).find((path) => {
+    const parsed = parseModulePath(path);
+    return parsed?.version === version && parsed?.method === method;
   });
+  if (!targetPath) return undefined;
 
-  const acc: Registry = {};
-  for (const [, data] of Object.entries(modules)) {
-    const key = `${data.version}_${data.method}`;
-    if (!acc[key]) acc[key] = {};
-
-    for (const [locKey, payload] of Object.entries(data.locations)) {
-      const normalizedKey = normalizeLocationKey(locKey);
-      acc[key][normalizedKey] = {
-        displayNameKey: locKey,
-        slots: payload.slots,
-      };
-    }
+  const data = await generatedModules[targetPath]();
+  const bucket: RegistryBucket = {};
+  for (const [locKey, payload] of Object.entries(data.locations)) {
+    const normalizedKey = normalizeLocationKey(locKey);
+    bucket[normalizedKey] = {
+      displayNameKey: locKey,
+      slots: payload.slots,
+    };
   }
-  return acc;
+  registryCache[key] = bucket;
+  return bucket;
 }
-
-function ensureRegistry(): Registry {
-  if (!registry) {
-    registry = initRegistry();
-  }
-  return registry;
-}
-
-// ---------------------------------------------------------------------------
-// Static encounter registry
-// ---------------------------------------------------------------------------
 
 /** version_method -> EncounterSpeciesEntryJson[] */
-type StaticRegistry = Record<string, EncounterSpeciesEntryJson[]>;
+const staticRegistryCache: Record<string, EncounterSpeciesEntryJson[]> = {};
 
-let staticRegistry: StaticRegistry | undefined;
+async function loadStaticRegistryEntry(
+  version: string,
+  method: string
+): Promise<EncounterSpeciesEntryJson[]> {
+  const key = `${version}_${method}`;
+  if (staticRegistryCache[key]) return staticRegistryCache[key];
 
-function initStaticRegistry(): StaticRegistry {
-  const modules = import.meta.glob<EncounterSpeciesJson>('./static/v1/**/*.json', {
-    eager: true,
-    import: 'default',
+  const targetPath = Object.keys(staticModules).find((path) => {
+    const parsed = parseModulePath(path);
+    return parsed?.version === version && parsed?.method === method;
   });
+  if (!targetPath) return [];
 
-  const acc: StaticRegistry = {};
-  for (const [, data] of Object.entries(modules)) {
-    const key = `${data.version}_${data.method}`;
-    acc[key] = data.entries;
-  }
-  return acc;
-}
-
-function ensureStaticRegistry(): StaticRegistry {
-  if (!staticRegistry) {
-    staticRegistry = initStaticRegistry();
-  }
-  return staticRegistry;
+  const data = await staticModules[targetPath]();
+  staticRegistryCache[key] = data.entries;
+  return data.entries;
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Public API (async)
 // ---------------------------------------------------------------------------
 
 /**
  * Get encounter slots for a specific version/location/method combination.
  */
-export function getEncounterSlots(
+export async function getEncounterSlots(
   version: string,
   location: string,
   method: string
-): EncounterSlotJson[] | undefined {
-  const reg = ensureRegistry();
-  const key = `${version}_${method}`;
-  const bucket = reg[key];
+): Promise<EncounterSlotJson[] | undefined> {
+  const bucket = await loadRegistryEntry(version, method);
   if (!bucket) return undefined;
 
   const normalizedLoc = normalizeLocationKey(location);
@@ -125,13 +134,11 @@ export function getEncounterSlots(
 /**
  * List all locations for a given version and method.
  */
-export function listLocations(
+export async function listLocations(
   version: string,
   method: string
-): Array<{ key: string; displayNameKey: string }> {
-  const reg = ensureRegistry();
-  const key = `${version}_${method}`;
-  const bucket = reg[key];
+): Promise<Array<{ key: string; displayNameKey: string }>> {
+  const bucket = await loadRegistryEntry(version, method);
   if (!bucket) return [];
 
   return Object.entries(bucket).map(([locKey, entry]) => ({
@@ -143,14 +150,12 @@ export function listLocations(
 /**
  * Get the full registry entry for a location.
  */
-export function getLocationEntry(
+export async function getLocationEntry(
   version: string,
   location: string,
   method: string
-): RegistryEntry | undefined {
-  const reg = ensureRegistry();
-  const key = `${version}_${method}`;
-  const bucket = reg[key];
+): Promise<RegistryEntry | undefined> {
+  const bucket = await loadRegistryEntry(version, method);
   if (!bucket) return undefined;
 
   const normalizedLoc = normalizeLocationKey(location);
@@ -158,29 +163,27 @@ export function getLocationEntry(
 }
 
 // ---------------------------------------------------------------------------
-// Static encounter public API
+// Static encounter public API (async)
 // ---------------------------------------------------------------------------
 
 /**
  * List all static encounter entries for a given version and method.
  */
-export function listStaticEncounterEntries(
+export async function listStaticEncounterEntries(
   version: string,
   method: string
-): EncounterSpeciesEntryJson[] {
-  const reg = ensureStaticRegistry();
-  const key = `${version}_${method}`;
-  return reg[key] ?? [];
+): Promise<EncounterSpeciesEntryJson[]> {
+  return loadStaticRegistryEntry(version, method);
 }
 
 /**
  * Get a single static encounter entry by id.
  */
-export function getStaticEncounterEntry(
+export async function getStaticEncounterEntry(
   version: string,
   method: string,
   entryId: string
-): EncounterSpeciesEntryJson | undefined {
-  const entries = listStaticEncounterEntries(version, method);
+): Promise<EncounterSpeciesEntryJson | undefined> {
+  const entries = await listStaticEncounterEntries(version, method);
   return entries.find((e) => e.id === entryId);
 }
