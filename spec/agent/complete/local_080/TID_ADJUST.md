@@ -341,15 +341,15 @@ case 'tid-adjust': return <TidAdjustPage />;
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/features/tid-adjust/types.ts` — フォーム状態型 + `parseShinyPid` + `validateTidAdjustForm`
-- [ ] `src/features/tid-adjust/hooks/use-tid-adjust.ts` — 検索フック
-- [ ] `src/features/tid-adjust/components/tid-adjust-form.tsx` — ID フィルタフォーム
-- [ ] `src/features/tid-adjust/components/trainer-info-columns.tsx` — テーブル列定義
-- [ ] `src/features/tid-adjust/components/tid-adjust-page.tsx` — ページコンポーネント
-- [ ] `src/features/tid-adjust/index.ts` — re-export
-- [ ] `src/services/batch-utils.ts` — `isTrainerInfoResult` 型ガード追加
-- [ ] `src/components/layout/feature-content.tsx` — ページマッピング追加
-- [ ] `src/test/unit/tid-adjust-types.test.ts` — PID パーサー + バリデーション テスト
-- [ ] `src/test/unit/batch-utils.test.ts` — `isTrainerInfoResult` テスト (既存ファイルへ追加)
-- [ ] `src/test/integration/tid-adjust-search.test.ts` — Worker/WASM 統合テスト
-- [ ] 翻訳リソース更新 (`pnpm lingui:extract`)
+- [x] `src/features/tid-adjust/types.ts` — フォーム状態型 + `parseShinyPid` + `validateTidAdjustForm`
+- [x] `src/features/tid-adjust/hooks/use-tid-adjust.ts` — 検索フック
+- [x] `src/features/tid-adjust/components/tid-adjust-form.tsx` — ID フィルタフォーム
+- [x] `src/features/tid-adjust/components/trainer-info-columns.tsx` — テーブル列定義
+- [x] `src/features/tid-adjust/components/tid-adjust-page.tsx` — ページコンポーネント
+- [x] `src/features/tid-adjust/index.ts` — re-export
+- [x] `src/services/batch-utils.ts` — `isTrainerInfoResult` 型ガード追加
+- [x] `src/components/layout/feature-content.tsx` — ページマッピング追加
+- [x] `src/test/unit/tid-adjust-types.test.ts` — PID パーサー + バリデーション テスト
+- [x] `src/test/unit/batch-utils.test.ts` — `isTrainerInfoResult` テスト (新規ファイル)
+- [x] `src/test/integration/tid-adjust-search.test.ts` — Worker/WASM 統合テスト
+- [x] 翻訳リソース更新 (`pnpm lingui:extract`)
