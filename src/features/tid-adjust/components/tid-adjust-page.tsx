@@ -93,7 +93,9 @@ function TidAdjustPage(): ReactElement {
       key_spec: keySpec,
     };
     const filter = toTrainerInfoFilter({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw });
-    startSearch(context, filter, gameStart);
+    // TID/SID はニューゲーム開始時に決定されるため start_mode を強制的に NewGame にする
+    const tidGameStart = { ...gameStart, start_mode: 'NewGame' as const };
+    startSearch(context, filter, tidGameStart);
   }, [
     dsConfig,
     dateRange,
