@@ -53,6 +53,8 @@ MT Seed 検索機能 (`mtseed-search`) を実装する。ユーザーが指定�
 | `src/components/layout/feature-content.tsx` | 修正 | `mtseed-search` case 追加 (PlaceholderPage → MtseedSearchPage) |
 | `src/services/batch-utils.ts` | 修正 | `isMtseedResult` 型ガード追加 |
 | `src/stores/search/results.ts` | 修正 | `pendingTargetSeeds` 状態追加 (Seed 連携用) |
+| `src/stores/settings/ui.ts` | 修正 | `navigateToFeature` アクション追加 |
+| `src/lib/navigate.ts` | 新規 | ナビゲーションアクション (`navigateToDatetimeSearch`) |
 | `src/features/datetime-search/components/datetime-search-page.tsx` | 修正 | `pendingTargetSeeds` 受信ロジック追加 |
 | `src/test/components/layout/feature-content.test.tsx` | 修正 | PlaceholderPage → MtseedSearchPage のテスト更新 |
 
@@ -140,24 +142,29 @@ useMtseedSearch.results (フラット化)
 #### 送信側 (mtseed-search)
 
 1. ボタン押下時、結果の `MtseedResult[]` から Seed 一覧を抽出
-2. `useSearchResultStore.getState().setPendingTargetSeeds(seeds)` で Store に書き込み
-3. `useUiStore.getState().setActiveFeature('datetime-search')` でタブ遷移
+2. `navigateToDatetimeSearch(seeds)` で Store への書き込みとタブ遷移を一括実行
+
+`navigateToDatetimeSearch` は `src/lib/navigate.ts` に定義され、内部で `useSearchResultsStore` への `setPendingTargetSeeds` と `useUiStore` の `navigateToFeature('datetime-search')` を実行する。複数 Store を跨ぐナビゲーションロジックをコンポーネントから分離し、将来のルーティング変更に対する影響範囲を限定する。
 
 #### 受信側 (datetime-search)
 
-`datetime-search-page.tsx` の `useEffect` で `pendingTargetSeeds` を監視する。
+`datetime-search-page.tsx` の `useState` 初期化で `pendingTargetSeeds` を読み取り、`useEffect` で消費済みとしてクリアする。`useState` のイニシャライザ内では副作用を行わず、読み取りのみ行う (React Strict Mode 対応)。
 
 ```typescript
-const pendingSeeds = useSearchResultStore((s) => s.pendingTargetSeeds);
-const clearPendingSeeds = useSearchResultStore((s) => s.clearPendingTargetSeeds);
-
-useEffect(() => {
-  if (pendingSeeds.length > 0) {
-    const text = pendingSeeds.map((s) => toHex(s, 8)).join('\n');
-    setTargetSeedsRaw(text);
-    clearPendingSeeds();
+const [targetSeedsRaw, setTargetSeedsRaw] = useState(() => {
+  const pending = useSearchResultsStore.getState().pendingTargetSeeds;
+  if (pending.length > 0) {
+    return pending.map((s) => toHex(s, 8)).join('\n');
   }
-}, [pendingSeeds, clearPendingSeeds]);
+  return '';
+});
+
+// 初回マウント時に pendingTargetSeeds を消費済みとしてクリア
+useEffect(() => {
+  if (useSearchResultsStore.getState().pendingTargetSeeds.length > 0) {
+    useSearchResultsStore.getState().clearPendingTargetSeeds();
+  }
+}, []);
 ```
 
 #### Store 拡張 (`stores/search/results.ts`)
@@ -479,13 +486,11 @@ import { useMtseedSearch } from '../hooks/use-mtseed-search';
 import {
   validateMtseedIvSearchForm,
   toMtseedSearchContext,
-  type MtseedIvSearchFormState,
   type MtseedIvValidationErrorCode,
 } from '../types';
-import type { IvFilter, MtseedResult, RomVersion } from '@/wasm/wasm_pkg.js';
+import type { IvFilter, RomVersion } from '@/wasm/wasm_pkg.js';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { useSearchResultStore } from '@/stores/search/results';
-import { useUiStore } from '@/stores/settings/ui';
+import { navigateToDatetimeSearch } from '@/lib/navigate';
 
 /** IvFilter のデフォルト値 (全 31-31, めざパ条件なし) */
 const DEFAULT_IV_FILTER: IvFilter = {
@@ -525,9 +530,8 @@ function MtseedSearchPage(): ReactElement {
     useMtseedSearch(useGpu);
 
   // バリデーション
-  const formState: MtseedIvSearchFormState = { ivFilter, mtOffset, isRoamer };
   const validation = useMemo(
-    () => validateMtseedIvSearchForm(formState),
+    () => validateMtseedIvSearchForm({ ivFilter, mtOffset, isRoamer }),
     [ivFilter, mtOffset, isRoamer],
   );
 
@@ -544,15 +548,12 @@ function MtseedSearchPage(): ReactElement {
 
   // 検索開始
   const handleSearch = useCallback(() => {
-    const context = toMtseedSearchContext(formState);
-    startSearch(context);
-  }, [formState, startSearch]);
+    startSearch(toMtseedSearchContext({ ivFilter, mtOffset, isRoamer }));
+  }, [ivFilter, mtOffset, isRoamer, startSearch]);
 
   // 起動時刻検索への連携
   const handleNavigateToDatetimeSearch = useCallback(() => {
-    const seeds = results.map((r) => r.seed);
-    useSearchResultStore.getState().setPendingTargetSeeds(seeds);
-    useUiStore.getState().setActiveFeature('datetime-search');
+    navigateToDatetimeSearch(results.map((r) => r.seed));
   }, [results]);
 
   return (
@@ -674,26 +675,30 @@ export function isMtseedResult(value: unknown): value is MtseedResult {
 
 ### 4.8 datetime-search 受信側 (`datetime-search-page.tsx` 修正)
 
-既存の `datetime-search-page.tsx` に以下を追加する。
+既存の `datetime-search-page.tsx` に以下を追加する。`useState` のイニシャライザで `pendingTargetSeeds` を読み取り (副作用なし)、`useEffect` で初回マウント時にクリアする。React Strict Mode でイニシャライザが 2 回呼ばれても副作用が発生しない。
 
 ```typescript
-import { useSearchResultStore } from '@/stores/search/results';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { toHex } from '@/lib/format';
 
 // コンポーネント内
-const pendingSeeds = useSearchResultStore((s) => s.pendingTargetSeeds);
-const clearPendingSeeds = useSearchResultStore((s) => s.clearPendingTargetSeeds);
-
-useEffect(() => {
-  if (pendingSeeds.length > 0) {
-    const text = pendingSeeds.map((s) => toHex(s, 8)).join('\n');
-    setTargetSeedsRaw(text);
-    clearPendingSeeds();
+const [targetSeedsRaw, setTargetSeedsRaw] = useState(() => {
+  const pending = useSearchResultsStore.getState().pendingTargetSeeds;
+  if (pending.length > 0) {
+    return pending.map((s) => toHex(s, 8)).join('\n');
   }
-}, [pendingSeeds, clearPendingSeeds]);
+  return '';
+});
+
+// 初回マウント時に pendingTargetSeeds を消費済みとしてクリア
+useEffect(() => {
+  if (useSearchResultsStore.getState().pendingTargetSeeds.length > 0) {
+    useSearchResultsStore.getState().clearPendingTargetSeeds();
+  }
+}, []);
 ```
 
-`targetSeedsRaw` は既存の `useState('')` で管理されている。`pendingSeeds` が空でないとき、hex 文字列に変換してフォームに反映し、Store をクリアする。ユーザーは手動で上書き可能。
+`targetSeedsRaw` は `useState` で管理される。`pendingTargetSeeds` が空でないとき、hex 文字列に変換してフォームの初期値とし、マウント後に Store をクリアする。ユーザーは手動で上書き可能。
 
 ### 4.9 公開 API (`index.ts`)
 

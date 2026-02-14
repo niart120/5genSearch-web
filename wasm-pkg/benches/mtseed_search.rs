@@ -2,7 +2,7 @@
 //!
 //! `MtseedSearcher::next_batch()` スループット測定
 //!
-//! バッチサイズは search.worker.ts の BATCH_SIZE.mtseed (400,000) に合わせる。
+//! バッチサイズは search.worker.ts の BATCH_SIZE.mtseed (500,000) に合わせる。
 
 use std::time::Duration;
 
@@ -43,10 +43,10 @@ fn bench_mtseed_search(c: &mut Criterion) {
     group.sample_size(20);
 
     // search.worker.ts BATCH_SIZE.mtseed と同値
-    let chunk_size = 400_000_u32;
+    let chunk_size = 500_000_u32;
     group.throughput(Throughput::Elements(u64::from(chunk_size)));
 
-    group.bench_function("next_batch_400k", |b| {
+    group.bench_function("next_batch_500k", |b| {
         b.iter_batched(
             create_mtseed_searcher,
             |mut searcher| searcher.next_batch(chunk_size),

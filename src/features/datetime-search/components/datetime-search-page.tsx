@@ -5,7 +5,7 @@
  * FeaturePageLayout による Controls / Results 2 ペイン構成。
  */
 
-import { useState, useMemo, useCallback, type ReactElement } from 'react';
+import { useState, useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
@@ -65,15 +65,21 @@ function DatetimeSearchPage(): ReactElement {
   const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
   const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
   const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
-  // MT Seed 検索からの連携: pendingTargetSeeds をフォームの初期値として消費
+  // MT Seed 検索からの連携: pendingTargetSeeds をフォームの初期値として反映
   const [targetSeedsRaw, setTargetSeedsRaw] = useState(() => {
     const pending = useSearchResultsStore.getState().pendingTargetSeeds;
     if (pending.length > 0) {
-      useSearchResultsStore.getState().clearPendingTargetSeeds();
       return pending.map((s) => toHex(s, 8)).join('\n');
     }
     return '';
   });
+
+  // 初回マウント時に pendingTargetSeeds を消費済みとしてクリア
+  useEffect(() => {
+    if (useSearchResultsStore.getState().pendingTargetSeeds.length > 0) {
+      useSearchResultsStore.getState().clearPendingTargetSeeds();
+    }
+  }, []);
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =

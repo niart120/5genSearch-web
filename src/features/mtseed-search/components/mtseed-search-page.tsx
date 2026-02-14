@@ -17,13 +17,11 @@ import { useMtseedSearch } from '../hooks/use-mtseed-search';
 import {
   validateMtseedIvSearchForm,
   toMtseedSearchContext,
-  type MtseedIvSearchFormState,
   type MtseedIvValidationErrorCode,
 } from '../types';
 import type { IvFilter, RomVersion } from '@/wasm/wasm_pkg.js';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { useSearchResultsStore } from '@/stores/search/results';
-import { useUiStore } from '@/stores/settings/ui';
+import { navigateToDatetimeSearch } from '@/lib/navigate';
 
 /** IvFilter のデフォルト値 (全 31-31, めざパ条件なし) */
 const DEFAULT_IV_FILTER: IvFilter = {
@@ -63,10 +61,8 @@ function MtseedSearchPage(): ReactElement {
     useMtseedSearch(useGpu);
 
   // バリデーション
-  const formState: MtseedIvSearchFormState = { ivFilter, mtOffset, isRoamer };
   const validation = useMemo(
-    () => validateMtseedIvSearchForm(formState),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- formState の各プロパティを個別に依存配列に列挙
+    () => validateMtseedIvSearchForm({ ivFilter, mtOffset, isRoamer }),
     [ivFilter, mtOffset, isRoamer]
   );
 
@@ -83,18 +79,12 @@ function MtseedSearchPage(): ReactElement {
 
   // 検索開始
   const handleSearch = useCallback(() => {
-    const context = toMtseedSearchContext(formState);
-    startSearch(context);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- formState の各プロパティに依存
+    startSearch(toMtseedSearchContext({ ivFilter, mtOffset, isRoamer }));
   }, [ivFilter, mtOffset, isRoamer, startSearch]);
 
   // 起動時刻検索への連携
   const handleNavigateToDatetimeSearch = useCallback(() => {
-    const seeds = results.map((r) => r.seed);
-    useSearchResultsStore.getState().setPendingTargetSeeds(seeds);
-    // カテゴリ + 機能の切り替え
-    useUiStore.getState().setActiveCategory('search');
-    useUiStore.getState().setActiveFeature('datetime-search');
+    navigateToDatetimeSearch(results.map((r) => r.seed));
   }, [results]);
 
   return (
