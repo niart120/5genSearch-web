@@ -4,25 +4,6 @@
 
 ---
 
-## 2026-02-11: MtseedDatetime CPU 検索のスループット低下
-
-現状: CPU パスの MtseedDatetime 検索が約 100M calc/s。参照実装 (`niart120/pokemon-gen5-initseed`) は同一マシン (32 コア) で約 280-300M calc/s を達成している。バッチサイズを 1,000 → 1,000,000 に増やしたが改善なし。Criterion ベンチマーク (ネイティブ) は約 11.9 Melem/s/core。
-
-観察: コアあたり性能を比較すると、参照実装 (300M / 32core ≈ 9.4M/core) に対し本実装のネイティブベンチマーク (11.9M/core) は上回っている。SHA-1 SIMD 実装自体は問題ない可能性が高い。GPU パスでも同様のスループット劣化 (期待値の約 1/4) が観測されており、GPU 側はネイティブベンチマークで問題が再現しないため、JS/Worker レイヤーの制御オーバーヘッドが共通要因と推定する。
-
-当面の方針: 仕様書 `spec/agent/wip/local_076/SEARCH_THROUGHPUT_OPTIMIZATION.md` に切り出して体系的に調査する。主要仮説は以下の通り:
-
-1. `setTimeout(resolve, 0)` による yield オーバーヘッド (最小 4ms/回)
-2. 毎バッチの `postMessage` 進捗報告によるメインスレッド負荷
-3. WASM ビルド設定 (`-C target-feature=+simd128`, `wasm-opt --enable-simd`) の未適用
-4. GPU: 単一ディスパッチ/await パターンによる GPU アイドル時間
-
-### 検証結果 (2026-02-13)
-
-**C1 (yield オーバーヘッド)**: yield を毎バッチ → 50ms 間隔に変更。スループット ~105M/s で有意な変化なし。診断ログにより、ボトルネックは WASM 実行速度自体 (3.3M/s/core、ネイティブ 11.9M/core の 28%) であることを確認。JS/Worker レイヤーのオーバーヘッドは支配的ではない。
-
-**C3/C4 (WASM ビルド設定)**: `wasm-pkg/.cargo/config.toml` に `-C target-feature=+simd128` を追加し、`scripts/optimize-wasm.js` に `--enable-simd` を追加。リビルド後、WASM バイナリに SIMD 命令 (`v128.load/store`, `i32x4.add` 等) の出力を確認。ブラウザでのスループット計測は未実施。
-
 ## 2026-02-11: スクレイピング時のエンカウント地名キーと表示名の不整合
 
 現状: `scripts/scrape-encounters.js` の `DUPLICATE_SUFFIX_RULES` が地名にサフィックスを付与し、`giant_chasm_cave` や `reversal_mountain_exterior` のようなサブエリアキーを生成する。一方 `src/lib/game-data-names.ts` の `ENCOUNTER_LOCATION_NAMES` にはサフィックス無しの親キーしか存在せず、生成された JSON に含まれるキーと表示名の対応が欠落していた。
