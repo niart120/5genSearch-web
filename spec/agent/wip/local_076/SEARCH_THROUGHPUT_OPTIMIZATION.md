@@ -419,11 +419,10 @@ batch\_size × ops/elem の概算バッチ実行時間 (10 Mops/s WASM 仮定):
 
 | Searcher | batch_size × ops | 推定 ms/batch |
 |---|---|---|
-| MtseedDatetime | 500K × 100 = 50M | ~5 ms |
-| TrainerInfo | 1M × 150 = 150M | ~15 ms |
-| Mtseed | 500K × 1300 = 650M | ~65 ms |
-| EggDatetime | 5K × 2000 = 10M | ~1 ms |
+| MtseedDatetime | 10M × 100 = 1G | ~100 ms |
+| TrainerInfo | 5M × 150 = 750M | ~75 ms |
+| Mtseed | 750K × 1300 = 975M | ~97 ms |
+| EggDatetime | 100K × 2000+α = 200M+ | ~10-115 ms (advance 依存) |
 
-バッチサイズ調整:
-- Mtseed: 1,000,000 → 500,000 (キャンセル応答 ~130ms → ~65ms に改善)
-- EggDatetime: 1,000 → 5,000 (yield 支配率を低減)
+cancel 応答 ~100ms を目標にバッチサイズを設定。
+yield オーバーヘッドを最小化しつつ、キャンセル応答性を実用的な範囲に収める。
