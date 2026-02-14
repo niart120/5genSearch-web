@@ -12,7 +12,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { DatetimeInput, DEFAULT_DATETIME } from '@/components/forms/datetime-input';
+import { DatetimeInput, DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { KeyInputSelector } from '@/components/forms/key-input-selector';
 import { useSearchResultsReadonly } from '@/hooks/use-search-results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
