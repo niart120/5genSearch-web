@@ -117,8 +117,8 @@ fn mt_iv_search(@builtin(global_invocation_id) global_id: vec3<u32>) {
         // IV 抽出 (6回)
         var ivs: array<u32, 6>;
         for (var i = 0u; i < 6u; i = i + 1u) {
-            // Twist が必要かチェック (mt_index が N を超えた場合)
-            if (mt_index >= MT_N) {
+            // Twist が必要かチェック (mt_index が N 以上の場合、繰り返しツイスト)
+            while (mt_index >= MT_N) {
                 mt_twist(&mt);
                 mt_index = mt_index - MT_N;
             }

@@ -15,6 +15,7 @@ import type {
   WorkerResponse,
   GpuMtseedSearchTask,
   GpuMtseedIvSearchTask,
+  ProgressInfo,
 } from './types';
 import type { GpuSearchBatch, GpuMtseedSearchBatch } from '../wasm/wasm_pkg.js';
 
@@ -24,6 +25,62 @@ import type { GpuSearchBatch, GpuMtseedSearchBatch } from '../wasm/wasm_pkg.js';
 
 /** 進捗 postMessage 送信間隔 (ms) — CPU Worker と同一 */
 const PROGRESS_INTERVAL_MS = 500;
+
+// =============================================================================
+// Batch Adapter
+// =============================================================================
+
+/** GPU バッチ型の差異を吸収するアダプタ */
+interface GpuBatchAdapter<TBatch> {
+  /** バッチから結果を取り出し、WorkerResponse として postMessage する */
+  reportResults: (taskId: string, batch: TBatch) => void;
+  /** バッチから進捗情報を構築する */
+  toProgress: (batch: TBatch, startTime: number, now: number) => ProgressInfo;
+}
+
+const datetimeSearchAdapter: GpuBatchAdapter<GpuSearchBatch> = {
+  reportResults(taskId, batch) {
+    if (batch.results.length > 0) {
+      postResponse({
+        type: 'result',
+        taskId,
+        resultType: 'seed-origin',
+        results: batch.results,
+      });
+    }
+  },
+  toProgress(batch, startTime, now) {
+    return buildProgressInfo(
+      Number(batch.processed_count),
+      Number(batch.total_count),
+      batch.progress,
+      startTime,
+      now
+    );
+  },
+};
+
+const mtseedIvSearchAdapter: GpuBatchAdapter<GpuMtseedSearchBatch> = {
+  reportResults(taskId, batch) {
+    if (batch.candidates.length > 0) {
+      postResponse({
+        type: 'result',
+        taskId,
+        resultType: 'mtseed',
+        results: batch.candidates,
+      });
+    }
+  },
+  toProgress(batch, startTime, now) {
+    return buildProgressInfo(
+      Number(batch.processed),
+      Number(batch.total),
+      batch.progress,
+      startTime,
+      now
+    );
+  },
+};
 
 // =============================================================================
 // State
@@ -119,126 +176,45 @@ function handleInit(): void {
 // =============================================================================
 
 /**
- * GPU 検索実行
- *
- * GpuDatetimeSearchIterator を使用して AsyncIterator パターンで検索を実行。
- * 各バッチ完了時に進捗を報告し、結果を収集して返却する。
+ * GPU datetime 検索実行
  */
 async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<void> {
-  cancelRequested = false;
-
-  try {
-    // WASM 側の GpuProfile::detect() が参照するアダプター情報を事前設定
-    await cacheGpuAdapterInfo();
-
-    currentIterator = await GpuDatetimeSearchIterator.create(task.context, task.targetSeeds);
-
-    await executeSearchLoop(taskId);
-  } catch (error) {
-    postResponse({
-      type: 'error',
-      taskId,
-      message: error instanceof Error ? error.message : String(error),
-    });
-  } finally {
-    // リソースを確実に解放
-    if (currentIterator) {
-      currentIterator.free();
-      currentIterator = undefined;
-    }
-  }
+  await cacheGpuAdapterInfo();
+  const iterator = await GpuDatetimeSearchIterator.create(task.context, task.targetSeeds);
+  currentIterator = iterator;
+  await runGpuSearchLoop(taskId, iterator, datetimeSearchAdapter);
 }
 
 /**
- * 検索ループ実行 (共通処理)
+ * GPU MT Seed IV 全探索実行
+ */
+async function runGpuMtseedIvSearch(taskId: string, task: GpuMtseedIvSearchTask): Promise<void> {
+  await cacheGpuAdapterInfo();
+  const iterator = await GpuMtseedSearchIterator.create(task.context);
+  currentIterator = iterator;
+  await runGpuSearchLoop(taskId, iterator, mtseedIvSearchAdapter);
+}
+
+/**
+ * GPU 検索ループ (共通)
  *
  * 進捗報告は PROGRESS_INTERVAL_MS で間引き、
  * 毎ディスパッチの postMessage オーバーヘッドを抑制する。
  * 結果 (マッチ) は即時報告する。
  */
-async function executeSearchLoop(taskId: string): Promise<void> {
-  if (!currentIterator || !(currentIterator instanceof GpuDatetimeSearchIterator)) {
-    return;
-  }
-
-  const iterator = currentIterator;
-  let batch: GpuSearchBatch | undefined;
-  const startTime = performance.now();
-  let lastProgressTime = startTime;
-  let lastBatch: GpuSearchBatch | undefined;
-
-  while (!cancelRequested && !iterator.is_done) {
-    batch = await iterator.next();
-
-    if (!batch) {
-      break;
-    }
-
-    lastBatch = batch;
-
-    // 中間結果は即時報告 (マッチ件数は通常極少)
-    if (batch.results.length > 0) {
-      postResponse({
-        type: 'result',
-        taskId,
-        resultType: 'seed-origin',
-        results: batch.results,
-      });
-    }
-
-    // 進捗スロットリング
-    const now = performance.now();
-    if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: buildProgress(batch, startTime, now),
-      });
-      lastProgressTime = now;
-    }
-  }
-
-  // 最終進捗: 完了時の正確な数値をメインスレッドに通知
-  if (lastBatch) {
-    const now = performance.now();
-    postResponse({
-      type: 'progress',
-      taskId,
-      progress: buildProgress(lastBatch, startTime, now),
-    });
-  }
-
-  postResponse({
-    type: 'done',
-    taskId,
-  });
-}
-
-// =============================================================================
-// GPU MT Seed IV Search Execution
-// =============================================================================
-
-/**
- * GPU MT Seed IV 全探索実行
- *
- * GpuMtseedSearchIterator を使用して AsyncIterator パターンで検索を実行。
- */
-async function runGpuMtseedIvSearch(taskId: string, task: GpuMtseedIvSearchTask): Promise<void> {
+async function runGpuSearchLoop<
+  TBatch,
+  TIterator extends { is_done: boolean; next(): Promise<TBatch | undefined>; free(): void },
+>(taskId: string, iterator: TIterator, adapter: GpuBatchAdapter<TBatch>): Promise<void> {
   cancelRequested = false;
 
   try {
-    await cacheGpuAdapterInfo();
-
-    const iterator = await GpuMtseedSearchIterator.create(task.context);
-    currentIterator = iterator;
-
-    let batch: GpuMtseedSearchBatch | undefined;
     const startTime = performance.now();
     let lastProgressTime = startTime;
-    let lastBatch: GpuMtseedSearchBatch | undefined;
+    let lastBatch: TBatch | undefined;
 
     while (!cancelRequested && !iterator.is_done) {
-      batch = await iterator.next();
+      const batch = await iterator.next();
 
       if (!batch) {
         break;
@@ -246,15 +222,8 @@ async function runGpuMtseedIvSearch(taskId: string, task: GpuMtseedIvSearchTask)
 
       lastBatch = batch;
 
-      // 中間結果は即時報告
-      if (batch.candidates.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'mtseed',
-          results: batch.candidates,
-        });
-      }
+      // 中間結果は即時報告 (マッチ件数は通常極少)
+      adapter.reportResults(taskId, batch);
 
       // 進捗スロットリング
       const now = performance.now();
@@ -262,19 +231,19 @@ async function runGpuMtseedIvSearch(taskId: string, task: GpuMtseedIvSearchTask)
         postResponse({
           type: 'progress',
           taskId,
-          progress: buildMtseedIvProgress(batch, startTime, now),
+          progress: adapter.toProgress(batch, startTime, now),
         });
         lastProgressTime = now;
       }
     }
 
-    // 最終進捗
+    // 最終進捗: 完了時の正確な数値をメインスレッドに通知
     if (lastBatch) {
       const now = performance.now();
       postResponse({
         type: 'progress',
         taskId,
-        progress: buildMtseedIvProgress(lastBatch, startTime, now),
+        progress: adapter.toProgress(lastBatch, startTime, now),
       });
     }
 
@@ -296,58 +265,23 @@ async function runGpuMtseedIvSearch(taskId: string, task: GpuMtseedIvSearchTask)
   }
 }
 
-/** GPU MT Seed IV 検索用進捗オブジェクト構築 */
-function buildMtseedIvProgress(
-  batch: GpuMtseedSearchBatch,
+/** 進捗オブジェクト構築 (共通) */
+function buildProgressInfo(
+  processed: number,
+  total: number,
+  progressRatio: number,
   startTime: number,
   now: number
-): {
-  processed: number;
-  total: number;
-  percentage: number;
-  elapsedMs: number;
-  estimatedRemainingMs: number;
-  throughput: number;
-} {
+): ProgressInfo {
   const elapsedMs = now - startTime;
-  const processedCount = Number(batch.processed);
-  const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
+  const throughput = elapsedMs > 0 ? (processed / elapsedMs) * 1000 : 0;
 
   return {
-    processed: processedCount,
-    total: Number(batch.total),
-    percentage: batch.progress * 100,
+    processed,
+    total,
+    percentage: progressRatio * 100,
     elapsedMs,
-    estimatedRemainingMs:
-      batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
-    throughput,
-  };
-}
-
-/** 進捗オブジェクト構築 */
-function buildProgress(
-  batch: GpuSearchBatch,
-  startTime: number,
-  now: number
-): {
-  processed: number;
-  total: number;
-  percentage: number;
-  elapsedMs: number;
-  estimatedRemainingMs: number;
-  throughput: number;
-} {
-  const elapsedMs = now - startTime;
-  const processedCount = Number(batch.processed_count);
-  const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
-
-  return {
-    processed: processedCount,
-    total: Number(batch.total_count),
-    percentage: batch.progress * 100,
-    elapsedMs,
-    estimatedRemainingMs:
-      batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
+    estimatedRemainingMs: progressRatio > 0 ? elapsedMs * ((1 - progressRatio) / progressRatio) : 0,
     throughput,
   };
 }

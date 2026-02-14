@@ -58,7 +58,7 @@ impl GpuMtseedSearchIterator {
     pub async fn create(context: MtseedSearchContext) -> Result<GpuMtseedSearchIterator, String> {
         let gpu_ctx = GpuDeviceContext::new().await?;
         let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
-        let items_per_thread = limits.mtseed_items_per_thread();
+        let items_per_thread = limits.mtseed_items_per_thread(gpu_ctx.gpu_profile());
         let pipeline = SearchPipeline::new(&gpu_ctx, &context, items_per_thread);
 
         Ok(Self {

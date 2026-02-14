@@ -73,11 +73,9 @@ fn bench_gpu_mtseed_search(c: &mut Criterion) {
             let mut total_time = Duration::ZERO;
             for _ in 0..iters {
                 let (processed, elapsed) = run_full_search();
-                assert!(
-                    processed >= expected_total * 99 / 100,
-                    "Incomplete search: {} < {}",
-                    processed,
-                    expected_total
+                assert_eq!(
+                    processed, expected_total,
+                    "Incomplete search: {processed} != {expected_total}",
                 );
                 total_time += elapsed;
             }
