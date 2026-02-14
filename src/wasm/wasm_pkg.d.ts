@@ -36,6 +36,28 @@ export interface DsConfig {
 }
 
 /**
+ * GPU MT Seed IV 検索バッチ結果
+ */
+export interface GpuMtseedSearchBatch {
+    /**
+     * フィルタ条件を満たした候補
+     */
+    candidates: MtseedResult[];
+    /**
+     * 進捗率 (0.0 - 1.0)
+     */
+    progress: number;
+    /**
+     * 処理済み Seed 数
+     */
+    processed: bigint;
+    /**
+     * 総 Seed 数
+     */
+    total: bigint;
+}
+
+/**
  * GPU デバイスの種類
  */
 export type GpuKind = "Discrete" | "Integrated" | "Mobile" | "Unknown";
@@ -1350,6 +1372,41 @@ export class GpuDatetimeSearchIterator {
      * 組み合わせ切り替えは内部で自動的に行われる。
      */
     next(): Promise<GpuSearchBatch | undefined>;
+    /**
+     * 検索が完了したか
+     */
+    readonly is_done: boolean;
+    /**
+     * 進捗率 (0.0 - 1.0)
+     */
+    readonly progress: number;
+}
+
+/**
+ * GPU MT Seed IV 全探索イテレータ
+ *
+ * `AsyncIterator` パターンで GPU 検索を実行する。
+ * `next()` を呼び出すたびに最適バッチサイズで GPU ディスパッチを実行し、
+ * 結果・進捗を返す。
+ */
+export class GpuMtseedSearchIterator {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * イテレータを作成
+     *
+     * # Errors
+     *
+     * GPU デバイスが利用不可の場合
+     */
+    static create(context: MtseedSearchContext): Promise<GpuMtseedSearchIterator>;
+    /**
+     * 次のバッチを取得
+     *
+     * 検索完了時は `None` を返す。
+     */
+    next(): Promise<GpuMtseedSearchBatch | undefined>;
     /**
      * 検索が完了したか
      */

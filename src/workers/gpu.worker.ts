@@ -157,17 +157,18 @@ async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<
  * 結果 (マッチ) は即時報告する。
  */
 async function executeSearchLoop(taskId: string): Promise<void> {
-  if (!currentIterator) {
+  if (!currentIterator || !(currentIterator instanceof GpuDatetimeSearchIterator)) {
     return;
   }
 
+  const iterator = currentIterator;
   let batch: GpuSearchBatch | undefined;
   const startTime = performance.now();
   let lastProgressTime = startTime;
   let lastBatch: GpuSearchBatch | undefined;
 
-  while (!cancelRequested && !currentIterator.is_done) {
-    batch = await currentIterator.next();
+  while (!cancelRequested && !iterator.is_done) {
+    batch = await iterator.next();
 
     if (!batch) {
       break;
