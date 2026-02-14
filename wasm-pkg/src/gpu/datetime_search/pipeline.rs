@@ -202,10 +202,16 @@ impl SearchPipeline {
             module,
             entry_point: Some("sha1_generate"),
             compilation_options: wgpu::PipelineCompilationOptions {
-                constants: &[(
-                    String::from("WORKGROUP_SIZE"),
-                    f64::from(limits.workgroup_size),
-                )]
+                constants: &[
+                    (
+                        String::from("WORKGROUP_SIZE"),
+                        f64::from(limits.workgroup_size),
+                    ),
+                    (
+                        String::from("ITEMS_PER_THREAD"),
+                        f64::from(limits.items_per_thread),
+                    ),
+                ]
                 .into_iter()
                 .collect(),
                 ..Default::default()
@@ -428,7 +434,10 @@ impl SearchPipeline {
             let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
             pass.set_pipeline(&self.pipeline);
             pass.set_bind_group(0, &self.bind_group, &[]);
-            let workgroup_count = count.div_ceil(self.workgroup_size);
+            // ITEMS_PER_THREAD 個のアイテムを 1 スレッドが処理するため、
+            // 必要スレッド数はアイテム数 / ITEMS_PER_THREAD
+            let threads_needed = count.div_ceil(self.limits.items_per_thread);
+            let workgroup_count = threads_needed.div_ceil(self.workgroup_size);
             pass.dispatch_workgroups(workgroup_count, 1, 1);
         }
 

@@ -5,6 +5,10 @@
 // ワークグループサイズ (パイプライン作成時にRust側から注入)
 override WORKGROUP_SIZE: u32 = 64u;
 
+// 1 スレッドあたりの処理アイテム数 (パイプライン作成時に注入)
+// 値を増やすとディスパッチ回数が減り、WASM 非同期境界オーバーヘッドを削減できる。
+override ITEMS_PER_THREAD: u32 = 1u;
+
 // ===== バッファ構造体 =====
 
 struct DispatchState {
@@ -223,10 +227,13 @@ fn compute_seed_from_hash(h0: u32, h1: u32) -> u32 {
 
 @compute @workgroup_size(WORKGROUP_SIZE)
 fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let idx = global_id.x;
-    if (idx >= state.message_count) {
-        return;
-    }
+    let base_idx = global_id.x * ITEMS_PER_THREAD;
+
+    for (var item_k = 0u; item_k < ITEMS_PER_THREAD; item_k = item_k + 1u) {
+        let idx = base_idx + item_k;
+        if (idx >= state.message_count) {
+            return;
+        }
 
     // 時刻範囲から日時を計算
     let combos_per_day = max(constants.hour_range_count, 1u)
@@ -387,4 +394,6 @@ fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
             output_buffer.records[match_idx].padding = 0u;
         }
     }
+
+    } // end ITEMS_PER_THREAD loop
 }
