@@ -1,6 +1,8 @@
 //! MT Seed 全探索ベンチマーク
 //!
 //! `MtseedSearcher::next_batch()` スループット測定
+//!
+//! バッチサイズは search.worker.ts の BATCH_SIZE.mtseed (400,000) に合わせる。
 
 use std::time::Duration;
 
@@ -11,6 +13,7 @@ use wasm_pkg::types::IvFilter;
 
 // ===== テスト用パラメータ生成 =====
 
+/// 5V1U フィルタ
 fn create_mtseed_searcher() -> MtseedSearcher {
     let params = MtseedSearchParams {
         iv_filter: IvFilter {
@@ -39,10 +42,11 @@ fn bench_mtseed_search(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(5));
     group.sample_size(20);
 
-    let chunk_size = 10000_u32;
+    // search.worker.ts BATCH_SIZE.mtseed と同値
+    let chunk_size = 400_000_u32;
     group.throughput(Throughput::Elements(u64::from(chunk_size)));
 
-    group.bench_function("next_batch", |b| {
+    group.bench_function("next_batch_400k", |b| {
         b.iter_batched(
             create_mtseed_searcher,
             |mut searcher| searcher.next_batch(chunk_size),
