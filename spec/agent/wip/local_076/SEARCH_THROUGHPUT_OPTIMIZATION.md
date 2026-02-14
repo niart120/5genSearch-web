@@ -314,19 +314,31 @@ const result = spawnSync(
 
 ### Phase 1: JS レイヤー改善
 
-- [ ] CPU Worker: `runMtseedDatetimeSearch` に時間ベース yield を実装
-- [ ] CPU Worker: `runEggDatetimeSearch` に同様の変更を適用
-- [ ] CPU Worker: `runTrainerInfoSearch` に同様の変更を適用
-- [ ] CPU Worker: `runMtseedSearch` に同様の変更を適用
+- [x] CPU Worker: 時間ベース yield を全 4 検索関数に実装 (C1 検証)
+- [ ] CPU Worker + GPU Worker: 進捗報告スロットリング (C2)
 - [ ] GPU Worker: `executeSearchLoop` に進捗スロットリングを実装
-- [ ] 既存テスト通過を確認
-- [ ] ブラウザでスループットを計測・比較
+
+#### C1 検証結果
+
+yield を毎バッチ → 50ms 間隔に変更した結果、スループットに有意な変化なし (~105M/s)。
+診断ログによりボトルネックは WASM 実行速度自体であることを確認:
+
+| 指標 | 値 |
+|------|----|
+| ワーカー数 (hardwareConcurrency) | 32 |
+| バッチあたり処理時間 | ~130-185ms (500K 要素) |
+| ワーカーあたりスループット | ~2.8-3.7 M/s (平均 ~3.3M/s) |
+| WASM/Native 比率 | 3.3 / 11.9 = 28% |
+| 期待 WASM/Native 比率 | 50-67% |
+
+結論: `yield` / `postMessage` のオーバーヘッドは支配的ではない。WASM 実行速度 (コード生成品質) が主因。
 
 ### Phase 2: WASM ビルド設定
 
-- [ ] `wasm-pkg/.cargo/config.toml` を作成
-- [ ] `scripts/optimize-wasm.js` に `--enable-simd` を追加
-- [ ] WASM を再ビルドし、バイナリサイズと SIMD 命令数を比較
+- [x] `wasm-pkg/.cargo/config.toml` を作成 (`-C target-feature=+simd128`)
+- [x] `scripts/optimize-wasm.js` に `--enable-simd` を追加
+- [x] WASM を再ビルドし、SIMD 命令 (`v128`, `i32x4`) の出力を確認
+- [x] 既存テスト通過を確認 (TS: 830 tests, Rust: 6 tests)
 - [ ] ブラウザでスループットを計測・比較
 
 ### Phase 3: GPU パイプライン改善 (Phase 1, 2 の効果次第)

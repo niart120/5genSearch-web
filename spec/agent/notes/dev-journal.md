@@ -17,6 +17,12 @@
 3. WASM ビルド設定 (`-C target-feature=+simd128`, `wasm-opt --enable-simd`) の未適用
 4. GPU: 単一ディスパッチ/await パターンによる GPU アイドル時間
 
+### 検証結果 (2026-02-13)
+
+**C1 (yield オーバーヘッド)**: yield を毎バッチ → 50ms 間隔に変更。スループット ~105M/s で有意な変化なし。診断ログにより、ボトルネックは WASM 実行速度自体 (3.3M/s/core、ネイティブ 11.9M/core の 28%) であることを確認。JS/Worker レイヤーのオーバーヘッドは支配的ではない。
+
+**C3/C4 (WASM ビルド設定)**: `wasm-pkg/.cargo/config.toml` に `-C target-feature=+simd128` を追加し、`scripts/optimize-wasm.js` に `--enable-simd` を追加。リビルド後、WASM バイナリに SIMD 命令 (`v128.load/store`, `i32x4.add` 等) の出力を確認。ブラウザでのスループット計測は未実施。
+
 ## 2026-02-11: スクレイピング時のエンカウント地名キーと表示名の不整合
 
 現状: `scripts/scrape-encounters.js` の `DUPLICATE_SUFFIX_RULES` が地名にサフィックスを付与し、`giant_chasm_cave` や `reversal_mountain_exterior` のようなサブエリアキーを生成する。一方 `src/lib/game-data-names.ts` の `ENCOUNTER_LOCATION_NAMES` にはサフィックス無しの親キーしか存在せず、生成された JSON に含まれるキーと表示名の対応が欠落していた。
