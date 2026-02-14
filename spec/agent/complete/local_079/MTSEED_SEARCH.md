@@ -735,17 +735,17 @@ export { validateMtseedIvSearchForm, toMtseedSearchContext } from './types';
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/features/mtseed-search/types.ts` — 型定義・バリデーション・変換関数
-- [ ] `src/features/mtseed-search/hooks/use-mtseed-search.ts` — 検索フック
-- [ ] `src/features/mtseed-search/components/mtseed-search-form.tsx` — IV フィルタフォーム
-- [ ] `src/features/mtseed-search/components/mtseed-result-columns.tsx` — DataTable 列定義
-- [ ] `src/features/mtseed-search/components/mtseed-search-page.tsx` — ページコンポーネント
-- [ ] `src/features/mtseed-search/index.ts` — 公開 API
-- [ ] `src/components/layout/feature-content.tsx` — `mtseed-search` case 追加
-- [ ] `src/services/batch-utils.ts` — `isMtseedResult` 型ガード追加
-- [ ] `src/stores/search/results.ts` — `pendingTargetSeeds` / `setPendingTargetSeeds` / `clearPendingTargetSeeds` 追加
-- [ ] `src/features/datetime-search/components/datetime-search-page.tsx` — `pendingTargetSeeds` 受信ロジック追加
-- [ ] `src/test/unit/mtseed-search-types.test.ts` — バリデーション・変換テスト
-- [ ] `src/test/integration/mtseed-search.test.ts` — CPU Worker 統合テスト
-- [ ] `src/test/components/layout/feature-content.test.tsx` — コンポーネントテスト更新
-- [ ] 翻訳カタログ更新 (`pnpm lingui:extract`)
+- [x] `src/features/mtseed-search/types.ts` — 型定義・バリデーション・変換関数
+- [x] `src/features/mtseed-search/hooks/use-mtseed-search.ts` — 検索フック
+- [x] `src/features/mtseed-search/components/mtseed-search-form.tsx` — IV フィルタフォーム
+- [x] `src/features/mtseed-search/components/mtseed-result-columns.tsx` — DataTable 列定義
+- [x] `src/features/mtseed-search/components/mtseed-search-page.tsx` — ページコンポーネント
+- [x] `src/features/mtseed-search/index.ts` — 公開 API
+- [x] `src/components/layout/feature-content.tsx` — `mtseed-search` case 追加
+- [x] `src/services/batch-utils.ts` — `isMtseedResult` 型ガード追加
+- [x] `src/stores/search/results.ts` — `pendingTargetSeeds` / `setPendingTargetSeeds` / `clearPendingTargetSeeds` 追加
+- [x] `src/features/datetime-search/components/datetime-search-page.tsx` — `pendingTargetSeeds` 受信ロジック追加
+- [x] `src/test/unit/mtseed-search-types.test.ts` — バリデーション・変換テスト
+- [ ] `src/test/integration/mtseed-search.test.ts` — CPU Worker 統合テスト (WASM ビルド環境依存のため後続対応)
+- [x] `src/test/components/layout/feature-content.test.tsx` — コンポーネントテスト更新
+- [x] 翻訳カタログ更新 (`pnpm lingui:extract`)
