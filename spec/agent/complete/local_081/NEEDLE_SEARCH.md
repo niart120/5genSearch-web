@@ -53,7 +53,9 @@
 | `src/features/needle/components/needle-input.tsx` | 新規 | 針パターン入力 UI (方向ボタン + テキスト入力) |
 | `src/features/needle/components/needle-result-columns.tsx` | 新規 | DataTable 列定義 |
 | `src/features/needle/components/seed-input.tsx` | 新規 | Seed 入力 UI (日時 / LCG Seed 2 モード) |
-| `src/components/forms/datetime-input.tsx` | 修正 | DatetimeInput 改修 (Plan C: native date + spinner NumField) |
+| `src/components/forms/datetime-input.tsx` | 修正 | DatetimeInput re-export (実装は `components/ui/` へ移動) |
+| `src/components/ui/datetime-input.tsx` | 新規 | DatetimeInput 実装 (SpinnerNumField 統一) |
+| `src/components/ui/spinner-num-field.tsx` | 新規 | NumField + SpinnerNumField 実装 |
 | `src/components/layout/feature-content.tsx` | 修正 | `'needle'` → `NeedlePage` マッピング追加 |
 
 ## 3. 設計方針
@@ -74,7 +76,7 @@ UI (needle-page) → Hook (use-needle-search) → WASM (search_needle_pattern) [
 
 | 入力項目 | 型 | 提供元 | 説明 |
 |----------|-----|--------|------|
-| SeedOrigin | `SeedOrigin` | `SeedInput` (日時 or LCG Seed) | 単一の起動条件 |
+| SeedOrigins | `SeedOrigin[]` | `SeedInput` (日時 or LCG Seed) | 起動条件 (timer0×vcount の組み合わせで複数になりうる) |
 | NeedlePattern | `NeedleDirection[]` | `NeedleInput` (方向ボタン or テキスト) | 観測した針パターン |
 | GenerationConfig | `GenerationConfig` | DS 設定 Store + ローカル state | 生成共通設定 |
 
@@ -102,7 +104,7 @@ ID 調整とは異なり、`GameStartConfig` はサイドバーの値をその�
 
 | WASM API | 実行場所 | 用途 |
 |----------|----------|------|
-| `search_needle_pattern(origins, pattern, config)` | メインスレッド | 針パターン検索。引数 `origins` は単一要素配列で渡す |
+| `search_needle_pattern(origins, pattern, config)` | メインスレッド | 針パターン検索。引数 `origins` は `SeedOrigin[]` で渡す (日時モードでは timer0×vcount の組み合わせ分) |
 | `get_needle_pattern_at(seed_value, advance, count)` | メインスレッド | (将来用) 指定位置の針パターン取得 |
 | `resolve_seeds(input)` | メインスレッド | SeedSpec → SeedOrigin[] 変換。日時モードで使用 |
 
@@ -110,7 +112,7 @@ ID 調整とは異なり、`GameStartConfig` はサイドバーの値をその�
 
 | API | ファイル | 用途 |
 |-----|----------|------|
-| `DatetimeInput` / `NumField` | `components/forms/datetime-input.tsx` | 日時入力 (本仕様で改修) |
+| `DatetimeInput` / `SpinnerNumField` | `components/ui/datetime-input.tsx`, `components/ui/spinner-num-field.tsx` | 日時入力 (全フィールド SpinnerNumField 統一) |
 | `useDsConfigReadonly()` | `hooks/use-ds-config.ts` | DS 設定取得 |
 | `resolveSeedOrigins()` | `services/seed-resolve.ts` | SeedSpec → SeedOrigin[] 変換 |
 | `DataTable` | `components/data-display/data-table.tsx` | 結果テーブル |
@@ -134,7 +136,7 @@ ID 調整とは異なり、`GameStartConfig` はサイドバーの値をその�
 ### 4.1 `types.ts` — フォーム状態型 + バリデーション + パターンパーサー
 
 ```typescript
-import type { NeedleDirection, NeedlePattern, SeedOrigin } from '../../wasm/wasm_pkg.js';
+import type { NeedleDirection, SeedOrigin } from '../../wasm/wasm_pkg.js';
 
 /** Seed 入力モード */
 export type SeedMode = 'datetime' | 'seed';
@@ -150,7 +152,7 @@ export type NeedleValidationErrorCode =
 /** 針読みフォーム状態 */
 export interface NeedleFormState {
   seedMode: SeedMode;
-  seedOrigin: SeedOrigin | undefined;
+  seedOrigins: SeedOrigin[];
   patternRaw: string;
   userOffset: number;
   maxAdvance: number;
@@ -203,11 +205,11 @@ export function directionsToArrows(dirs: NeedleDirection[]): string {
  * バリデーション
  */
 export function validateNeedleForm(
-  form: Pick<NeedleFormState, 'seedOrigin' | 'patternRaw' | 'userOffset' | 'maxAdvance'>
+  form: Pick<NeedleFormState, 'seedOrigins' | 'patternRaw' | 'userOffset' | 'maxAdvance'>
 ): NeedleValidationResult {
   const errors: NeedleValidationErrorCode[] = [];
 
-  if (form.seedOrigin === undefined) {
+  if (form.seedOrigins.length === 0) {
     errors.push('SEED_EMPTY');
   }
 
@@ -233,7 +235,7 @@ export function validateNeedleForm(
 
 | コード | 条件 |
 |--------|------|
-| `SEED_EMPTY` | SeedOrigin が未設定 |
+| `SEED_EMPTY` | SeedOrigins が空配列 |
 | `PATTERN_EMPTY` | パターン入力が空 |
 | `PATTERN_INVALID` | パターン入力が 0-7 の数字列でない |
 | `OFFSET_NEGATIVE` | `user_offset` が負数 |
@@ -261,13 +263,12 @@ import type {
   GenerationConfig,
   NeedleDirection,
 } from '@/wasm/wasm_pkg.js';
-import { parseNeedlePattern, type NeedleFormState } from '../types';
 
 interface UseNeedleSearchReturn {
   results: NeedleSearchResult[];
   error: string | undefined;
   search: (
-    origin: SeedOrigin,
+    origins: SeedOrigin[],
     pattern: NeedleDirection[],
     config: GenerationConfig,
   ) => void;
@@ -280,14 +281,13 @@ export function useNeedleSearch(): UseNeedleSearchReturn {
 
   const search = useCallback(
     (
-      origin: SeedOrigin,
+      origins: SeedOrigin[],
       pattern: NeedleDirection[],
       config: GenerationConfig,
     ) => {
       setError(undefined);
       try {
-        // WASM API は Vec<SeedOrigin> を受け取るため単一要素配列で渡す
-        const found = search_needle_pattern([origin], pattern, config);
+        const found = search_needle_pattern(origins, pattern, config);
         setResults(found);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : String(e));
@@ -302,11 +302,11 @@ export function useNeedleSearch(): UseNeedleSearchReturn {
     setError(undefined);
   }, []);
 
-  return { results, error, search, clear };
+  return useMemo(() => ({ results, error, search, clear }), [results, error, search, clear]);
 }
 ```
 
-`useSearch` / `WorkerPool` は使用しない。状態は `useState` のみで管理する。
+`useSearch` / `WorkerPool` は使用しない。状態は `useState` のみで管理する。返却値は `useMemo` で安定化し、呼び出し元の `useEffect` 依存配列で安全に参照できるようにする。
 
 ### 4.3 `needle-input.tsx` — 針パターン入力 UI
 
@@ -355,21 +355,21 @@ interface NeedleInputProps {
 
 ### 4.4 `seed-input.tsx` — Seed 入力 UI
 
-`SeedInputSection` (3 モード: Startup / Seeds / 検索結果) は再利用しない。針読みでは単一の起動条件を指定すれば十分なため、軽量な専用コンポーネントを新設する。
+`SeedInputSection` (3 モード: Startup / Seeds / 検索結果) は再利用しない。針読みでは軽量な専用コンポーネントを新設する。日時モードでは timer0×vcount の組み合わせ数に応じて複数の `SeedOrigin` を生成する。
 
 #### Seed 入力モード
 
 | モード | 入力 | SeedOrigin 変換方法 |
 |--------|------|-------------------|
-| `datetime` | 日時入力 (DatetimeInput) + DS 設定 (サイドバー) | `resolveSeedOrigins()` → 1 件取得 |
-| `seed` | LCG Seed Hex 入力 (16 桁) | `SeedOrigin.Seed(value)` を直接構築 |
+| `datetime` | 日時入力 (DatetimeInput) + DS 設定 (サイドバー) | `resolveSeedOrigins()` → `SeedOrigin[]` (timer0×vcount 組み合わせ分) |
+| `seed` | LCG Seed Hex 入力 (16 桁) | `SeedOrigin.Seed(value)` を1件配列で構築 |
 
 ```typescript
 interface SeedInputProps {
   mode: SeedMode;
   onModeChange: (mode: SeedMode) => void;
-  seedOrigin: SeedOrigin | undefined;
-  onSeedOriginChange: (origin: SeedOrigin | undefined) => void;
+  seedOrigins: SeedOrigin[];
+  onSeedOriginsChange: (origins: SeedOrigin[]) => void;
 }
 ```
 
@@ -389,13 +389,13 @@ interface SeedInputProps {
 └──────────────────────────────────────────────┘
 ```
 
-- `datetime` モード: `DatetimeInput` (改修後) + `keyInput` (既存) → DS 設定 (サイドバー) と組み合わせて `SeedSpec.Startup` を構築し、`resolveSeedOrigins()` で `SeedOrigin[]` (1 件) を取得。先頭要素を `seedOrigin` に設定
-- `seed` モード: 16 進数入力 → `BigInt` → `SeedOrigin` の `Seed` variant を直接構築
-- モード切替時は `seedOrigin` を `undefined` にリセット
+- `datetime` モード: `DatetimeInput` + `keyInput` (既存) → DS 設定 (サイドバー) と組み合わせて `SeedSpec.Startup` を構築し、`resolveSeedOrigins()` で `SeedOrigin[]` (timer0×vcount 組み合わせ分) を取得
+- `seed` モード: 16 進数入力 → `BigInt` → `SeedOrigin` の `Seed` variant を1件配列で構築
+- モード切替時は既存入力値から `seedOrigins` を再計算する
 
-### 4.5 DatetimeInput 改修 (Plan C)
+### 4.5 DatetimeInput 改修 (SpinnerNumField 統一)
 
-`src/components/forms/datetime-input.tsx` を改修し、日付入力と時刻入力の UX を改善する。
+`src/components/forms/datetime-input.tsx` は `src/components/ui/datetime-input.tsx` へ実装を移動し、全フィールドを `SpinnerNumField` (上下ボタン付き) で構成する。元ファイルは re-export のみとし、既存 import パスとの後方互換を維持する。
 
 #### 現状の問題
 
@@ -408,26 +408,12 @@ interface SeedInputProps {
 
 | 部位 | 現行 | 改修後 |
 |------|------|--------|
-| 日付 (Y/M/D) | NumField × 3 | `<input type="date">` (ネイティブ) |
-| 時刻 (H/M/S) | NumField × 3 | NumField × 3 + カスタムスピナー (上下ボタン) |
+| 日付 (Y/M/D) | NumField × 3 | SpinnerNumField × 3 (年月変更時に day を自動 clamp) |
+| 時刻 (H/M/S) | NumField × 3 | SpinnerNumField × 3 |
 
-#### `<input type="date">` の設計
+`<input type="date">` の採用も検討したが、レンダリングが環境依存でテスト困難なため、全フィールドを `SpinnerNumField` で統一する方針とした。
 
-```typescript
-<input
-  type="date"
-  min="2000-01-01"
-  max="2099-12-31"
-  value={dateString}        // "YYYY-MM-DD" 形式
-  onChange={handleDateChange}
-/>
-```
-
-- `min` / `max` で DS 対応年範囲 (2000-2099) を制限
-- カレンダーピッカーが表示され、日付の整合性 (うるう年・月末) はブラウザが自動保証
-- `onChange` 時に年・月・日を分解して既存の `DatetimeValue` に反映
-
-#### カスタムスピナー付き NumField
+#### `SpinnerNumField` の設計
 
 ```typescript
 interface SpinnerNumFieldProps extends NumFieldProps {
@@ -446,6 +432,15 @@ interface SpinnerNumFieldProps extends NumFieldProps {
 - 上下ボタンで値を ±step 増減 (clamp: min-max 範囲内)
 - キーボード入力 (数字直打ち) も従来通りサポート
 - `select()` の不安定さはスピナーで代替操作路を確保することで実質的に解消
+- 日付フィールドは年月変更時に `getDaysInMonth()` で日を自動 clamp し、不正な日付を防ぐ
+
+#### ファイル配置
+
+| ファイル | 役割 |
+|------|------|
+| `src/components/ui/spinner-num-field.tsx` | `NumField` + `SpinnerNumField` 実装 |
+| `src/components/ui/datetime-input.tsx` | `DatetimeInput` 実装 (SpinnerNumField を使用) |
+| `src/components/forms/datetime-input.tsx` | re-export のみ (後方互換) |
 
 #### 後方互換性
 
@@ -486,8 +481,8 @@ useEffect(() => {
     max_advance: maxAdvance,
   };
 
-  needleSearch.search(seedOrigin, pattern, config);
-}, [autoSearch, seedOrigin, patternRaw, dsConfig.version, gameStart, userOffset, maxAdvance]);
+  needleSearch.search(seedOrigins, pattern, config);
+}, [autoSearch, seedOrigins, patternRaw, dsConfig.version, gameStart, userOffset, maxAdvance]);
 ```
 
 `autoSearch` が OFF の場合は検索ボタンのクリックイベントで同じ処理を行う。
@@ -540,13 +535,13 @@ case 'needle': return <NeedlePage />;
 | 状態 | 管理場所 | 永続化 |
 |------|----------|--------|
 | DS 設定 (DsConfig, ranges, gameStart) | `ds-config` Store (サイドバー) | あり |
-| Seed 入力モード / SeedOrigin | `needle-page.tsx` ローカル state | なし |
+| Seed 入力モード / SeedOrigins | `needle-page.tsx` ローカル state | なし |
 | 針パターン (patternRaw) | `needle-page.tsx` ローカル state | なし |
 | 消費数範囲 (userOffset / maxAdvance) | `needle-page.tsx` ローカル state | なし |
 | 自動検索トグル (autoSearch) | `needle-page.tsx` ローカル state | なし |
 | 検索結果 | `use-needle-search.ts` 内部 state | なし |
 
-新規 Store の追加は不要。サイドバーの `gameStart` をそのまま使用する (針読みは「つづきから」用途)。Seed 入力は単一の `SeedOrigin` を生成するのみで、複数 Seed のバッチ検索はサポートしない。
+新規 Store の追加は不要。サイドバーの `gameStart` をそのまま使用する (針読みは「つづきから」用途)。日時モードでは timer0×vcount の組み合わせ数に応じて複数 `SeedOrigin` を生成する。
 
 ## 5. テスト方針
 
@@ -560,7 +555,17 @@ case 'needle': return <NeedlePage />;
 | 矢印変換 | `directionsToArrows()` | `['E', 'S', 'E']` → `"→,↓,→"` |
 | バリデーション | `validateNeedleForm()` | Seed 未設定 → `SEED_EMPTY`、パターン空 → `PATTERN_EMPTY`、正常入力 → `isValid: true` |
 
-### 5.2 統合テスト (`src/test/integration/`)
+### 5.2 コンポーネントテスト (`src/test/components/`)
+
+| テスト | 対象 | 検証内容 |
+|--------|------|----------|
+| 方向ボタン押下 | `NeedleInput` | ボタン押下で対応する数字が末尾に追加される |
+| テキスト入力フィルタ | `NeedleInput` | 0-7 以外の文字が除外される |
+| Back / Clear ボタン | `NeedleInput` | Back で末尾削除、Clear で空文字リセット |
+| 矢印表示 | `NeedleInput` | 有効な数字列に対応する矢印がリードオンリー欄に表示される |
+| disabled | `NeedleInput` | disabled 時に全ボタンが disabled |
+
+### 5.3 統合テスト (`src/test/integration/`)
 
 | テスト | 対象 | 検証内容 |
 |--------|------|----------|
@@ -575,8 +580,11 @@ case 'needle': return <NeedlePage />;
 - [x] `src/features/needle/components/needle-result-columns.tsx` — テーブル列定義
 - [x] `src/features/needle/components/needle-page.tsx` — ページコンポーネント
 - [x] `src/features/needle/index.ts` — re-export
-- [x] `src/components/forms/datetime-input.tsx` — DatetimeInput 改修 (Plan C)
+- [x] `src/components/forms/datetime-input.tsx` — DatetimeInput re-export (実装は ui/ へ移動)
+- [x] `src/components/ui/datetime-input.tsx` — DatetimeInput 実装 (SpinnerNumField 統一)
+- [x] `src/components/ui/spinner-num-field.tsx` — NumField + SpinnerNumField 実装
 - [x] `src/components/layout/feature-content.tsx` — ページマッピング追加
 - [x] `src/test/unit/needle-types.test.ts` — パーサー + バリデーション テスト
+- [x] `src/test/components/features/needle-input.test.tsx` — NeedleInput コンポーネントテスト
 - [x] `src/test/integration/needle-search.test.ts` — WASM 統合テスト
 - [x] 翻訳リソース更新 (`pnpm lingui:extract`)

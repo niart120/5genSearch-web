@@ -8,7 +8,7 @@ import {
   directionsToArrows,
   validateNeedleForm,
 } from '@/features/needle/types';
-import type { NeedleDirection } from '@/wasm/wasm_pkg.js';
+import type { NeedleDirection, SeedOrigin } from '@/wasm/wasm_pkg.js';
 
 /* ------------------------------------------------------------------ */
 /*  parseNeedlePattern                                                 */
@@ -86,7 +86,7 @@ describe('directionsToArrows', () => {
 
 describe('validateNeedleForm', () => {
   const validForm = {
-    seedOrigins: [{ Seed: { base_seed: 0n, mt_seed: 0 } }] as unknown[],
+    seedOrigins: [{ Seed: { base_seed: 0n, mt_seed: 0 } }] as SeedOrigin[],
     patternRaw: '024',
     userOffset: 0,
     maxAdvance: 200,

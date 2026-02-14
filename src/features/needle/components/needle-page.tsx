@@ -43,7 +43,7 @@ function NeedlePage(): ReactElement {
   const [autoSearch, setAutoSearch] = useState(true);
 
   // 検索フック
-  const needleSearch = useNeedleSearch();
+  const { results, error, search, clear } = useNeedleSearch();
 
   // バリデーション
   const validation = useMemo(
@@ -77,7 +77,7 @@ function NeedlePage(): ReactElement {
       user_offset: userOffset,
       max_advance: maxAdvance,
     };
-    needleSearch.search(seedOrigins, pattern, config);
+    search(seedOrigins, pattern, config);
   }, [
     validation.isValid,
     seedOrigins,
@@ -86,19 +86,18 @@ function NeedlePage(): ReactElement {
     gameStart,
     userOffset,
     maxAdvance,
-    needleSearch,
+    search,
   ]);
 
   // 自動検索
   useEffect(() => {
     if (!autoSearch) return;
     if (!validation.isValid) {
-      needleSearch.clear();
+      clear();
       return;
     }
     executeSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- executeSearch の依存値で十分
-  }, [autoSearch, seedOrigins, patternRaw, dsConfig.version, gameStart, userOffset, maxAdvance]);
+  }, [autoSearch, validation.isValid, executeSearch, clear]);
 
   return (
     <>
@@ -194,14 +193,12 @@ function NeedlePage(): ReactElement {
 
         <FeaturePageLayout.Results>
           <p className="text-xs text-muted-foreground">
-            <Trans>Results</Trans>: {needleSearch.results.length.toLocaleString()}
+            <Trans>Results</Trans>: {results.length.toLocaleString()}
           </p>
-          {needleSearch.error ? (
-            <p className="text-xs text-destructive">{needleSearch.error}</p>
-          ) : undefined}
+          {error ? <p className="text-xs text-destructive">{error}</p> : undefined}
           <DataTable
             columns={columns}
-            data={needleSearch.results}
+            data={results}
             className="flex-1"
             emptyMessage={t`No results`}
             getRowId={(_row, index) => String(index)}

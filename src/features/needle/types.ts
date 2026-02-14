@@ -2,7 +2,7 @@
  * 針読み (Needle Search) — 型定義 + バリデーション + パターンパーサー
  */
 
-import type { NeedleDirection } from '../../wasm/wasm_pkg.js';
+import type { NeedleDirection, SeedOrigin } from '../../wasm/wasm_pkg.js';
 
 /** Seed 入力モード */
 export type SeedMode = 'datetime' | 'seed';
@@ -18,7 +18,7 @@ export type NeedleValidationErrorCode =
 /** 針読みフォーム状態 */
 export interface NeedleFormState {
   seedMode: SeedMode;
-  seedOrigins: unknown[];
+  seedOrigins: SeedOrigin[];
   patternRaw: string;
   userOffset: number;
   maxAdvance: number;

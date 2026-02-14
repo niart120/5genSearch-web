@@ -5,7 +5,7 @@
  * メインスレッドで直接実行する。
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { search_needle_pattern } from '@/wasm/wasm_pkg.js';
 import type {
   SeedOrigin,
@@ -44,5 +44,5 @@ export function useNeedleSearch(): UseNeedleSearchReturn {
     setError(undefined);
   }, []);
 
-  return { results, error, search, clear };
+  return useMemo(() => ({ results, error, search, clear }), [results, error, search, clear]);
 }

@@ -95,14 +95,13 @@ function SeedInput({
         return;
       }
       const value = BigInt('0x' + hex);
-      onSeedOriginsChange([
-        {
-          Seed: {
-            base_seed: value as never,
-            mt_seed: Number(value & 0xff_ff_ff_ffn) as never,
-          },
+      const seed: SeedOrigin = {
+        Seed: {
+          base_seed: value,
+          mt_seed: Number(value & 0xff_ff_ff_ffn),
         },
-      ]);
+      };
+      onSeedOriginsChange([seed]);
     },
     [onSeedOriginsChange]
   );
@@ -112,7 +111,6 @@ function SeedInput({
     (v: string) => {
       const newMode = v as SeedMode;
       onModeChange(newMode);
-      onSeedOriginsChange([]);
 
       // モード切替後、既存入力から再計算
       if (newMode === 'datetime') {
@@ -121,14 +119,7 @@ function SeedInput({
         handleSeedHexChange(seedHex);
       }
     },
-    [
-      onModeChange,
-      onSeedOriginsChange,
-      handleDatetimeChange,
-      handleSeedHexChange,
-      datetime,
-      seedHex,
-    ]
+    [onModeChange, handleDatetimeChange, handleSeedHexChange, datetime, seedHex]
   );
 
   // 現在の Seed 表示 (確認用 — 先頭 1 件を表示)
@@ -136,10 +127,10 @@ function SeedInput({
     const first = seedOrigins.at(0);
     if (!first) return '';
     if ('Seed' in first) {
-      return (first.Seed.base_seed as bigint).toString(16).toUpperCase().padStart(16, '0');
+      return first.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
     }
     if ('Startup' in first) {
-      return (first.Startup.base_seed as bigint).toString(16).toUpperCase().padStart(16, '0');
+      return first.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
     }
     return '';
   }, [seedOrigins]);
