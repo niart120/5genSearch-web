@@ -18,6 +18,7 @@ import { SearchControls } from '@/components/forms/search-controls';
 import { DataTable } from '@/components/data-display/data-table';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
@@ -164,25 +165,24 @@ function TidAdjustPage(): ReactElement {
           />
 
           {/* セーブ状態 (サイドバーの値は使用しない) */}
-          <div className="space-y-3 rounded-md border p-3">
-            <p className="text-xs font-medium">
-              <Trans>Save state</Trans>
-            </p>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="tid-save-presence" className="text-xs">
-                <Trans>With save</Trans>
-              </Label>
-              <Switch
-                id="tid-save-presence"
-                checked={save === 'WithSave'}
-                onCheckedChange={(checked) => {
-                  setSave(checked ? 'WithSave' : 'NoSave');
-                  if (!checked) setMemoryLink('Disabled');
-                }}
-                disabled={isLoading}
-                aria-label={t`With save`}
-              />
-            </div>
+          <div className="space-y-3">
+            <Tabs
+              value={save}
+              onValueChange={(v) => {
+                const next = v as SavePresence;
+                setSave(next);
+                if (next === 'NoSave') setMemoryLink('Disabled');
+              }}
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="NoSave" disabled={isLoading} className="flex-1">
+                  <Trans>No save</Trans>
+                </TabsTrigger>
+                <TabsTrigger value="WithSave" disabled={isLoading} className="flex-1">
+                  <Trans>With save</Trans>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
             <div className="flex items-center justify-between">
               <Label htmlFor="tid-memory-link" className="text-xs">
                 <Trans>Memory Link</Trans>
@@ -195,6 +195,9 @@ function TidAdjustPage(): ReactElement {
                 aria-label={t`Memory Link`}
               />
             </div>
+            <p className="text-xs text-muted-foreground">
+              <Trans>This setting is independent of the sidebar.</Trans>
+            </p>
           </div>
 
           <TidAdjustForm

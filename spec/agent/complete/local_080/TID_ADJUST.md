@@ -92,7 +92,12 @@ ID 調整は「ニューゲーム開始時の TID/SID 決定」を対象とす�
 
 サイドバーの `GameStartConfig` は「つづきから」等の他用途向けの設定であり、ID 調整のドメイン制約と一致しない。状態の混同を避けるため、**サイドバーの `gameStart` は参照せず、Feature-local state で独立管理する**。
 
-将来的に save/memory_link の UI 部品を他の Feature でも再利用する場合は、Presentational コンポーネントとして抽出し Controlled Props で接続する方針を検討する (dev-journal 2026-02-15 エントリ参照)。
+将来的に save/memory_link の UI 部品を他の Feature でも再利用する場合は、以下の方針 (方針 C) を検討する:
+
+- save/memory_link の UI を Presentational コンポーネント (`SaveConfigControls`) として抽出
+- `save` / `memoryLink` / `onSaveChange` / `onMemoryLinkChange` / `isBw2` を Controlled Props で受け取る
+- サイドバーでは Store 接続、Feature パネルではローカル state 接続
+- `disabled` 制約ロジック (BW2 判定、save=NoSave 時の memory_link 無効化) をコンポーネント内に閉じ込める
 
 #### 出力
 
@@ -276,11 +281,10 @@ Controls 内の配置順:
 
 1. `SearchControls` (PC 版、`hidden lg:flex`)
 2. `SearchContextForm` (日付・時刻・キー入力)
-3. セーブ状態コントロール (`save` / `memory_link` トグル、Feature-local state)
-4. `TidAdjustForm` (TID / SID / Shiny PID)
-5. バリデーションエラー表示
-
-**注意**: サイドバーの `GameStartConfig` (save / memory_link / start_mode / shiny_charm) はこの Feature では使用しない。セーブ関連の状態は Feature パネル内のローカル state で独立管理する。
+3. セーブ状態コントロール: `save` は `NoSave` / `WithSave` の横並びタブ、`memory_link` は Switch (Feature-local state)
+4. ユーザ向け注意表示: サイドバーのセーブ設定を使用しない旨を `text-muted-foreground` で表示
+5. `TidAdjustForm` (TID / SID / Shiny PID)
+6. バリデーションエラー表示
 
 Results 内:
 

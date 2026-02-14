@@ -518,7 +518,7 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:152
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:228
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:231
 msgid "No results"
 msgstr "結果なし"
 
@@ -534,6 +534,10 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 #: src/features/datetime-search/components/datetime-search-page.tsx:203
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
+
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:179
+msgid "No save"
+msgstr "セーブなし"
 
 #: src/features/egg-list/components/egg-list-page.tsx:155
 msgid "No seeds specified"
@@ -635,7 +639,7 @@ msgstr "結果の詳細"
 #: src/features/egg-search/components/egg-search-page.tsx:233
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:144
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:222
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:225
 msgid "Results"
 msgstr "検索結果"
 
@@ -644,8 +648,8 @@ msgid "Roamer"
 msgstr "徘徊ポケモン"
 
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:169
-msgid "Save state"
-msgstr "セーブ状態"
+#~ msgid "Save state"
+#~ msgstr "セーブ状態"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
@@ -740,7 +744,7 @@ msgstr "ひかるおまもり"
 msgid "Shiny PID"
 msgstr "色違い PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:107
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 
@@ -748,7 +752,7 @@ msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
 msgid "SID must be between 0 and 65535"
 msgstr "SID は 0〜65535 の範囲で入力してください"
 
@@ -798,7 +802,7 @@ msgstr "開始日"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:102
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
 msgid "Start date must be on or before end date"
 msgstr "開始日は終了日以前である必要があります"
 
@@ -874,6 +878,10 @@ msgstr "本アプリは非公式のツールであり、任天堂、ゲームフ
 msgid "This project is open source."
 msgstr "このプロジェクトはオープンソースです。"
 
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:199
+msgid "This setting is independent of the sidebar."
+msgstr "この設定はサイドバーとは独立しています。"
+
 #: src/features/ds-config/components/trainer-config-form.tsx:28
 msgid "TID"
 msgstr "TID (表ID)"
@@ -882,7 +890,7 @@ msgstr "TID (表ID)"
 msgid "TID Adjust"
 msgstr "TID 調整"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
 msgid "TID must be between 0 and 65535"
 msgstr "TID は 0〜65535 の範囲で入力してください"
 
@@ -892,7 +900,7 @@ msgstr "時刻範囲"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
 msgid "Time range is invalid"
 msgstr "時刻範囲が不正です"
 
@@ -940,7 +948,6 @@ msgstr "バージョン"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:173
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:182
 msgid "With save"
 msgstr "セーブあり"
