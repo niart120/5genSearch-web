@@ -746,32 +746,32 @@ GPU テストは `describe.skipIf(!navigator.gpu)` でスキップ。
 
 ### GPU 経路
 
-- [ ] WGSL シェーダー (`wasm-pkg/src/gpu/mtseed_search/shader.wgsl`) 作成
-- [ ] パイプライン (`wasm-pkg/src/gpu/mtseed_search/pipeline.rs`) 実装
-- [ ] イテレータ (`wasm-pkg/src/gpu/mtseed_search/iterator.rs`) 実装
-- [ ] モジュール宣言 (`wasm-pkg/src/gpu/mtseed_search/mod.rs`) 作成
-- [ ] `wasm-pkg/src/gpu/mod.rs` にサブモジュール追加・re-export
-- [ ] `SearchJobLimits` に `mtseed_items_per_thread()` メソッド追加
-- [ ] `GpuMtseedSearchBatch` 型定義 (`wasm-pkg/src/types/search.rs`)
-- [ ] `wasm-pkg/src/lib.rs` に re-export 追加
-- [ ] Rust ユニットテスト (iterator.rs 内)
-- [ ] GPU vs CPU 整合性テスト
-- [ ] ベンチマーク (`wasm-pkg/benches/gpu_mtseed_search.rs`) 作成
-- [ ] `Cargo.toml` に `[[bench]]` エントリ追加
+- [x] WGSL シェーダー (`wasm-pkg/src/gpu/mtseed_search/shader.wgsl`) 作成
+- [x] パイプライン (`wasm-pkg/src/gpu/mtseed_search/pipeline.rs`) 実装
+- [x] イテレータ (`wasm-pkg/src/gpu/mtseed_search/iterator.rs`) 実装
+- [x] モジュール宣言 (`wasm-pkg/src/gpu/mtseed_search/mod.rs`) 作成
+- [x] `wasm-pkg/src/gpu/mod.rs` にサブモジュール追加・re-export
+- [x] `SearchJobLimits` に `mtseed_items_per_thread()` メソッド追加
+- [x] `GpuMtseedSearchBatch` 型定義 (`wasm-pkg/src/types/search.rs`)
+- [x] `wasm-pkg/src/lib.rs` に re-export 追加
+- [x] Rust ユニットテスト (iterator.rs 内)
+- [x] GPU vs CPU 整合性テスト
+- [x] ベンチマーク (`wasm-pkg/benches/gpu_mtseed_search.rs`) 作成
+- [x] `Cargo.toml` に `[[bench]]` エントリ追加
 
 ### CPU SIMD 化
 
-- [ ] `generate_rng_ivs_with_offset_x4` 追加 (`wasm-pkg/src/generation/algorithm/iv.rs`)
-- [ ] `MtseedSearcher::next_batch()` を `Mt19937x4` ベースに変更 (`wasm-pkg/src/misc/mtseed_search.rs`)
-- [ ] CPU SIMD ユニットテスト (スカラー版との結果一致検証)
+- [x] `generate_rng_ivs_with_offset_x4` 追加 (`wasm-pkg/src/generation/algorithm/iv.rs`)
+- [x] `MtseedSearcher::next_batch()` を `Mt19937x4` ベースに変更 (`wasm-pkg/src/misc/mtseed_search.rs`)
+- [x] CPU SIMD ユニットテスト (スカラー版との結果一致検証)
 
 ### Worker 統合
 
-- [ ] `src/workers/types.ts` に `GpuMtseedIvSearchTask` 型追加
-- [ ] `src/workers/gpu.worker.ts` に `gpu-mtseed-iv` ハンドリング追加
+- [x] `src/workers/types.ts` に `GpuMtseedIvSearchTask` 型追加
+- [x] `src/workers/gpu.worker.ts` に `gpu-mtseed-iv` ハンドリング追加
 
 ### 検証
 
-- [ ] `cargo clippy --all-targets --features gpu -- -D warnings` パス
-- [ ] `cargo test --features gpu` パス (GPU 環境)
-- [ ] `cargo test` パス (GPU なし環境)
+- [x] `cargo clippy --all-targets --features gpu -- -D warnings` パス
+- [x] `cargo test --features gpu` パス (GPU 環境)
+- [x] `cargo test` パス (GPU なし環境)
