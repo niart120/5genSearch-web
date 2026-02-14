@@ -13,7 +13,7 @@ if (!existsSync(inputPath)) {
   throw new Error(`WASM input not found: ${inputPath}`);
 }
 
-const result = spawnSync('wasm-opt', ['-O4', '-o', outputPath, inputPath], {
+const result = spawnSync('wasm-opt', ['-O4', '--enable-simd', '-o', outputPath, inputPath], {
   stdio: 'inherit',
 });
 

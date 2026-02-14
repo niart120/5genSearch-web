@@ -39,4 +39,5 @@ public/wasm/
 __screenshots__/
 
 # ローカル開発用設定
-wasm-pkg/.cargo/
+wasm-pkg/.cargo/*
+!wasm-pkg/.cargo/config.toml

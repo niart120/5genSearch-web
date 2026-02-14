@@ -152,7 +152,7 @@ describe('WorkerPool', () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 2 });
     await pool.initialize();
 
-    // 長時間かかるタスク
+    // 長時間かかるタスク (500ms 進捗スロットリングで 3 回以上受信するため 365 日分)
     const tasks: SearchTask[] = [
       {
         kind: 'mtseed-datetime',
@@ -160,7 +160,7 @@ describe('WorkerPool', () => {
           target_seeds: [0x12_34_56_78],
           ds: createTestDsConfig(),
           time_range: createTestTimeRange(),
-          search_range: createTestSearchRange(2010, 1, 1, 86_400 * 30), // 30日分
+          search_range: createTestSearchRange(2010, 1, 1, 86_400 * 365),
           condition: createTestStartupCondition(),
         },
       },

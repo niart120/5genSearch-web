@@ -46,6 +46,16 @@ fn create_search_range() -> SearchRangeParams {
     }
 }
 
+fn create_search_range_year(start_year: u16) -> SearchRangeParams {
+    SearchRangeParams {
+        start_year,
+        start_month: 1,
+        start_day: 1,
+        start_second_offset: 0,
+        range_seconds: 86400 * 7, // 1週間
+    }
+}
+
 fn create_condition() -> StartupCondition {
     StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE)
 }
@@ -121,6 +131,31 @@ fn bench_mtseed_datetime_search(c: &mut Criterion) {
             criterion::BatchSize::SmallInput,
         );
     });
+
+    // 年による性能差を計測 (days_to_date キャッシュの効果確認)
+    for &year in &[2000u16, 2050, 2099] {
+        group.bench_function(format!("next_batch_year_{year}"), |b| {
+            b.iter_batched(
+                || {
+                    let params = MtseedDatetimeSearchParams {
+                        target_seeds: vec![
+                            MtSeed::new(0x12345678),
+                            MtSeed::new(0x87654321),
+                            MtSeed::new(0xABCDEF01),
+                        ],
+                        ds: create_ds_config(),
+                        time_range: create_time_range(),
+                        search_range: create_search_range_year(year),
+                        condition: create_condition(),
+                    };
+                    MtseedDatetimeSearcher::new(params)
+                        .expect("Failed to create MtseedDatetimeSearcher")
+                },
+                |mut searcher| searcher.next_batch(chunk_size),
+                criterion::BatchSize::SmallInput,
+            );
+        });
+    }
 
     group.finish();
 }

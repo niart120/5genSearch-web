@@ -37,6 +37,41 @@ let initialized = false;
 let cancelled = false;
 
 // =============================================================================
+// Batch Loop Timing
+// =============================================================================
+
+/**
+ * 検索ループは next_batch() ごとにイベントループへ制御を返す。
+ * バッチサイズが計算粒度の唯一の調整パラメータとなる。
+ *
+ * 進捗 postMessage は PROGRESS_INTERVAL_MS で間引き、
+ * Worker 数が多い環境でのメインスレッド負荷を抑制する。
+ */
+
+/** 進捗 postMessage 送信間隔 (ms) */
+const PROGRESS_INTERVAL_MS = 500;
+
+/**
+ * 検索種別ごとのバッチサイズ
+ *
+ * 1 バッチ = 1 回の next_batch() 呼び出しで処理する要素数。
+ * バッチ実行後に毎回 yield するため、この値が応答性と計算効率のトレードオフを決める。
+ *
+ * - 大きい値: yield 頻度が下がり計算効率が上がるが、cancel 応答が遅れる
+ * - 小さい値: 応答性が上がるが yield オーバーヘッドの割合が増える
+ */
+const BATCH_SIZE = {
+  /** EggDatetime: SHA-1 + MT init/twist + GameOffset + advance×卵生成 (最重量, ~10ms/batch) */
+  eggDatetime: 50_000,
+  /** MtseedDatetime: SHA-1 SIMD 4並列 + BTreeSet lookup (最軽量, ~50ms/batch) */
+  mtseedDatetime: 5_000_000,
+  /** Mtseed: MT init(624) + twist(624) + offset消費 + IV filter (中程度, ~52ms/batch) */
+  mtseed: 400_000,
+  /** TrainerInfo: SHA-1 SIMD 4並列 + LCG ~20-50消費 + filter (軽量, ~45ms/batch) */
+  trainerInfo: 3_000_000,
+} as const;
+
+// =============================================================================
 // Message Handler
 // =============================================================================
 
@@ -149,6 +184,65 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
 }
 
 // =============================================================================
+// Batch Search Loop (共通)
+// =============================================================================
+
+/** processBatch が返す進捗情報 */
+interface BatchProgress {
+  processed: number | bigint;
+  total: number | bigint;
+}
+
+/**
+ * バッチ検索の共通ループ
+ *
+ * next_batch() ごとにイベントループへ制御を返し、cancel メッセージの受信を可能にする。
+ * 進捗報告は PROGRESS_INTERVAL_MS で間引く。
+ * バッチサイズが計算粒度の唯一の調整パラメータ。
+ */
+async function runSearchLoop<T extends { readonly is_done: boolean; free(): void }>(
+  taskId: string,
+  searcher: T,
+  startTime: number,
+  processBatch: (searcher: T) => BatchProgress
+): Promise<void> {
+  let lastProgressTime = performance.now();
+  let lastProgress: BatchProgress | undefined;
+
+  try {
+    while (!searcher.is_done && !cancelled) {
+      lastProgress = processBatch(searcher);
+
+      // 進捗スロットリング
+      const now = performance.now();
+      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+        postResponse({
+          type: 'progress',
+          taskId,
+          progress: calculateProgress(lastProgress.processed, lastProgress.total, startTime),
+        });
+        lastProgressTime = now;
+      }
+
+      // バッチごとに制御を返す (cancel メッセージ受信)
+      await yieldToMain();
+    }
+
+    // 最終進捗: 完了時の正確な数値をメインスレッドに通知
+    if (lastProgress) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: calculateProgress(lastProgress.processed, lastProgress.total, startTime),
+      });
+    }
+    postResponse({ type: 'done', taskId });
+  } finally {
+    searcher.free();
+  }
+}
+
+// =============================================================================
 // Egg Datetime Search
 // =============================================================================
 
@@ -158,33 +252,13 @@ async function runEggDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new EggDatetimeSearcher(params);
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1000);
-
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'egg',
-          results: batch.results,
-        });
-      }
-
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-      });
-
-      await yieldToMain();
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(BATCH_SIZE.eggDatetime);
+    if (batch.results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'egg', results: batch.results });
     }
-
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
 }
 
 // =============================================================================
@@ -197,33 +271,18 @@ async function runMtseedDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new MtseedDatetimeSearcher(params);
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(500_000);
-
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'seed-origin',
-          results: batch.results,
-        });
-      }
-
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(BATCH_SIZE.mtseedDatetime);
+    if (batch.results.length > 0) {
       postResponse({
-        type: 'progress',
+        type: 'result',
         taskId,
-        progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
+        resultType: 'seed-origin',
+        results: batch.results,
       });
-
-      await yieldToMain();
     }
-
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
 }
 
 // =============================================================================
@@ -236,33 +295,13 @@ async function runMtseedSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new MtseedSearcher(params);
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1_000_000);
-
-      if (batch.candidates.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'mtseed',
-          results: batch.candidates,
-        });
-      }
-
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(Number(batch.processed), Number(batch.total), startTime),
-      });
-
-      await yieldToMain();
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(BATCH_SIZE.mtseed);
+    if (batch.candidates.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'mtseed', results: batch.candidates });
     }
-
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed, total: batch.total };
+  });
 }
 
 // =============================================================================
@@ -275,33 +314,18 @@ async function runTrainerInfoSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new TrainerInfoSearcher(params);
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1_000_000);
-
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'trainer-info',
-          results: batch.results,
-        });
-      }
-
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(BATCH_SIZE.trainerInfo);
+    if (batch.results.length > 0) {
       postResponse({
-        type: 'progress',
+        type: 'result',
         taskId,
-        progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
+        resultType: 'trainer-info',
+        results: batch.results,
       });
-
-      await yieldToMain();
     }
-
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
 }
 
 // =============================================================================
