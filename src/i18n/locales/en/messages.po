@@ -82,8 +82,8 @@ msgid "Advance range invalid"
 msgstr "Advance range invalid"
 
 #: src/components/forms/iv-range-input.tsx:153
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:57
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:82
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:55
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:78
 msgid "Any"
 msgstr "Any"
 
@@ -438,6 +438,8 @@ msgstr "Max advance must be ≥ start offset"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:188
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:195
 msgid "Memory Link"
 msgstr "Memory Link"
 
@@ -520,7 +522,7 @@ msgstr "No default Timer0/VCount data for this combination. Switched to manual m
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:152
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:155
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:228
 msgid "No results"
 msgstr "No results"
 
@@ -637,13 +639,17 @@ msgstr "Result details"
 #: src/features/egg-search/components/egg-search-page.tsx:233
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:144
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:149
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:222
 msgid "Results"
 msgstr "Results"
 
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:94
 msgid "Roamer"
 msgstr "Roamer"
+
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:169
+msgid "Save state"
+msgstr "Save state"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
@@ -720,7 +726,7 @@ msgstr "Settings"
 #: src/features/egg-search/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:77
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:65
-#: src/features/tid-adjust/components/trainer-info-columns.tsx:69
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:67
 msgid "Shiny"
 msgstr "Shiny"
 
@@ -733,12 +739,12 @@ msgstr "Shiny Charm"
 #~ msgid "Shiny only"
 #~ msgstr "Shiny only"
 
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:91
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:102
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:87
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:98
 msgid "Shiny PID"
 msgstr "Shiny PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:78
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 
@@ -746,7 +752,7 @@ msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgid "SID"
 msgstr "SID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:77
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
 msgid "SID must be between 0 and 65535"
 msgstr "SID must be between 0 and 65535"
 
@@ -796,7 +802,7 @@ msgstr "Start date"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:74
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:102
 msgid "Start date must be on or before end date"
 msgstr "Start date must be on or before end date"
 
@@ -880,7 +886,7 @@ msgstr "TID"
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:76
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
 msgid "TID must be between 0 and 65535"
 msgstr "TID must be between 0 and 65535"
 
@@ -890,7 +896,7 @@ msgstr "Time range"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:75
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
 msgid "Time range is invalid"
 msgstr "Time range is invalid"
 
@@ -938,5 +944,7 @@ msgstr "Version"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:173
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
 msgid "With save"
 msgstr "With save"

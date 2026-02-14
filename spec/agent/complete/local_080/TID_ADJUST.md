@@ -71,13 +71,28 @@ UI (tid-adjust-page) → Hook (use-tid-adjust) → Service (search-tasks) → Wo
 |----------|-----|--------|------|
 | DS 設定 | `DsConfig` | `ds-config` Store (サイドバー) | MAC / Hardware / Version / Region |
 | Timer0/VCount 範囲 | `Timer0VCountRange[]` | `ds-config` Store (サイドバー) | 個体差範囲 |
-| GameStartConfig | `GameStartConfig` | `ds-config` Store (サイドバー) | 起動条件 |
+| GameStartConfig | `GameStartConfig` | Feature-local state (後述) | 起動条件。サイドバーの値は使用しない |
 | 日付範囲 | `DateRangeParams` | フォーム (ローカル state) | 検索対象の日付範囲 |
 | 時刻範囲 | `TimeRangeParams` | フォーム (ローカル state) | 検索対象の時刻範囲 |
 | キー入力 | `KeySpec` | フォーム (ローカル state) | 検索対象のキー組み合わせ |
 | TID | `number \| undefined` | フォーム (ローカル state) | 検索対象 TID (省略可) |
 | SID | `number \| undefined` | フォーム (ローカル state) | 検索対象 SID (省略可) |
 | Shiny PID | `Pid \| undefined` | フォーム (ローカル state) | 光らせたい PID (省略可、16 進数入力) |
+
+#### GameStartConfig のドメイン制約
+
+ID 調整は「ニューゲーム開始時の TID/SID 決定」を対象とするため、`GameStartConfig` の 4 フィールドに以下の制約がある:
+
+| フィールド | 値 | 根拠 |
+|---|---|---|
+| `start_mode` | 固定 `NewGame` | `TrainerInfoSearcher` のドメイン制約 |
+| `shiny_charm` | 固定 `NotObtained` | NewGame 開始時点では未取得 |
+| `save` | ユーザ選択 (`NoSave` / `WithSave`) | セーブデータの有無で Timer0/VCount 分布が変わる |
+| `memory_link` | ユーザ選択 (`Disabled` / `Enabled`) | BW2 かつ `WithSave` 時のみ有効。分布に影響する |
+
+サイドバーの `GameStartConfig` は「つづきから」等の他用途向けの設定であり、ID 調整のドメイン制約と一致しない。状態の混同を避けるため、**サイドバーの `gameStart` は参照せず、Feature-local state で独立管理する**。
+
+将来的に save/memory_link の UI 部品を他の Feature でも再利用する場合は、Presentational コンポーネントとして抽出し Controlled Props で接続する方針を検討する (dev-journal 2026-02-15 エントリ参照)。
 
 #### 出力
 
@@ -261,8 +276,11 @@ Controls 内の配置順:
 
 1. `SearchControls` (PC 版、`hidden lg:flex`)
 2. `SearchContextForm` (日付・時刻・キー入力)
-3. `TidAdjustForm` (TID / SID / Shiny PID)
-4. バリデーションエラー表示
+3. セーブ状態コントロール (`save` / `memory_link` トグル、Feature-local state)
+4. `TidAdjustForm` (TID / SID / Shiny PID)
+5. バリデーションエラー表示
+
+**注意**: サイドバーの `GameStartConfig` (save / memory_link / start_mode / shiny_charm) はこの Feature では使用しない。セーブ関連の状態は Feature パネル内のローカル state で独立管理する。
 
 Results 内:
 
@@ -315,13 +333,14 @@ case 'tid-adjust': return <TidAdjustPage />;
 
 | 状態 | 管理場所 | 永続化 |
 |------|----------|--------|
-| DS 設定 (DsConfig, ranges, gameStart) | `ds-config` Store | あり |
+| DS 設定 (DsConfig, ranges) | `ds-config` Store | あり |
+| GameStartConfig (save, memory_link) | `tid-adjust-page.tsx` ローカル state | なし |
 | 日付範囲 / 時刻範囲 / キー入力 | `tid-adjust-page.tsx` ローカル state | なし |
 | TID / SID / Shiny PID (検索フィルタ) | `tid-adjust-page.tsx` ローカル state | なし |
 | 検索進捗 / Worker 状態 | `use-search.ts` 内部 state | なし |
 | 検索結果 | `use-search.ts` 内部 state | なし |
 
-新規 Store の追加は不要。
+新規 Store の追加は不要。サイドバーの `gameStart` は参照しない (`start_mode` / `shiny_charm` は固定値、`save` / `memory_link` は Feature-local)。
 
 ## 5. テスト方針
 

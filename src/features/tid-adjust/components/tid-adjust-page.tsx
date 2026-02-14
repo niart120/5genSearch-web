@@ -3,6 +3,11 @@
  *
  * 指定した TID / SID / 光らせたい PID の条件を満たす DS 起動日時を探索し、
  * 結果をテーブル表示する。
+ *
+ * GameStartConfig はサイドバーの値を使用せず、Feature-local state で独立管理する。
+ * - start_mode: 固定 NewGame (TrainerInfoSearcher のドメイン制約)
+ * - shiny_charm: 固定 NotObtained (NewGame 開始時点では未取得)
+ * - save / memory_link: ユーザ選択 (Timer0/VCount 分布に影響)
  */
 
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
@@ -11,7 +16,9 @@ import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { DataTable } from '@/components/data-display/data-table';
-import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
 import { useTidAdjust } from '../hooks/use-tid-adjust';
@@ -25,6 +32,9 @@ import type {
   TimeRangeParams,
   KeySpec,
   DatetimeSearchContext,
+  GameStartConfig,
+  SavePresence,
+  MemoryLinkState,
 } from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_DATE_RANGE: DateRangeParams = {
@@ -49,7 +59,11 @@ const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
 
 function TidAdjustPage(): ReactElement {
   const { t } = useLingui();
-  const { config: dsConfig, ranges, gameStart } = useDsConfigReadonly();
+  const dsConfig = useDsConfigStore((s) => s.config);
+  const ranges = useDsConfigStore((s) => s.ranges);
+  const isBw2 = useDsConfigStore(
+    (s) => s.config.version === 'Black2' || s.config.version === 'White2'
+  );
 
   // フォーム状態
   const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
@@ -58,6 +72,20 @@ function TidAdjustPage(): ReactElement {
   const [tid, setTid] = useState('');
   const [sid, setSid] = useState('');
   const [shinyPidRaw, setShinyPidRaw] = useState('');
+
+  // GameStartConfig: サイドバーの値は使用しない (Feature-local state)
+  const [save, setSave] = useState<SavePresence>('NoSave');
+  const [memoryLink, setMemoryLink] = useState<MemoryLinkState>('Disabled');
+
+  const tidGameStart = useMemo<GameStartConfig>(
+    () => ({
+      start_mode: 'NewGame',
+      shiny_charm: 'NotObtained',
+      save,
+      memory_link: save === 'WithSave' ? memoryLink : 'Disabled',
+    }),
+    [save, memoryLink]
+  );
 
   // 検索フック (CPU 専用)
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
@@ -93,8 +121,6 @@ function TidAdjustPage(): ReactElement {
       key_spec: keySpec,
     };
     const filter = toTrainerInfoFilter({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw });
-    // TID/SID はニューゲーム開始時に決定されるため start_mode を強制的に NewGame にする
-    const tidGameStart = { ...gameStart, start_mode: 'NewGame' as const };
     startSearch(context, filter, tidGameStart);
   }, [
     dsConfig,
@@ -105,7 +131,7 @@ function TidAdjustPage(): ReactElement {
     tid,
     sid,
     shinyPidRaw,
-    gameStart,
+    tidGameStart,
     startSearch,
   ]);
 
@@ -136,6 +162,40 @@ function TidAdjustPage(): ReactElement {
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
           />
+
+          {/* セーブ状態 (サイドバーの値は使用しない) */}
+          <div className="space-y-3 rounded-md border p-3">
+            <p className="text-xs font-medium">
+              <Trans>Save state</Trans>
+            </p>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tid-save-presence" className="text-xs">
+                <Trans>With save</Trans>
+              </Label>
+              <Switch
+                id="tid-save-presence"
+                checked={save === 'WithSave'}
+                onCheckedChange={(checked) => {
+                  setSave(checked ? 'WithSave' : 'NoSave');
+                  if (!checked) setMemoryLink('Disabled');
+                }}
+                disabled={isLoading}
+                aria-label={t`With save`}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tid-memory-link" className="text-xs">
+                <Trans>Memory Link</Trans>
+              </Label>
+              <Switch
+                id="tid-memory-link"
+                checked={memoryLink === 'Enabled'}
+                onCheckedChange={(checked) => setMemoryLink(checked ? 'Enabled' : 'Disabled')}
+                disabled={isLoading || !isBw2 || save === 'NoSave'}
+                aria-label={t`Memory Link`}
+              />
+            </div>
+          </div>
 
           <TidAdjustForm
             tid={tid}

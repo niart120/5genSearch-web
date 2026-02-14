@@ -82,8 +82,8 @@ msgid "Advance range invalid"
 msgstr "消費範囲が不正です"
 
 #: src/components/forms/iv-range-input.tsx:153
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:57
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:82
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:55
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:78
 msgid "Any"
 msgstr "任意"
 
@@ -434,6 +434,8 @@ msgstr "最大消費数は開始オフセット以上である必要がありま
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:188
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:195
 msgid "Memory Link"
 msgstr "思い出リンク"
 
@@ -516,7 +518,7 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:152
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:155
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:228
 msgid "No results"
 msgstr "結果なし"
 
@@ -633,13 +635,17 @@ msgstr "結果の詳細"
 #: src/features/egg-search/components/egg-search-page.tsx:233
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:144
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:149
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:222
 msgid "Results"
 msgstr "検索結果"
 
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:94
 msgid "Roamer"
 msgstr "徘徊ポケモン"
+
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:169
+msgid "Save state"
+msgstr "セーブ状態"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
@@ -716,7 +722,7 @@ msgstr "設定"
 #: src/features/egg-search/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:77
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:65
-#: src/features/tid-adjust/components/trainer-info-columns.tsx:69
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:67
 msgid "Shiny"
 msgstr "色違い"
 
@@ -729,12 +735,12 @@ msgstr "ひかるおまもり"
 #~ msgid "Shiny only"
 #~ msgstr "色違いのみ"
 
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:91
-#: src/features/tid-adjust/components/tid-adjust-form.tsx:102
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:87
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:98
 msgid "Shiny PID"
 msgstr "色違い PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:78
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 
@@ -742,7 +748,7 @@ msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:77
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
 msgid "SID must be between 0 and 65535"
 msgstr "SID は 0〜65535 の範囲で入力してください"
 
@@ -792,7 +798,7 @@ msgstr "開始日"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:74
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:102
 msgid "Start date must be on or before end date"
 msgstr "開始日は終了日以前である必要があります"
 
@@ -876,7 +882,7 @@ msgstr "TID (表ID)"
 msgid "TID Adjust"
 msgstr "TID 調整"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:76
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
 msgid "TID must be between 0 and 65535"
 msgstr "TID は 0〜65535 の範囲で入力してください"
 
@@ -886,7 +892,7 @@ msgstr "時刻範囲"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:75
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
 msgid "Time range is invalid"
 msgstr "時刻範囲が不正です"
 
@@ -934,5 +940,7 @@ msgstr "バージョン"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:173
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
 msgid "With save"
 msgstr "セーブあり"
