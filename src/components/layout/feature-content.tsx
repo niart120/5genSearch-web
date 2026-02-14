@@ -4,6 +4,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { PlaceholderPage } from './placeholder-page';
 import { DatetimeSearchPage } from '@/features/datetime-search';
 import { EggSearchPage } from '@/features/egg-search';
+import { MtseedSearchPage } from '@/features/mtseed-search';
 import { PokemonListPage } from '@/features/pokemon-list';
 import { EggListPage } from '@/features/egg-list';
 import { AboutPage } from '@/features/about';
@@ -21,6 +22,9 @@ function renderFeature(featureId: FeatureId) {
     }
     case 'egg-list': {
       return <EggListPage />;
+    }
+    case 'mtseed-search': {
+      return <MtseedSearchPage />;
     }
     case 'about': {
       return <AboutPage />;

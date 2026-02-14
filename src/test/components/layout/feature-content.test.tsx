@@ -42,9 +42,11 @@ describe('FeatureContent', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('mtseed-search がアクティブのとき PlaceholderPage が表示される', () => {
+  it('mtseed-search がアクティブのとき MtseedSearchPage が表示される', () => {
     renderFeatureContent('mtseed-search');
-    expect(screen.getByText('MT Seed Search')).toBeInTheDocument();
+    // MtseedSearchPage はフォームを含む — Search ボタンが表示される
+    const buttons = screen.getAllByRole('button', { name: /Search/i });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('pokemon-list がアクティブのとき PokemonListPage が表示される', () => {

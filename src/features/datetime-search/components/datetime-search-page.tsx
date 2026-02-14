@@ -13,6 +13,8 @@ import { SearchControls } from '@/components/forms/search-controls';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
 import { DataTable } from '@/components/data-display/data-table';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { useSearchResultsStore } from '@/stores/search/results';
+import { toHex } from '@/lib/format';
 import { useDatetimeSearch } from '../hooks/use-datetime-search';
 import { parseTargetSeeds, validateMtseedSearchForm } from '../types';
 import type { ValidationErrorCode, ParseErrorCode } from '../types';
@@ -63,7 +65,15 @@ function DatetimeSearchPage(): ReactElement {
   const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
   const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
   const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
-  const [targetSeedsRaw, setTargetSeedsRaw] = useState('');
+  // MT Seed 検索からの連携: pendingTargetSeeds をフォームの初期値として消費
+  const [targetSeedsRaw, setTargetSeedsRaw] = useState(() => {
+    const pending = useSearchResultsStore.getState().pendingTargetSeeds;
+    if (pending.length > 0) {
+      useSearchResultsStore.getState().clearPendingTargetSeeds();
+      return pending.map((s) => toHex(s, 8)).join('\n');
+    }
+    return '';
+  });
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
