@@ -51,6 +51,26 @@ let cancelled = false;
 /** 進捗 postMessage 送信間隔 (ms) */
 const PROGRESS_INTERVAL_MS = 500;
 
+/**
+ * 検索種別ごとのバッチサイズ
+ *
+ * 1 バッチ = 1 回の next_batch() 呼び出しで処理する要素数。
+ * バッチ実行後に毎回 yield するため、この値が応答性と計算効率のトレードオフを決める。
+ *
+ * - 大きい値: yield 頻度が下がり計算効率が上がるが、cancel 応答が遅れる
+ * - 小さい値: 応答性が上がるが yield オーバーヘッドの割合が増える
+ */
+const BATCH_SIZE = {
+  /** EggDatetime: 秒単位の探索で要素あたりの計算コストが高い */
+  eggDatetime: 1000,
+  /** MtseedDatetime: SHA-1 ベースで中程度のコスト */
+  mtseedDatetime: 500_000,
+  /** Mtseed (IV filter): MT 初期化のみで軽量 */
+  mtseed: 1_000_000,
+  /** TrainerInfo: MT 初期化のみで軽量 */
+  trainerInfo: 1_000_000,
+} as const;
+
 // =============================================================================
 // Message Handler
 // =============================================================================
@@ -233,7 +253,7 @@ async function runEggDatetimeSearch(
 ): Promise<void> {
   const searcher = new EggDatetimeSearcher(params);
   await runSearchLoop(taskId, searcher, startTime, (s) => {
-    const batch = s.next_batch(1000);
+    const batch = s.next_batch(BATCH_SIZE.eggDatetime);
     if (batch.results.length > 0) {
       postResponse({ type: 'result', taskId, resultType: 'egg', results: batch.results });
     }
@@ -252,7 +272,7 @@ async function runMtseedDatetimeSearch(
 ): Promise<void> {
   const searcher = new MtseedDatetimeSearcher(params);
   await runSearchLoop(taskId, searcher, startTime, (s) => {
-    const batch = s.next_batch(500_000);
+    const batch = s.next_batch(BATCH_SIZE.mtseedDatetime);
     if (batch.results.length > 0) {
       postResponse({
         type: 'result',
@@ -276,7 +296,7 @@ async function runMtseedSearch(
 ): Promise<void> {
   const searcher = new MtseedSearcher(params);
   await runSearchLoop(taskId, searcher, startTime, (s) => {
-    const batch = s.next_batch(1_000_000);
+    const batch = s.next_batch(BATCH_SIZE.mtseed);
     if (batch.candidates.length > 0) {
       postResponse({ type: 'result', taskId, resultType: 'mtseed', results: batch.candidates });
     }
@@ -295,7 +315,7 @@ async function runTrainerInfoSearch(
 ): Promise<void> {
   const searcher = new TrainerInfoSearcher(params);
   await runSearchLoop(taskId, searcher, startTime, (s) => {
-    const batch = s.next_batch(1_000_000);
+    const batch = s.next_batch(BATCH_SIZE.trainerInfo);
     if (batch.results.length > 0) {
       postResponse({
         type: 'result',
