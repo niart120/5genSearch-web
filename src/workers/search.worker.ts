@@ -36,11 +36,27 @@ import type {
 let initialized = false;
 let cancelled = false;
 
-/** yield 間隔 (ms): この時間が経過するまで同期的にバッチを連続実行する */
+// =============================================================================
+// Batch Loop Timing
+// =============================================================================
+
+/**
+ * 検索ループは同期的に WASM バッチを連続実行する。
+ * 2 段階のタイマーで制御を行う:
+ *
+ * 1. **Yield** (YIELD_INTERVAL_MS):
+ *    この間隔でイベントループに制御を返し、cancel メッセージの受信を可能にする。
+ *
+ * 2. **Progress** (PROGRESS_INTERVAL_MS ≥ YIELD_INTERVAL_MS):
+ *    yield タイミングでこの間隔も超過していれば進捗を postMessage で送信する。
+ *    Worker 数が多い環境でのメインスレッド負荷を抑制する。
+ */
+
+/** イベントループへの制御返却間隔 (ms) */
 const YIELD_INTERVAL_MS = 50;
 
-/** 進捗報告間隔 (ms): この間隔でのみ postMessage で進捗を送信する */
-const PROGRESS_INTERVAL_MS = 200;
+/** 進捗 postMessage 送信間隔 (ms) — yield の上位間隔 */
+const PROGRESS_INTERVAL_MS = 500;
 
 // =============================================================================
 // Message Handler
@@ -155,6 +171,68 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
 }
 
 // =============================================================================
+// Batch Search Loop (共通)
+// =============================================================================
+
+/** processBatch が返す進捗情報 */
+interface BatchProgress {
+  processed: number | bigint;
+  total: number | bigint;
+}
+
+/**
+ * バッチ検索の共通ループ
+ *
+ * yield/progress の時間制御を一箇所に集約する。
+ * 各検索関数は processBatch コールバックでバッチ実行と結果送信のみを担当する。
+ */
+async function runSearchLoop<T extends { readonly is_done: boolean; free(): void }>(
+  taskId: string,
+  searcher: T,
+  startTime: number,
+  processBatch: (searcher: T) => BatchProgress
+): Promise<void> {
+  let lastYieldTime = performance.now();
+  let lastProgressTime = performance.now();
+  let lastProgress: BatchProgress | undefined;
+
+  try {
+    while (!searcher.is_done && !cancelled) {
+      lastProgress = processBatch(searcher);
+
+      const now = performance.now();
+
+      // Yield チェックポイント: キャンセル受信 + 進捗報告
+      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
+        if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+          postResponse({
+            type: 'progress',
+            taskId,
+            progress: calculateProgress(lastProgress.processed, lastProgress.total, startTime),
+          });
+          lastProgressTime = now;
+        }
+
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
+    }
+
+    // 最終進捗: 完了時の正確な数値をメインスレッドに通知
+    if (lastProgress) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: calculateProgress(lastProgress.processed, lastProgress.total, startTime),
+      });
+    }
+    postResponse({ type: 'done', taskId });
+  } finally {
+    searcher.free();
+  }
+}
+
+// =============================================================================
 // Egg Datetime Search
 // =============================================================================
 
@@ -164,52 +242,13 @@ async function runEggDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new EggDatetimeSearcher(params);
-  let lastYieldTime = performance.now();
-  let lastProgressTime = performance.now();
-  let lastBatch: { processed_count: number | bigint; total_count: number | bigint } | undefined;
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1000);
-      lastBatch = batch;
-
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'egg',
-          results: batch.results,
-        });
-      }
-
-      const now = performance.now();
-
-      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-        postResponse({
-          type: 'progress',
-          taskId,
-          progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-        });
-        lastProgressTime = now;
-      }
-
-      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
-        await yieldToMain();
-        lastYieldTime = performance.now();
-      }
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(1000);
+    if (batch.results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'egg', results: batch.results });
     }
-
-    if (lastBatch) {
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(lastBatch.processed_count, lastBatch.total_count, startTime),
-      });
-    }
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
 }
 
 // =============================================================================
@@ -222,52 +261,18 @@ async function runMtseedDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new MtseedDatetimeSearcher(params);
-  let lastYieldTime = performance.now();
-  let lastProgressTime = performance.now();
-  let lastBatch: { processed_count: number | bigint; total_count: number | bigint } | undefined;
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(500_000);
-      lastBatch = batch;
-
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'seed-origin',
-          results: batch.results,
-        });
-      }
-
-      const now = performance.now();
-
-      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-        postResponse({
-          type: 'progress',
-          taskId,
-          progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-        });
-        lastProgressTime = now;
-      }
-
-      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
-        await yieldToMain();
-        lastYieldTime = performance.now();
-      }
-    }
-
-    if (lastBatch) {
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(500_000);
+    if (batch.results.length > 0) {
       postResponse({
-        type: 'progress',
+        type: 'result',
         taskId,
-        progress: calculateProgress(lastBatch.processed_count, lastBatch.total_count, startTime),
+        resultType: 'seed-origin',
+        results: batch.results,
       });
     }
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
 }
 
 // =============================================================================
@@ -280,56 +285,13 @@ async function runMtseedSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new MtseedSearcher(params);
-  let lastYieldTime = performance.now();
-  let lastProgressTime = performance.now();
-  let lastBatch: { processed: bigint; total: bigint } | undefined;
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1_000_000);
-      lastBatch = batch;
-
-      if (batch.candidates.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'mtseed',
-          results: batch.candidates,
-        });
-      }
-
-      const now = performance.now();
-
-      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-        postResponse({
-          type: 'progress',
-          taskId,
-          progress: calculateProgress(Number(batch.processed), Number(batch.total), startTime),
-        });
-        lastProgressTime = now;
-      }
-
-      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
-        await yieldToMain();
-        lastYieldTime = performance.now();
-      }
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(1_000_000);
+    if (batch.candidates.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'mtseed', results: batch.candidates });
     }
-
-    if (lastBatch) {
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(
-          Number(lastBatch.processed),
-          Number(lastBatch.total),
-          startTime
-        ),
-      });
-    }
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed, total: batch.total };
+  });
 }
 
 // =============================================================================
@@ -342,52 +304,18 @@ async function runTrainerInfoSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new TrainerInfoSearcher(params);
-  let lastYieldTime = performance.now();
-  let lastProgressTime = performance.now();
-  let lastBatch: { processed_count: number | bigint; total_count: number | bigint } | undefined;
-
-  try {
-    while (!searcher.is_done && !cancelled) {
-      const batch = searcher.next_batch(1_000_000);
-      lastBatch = batch;
-
-      if (batch.results.length > 0) {
-        postResponse({
-          type: 'result',
-          taskId,
-          resultType: 'trainer-info',
-          results: batch.results,
-        });
-      }
-
-      const now = performance.now();
-
-      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-        postResponse({
-          type: 'progress',
-          taskId,
-          progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-        });
-        lastProgressTime = now;
-      }
-
-      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
-        await yieldToMain();
-        lastYieldTime = performance.now();
-      }
-    }
-
-    if (lastBatch) {
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch(1_000_000);
+    if (batch.results.length > 0) {
       postResponse({
-        type: 'progress',
+        type: 'result',
         taskId,
-        progress: calculateProgress(lastBatch.processed_count, lastBatch.total_count, startTime),
+        resultType: 'trainer-info',
+        results: batch.results,
       });
     }
-    postResponse({ type: 'done', taskId });
-  } finally {
-    searcher.free();
-  }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
 }
 
 // =============================================================================
