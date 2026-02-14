@@ -39,6 +39,9 @@ let cancelled = false;
 /** yield 間隔 (ms): この時間が経過するまで同期的にバッチを連続実行する */
 const YIELD_INTERVAL_MS = 50;
 
+/** 進捗報告間隔 (ms): この間隔でのみ postMessage で進捗を送信する */
+const PROGRESS_INTERVAL_MS = 200;
+
 // =============================================================================
 // Message Handler
 // =============================================================================
@@ -162,10 +165,13 @@ async function runEggDatetimeSearch(
 ): Promise<void> {
   const searcher = new EggDatetimeSearcher(params);
   let lastYieldTime = performance.now();
+  let lastProgressTime = performance.now();
+  let lastBatch: { processed_count: number | bigint; total_count: number | bigint } | undefined;
 
   try {
     while (!searcher.is_done && !cancelled) {
       const batch = searcher.next_batch(1000);
+      lastBatch = batch;
 
       if (batch.results.length > 0) {
         postResponse({
@@ -176,18 +182,30 @@ async function runEggDatetimeSearch(
         });
       }
 
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-      });
+      const now = performance.now();
 
-      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+        postResponse({
+          type: 'progress',
+          taskId,
+          progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
+        });
+        lastProgressTime = now;
+      }
+
+      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
         await yieldToMain();
         lastYieldTime = performance.now();
       }
     }
 
+    if (lastBatch) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: calculateProgress(lastBatch.processed_count, lastBatch.total_count, startTime),
+      });
+    }
     postResponse({ type: 'done', taskId });
   } finally {
     searcher.free();
@@ -205,10 +223,13 @@ async function runMtseedDatetimeSearch(
 ): Promise<void> {
   const searcher = new MtseedDatetimeSearcher(params);
   let lastYieldTime = performance.now();
+  let lastProgressTime = performance.now();
+  let lastBatch: { processed_count: number | bigint; total_count: number | bigint } | undefined;
 
   try {
     while (!searcher.is_done && !cancelled) {
       const batch = searcher.next_batch(500_000);
+      lastBatch = batch;
 
       if (batch.results.length > 0) {
         postResponse({
@@ -219,18 +240,30 @@ async function runMtseedDatetimeSearch(
         });
       }
 
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-      });
+      const now = performance.now();
 
-      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+        postResponse({
+          type: 'progress',
+          taskId,
+          progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
+        });
+        lastProgressTime = now;
+      }
+
+      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
         await yieldToMain();
         lastYieldTime = performance.now();
       }
     }
 
+    if (lastBatch) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: calculateProgress(lastBatch.processed_count, lastBatch.total_count, startTime),
+      });
+    }
     postResponse({ type: 'done', taskId });
   } finally {
     searcher.free();
@@ -248,10 +281,13 @@ async function runMtseedSearch(
 ): Promise<void> {
   const searcher = new MtseedSearcher(params);
   let lastYieldTime = performance.now();
+  let lastProgressTime = performance.now();
+  let lastBatch: { processed: bigint; total: bigint } | undefined;
 
   try {
     while (!searcher.is_done && !cancelled) {
       const batch = searcher.next_batch(1_000_000);
+      lastBatch = batch;
 
       if (batch.candidates.length > 0) {
         postResponse({
@@ -262,18 +298,34 @@ async function runMtseedSearch(
         });
       }
 
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(Number(batch.processed), Number(batch.total), startTime),
-      });
+      const now = performance.now();
 
-      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+        postResponse({
+          type: 'progress',
+          taskId,
+          progress: calculateProgress(Number(batch.processed), Number(batch.total), startTime),
+        });
+        lastProgressTime = now;
+      }
+
+      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
         await yieldToMain();
         lastYieldTime = performance.now();
       }
     }
 
+    if (lastBatch) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: calculateProgress(
+          Number(lastBatch.processed),
+          Number(lastBatch.total),
+          startTime
+        ),
+      });
+    }
     postResponse({ type: 'done', taskId });
   } finally {
     searcher.free();
@@ -291,10 +343,13 @@ async function runTrainerInfoSearch(
 ): Promise<void> {
   const searcher = new TrainerInfoSearcher(params);
   let lastYieldTime = performance.now();
+  let lastProgressTime = performance.now();
+  let lastBatch: { processed_count: number | bigint; total_count: number | bigint } | undefined;
 
   try {
     while (!searcher.is_done && !cancelled) {
       const batch = searcher.next_batch(1_000_000);
+      lastBatch = batch;
 
       if (batch.results.length > 0) {
         postResponse({
@@ -305,18 +360,30 @@ async function runTrainerInfoSearch(
         });
       }
 
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
-      });
+      const now = performance.now();
 
-      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+        postResponse({
+          type: 'progress',
+          taskId,
+          progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
+        });
+        lastProgressTime = now;
+      }
+
+      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
         await yieldToMain();
         lastYieldTime = performance.now();
       }
     }
 
+    if (lastBatch) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: calculateProgress(lastBatch.processed_count, lastBatch.total_count, startTime),
+      });
+    }
     postResponse({ type: 'done', taskId });
   } finally {
     searcher.free();
