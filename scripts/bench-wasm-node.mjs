@@ -10,10 +10,10 @@
  *   - workerCount 指定: worker_threads で並列計測 (スケーリング検証)
  */
 
-import { createRequire } from "module";
-import { Worker, isMainThread, parentPort, workerData } from "worker_threads";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { createRequire } from 'module';
+import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,9 +25,9 @@ const PARAMS = {
   target_seeds: [0x12345678, 0x87654321, 0xabcdef01],
   ds: {
     mac: [0x00, 0x09, 0xbf, 0x12, 0x34, 0x56],
-    hardware: "DsLite",
-    version: "Black",
-    region: "Jpn",
+    hardware: 'DsLite',
+    version: 'Black',
+    region: 'Jpn',
   },
   time_range: {
     hour_start: 0,
@@ -98,7 +98,7 @@ if (!isMainThread) {
 // Main thread
 // =========================================================================
 const workerCount = parseInt(process.argv[2], 10) || 0;
-const wasmPath = join(__dirname, "..", "target", "wasm-bench-pkg", "wasm_pkg.js");
+const wasmPath = join(__dirname, '..', 'target', 'wasm-bench-pkg', 'wasm_pkg.js');
 
 if (workerCount === 0) {
   // シングルスレッド計測
@@ -149,7 +149,9 @@ Iterations     : ${ITERATIONS}
 ----------------------------------------`);
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
-    console.log(`  Iter ${i + 1}: ${r.elapsedMs.toFixed(1)} ms, ${r.throughput.toFixed(2)} Melem/s`);
+    console.log(
+      `  Iter ${i + 1}: ${r.elapsedMs.toFixed(1)} ms, ${r.throughput.toFixed(2)} Melem/s`
+    );
   }
   console.log(`----------------------------------------
 Avg throughput : ${avgThroughput.toFixed(2)} Melem/s
@@ -175,8 +177,8 @@ WASM/Native    : ${ratio.toFixed(1)}%
         const w = new Worker(__filename, {
           workerData: { wasmPath },
         });
-        w.on("message", resolve);
-        w.on("error", reject);
+        w.on('message', resolve);
+        w.on('error', reject);
       })
     );
   }
@@ -203,7 +205,11 @@ WASM/Native    : ${ratio.toFixed(1)}%
   console.log(`Aggregate      : ${aggregateThroughput.toFixed(2)} Melem/s`);
   console.log(`Wall clock     : ${globalMs.toFixed(1)} ms`);
   console.log(`Expected (linear): ${(avgPerWorker * workerCount).toFixed(2)} Melem/s`);
-  console.log(`Scaling ratio  : ${((aggregateThroughput / (avgPerWorker * workerCount)) * 100).toFixed(1)}%`);
-  console.log(`vs Native ×${workerCount}: ${((aggregateThroughput / (nativeThroughput * workerCount)) * 100).toFixed(1)}%`);
+  console.log(
+    `Scaling ratio  : ${((aggregateThroughput / (avgPerWorker * workerCount)) * 100).toFixed(1)}%`
+  );
+  console.log(
+    `vs Native ×${workerCount}: ${((aggregateThroughput / (nativeThroughput * workerCount)) * 100).toFixed(1)}%`
+  );
   console.log(`========================================`);
 }
