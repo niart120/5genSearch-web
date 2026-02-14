@@ -41,21 +41,14 @@ let cancelled = false;
 // =============================================================================
 
 /**
- * 検索ループは同期的に WASM バッチを連続実行する。
- * 2 段階のタイマーで制御を行う:
+ * 検索ループは next_batch() ごとにイベントループへ制御を返す。
+ * バッチサイズが計算粒度の唯一の調整パラメータとなる。
  *
- * 1. **Yield** (YIELD_INTERVAL_MS):
- *    この間隔でイベントループに制御を返し、cancel メッセージの受信を可能にする。
- *
- * 2. **Progress** (PROGRESS_INTERVAL_MS ≥ YIELD_INTERVAL_MS):
- *    yield タイミングでこの間隔も超過していれば進捗を postMessage で送信する。
- *    Worker 数が多い環境でのメインスレッド負荷を抑制する。
+ * 進捗 postMessage は PROGRESS_INTERVAL_MS で間引き、
+ * Worker 数が多い環境でのメインスレッド負荷を抑制する。
  */
 
-/** イベントループへの制御返却間隔 (ms) */
-const YIELD_INTERVAL_MS = 50;
-
-/** 進捗 postMessage 送信間隔 (ms) — yield の上位間隔 */
+/** 進捗 postMessage 送信間隔 (ms) */
 const PROGRESS_INTERVAL_MS = 500;
 
 // =============================================================================
@@ -183,8 +176,9 @@ interface BatchProgress {
 /**
  * バッチ検索の共通ループ
  *
- * yield/progress の時間制御を一箇所に集約する。
- * 各検索関数は processBatch コールバックでバッチ実行と結果送信のみを担当する。
+ * next_batch() ごとにイベントループへ制御を返し、cancel メッセージの受信を可能にする。
+ * 進捗報告は PROGRESS_INTERVAL_MS で間引く。
+ * バッチサイズが計算粒度の唯一の調整パラメータ。
  */
 async function runSearchLoop<T extends { readonly is_done: boolean; free(): void }>(
   taskId: string,
@@ -192,7 +186,6 @@ async function runSearchLoop<T extends { readonly is_done: boolean; free(): void
   startTime: number,
   processBatch: (searcher: T) => BatchProgress
 ): Promise<void> {
-  let lastYieldTime = performance.now();
   let lastProgressTime = performance.now();
   let lastProgress: BatchProgress | undefined;
 
@@ -200,22 +193,19 @@ async function runSearchLoop<T extends { readonly is_done: boolean; free(): void
     while (!searcher.is_done && !cancelled) {
       lastProgress = processBatch(searcher);
 
+      // 進捗スロットリング
       const now = performance.now();
-
-      // Yield チェックポイント: キャンセル受信 + 進捗報告
-      if (now - lastYieldTime >= YIELD_INTERVAL_MS) {
-        if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-          postResponse({
-            type: 'progress',
-            taskId,
-            progress: calculateProgress(lastProgress.processed, lastProgress.total, startTime),
-          });
-          lastProgressTime = now;
-        }
-
-        await yieldToMain();
-        lastYieldTime = performance.now();
+      if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+        postResponse({
+          type: 'progress',
+          taskId,
+          progress: calculateProgress(lastProgress.processed, lastProgress.total, startTime),
+        });
+        lastProgressTime = now;
       }
+
+      // バッチごとに制御を返す (cancel メッセージ受信)
+      await yieldToMain();
     }
 
     // 最終進捗: 完了時の正確な数値をメインスレッドに通知
