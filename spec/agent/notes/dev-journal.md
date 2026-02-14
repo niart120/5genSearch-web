@@ -6,20 +6,16 @@
 
 ## 2026-02-11: MtseedDatetime CPU 検索のスループット低下
 
-現状: CPU パスの MtseedDatetime 検索が約 100M calc/s。参照実装 (`niart120/pokemon-gen5-initseed`) は同一マシンで約 280-300M calc/s を達成している。バッチサイズを 1,000 → 1,000,000 に増やしたが改善なし。Criterion ベンチマーク (ネイティブ) は約 11.9 Melem/s/core。
+現状: CPU パスの MtseedDatetime 検索が約 100M calc/s。参照実装 (`niart120/pokemon-gen5-initseed`) は同一マシン (32 コア) で約 280-300M calc/s を達成している。バッチサイズを 1,000 → 1,000,000 に増やしたが改善なし。Criterion ベンチマーク (ネイティブ) は約 11.9 Melem/s/core。
 
-観察: SHA-1 SIMD 実装に構造差がある。
+観察: コアあたり性能を比較すると、参照実装 (300M / 32core ≈ 9.4M/core) に対し本実装のネイティブベンチマーク (11.9M/core) は上回っている。SHA-1 SIMD 実装自体は問題ない可能性が高い。GPU パスでも同様のスループット劣化 (期待値の約 1/4) が観測されており、GPU 側はネイティブベンチマークで問題が再現しないため、JS/Worker レイヤーの制御オーバーヘッドが共通要因と推定する。
 
-1. 本リポジトリ: `std::simd::u32x4` (Rust Portable SIMD) を使用。`.cargo/config.toml` なし (= `-C target-feature=+simd128` 未指定)。ただし WASM バイナリに SIMD 命令 (0xFD prefix) は 196 箇所存在しており、一定のベクタ化はされている。
-2. 参照実装: `core::arch::wasm32::*` (WASM SIMD intrinsics) を直接使用。`.cargo/config.toml` で `-C target-feature=+simd128` を明示。wasm-opt も `--enable-simd` 付き。
+当面の方針: 仕様書 `spec/agent/wip/local_076/SEARCH_THROUGHPUT_OPTIMIZATION.md` に切り出して体系的に調査する。主要仮説は以下の通り:
 
-Portable SIMD は抽象レイヤを経由するため、直接 intrinsics より非効率なコード生成になる可能性がある。また `-C target-feature=+simd128` の有無により、LLVM が SIMD 前提のコード最適化 (auto-vectorization 等) を行えるかも変わる。
-
-当面の方針: 以下を段階的に検証する。
-
-1. `wasm-pkg/.cargo/config.toml` を追加し `-C target-feature=+simd128` を有効化 → 効果測定
-2. 効果不十分なら SHA-1 実装を `core::arch::wasm32` intrinsics (`v128`, `u32x4_shl` 等) に書き換え
-3. wasm-opt オプションに `--enable-simd` を追加
+1. `setTimeout(resolve, 0)` による yield オーバーヘッド (最小 4ms/回)
+2. 毎バッチの `postMessage` 進捗報告によるメインスレッド負荷
+3. WASM ビルド設定 (`-C target-feature=+simd128`, `wasm-opt --enable-simd`) の未適用
+4. GPU: 単一ディスパッチ/await パターンによる GPU アイドル時間
 
 ## 2026-02-11: スクレイピング時のエンカウント地名キーと表示名の不整合
 
