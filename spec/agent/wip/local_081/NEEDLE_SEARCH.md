@@ -568,15 +568,15 @@ case 'needle': return <NeedlePage />;
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/features/needle/types.ts` — フォーム状態型 + `parseNeedlePattern` + `directionsToArrows` + `validateNeedleForm`
-- [ ] `src/features/needle/hooks/use-needle-search.ts` — 針検索フック
-- [ ] `src/features/needle/components/needle-input.tsx` — 針パターン入力 UI
-- [ ] `src/features/needle/components/seed-input.tsx` — Seed 入力 UI (2 モード)
-- [ ] `src/features/needle/components/needle-result-columns.tsx` — テーブル列定義
-- [ ] `src/features/needle/components/needle-page.tsx` — ページコンポーネント
-- [ ] `src/features/needle/index.ts` — re-export
-- [ ] `src/components/forms/datetime-input.tsx` — DatetimeInput 改修 (Plan C)
-- [ ] `src/components/layout/feature-content.tsx` — ページマッピング追加
-- [ ] `src/test/unit/needle-types.test.ts` — パーサー + バリデーション テスト
-- [ ] `src/test/integration/needle-search.test.ts` — WASM 統合テスト
-- [ ] 翻訳リソース更新 (`pnpm lingui:extract`)
+- [x] `src/features/needle/types.ts` — フォーム状態型 + `parseNeedlePattern` + `directionsToArrows` + `validateNeedleForm`
+- [x] `src/features/needle/hooks/use-needle-search.ts` — 針検索フック
+- [x] `src/features/needle/components/needle-input.tsx` — 針パターン入力 UI
+- [x] `src/features/needle/components/seed-input.tsx` — Seed 入力 UI (2 モード)
+- [x] `src/features/needle/components/needle-result-columns.tsx` — テーブル列定義
+- [x] `src/features/needle/components/needle-page.tsx` — ページコンポーネント
+- [x] `src/features/needle/index.ts` — re-export
+- [x] `src/components/forms/datetime-input.tsx` — DatetimeInput 改修 (Plan C)
+- [x] `src/components/layout/feature-content.tsx` — ページマッピング追加
+- [x] `src/test/unit/needle-types.test.ts` — パーサー + バリデーション テスト
+- [x] `src/test/integration/needle-search.test.ts` — WASM 統合テスト
+- [x] 翻訳リソース更新 (`pnpm lingui:extract`)

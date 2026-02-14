@@ -9,6 +9,7 @@ import { TidAdjustPage } from '@/features/tid-adjust';
 import { PokemonListPage } from '@/features/pokemon-list';
 import { EggListPage } from '@/features/egg-list';
 import { AboutPage } from '@/features/about';
+import { NeedlePage } from '@/features/needle';
 
 function renderFeature(featureId: FeatureId) {
   switch (featureId) {
@@ -29,6 +30,9 @@ function renderFeature(featureId: FeatureId) {
     }
     case 'tid-adjust': {
       return <TidAdjustPage />;
+    }
+    case 'needle': {
+      return <NeedlePage />;
     }
     case 'about': {
       return <AboutPage />;

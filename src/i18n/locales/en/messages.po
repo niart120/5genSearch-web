@@ -72,10 +72,15 @@ msgstr "About this app"
 #: src/features/egg-list/components/result-detail-dialog.tsx:83
 #: src/features/egg-search/components/egg-result-columns.tsx:112
 #: src/features/egg-search/components/result-detail-dialog.tsx:83
+#: src/features/needle/components/needle-result-columns.tsx:21
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:47
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:88
 msgid "Advance"
 msgstr "Advance"
+
+#: src/features/needle/components/needle-page.tsx:139
+msgid "Advance Range"
+msgstr "Advance Range"
 
 #: src/features/egg-list/components/egg-list-page.tsx:156
 msgid "Advance range invalid"
@@ -93,8 +98,14 @@ msgstr "Atk"
 
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
+#: src/features/needle/components/needle-page.tsx:115
+#: src/features/needle/components/needle-page.tsx:221
 msgid "Auto"
 msgstr "Auto"
+
+#: src/features/needle/components/needle-input.tsx:109
+msgid "Back"
+msgstr "Back"
 
 #. placeholder {0}: BUTTON_LABELS['L']
 #. placeholder {0}: BUTTON_LABELS['R']
@@ -127,6 +138,10 @@ msgstr "Button {0}"
 msgid "Cancel"
 msgstr "Cancel"
 
+#: src/features/needle/components/needle-input.tsx:118
+msgid "Clear"
+msgstr "Clear"
+
 #: src/components/forms/key-spec-selector.tsx:42
 msgid "Combinations"
 msgstr "Combinations"
@@ -148,6 +163,10 @@ msgstr "Copy {label}"
 msgid "Data sources"
 msgstr "Data sources"
 
+#: src/features/needle/components/needle-result-columns.tsx:45
+msgid "Date"
+msgstr "Date"
+
 #: src/components/forms/seed-input-section.tsx:258
 msgid "Date & time"
 msgstr "Date & time"
@@ -165,6 +184,10 @@ msgstr "Date range"
 #: src/features/tid-adjust/components/trainer-info-columns.tsx:27
 msgid "Date/Time"
 msgstr "Date/Time"
+
+#: src/features/needle/components/seed-input.tsx:153
+msgid "Datetime"
+msgstr "Datetime"
 
 #: src/components/layout/navigation-labels.tsx:13
 msgid "Datetime Search"
@@ -348,6 +371,11 @@ msgstr "Hour"
 msgid "HP"
 msgstr "HP"
 
+#: src/features/needle/components/needle-result-columns.tsx:33
+#: src/features/needle/components/seed-input.tsx:190
+msgid "Initial Seed"
+msgstr "Initial Seed"
+
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:102
 msgid "IV Range"
 msgstr "IV Range"
@@ -371,6 +399,14 @@ msgstr "Key input"
 #: src/components/forms/key-input-selector.tsx:35
 msgid "Key input (buttons held)"
 msgstr "Key input (buttons held)"
+
+#: src/features/needle/components/seed-input.tsx:156
+msgid "LCG Seed"
+msgstr "LCG Seed"
+
+#: src/features/needle/components/seed-input.tsx:172
+msgid "LCG Seed (Hex)"
+msgstr "LCG Seed (Hex)"
 
 #: src/components/forms/seed-input-section.tsx:281
 msgid "LCG Seeds (hex, one per line)"
@@ -431,6 +467,15 @@ msgstr "Max"
 msgid "Max advance"
 msgstr "Max advance"
 
+#: src/features/needle/components/needle-page.tsx:160
+#: src/features/needle/components/needle-page.tsx:169
+msgid "Max Advance"
+msgstr "Max Advance"
+
+#: src/features/needle/components/needle-page.tsx:60
+msgid "Max advance must be ≥ offset"
+msgstr "Max advance must be ≥ offset"
+
 #: src/features/egg-search/components/egg-search-page.tsx:123
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:89
 msgid "Max advance must be ≥ start offset"
@@ -438,7 +483,7 @@ msgstr "Max advance must be ≥ start offset"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:194
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:187
 msgid "Memory Link"
 msgstr "Memory Link"
 
@@ -511,6 +556,26 @@ msgstr "Nature"
 msgid "Needle"
 msgstr "Needle"
 
+#: src/features/needle/components/needle-input.tsx:90
+msgid "Needle Direction (Arrow)"
+msgstr "Needle Direction (Arrow)"
+
+#: src/features/needle/components/needle-input.tsx:71
+msgid "Needle Direction (Numeric)"
+msgstr "Needle Direction (Numeric)"
+
+#: src/features/needle/components/needle-page.tsx:131
+msgid "Needle Pattern"
+msgstr "Needle Pattern"
+
+#: src/features/needle/components/needle-page.tsx:57
+msgid "Needle pattern is empty"
+msgstr "Needle pattern is empty"
+
+#: src/features/needle/components/needle-page.tsx:58
+msgid "Needle pattern must be digits 0-7"
+msgstr "Needle pattern must be digits 0-7"
+
 #: src/components/forms/egg-params-form.tsx:355
 msgid "Nidoran♀"
 msgstr "Nidoran♀"
@@ -521,7 +586,8 @@ msgstr "No default Timer0/VCount data for this combination. Switched to manual m
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:152
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:231
+#: src/features/needle/components/needle-page.tsx:197
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:224
 msgid "No results"
 msgstr "No results"
 
@@ -538,7 +604,7 @@ msgstr "No results found. Configure parameters and start searching."
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:180
 msgid "No save"
 msgstr "No save"
 
@@ -569,6 +635,15 @@ msgstr "Not specified"
 #: src/components/forms/egg-params-form.tsx:292
 msgid "Not used"
 msgstr "Not used"
+
+#: src/features/needle/components/needle-page.tsx:144
+#: src/features/needle/components/needle-page.tsx:153
+msgid "Offset"
+msgstr "Offset"
+
+#: src/features/needle/components/needle-page.tsx:59
+msgid "Offset must be 0 or positive"
+msgstr "Offset must be 0 or positive"
 
 #: src/features/egg-list/components/egg-list-page.tsx:157
 msgid "Offset must be non-negative"
@@ -641,8 +716,9 @@ msgstr "Result details"
 #: src/features/egg-list/components/egg-list-page.tsx:233
 #: src/features/egg-search/components/egg-search-page.tsx:233
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:144
+#: src/features/needle/components/needle-page.tsx:188
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:225
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:218
 msgid "Results"
 msgstr "Results"
 
@@ -656,6 +732,8 @@ msgstr "Roamer"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
+#: src/features/needle/components/needle-page.tsx:106
+#: src/features/needle/components/needle-page.tsx:212
 msgid "Search"
 msgstr "Search"
 
@@ -680,9 +758,17 @@ msgstr "Second"
 msgid "Secret ID"
 msgstr "Secret ID"
 
+#: src/features/needle/components/seed-input.tsx:148
+msgid "Seed"
+msgstr "Seed"
+
 #: src/components/forms/seed-input-section.tsx:230
 msgid "Seed input"
 msgstr "Seed input"
+
+#: src/features/needle/components/needle-page.tsx:56
+msgid "Seed is not set"
+msgstr "Seed is not set"
 
 #: src/components/forms/seed-input-section.tsx:239
 msgid "Seeds"
@@ -881,7 +967,7 @@ msgstr "This is an unofficial tool and is not affiliated with or endorsed by Nin
 msgid "This project is open source."
 msgstr "This project is open source."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:200
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:193
 msgid "This setting is independent of the sidebar."
 msgstr "This setting is independent of the sidebar."
 
@@ -896,6 +982,10 @@ msgstr "TID Adjust"
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:114
 msgid "TID must be between 0 and 65535"
 msgstr "TID must be between 0 and 65535"
+
+#: src/features/needle/components/needle-result-columns.tsx:57
+msgid "Time"
+msgstr "Time"
 
 #: src/components/forms/search-context-form.tsx:48
 msgid "Time range"
@@ -951,6 +1041,6 @@ msgstr "Version"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:186
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
 msgid "With save"
 msgstr "With save"

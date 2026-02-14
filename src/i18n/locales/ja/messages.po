@@ -72,10 +72,15 @@ msgstr "このアプリについて"
 #: src/features/egg-list/components/result-detail-dialog.tsx:83
 #: src/features/egg-search/components/egg-result-columns.tsx:112
 #: src/features/egg-search/components/result-detail-dialog.tsx:83
+#: src/features/needle/components/needle-result-columns.tsx:21
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:47
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:88
 msgid "Advance"
 msgstr "消費数"
+
+#: src/features/needle/components/needle-page.tsx:139
+msgid "Advance Range"
+msgstr "消費範囲"
 
 #: src/features/egg-list/components/egg-list-page.tsx:156
 msgid "Advance range invalid"
@@ -93,8 +98,14 @@ msgstr "攻撃"
 
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
+#: src/features/needle/components/needle-page.tsx:115
+#: src/features/needle/components/needle-page.tsx:221
 msgid "Auto"
 msgstr "自動"
+
+#: src/features/needle/components/needle-input.tsx:109
+msgid "Back"
+msgstr "戻す"
 
 #. placeholder {0}: BUTTON_LABELS['L']
 #. placeholder {0}: BUTTON_LABELS['R']
@@ -127,6 +138,10 @@ msgstr "{0}ボタン"
 msgid "Cancel"
 msgstr "キャンセル"
 
+#: src/features/needle/components/needle-input.tsx:118
+msgid "Clear"
+msgstr "クリア"
+
 #: src/components/forms/key-spec-selector.tsx:42
 msgid "Combinations"
 msgstr "組み合わせ"
@@ -148,6 +163,10 @@ msgstr "{label}をコピー"
 msgid "Data sources"
 msgstr "データの出典"
 
+#: src/features/needle/components/needle-result-columns.tsx:45
+msgid "Date"
+msgstr "日付"
+
 #: src/components/forms/seed-input-section.tsx:258
 msgid "Date & time"
 msgstr "日時"
@@ -164,6 +183,10 @@ msgstr "日付範囲"
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:51
 #: src/features/tid-adjust/components/trainer-info-columns.tsx:27
 msgid "Date/Time"
+msgstr "日時"
+
+#: src/features/needle/components/seed-input.tsx:153
+msgid "Datetime"
 msgstr "日時"
 
 #: src/components/layout/navigation-labels.tsx:13
@@ -344,6 +367,11 @@ msgstr "時"
 msgid "HP"
 msgstr "HP"
 
+#: src/features/needle/components/needle-result-columns.tsx:33
+#: src/features/needle/components/seed-input.tsx:190
+msgid "Initial Seed"
+msgstr "初期Seed"
+
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:102
 msgid "IV Range"
 msgstr "個体値範囲"
@@ -367,6 +395,14 @@ msgstr "キー入力"
 #: src/components/forms/key-input-selector.tsx:35
 msgid "Key input (buttons held)"
 msgstr "キー入力 (押すボタン)"
+
+#: src/features/needle/components/seed-input.tsx:156
+msgid "LCG Seed"
+msgstr "LCG Seed"
+
+#: src/features/needle/components/seed-input.tsx:172
+msgid "LCG Seed (Hex)"
+msgstr "LCG Seed (16進数)"
 
 #: src/components/forms/seed-input-section.tsx:281
 msgid "LCG Seeds (hex, one per line)"
@@ -427,6 +463,15 @@ msgstr "Max"
 msgid "Max advance"
 msgstr "最大消費数"
 
+#: src/features/needle/components/needle-page.tsx:160
+#: src/features/needle/components/needle-page.tsx:169
+msgid "Max Advance"
+msgstr "最大消費数"
+
+#: src/features/needle/components/needle-page.tsx:60
+msgid "Max advance must be ≥ offset"
+msgstr "最大消費数はオフセット以上にしてください"
+
 #: src/features/egg-search/components/egg-search-page.tsx:123
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:89
 msgid "Max advance must be ≥ start offset"
@@ -434,7 +479,7 @@ msgstr "最大消費数は開始オフセット以上である必要がありま
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:194
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:187
 msgid "Memory Link"
 msgstr "思い出リンク"
 
@@ -507,6 +552,26 @@ msgstr "性格"
 msgid "Needle"
 msgstr "針読み"
 
+#: src/features/needle/components/needle-input.tsx:90
+msgid "Needle Direction (Arrow)"
+msgstr "針の方向 (矢印)"
+
+#: src/features/needle/components/needle-input.tsx:71
+msgid "Needle Direction (Numeric)"
+msgstr "針の方向 (数値)"
+
+#: src/features/needle/components/needle-page.tsx:131
+msgid "Needle Pattern"
+msgstr "針読みパターン"
+
+#: src/features/needle/components/needle-page.tsx:57
+msgid "Needle pattern is empty"
+msgstr "針読みパターンが空です"
+
+#: src/features/needle/components/needle-page.tsx:58
+msgid "Needle pattern must be digits 0-7"
+msgstr "針読みパターンは0-7の数字で入力してください"
+
 #: src/components/forms/egg-params-form.tsx:355
 msgid "Nidoran♀"
 msgstr "ニドラン♀"
@@ -517,7 +582,8 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:152
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:231
+#: src/features/needle/components/needle-page.tsx:197
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:224
 msgid "No results"
 msgstr "結果なし"
 
@@ -534,7 +600,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:180
 msgid "No save"
 msgstr "セーブなし"
 
@@ -565,6 +631,15 @@ msgstr "指定なし"
 #: src/components/forms/egg-params-form.tsx:292
 msgid "Not used"
 msgstr "使用しない"
+
+#: src/features/needle/components/needle-page.tsx:144
+#: src/features/needle/components/needle-page.tsx:153
+msgid "Offset"
+msgstr "オフセット"
+
+#: src/features/needle/components/needle-page.tsx:59
+msgid "Offset must be 0 or positive"
+msgstr "オフセットは0以上にしてください"
 
 #: src/features/egg-list/components/egg-list-page.tsx:157
 msgid "Offset must be non-negative"
@@ -637,8 +712,9 @@ msgstr "結果の詳細"
 #: src/features/egg-list/components/egg-list-page.tsx:233
 #: src/features/egg-search/components/egg-search-page.tsx:233
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:144
+#: src/features/needle/components/needle-page.tsx:188
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:225
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:218
 msgid "Results"
 msgstr "検索結果"
 
@@ -652,6 +728,8 @@ msgstr "徘徊ポケモン"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
+#: src/features/needle/components/needle-page.tsx:106
+#: src/features/needle/components/needle-page.tsx:212
 msgid "Search"
 msgstr "検索"
 
@@ -676,9 +754,17 @@ msgstr "秒"
 msgid "Secret ID"
 msgstr "裏ID"
 
+#: src/features/needle/components/seed-input.tsx:148
+msgid "Seed"
+msgstr "Seed"
+
 #: src/components/forms/seed-input-section.tsx:230
 msgid "Seed input"
 msgstr "Seed 入力"
+
+#: src/features/needle/components/needle-page.tsx:56
+msgid "Seed is not set"
+msgstr "Seedが設定されていません"
 
 #: src/components/forms/seed-input-section.tsx:239
 msgid "Seeds"
@@ -877,7 +963,7 @@ msgstr "本アプリは非公式のツールであり、任天堂、ゲームフ
 msgid "This project is open source."
 msgstr "このプロジェクトはオープンソースです。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:200
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:193
 msgid "This setting is independent of the sidebar."
 msgstr "この設定はサイドバーとは独立しています。"
 
@@ -892,6 +978,10 @@ msgstr "TID 調整"
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:114
 msgid "TID must be between 0 and 65535"
 msgstr "TID は 0〜65535 の範囲で入力してください"
+
+#: src/features/needle/components/needle-result-columns.tsx:57
+msgid "Time"
+msgstr "時刻"
 
 #: src/components/forms/search-context-form.tsx:48
 msgid "Time range"
@@ -947,6 +1037,6 @@ msgstr "バージョン"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:186
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
 msgid "With save"
 msgstr "セーブあり"
