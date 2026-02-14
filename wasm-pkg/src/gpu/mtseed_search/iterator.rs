@@ -57,8 +57,15 @@ impl GpuMtseedSearchIterator {
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = "create"))]
     pub async fn create(context: MtseedSearchContext) -> Result<GpuMtseedSearchIterator, String> {
         let gpu_ctx = GpuDeviceContext::new().await?;
-        let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
+        let mut limits =
+            SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
         let items_per_thread = limits.mtseed_items_per_thread(gpu_ctx.gpu_profile());
+
+        // MT Seed 検索用にスレッドあたり処理数を調整
+        limits.items_per_thread = items_per_thread;
+        limits.max_messages_per_dispatch =
+            limits.workgroup_size * limits.max_workgroups * items_per_thread;
+
         let pipeline = SearchPipeline::new(&gpu_ctx, &context, items_per_thread);
 
         Ok(Self {
@@ -219,6 +226,166 @@ mod tests {
             } else {
                 break;
             }
+        }
+    }
+
+    // =========================================================================
+    // 既知 Seed 全探索テスト (GPU vs CPU 照合)
+    //
+    // 各テストケースは 2^32 の全 Seed 空間を GPU で探索し、
+    // 期待する Seed が結果に含まれかつ CPU 版と IV が一致することを確認する。
+    // =========================================================================
+
+    /// GPU 全探索を実行し、全候補を収集するヘルパー
+    fn run_gpu_full_search(context: MtseedSearchContext) -> Vec<MtseedResult> {
+        let result = pollster::block_on(GpuMtseedSearchIterator::create(context));
+
+        let Ok(mut iterator) = result else {
+            eprintln!("GPU not available, skipping test");
+            return Vec::new();
+        };
+
+        let mut all: Vec<MtseedResult> = Vec::new();
+        while let Some(batch) = pollster::block_on(iterator.next()) {
+            all.extend(batch.candidates);
+        }
+        all
+    }
+
+    /// 6V (offset=0): 14B11BA6, 8A30480D, 9E02B0AE, ADFA2178, FC4AA3AC
+    #[test]
+    fn test_gpu_full_search_6v_offset0() {
+        use crate::generation::algorithm::generate_rng_ivs_with_offset;
+        use crate::types::MtSeed;
+
+        let context = MtseedSearchContext {
+            iv_filter: IvFilter::six_v(),
+            mt_offset: 0,
+            is_roamer: false,
+        };
+
+        let results = run_gpu_full_search(context);
+        if results.is_empty() {
+            // GPU 未対応環境ではスキップ
+            return;
+        }
+
+        let expected_seeds: &[u32] = &[
+            0x14B1_1BA6,
+            0x8A30_480D,
+            0x9E02_B0AE,
+            0xADFA_2178,
+            0xFC4A_A3AC,
+        ];
+
+        for &seed_val in expected_seeds {
+            let found = results.iter().find(|r| r.seed.value() == seed_val);
+            assert!(
+                found.is_some(),
+                "Expected seed 0x{seed_val:08X} not found in GPU results"
+            );
+
+            let cpu_ivs = generate_rng_ivs_with_offset(MtSeed::new(seed_val), 0, false);
+            let gpu_ivs = found.unwrap().ivs;
+            assert_eq!(
+                gpu_ivs, cpu_ivs,
+                "GPU/CPU IV mismatch at seed 0x{seed_val:08X}: GPU={gpu_ivs:?}, CPU={cpu_ivs:?}"
+            );
+        }
+    }
+
+    /// V0VVV0 (offset=2): 54F39E0F, 6338DDED, 7BF8CD77, F9C432EB
+    #[test]
+    fn test_gpu_full_search_v0vvv0_offset2() {
+        use crate::generation::algorithm::generate_rng_ivs_with_offset;
+        use crate::types::MtSeed;
+
+        let context = MtseedSearchContext {
+            iv_filter: IvFilter {
+                hp: (31, 31),
+                atk: (0, 0),
+                def: (31, 31),
+                spa: (31, 31),
+                spd: (31, 31),
+                spe: (0, 0),
+                hidden_power_types: None,
+                hidden_power_min_power: None,
+            },
+            mt_offset: 2,
+            is_roamer: false,
+        };
+
+        let results = run_gpu_full_search(context);
+        if results.is_empty() {
+            return;
+        }
+
+        let expected_seeds: &[u32] = &[0x54F3_9E0F, 0x6338_DDED, 0x7BF8_CD77, 0xF9C4_32EB];
+
+        for &seed_val in expected_seeds {
+            let found = results.iter().find(|r| r.seed.value() == seed_val);
+            assert!(
+                found.is_some(),
+                "Expected seed 0x{seed_val:08X} not found in GPU results"
+            );
+
+            let cpu_ivs = generate_rng_ivs_with_offset(MtSeed::new(seed_val), 2, false);
+            let gpu_ivs = found.unwrap().ivs;
+            assert_eq!(
+                gpu_ivs, cpu_ivs,
+                "GPU/CPU IV mismatch at seed 0x{seed_val:08X}: GPU={gpu_ivs:?}, CPU={cpu_ivs:?}"
+            );
+        }
+    }
+
+    /// V2UVVV (roamer, offset=1): 5F3DE7EF, 7F1983D4, B8500799, C18AA384, C899E66E, D8BFC637
+    #[test]
+    fn test_gpu_full_search_v2uvvv_roamer_offset1() {
+        use crate::generation::algorithm::generate_rng_ivs_with_offset;
+        use crate::types::MtSeed;
+
+        let context = MtseedSearchContext {
+            iv_filter: IvFilter {
+                hp: (31, 31),
+                atk: (2, 2),
+                def: (0, 31),
+                spa: (31, 31),
+                spd: (31, 31),
+                spe: (31, 31),
+                hidden_power_types: None,
+                hidden_power_min_power: None,
+            },
+            mt_offset: 1,
+            is_roamer: true,
+        };
+
+        let results = run_gpu_full_search(context);
+        if results.is_empty() {
+            return;
+        }
+
+        let expected_seeds: &[u32] = &[
+            0x5F3D_E7EF,
+            0x7F19_83D4,
+            0xB850_0799,
+            0xC18A_A384,
+            0xC899_E66E,
+            0xD8BF_C637,
+        ];
+
+        for &seed_val in expected_seeds {
+            let found = results.iter().find(|r| r.seed.value() == seed_val);
+            assert!(
+                found.is_some(),
+                "Expected seed 0x{seed_val:08X} not found in GPU results"
+            );
+
+            let cpu_ivs = generate_rng_ivs_with_offset(MtSeed::new(seed_val), 1, true);
+            let gpu_ivs = found.unwrap().ivs;
+            assert_eq!(
+                gpu_ivs, cpu_ivs,
+                "GPU/CPU IV mismatch at seed 0x{seed_val:08X}: GPU={gpu_ivs:?}, CPU={cpu_ivs:?}"
+            );
         }
     }
 }
