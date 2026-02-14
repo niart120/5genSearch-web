@@ -76,7 +76,7 @@ UI (needle-page) → Hook (use-needle-search) → WASM (search_needle_pattern) [
 
 | 入力項目 | 型 | 提供元 | 説明 |
 |----------|-----|--------|------|
-| SeedOrigins | `SeedOrigin[]` | `SeedInput` (日時 or LCG Seed) | 起動条件 (timer0×vcount の組み合わせで複数になりうる) |
+| SeedOrigins | `SeedOrigin[]` | `NeedlePage` (`useMemo` 導出) | 起動条件 (timer0×vcount の組み合わせで複数になりうる) |
 | NeedlePattern | `NeedleDirection[]` | `NeedleInput` (方向ボタン or テキスト) | 観測した針パターン |
 | GenerationConfig | `GenerationConfig` | DS 設定 Store + ローカル state | 生成共通設定 |
 
@@ -355,11 +355,11 @@ interface NeedleInputProps {
 
 ### 4.4 `seed-input.tsx` — Seed 入力 UI
 
-`SeedInputSection` (3 モード: Startup / Seeds / 検索結果) は再利用しない。針読みでは軽量な専用コンポーネントを新設する。日時モードでは timer0×vcount の組み合わせ数に応じて複数の `SeedOrigin` を生成する。
+`SeedInputSection` (3 モード: Startup / Seeds / 検索結果) は再利用しない。針読みでは軽量な専用コンポーネントを新設する。全入力状態は親 (`NeedlePage`) が所有し、`SeedInput` は純粋な制御コンポーネントとして動作する。`seedOrigins` は `NeedlePage` 側で `useMemo` により導出されるため、コールバックによる push は不要。
 
 #### Seed 入力モード
 
-| モード | 入力 | SeedOrigin 変換方法 |
+| モード | 入力 | SeedOrigin 導出方法 |
 |--------|------|-------------------|
 | `datetime` | 日時入力 (DatetimeInput) + DS 設定 (サイドバー) | `resolveSeedOrigins()` → `SeedOrigin[]` (timer0×vcount 組み合わせ分) |
 | `seed` | LCG Seed Hex 入力 (16 桁) | `SeedOrigin.Seed(value)` を1件配列で構築 |
@@ -368,8 +368,14 @@ interface NeedleInputProps {
 interface SeedInputProps {
   mode: SeedMode;
   onModeChange: (mode: SeedMode) => void;
+  datetime: Datetime;
+  onDatetimeChange: (dt: Datetime) => void;
+  keyInput: KeyInput;
+  onKeyInputChange: (ki: KeyInput) => void;
+  seedHex: string;
+  onSeedHexChange: (hex: string) => void;
+  /** 親で useMemo 導出された SeedOrigin[] (表示専用) */
   seedOrigins: SeedOrigin[];
-  onSeedOriginsChange: (origins: SeedOrigin[]) => void;
 }
 ```
 
@@ -389,9 +395,9 @@ interface SeedInputProps {
 └──────────────────────────────────────────────┘
 ```
 
-- `datetime` モード: `DatetimeInput` + `keyInput` (既存) → DS 設定 (サイドバー) と組み合わせて `SeedSpec.Startup` を構築し、`resolveSeedOrigins()` で `SeedOrigin[]` (timer0×vcount 組み合わせ分) を取得
-- `seed` モード: 16 進数入力 → `BigInt` → `SeedOrigin` の `Seed` variant を1件配列で構築
-- モード切替時は既存入力値から `seedOrigins` を再計算する
+- `datetime` モード: `DatetimeInput` + `keyInput` → DS 設定と組み合わせて `SeedSpec.Startup` を構築し、`resolveSeedOrigins()` で `SeedOrigin[]` を導出
+- `seed` モード: 16 進数入力 → `BigInt` → `SeedOrigin.Seed` を1件配列で構築
+- `seedOrigins` は `NeedlePage` の `useMemo` で導出されるため、モード切替時の再計算は自動的に行われる
 
 ### 4.5 DatetimeInput 改修 (SpinnerNumField 統一)
 
@@ -466,23 +472,26 @@ Results 内:
 #### 自動検索の実装
 
 ```typescript
+// seedOrigins は useMemo で導出 (初回レンダーから計算される)
+const seedOrigins = useMemo(() => {
+  if (seedMode === 'seed') {
+    if (!seedHex || !LCG_SEED_RE.test(seedHex)) return [];
+    const value = BigInt('0x' + seedHex);
+    return [{ Seed: { base_seed: value, mt_seed: Number(value & 0xff_ff_ff_ffn) } }];
+  }
+  try {
+    return resolveSeedOrigins({
+      type: 'Startup', ds: dsConfig, datetime, ranges, key_input: keyInput,
+    });
+  } catch { return []; }
+}, [seedMode, seedHex, dsConfig, datetime, ranges, keyInput]);
+
 // autoSearch === true のとき、依存値変更で自動実行
 useEffect(() => {
   if (!autoSearch) return;
-  if (!validation.isValid) return;
-
-  const pattern = parseNeedlePattern(patternRaw);
-  if (!pattern) return;
-
-  const config: GenerationConfig = {
-    version: dsConfig.version,
-    game_start: gameStart,
-    user_offset: userOffset,
-    max_advance: maxAdvance,
-  };
-
-  needleSearch.search(seedOrigins, pattern, config);
-}, [autoSearch, seedOrigins, patternRaw, dsConfig.version, gameStart, userOffset, maxAdvance]);
+  if (!validation.isValid) { clear(); return; }
+  executeSearch();
+}, [autoSearch, validation.isValid, executeSearch, clear]);
 ```
 
 `autoSearch` が OFF の場合は検索ボタンのクリックイベントで同じ処理を行う。
@@ -535,7 +544,8 @@ case 'needle': return <NeedlePage />;
 | 状態 | 管理場所 | 永続化 |
 |------|----------|--------|
 | DS 設定 (DsConfig, ranges, gameStart) | `ds-config` Store (サイドバー) | あり |
-| Seed 入力モード / SeedOrigins | `needle-page.tsx` ローカル state | なし |
+| Seed 入力モード / datetime / keyInput / seedHex | `needle-page.tsx` ローカル state | なし |
+| SeedOrigins | `needle-page.tsx` `useMemo` 導出値 | なし |
 | 針パターン (patternRaw) | `needle-page.tsx` ローカル state | なし |
 | 消費数範囲 (userOffset / maxAdvance) | `needle-page.tsx` ローカル state | なし |
 | 自動検索トグル (autoSearch) | `needle-page.tsx` ローカル state | なし |

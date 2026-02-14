@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { NumField } from '@/components/ui/spinner-num-field';
+import { DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { resolveSeedOrigins } from '@/services/seed-resolve';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
 import { createNeedleResultColumns } from './needle-result-columns';
@@ -25,22 +27,48 @@ import {
   type SeedMode,
   type NeedleValidationErrorCode,
 } from '../types';
-import type { SeedOrigin, GenerationConfig } from '@/wasm/wasm_pkg.js';
+import type { Datetime, KeyInput, GenerationConfig } from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_USER_OFFSET = 0;
 const DEFAULT_MAX_ADVANCE = 200;
 
+/** Hex パターン (最大 16 桁) */
+const LCG_SEED_RE = /^[\da-fA-F]{1,16}$/;
+
 function NeedlePage(): ReactElement {
   const { t } = useLingui();
-  const { config: dsConfig, gameStart } = useDsConfigReadonly();
+  const { config: dsConfig, ranges, gameStart } = useDsConfigReadonly();
 
   // フォーム状態
   const [seedMode, setSeedMode] = useState<SeedMode>('datetime');
-  const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
+  const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
+  const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
+  const [seedHex, setSeedHex] = useState('');
   const [patternRaw, setPatternRaw] = useState('');
   const [userOffset, setUserOffset] = useState(DEFAULT_USER_OFFSET);
   const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
   const [autoSearch, setAutoSearch] = useState(true);
+
+  // seedOrigins は入力状態から導出 (初回レンダーから計算される)
+  const seedOrigins = useMemo(() => {
+    if (seedMode === 'seed') {
+      if (!seedHex || !LCG_SEED_RE.test(seedHex)) return [];
+      const value = BigInt('0x' + seedHex);
+      return [{ Seed: { base_seed: value, mt_seed: Number(value & 0xff_ff_ff_ffn) } }];
+    }
+    // datetime mode
+    try {
+      return resolveSeedOrigins({
+        type: 'Startup',
+        ds: dsConfig,
+        datetime,
+        ranges,
+        key_input: keyInput,
+      });
+    } catch {
+      return [];
+    }
+  }, [seedMode, seedHex, dsConfig, datetime, ranges, keyInput]);
 
   // 検索フック
   const { results, error, search, clear } = useNeedleSearch();
@@ -129,8 +157,13 @@ function NeedlePage(): ReactElement {
           <SeedInput
             mode={seedMode}
             onModeChange={setSeedMode}
+            datetime={datetime}
+            onDatetimeChange={setDatetime}
+            keyInput={keyInput}
+            onKeyInputChange={setKeyInput}
+            seedHex={seedHex}
+            onSeedHexChange={setSeedHex}
             seedOrigins={seedOrigins}
-            onSeedOriginsChange={setSeedOrigins}
           />
 
           {/* 針パターン入力 */}

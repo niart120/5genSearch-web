@@ -2,125 +2,59 @@
  * Seed 入力 UI — 日時モード / LCG Seed 直接指定モード
  *
  * 日時モードでは timer0×vcount の組み合わせ数に応じて複数の SeedOrigin を生成する。
- * 既存の SeedInputSection (3 モード) は再利用せず軽量な専用コンポーネントとする。
+ * 全入力状態は親コンポーネント (NeedlePage) が所有し、
+ * seedOrigins は useMemo で導出されるため、本コンポーネントは純粋な制御コンポーネントとして動作する。
  */
 
-import { useState, useCallback, useMemo, type ReactElement } from 'react';
+import { useCallback, useMemo, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatetimeInput, DEFAULT_DATETIME } from '@/components/ui/datetime-input';
+import { DatetimeInput } from '@/components/ui/datetime-input';
 import { KeySpecSelector } from '@/components/forms/key-spec-selector';
-import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { resolveSeedOrigins } from '@/services/seed-resolve';
 import type { Datetime, KeyInput, SeedOrigin } from '@/wasm/wasm_pkg.js';
 import type { SeedMode } from '../types';
 
 interface SeedInputProps {
   mode: SeedMode;
   onModeChange: (mode: SeedMode) => void;
+  datetime: Datetime;
+  onDatetimeChange: (dt: Datetime) => void;
+  keyInput: KeyInput;
+  onKeyInputChange: (ki: KeyInput) => void;
+  seedHex: string;
+  onSeedHexChange: (hex: string) => void;
+  /** 親で useMemo 導出された SeedOrigin[] (表示専用) */
   seedOrigins: SeedOrigin[];
-  onSeedOriginsChange: (origins: SeedOrigin[]) => void;
   disabled?: boolean;
 }
-
-/** Hex パターン (最大 16 桁) */
-const LCG_SEED_RE = /^[\da-fA-F]{1,16}$/;
 
 function SeedInput({
   mode,
   onModeChange,
+  datetime,
+  onDatetimeChange,
+  keyInput,
+  onKeyInputChange,
+  seedHex,
+  onSeedHexChange,
   seedOrigins,
-  onSeedOriginsChange,
   disabled,
 }: SeedInputProps): ReactElement {
   const { t } = useLingui();
-  const { config: dsConfig, ranges } = useDsConfigReadonly();
 
-  // datetime モード用ローカル state
-  const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
-  const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
-
-  // seed モード用ローカル state
-  const [seedHex, setSeedHex] = useState('');
-
-  // datetime 変更時に SeedOrigin[] を再計算
-  const handleDatetimeChange = useCallback(
-    (dt: Datetime) => {
-      setDatetime(dt);
-      try {
-        const origins = resolveSeedOrigins({
-          type: 'Startup',
-          ds: dsConfig,
-          datetime: dt,
-          ranges,
-          key_input: keyInput,
-        });
-        onSeedOriginsChange(origins);
-      } catch {
-        onSeedOriginsChange([]);
-      }
-    },
-    [dsConfig, ranges, keyInput, onSeedOriginsChange]
-  );
-
-  // keyInput 変更時に SeedOrigin[] を再計算
-  const handleKeyInputChange = useCallback(
-    (ki: KeyInput) => {
-      setKeyInput(ki);
-      try {
-        const origins = resolveSeedOrigins({
-          type: 'Startup',
-          ds: dsConfig,
-          datetime,
-          ranges,
-          key_input: ki,
-        });
-        onSeedOriginsChange(origins);
-      } catch {
-        onSeedOriginsChange([]);
-      }
-    },
-    [dsConfig, ranges, datetime, onSeedOriginsChange]
-  );
-
-  // seed hex 変更時に SeedOrigin を構築 (seed モードは常に 1 件)
-  const handleSeedHexChange = useCallback(
+  // seed hex フィールドの入力フィルタリング
+  const handleSeedHexInput = useCallback(
     (raw: string) => {
       const hex = raw.replaceAll(/[^\da-fA-F]/g, '').slice(0, 16);
-      setSeedHex(hex);
-      if (hex.length === 0 || !LCG_SEED_RE.test(hex)) {
-        onSeedOriginsChange([]);
-        return;
-      }
-      const value = BigInt('0x' + hex);
-      const seed: SeedOrigin = {
-        Seed: {
-          base_seed: value,
-          mt_seed: Number(value & 0xff_ff_ff_ffn),
-        },
-      };
-      onSeedOriginsChange([seed]);
+      onSeedHexChange(hex);
     },
-    [onSeedOriginsChange]
+    [onSeedHexChange]
   );
 
-  // モード切替
-  const handleModeChange = useCallback(
-    (v: string) => {
-      const newMode = v as SeedMode;
-      onModeChange(newMode);
-
-      // モード切替後、既存入力から再計算
-      if (newMode === 'datetime') {
-        handleDatetimeChange(datetime);
-      } else {
-        handleSeedHexChange(seedHex);
-      }
-    },
-    [onModeChange, handleDatetimeChange, handleSeedHexChange, datetime, seedHex]
-  );
+  // モード切替 (導出は親の useMemo が自動で行うため副作用不要)
+  const handleModeChange = useCallback((v: string) => onModeChange(v as SeedMode), [onModeChange]);
 
   // 現在の Seed 表示 (確認用 — 先頭 1 件を表示)
   const seedDisplay = useMemo(() => {
@@ -153,10 +87,10 @@ function SeedInput({
         </TabsList>
 
         <TabsContent value="datetime" className="flex flex-col gap-2">
-          <DatetimeInput value={datetime} onChange={handleDatetimeChange} disabled={disabled} />
+          <DatetimeInput value={datetime} onChange={onDatetimeChange} disabled={disabled} />
           <KeySpecSelector
             value={{ available_buttons: keyInput.buttons }}
-            onChange={(spec) => handleKeyInputChange({ buttons: spec.available_buttons })}
+            onChange={(spec) => onKeyInputChange({ buttons: spec.available_buttons })}
             disabled={disabled}
           />
         </TabsContent>
@@ -169,7 +103,7 @@ function SeedInput({
             <Input
               id="lcg-seed-input"
               value={seedHex}
-              onChange={(e) => handleSeedHexChange(e.target.value)}
+              onChange={(e) => handleSeedHexInput(e.target.value)}
               placeholder="0123456789ABCDEF"
               disabled={disabled}
               className="font-mono"
