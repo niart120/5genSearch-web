@@ -49,17 +49,49 @@ pub fn calculate_pokemon_sha1_simd(
     let mut d = u32x4::splat(H3);
     let mut e = u32x4::splat(H4);
 
-    // 80 ラウンド処理
-    for i in 0..80 {
-        let (f, k) = match i {
-            0..=19 => (simd_choice(b, c, d), u32x4::splat(K[0])),
-            20..=39 => (simd_parity(b, c, d), u32x4::splat(K[1])),
-            40..=59 => (simd_majority(b, c, d), u32x4::splat(K[2])),
-            _ => (simd_parity(b, c, d), u32x4::splat(K[3])),
-        };
+    // 80 ラウンド処理 (4 ループに分割して分岐を排除)
+    let k0 = u32x4::splat(K[0]);
+    let k1 = u32x4::splat(K[1]);
+    let k2 = u32x4::splat(K[2]);
+    let k3 = u32x4::splat(K[3]);
 
-        let temp = simd_left_rotate(a, 5) + f + e + k + w_simd[i];
+    // Rounds 0-19: Ch(b, c, d)
+    for i in 0..20 {
+        let f = simd_choice(b, c, d);
+        let temp = simd_left_rotate(a, 5) + f + e + k0 + w_simd[i];
+        e = d;
+        d = c;
+        c = simd_left_rotate(b, 30);
+        b = a;
+        a = temp;
+    }
 
+    // Rounds 20-39: Parity(b, c, d)
+    for i in 20..40 {
+        let f = simd_parity(b, c, d);
+        let temp = simd_left_rotate(a, 5) + f + e + k1 + w_simd[i];
+        e = d;
+        d = c;
+        c = simd_left_rotate(b, 30);
+        b = a;
+        a = temp;
+    }
+
+    // Rounds 40-59: Maj(b, c, d)
+    for i in 40..60 {
+        let f = simd_majority(b, c, d);
+        let temp = simd_left_rotate(a, 5) + f + e + k2 + w_simd[i];
+        e = d;
+        d = c;
+        c = simd_left_rotate(b, 30);
+        b = a;
+        a = temp;
+    }
+
+    // Rounds 60-79: Parity(b, c, d)
+    for i in 60..80 {
+        let f = simd_parity(b, c, d);
+        let temp = simd_left_rotate(a, 5) + f + e + k3 + w_simd[i];
         e = d;
         d = c;
         c = simd_left_rotate(b, 30);
