@@ -16,8 +16,6 @@ import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { DataTable } from '@/components/data-display/data-table';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { TidAdjustForm } from './tid-adjust-form';
@@ -34,8 +32,6 @@ import type {
   KeySpec,
   DatetimeSearchContext,
   GameStartConfig,
-  SavePresence,
-  MemoryLinkState,
 } from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_DATE_RANGE: DateRangeParams = {
@@ -58,6 +54,22 @@ const DEFAULT_TIME_RANGE: TimeRangeParams = {
 
 const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
 
+/**
+ * save と memory_link を統合したセーブ状態。
+ * BW: 2 値 (NoSave / WithSave)
+ * BW2: 3 値 (NoSave / WithSave / WithSaveMemoryLink)
+ */
+type SaveMode = 'NoSave' | 'WithSave' | 'WithSaveMemoryLink';
+
+function toGameStartConfig(mode: SaveMode): GameStartConfig {
+  return {
+    start_mode: 'NewGame',
+    shiny_charm: 'NotObtained',
+    save: mode === 'NoSave' ? 'NoSave' : 'WithSave',
+    memory_link: mode === 'WithSaveMemoryLink' ? 'Enabled' : 'Disabled',
+  };
+}
+
 function TidAdjustPage(): ReactElement {
   const { t } = useLingui();
   const dsConfig = useDsConfigStore((s) => s.config);
@@ -75,17 +87,14 @@ function TidAdjustPage(): ReactElement {
   const [shinyPidRaw, setShinyPidRaw] = useState('');
 
   // GameStartConfig: サイドバーの値は使用しない (Feature-local state)
-  const [save, setSave] = useState<SavePresence>('NoSave');
-  const [memoryLink, setMemoryLink] = useState<MemoryLinkState>('Disabled');
+  const [saveMode, setSaveMode] = useState<SaveMode>('NoSave');
+
+  // BW2 → BW 切替時: WithSaveMemoryLink → WithSave にフォールバック
+  const effectiveSaveMode = !isBw2 && saveMode === 'WithSaveMemoryLink' ? 'WithSave' : saveMode;
 
   const tidGameStart = useMemo<GameStartConfig>(
-    () => ({
-      start_mode: 'NewGame',
-      shiny_charm: 'NotObtained',
-      save,
-      memory_link: save === 'WithSave' ? memoryLink : 'Disabled',
-    }),
-    [save, memoryLink]
+    () => toGameStartConfig(effectiveSaveMode),
+    [effectiveSaveMode]
   );
 
   // 検索フック (CPU 専用)
@@ -165,40 +174,24 @@ function TidAdjustPage(): ReactElement {
           />
 
           {/* セーブ状態 (サイドバーの値は使用しない) */}
-          <div className="space-y-3">
-            <Tabs
-              value={save}
-              onValueChange={(v) => {
-                const next = v as SavePresence;
-                setSave(next);
-                if (next === 'NoSave') setMemoryLink('Disabled');
-              }}
-            >
-              <TabsList className="w-full">
-                <TabsTrigger value="NoSave" disabled={isLoading} className="flex-1">
-                  <Trans>No save</Trans>
+          <Tabs value={effectiveSaveMode} onValueChange={(v) => setSaveMode(v as SaveMode)}>
+            <TabsList className="w-full">
+              <TabsTrigger value="NoSave" disabled={isLoading} className="flex-1">
+                <Trans>No save</Trans>
+              </TabsTrigger>
+              <TabsTrigger value="WithSave" disabled={isLoading} className="flex-1">
+                <Trans>With save</Trans>
+              </TabsTrigger>
+              {isBw2 ? (
+                <TabsTrigger value="WithSaveMemoryLink" disabled={isLoading} className="flex-1">
+                  <Trans>Memory Link</Trans>
                 </TabsTrigger>
-                <TabsTrigger value="WithSave" disabled={isLoading} className="flex-1">
-                  <Trans>With save</Trans>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="tid-memory-link" className="text-xs">
-                <Trans>Memory Link</Trans>
-              </Label>
-              <Switch
-                id="tid-memory-link"
-                checked={memoryLink === 'Enabled'}
-                onCheckedChange={(checked) => setMemoryLink(checked ? 'Enabled' : 'Disabled')}
-                disabled={isLoading || !isBw2 || save === 'NoSave'}
-                aria-label={t`Memory Link`}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <Trans>This setting is independent of the sidebar.</Trans>
-            </p>
-          </div>
+              ) : undefined}
+            </TabsList>
+          </Tabs>
+          <p className="text-xs text-muted-foreground">
+            <Trans>This setting is independent of the sidebar.</Trans>
+          </p>
 
           <TidAdjustForm
             tid={tid}

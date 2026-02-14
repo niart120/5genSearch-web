@@ -101,18 +101,3 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 
 当面の方針: 現時点では未実装。実際に問題が顕在化した段階で対応する。対応時は `services/` 層に検索系機能共通のユーティリティとして実装し、各 feature の検索フック (`use-*-search.ts`) から利用する形を想定する。
 
-## 2026-02-15: GameStartConfig の Feature-local 管理と Presentational 抽出案
-
-現状: ID 調整では `GameStartConfig` の 4 フィールドのうち `start_mode` (`NewGame` 固定) と `shiny_charm` (`NotObtained` 固定) はドメイン制約で決定される。`save` と `memory_link` はユーザ選択が必要で、セーブデータの有無により Timer0/VCount 分布が変わるため検索結果に影響する。
-
-観察: サイドバーの `GameStartConfig` は「つづきから」等の一般的な起動条件を想定しており、ID 調整の「ニューゲーム前提」というドメイン制約と合致しない。共有すると Feature 間の暗黙的結合が発生し、一方の変更が他方に意図しない副作用を起こす。
-
-当面の方針: Feature-local state で独立管理する (方針 A)。`save` / `memory_link` を `tid-adjust-page.tsx` 内の `useState` で保持する。将来的に save/memory_link の UI 部品を他 Feature でも再利用する場合は、以下の方針 C を検討する:
-
-- save/memory_link の Switch UI を Presentational コンポーネント (`SaveConfigControls`) として抽出
-- `save` / `memoryLink` / `onSaveChange` / `onMemoryLinkChange` / `isBw2` を Controlled Props で受け取る
-- サイドバーでは Store 接続、Feature パネルではローカル state 接続
-- `disabled` 制約ロジック (BW2 判定、save=NoSave 時の memory_link 無効化) をコンポーネント内に閉じ込める
-
-関連ファイル: `src/features/ds-config/components/game-start-config-form.tsx`、`src/features/tid-adjust/components/tid-adjust-page.tsx`。
-

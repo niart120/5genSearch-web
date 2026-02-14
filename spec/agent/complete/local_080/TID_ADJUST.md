@@ -90,6 +90,16 @@ ID 調整は「ニューゲーム開始時の TID/SID 決定」を対象とす�
 | `save` | ユーザ選択 (`NoSave` / `WithSave`) | セーブデータの有無で Timer0/VCount 分布が変わる |
 | `memory_link` | ユーザ選択 (`Disabled` / `Enabled`) | BW2 かつ `WithSave` 時のみ有効。分布に影響する |
 
+`save` と `memory_link` は UI 上、統合タブ (`SaveMode`) として提供する:
+
+| SaveMode | BW | BW2 | 対応する GameStartConfig |
+|---|:-:|:-:|---|
+| `NoSave` | ○ | ○ | `save: NoSave, memory_link: Disabled` |
+| `WithSave` | ○ | ○ | `save: WithSave, memory_link: Disabled` |
+| `WithSaveMemoryLink` | - | ○ | `save: WithSave, memory_link: Enabled` |
+
+BW では 2 値、BW2 では 3 値のタブを表示する。BW2 → BW 切替時に `WithSaveMemoryLink` が選択中の場合は `WithSave` にフォールバックする。
+
 サイドバーの `GameStartConfig` は「つづきから」等の他用途向けの設定であり、ID 調整のドメイン制約と一致しない。状態の混同を避けるため、**サイドバーの `gameStart` は参照せず、Feature-local state で独立管理する**。
 
 将来的に save/memory_link の UI 部品を他の Feature でも再利用する場合は、以下の方針 (方針 C) を検討する:
@@ -281,7 +291,7 @@ Controls 内の配置順:
 
 1. `SearchControls` (PC 版、`hidden lg:flex`)
 2. `SearchContextForm` (日付・時刻・キー入力)
-3. セーブ状態コントロール: `save` は `NoSave` / `WithSave` の横並びタブ、`memory_link` は Switch (Feature-local state)
+3. セーブ状態タブ (`SaveMode`): BW では `NoSave` / `WithSave` の 2 値、BW2 では `NoSave` / `WithSave` / `Memory Link` の 3 値 (Feature-local state)
 4. ユーザ向け注意表示: サイドバーのセーブ設定を使用しない旨を `text-muted-foreground` で表示
 5. `TidAdjustForm` (TID / SID / Shiny PID)
 6. バリデーションエラー表示
@@ -338,7 +348,7 @@ case 'tid-adjust': return <TidAdjustPage />;
 | 状態 | 管理場所 | 永続化 |
 |------|----------|--------|
 | DS 設定 (DsConfig, ranges) | `ds-config` Store | あり |
-| GameStartConfig (save, memory_link) | `tid-adjust-page.tsx` ローカル state | なし |
+| GameStartConfig (`SaveMode`) | `tid-adjust-page.tsx` ローカル state | なし |
 | 日付範囲 / 時刻範囲 / キー入力 | `tid-adjust-page.tsx` ローカル state | なし |
 | TID / SID / Shiny PID (検索フィルタ) | `tid-adjust-page.tsx` ローカル state | なし |
 | 検索進捗 / Worker 状態 | `use-search.ts` 内部 state | なし |

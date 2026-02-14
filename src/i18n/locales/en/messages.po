@@ -438,8 +438,7 @@ msgstr "Max advance must be ≥ start offset"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:188
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:195
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:194
 msgid "Memory Link"
 msgstr "Memory Link"
 
@@ -539,7 +538,7 @@ msgstr "No results found. Configure parameters and start searching."
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:179
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
 msgid "No save"
 msgstr "No save"
 
@@ -748,7 +747,7 @@ msgstr "Shiny Charm"
 msgid "Shiny PID"
 msgstr "Shiny PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:107
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:116
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 
@@ -756,7 +755,7 @@ msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgid "SID"
 msgstr "SID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:115
 msgid "SID must be between 0 and 65535"
 msgstr "SID must be between 0 and 65535"
 
@@ -806,7 +805,7 @@ msgstr "Start date"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:112
 msgid "Start date must be on or before end date"
 msgstr "Start date must be on or before end date"
 
@@ -882,7 +881,7 @@ msgstr "This is an unofficial tool and is not affiliated with or endorsed by Nin
 msgid "This project is open source."
 msgstr "This project is open source."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:199
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:200
 msgid "This setting is independent of the sidebar."
 msgstr "This setting is independent of the sidebar."
 
@@ -894,7 +893,7 @@ msgstr "TID"
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:114
 msgid "TID must be between 0 and 65535"
 msgstr "TID must be between 0 and 65535"
 
@@ -904,7 +903,7 @@ msgstr "Time range"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:113
 msgid "Time range is invalid"
 msgstr "Time range is invalid"
 
@@ -952,6 +951,6 @@ msgstr "Version"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:182
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:186
 msgid "With save"
 msgstr "With save"

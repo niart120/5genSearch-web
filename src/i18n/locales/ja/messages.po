@@ -434,8 +434,7 @@ msgstr "最大消費数は開始オフセット以上である必要がありま
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:188
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:195
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:194
 msgid "Memory Link"
 msgstr "思い出リンク"
 
@@ -535,7 +534,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:179
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:183
 msgid "No save"
 msgstr "セーブなし"
 
@@ -744,7 +743,7 @@ msgstr "ひかるおまもり"
 msgid "Shiny PID"
 msgstr "色違い PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:107
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:116
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 
@@ -752,7 +751,7 @@ msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:115
 msgid "SID must be between 0 and 65535"
 msgstr "SID は 0〜65535 の範囲で入力してください"
 
@@ -802,7 +801,7 @@ msgstr "開始日"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:112
 msgid "Start date must be on or before end date"
 msgstr "開始日は終了日以前である必要があります"
 
@@ -878,7 +877,7 @@ msgstr "本アプリは非公式のツールであり、任天堂、ゲームフ
 msgid "This project is open source."
 msgstr "このプロジェクトはオープンソースです。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:199
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:200
 msgid "This setting is independent of the sidebar."
 msgstr "この設定はサイドバーとは独立しています。"
 
@@ -890,7 +889,7 @@ msgstr "TID (表ID)"
 msgid "TID Adjust"
 msgstr "TID 調整"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:114
 msgid "TID must be between 0 and 65535"
 msgstr "TID は 0〜65535 の範囲で入力してください"
 
@@ -900,7 +899,7 @@ msgstr "時刻範囲"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:113
 msgid "Time range is invalid"
 msgstr "時刻範囲が不正です"
 
@@ -948,6 +947,6 @@ msgstr "バージョン"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:182
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:186
 msgid "With save"
 msgstr "セーブあり"
