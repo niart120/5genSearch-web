@@ -10,6 +10,13 @@ import type { WorkerRequest, WorkerResponse, GpuMtseedSearchTask } from './types
 import type { GpuSearchBatch } from '../wasm/wasm_pkg.js';
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/** 進捗 postMessage 送信間隔 (ms) — CPU Worker と同一 */
+const PROGRESS_INTERVAL_MS = 500;
+
+// =============================================================================
 // State
 // =============================================================================
 
@@ -110,6 +117,9 @@ async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<
   cancelRequested = false;
 
   try {
+    // WASM 側の GpuProfile::detect() が参照するアダプター情報を事前設定
+    await cacheGpuAdapterInfo();
+
     currentIterator = await GpuDatetimeSearchIterator.create(task.context, task.targetSeeds);
 
     await executeSearchLoop(taskId);
@@ -130,6 +140,10 @@ async function runGpuSearch(taskId: string, task: GpuMtseedSearchTask): Promise<
 
 /**
  * 検索ループ実行 (共通処理)
+ *
+ * 進捗報告は PROGRESS_INTERVAL_MS で間引き、
+ * 毎ディスパッチの postMessage オーバーヘッドを抑制する。
+ * 結果 (マッチ) は即時報告する。
  */
 async function executeSearchLoop(taskId: string): Promise<void> {
   if (!currentIterator) {
@@ -138,6 +152,8 @@ async function executeSearchLoop(taskId: string): Promise<void> {
 
   let batch: GpuSearchBatch | undefined;
   const startTime = performance.now();
+  let lastProgressTime = startTime;
+  let lastBatch: GpuSearchBatch | undefined;
 
   while (!cancelRequested && !currentIterator.is_done) {
     batch = await currentIterator.next();
@@ -146,29 +162,9 @@ async function executeSearchLoop(taskId: string): Promise<void> {
       break;
     }
 
-    const now = performance.now();
-    const elapsedMs = now - startTime;
-    const processedCount = Number(batch.processed_count);
+    lastBatch = batch;
 
-    // スループット計算 (items/sec)
-    const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
-
-    // 進捗報告
-    postResponse({
-      type: 'progress',
-      taskId,
-      progress: {
-        processed: processedCount,
-        total: Number(batch.total_count),
-        percentage: batch.progress * 100,
-        elapsedMs,
-        estimatedRemainingMs:
-          batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
-        throughput,
-      },
-    });
-
-    // 中間結果を報告
+    // 中間結果は即時報告 (マッチ件数は通常極少)
     if (batch.results.length > 0) {
       postResponse({
         type: 'result',
@@ -177,13 +173,100 @@ async function executeSearchLoop(taskId: string): Promise<void> {
         results: batch.results,
       });
     }
+
+    // 進捗スロットリング
+    const now = performance.now();
+    if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: buildProgress(batch, startTime, now),
+      });
+      lastProgressTime = now;
+    }
   }
 
-  // 完了
+  // 最終進捗: 完了時の正確な数値をメインスレッドに通知
+  if (lastBatch) {
+    const now = performance.now();
+    postResponse({
+      type: 'progress',
+      taskId,
+      progress: buildProgress(lastBatch, startTime, now),
+    });
+  }
+
   postResponse({
     type: 'done',
     taskId,
   });
+}
+
+/** 進捗オブジェクト構築 */
+function buildProgress(
+  batch: GpuSearchBatch,
+  startTime: number,
+  now: number
+): {
+  processed: number;
+  total: number;
+  percentage: number;
+  elapsedMs: number;
+  estimatedRemainingMs: number;
+  throughput: number;
+} {
+  const elapsedMs = now - startTime;
+  const processedCount = Number(batch.processed_count);
+  const throughput = elapsedMs > 0 ? (processedCount / elapsedMs) * 1000 : 0;
+
+  return {
+    processed: processedCount,
+    total: Number(batch.total_count),
+    percentage: batch.progress * 100,
+    elapsedMs,
+    estimatedRemainingMs:
+      batch.progress > 0 ? elapsedMs * ((1 - batch.progress) / batch.progress) : 0,
+    throughput,
+  };
+}
+
+/**
+ * ブラウザの GPUAdapterInfo 拡張プロパティ
+ *
+ * @webgpu/types v0.1.69 では `type` / `driver` が未定義。
+ * Chrome 131+ で追加されたプロパティを補完する。
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapterInfo
+ */
+interface GPUAdapterInfoExtended extends GPUAdapterInfo {
+  readonly type?: string;
+  readonly driver?: string;
+}
+
+/**
+ * ブラウザの GPUAdapterInfo を globalThis に保存
+ *
+ * wgpu v24 の WebGPU バックエンドは AdapterInfo のフィールドを
+ * 空/デフォルト値で返すため、WASM 側の GpuProfile::detect() が
+ * globalThis.__wgpu_browser_adapter_info を参照して GPU 種別を判定する。
+ */
+async function cacheGpuAdapterInfo(): Promise<void> {
+  try {
+    const gpu = navigator.gpu;
+    if (!gpu) return;
+
+    const adapter = await gpu.requestAdapter({ powerPreference: 'high-performance' });
+    if (!adapter?.info) return;
+
+    const info = adapter.info as GPUAdapterInfoExtended;
+    (globalThis as Record<string, unknown>).__wgpu_browser_adapter_info = {
+      type: info.type ?? '',
+      description: info.description ?? '',
+      vendor: info.vendor ?? '',
+      driver: info.driver ?? '',
+    };
+  } catch {
+    // WebGPU 未対応環境では無視
+  }
 }
 
 function postResponse(response: WorkerResponse): void {
