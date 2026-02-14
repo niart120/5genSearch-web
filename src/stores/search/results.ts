@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type {
   EggDatetimeSearchResult,
   GeneratedPokemonData,
+  MtSeed,
   MtseedResult,
   SeedOrigin,
   TrainerInfoSearchResult,
@@ -17,16 +18,20 @@ export type SearchResult =
 interface SearchResultsState {
   results: SearchResult[];
   lastUpdatedAt: number | undefined;
+  pendingTargetSeeds: MtSeed[];
 }
 
 interface SearchResultsActions {
   addResult: (result: SearchResult) => void;
   clearResults: () => void;
+  setPendingTargetSeeds: (seeds: MtSeed[]) => void;
+  clearPendingTargetSeeds: () => void;
 }
 
 const DEFAULT_STATE: SearchResultsState = {
   results: [],
   lastUpdatedAt: undefined,
+  pendingTargetSeeds: [],
 };
 
 export const useSearchResultsStore = create<SearchResultsState & SearchResultsActions>()((set) => ({
@@ -37,6 +42,8 @@ export const useSearchResultsStore = create<SearchResultsState & SearchResultsAc
       lastUpdatedAt: Date.now(),
     })),
   clearResults: () => set(DEFAULT_STATE),
+  setPendingTargetSeeds: (seeds) => set({ pendingTargetSeeds: seeds }),
+  clearPendingTargetSeeds: () => set({ pendingTargetSeeds: [] }),
 }));
 
 export const getSearchResultsInitialState = (): SearchResultsState => DEFAULT_STATE;

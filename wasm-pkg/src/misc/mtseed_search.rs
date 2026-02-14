@@ -347,4 +347,107 @@ mod tests {
         assert_eq!(batch2.processed, 103);
         assert!(searcher2.is_done());
     }
+
+    // =========================================================================
+    // 既知 Seed 検証テスト (CPU)
+    //
+    // 指定条件で全空間を探索した際に期待する Seed が結果に含まれることを検証する。
+    // 全探索は時間がかかるため、各期待 Seed の周辺局所範囲 (±8) のみ走査する。
+    // =========================================================================
+
+    /// 局所範囲で `MtseedSearcher` を実行し、指定 Seed が見つかることを確認
+    fn assert_seed_found(iv_filter: &IvFilter, mt_offset: u32, is_roamer: bool, seed: u32) {
+        // ±8 の範囲で走査
+        let start = seed.saturating_sub(8);
+        let end = seed.saturating_add(8);
+        let params = MtseedSearchParams {
+            iv_filter: iv_filter.clone(),
+            mt_offset,
+            is_roamer,
+            start_seed: start,
+            end_seed: end,
+        };
+        let range_size = u64::from(end) - u64::from(start) + 1;
+        let mut searcher = MtseedSearcher::new(params);
+        #[allow(clippy::cast_possible_truncation)]
+        let batch = searcher.next_batch(range_size as u32);
+
+        let found = batch.candidates.iter().any(|c| c.seed.value() == seed);
+        assert!(
+            found,
+            "Seed 0x{seed:08X} not found with offset={mt_offset}, roamer={is_roamer}"
+        );
+
+        // スカラー版と IV が一致するか
+        let expected_ivs =
+            generate_rng_ivs_with_offset(crate::types::MtSeed::new(seed), mt_offset, is_roamer);
+        let result = batch
+            .candidates
+            .iter()
+            .find(|c| c.seed.value() == seed)
+            .unwrap();
+        assert_eq!(
+            result.ivs, expected_ivs,
+            "IV mismatch at seed 0x{seed:08X}: got {:?}, expected {:?}",
+            result.ivs, expected_ivs
+        );
+    }
+
+    /// 6V (offset=0): 14B11BA6, 8A30480D, 9E02B0AE, ADFA2178, FC4AA3AC
+    #[test]
+    fn test_known_seeds_6v_offset0() {
+        let filter = IvFilter::six_v();
+        for &seed in &[
+            0x14B1_1BA6,
+            0x8A30_480D,
+            0x9E02_B0AE,
+            0xADFA_2178,
+            0xFC4A_A3AC,
+        ] {
+            assert_seed_found(&filter, 0, false, seed);
+        }
+    }
+
+    /// V0VVV0 (offset=2): 54F39E0F, 6338DDED, 7BF8CD77, F9C432EB
+    #[test]
+    fn test_known_seeds_v0vvv0_offset2() {
+        let filter = IvFilter {
+            hp: (31, 31),
+            atk: (0, 0),
+            def: (31, 31),
+            spa: (31, 31),
+            spd: (31, 31),
+            spe: (0, 0),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        };
+        for &seed in &[0x54F3_9E0F, 0x6338_DDED, 0x7BF8_CD77, 0xF9C4_32EB] {
+            assert_seed_found(&filter, 2, false, seed);
+        }
+    }
+
+    /// V2UVVV (roamer, offset=1): 5F3DE7EF, 7F1983D4, B8500799, C18AA384, C899E66E, D8BFC637
+    #[test]
+    fn test_known_seeds_v2uvvv_roamer_offset1() {
+        let filter = IvFilter {
+            hp: (31, 31),
+            atk: (2, 2),
+            def: (0, 31),
+            spa: (31, 31),
+            spd: (31, 31),
+            spe: (31, 31),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        };
+        for &seed in &[
+            0x5F3D_E7EF,
+            0x7F19_83D4,
+            0xB850_0799,
+            0xC18A_A384,
+            0xC899_E66E,
+            0xD8BF_C637,
+        ] {
+            assert_seed_found(&filter, 1, true, seed);
+        }
+    }
 }

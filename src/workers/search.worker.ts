@@ -66,7 +66,7 @@ const BATCH_SIZE = {
   /** MtseedDatetime: SHA-1 SIMD 4並列 + BTreeSet lookup (最軽量, ~50ms/batch) */
   mtseedDatetime: 5_000_000,
   /** Mtseed: MT init(624) + twist(624) + offset消費 + IV filter (中程度, ~52ms/batch) */
-  mtseed: 400_000,
+  mtseed: 500_000,
   /** TrainerInfo: SHA-1 SIMD 4並列 + LCG ~20-50消費 + filter (軽量, ~45ms/batch) */
   trainerInfo: 3_000_000,
 } as const;

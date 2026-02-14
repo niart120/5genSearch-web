@@ -51,3 +51,10 @@ export function isGeneratedEggData(value: unknown): boolean {
     'inheritance' in value
   );
 }
+
+/**
+ * MtseedResult 型ガード
+ */
+export function isMtseedResult(value: unknown): boolean {
+  return typeof value === 'object' && value !== null && 'seed' in value && 'ivs' in value;
+}

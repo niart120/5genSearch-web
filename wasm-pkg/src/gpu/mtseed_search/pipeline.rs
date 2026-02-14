@@ -70,7 +70,12 @@ impl SearchPipeline {
     ) -> Self {
         let device = ctx.device().clone();
         let queue = ctx.queue().clone();
-        let limits = SearchJobLimits::from_device_limits(ctx.limits(), ctx.gpu_profile());
+        let mut limits = SearchJobLimits::from_device_limits(ctx.limits(), ctx.gpu_profile());
+
+        // シェーダーオーバーライドと一致させる
+        limits.items_per_thread = items_per_thread;
+        limits.max_messages_per_dispatch =
+            limits.workgroup_size * limits.max_workgroups * items_per_thread;
 
         // シェーダーモジュール作成
         let shader_source = include_str!("shader.wgsl");

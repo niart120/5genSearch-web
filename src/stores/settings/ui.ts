@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import type { SupportedLocale } from '../../i18n';
 import type { Category, FeatureId } from '../../lib/navigation';
-import { getDefaultFeature } from '../../lib/navigation';
+import { getCategoryByFeature, getDefaultFeature } from '../../lib/navigation';
 
 type Theme = 'light' | 'dark';
 
@@ -24,6 +24,7 @@ interface UiActions {
   setTheme: (theme: Theme) => void;
   setActiveCategory: (category: Category) => void;
   setActiveFeature: (feature: FeatureId) => void;
+  navigateToFeature: (feature: FeatureId) => void;
   reset: () => void;
 }
 
@@ -55,6 +56,17 @@ export const useUiStore = create<UiState & UiActions>()(
               [state.activeCategory]: feature,
             },
           })),
+        navigateToFeature: (feature) => {
+          const category = getCategoryByFeature(feature);
+          set((state) => ({
+            activeCategory: category,
+            activeFeature: feature,
+            featureMemory: {
+              ...state.featureMemory,
+              [category]: feature,
+            },
+          }));
+        },
         reset: () => set(DEFAULT_STATE),
       }),
       {
