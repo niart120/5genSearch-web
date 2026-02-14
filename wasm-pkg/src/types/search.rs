@@ -347,7 +347,7 @@ pub struct MtseedSearchParams {
 }
 
 /// MT Seed 検索結果
-#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MtseedResult {
     /// 一致した MT Seed

@@ -60,3 +60,32 @@
 
 当面の方針: 現行の薄いラッパー4つで実用上の問題はないため、優先度は低い。WASM API に破壊的変更を入れるタイミングがあれば合わせて検討する。
 
+## 2026-02-14: Searcher / Iterator 命名規則の不統一
+
+現状: Rust 側と TS 側を通じて、検索系型の命名パターンが混在している。
+
+| 型名 | パターン |
+|------|----------|
+| `MtseedDatetimeSearcher` | `{key}{target}Searcher` |
+| `EggDatetimeSearcher` | 同上 |
+| `MtseedSearcher` | `{key}Searcher` (target 省略) |
+| `TrainerInfoSearcher` | 同上 |
+| `GpuDatetimeSearchIterator` | `Gpu{target}SearchIterator` (key 省略) |
+| `GpuMtseedSearchTask` (TS) | datetime search 用だが名前に datetime が含まれない |
+
+観察:
+
+- CPU 版 Searcher は `{key}{target}Searcher` が基本だが、`MtseedSearcher` は `{key}Searcher` で target が省略されている。実体は IV 全探索なので `MtseedIvSearcher` が正確。
+- GPU 版 `GpuDatetimeSearchIterator` は Searcher ではなく Iterator を名乗るが、CPU 版は Searcher。Rust 側の trait 体系から見ると同じ役割。
+- TS の `GpuMtseedSearchTask` (kind: `'gpu-mtseed'`) は datetime search 用だが、名前から datetime であることが読み取れない。新規の GPU MT Seed IV search (kind: `'gpu-mtseed-iv'`) との混同リスクがある。
+- 仕様書 `local_078` では GPU 版を `GpuMtseedSearchIterator` と命名したが、これも「何を検索しているか」(IV) が名前に現れない。
+
+当面の方針: 今回の `local_078` 実装では既存命名との整合を優先し、上記の不統一は許容する。将来的にリネームする場合の候補:
+
+- `GpuMtseedSearchTask` → `GpuMtseedDatetimeSearchTask` (kind: `'gpu-mtseed-datetime'`)
+- `MtseedSearcher` → `MtseedIvSearcher`
+- `GpuDatetimeSearchIterator` → `GpuMtseedDatetimeSearchIterator` (key の明示)
+- Searcher / Iterator の呼称統一 (どちらかに寄せる)
+
+WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>` 統一と合わせて一括対応が望ましい。
+

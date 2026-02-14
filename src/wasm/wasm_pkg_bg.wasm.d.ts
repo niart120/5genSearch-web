@@ -3,6 +3,7 @@
 export const memory: WebAssembly.Memory;
 export const __wbg_eggdatetimesearcher_free: (a: number, b: number) => void;
 export const __wbg_gpudatetimesearchiterator_free: (a: number, b: number) => void;
+export const __wbg_gpumtseedsearchiterator_free: (a: number, b: number) => void;
 export const __wbg_mtseeddatetimesearcher_free: (a: number, b: number) => void;
 export const __wbg_mtseedsearcher_free: (a: number, b: number) => void;
 export const __wbg_trainerinfosearcher_free: (a: number, b: number) => void;
@@ -23,6 +24,10 @@ export const gpudatetimesearchiterator_create: (a: any, b: number, c: number) =>
 export const gpudatetimesearchiterator_is_done: (a: number) => number;
 export const gpudatetimesearchiterator_next: (a: number) => any;
 export const gpudatetimesearchiterator_progress: (a: number) => number;
+export const gpumtseedsearchiterator_create: (a: any) => any;
+export const gpumtseedsearchiterator_is_done: (a: number) => number;
+export const gpumtseedsearchiterator_next: (a: number) => any;
+export const gpumtseedsearchiterator_progress: (a: number) => number;
 export const health_check: () => [number, number];
 export const mtseeddatetimesearcher_is_done: (a: number) => number;
 export const mtseeddatetimesearcher_new: (a: any) => [number, number, number];

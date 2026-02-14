@@ -5,7 +5,7 @@
 
 use wasm_bindgen::prelude::*;
 
-use crate::generation::algorithm::generate_rng_ivs_with_offset;
+use crate::generation::algorithm::{generate_rng_ivs_with_offset, generate_rng_ivs_with_offset_x4};
 use crate::types::{
     IvFilter, MtSeed, MtseedResult, MtseedSearchBatch, MtseedSearchContext, MtseedSearchParams,
 };
@@ -61,6 +61,29 @@ impl MtseedSearcher {
         let batch_end = (self.current_seed + u64::from(chunk_size)).min(self.end_seed);
         let total = self.end_seed - self.start_seed;
 
+        // 4 Seed 単位で SIMD 処理
+        while self.current_seed + 4 <= batch_end {
+            #[allow(clippy::cast_possible_truncation)]
+            let base = self.current_seed as u32;
+            #[allow(clippy::cast_possible_truncation)]
+            let seeds: [MtSeed; 4] = std::array::from_fn(|i| MtSeed::new(base + i as u32));
+            let ivs_x4 = generate_rng_ivs_with_offset_x4(seeds, self.mt_offset, self.is_roamer);
+
+            for (i, ivs) in ivs_x4.iter().enumerate() {
+                #[allow(clippy::cast_possible_truncation)]
+                let s = base + i as u32;
+                if self.iv_filter.matches(ivs) {
+                    candidates.push(MtseedResult {
+                        seed: MtSeed::new(s),
+                        ivs: *ivs,
+                    });
+                }
+            }
+
+            self.current_seed += 4;
+        }
+
+        // 端数処理 (残り 1〜3 Seed)
         while self.current_seed < batch_end {
             #[allow(clippy::cast_possible_truncation)]
             let seed = MtSeed::new(self.current_seed as u32);
@@ -269,5 +292,59 @@ mod tests {
             assert_eq!(task.mt_offset, 10);
             assert!(task.is_roamer);
         }
+    }
+
+    /// SIMD 化後の `MtseedSearcher` がスカラー版と同じ結果を返すことを検証
+    #[test]
+    fn test_mtseed_searcher_simd_consistency() {
+        let iv_filter = IvFilter {
+            hp: (20, 31),
+            atk: (0, 31),
+            def: (0, 31),
+            spa: (0, 31),
+            spd: (0, 31),
+            spe: (0, 31),
+            hidden_power_types: None,
+            hidden_power_min_power: None,
+        };
+
+        let params = MtseedSearchParams {
+            iv_filter: iv_filter.clone(),
+            mt_offset: 7,
+            is_roamer: false,
+            start_seed: 0,
+            end_seed: 65535,
+        };
+
+        let mut searcher = MtseedSearcher::new(params);
+        let batch = searcher.next_batch(65536);
+
+        // スカラー版で同じ範囲を検索して比較
+        for candidate in &batch.candidates {
+            let scalar_ivs = generate_rng_ivs_with_offset(candidate.seed, 7, false);
+            assert_eq!(
+                candidate.ivs,
+                scalar_ivs,
+                "SIMD/scalar mismatch at seed={}",
+                candidate.seed.value()
+            );
+        }
+
+        // 端数処理も含めて正しく動作することを確認
+        // (65536 は 4 の倍数なので端数なし)
+        assert!(searcher.is_done());
+
+        // 奇数範囲で端数処理を確認
+        let params2 = MtseedSearchParams {
+            iv_filter,
+            mt_offset: 7,
+            is_roamer: false,
+            start_seed: 0,
+            end_seed: 102, // 103 Seed → 25 SIMD + 3 端数
+        };
+        let mut searcher2 = MtseedSearcher::new(params2);
+        let batch2 = searcher2.next_batch(200);
+        assert_eq!(batch2.processed, 103);
+        assert!(searcher2.is_done());
     }
 }

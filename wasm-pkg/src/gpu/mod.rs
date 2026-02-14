@@ -6,6 +6,7 @@
 pub mod context;
 pub mod datetime_search;
 pub mod limits;
+pub mod mtseed_search;
 pub mod profile;
 
 pub use context::GpuDeviceContext;
@@ -14,3 +15,6 @@ pub use profile::{GpuKind, GpuProfile};
 
 // Re-export GPU datetime search
 pub use datetime_search::{GpuDatetimeSearchIterator, GpuSearchBatch};
+
+// Re-export GPU mtseed IV search
+pub use mtseed_search::{GpuMtseedSearchBatch, GpuMtseedSearchIterator};

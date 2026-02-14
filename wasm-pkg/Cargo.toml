@@ -57,6 +57,11 @@ name = "gpu_datetime_search"
 harness = false
 required-features = ["gpu"]
 
+[[bench]]
+name = "gpu_mtseed_search"
+harness = false
+required-features = ["gpu"]
+
 [lints.rust]
 # Enable nightly features for Portable SIMD
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(feature, values())"] }

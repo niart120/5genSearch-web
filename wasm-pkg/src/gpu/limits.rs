@@ -81,6 +81,19 @@ impl SearchJobLimits {
             max_dispatches_in_flight: 1,
         }
     }
+
+    /// MT Seed IV 検索用の `ITEMS_PER_THREAD` を返す
+    ///
+    /// MT19937 の init (624 乗算) + twist (624 反復) は
+    /// SHA-1 (80 ラウンド) より計算コストが高いため、
+    /// `datetime_search` 用より小さい値にする。
+    pub fn mtseed_items_per_thread(&self, profile: &GpuProfile) -> u32 {
+        match profile.kind {
+            GpuKind::Discrete => 8,
+            GpuKind::Integrated => 4,
+            GpuKind::Mobile | GpuKind::Unknown => 2,
+        }
+    }
 }
 
 impl Default for SearchJobLimits {

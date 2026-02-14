@@ -1,6 +1,6 @@
 //! IV 生成・遺伝アルゴリズム
 
-use crate::core::mt::Mt19937;
+use crate::core::mt::{Mt19937, Mt19937x4};
 use crate::types::{InheritanceSlot, Ivs, MtSeed};
 
 /// MT19937 出力から IV を抽出 (0-31)
@@ -56,6 +56,39 @@ pub fn generate_rng_ivs_with_offset(seed: MtSeed, offset: u32, is_roamer: bool) 
     } else {
         ivs
     }
+}
+
+/// 4 つの MT Seed に対して同時に IV を生成する (SIMD)
+///
+/// `Mt19937x4` を使って 4 系統を並列処理する。
+/// 各レーンの出力はスカラー版 `generate_rng_ivs_with_offset` と完全に一致する。
+pub fn generate_rng_ivs_with_offset_x4(
+    seeds: [MtSeed; 4],
+    offset: u32,
+    is_roamer: bool,
+) -> [Ivs; 4] {
+    let mut mt = Mt19937x4::new(seeds);
+    mt.discard(offset);
+
+    // 6 回の乱数生成 (各呼び出しで 4 レーン分が一度に得られる)
+    let raw: [[u32; 4]; 6] = std::array::from_fn(|_| mt.next_u32x4());
+
+    // raw[stat_idx][lane_idx] → 各レーンごとに IV を組み立て
+    std::array::from_fn(|lane| {
+        let ivs = Ivs::new(
+            extract_iv(raw[0][lane]),
+            extract_iv(raw[1][lane]),
+            extract_iv(raw[2][lane]),
+            extract_iv(raw[3][lane]),
+            extract_iv(raw[4][lane]),
+            extract_iv(raw[5][lane]),
+        );
+        if is_roamer {
+            reorder_for_roamer(ivs)
+        } else {
+            ivs
+        }
+    })
 }
 
 /// 遺伝適用
@@ -133,5 +166,51 @@ mod tests {
         assert_eq!(result.hp, 31);
         assert_eq!(result.atk, 31);
         assert_eq!(result.def, 0);
+    }
+
+    #[test]
+    fn test_generate_rng_ivs_with_offset_x4_matches_scalar() {
+        let seeds = [
+            MtSeed::new(0),
+            MtSeed::new(100),
+            MtSeed::new(0x1234_5678),
+            MtSeed::new(0xFFFF_FFFF),
+        ];
+
+        for offset in [0, 1, 7, 10, 50] {
+            let simd_results = generate_rng_ivs_with_offset_x4(seeds, offset, false);
+            for (i, seed) in seeds.iter().enumerate() {
+                let scalar_result = generate_rng_ivs_with_offset(*seed, offset, false);
+                assert_eq!(
+                    simd_results[i],
+                    scalar_result,
+                    "Mismatch at seed={}, offset={offset}",
+                    seed.value()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_generate_rng_ivs_with_offset_x4_roamer() {
+        let seeds = [
+            MtSeed::new(42),
+            MtSeed::new(1000),
+            MtSeed::new(0xDEAD_BEEF),
+            MtSeed::new(0x0BAD_F00D),
+        ];
+
+        for offset in [0, 1, 7] {
+            let simd_results = generate_rng_ivs_with_offset_x4(seeds, offset, true);
+            for (i, seed) in seeds.iter().enumerate() {
+                let scalar_result = generate_rng_ivs_with_offset(*seed, offset, true);
+                assert_eq!(
+                    simd_results[i],
+                    scalar_result,
+                    "Roamer mismatch at seed={}, offset={offset}",
+                    seed.value()
+                );
+            }
+        }
     }
 }
