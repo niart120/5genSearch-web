@@ -52,3 +52,11 @@
 
 フォローアップ: フォームの複雑化が進む場合、`useReducer` への移行や状態保持を親コンポーネントに引き上げる案を検討する。関連ファイル: `src/features/pokemon-list/components/pokemon-filter-form.tsx`。
 
+## 2026-02-14: WASM Searcher API の共通化
+
+現状: 4つの Searcher (`MtseedDatetimeSearcher`, `MtseedSearcher`, `EggDatetimeSearcher`, `TrainerInfoSearcher`) の `next_batch()` 返却型でプロパティ名が不統一。`MtseedSearcher` のみ `candidates` / `processed` / `total`、他3つは `results` / `processed_count` / `total_count`。
+
+観察: TS 側の `runSearchLoop` 共通ヘルパーで各検索関数を統合済みだが、WASM 返却型の不統一により `processBatch` コールバック内でプロパティ名を個別にマッピングしている。Rust 側で共通トレイト (`SearchBatch<T>`) を定義し返却型を統一すれば、TS 側のアダプター層が不要になる。ただし `wasm-bindgen` のトレイト制約 (tsify でジェネリクスがどこまで扱えるか) の調査が必要。
+
+当面の方針: 現行の薄いラッパー4つで実用上の問題はないため、優先度は低い。WASM API に破壊的変更を入れるタイミングがあれば合わせて検討する。
+

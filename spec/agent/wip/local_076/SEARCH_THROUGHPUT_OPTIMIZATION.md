@@ -404,23 +404,6 @@ WASM コード生成品質は十分高い (ネイティブの 90%) 。
 
 ## 6. 検討事項
 
-### WASM Searcher API の共通化
-
-現在 4 つの Searcher (`MtseedDatetimeSearcher`, `MtseedSearcher`, `EggDatetimeSearcher`, `TrainerInfoSearcher`) の `next_batch()` 返却型はプロパティ名が不統一:
-
-| Searcher | 結果 | 進捗(処理済) | 進捗(全体) |
-|---|---|---|---|
-| MtseedDatetime | `results` | `processed_count` | `total_count` |
-| Mtseed | `candidates` | `processed` | `total` |
-| EggDatetime | `results` | `processed_count` | `total_count` |
-| TrainerInfo | `results` | `processed_count` | `total_count` |
-
-TS 側の `runSearchLoop` で共通化を進める際の障壁になっている。
-Rust 側で共通トレイト (`SearchBatch<T>`) を定義し、返却型を統一すれば TS 側のアダプター層が不要になる。
-ただし wasm-bindgen のトレイト制約 (tsify でジェネリクスがどこまで扱えるか) の調査が必要。
-
-優先度: 低 (現行の薄いラッパー4つで実用上の問題はない)
-
 ### BATCH_SIZE の計算コスト根拠
 
 per-element の計算ステップを解析した結果:
@@ -438,9 +421,9 @@ batch\_size × ops/elem の概算バッチ実行時間 (10 Mops/s WASM 仮定):
 |---|---|---|
 | MtseedDatetime | 500K × 100 = 50M | ~5 ms |
 | TrainerInfo | 1M × 150 = 150M | ~15 ms |
-| Mtseed | 1M × 1300 = 1.3G | ~130 ms |
-| EggDatetime | 1K × 2000 = 2M | ~0.2 ms |
+| Mtseed | 500K × 1300 = 650M | ~65 ms |
+| EggDatetime | 5K × 2000 = 10M | ~1 ms |
 
-Mtseed の 1,000,000 は ~130ms/batch でキャンセル応答が遅延する可能性がある。
-EggDatetime の 1,000 は ~0.2ms/batch で yield オーバーヘッドが支配的になりうる。
-これらのバッチサイズは別途チューニングの余地がある。
+バッチサイズ調整:
+- Mtseed: 1,000,000 → 500,000 (キャンセル応答 ~130ms → ~65ms に改善)
+- EggDatetime: 1,000 → 5,000 (yield 支配率を低減)

@@ -61,13 +61,13 @@ const PROGRESS_INTERVAL_MS = 500;
  * - 小さい値: 応答性が上がるが yield オーバーヘッドの割合が増える
  */
 const BATCH_SIZE = {
-  /** EggDatetime: SHA-1 + MT init/twist + GameOffset + advance×卵生成 (最重量) */
-  eggDatetime: 1000,
-  /** MtseedDatetime: SHA-1 SIMD 4並列 + BTreeSet lookup (最軽量) */
+  /** EggDatetime: SHA-1 + MT init/twist + GameOffset + advance×卵生成 (最重量, ~1ms/batch) */
+  eggDatetime: 5000,
+  /** MtseedDatetime: SHA-1 SIMD 4並列 + BTreeSet lookup (最軽量, ~5ms/batch) */
   mtseedDatetime: 500_000,
-  /** Mtseed: MT init(624) + twist(624) + offset消費 + IV filter (中程度) */
-  mtseed: 1_000_000,
-  /** TrainerInfo: SHA-1 SIMD 4並列 + LCG ~20-50消費 + filter (軽量) */
+  /** Mtseed: MT init(624) + twist(624) + offset消費 + IV filter (中程度, ~65ms/batch) */
+  mtseed: 500_000,
+  /** TrainerInfo: SHA-1 SIMD 4並列 + LCG ~20-50消費 + filter (軽量, ~15ms/batch) */
   trainerInfo: 1_000_000,
 } as const;
 
