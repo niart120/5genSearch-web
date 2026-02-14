@@ -44,18 +44,27 @@ pub struct DateTimeCodeEnumerator {
     current_seconds: u64,
     /// 検索終了秒数
     end_seconds: u64,
+    /// 日付キャッシュ: `days_to_date()` は O(year − 2000) のため、
+    /// 日が変わった時のみ再計算する (1 日 86,400 回の呼び出しを 1 回に削減)
+    cached_days: u32,
+    cached_date: (u16, u8, u8),
 }
 
 impl DateTimeCodeEnumerator {
+    #[allow(clippy::cast_possible_truncation)]
     pub fn new(
         time_code_table: RangedTimeCodeTable,
         start_seconds: u64,
         range_seconds: u32,
     ) -> Self {
+        let start_days = (start_seconds / 86400) as u32;
+        let date = days_to_date(start_days);
         Self {
             time_code_table,
             current_seconds: start_seconds,
             end_seconds: start_seconds + u64::from(range_seconds),
+            cached_days: start_days,
+            cached_date: date,
         }
     }
 
@@ -71,8 +80,15 @@ impl DateTimeCodeEnumerator {
             self.current_seconds += 1;
 
             if let Some(time_code) = self.time_code_table[second_of_day] {
-                let (year, month, day, hour, minute, second) =
-                    seconds_to_datetime_parts(days, secs);
+                // 日付キャッシュ: days が変わった時のみ再計算
+                if days != self.cached_days {
+                    self.cached_days = days;
+                    self.cached_date = days_to_date(days);
+                }
+                let (year, month, day) = self.cached_date;
+                let hour = (secs / 3600) as u8;
+                let minute = ((secs % 3600) / 60) as u8;
+                let second = (secs % 60) as u8;
                 let date_code = get_date_code(days);
                 return Some((year, month, day, hour, minute, second, date_code, time_code));
             }
