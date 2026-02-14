@@ -17,7 +17,7 @@ import type {
 interface UseNeedleSearchReturn {
   results: NeedleSearchResult[];
   error: string | undefined;
-  search: (origin: SeedOrigin, pattern: NeedleDirection[], config: GenerationConfig) => void;
+  search: (origins: SeedOrigin[], pattern: NeedleDirection[], config: GenerationConfig) => void;
   clear: () => void;
 }
 
@@ -26,10 +26,10 @@ export function useNeedleSearch(): UseNeedleSearchReturn {
   const [error, setError] = useState<string | undefined>();
 
   const search = useCallback(
-    (origin: SeedOrigin, pattern: NeedleDirection[], config: GenerationConfig) => {
+    (origins: SeedOrigin[], pattern: NeedleDirection[], config: GenerationConfig) => {
       setError(undefined);
       try {
-        const found = search_needle_pattern([origin], pattern, config);
+        const found = search_needle_pattern(origins, pattern, config);
         setResults(found);
       } catch (error_: unknown) {
         setError(error_ instanceof Error ? error_.message : String(error_));

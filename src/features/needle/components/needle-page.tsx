@@ -36,7 +36,7 @@ function NeedlePage(): ReactElement {
 
   // フォーム状態
   const [seedMode, setSeedMode] = useState<SeedMode>('datetime');
-  const [seedOrigin, setSeedOrigin] = useState<SeedOrigin | undefined>();
+  const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
   const [patternRaw, setPatternRaw] = useState('');
   const [userOffset, setUserOffset] = useState(DEFAULT_USER_OFFSET);
   const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
@@ -47,8 +47,8 @@ function NeedlePage(): ReactElement {
 
   // バリデーション
   const validation = useMemo(
-    () => validateNeedleForm({ seedOrigin, patternRaw, userOffset, maxAdvance }),
-    [seedOrigin, patternRaw, userOffset, maxAdvance]
+    () => validateNeedleForm({ seedOrigins, patternRaw, userOffset, maxAdvance }),
+    [seedOrigins, patternRaw, userOffset, maxAdvance]
   );
 
   const validationMessages = useMemo(
@@ -67,7 +67,7 @@ function NeedlePage(): ReactElement {
 
   // 検索実行
   const executeSearch = useCallback(() => {
-    if (!validation.isValid || !seedOrigin) return;
+    if (!validation.isValid || seedOrigins.length === 0) return;
     const pattern = parseNeedlePattern(patternRaw);
     if (!pattern) return;
 
@@ -77,10 +77,10 @@ function NeedlePage(): ReactElement {
       user_offset: userOffset,
       max_advance: maxAdvance,
     };
-    needleSearch.search(seedOrigin, pattern, config);
+    needleSearch.search(seedOrigins, pattern, config);
   }, [
     validation.isValid,
-    seedOrigin,
+    seedOrigins,
     patternRaw,
     dsConfig.version,
     gameStart,
@@ -98,7 +98,7 @@ function NeedlePage(): ReactElement {
     }
     executeSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- executeSearch の依存値で十分
-  }, [autoSearch, seedOrigin, patternRaw, dsConfig.version, gameStart, userOffset, maxAdvance]);
+  }, [autoSearch, seedOrigins, patternRaw, dsConfig.version, gameStart, userOffset, maxAdvance]);
 
   return (
     <>
@@ -130,8 +130,8 @@ function NeedlePage(): ReactElement {
           <SeedInput
             mode={seedMode}
             onModeChange={setSeedMode}
-            seedOrigin={seedOrigin}
-            onSeedOriginChange={setSeedOrigin}
+            seedOrigins={seedOrigins}
+            onSeedOriginsChange={setSeedOrigins}
           />
 
           {/* 針パターン入力 */}

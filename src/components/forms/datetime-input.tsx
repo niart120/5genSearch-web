@@ -1,11 +1,11 @@
 /**
  * DatetimeInput: 単一日時入力 (YYYY/MM/DD HH:MM:SS)
  *
- * - 日付: `<input type="date">` (ネイティブカレンダーピッカー)
- * - 時刻: NumField × 3 + スピナー (上下ボタン)
+ * 全フィールドが SpinnerNumField で構成される。
+ * スピナーはボタン操作に加え、ホイールスクロールと ArrowUp/Down キーにも対応。
  */
 
-import { useState, useCallback, type ReactElement } from 'react';
+import { useState, useCallback, useRef, useEffect, type ReactElement } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -95,9 +95,10 @@ interface SpinnerNumFieldProps extends NumFieldProps {
   step?: number;
 }
 
-/** スピナー (上下ボタン) 付き NumField */
+/** スピナー (上下ボタン + ホイール + ArrowUp/Down) 付き NumField */
 function SpinnerNumField({ step = 1, ...props }: SpinnerNumFieldProps): ReactElement {
   const { value, onChange, min, max, disabled } = props;
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const increment = useCallback(() => {
     const next = Math.min(value + step, max);
@@ -109,8 +110,45 @@ function SpinnerNumField({ step = 1, ...props }: SpinnerNumFieldProps): ReactEle
     onChange(next);
   }, [value, step, min, onChange]);
 
+  // ホイールスクロールによるスピン
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el || disabled) return;
+
+    function handleWheel(e: WheelEvent) {
+      // input にフォーカスがある場合のみ反応
+      if (document.activeElement?.tagName !== 'INPUT') return;
+      if (!el!.contains(document.activeElement)) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        const next = Math.min(value + step, max);
+        onChange(next);
+      } else if (e.deltaY > 0) {
+        const next = Math.max(value - step, min);
+        onChange(next);
+      }
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [value, step, min, max, onChange, disabled]);
+
+  // ArrowUp / ArrowDown キーによるスピン
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        increment();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        decrement();
+      }
+    },
+    [increment, decrement]
+  );
+
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div ref={wrapperRef} className="flex flex-col items-center gap-0.5" onKeyDown={handleKeyDown}>
       <Button
         type="button"
         variant="ghost"
@@ -144,22 +182,15 @@ function SpinnerNumField({ step = 1, ...props }: SpinnerNumFieldProps): ReactEle
 // DatetimeInput
 // ---------------------------------------------------------------------------
 
-/** YYYY-MM-DD 文字列を Datetime の年月日に分解 */
-function parseDateString(
-  dateStr: string
-): { year: number; month: number; day: number } | undefined {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
-  if (!match) return undefined;
-  return {
-    year: Number(match[1]),
-    month: Number(match[2]),
-    day: Number(match[3]),
-  };
-}
-
-/** Datetime の年月日を YYYY-MM-DD 文字列に変換 */
-function toDateString(dt: Datetime): string {
-  return `${dt.year}-${String(dt.month).padStart(2, '0')}-${String(dt.day).padStart(2, '0')}`;
+/** 指定年月の日数を返す */
+function getDaysInMonth(year: number, month: number): number {
+  // month: 1-12
+  const DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month === 2) {
+    const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    return leap ? 29 : 28;
+  }
+  return DAYS[month];
 }
 
 interface DatetimeInputProps {
@@ -169,50 +200,81 @@ interface DatetimeInputProps {
 }
 
 /**
- * 単一日時入力 (YYYY/MM/DD HH:MM:SS)
+ * 単一日時入力 (YYYY / MM / DD  HH : MM : SS)
  *
- * - 日付: `<input type="date">` (ネイティブカレンダーピッカー)
- * - 時刻: SpinnerNumField × 3 (上下ボタン付き)
+ * 全フィールドが SpinnerNumField (上下ボタン + ホイール + ArrowKey) で構成される。
+ * 年月変更時に day を自動 clamp し、不正な日付を防ぐ。
  */
 function DatetimeInput({ value, onChange, disabled }: DatetimeInputProps): ReactElement {
-  const update = useCallback(
-    (field: keyof Datetime, v: number) => {
-      onChange({ ...value, [field]: v });
+  /** day を clamp しつつ更新 */
+  const updateWithDayClamp = useCallback(
+    (patch: Partial<Datetime>) => {
+      const next = { ...value, ...patch };
+      const maxDay = getDaysInMonth(next.year, next.month);
+      if (next.day > maxDay) next.day = maxDay;
+      onChange(next);
     },
     [value, onChange]
   );
 
-  const handleDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseDateString(e.target.value);
-      if (!parsed) return;
-      onChange({
-        ...value,
-        year: Math.max(2000, Math.min(2099, parsed.year)),
-        month: parsed.month,
-        day: parsed.day,
-      });
+  const update = useCallback(
+    (field: keyof Datetime, v: number) => {
+      if (field === 'year' || field === 'month') {
+        updateWithDayClamp({ [field]: v });
+      } else {
+        onChange({ ...value, [field]: v });
+      }
     },
-    [value, onChange]
+    [value, onChange, updateWithDayClamp]
   );
+
+  const maxDay = getDaysInMonth(value.year, value.month);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {/* 日付: ネイティブ date picker */}
-      <Input
-        type="date"
-        min="2000-01-01"
-        max="2099-12-31"
-        value={toDateString(value)}
-        onChange={handleDateChange}
-        disabled={disabled}
-        className="h-7 w-auto font-mono"
-        aria-label="date"
-      />
+      {/* 日付: スピナー付き Year / Month / Day */}
+      <div className="flex items-center gap-0.5">
+        <SpinnerNumField
+          id="startup-year"
+          value={value.year}
+          onChange={(v) => update('year', v)}
+          defaultValue={2000}
+          min={2000}
+          max={2099}
+          disabled={disabled}
+          label="year"
+          className="w-12"
+          padLength={4}
+        />
+        <span className="text-sm text-muted-foreground">/</span>
+        <SpinnerNumField
+          id="startup-month"
+          value={value.month}
+          onChange={(v) => update('month', v)}
+          defaultValue={1}
+          min={1}
+          max={12}
+          disabled={disabled}
+          label="month"
+          className="w-8"
+          padLength={2}
+        />
+        <span className="text-sm text-muted-foreground">/</span>
+        <SpinnerNumField
+          id="startup-day"
+          value={value.day}
+          onChange={(v) => update('day', v)}
+          defaultValue={1}
+          min={1}
+          max={maxDay}
+          disabled={disabled}
+          label="day"
+          className="w-8"
+          padLength={2}
+        />
+      </div>
 
-      <span className="text-sm text-muted-foreground" />
-
-      {/* 時刻: スピナー付き NumField */}
+      {/* 時刻: スピナー付き HH : MM : SS */}
       <div className="flex items-center gap-0.5">
         <SpinnerNumField
           id="startup-hour"

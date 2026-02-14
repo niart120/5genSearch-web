@@ -18,7 +18,7 @@ export type NeedleValidationErrorCode =
 /** 針読みフォーム状態 */
 export interface NeedleFormState {
   seedMode: SeedMode;
-  seedOrigin: unknown;
+  seedOrigins: unknown[];
   patternRaw: string;
   userOffset: number;
   maxAdvance: number;
@@ -76,11 +76,11 @@ export function directionsToArrows(dirs: NeedleDirection[]): string {
  * バリデーション
  */
 export function validateNeedleForm(
-  form: Pick<NeedleFormState, 'seedOrigin' | 'patternRaw' | 'userOffset' | 'maxAdvance'>
+  form: Pick<NeedleFormState, 'seedOrigins' | 'patternRaw' | 'userOffset' | 'maxAdvance'>
 ): NeedleValidationResult {
   const errors: NeedleValidationErrorCode[] = [];
 
-  if (form.seedOrigin === undefined) {
+  if (form.seedOrigins.length === 0) {
     errors.push('SEED_EMPTY');
   }
 

@@ -86,7 +86,7 @@ describe('directionsToArrows', () => {
 
 describe('validateNeedleForm', () => {
   const validForm = {
-    seedOrigin: { Seed: { base_seed: 0n, mt_seed: 0 } } as unknown,
+    seedOrigins: [{ Seed: { base_seed: 0n, mt_seed: 0 } }] as unknown[],
     patternRaw: '024',
     userOffset: 0,
     maxAdvance: 200,
@@ -98,8 +98,8 @@ describe('validateNeedleForm', () => {
     expect(result.errors).toHaveLength(0);
   });
 
-  it('seedOrigin が undefined のとき SEED_EMPTY エラー', () => {
-    const result = validateNeedleForm({ ...validForm, seedOrigin: undefined });
+  it('seedOrigins が空配列のとき SEED_EMPTY エラー', () => {
+    const result = validateNeedleForm({ ...validForm, seedOrigins: [] });
     expect(result.errors).toContain('SEED_EMPTY');
     expect(result.isValid).toBe(false);
   });
@@ -131,7 +131,7 @@ describe('validateNeedleForm', () => {
 
   it('複数エラーが同時に検出される', () => {
     const result = validateNeedleForm({
-      seedOrigin: undefined,
+      seedOrigins: [],
       patternRaw: '',
       userOffset: -1,
       maxAdvance: -2,
