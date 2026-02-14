@@ -5,6 +5,7 @@ import { PlaceholderPage } from './placeholder-page';
 import { DatetimeSearchPage } from '@/features/datetime-search';
 import { EggSearchPage } from '@/features/egg-search';
 import { MtseedSearchPage } from '@/features/mtseed-search';
+import { TidAdjustPage } from '@/features/tid-adjust';
 import { PokemonListPage } from '@/features/pokemon-list';
 import { EggListPage } from '@/features/egg-list';
 import { AboutPage } from '@/features/about';
@@ -25,6 +26,9 @@ function renderFeature(featureId: FeatureId) {
     }
     case 'mtseed-search': {
       return <MtseedSearchPage />;
+    }
+    case 'tid-adjust': {
+      return <TidAdjustPage />;
     }
     case 'about': {
       return <AboutPage />;

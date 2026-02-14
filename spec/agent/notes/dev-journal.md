@@ -4,25 +4,6 @@
 
 ---
 
-## 2026-02-11: MtseedDatetime CPU 検索のスループット低下
-
-現状: CPU パスの MtseedDatetime 検索が約 100M calc/s。参照実装 (`niart120/pokemon-gen5-initseed`) は同一マシン (32 コア) で約 280-300M calc/s を達成している。バッチサイズを 1,000 → 1,000,000 に増やしたが改善なし。Criterion ベンチマーク (ネイティブ) は約 11.9 Melem/s/core。
-
-観察: コアあたり性能を比較すると、参照実装 (300M / 32core ≈ 9.4M/core) に対し本実装のネイティブベンチマーク (11.9M/core) は上回っている。SHA-1 SIMD 実装自体は問題ない可能性が高い。GPU パスでも同様のスループット劣化 (期待値の約 1/4) が観測されており、GPU 側はネイティブベンチマークで問題が再現しないため、JS/Worker レイヤーの制御オーバーヘッドが共通要因と推定する。
-
-当面の方針: 仕様書 `spec/agent/wip/local_076/SEARCH_THROUGHPUT_OPTIMIZATION.md` に切り出して体系的に調査する。主要仮説は以下の通り:
-
-1. `setTimeout(resolve, 0)` による yield オーバーヘッド (最小 4ms/回)
-2. 毎バッチの `postMessage` 進捗報告によるメインスレッド負荷
-3. WASM ビルド設定 (`-C target-feature=+simd128`, `wasm-opt --enable-simd`) の未適用
-4. GPU: 単一ディスパッチ/await パターンによる GPU アイドル時間
-
-### 検証結果 (2026-02-13)
-
-**C1 (yield オーバーヘッド)**: yield を毎バッチ → 50ms 間隔に変更。スループット ~105M/s で有意な変化なし。診断ログにより、ボトルネックは WASM 実行速度自体 (3.3M/s/core、ネイティブ 11.9M/core の 28%) であることを確認。JS/Worker レイヤーのオーバーヘッドは支配的ではない。
-
-**C3/C4 (WASM ビルド設定)**: `wasm-pkg/.cargo/config.toml` に `-C target-feature=+simd128` を追加し、`scripts/optimize-wasm.js` に `--enable-simd` を追加。リビルド後、WASM バイナリに SIMD 命令 (`v128.load/store`, `i32x4.add` 等) の出力を確認。ブラウザでのスループット計測は未実施。
-
 ## 2026-02-11: スクレイピング時のエンカウント地名キーと表示名の不整合
 
 現状: `scripts/scrape-encounters.js` の `DUPLICATE_SUFFIX_RULES` が地名にサフィックスを付与し、`giant_chasm_cave` や `reversal_mountain_exterior` のようなサブエリアキーを生成する。一方 `src/lib/game-data-names.ts` の `ENCOUNTER_LOCATION_NAMES` にはサフィックス無しの親キーしか存在せず、生成された JSON に含まれるキーと表示名の対応が欠落していた。
@@ -88,4 +69,16 @@
 - Searcher / Iterator の呼称統一 (どちらかに寄せる)
 
 WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>` 統一と合わせて一括対応が望ましい。
+
+## 2026-02-14: 検索結果件数の事前見積もりと抑制
+
+背景: ID 調整 (TID/SID 検索) ではフィルタ全未指定を許容する方針にした。フィルタが緩い場合やフィルタ未指定 + 広い検索範囲の場合、結果件数が膨大になりメモリ消費・UI 描画の負荷が問題になりうる。この問題は ID 調整に限らず、datetime-search・egg-search 等の検索系機能に共通する。
+
+検討案:
+
+1. **結果件数キャップ**: 一定件数 (例: 100,000) を超えた時点で検索を打ち切り、ユーザーに通知する。実装はシンプルだが、途中打ち切りは直感に反する可能性がある
+2. **事前見積もり**: フィルタ内容と検索範囲から結果件数を概算し、閾値以上なら検索開始前に警告・確認を挟む。TS 側で実装可能だが、見積もりロジックの精度が問題になる
+3. **件数キャップ + 警告**: (1) と (2) の組み合わせ。事前に概算警告し、実行時にも上限で打ち切る
+
+当面の方針: 現時点では未実装。実際に問題が顕在化した段階で対応する。対応時は `services/` 層に検索系機能共通のユーティリティとして実装し、各 feature の検索フック (`use-*-search.ts`) から利用する形を想定する。
 
