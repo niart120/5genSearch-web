@@ -72,8 +72,8 @@ pub fn get_species_name(species_id: u16, locale: &str) -> String {
 // Re-export GPU module (when enabled)
 #[cfg(feature = "gpu")]
 pub use gpu::{
-    GpuDatetimeSearchIterator, GpuDeviceContext, GpuKind, GpuProfile, GpuSearchBatch,
-    SearchJobLimits,
+    GpuDatetimeSearchIterator, GpuDeviceContext, GpuKind, GpuMtseedSearchBatch,
+    GpuMtseedSearchIterator, GpuProfile, GpuSearchBatch, SearchJobLimits,
 };
 
 #[wasm_bindgen(start)]

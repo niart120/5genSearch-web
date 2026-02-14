@@ -81,6 +81,18 @@ impl SearchJobLimits {
             max_dispatches_in_flight: 1,
         }
     }
+
+    /// MT Seed IV 検索用の `ITEMS_PER_THREAD` を返す
+    ///
+    /// MT init + twist は SHA-1 より計算コストが高いため、
+    /// `datetime_search` 用の `items_per_thread` より小さい値にする。
+    pub fn mtseed_items_per_thread(&self) -> u32 {
+        match self.items_per_thread {
+            32 => 8, // Discrete: 32 → 8
+            16 => 4, // Integrated: 16 → 4
+            _ => 2,  // Mobile/Unknown: 4 → 2
+        }
+    }
 }
 
 impl Default for SearchJobLimits {
