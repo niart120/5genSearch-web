@@ -9,7 +9,7 @@ import importPlugin from 'eslint-plugin-import';
 import unicorn from 'eslint-plugin-unicorn';
 
 export default defineConfig([
-  globalIgnores(['dist', 'wasm-pkg/pkg', 'src/wasm', 'src/i18n/locales', '**/*.md']),
+  globalIgnores(['dist', 'target', 'wasm-pkg/pkg', 'src/wasm', 'src/i18n/locales', '**/*.md']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
