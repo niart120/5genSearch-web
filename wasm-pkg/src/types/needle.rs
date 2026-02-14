@@ -118,7 +118,7 @@ impl NeedlePattern {
 
 /// レポート針パターン検索結果
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct NeedleSearchResult {
     /// パターン末尾消費位置 (`game_offset` からの相対)
     pub advance: u32,

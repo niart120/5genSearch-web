@@ -10,7 +10,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatetimeInput, DEFAULT_DATETIME } from '@/components/forms/datetime-input';
+import { DatetimeInput, DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { KeySpecSelector } from '@/components/forms/key-spec-selector';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { resolveSeedOrigins } from '@/services/seed-resolve';

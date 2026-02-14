@@ -52,7 +52,7 @@ describe('Needle Search Integration', () => {
     }
   });
 
-  it('empty pattern returns empty results', () => {
+  it('empty pattern throws an error', () => {
     const origins = resolve_seeds({
       type: 'Seeds',
       seeds: [0xab_cd_ef_01_23_45_67_89n],
@@ -71,7 +71,6 @@ describe('Needle Search Integration', () => {
       max_advance: 100,
     };
 
-    const results = search_needle_pattern([origins[0]], [], config);
-    expect(Array.isArray(results)).toBe(true);
+    expect(() => search_needle_pattern([origins[0]], [], config)).toThrow();
   });
 });

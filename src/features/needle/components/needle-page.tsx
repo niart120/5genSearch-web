@@ -13,7 +13,7 @@ import { DataTable } from '@/components/data-display/data-table';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { NumField } from '@/components/forms/datetime-input';
+import { NumField } from '@/components/ui/spinner-num-field';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
