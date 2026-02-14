@@ -36,6 +36,9 @@ import type {
 let initialized = false;
 let cancelled = false;
 
+/** yield 間隔 (ms): この時間が経過するまで同期的にバッチを連続実行する */
+const YIELD_INTERVAL_MS = 50;
+
 // =============================================================================
 // Message Handler
 // =============================================================================
@@ -158,6 +161,7 @@ async function runEggDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new EggDatetimeSearcher(params);
+  let lastYieldTime = performance.now();
 
   try {
     while (!searcher.is_done && !cancelled) {
@@ -178,7 +182,10 @@ async function runEggDatetimeSearch(
         progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
       });
 
-      await yieldToMain();
+      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
     }
 
     postResponse({ type: 'done', taskId });
@@ -197,6 +204,7 @@ async function runMtseedDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new MtseedDatetimeSearcher(params);
+  let lastYieldTime = performance.now();
 
   try {
     while (!searcher.is_done && !cancelled) {
@@ -217,7 +225,10 @@ async function runMtseedDatetimeSearch(
         progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
       });
 
-      await yieldToMain();
+      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
     }
 
     postResponse({ type: 'done', taskId });
@@ -236,6 +247,7 @@ async function runMtseedSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new MtseedSearcher(params);
+  let lastYieldTime = performance.now();
 
   try {
     while (!searcher.is_done && !cancelled) {
@@ -256,7 +268,10 @@ async function runMtseedSearch(
         progress: calculateProgress(Number(batch.processed), Number(batch.total), startTime),
       });
 
-      await yieldToMain();
+      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
     }
 
     postResponse({ type: 'done', taskId });
@@ -275,6 +290,7 @@ async function runTrainerInfoSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new TrainerInfoSearcher(params);
+  let lastYieldTime = performance.now();
 
   try {
     while (!searcher.is_done && !cancelled) {
@@ -295,7 +311,10 @@ async function runTrainerInfoSearch(
         progress: calculateProgress(batch.processed_count, batch.total_count, startTime),
       });
 
-      await yieldToMain();
+      if (performance.now() - lastYieldTime >= YIELD_INTERVAL_MS) {
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
     }
 
     postResponse({ type: 'done', taskId });
