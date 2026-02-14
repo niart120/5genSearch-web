@@ -401,3 +401,46 @@ WASM コード生成品質は十分高い (ネイティブの 90%) 。
 
 - [ ] 複数ディスパッチ重畳の設計・実装
 - [ ] GPU ベンチマークで効果を確認
+
+## 6. 検討事項
+
+### WASM Searcher API の共通化
+
+現在 4 つの Searcher (`MtseedDatetimeSearcher`, `MtseedSearcher`, `EggDatetimeSearcher`, `TrainerInfoSearcher`) の `next_batch()` 返却型はプロパティ名が不統一:
+
+| Searcher | 結果 | 進捗(処理済) | 進捗(全体) |
+|---|---|---|---|
+| MtseedDatetime | `results` | `processed_count` | `total_count` |
+| Mtseed | `candidates` | `processed` | `total` |
+| EggDatetime | `results` | `processed_count` | `total_count` |
+| TrainerInfo | `results` | `processed_count` | `total_count` |
+
+TS 側の `runSearchLoop` で共通化を進める際の障壁になっている。
+Rust 側で共通トレイト (`SearchBatch<T>`) を定義し、返却型を統一すれば TS 側のアダプター層が不要になる。
+ただし wasm-bindgen のトレイト制約 (tsify でジェネリクスがどこまで扱えるか) の調査が必要。
+
+優先度: 低 (現行の薄いラッパー4つで実用上の問題はない)
+
+### BATCH_SIZE の計算コスト根拠
+
+per-element の計算ステップを解析した結果:
+
+| Searcher | 主要処理 | 概算 ops/elem | batch size |
+|---|---|---|---|
+| MtseedDatetime | SHA-1 SIMD 4並列 (amortized 1/4) + BTreeSet lookup | ~100 | 500,000 |
+| TrainerInfo | SHA-1 SIMD 4並列 + LCG ~20-50消費 (PT含む) | ~130-160 | 1,000,000 |
+| Mtseed | MT19937 init(624) + twist(624) + offset(7) + IV(6) | ~1,300 | 1,000,000 |
+| EggDatetime | SHA-1 + MT init/twist + GameOffset + advance×egg生成 | ~1,500+α | 1,000 |
+
+batch\_size × ops/elem の概算バッチ実行時間 (10 Mops/s WASM 仮定):
+
+| Searcher | batch_size × ops | 推定 ms/batch |
+|---|---|---|
+| MtseedDatetime | 500K × 100 = 50M | ~5 ms |
+| TrainerInfo | 1M × 150 = 150M | ~15 ms |
+| Mtseed | 1M × 1300 = 1.3G | ~130 ms |
+| EggDatetime | 1K × 2000 = 2M | ~0.2 ms |
+
+Mtseed の 1,000,000 は ~130ms/batch でキャンセル応答が遅延する可能性がある。
+EggDatetime の 1,000 は ~0.2ms/batch で yield オーバーヘッドが支配的になりうる。
+これらのバッチサイズは別途チューニングの余地がある。
