@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: results.length
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:146
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:136
 msgid "{0} seeds found"
 msgstr "{0} 件の Seed が見つかりました"
 
@@ -82,10 +82,12 @@ msgid "Advance range invalid"
 msgstr "消費範囲が不正です"
 
 #: src/components/forms/iv-range-input.tsx:153
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:57
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:82
 msgid "Any"
 msgstr "任意"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:27
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:29
 msgid "Atk"
 msgstr "攻撃"
 
@@ -160,6 +162,7 @@ msgstr "日付範囲"
 #: src/features/egg-search/components/egg-result-columns.tsx:55
 #: src/features/egg-search/components/result-detail-dialog.tsx:65
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:51
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:27
 msgid "Date/Time"
 msgstr "日時"
 
@@ -167,7 +170,7 @@ msgstr "日時"
 msgid "Datetime Search"
 msgstr "起動時刻検索"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:33
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:36
 msgid "Def"
 msgstr "防御"
 
@@ -253,11 +256,11 @@ msgstr "エンカウント種別"
 msgid "End date"
 msgstr "終了日"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:103
+#: src/features/datetime-search/components/datetime-search-page.tsx:109
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:94
+#: src/features/datetime-search/components/datetime-search-page.tsx:100
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
@@ -337,7 +340,7 @@ msgstr "めざパ"
 msgid "Hour"
 msgstr "時"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:21
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:22
 msgid "HP"
 msgstr "HP"
 
@@ -439,7 +442,7 @@ msgstr "思い出リンク"
 msgid "Min"
 msgstr "Min"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:75
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:71
 msgid "Min IV must be less than or equal to max IV"
 msgstr "個体値の最小値は最大値以下にしてください"
 
@@ -468,7 +471,7 @@ msgstr "移動エンカウント"
 msgid "MT Advances"
 msgstr "MT 消費数"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:76
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:72
 msgid "MT Advances must be 0 or greater"
 msgstr "MT 消費数は 0 以上にしてください"
 
@@ -477,7 +480,7 @@ msgstr "MT 消費数は 0 以上にしてください"
 msgid "MT Seed"
 msgstr "MT Seed"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:95
+#: src/features/datetime-search/components/datetime-search-page.tsx:101
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seedは0からFFFFFFFFの範囲で入力してください"
 
@@ -512,7 +515,8 @@ msgid "No default Timer0/VCount data for this combination. Switched to manual mo
 msgstr "この組み合わせのデフォルトTimer0/VCountデータがありません。手動モードに切り替えました。"
 
 #: src/components/data-display/empty-state.tsx:11
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:162
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:152
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:155
 msgid "No results"
 msgstr "結果なし"
 
@@ -525,7 +529,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Configure parameters and start searching."
 msgstr "結果が見つかりませんでした。パラメータを設定して検索を開始してください。"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:197
+#: src/features/datetime-search/components/datetime-search-page.tsx:203
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
@@ -624,11 +628,12 @@ msgstr "解決済みSeed"
 msgid "Result details"
 msgstr "結果の詳細"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:191
+#: src/features/datetime-search/components/datetime-search-page.tsx:197
 #: src/features/egg-list/components/egg-list-page.tsx:233
 #: src/features/egg-search/components/egg-search-page.tsx:233
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:154
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:144
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:149
 msgid "Results"
 msgstr "検索結果"
 
@@ -641,7 +646,7 @@ msgstr "徘徊ポケモン"
 msgid "Search"
 msgstr "検索"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:149
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:139
 msgid "Search Boot Timing"
 msgstr "起動時刻検索へ"
 
@@ -711,6 +716,7 @@ msgstr "設定"
 #: src/features/egg-search/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:77
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:65
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:69
 msgid "Shiny"
 msgstr "色違い"
 
@@ -723,19 +729,32 @@ msgstr "ひかるおまもり"
 #~ msgid "Shiny only"
 #~ msgstr "色違いのみ"
 
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:91
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:102
+msgid "Shiny PID"
+msgstr "色違い PID"
+
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:78
+msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
+msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
+
 #: src/features/ds-config/components/trainer-config-form.tsx:43
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:39
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:77
+msgid "SID must be between 0 and 65535"
+msgstr "SID は 0〜65535 の範囲で入力してください"
+
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:43
 msgid "SpA"
 msgstr "特攻"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:45
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:50
 msgid "SpD"
 msgstr "特防"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:51
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:57
 msgid "Spe"
 msgstr "素早さ"
 
@@ -771,8 +790,9 @@ msgstr "種族 (任意)"
 msgid "Start date"
 msgstr "開始日"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:92
+#: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:74
 msgid "Start date must be on or before end date"
 msgstr "開始日は終了日以前である必要があります"
 
@@ -856,12 +876,17 @@ msgstr "TID (表ID)"
 msgid "TID Adjust"
 msgstr "TID 調整"
 
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:76
+msgid "TID must be between 0 and 65535"
+msgstr "TID は 0〜65535 の範囲で入力してください"
+
 #: src/components/forms/search-context-form.tsx:48
 msgid "Time range"
 msgstr "時刻範囲"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:93
+#: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:75
 msgid "Time range is invalid"
 msgstr "時刻範囲が不正です"
 

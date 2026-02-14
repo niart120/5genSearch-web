@@ -58,3 +58,12 @@ export function isGeneratedEggData(value: unknown): boolean {
 export function isMtseedResult(value: unknown): boolean {
   return typeof value === 'object' && value !== null && 'seed' in value && 'ivs' in value;
 }
+
+/**
+ * TrainerInfoSearchResult 型ガード
+ */
+export function isTrainerInfoResult(value: unknown): boolean {
+  return (
+    typeof value === 'object' && value !== null && 'trainer' in value && 'seed_origin' in value
+  );
+}

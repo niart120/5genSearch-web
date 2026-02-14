@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: results.length
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:146
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:136
 msgid "{0} seeds found"
 msgstr "{0} seeds found"
 
@@ -82,10 +82,12 @@ msgid "Advance range invalid"
 msgstr "Advance range invalid"
 
 #: src/components/forms/iv-range-input.tsx:153
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:57
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:82
 msgid "Any"
 msgstr "Any"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:27
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:29
 msgid "Atk"
 msgstr "Atk"
 
@@ -160,6 +162,7 @@ msgstr "Date range"
 #: src/features/egg-search/components/egg-result-columns.tsx:55
 #: src/features/egg-search/components/result-detail-dialog.tsx:65
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:51
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:27
 msgid "Date/Time"
 msgstr "Date/Time"
 
@@ -167,7 +170,7 @@ msgstr "Date/Time"
 msgid "Datetime Search"
 msgstr "Datetime Search"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:33
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:36
 msgid "Def"
 msgstr "Def"
 
@@ -253,11 +256,11 @@ msgstr "Encounter type"
 msgid "End date"
 msgstr "End date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:103
+#: src/features/datetime-search/components/datetime-search-page.tsx:109
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:94
+#: src/features/datetime-search/components/datetime-search-page.tsx:100
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
@@ -341,7 +344,7 @@ msgstr "Hidden Power"
 msgid "Hour"
 msgstr "Hour"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:21
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:22
 msgid "HP"
 msgstr "HP"
 
@@ -443,7 +446,7 @@ msgstr "Memory Link"
 msgid "Min"
 msgstr "Min"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:75
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:71
 msgid "Min IV must be less than or equal to max IV"
 msgstr "Min IV must be less than or equal to max IV"
 
@@ -472,7 +475,7 @@ msgstr "Moving encounter"
 msgid "MT Advances"
 msgstr "MT Advances"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:76
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:72
 msgid "MT Advances must be 0 or greater"
 msgstr "MT Advances must be 0 or greater"
 
@@ -481,7 +484,7 @@ msgstr "MT Advances must be 0 or greater"
 msgid "MT Seed"
 msgstr "MT Seed"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:95
+#: src/features/datetime-search/components/datetime-search-page.tsx:101
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 
@@ -516,7 +519,8 @@ msgid "No default Timer0/VCount data for this combination. Switched to manual mo
 msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
 
 #: src/components/data-display/empty-state.tsx:11
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:162
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:152
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:155
 msgid "No results"
 msgstr "No results"
 
@@ -529,7 +533,7 @@ msgstr "No results found. Configure parameters and start generating."
 msgid "No results found. Configure parameters and start searching."
 msgstr "No results found. Configure parameters and start searching."
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:197
+#: src/features/datetime-search/components/datetime-search-page.tsx:203
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
@@ -628,11 +632,12 @@ msgstr "Resolved seeds"
 msgid "Result details"
 msgstr "Result details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:191
+#: src/features/datetime-search/components/datetime-search-page.tsx:197
 #: src/features/egg-list/components/egg-list-page.tsx:233
 #: src/features/egg-search/components/egg-search-page.tsx:233
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:154
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:144
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:218
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:149
 msgid "Results"
 msgstr "Results"
 
@@ -645,7 +650,7 @@ msgstr "Roamer"
 msgid "Search"
 msgstr "Search"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:149
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:139
 msgid "Search Boot Timing"
 msgstr "Search Boot Timing"
 
@@ -715,6 +720,7 @@ msgstr "Settings"
 #: src/features/egg-search/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:77
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:65
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:69
 msgid "Shiny"
 msgstr "Shiny"
 
@@ -727,19 +733,32 @@ msgstr "Shiny Charm"
 #~ msgid "Shiny only"
 #~ msgstr "Shiny only"
 
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:91
+#: src/features/tid-adjust/components/tid-adjust-form.tsx:102
+msgid "Shiny PID"
+msgstr "Shiny PID"
+
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:78
+msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
+msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
+
 #: src/features/ds-config/components/trainer-config-form.tsx:43
 msgid "SID"
 msgstr "SID"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:39
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:77
+msgid "SID must be between 0 and 65535"
+msgstr "SID must be between 0 and 65535"
+
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:43
 msgid "SpA"
 msgstr "SpA"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:45
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:50
 msgid "SpD"
 msgstr "SpD"
 
-#: src/features/mtseed-search/components/mtseed-result-columns.tsx:51
+#: src/features/mtseed-search/components/mtseed-result-columns.tsx:57
 msgid "Spe"
 msgstr "Spe"
 
@@ -775,8 +794,9 @@ msgstr "Species (optional)"
 msgid "Start date"
 msgstr "Start date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:92
+#: src/features/datetime-search/components/datetime-search-page.tsx:98
 #: src/features/egg-search/components/egg-search-page.tsx:121
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:74
 msgid "Start date must be on or before end date"
 msgstr "Start date must be on or before end date"
 
@@ -860,12 +880,17 @@ msgstr "TID"
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:76
+msgid "TID must be between 0 and 65535"
+msgstr "TID must be between 0 and 65535"
+
 #: src/components/forms/search-context-form.tsx:48
 msgid "Time range"
 msgstr "Time range"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:93
+#: src/features/datetime-search/components/datetime-search-page.tsx:99
 #: src/features/egg-search/components/egg-search-page.tsx:122
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:75
 msgid "Time range is invalid"
 msgstr "Time range is invalid"
 
