@@ -10,6 +10,7 @@ import type {
   EggDatetimeSearchParams,
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
+  MtseedSearchContext,
   TrainerInfoSearchParams,
   SeedOrigin,
   MtSeed,
@@ -226,6 +227,17 @@ export interface GpuMtseedSearchTask {
 }
 
 /**
+ * GPU MT Seed IV 全探索タスク
+ *
+ * GPU Worker で使用する。MtseedSearchContext を直接受け取り、
+ * 全 Seed 空間 (0〜2^32-1) を GPU で並列探索する。
+ */
+export interface GpuMtseedIvSearchTask {
+  kind: 'gpu-mtseed-iv';
+  context: MtseedSearchContext;
+}
+
+/**
  * MT Seed 検索タスク (IV フィルタ)
  */
 export interface MtseedSearchTask {
@@ -270,6 +282,7 @@ export type SearchTask =
   | EggDatetimeSearchTask
   | MtseedDatetimeSearchTask
   | GpuMtseedSearchTask
+  | GpuMtseedIvSearchTask
   | MtseedSearchTask
   | TrainerInfoSearchTask
   | PokemonListTask
@@ -288,12 +301,14 @@ export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-date
     ? SeedOrigin[]
     : T extends 'gpu-mtseed'
       ? SeedOrigin[]
-      : T extends 'mtseed'
+      : T extends 'gpu-mtseed-iv'
         ? MtseedResult[]
-        : T extends 'trainer-info'
-          ? TrainerInfoSearchResult[]
-          : T extends 'pokemon-list'
-            ? GeneratedPokemonData[]
-            : T extends 'egg-list'
-              ? GeneratedEggData[]
-              : never;
+        : T extends 'mtseed'
+          ? MtseedResult[]
+          : T extends 'trainer-info'
+            ? TrainerInfoSearchResult[]
+            : T extends 'pokemon-list'
+              ? GeneratedPokemonData[]
+              : T extends 'egg-list'
+                ? GeneratedEggData[]
+                : never;
