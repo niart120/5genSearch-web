@@ -46,6 +46,7 @@ GPU パスの最適化は [local_077](../local_077/GPU_SEARCH_THROUGHPUT_OPTIMIZ
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `src/workers/search.worker.ts` | 修正 | バッチサイズ調整、yield 戦略変更、進捗報告スロットリング |
+| `wasm-pkg/src/datetime_search/base.rs` | 修正 | `DateTimeCodeEnumerator` に日付キャッシュ追加 |
 | `wasm-pkg/.cargo/config.toml` | 新規 | `-C target-feature=+simd128` 設定 |
 | `scripts/optimize-wasm.js` | 修正 | `--enable-simd` フラグ追加 |
 
@@ -60,6 +61,7 @@ GPU パスの最適化は [local_077](../local_077/GPU_SEARCH_THROUGHPUT_OPTIMIZ
 | C3 | WASM ビルド: `-C target-feature=+simd128` 未指定 | `wasm-pkg/.cargo/config.toml` が存在しない。LLVM が SIMD 命令を前提とした最適化を行えない | 低〜中 | config.toml を追加してベンチマーク比較 |
 | C4 | `wasm-opt` に `--enable-simd` 未指定 | wasm-opt が SIMD 命令を理解しないまま最適化を行い、SIMD コードを劣化させる可能性 | 低〜中 | `--enable-simd` 追加して比較 |
 | C5 | `next_batch` の chunk_count と WASM-JS 境界コスト | 1 回の `next_batch()` 呼び出しあたりの境界越えコストは固定。chunk_count 増加で相対コスト削減 | 低 | chunk_count 変更して比較 |
+| C6 | `days_to_date()` の O(year − 2000) コスト | `DateTimeCodeEnumerator::advance()` が有効秒ごとに `seconds_to_datetime_parts()` → `days_to_date()` を呼ぶ。年 2099 では ~100 ループ/エントリの追加コストが SHA-1 (~100 ops) に匹敵 | 高 | 日付キャッシュを導入し年別ベンチマーク比較 |
 
 ### 3.2 優先度と実施順序
 
@@ -67,6 +69,7 @@ GPU パスの最適化は [local_077](../local_077/GPU_SEARCH_THROUGHPUT_OPTIMIZ
 |-------|------|--------|
 | Phase 1 | JS レイヤー改善 (yield, 進捗スロットリング, バッチサイズ) | 低 |
 | Phase 2 | WASM ビルド設定 (SIMD フラグ) | 低 |
+| Phase 3 | WASM コード最適化 (`days_to_date` キャッシュ) | 低 |
 
 ### 3.3 検証結果
 
@@ -130,6 +133,31 @@ yield を毎バッチ → 50ms 間隔に変更した結果、スループット�
 | ブラウザ固有 overhead | ~22% loss | 164 (Node) vs ~128 (browser) |
 
 結論: WASM コード生成品質は問題ない (ネイティブの 90%)。スループット低下の主因は**マルチスレッドスケーリングの限界** (HT、キャッシュ競合) とブラウザ固有のオーバーヘッド。
+
+#### C6: `days_to_date()` の年依存スループット劣化
+
+`DateTimeCodeEnumerator::advance()` が有効秒ごとに `seconds_to_datetime_parts()` を呼び、
+内部の `days_to_date()` は 2000 年からの年ループで O(year − 2000)。
+year/month/day は SHA-1 計算には不要で、結果の `Datetime` 構築にのみ使用されるが、
+マッチ有無にかかわらず全エントリで計算されていた。
+
+`DateTimeCodeEnumerator` に `cached_days` / `cached_date` を追加。
+日が変わった時のみ `days_to_date()` を再計算 (86,400 回/日 → 1 回/日)。
+
+Criterion ベンチマーク (ネイティブ):
+
+| Year | 修正前 | 修正後 | 差分 |
+|------|--------|--------|------|
+| 2000 | — | 15.1 Melem/s | — |
+| 2011 | 12.6 Melem/s | 14.8 Melem/s | +18% |
+| 2050 | — | 15.5 Melem/s | — |
+| 2099 | — | 15.5 Melem/s | — |
+
+修正後は年による性能差が解消 (最大 3% 以内)。
+
+代替案として `DATE_CODES` 静的テーブルからの BCD 逆変換も検討したが、
+per-entry 15 ops (shift+mask+mul+add ×3) vs キャッシュ方式の 1 op (比較) で
+キャッシュ方式の方が効率的。
 
 ### 3.4 BATCH_SIZE の計算コスト根拠
 
@@ -211,6 +239,39 @@ async function runSearchLoop<T extends { is_done: boolean; free(): void }>(
 }
 ```
 
+### 4.5 `DateTimeCodeEnumerator` 日付キャッシュ
+
+`days_to_date()` は O(year − 2000) の線形探索。1 日内では `days` が変わらないため、
+`cached_days` / `cached_date` フィールドで結果をキャッシュする。
+
+```rust
+pub struct DateTimeCodeEnumerator {
+    // ... 既存フィールド ...
+    cached_days: u32,
+    cached_date: (u16, u8, u8),
+}
+
+fn advance(&mut self) -> Option<DateTimeEntry> {
+    while self.current_seconds < self.end_seconds {
+        let days = (self.current_seconds / 86400) as u32;
+        let secs = (self.current_seconds % 86400) as u32;
+        self.current_seconds += 1;
+
+        if let Some(time_code) = self.time_code_table[secs as usize] {
+            if days != self.cached_days {
+                self.cached_days = days;
+                self.cached_date = days_to_date(days);
+            }
+            let (year, month, day) = self.cached_date;
+            // hour/minute/second は secs から直接計算
+            let date_code = get_date_code(days); // O(1) 静的テーブル
+            return Some((year, month, day, hour, minute, second, date_code, time_code));
+        }
+    }
+    None
+}
+```
+
 ## 5. テスト方針
 
 | テスト | 内容 | 場所 |
@@ -238,3 +299,8 @@ async function runSearchLoop<T extends { is_done: boolean; free(): void }>(
 - [x] 既存テスト通過確認 (TS: 830 tests, Rust: 6 tests)
 - [x] SHA-1 ループ分割による追加最適化 (+5.6% native)
 - [ ] ブラウザでスループット計測・比較
+
+### Phase 3: WASM コード最適化
+
+- [x] C6: `DateTimeCodeEnumerator` に日付キャッシュ導入 (+18% native, 年依存差解消)
+- [x] 年別 Criterion ベンチマーク追加 (year 2000/2050/2099)
