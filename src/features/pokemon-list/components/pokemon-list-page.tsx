@@ -155,16 +155,7 @@ function PokemonListPage(): ReactElement {
     };
 
     generate(seedOrigins, params, fullGenConfig, mergedFilter);
-  }, [
-    dsConfig.version,
-    gameStart,
-    encounterParams,
-    tid,
-    sid,
-    seedOrigins,
-    mergedFilter,
-    generate,
-  ]);
+  }, [dsConfig.version, gameStart, encounterParams, tid, sid, seedOrigins, mergedFilter, generate]);
 
   // 見積もり → 確認 → 実行
   const handleGenerate = useCallback(() => {
