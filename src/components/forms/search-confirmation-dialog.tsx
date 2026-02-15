@@ -52,7 +52,12 @@ function SearchConfirmationDialog({
           <AlertDialogCancel>
             <Trans>Cancel</Trans>
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+          >
             <Trans>Continue search</Trans>
           </AlertDialogAction>
         </AlertDialogFooter>

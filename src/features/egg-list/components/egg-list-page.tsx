@@ -110,6 +110,20 @@ function EggListPage(): ReactElement {
     setDetailOpen(true);
   }, []);
 
+  // statsFilter を EggFilter.stats に統合
+  const mergedFilter = useMemo((): EggFilter | undefined => {
+    if (!filter && !statsFilter) return;
+    return {
+      iv: filter?.iv,
+      natures: filter?.natures,
+      gender: filter?.gender,
+      ability_slot: filter?.ability_slot,
+      shiny: filter?.shiny,
+      min_margin_frames: filter?.min_margin_frames,
+      stats: statsFilter,
+    };
+  }, [filter, statsFilter]);
+
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -131,27 +145,13 @@ function EggListPage(): ReactElement {
       max_advance: genConfig.max_advance,
     };
 
-    const mergedFilter: EggFilter | undefined = (() => {
-      if (!filter && !statsFilter) return;
-      return {
-        iv: filter?.iv,
-        natures: filter?.natures,
-        gender: filter?.gender,
-        ability_slot: filter?.ability_slot,
-        shiny: filter?.shiny,
-        min_margin_frames: filter?.min_margin_frames,
-        stats: statsFilter,
-      };
-    })();
-
     generate(seedOrigins, paramsWithTrainer, fullGenConfig, mergedFilter);
   }, [
     generate,
     seedOrigins,
     eggParams,
     genConfig,
-    filter,
-    statsFilter,
+    mergedFilter,
     tid,
     sid,
     speciesId,
@@ -161,20 +161,6 @@ function EggListPage(): ReactElement {
 
   // 見積もり → 確認 → 実行
   const handleGenerate = useCallback(() => {
-    // statsFilter を統合して推定に使う
-    const mergedFilter: EggFilter | undefined = (() => {
-      if (!filter && !statsFilter) return;
-      return {
-        iv: filter?.iv,
-        natures: filter?.natures,
-        gender: filter?.gender,
-        ability_slot: filter?.ability_slot,
-        shiny: filter?.shiny,
-        min_margin_frames: filter?.min_margin_frames,
-        stats: statsFilter,
-      };
-    })();
-
     const estimation = estimateEggListResults(
       seedOrigins.length,
       genConfig.max_advance,
@@ -191,21 +177,20 @@ function EggListPage(): ReactElement {
     seedOrigins.length,
     genConfig.max_advance,
     genConfig.user_offset,
-    filter,
-    statsFilter,
+    mergedFilter,
     eggParams.masuda_method,
     handleGenerateExecution,
   ]);
 
-  const errorMessages = useMemo(() => {
-    const messages: Record<EggListValidationErrorCode, string> = {
+  const validationMessages = useMemo(
+    (): Record<EggListValidationErrorCode, string> => ({
       SEEDS_EMPTY: t`No seeds specified`,
       ADVANCE_RANGE_INVALID: t`Advance range invalid`,
       OFFSET_NEGATIVE: t`Offset must be non-negative`,
       IV_OUT_OF_RANGE: t`Parent IV out of range`,
-    };
-    return validation.errors.map((code) => messages[code]);
-  }, [validation.errors, t]);
+    }),
+    [t]
+  );
 
   const columns = useMemo(
     () =>
@@ -267,8 +252,8 @@ function EggListPage(): ReactElement {
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (
             <ul className="space-y-0.5 text-xs text-destructive">
-              {errorMessages.map((msg, i) => (
-                <li key={i}>{msg}</li>
+              {validation.errors.map((code) => (
+                <li key={code}>{validationMessages[code]}</li>
               ))}
             </ul>
           ) : undefined}

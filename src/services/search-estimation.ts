@@ -317,6 +317,11 @@ export function estimatePokemonFilterHitRate(filter?: PokemonFilter): number {
 
 /**
  * EstimationResult を構築するヘルパー。
+ *
+ * 注意: searchSpaceSize と hitRate の積は IEEE 754 倍精度浮動小数点で計算される。
+ * searchSpaceSize が 2^53 (Number.MAX_SAFE_INTEGER) を超える場合、
+ * 推定結果に丸め誤差が生じる。現実的な検索パラメータでは
+ * 問題にならないが、正確な件数保証を意図しない。
  */
 function buildEstimation(
   searchSpaceSize: number,

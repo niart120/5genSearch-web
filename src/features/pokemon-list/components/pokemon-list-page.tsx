@@ -116,6 +116,21 @@ function PokemonListPage(): ReactElement {
     [handleSelectResult, statMode, language]
   );
 
+  // statsFilter を PokemonFilter.stats に統合
+  const mergedFilter = useMemo((): PokemonFilter | undefined => {
+    if (!filter && !statsFilter) return;
+    return {
+      iv: filter?.iv,
+      natures: filter?.natures,
+      gender: filter?.gender,
+      ability_slot: filter?.ability_slot,
+      shiny: filter?.shiny,
+      species_ids: filter?.species_ids,
+      level_range: filter?.level_range,
+      stats: statsFilter,
+    };
+  }, [filter, statsFilter]);
+
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -139,21 +154,6 @@ function PokemonListPage(): ReactElement {
       slots: encounterParams.slots,
     };
 
-    // statsFilter を PokemonFilter.stats に統合
-    const mergedFilter: PokemonFilter | undefined = (() => {
-      if (!filter && !statsFilter) return;
-      return {
-        iv: filter?.iv,
-        natures: filter?.natures,
-        gender: filter?.gender,
-        ability_slot: filter?.ability_slot,
-        shiny: filter?.shiny,
-        species_ids: filter?.species_ids,
-        level_range: filter?.level_range,
-        stats: statsFilter,
-      };
-    })();
-
     generate(seedOrigins, params, fullGenConfig, mergedFilter);
   }, [
     dsConfig.version,
@@ -162,28 +162,12 @@ function PokemonListPage(): ReactElement {
     tid,
     sid,
     seedOrigins,
-    filter,
-    statsFilter,
+    mergedFilter,
     generate,
   ]);
 
   // 見積もり → 確認 → 実行
   const handleGenerate = useCallback(() => {
-    // statsFilter を統合して推定に使う
-    const mergedFilter: PokemonFilter | undefined = (() => {
-      if (!filter && !statsFilter) return;
-      return {
-        iv: filter?.iv,
-        natures: filter?.natures,
-        gender: filter?.gender,
-        ability_slot: filter?.ability_slot,
-        shiny: filter?.shiny,
-        species_ids: filter?.species_ids,
-        level_range: filter?.level_range,
-        stats: statsFilter,
-      };
-    })();
-
     const estimation = estimatePokemonListResults(
       seedOrigins.length,
       encounterParams.genConfig.max_advance,
@@ -199,8 +183,7 @@ function PokemonListPage(): ReactElement {
     seedOrigins.length,
     encounterParams.genConfig.max_advance,
     encounterParams.genConfig.user_offset,
-    filter,
-    statsFilter,
+    mergedFilter,
     handleGenerateExecution,
   ]);
 

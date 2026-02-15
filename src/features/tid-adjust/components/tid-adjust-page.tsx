@@ -158,6 +158,7 @@ function TidAdjustPage(): ReactElement {
 
   // 見積もり → 確認 → 実行
   const handleSearch = useCallback(() => {
+    // keySpec は toTrainerInfoFilter に必要 (keyCombinationCount とは別用途)
     const filter = toTrainerInfoFilter({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw });
     const estimation = estimateTidAdjustResults(
       dateRange,
@@ -176,6 +177,7 @@ function TidAdjustPage(): ReactElement {
     timeRange,
     ranges,
     keyCombinationCount,
+    // keySpec は toTrainerInfoFilter の引数として必要
     keySpec,
     tid,
     sid,
