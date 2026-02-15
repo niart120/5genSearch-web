@@ -282,7 +282,7 @@ export function calculateMtseedSearchSpace(): number;
  * EggFilter, PokemonFilter の base 部分に対応。
  */
 export function estimateCoreDataFilterHitRate(
-  filter: CoreDataFilter | undefined
+  filter?: CoreDataFilter
 ): number;
 
 /**
@@ -315,7 +315,7 @@ export function estimateEggFilterHitRate(
  * species_ids / level_range は概算対象外 (1.0)。
  */
 export function estimatePokemonFilterHitRate(
-  filter: PokemonFilter | undefined
+  filter?: PokemonFilter
 ): number;
 ```
 
@@ -368,7 +368,7 @@ export function estimatePokemonListResults(
   seedCount: number,
   maxAdvance: number,
   userOffset: number,
-  filter: PokemonFilter | undefined,
+  filter?: PokemonFilter,
   threshold?: number
 ): EstimationResult;
 

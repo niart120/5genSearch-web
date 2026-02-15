@@ -261,7 +261,7 @@ describe('estimateIvFilterHitRate', () => {
 
 describe('estimateCoreDataFilterHitRate', () => {
   it('undefined → 1.0', () => {
-    expect(estimateCoreDataFilterHitRate(undefined)).toBe(1);
+    expect(estimateCoreDataFilterHitRate()).toBe(1);
   });
 
   it('色違い Star → 7/65536', () => {
@@ -409,7 +409,7 @@ describe('estimateEggFilterHitRate', () => {
 
 describe('estimatePokemonFilterHitRate', () => {
   it('undefined → 1.0', () => {
-    expect(estimatePokemonFilterHitRate(undefined)).toBe(1);
+    expect(estimatePokemonFilterHitRate()).toBe(1);
   });
 
   it('CoreDataFilter 部分の概算 (性格 1 種 + 性別)', () => {
@@ -569,7 +569,7 @@ describe('estimateTidAdjustResults', () => {
 
 describe('estimatePokemonListResults', () => {
   it('seeds=100, advance=1000, offset=0, filter=none → 100,000 件、閾値超過', () => {
-    const result = estimatePokemonListResults(100, 1000, 0, undefined);
+    const result = estimatePokemonListResults(100, 1000, 0);
     expect(result.searchSpaceSize).toBe(100_000);
     expect(result.hitRate).toBe(1);
     expect(result.estimatedCount).toBe(100_000);

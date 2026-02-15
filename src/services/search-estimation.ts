@@ -236,7 +236,7 @@ function shinyHitRate(shiny: 'Shiny' | 'Star' | 'Square', masudaMethod: boolean)
  * masudaMethod は色違い確率の補正に使用。
  */
 export function estimateCoreDataFilterHitRate(
-  filter: CoreDataFilter | undefined,
+  filter?: CoreDataFilter,
   masudaMethod: boolean = false
 ): number {
   if (!filter) return 1;
@@ -309,7 +309,7 @@ export function estimateEggFilterHitRate(
  * PokemonFilter からヒット率を概算する。
  * species_ids / level_range は概算対象外 (1.0)。
  */
-export function estimatePokemonFilterHitRate(filter: PokemonFilter | undefined): number {
+export function estimatePokemonFilterHitRate(filter?: PokemonFilter): number {
   if (!filter) return 1;
   return estimateCoreDataFilterHitRate(filter);
 }
@@ -421,7 +421,7 @@ export function estimatePokemonListResults(
   seedCount: number,
   maxAdvance: number,
   userOffset: number,
-  filter: PokemonFilter | undefined,
+  filter?: PokemonFilter,
   threshold: number = DEFAULT_RESULT_WARNING_THRESHOLD
 ): EstimationResult {
   const generated = seedCount * Math.max(maxAdvance - userOffset, 0);
