@@ -373,7 +373,7 @@ describe('estimateTrainerInfoFilterHitRate', () => {
 
 describe('estimateEggFilterHitRate', () => {
   it('undefined → 1.0', () => {
-    expect(estimateEggFilterHitRate(undefined, false)).toBe(1);
+    expect(estimateEggFilterHitRate(false)).toBe(1);
   });
 
   it('masuda=true + Shiny → 48/65536 適用', () => {
@@ -386,7 +386,7 @@ describe('estimateEggFilterHitRate', () => {
       stats: undefined,
       min_margin_frames: undefined,
     };
-    expect(estimateEggFilterHitRate(filter, true)).toBeCloseTo(48 / 65_536);
+    expect(estimateEggFilterHitRate(true, filter)).toBeCloseTo(48 / 65_536);
   });
 
   it('masuda=false + Shiny → 8/65536', () => {
@@ -399,7 +399,7 @@ describe('estimateEggFilterHitRate', () => {
       stats: undefined,
       min_margin_frames: undefined,
     };
-    expect(estimateEggFilterHitRate(filter, false)).toBeCloseTo(8 / 65_536);
+    expect(estimateEggFilterHitRate(false, filter)).toBeCloseTo(8 / 65_536);
   });
 });
 

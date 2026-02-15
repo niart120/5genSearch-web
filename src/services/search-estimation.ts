@@ -296,10 +296,7 @@ export function estimateTrainerInfoFilterHitRate(filter: TrainerInfoFilter): num
  * EggFilter からヒット率を概算する。
  * masuda_method フラグで色違い確率を調整。
  */
-export function estimateEggFilterHitRate(
-  filter: EggFilter | undefined,
-  masudaMethod: boolean
-): number {
+export function estimateEggFilterHitRate(masudaMethod: boolean, filter?: EggFilter): number {
   if (!filter) return 1;
   // EggFilter extends CoreDataFilter, so use CoreDataFilter hit rate
   return estimateCoreDataFilterHitRate(filter, masudaMethod);
@@ -389,7 +386,7 @@ export function estimateEggSearchResults(
     ranges,
     keyCombinationCount
   );
-  const hitRate = estimateEggFilterHitRate(filter, masudaMethod);
+  const hitRate = estimateEggFilterHitRate(masudaMethod, filter);
   return buildEstimation(searchSpaceSize, hitRate, threshold);
 }
 
@@ -441,6 +438,6 @@ export function estimateEggListResults(
   threshold: number = DEFAULT_RESULT_WARNING_THRESHOLD
 ): EstimationResult {
   const generated = seedCount * Math.max(maxAdvance - userOffset, 0);
-  const hitRate = estimateEggFilterHitRate(filter, masudaMethod);
+  const hitRate = estimateEggFilterHitRate(masudaMethod, filter);
   return buildEstimation(generated, hitRate, threshold);
 }

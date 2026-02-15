@@ -305,8 +305,8 @@ export function estimateTrainerInfoFilterHitRate(
  * masuda_method フラグで色違い確率を調整。
  */
 export function estimateEggFilterHitRate(
-  filter: EggFilter | undefined,
-  masudaMethod: boolean
+  masudaMethod: boolean,
+  filter?: EggFilter
 ): number;
 
 /**
