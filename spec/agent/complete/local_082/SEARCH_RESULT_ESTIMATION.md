@@ -548,19 +548,19 @@ const handleSearch = useCallback(() => {
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/services/search-estimation.ts` — 検索空間サイズ計算関数の実装
-- [ ] `src/services/search-estimation.ts` — ヒット率概算関数の実装
-- [ ] `src/services/search-estimation.ts` — feature 別統合推定関数の実装
-- [ ] `src/test/unit/services/search-estimation.test.ts` — ユニットテスト
-- [ ] `src/components/forms/search-confirmation-dialog.tsx` — 警告ダイアログ
-- [ ] `src/test/components/search-confirmation-dialog.test.tsx` — コンポーネントテスト
-- [ ] `src/features/datetime-search/components/datetime-search-page.tsx` — 見積もり組み込み
-- [ ] `src/features/mtseed-search/components/mtseed-search-page.tsx` — 見積もり組み込み
-- [ ] `src/features/egg-search/components/egg-search-page.tsx` — 見積もり組み込み
-- [ ] `src/features/tid-adjust/components/tid-adjust-page.tsx` — 見積もり組み込み
-- [ ] `src/features/pokemon-list/components/pokemon-list-page.tsx` — 見積もり組み込み
-- [ ] `src/features/egg-list/components/egg-list-page.tsx` — 見積もり組み込み
-- [ ] `KeySpecSelector` の組み合わせ数表示修正 — 各 feature ページから `countKeyCombinations` を渡す
-- [ ] `wasm-pkg/src/lib.rs` — `get_key_combination_count` WASM export 関数の削除
-- [ ] `src/i18n/locales/ja/messages.po` — 翻訳追加
-- [ ] `src/i18n/locales/en/messages.po` — 翻訳追加
+- [x] `src/services/search-estimation.ts` — 検索空間サイズ計算関数の実装
+- [x] `src/services/search-estimation.ts` — ヒット率概算関数の実装
+- [x] `src/services/search-estimation.ts` — feature 別統合推定関数の実装
+- [x] `src/test/unit/services/search-estimation.test.ts` — ユニットテスト
+- [x] `src/components/forms/search-confirmation-dialog.tsx` — 警告ダイアログ
+- [x] `src/test/components/search-confirmation-dialog.test.tsx` — コンポーネントテスト
+- [x] `src/features/datetime-search/components/datetime-search-page.tsx` — 見積もり組み込み
+- [x] `src/features/mtseed-search/components/mtseed-search-page.tsx` — 見積もり組み込み
+- [x] `src/features/egg-search/components/egg-search-page.tsx` — 見積もり組み込み
+- [x] `src/features/tid-adjust/components/tid-adjust-page.tsx` — 見積もり組み込み
+- [x] `src/features/pokemon-list/components/pokemon-list-page.tsx` — 見積もり組み込み
+- [x] `src/features/egg-list/components/egg-list-page.tsx` — 見積もり組み込み
+- [x] `KeySpecSelector` の組み合わせ数表示修正 — 各 feature ページから `countKeyCombinations` を渡す
+- [x] `wasm-pkg/src/lib.rs` — `get_key_combination_count` WASM export 関数の削除
+- [x] `src/i18n/locales/ja/messages.po` — 翻訳追加
+- [x] `src/i18n/locales/en/messages.po` — 翻訳追加
