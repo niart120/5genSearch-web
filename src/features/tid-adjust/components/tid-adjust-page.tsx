@@ -15,9 +15,11 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
+import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
+import { estimateTidAdjustResults, countKeyCombinations } from '@/services/search-estimation';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
 import { useTidAdjust } from '../hooks/use-tid-adjust';
@@ -121,8 +123,17 @@ function TidAdjustPage(): ReactElement {
   // 列定義
   const columns = useMemo(() => createTrainerInfoColumns(), []);
 
-  // 検索開始
-  const handleSearch = useCallback(() => {
+  // KeySpec 組み合わせ数
+  const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
+
+  // 確認ダイアログ
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    estimatedCount: number;
+  }>({ open: false, estimatedCount: 0 });
+
+  // 検索実行
+  const handleSearchExecution = useCallback(() => {
     const context: DatetimeSearchContext = {
       ds: dsConfig,
       date_range: dateRange,
@@ -143,6 +154,35 @@ function TidAdjustPage(): ReactElement {
     shinyPidRaw,
     tidGameStart,
     startSearch,
+  ]);
+
+  // 見積もり → 確認 → 実行
+  const handleSearch = useCallback(() => {
+    // keySpec は toTrainerInfoFilter に必要 (keyCombinationCount とは別用途)
+    const filter = toTrainerInfoFilter({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw });
+    const estimation = estimateTidAdjustResults(
+      dateRange,
+      timeRange,
+      ranges,
+      keyCombinationCount,
+      filter
+    );
+    if (estimation.exceedsThreshold) {
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+    } else {
+      handleSearchExecution();
+    }
+  }, [
+    dateRange,
+    timeRange,
+    ranges,
+    keyCombinationCount,
+    // keySpec は toTrainerInfoFilter の引数として必要
+    keySpec,
+    tid,
+    sid,
+    shinyPidRaw,
+    handleSearchExecution,
   ]);
 
   return (
@@ -171,6 +211,7 @@ function TidAdjustPage(): ReactElement {
             onTimeRangeChange={setTimeRange}
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
+            keyCombinationCount={keyCombinationCount}
           />
 
           {/* セーブ状態 (サイドバーの値は使用しない) */}
@@ -240,6 +281,16 @@ function TidAdjustPage(): ReactElement {
           onCancel={cancel}
         />
       </div>
+
+      <SearchConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        estimatedCount={confirmDialog.estimatedCount}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, estimatedCount: 0 });
+          handleSearchExecution();
+        }}
+      />
     </>
   );
 }

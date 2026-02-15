@@ -88,15 +88,6 @@ pub fn health_check() -> String {
     "wasm-pkg is ready".to_string()
 }
 
-/// `KeySpec` から有効なキー組み合わせ総数を取得
-///
-/// 無効パターン (上下/左右同時押し、ソフトリセット) を除外した数を返す。
-#[wasm_bindgen]
-#[allow(clippy::needless_pass_by_value)] // wasm_bindgen API は値渡しが必要
-pub fn get_key_combination_count(key_spec: KeySpec) -> u32 {
-    key_spec.combination_count()
-}
-
 /// ポケモンデータをバッチ解決
 ///
 /// # Arguments

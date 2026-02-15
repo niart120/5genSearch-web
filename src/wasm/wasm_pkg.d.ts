@@ -1577,13 +1577,6 @@ export function generate_pokemon_list(origins: SeedOrigin[], params: PokemonGene
 export function generate_trainer_info_search_tasks(context: DatetimeSearchContext, filter: TrainerInfoFilter, game_start: GameStartConfig, worker_count: number): TrainerInfoSearchParams[];
 
 /**
- * `KeySpec` から有効なキー組み合わせ総数を取得
- *
- * 無効パターン (上下/左右同時押し、ソフトリセット) を除外した数を返す。
- */
-export function get_key_combination_count(key_spec: KeySpec): number;
-
-/**
  * 針パターンを取得 (ユーティリティ関数)
  *
  * 指定した Seed と advance から始まる針パターンを取得。
