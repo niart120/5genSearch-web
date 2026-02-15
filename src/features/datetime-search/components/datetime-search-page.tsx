@@ -10,6 +10,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
+import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
 import { DataTable } from '@/components/data-display/data-table';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
@@ -20,6 +21,7 @@ import { parseTargetSeeds, validateMtseedSearchForm } from '../types';
 import type { ValidationErrorCode, ParseErrorCode } from '../types';
 import { createSeedOriginColumns } from './seed-origin-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
+import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import type {
   DateRangeParams,
   TimeRangeParams,
@@ -132,8 +134,17 @@ function DatetimeSearchPage(): ReactElement {
 
   const columns = useMemo(() => createSeedOriginColumns(handleSelectOrigin), [handleSelectOrigin]);
 
-  // 検索開始
-  const handleSearch = useCallback(() => {
+  // KeySpec 組み合わせ数
+  const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
+
+  // 確認ダイアログ
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    estimatedCount: number;
+  }>({ open: false, estimatedCount: 0 });
+
+  // 検索実行
+  const handleSearchExecution = useCallback(() => {
     const context: DatetimeSearchContext = {
       ds: dsConfig,
       date_range: dateRange,
@@ -143,6 +154,29 @@ function DatetimeSearchPage(): ReactElement {
     };
     startSearch(context, parsedSeeds.seeds);
   }, [dsConfig, dateRange, timeRange, ranges, keySpec, parsedSeeds.seeds, startSearch]);
+
+  // 見積もり → 確認 → 実行
+  const handleSearch = useCallback(() => {
+    const estimation = estimateDatetimeSearchResults(
+      dateRange,
+      timeRange,
+      ranges,
+      keyCombinationCount,
+      parsedSeeds.seeds.length
+    );
+    if (estimation.exceedsThreshold) {
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+    } else {
+      handleSearchExecution();
+    }
+  }, [
+    dateRange,
+    timeRange,
+    ranges,
+    keyCombinationCount,
+    parsedSeeds.seeds.length,
+    handleSearchExecution,
+  ]);
 
   return (
     <>
@@ -172,6 +206,7 @@ function DatetimeSearchPage(): ReactElement {
             onTimeRangeChange={setTimeRange}
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
+            keyCombinationCount={keyCombinationCount}
           />
 
           <TargetSeedsInput
@@ -226,6 +261,16 @@ function DatetimeSearchPage(): ReactElement {
           onCancel={cancel}
         />
       </div>
+
+      <SearchConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        estimatedCount={confirmDialog.estimatedCount}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, estimatedCount: 0 });
+          handleSearchExecution();
+        }}
+      />
     </>
   );
 }

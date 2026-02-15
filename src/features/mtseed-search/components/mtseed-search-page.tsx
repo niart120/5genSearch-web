@@ -9,11 +9,13 @@ import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
+import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
 import { Button } from '@/components/ui/button';
 import { MtseedSearchForm } from './mtseed-search-form';
 import { createMtseedResultColumns } from './mtseed-result-columns';
 import { useMtseedSearch } from '../hooks/use-mtseed-search';
+import { estimateMtseedSearchResults } from '@/services/search-estimation';
 import {
   validateMtseedIvSearchForm,
   toMtseedSearchContext,
@@ -77,10 +79,26 @@ function MtseedSearchPage(): ReactElement {
   // 列定義
   const columns = useMemo(() => createMtseedResultColumns(), []);
 
-  // 検索開始
-  const handleSearch = useCallback(() => {
+  // 確認ダイアログ
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    estimatedCount: number;
+  }>({ open: false, estimatedCount: 0 });
+
+  // 検索実行
+  const handleSearchExecution = useCallback(() => {
     startSearch(toMtseedSearchContext({ ivFilter, mtOffset, isRoamer }));
   }, [ivFilter, mtOffset, isRoamer, startSearch]);
+
+  // 見積もり → 確認 → 実行
+  const handleSearch = useCallback(() => {
+    const estimation = estimateMtseedSearchResults(ivFilter);
+    if (estimation.exceedsThreshold) {
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+    } else {
+      handleSearchExecution();
+    }
+  }, [ivFilter, handleSearchExecution]);
 
   // 起動時刻検索への連携
   const handleNavigateToDatetimeSearch = useCallback(() => {
@@ -169,6 +187,16 @@ function MtseedSearchPage(): ReactElement {
           onGpuChange={setUseGpu}
         />
       </div>
+
+      <SearchConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        estimatedCount={confirmDialog.estimatedCount}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, estimatedCount: 0 });
+          handleSearchExecution();
+        }}
+      />
     </>
   );
 }

@@ -9,6 +9,7 @@ import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
+import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -32,6 +33,7 @@ import type {
   StatsFilter,
   UiPokemonData,
 } from '@/wasm/wasm_pkg.js';
+import { estimatePokemonListResults } from '@/services/search-estimation';
 
 // ---------------------------------------------------------------------------
 // Page Component
@@ -114,8 +116,14 @@ function PokemonListPage(): ReactElement {
     [handleSelectResult, statMode, language]
   );
 
-  // 生成開始
-  const handleGenerate = useCallback(() => {
+  // 確認ダイアログ
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    estimatedCount: number;
+  }>({ open: false, estimatedCount: 0 });
+
+  // 生成実行
+  const handleGenerateExecution = useCallback(() => {
     const fullGenConfig: GenerationConfig = {
       version: dsConfig.version,
       game_start: gameStart,
@@ -157,6 +165,43 @@ function PokemonListPage(): ReactElement {
     filter,
     statsFilter,
     generate,
+  ]);
+
+  // 見積もり → 確認 → 実行
+  const handleGenerate = useCallback(() => {
+    // statsFilter を統合して推定に使う
+    const mergedFilter: PokemonFilter | undefined = (() => {
+      if (!filter && !statsFilter) return;
+      return {
+        iv: filter?.iv,
+        natures: filter?.natures,
+        gender: filter?.gender,
+        ability_slot: filter?.ability_slot,
+        shiny: filter?.shiny,
+        species_ids: filter?.species_ids,
+        level_range: filter?.level_range,
+        stats: statsFilter,
+      };
+    })();
+
+    const estimation = estimatePokemonListResults(
+      seedOrigins.length,
+      encounterParams.genConfig.max_advance,
+      encounterParams.genConfig.user_offset,
+      mergedFilter
+    );
+    if (estimation.exceedsThreshold) {
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+    } else {
+      handleGenerateExecution();
+    }
+  }, [
+    seedOrigins.length,
+    encounterParams.genConfig.max_advance,
+    encounterParams.genConfig.user_offset,
+    filter,
+    statsFilter,
+    handleGenerateExecution,
   ]);
 
   return (
@@ -259,6 +304,16 @@ function PokemonListPage(): ReactElement {
           onCancel={cancel}
         />
       </div>
+
+      <SearchConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        estimatedCount={confirmDialog.estimatedCount}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, estimatedCount: 0 });
+          handleGenerateExecution();
+        }}
+      />
     </>
   );
 }

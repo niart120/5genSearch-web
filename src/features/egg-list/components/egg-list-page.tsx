@@ -8,6 +8,7 @@ import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
+import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -32,6 +33,7 @@ import type {
   UiEggData,
   Ivs,
 } from '@/wasm/wasm_pkg.js';
+import { estimateEggListResults } from '@/services/search-estimation';
 
 const DEFAULT_IVS: Ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 
@@ -108,7 +110,14 @@ function EggListPage(): ReactElement {
     setDetailOpen(true);
   }, []);
 
-  const handleGenerate = useCallback(() => {
+  // 確認ダイアログ
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    estimatedCount: number;
+  }>({ open: false, estimatedCount: 0 });
+
+  // 生成実行
+  const handleGenerateExecution = useCallback(() => {
     const paramsWithTrainer: EggGenerationParams = {
       ...eggParams,
       trainer: { tid: tid ?? 0, sid: sid ?? 0 },
@@ -148,6 +157,44 @@ function EggListPage(): ReactElement {
     speciesId,
     dsConfig.version,
     gameStart,
+  ]);
+
+  // 見積もり → 確認 → 実行
+  const handleGenerate = useCallback(() => {
+    // statsFilter を統合して推定に使う
+    const mergedFilter: EggFilter | undefined = (() => {
+      if (!filter && !statsFilter) return;
+      return {
+        iv: filter?.iv,
+        natures: filter?.natures,
+        gender: filter?.gender,
+        ability_slot: filter?.ability_slot,
+        shiny: filter?.shiny,
+        min_margin_frames: filter?.min_margin_frames,
+        stats: statsFilter,
+      };
+    })();
+
+    const estimation = estimateEggListResults(
+      seedOrigins.length,
+      genConfig.max_advance,
+      genConfig.user_offset,
+      mergedFilter,
+      eggParams.masuda_method
+    );
+    if (estimation.exceedsThreshold) {
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+    } else {
+      handleGenerateExecution();
+    }
+  }, [
+    seedOrigins.length,
+    genConfig.max_advance,
+    genConfig.user_offset,
+    filter,
+    statsFilter,
+    eggParams.masuda_method,
+    handleGenerateExecution,
   ]);
 
   const errorMessages = useMemo(() => {
@@ -274,6 +321,16 @@ function EggListPage(): ReactElement {
           onCancel={cancel}
         />
       </div>
+
+      <SearchConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        estimatedCount={confirmDialog.estimatedCount}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, estimatedCount: 0 });
+          handleGenerateExecution();
+        }}
+      />
     </>
   );
 }

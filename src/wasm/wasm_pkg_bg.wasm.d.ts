@@ -17,7 +17,6 @@ export const generate_mtseed_iv_search_tasks: (a: any, b: number) => [number, nu
 export const generate_mtseed_search_tasks: (a: any, b: number, c: number, d: number) => [number, number];
 export const generate_pokemon_list: (a: number, b: number, c: any, d: any, e: number) => [number, number, number, number];
 export const generate_trainer_info_search_tasks: (a: any, b: any, c: any, d: number) => [number, number];
-export const get_key_combination_count: (a: any) => number;
 export const get_needle_pattern_at: (a: bigint, b: number, c: number) => [number, number];
 export const get_species_name: (a: number, b: number, c: number) => [number, number];
 export const gpudatetimesearchiterator_create: (a: any, b: number, c: number) => any;

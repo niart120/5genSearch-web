@@ -15,7 +15,7 @@ interface KeySpecSelectorProps {
   value: KeySpec;
   onChange: (value: KeySpec) => void;
   disabled?: boolean;
-  /** WASM get_key_combination_count で計算した組み合わせ数 */
+  /** countKeyCombinations で計算した組み合わせ数 */
   combinationCount?: number;
 }
 

@@ -10,6 +10,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
+import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
@@ -21,6 +22,7 @@ import { EggParamsForm } from '@/components/forms/egg-params-form';
 import { EggFilterForm } from '@/components/forms/egg-filter-form';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
+import { estimateEggSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import type {
   DateRangeParams,
   TimeRangeParams,
@@ -141,8 +143,17 @@ function EggSearchPage(): ReactElement {
     [language, handleSelectResult]
   );
 
-  // 検索開始
-  const handleSearch = useCallback(() => {
+  // KeySpec 組み合わせ数
+  const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
+
+  // 確認ダイアログ
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    estimatedCount: number;
+  }>({ open: false, estimatedCount: 0 });
+
+  // 検索実行
+  const handleSearchExecution = useCallback(() => {
     const context: DatetimeSearchContext = {
       ds: dsConfig,
       date_range: dateRange,
@@ -180,6 +191,31 @@ function EggSearchPage(): ReactElement {
     startSearch,
   ]);
 
+  // 見積もり → 確認 → 実行
+  const handleSearch = useCallback(() => {
+    const estimation = estimateEggSearchResults(
+      dateRange,
+      timeRange,
+      ranges,
+      keyCombinationCount,
+      filter,
+      eggParams.masuda_method
+    );
+    if (estimation.exceedsThreshold) {
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+    } else {
+      handleSearchExecution();
+    }
+  }, [
+    dateRange,
+    timeRange,
+    ranges,
+    keyCombinationCount,
+    filter,
+    eggParams.masuda_method,
+    handleSearchExecution,
+  ]);
+
   return (
     <>
       <FeaturePageLayout className="pb-32 lg:pb-4">
@@ -206,6 +242,7 @@ function EggSearchPage(): ReactElement {
             onTimeRangeChange={setTimeRange}
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
+            keyCombinationCount={keyCombinationCount}
           />
 
           <EggParamsForm
@@ -260,6 +297,16 @@ function EggSearchPage(): ReactElement {
           onCancel={cancel}
         />
       </div>
+
+      <SearchConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        estimatedCount={confirmDialog.estimatedCount}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, estimatedCount: 0 });
+          handleSearchExecution();
+        }}
+      />
     </>
   );
 }
