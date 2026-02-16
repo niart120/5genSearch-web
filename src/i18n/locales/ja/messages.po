@@ -986,7 +986,11 @@ msgstr "シンクロ性格"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "左上のメニューアイコンから検索設定を行えます。"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:240
+#: src/features/datetime-search/components/datetime-search-page.tsx
+msgid "Init seeds"
+msgstr "初期 Seed"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx
 msgid "Template"
 msgstr "テンプレート"
 

@@ -223,22 +223,27 @@ function DatetimeSearchPage(): ReactElement {
             keyCombinationCount={keyCombinationCount}
           />
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setTemplateDialogOpen(true)}
-            disabled={isLoading}
-          >
-            <Trans>Template</Trans>
-          </Button>
+          <section className="flex flex-col gap-2">
+            <h3 className="text-sm font-medium">
+              <Trans>Init seeds</Trans>
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplateDialogOpen(true)}
+              disabled={isLoading}
+            >
+              <Trans>Template</Trans>
+            </Button>
 
-          <TargetSeedsInput
-            value={targetSeedsRaw}
-            onChange={setTargetSeedsRaw}
-            parsedSeeds={parsedSeeds.seeds}
-            errors={translatedParseErrors}
-            disabled={isLoading}
-          />
+            <TargetSeedsInput
+              value={targetSeedsRaw}
+              onChange={setTargetSeedsRaw}
+              parsedSeeds={parsedSeeds.seeds}
+              errors={translatedParseErrors}
+              disabled={isLoading}
+            />
+          </section>
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (
