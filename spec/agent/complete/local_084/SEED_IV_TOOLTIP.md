@@ -470,24 +470,24 @@ Lingui の `<Trans>` / `t` マクロを使用する。
 
 ## 6. 実装チェックリスト
 
-- [ ] `@radix-ui/react-tooltip` をインストール
-- [ ] `src/components/ui/tooltip.tsx` を作成
-- [ ] WASM: `generate_rng_ivs_with_offset` を `pub` に変更 (`algorithm/mod.rs`)
-- [ ] WASM: `compute_iv_spread` ラッパーを `lib.rs` に追加
-- [ ] WASM: `lcg_seed_to_mt_seed` ラッパーを `lib.rs` に追加
-- [ ] WASM ビルド (`pnpm build:wasm`)
-- [ ] `src/lib/iv-tooltip.ts` を作成
-- [ ] `src/components/data-display/seed-iv-tooltip.tsx` を作成
-- [ ] `mtseed-result-columns.tsx` にツールチップ統合
-- [ ] `seed-origin-columns.tsx` にツールチップ統合
-- [ ] `pokemon-list/result-detail-dialog.tsx` にツールチップ統合
-- [ ] `egg-list/result-detail-dialog.tsx` にツールチップ統合
-- [ ] `seed-input-section.tsx` にツールチップ統合
-- [ ] 詳細ダイアログの IV フォーマット統一 (pokemon-list / egg-list を `getStatLabel` + i18n 対応に統一)
-- [ ] `TooltipProvider` をアプリルート (`app.tsx` 等) に追加
-- [ ] 翻訳キーを抽出・追加 (`pnpm lingui:extract`)
-- [ ] ユニットテスト作成・実行
-- [ ] 統合テスト作成・実行
-- [ ] コンポーネントテスト作成・実行
-- [ ] Lint・型チェック (`pnpm lint`, `pnpm exec tsc -b --noEmit`)
-- [ ] WASM テスト (`cargo test`)
+- [x] `@radix-ui/react-tooltip` をインストール
+- [x] `src/components/ui/tooltip.tsx` を作成
+- [x] WASM: `generate_rng_ivs_with_offset` を `pub` に変更 (`algorithm/mod.rs`)
+- [x] WASM: `compute_iv_spread` ラッパーを `lib.rs` に追加
+- [x] WASM: `lcg_seed_to_mt_seed` ラッパーを `lib.rs` に追加
+- [x] WASM ビルド (`pnpm build:wasm`)
+- [x] `src/lib/iv-tooltip.ts` を作成
+- [x] `src/components/data-display/seed-iv-tooltip.tsx` を作成
+- [x] `mtseed-result-columns.tsx` にツールチップ統合
+- [x] `seed-origin-columns.tsx` にツールチップ統合
+- [x] `pokemon-list/result-detail-dialog.tsx` にツールチップ統合
+- [x] `egg-list/result-detail-dialog.tsx` にツールチップ統合
+- [x] `seed-input-section.tsx` にツールチップ統合 (該当する表示要素なし — スキップ)
+- [x] 詳細ダイアログの IV フォーマット統一 (pokemon-list / egg-list を `getStatLabel` + i18n 対応に統一)
+- [x] `TooltipProvider` をアプリルート (`app.tsx` 等) に追加
+- [x] 翻訳キーを抽出・追加 (`pnpm lingui:extract`)
+- [x] ユニットテスト作成・実行
+- [x] 統合テスト作成・実行
+- [x] コンポーネントテスト作成・実行
+- [x] Lint・型チェック (`pnpm lint`, `pnpm exec tsc -b --noEmit`)
+- [x] WASM テスト (`cargo test`)
