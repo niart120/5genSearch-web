@@ -223,14 +223,6 @@ function DatetimeSearchPage(): ReactElement {
             keyCombinationCount={keyCombinationCount}
           />
 
-          <TargetSeedsInput
-            value={targetSeedsRaw}
-            onChange={setTargetSeedsRaw}
-            parsedSeeds={parsedSeeds.seeds}
-            errors={translatedParseErrors}
-            disabled={isLoading}
-          />
-
           <Button
             variant="outline"
             size="sm"
@@ -239,6 +231,14 @@ function DatetimeSearchPage(): ReactElement {
           >
             <Trans>Template</Trans>
           </Button>
+
+          <TargetSeedsInput
+            value={targetSeedsRaw}
+            onChange={setTargetSeedsRaw}
+            parsedSeeds={parsedSeeds.seeds}
+            errors={translatedParseErrors}
+            disabled={isLoading}
+          />
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (

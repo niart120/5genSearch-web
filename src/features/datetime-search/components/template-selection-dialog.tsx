@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   SEED_TEMPLATES,
   TEMPLATE_CATEGORY_LABELS,
@@ -174,7 +175,10 @@ function TemplateSelectionDialog({
             filteredTemplates.map((tpl) => (
               <label
                 key={tpl.id}
-                className="flex cursor-pointer items-start gap-2 rounded-sm border border-border p-2 transition-colors hover:bg-accent/50 has-[:checked]:border-primary/50 has-[:checked]:bg-accent/30"
+                className={cn(
+                  'flex cursor-pointer items-start gap-2 rounded-sm border border-border p-2 transition-colors hover:bg-accent/50',
+                  selectedIds.has(tpl.id) && 'border-primary/50 bg-accent/30'
+                )}
               >
                 <Checkbox
                   checked={selectedIds.has(tpl.id)}

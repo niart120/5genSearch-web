@@ -116,7 +116,7 @@ const BW_STATIONARY_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     id: 'bw-stationary-hp-ground',
-    name: { ja: 'BW 固定・野生 めざ地面', en: 'BW Stationary/Wild Hidden Power Ground' },
+    name: { ja: 'BW 固定・野生 めざ地', en: 'BW Stationary/Wild Hidden Power Ground' },
     description: { ja: '31-2-31-30-30-31', en: '31-2-31-30-30-31' },
     version: 'BW',
     category: 'stationary',
@@ -228,7 +228,7 @@ const BW2_STATIONARY_TEMPLATES: readonly SeedTemplate[] = [
   },
   {
     id: 'bw2-stationary-hp-ground',
-    name: { ja: 'BW2 固定・野生 めざ地面', en: 'BW2 Stationary/Wild Hidden Power Ground' },
+    name: { ja: 'BW2 固定・野生 めざ地', en: 'BW2 Stationary/Wild Hidden Power Ground' },
     description: { ja: '31-2-31-30-30-31', en: '31-2-31-30-30-31' },
     version: 'BW2',
     category: 'stationary',
