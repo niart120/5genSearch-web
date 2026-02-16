@@ -9,7 +9,10 @@ import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
+import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
+import type { IvTooltipContext } from '@/lib/iv-tooltip';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
+import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 
 /** Startup バリアントを前提とした列アクセサ用ヘルパー */
 function getStartup(origin: SeedOrigin) {
@@ -19,7 +22,10 @@ function getStartup(origin: SeedOrigin) {
 
 const columnHelper = createColumnHelper<SeedOrigin>();
 
-function createSeedOriginColumns(onSelect?: (origin: SeedOrigin) => void) {
+function createSeedOriginColumns(
+  contexts: IvTooltipContext[],
+  onSelect?: (origin: SeedOrigin) => void
+) {
   return [
     columnHelper.display({
       id: 'detail',
@@ -91,7 +97,20 @@ function createSeedOriginColumns(onSelect?: (origin: SeedOrigin) => void) {
         id: 'baseSeed',
         header: () => 'Base Seed',
         size: 160,
-        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+        cell: (info) => {
+          const row = info.row.original;
+          const s = getStartup(row);
+          const baseSeed = s?.base_seed ?? ('Seed' in row ? row.Seed.base_seed : undefined);
+          if (baseSeed === undefined) {
+            return <span className="font-mono text-xs">{info.getValue()}</span>;
+          }
+          const mtSeed = lcg_seed_to_mt_seed(baseSeed);
+          return (
+            <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+              <span className="font-mono text-xs">{info.getValue()}</span>
+            </SeedIvTooltip>
+          );
+        },
       }
     ),
     columnHelper.accessor(
@@ -105,7 +124,19 @@ function createSeedOriginColumns(onSelect?: (origin: SeedOrigin) => void) {
         id: 'mtSeed',
         header: () => 'MT Seed',
         size: 100,
-        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+        cell: (info) => {
+          const row = info.row.original;
+          const s = getStartup(row);
+          const mtSeed = s?.mt_seed ?? ('Seed' in row ? row.Seed.mt_seed : undefined);
+          if (mtSeed === undefined) {
+            return <span className="font-mono text-xs">{info.getValue()}</span>;
+          }
+          return (
+            <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+              <span className="font-mono text-xs">{info.getValue()}</span>
+            </SeedIvTooltip>
+          );
+        },
       }
     ),
   ];

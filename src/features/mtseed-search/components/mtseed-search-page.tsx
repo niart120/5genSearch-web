@@ -24,6 +24,7 @@ import {
 import type { IvFilter, RomVersion } from '@/wasm/wasm_pkg.js';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { navigateToDatetimeSearch } from '@/lib/navigate';
+import { getStandardContexts } from '@/lib/iv-tooltip';
 
 /** IvFilter のデフォルト値 (全 31-31, めざパ条件なし) */
 const DEFAULT_IV_FILTER: IvFilter = {
@@ -76,8 +77,9 @@ function MtseedSearchPage(): ReactElement {
     [t]
   );
 
-  // 列定義
-  const columns = useMemo(() => createMtseedResultColumns(), []);
+  // コンテキスト・列定義
+  const contexts = useMemo(() => getStandardContexts(config.version), [config.version]);
+  const columns = useMemo(() => createMtseedResultColumns(contexts), [contexts]);
 
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{

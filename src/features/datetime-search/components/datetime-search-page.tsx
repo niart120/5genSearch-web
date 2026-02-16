@@ -24,6 +24,7 @@ import { createSeedOriginColumns } from './seed-origin-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import { TemplateSelectionDialog } from './template-selection-dialog';
 import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
+import { getStandardContexts } from '@/lib/iv-tooltip';
 import type {
   DateRangeParams,
   TimeRangeParams,
@@ -146,7 +147,11 @@ function DatetimeSearchPage(): ReactElement {
     setDetailOpen(true);
   }, []);
 
-  const columns = useMemo(() => createSeedOriginColumns(handleSelectOrigin), [handleSelectOrigin]);
+  const contexts = useMemo(() => getStandardContexts(dsConfig.version), [dsConfig.version]);
+  const columns = useMemo(
+    () => createSeedOriginColumns(contexts, handleSelectOrigin),
+    [contexts, handleSelectOrigin]
+  );
 
   // KeySpec 組み合わせ数
   const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);

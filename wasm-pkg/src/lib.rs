@@ -128,6 +128,27 @@ pub fn resolve_egg_data_batch(
         .collect()
 }
 
+/// MT Seed と消費数から IV スプレッドを計算する。
+///
+/// 既存内部関数 `generate_rng_ivs_with_offset` の wasm-bindgen エクスポート。
+///
+/// # Arguments
+/// * `mt_seed` - MT19937 初期化シード
+/// * `mt_offset` - IV 生成開始までの消費数 (0, 1, 2, 7)
+/// * `is_roamer` - true の場合 IV 読み取り順が H/A/B/S/C/D になる (BW 徘徊)
+#[wasm_bindgen]
+pub fn compute_iv_spread(mt_seed: MtSeed, mt_offset: u32, is_roamer: bool) -> Ivs {
+    generation::algorithm::generate_rng_ivs_with_offset(mt_seed, mt_offset, is_roamer)
+}
+
+/// LCG Seed から MT Seed を導出する。
+///
+/// 既存メソッド `LcgSeed::derive_mt_seed()` の wasm-bindgen エクスポート。
+#[wasm_bindgen]
+pub fn lcg_seed_to_mt_seed(seed: LcgSeed) -> MtSeed {
+    seed.derive_mt_seed()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

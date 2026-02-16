@@ -5,16 +5,22 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Trans } from '@lingui/react/macro';
 import { toHex } from '@/lib/format';
+import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
+import type { IvTooltipContext } from '@/lib/iv-tooltip';
 import type { MtseedResult } from '@/wasm/wasm_pkg.js';
 
-export function createMtseedResultColumns(): ColumnDef<MtseedResult>[] {
+export function createMtseedResultColumns(contexts: IvTooltipContext[]): ColumnDef<MtseedResult>[] {
   return [
     {
       accessorFn: (row) => toHex(row.seed, 8),
       id: 'seed',
       header: () => <Trans>MT Seed</Trans>,
       size: 100,
-      cell: ({ getValue }) => <span className="font-mono">{getValue<string>()}</span>,
+      cell: ({ getValue, row }) => (
+        <SeedIvTooltip mtSeed={row.original.seed} contexts={contexts}>
+          <span className="font-mono">{getValue<string>()}</span>
+        </SeedIvTooltip>
+      ),
     },
     {
       accessorFn: (row) => row.ivs.hp,

@@ -6,6 +6,7 @@ import { FeatureTabs } from '@/components/layout/feature-tabs';
 import { FeatureContent } from '@/components/layout/feature-content';
 import { Toaster } from '@/components/ui/toast';
 import { Tabs } from '@/components/ui/tabs';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { DsConfigForm, TrainerConfigForm, GameStartConfigForm } from '@/features/ds-config';
 import { useUiStore } from '@/stores/settings/ui';
 import type { FeatureId } from '@/lib/navigation';
@@ -24,25 +25,27 @@ function App() {
   );
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
-      <Header onMenuClick={() => setSidebarOpen(true)} />
-      <Tabs
-        value={activeFeature}
-        onValueChange={(v) => setActiveFeature(v as FeatureId)}
-        className="flex flex-1 flex-col overflow-hidden"
-      >
-        <ResponsiveContainer
-          sidebarContent={sidebarContent}
-          sidebarOpen={sidebarOpen}
-          onSidebarOpenChange={setSidebarOpen}
-          topContent={<FeatureTabs />}
+    <TooltipProvider delayDuration={300}>
+      <div className="flex h-dvh flex-col overflow-hidden">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <Tabs
+          value={activeFeature}
+          onValueChange={(v) => setActiveFeature(v as FeatureId)}
+          className="flex flex-1 flex-col overflow-hidden"
         >
-          <FeatureContent />
-        </ResponsiveContainer>
-      </Tabs>
-      <BottomNav />
-      <Toaster />
-    </div>
+          <ResponsiveContainer
+            sidebarContent={sidebarContent}
+            sidebarOpen={sidebarOpen}
+            onSidebarOpenChange={setSidebarOpen}
+            topContent={<FeatureTabs />}
+          >
+            <FeatureContent />
+          </ResponsiveContainer>
+        </Tabs>
+        <BottomNav />
+        <Toaster />
+      </div>
+    </TooltipProvider>
   );
 }
 

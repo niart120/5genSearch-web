@@ -14,7 +14,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { DetailRow } from '@/components/data-display/detail-row';
-import { getNeedleArrow } from '@/lib/game-data-names';
+import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-names';
+import { useUiStore } from '@/stores/settings/ui';
 import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
@@ -29,6 +30,7 @@ function ResultDetailDialog({
   result,
 }: ResultDetailDialogProps): ReactElement | undefined {
   const { t } = useLingui();
+  const language = useUiStore((s) => s.language);
 
   if (!result) return;
 
@@ -65,12 +67,14 @@ function ResultDetailDialog({
           <DetailRow label={t`Shiny`} value={result.shiny_symbol || '-'} />
           <DetailRow
             label="IV"
-            value={result.ivs.map((v, i) => `${['H', 'A', 'B', 'C', 'D', 'S'][i]}:${v}`).join(' ')}
+            value={result.ivs
+              .map((v, i) => `${getStatLabel(IV_STAT_KEYS[i], language)}:${v}`)
+              .join(' ')}
           />
           <DetailRow
             label={t`Stats`}
             value={result.stats
-              .map((v, i) => `${['H', 'A', 'B', 'C', 'D', 'S'][i]}:${v}`)
+              .map((v, i) => `${getStatLabel(IV_STAT_KEYS[i], language)}:${v}`)
               .join(' ')}
           />
           <DetailRow
