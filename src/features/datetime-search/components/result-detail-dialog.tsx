@@ -5,7 +5,7 @@
  * 各値にコピーボタンを付ける。
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Copy } from 'lucide-react';
 import {
@@ -16,7 +16,10 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
+import { getStandardContexts } from '@/lib/iv-tooltip';
 import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
+import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
@@ -57,6 +60,8 @@ function DetailRow({ label, value }: DetailRowProps) {
 
 function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDialogProps) {
   const { t } = useLingui();
+  const { config } = useDsConfigReadonly();
+  const contexts = useMemo(() => getStandardContexts(config.version), [config.version]);
 
   if (!seedOrigin) return;
 
@@ -89,7 +94,13 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
           {baseSeed !== undefined && (
             <DetailRow label="Base Seed" value={toBigintHex(baseSeed, 16)} />
           )}
-          {mtSeed !== undefined && <DetailRow label="MT Seed" value={toHex(mtSeed, 8)} />}
+          {mtSeed !== undefined && (
+            <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+              <div>
+                <DetailRow label="MT Seed" value={toHex(mtSeed, 8)} />
+              </div>
+            </SeedIvTooltip>
+          )}
         </div>
       </DialogContent>
     </Dialog>

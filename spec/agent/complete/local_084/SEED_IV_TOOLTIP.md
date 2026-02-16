@@ -47,6 +47,7 @@ LCG Seed / MT Seed の表示箇所にホバーツールチップを追加し、�
 | `src/lib/iv-tooltip.ts` | 新規 | IV ツールチップのコンテキスト定義・フォーマット関数 |
 | `src/features/mtseed-search/components/mtseed-result-columns.tsx` | 修正 | MT Seed セルにツールチップ追加 |
 | `src/features/datetime-search/components/seed-origin-columns.tsx` | 修正 | Base Seed / MT Seed セルにツールチップ追加 |
+| `src/features/datetime-search/components/result-detail-dialog.tsx` | 修正 | MT Seed 行にツールチップ追加 |
 | `src/features/pokemon-list/components/pokemon-result-columns.tsx` | 修正 | (seed 列があれば) ツールチップ追加 |
 | `src/features/pokemon-list/components/result-detail-dialog.tsx` | 修正 | ツールチップ追加 + IV フォーマットを `getStatLabel` ベースに統一 |
 | `src/features/egg-list/components/result-detail-dialog.tsx` | 修正 | 同上 |
@@ -392,9 +393,21 @@ Base Seed と MT Seed の両セルにツールチップを追加する。
 - **MT Seed**: `origin.Startup.mt_seed` (または `origin.Seed.mt_seed`) を直接使用
 - **Base Seed**: `lcg_seed_to_mt_seed(origin.base_seed)` で MT Seed に変換してから使用
 
-#### 4.5.3 DetailRow (pokemon-list / egg-list)
+#### 4.5.3 DetailRow (datetime-search / pokemon-list / egg-list)
 
 `DetailRow` を直接変更するのではなく、詳細ダイアログ内の Base Seed / MT Seed 行を `SeedIvTooltip` でラップする形で統合する。
+
+datetime-search の `result-detail-dialog.tsx` では MT Seed 行を `SeedIvTooltip` でラップする。`SeedOrigin` の `Startup` / `Seed` どちらの場合も `mt_seed` があればツールチップを表示する。
+
+```tsx
+{mtSeed !== undefined && (
+  <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+    <div>
+      <DetailRow label="MT Seed" value={toHex(mtSeed, 8)} />
+    </div>
+  </SeedIvTooltip>
+)}
+```
 
 ```tsx
 {/* Seed 情報 */}
@@ -480,6 +493,7 @@ Lingui の `<Trans>` / `t` マクロを使用する。
 - [x] `src/components/data-display/seed-iv-tooltip.tsx` を作成
 - [x] `mtseed-result-columns.tsx` にツールチップ統合
 - [x] `seed-origin-columns.tsx` にツールチップ統合
+- [x] `datetime-search/result-detail-dialog.tsx` にツールチップ統合
 - [x] `pokemon-list/result-detail-dialog.tsx` にツールチップ統合
 - [x] `egg-list/result-detail-dialog.tsx` にツールチップ統合
 - [x] `seed-input-section.tsx` にツールチップ統合 (該当する表示要素なし — スキップ)
