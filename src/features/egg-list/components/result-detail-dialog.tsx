@@ -4,7 +4,7 @@
  * UiEggData の全フィールドを表示する Radix Dialog。
  */
 
-import { type ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import {
   Dialog,
@@ -14,7 +14,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { DetailRow } from '@/components/data-display/detail-row';
-import { getNeedleArrow } from '@/lib/game-data-names';
+import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
+import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-names';
+import { getEggContexts } from '@/lib/iv-tooltip';
+import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { useUiStore } from '@/stores/settings/ui';
 import type { UiEggData } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
@@ -29,8 +33,13 @@ function ResultDetailDialog({
   result,
 }: ResultDetailDialogProps): ReactElement | undefined {
   const { t } = useLingui();
+  const { config } = useDsConfigReadonly();
+  const language = useUiStore((s) => s.language);
+  const contexts = useMemo(() => getEggContexts(config.version), [config.version]);
 
   if (!result) return;
+
+  const mtSeed = Number.parseInt(result.mt_seed, 16) >>> 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,7 +55,11 @@ function ResultDetailDialog({
         <div className="max-h-[60vh] divide-y divide-border overflow-y-auto">
           {/* Seed 情報 */}
           <DetailRow label="Base Seed" value={result.base_seed} />
-          <DetailRow label="MT Seed" value={result.mt_seed} />
+          <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+            <div>
+              <DetailRow label="MT Seed" value={result.mt_seed} />
+            </div>
+          </SeedIvTooltip>
           {result.datetime_iso !== undefined && (
             <DetailRow label={t`Date/Time`} value={result.datetime_iso} />
           )}
@@ -65,12 +78,14 @@ function ResultDetailDialog({
           <DetailRow label={t`Shiny`} value={result.shiny_symbol || '-'} />
           <DetailRow
             label="IV"
-            value={result.ivs.map((v, i) => `${['H', 'A', 'B', 'C', 'D', 'S'][i]}:${v}`).join(' ')}
+            value={result.ivs
+              .map((v, i) => `${getStatLabel(IV_STAT_KEYS[i], language)}:${v}`)
+              .join(' ')}
           />
           <DetailRow
             label={t`Stats`}
             value={result.stats
-              .map((v, i) => `${['H', 'A', 'B', 'C', 'D', 'S'][i]}:${v}`)
+              .map((v, i) => `${getStatLabel(IV_STAT_KEYS[i], language)}:${v}`)
               .join(' ')}
           />
           <DetailRow

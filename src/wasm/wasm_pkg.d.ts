@@ -1478,6 +1478,18 @@ export class TrainerInfoSearcher {
 }
 
 /**
+ * MT Seed と消費数から IV スプレッドを計算する。
+ *
+ * 既存内部関数 `generate_rng_ivs_with_offset` の wasm-bindgen エクスポート。
+ *
+ * # Arguments
+ * * `mt_seed` - MT19937 初期化シード
+ * * `mt_offset` - IV 生成開始までの消費数 (0, 1, 2, 7)
+ * * `is_roamer` - true の場合 IV 読み取り順が H/A/B/S/C/D になる (BW 徘徊)
+ */
+export function compute_iv_spread(mt_seed: MtSeed, mt_offset: number, is_roamer: boolean): Ivs;
+
+/**
  * タマゴ一括生成 (公開 API)
  *
  * - 解決済み Seed 対応: `Vec<SeedOrigin>` を受け取る
@@ -1601,6 +1613,13 @@ export function get_species_name(species_id: number, locale: string): string;
 export function health_check(): string;
 
 export function init(): void;
+
+/**
+ * LCG Seed から MT Seed を導出する。
+ *
+ * 既存メソッド `LcgSeed::derive_mt_seed()` の wasm-bindgen エクスポート。
+ */
+export function lcg_seed_to_mt_seed(seed: LcgSeed): MtSeed;
 
 /**
  * 卵データをバッチ解決
