@@ -82,7 +82,7 @@ msgstr "消費数"
 msgid "Advance Range"
 msgstr "消費範囲"
 
-#: src/features/egg-list/components/egg-list-page.tsx:203
+#: src/features/egg-list/components/egg-list-page.tsx:188
 msgid "Advance range invalid"
 msgstr "消費範囲が不正です"
 
@@ -91,6 +91,10 @@ msgstr "消費範囲が不正です"
 #: src/features/tid-adjust/components/tid-adjust-form.tsx:78
 msgid "Any"
 msgstr "任意"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:204
+msgid "Apply ({selectedSeedCount})"
+msgstr "適用 ({selectedSeedCount})"
 
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:29
 msgid "Atk"
@@ -136,8 +140,13 @@ msgstr "{0}ボタン"
 
 #: src/components/forms/search-confirmation-dialog.tsx:53
 #: src/components/forms/search-controls.tsx:53
+#: src/features/datetime-search/components/template-selection-dialog.tsx:201
 msgid "Cancel"
 msgstr "キャンセル"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:149
+msgid "Category"
+msgstr "種別"
 
 #: src/features/needle/components/needle-input.tsx:115
 msgid "Clear"
@@ -155,7 +164,7 @@ msgstr "ふくがん"
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
 
-#: src/components/forms/search-confirmation-dialog.tsx:56
+#: src/components/forms/search-confirmation-dialog.tsx:61
 msgid "Continue search"
 msgstr "検索を続行"
 
@@ -284,11 +293,11 @@ msgstr "エンカウント種別"
 msgid "End date"
 msgstr "終了日"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:114
+#: src/features/datetime-search/components/datetime-search-page.tsx:113
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:105
+#: src/features/datetime-search/components/datetime-search-page.tsx:104
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
@@ -386,7 +395,7 @@ msgstr "初期Seed"
 msgid "IV Range"
 msgstr "個体値範囲"
 
-#: src/features/egg-search/components/egg-search-page.tsx:130
+#: src/features/egg-search/components/egg-search-page.tsx:127
 msgid "IVs must be in the range 0 to 31"
 msgstr "個体値は0から31の範囲で入力してください"
 
@@ -486,14 +495,14 @@ msgstr "最大消費数"
 msgid "Max advance must be ≥ offset"
 msgstr "最大消費数はオフセット以上にしてください"
 
-#: src/features/egg-search/components/egg-search-page.tsx:128
+#: src/features/egg-search/components/egg-search-page.tsx:125
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:91
 msgid "Max advance must be ≥ start offset"
 msgstr "最大消費数は開始オフセット以上である必要があります"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:229
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:228
 msgid "Memory Link"
 msgstr "思い出リンク"
 
@@ -540,7 +549,7 @@ msgstr "MT 消費数は 0 以上にしてください"
 msgid "MT Seed"
 msgstr "MT Seed"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:106
+#: src/features/datetime-search/components/datetime-search-page.tsx:105
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seedは0からFFFFFFFFの範囲で入力してください"
 
@@ -597,34 +606,38 @@ msgstr "この組み合わせのデフォルトTimer0/VCountデータがあり�
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:170
 #: src/features/needle/components/needle-page.tsx:236
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:266
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "No results"
 msgstr "結果なし"
 
-#: src/features/egg-list/components/egg-list-page.tsx:300
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:283
+#: src/features/egg-list/components/egg-list-page.tsx:285
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:257
 msgid "No results found. Configure parameters and start generating."
 msgstr "結果が見つかりませんでした。パラメータを設定して生成を開始してください。"
 
-#: src/features/egg-search/components/egg-search-page.tsx:279
+#: src/features/egg-search/components/egg-search-page.tsx:276
 msgid "No results found. Configure parameters and start searching."
 msgstr "結果が見つかりませんでした。パラメータを設定して検索を開始してください。"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:241
+#: src/features/datetime-search/components/datetime-search-page.tsx:261
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:222
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:221
 msgid "No save"
 msgstr "セーブなし"
 
-#: src/features/egg-list/components/egg-list-page.tsx:202
+#: src/features/egg-list/components/egg-list-page.tsx:187
 msgid "No seeds specified"
 msgstr "Seedが指定されていません"
 
 #: src/components/forms/species-combobox.tsx:82
 msgid "No species found"
 msgstr "種族が見つかりません"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:172
+msgid "No templates match the current filter."
+msgstr "条件に一致するテンプレートがありません。"
 
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
 msgid "None"
@@ -655,7 +668,7 @@ msgstr "オフセット"
 msgid "Offset must be 0 or positive"
 msgstr "オフセットは0以上にしてください"
 
-#: src/features/egg-list/components/egg-list-page.tsx:204
+#: src/features/egg-list/components/egg-list-page.tsx:189
 msgid "Offset must be non-negative"
 msgstr "オフセットは0以上で指定してください"
 
@@ -671,7 +684,7 @@ msgstr "♀親の個体値"
 msgid "Parent ♂ IVs"
 msgstr "♂親の個体値"
 
-#: src/features/egg-list/components/egg-list-page.tsx:205
+#: src/features/egg-list/components/egg-list-page.tsx:190
 msgid "Parent IV out of range"
 msgstr "親の個体値が範囲外です"
 
@@ -722,13 +735,13 @@ msgstr "解決済みSeed"
 msgid "Result details"
 msgstr "結果の詳細"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:235
-#: src/features/egg-list/components/egg-list-page.tsx:280
-#: src/features/egg-search/components/egg-search-page.tsx:273
+#: src/features/datetime-search/components/datetime-search-page.tsx:255
+#: src/features/egg-list/components/egg-list-page.tsx:265
+#: src/features/egg-search/components/egg-search-page.tsx:270
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:162
 #: src/features/needle/components/needle-page.tsx:229
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:263
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:260
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:237
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:259
 msgid "Results"
 msgstr "検索結果"
 
@@ -780,6 +793,10 @@ msgstr "Seed 入力"
 msgid "Seed is not set"
 msgstr "Seedが設定されていません"
 
+#: src/features/datetime-search/components/template-selection-dialog.tsx:139
+msgid "Seed template selection"
+msgstr "Seed テンプレートの選択"
+
 #: src/components/forms/seed-input-section.tsx:239
 msgid "Seeds"
 msgstr "Seed 入力"
@@ -808,6 +825,10 @@ msgstr "Seedを1つ以上選択または入力してください"
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:352
 msgid "Select Pokémon"
 msgstr "ポケモンを選択"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:142
+msgid "Select seed templates to apply to Target Seeds."
+msgstr "Target Seeds に適用する Seed テンプレートを選択してください。"
 
 #: src/components/forms/key-input-selector.tsx:40
 msgid "Selected buttons"
@@ -843,7 +864,7 @@ msgstr "ひかるおまもり"
 msgid "Shiny PID"
 msgstr "色違い PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:121
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:118
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 
@@ -851,7 +872,7 @@ msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:120
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:117
 msgid "SID must be between 0 and 65535"
 msgstr "SID は 0〜65535 の範囲で入力してください"
 
@@ -899,9 +920,9 @@ msgstr "種族 (任意)"
 msgid "Start date"
 msgstr "開始日"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:103
-#: src/features/egg-search/components/egg-search-page.tsx:126
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:117
+#: src/features/datetime-search/components/datetime-search-page.tsx:102
+#: src/features/egg-search/components/egg-search-page.tsx:123
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:114
 msgid "Start date must be on or before end date"
 msgstr "開始日は終了日以前である必要があります"
 
@@ -915,7 +936,7 @@ msgstr "起動モード"
 msgid "Start offset"
 msgstr "開始オフセット"
 
-#: src/features/egg-search/components/egg-search-page.tsx:129
+#: src/features/egg-search/components/egg-search-page.tsx:126
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:92
 msgid "Start offset must be ≥ 0"
 msgstr "開始オフセットは0以上である必要があります"
@@ -932,9 +953,9 @@ msgstr "起動条件の詳細"
 msgid "Stationary"
 msgstr "固定"
 
-#: src/features/egg-list/components/egg-list-page.tsx:292
+#: src/features/egg-list/components/egg-list-page.tsx:277
 #: src/features/egg-list/components/result-detail-dialog.tsx:71
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:275
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:249
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:71
 msgid "Stats"
 msgstr "ステータス"
@@ -965,6 +986,10 @@ msgstr "シンクロ性格"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "左上のメニューアイコンから検索設定を行えます。"
 
+#: src/features/datetime-search/components/datetime-search-page.tsx
+msgid "Template"
+msgstr "テンプレート"
+
 #: src/components/layout/placeholder-page.tsx:20
 msgid "This feature is under development."
 msgstr "この機能は準備中です。"
@@ -977,7 +1002,7 @@ msgstr "本アプリは非公式のツールであり、任天堂、ゲームフ
 msgid "This project is open source."
 msgstr "このプロジェクトはオープンソースです。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:235
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:234
 msgid "This setting is independent of the sidebar."
 msgstr "この設定はサイドバーとは独立しています。"
 
@@ -989,7 +1014,7 @@ msgstr "TID (表ID)"
 msgid "TID Adjust"
 msgstr "TID 調整"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:119
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:116
 msgid "TID must be between 0 and 65535"
 msgstr "TID は 0〜65535 の範囲で入力してください"
 
@@ -1001,9 +1026,9 @@ msgstr "時刻"
 msgid "Time range"
 msgstr "時刻範囲"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:104
-#: src/features/egg-search/components/egg-search-page.tsx:127
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:118
+#: src/features/datetime-search/components/datetime-search-page.tsx:103
+#: src/features/egg-search/components/egg-search-page.tsx:124
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:115
 msgid "Time range is invalid"
 msgstr "時刻範囲が不正です"
 
@@ -1051,6 +1076,6 @@ msgstr "バージョン"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:225
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:224
 msgid "With save"
 msgstr "セーブあり"

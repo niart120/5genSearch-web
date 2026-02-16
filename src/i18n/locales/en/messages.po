@@ -82,7 +82,7 @@ msgstr "Advance"
 msgid "Advance Range"
 msgstr "Advance Range"
 
-#: src/features/egg-list/components/egg-list-page.tsx:203
+#: src/features/egg-list/components/egg-list-page.tsx:188
 msgid "Advance range invalid"
 msgstr "Advance range invalid"
 
@@ -91,6 +91,10 @@ msgstr "Advance range invalid"
 #: src/features/tid-adjust/components/tid-adjust-form.tsx:78
 msgid "Any"
 msgstr "Any"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:204
+msgid "Apply ({selectedSeedCount})"
+msgstr "Apply ({selectedSeedCount})"
 
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:29
 msgid "Atk"
@@ -136,8 +140,13 @@ msgstr "Button {0}"
 
 #: src/components/forms/search-confirmation-dialog.tsx:53
 #: src/components/forms/search-controls.tsx:53
+#: src/features/datetime-search/components/template-selection-dialog.tsx:201
 msgid "Cancel"
 msgstr "Cancel"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:149
+msgid "Category"
+msgstr "Category"
 
 #: src/features/needle/components/needle-input.tsx:115
 msgid "Clear"
@@ -155,7 +164,7 @@ msgstr "Compound Eyes"
 msgid "Consider NPC"
 msgstr "Consider NPC"
 
-#: src/components/forms/search-confirmation-dialog.tsx:56
+#: src/components/forms/search-confirmation-dialog.tsx:61
 msgid "Continue search"
 msgstr "Continue search"
 
@@ -284,11 +293,11 @@ msgstr "Encounter type"
 msgid "End date"
 msgstr "End date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:114
+#: src/features/datetime-search/components/datetime-search-page.tsx:113
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:105
+#: src/features/datetime-search/components/datetime-search-page.tsx:104
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
@@ -390,7 +399,7 @@ msgstr "Initial Seed"
 msgid "IV Range"
 msgstr "IV Range"
 
-#: src/features/egg-search/components/egg-search-page.tsx:130
+#: src/features/egg-search/components/egg-search-page.tsx:127
 msgid "IVs must be in the range 0 to 31"
 msgstr "IVs must be in the range 0 to 31"
 
@@ -490,14 +499,14 @@ msgstr "Max Advance"
 msgid "Max advance must be ≥ offset"
 msgstr "Max advance must be ≥ offset"
 
-#: src/features/egg-search/components/egg-search-page.tsx:128
+#: src/features/egg-search/components/egg-search-page.tsx:125
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:91
 msgid "Max advance must be ≥ start offset"
 msgstr "Max advance must be ≥ start offset"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:229
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:228
 msgid "Memory Link"
 msgstr "Memory Link"
 
@@ -544,7 +553,7 @@ msgstr "MT Advances must be 0 or greater"
 msgid "MT Seed"
 msgstr "MT Seed"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:106
+#: src/features/datetime-search/components/datetime-search-page.tsx:105
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 
@@ -601,34 +610,38 @@ msgstr "No default Timer0/VCount data for this combination. Switched to manual m
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:170
 #: src/features/needle/components/needle-page.tsx:236
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:266
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "No results"
 msgstr "No results"
 
-#: src/features/egg-list/components/egg-list-page.tsx:300
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:283
+#: src/features/egg-list/components/egg-list-page.tsx:285
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:257
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
-#: src/features/egg-search/components/egg-search-page.tsx:279
+#: src/features/egg-search/components/egg-search-page.tsx:276
 msgid "No results found. Configure parameters and start searching."
 msgstr "No results found. Configure parameters and start searching."
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:241
+#: src/features/datetime-search/components/datetime-search-page.tsx:261
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:222
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:221
 msgid "No save"
 msgstr "No save"
 
-#: src/features/egg-list/components/egg-list-page.tsx:202
+#: src/features/egg-list/components/egg-list-page.tsx:187
 msgid "No seeds specified"
 msgstr "No seeds specified"
 
 #: src/components/forms/species-combobox.tsx:82
 msgid "No species found"
 msgstr "No species found"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:172
+msgid "No templates match the current filter."
+msgstr "No templates match the current filter."
 
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
 msgid "None"
@@ -659,7 +672,7 @@ msgstr "Offset"
 msgid "Offset must be 0 or positive"
 msgstr "Offset must be 0 or positive"
 
-#: src/features/egg-list/components/egg-list-page.tsx:204
+#: src/features/egg-list/components/egg-list-page.tsx:189
 msgid "Offset must be non-negative"
 msgstr "Offset must be non-negative"
 
@@ -675,7 +688,7 @@ msgstr "Parent ♀ IVs"
 msgid "Parent ♂ IVs"
 msgstr "Parent ♂ IVs"
 
-#: src/features/egg-list/components/egg-list-page.tsx:205
+#: src/features/egg-list/components/egg-list-page.tsx:190
 msgid "Parent IV out of range"
 msgstr "Parent IV out of range"
 
@@ -726,13 +739,13 @@ msgstr "Resolved seeds"
 msgid "Result details"
 msgstr "Result details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:235
-#: src/features/egg-list/components/egg-list-page.tsx:280
-#: src/features/egg-search/components/egg-search-page.tsx:273
+#: src/features/datetime-search/components/datetime-search-page.tsx:255
+#: src/features/egg-list/components/egg-list-page.tsx:265
+#: src/features/egg-search/components/egg-search-page.tsx:270
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:162
 #: src/features/needle/components/needle-page.tsx:229
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:263
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:260
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:237
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:259
 msgid "Results"
 msgstr "Results"
 
@@ -784,6 +797,10 @@ msgstr "Seed input"
 msgid "Seed is not set"
 msgstr "Seed is not set"
 
+#: src/features/datetime-search/components/template-selection-dialog.tsx:139
+msgid "Seed template selection"
+msgstr "Seed template selection"
+
 #: src/components/forms/seed-input-section.tsx:239
 msgid "Seeds"
 msgstr "Seeds"
@@ -812,6 +829,10 @@ msgstr "Select or enter at least one seed"
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:352
 msgid "Select Pokémon"
 msgstr "Select Pokémon"
+
+#: src/features/datetime-search/components/template-selection-dialog.tsx:142
+msgid "Select seed templates to apply to Target Seeds."
+msgstr "Select seed templates to apply to Target Seeds."
 
 #: src/components/forms/key-input-selector.tsx:40
 msgid "Selected buttons"
@@ -847,7 +868,7 @@ msgstr "Shiny Charm"
 msgid "Shiny PID"
 msgstr "Shiny PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:121
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:118
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 
@@ -855,7 +876,7 @@ msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgid "SID"
 msgstr "SID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:120
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:117
 msgid "SID must be between 0 and 65535"
 msgstr "SID must be between 0 and 65535"
 
@@ -903,9 +924,9 @@ msgstr "Species (optional)"
 msgid "Start date"
 msgstr "Start date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:103
-#: src/features/egg-search/components/egg-search-page.tsx:126
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:117
+#: src/features/datetime-search/components/datetime-search-page.tsx:102
+#: src/features/egg-search/components/egg-search-page.tsx:123
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:114
 msgid "Start date must be on or before end date"
 msgstr "Start date must be on or before end date"
 
@@ -919,7 +940,7 @@ msgstr "Start mode"
 msgid "Start offset"
 msgstr "Start offset"
 
-#: src/features/egg-search/components/egg-search-page.tsx:129
+#: src/features/egg-search/components/egg-search-page.tsx:126
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:92
 msgid "Start offset must be ≥ 0"
 msgstr "Start offset must be ≥ 0"
@@ -936,9 +957,9 @@ msgstr "Startup condition details"
 msgid "Stationary"
 msgstr "Stationary"
 
-#: src/features/egg-list/components/egg-list-page.tsx:292
+#: src/features/egg-list/components/egg-list-page.tsx:277
 #: src/features/egg-list/components/result-detail-dialog.tsx:71
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:275
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:249
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:71
 msgid "Stats"
 msgstr "Stats"
@@ -969,6 +990,10 @@ msgstr "Synchronize nature"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "Tap the menu icon at the top left to configure search settings."
 
+#: src/features/datetime-search/components/datetime-search-page.tsx
+msgid "Template"
+msgstr "Template"
+
 #: src/components/layout/placeholder-page.tsx:20
 msgid "This feature is under development."
 msgstr "This feature is under development."
@@ -981,7 +1006,7 @@ msgstr "This is an unofficial tool and is not affiliated with or endorsed by Nin
 msgid "This project is open source."
 msgstr "This project is open source."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:235
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:234
 msgid "This setting is independent of the sidebar."
 msgstr "This setting is independent of the sidebar."
 
@@ -993,7 +1018,7 @@ msgstr "TID"
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:119
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:116
 msgid "TID must be between 0 and 65535"
 msgstr "TID must be between 0 and 65535"
 
@@ -1005,9 +1030,9 @@ msgstr "Time"
 msgid "Time range"
 msgstr "Time range"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:104
-#: src/features/egg-search/components/egg-search-page.tsx:127
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:118
+#: src/features/datetime-search/components/datetime-search-page.tsx:103
+#: src/features/egg-search/components/egg-search-page.tsx:124
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:115
 msgid "Time range is invalid"
 msgstr "Time range is invalid"
 
@@ -1055,6 +1080,6 @@ msgstr "Version"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:225
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:224
 msgid "With save"
 msgstr "With save"

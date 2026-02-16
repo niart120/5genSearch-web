@@ -12,6 +12,7 @@ import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
+import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
@@ -21,6 +22,7 @@ import { parseTargetSeeds, validateMtseedSearchForm } from '../types';
 import type { ValidationErrorCode, ParseErrorCode } from '../types';
 import { createSeedOriginColumns } from './seed-origin-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
+import { TemplateSelectionDialog } from './template-selection-dialog';
 import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import type {
   DateRangeParams,
@@ -123,6 +125,18 @@ function DatetimeSearchPage(): ReactElement {
     [parsedSeeds.errors, parseErrorMessages]
   );
 
+  // テンプレートダイアログ
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+
+  // テンプレート適用
+  const handleTemplateApply = useCallback(
+    (seeds: number[]) => {
+      const text = seeds.map((s) => toHex(s, 8)).join('\n');
+      setTargetSeedsRaw(text);
+    },
+    [setTargetSeedsRaw]
+  );
+
   // 詳細ダイアログ
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedOrigin, setSelectedOrigin] = useState<SeedOrigin | undefined>();
@@ -209,13 +223,27 @@ function DatetimeSearchPage(): ReactElement {
             keyCombinationCount={keyCombinationCount}
           />
 
-          <TargetSeedsInput
-            value={targetSeedsRaw}
-            onChange={setTargetSeedsRaw}
-            parsedSeeds={parsedSeeds.seeds}
-            errors={translatedParseErrors}
-            disabled={isLoading}
-          />
+          <section className="flex flex-col gap-2">
+            <h3 className="text-sm font-medium">
+              <Trans>Initial Seed</Trans>
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplateDialogOpen(true)}
+              disabled={isLoading}
+            >
+              <Trans>Template</Trans>
+            </Button>
+
+            <TargetSeedsInput
+              value={targetSeedsRaw}
+              onChange={setTargetSeedsRaw}
+              parsedSeeds={parsedSeeds.seeds}
+              errors={translatedParseErrors}
+              disabled={isLoading}
+            />
+          </section>
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (
@@ -270,6 +298,13 @@ function DatetimeSearchPage(): ReactElement {
           setConfirmDialog({ open: false, estimatedCount: 0 });
           handleSearchExecution();
         }}
+      />
+
+      <TemplateSelectionDialog
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
+        onApply={handleTemplateApply}
+        currentVersion={dsConfig.version}
       />
     </>
   );
