@@ -4,7 +4,7 @@
  * UiEggData の全フィールドを表示する Radix Dialog。
  */
 
-import { useMemo, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import {
   Dialog,
@@ -14,12 +14,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { DetailRow } from '@/components/data-display/detail-row';
-import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-names';
-import { getEggContexts } from '@/lib/iv-tooltip';
-import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useUiStore } from '@/stores/settings/ui';
-import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 import type { UiEggData } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
@@ -34,13 +30,9 @@ function ResultDetailDialog({
   result,
 }: ResultDetailDialogProps): ReactElement | undefined {
   const { t } = useLingui();
-  const { config } = useDsConfigReadonly();
   const language = useUiStore((s) => s.language);
-  const contexts = useMemo(() => getEggContexts(config.version), [config.version]);
 
   if (!result) return;
-
-  const mtSeed = Number.parseInt(result.mt_seed, 16) >>> 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,19 +47,8 @@ function ResultDetailDialog({
         </DialogHeader>
         <div className="max-h-[60vh] divide-y divide-border overflow-y-auto">
           {/* Seed 情報 */}
-          <SeedIvTooltip
-            mtSeed={lcg_seed_to_mt_seed(BigInt(`0x${result.base_seed}`))}
-            contexts={contexts}
-          >
-            <div>
-              <DetailRow label="Base Seed" value={result.base_seed} />
-            </div>
-          </SeedIvTooltip>
-          <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
-            <div>
-              <DetailRow label="MT Seed" value={result.mt_seed} />
-            </div>
-          </SeedIvTooltip>
+          <DetailRow label="Base Seed" value={result.base_seed} />
+          <DetailRow label="MT Seed" value={result.mt_seed} />
           {result.datetime_iso !== undefined && (
             <DetailRow label={t`Date/Time`} value={result.datetime_iso} />
           )}
