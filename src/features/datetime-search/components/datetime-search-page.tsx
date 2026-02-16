@@ -225,7 +225,7 @@ function DatetimeSearchPage(): ReactElement {
 
           <section className="flex flex-col gap-2">
             <h3 className="text-sm font-medium">
-              <Trans>Init seeds</Trans>
+              <Trans>Initial Seed</Trans>
             </h3>
             <Button
               variant="outline"

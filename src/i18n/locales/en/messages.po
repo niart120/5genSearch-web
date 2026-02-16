@@ -991,10 +991,6 @@ msgstr "Synchronize nature"
 #~ msgstr "Tap the menu icon at the top left to configure search settings."
 
 #: src/features/datetime-search/components/datetime-search-page.tsx
-msgid "Init seeds"
-msgstr "Init seeds"
-
-#: src/features/datetime-search/components/datetime-search-page.tsx
 msgid "Template"
 msgstr "Template"
 
