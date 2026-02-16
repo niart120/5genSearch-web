@@ -20,6 +20,7 @@ import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
@@ -92,7 +93,11 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
             </>
           )}
           {baseSeed !== undefined && (
-            <DetailRow label="Base Seed" value={toBigintHex(baseSeed, 16)} />
+            <SeedIvTooltip mtSeed={lcg_seed_to_mt_seed(baseSeed)} contexts={contexts}>
+              <div>
+                <DetailRow label="Base Seed" value={toBigintHex(baseSeed, 16)} />
+              </div>
+            </SeedIvTooltip>
           )}
           {mtSeed !== undefined && (
             <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>

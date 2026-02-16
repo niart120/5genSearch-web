@@ -19,6 +19,7 @@ import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-name
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useUiStore } from '@/stores/settings/ui';
+import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
 
 interface ResultDetailDialogProps {
@@ -54,7 +55,14 @@ function ResultDetailDialog({
         </DialogHeader>
         <div className="max-h-[60vh] divide-y divide-border overflow-y-auto">
           {/* Seed 情報 */}
-          <DetailRow label="Base Seed" value={result.base_seed} />
+          <SeedIvTooltip
+            mtSeed={lcg_seed_to_mt_seed(BigInt(`0x${result.base_seed}`))}
+            contexts={contexts}
+          >
+            <div>
+              <DetailRow label="Base Seed" value={result.base_seed} />
+            </div>
+          </SeedIvTooltip>
           <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
             <div>
               <DetailRow label="MT Seed" value={result.mt_seed} />
