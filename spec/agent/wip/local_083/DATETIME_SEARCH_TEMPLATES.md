@@ -12,14 +12,15 @@
 |------|------|
 | Seed テンプレート | 特定の条件（バージョン・カテゴリ・IV パターン）に対応する MT Seed の定義済みリスト |
 | TemplateVersion | テンプレートの対象バージョン軸。`BW` (Black/White) と `BW2` (Black2/White2) の 2 値 |
-| TemplateCategory | テンプレートの種別。`stationary` (固定・野生)、`roamer` (徘徊)、`egg` (孵化) の 3 値 |
+| TemplateCategory | テンプレートの種別。`stationary` (固定・野生) と `roamer` (徘徊) の 2 値 |
+| IvPattern | IV パターンの表記。`V` = 31, 数字 = 固定値, `U` = 30。例: `V0VVV0` = 31-0-31-31-31-0 |
 | Target Seeds | 起動時刻検索の対象 MT Seed 入力欄 (textarea ベース、改行区切り 16 進数) |
 
 ### 1.3 背景・問題
 
-起動時刻検索 (local_054) では、検索対象の MT Seed をユーザーが手動で入力する必要がある。ポケモン BW/BW2 の乱数調整では、6V 個体や特定の IV パターン (5VA0, V0VVV0, めざ氷 等) に対応する既知の MT Seed が存在し、これらは乱数調整コミュニティで広く共有されている。
+起動時刻検索 (local_054) では、検索対象の MT Seed をユーザーが手動で入力する必要がある。ポケモン BW/BW2 の乱数調整では、6V 個体や特定の IV パターンに対応する既知の MT Seed が存在し、これらは乱数調整コミュニティで広く共有されている。
 
-リファレンス実装 (niart120/pokemon-gen5-initseed) では `src/data/seed-templates.ts` に定義済みテンプレートを持ち、`TemplateSelectionDialog` でユーザーが選択・適用する機能を提供していた。本 spec ではこの機能を本リポジトリのアーキテクチャに合わせて再実装する。
+リファレンス実装 (niart120/pokemon-gen5-initseed) では定義済みテンプレートを持ちユーザーが選択・適用する機能を提供していた。本 spec ではこの機能を本リポジトリのアーキテクチャに合わせて再構築する。
 
 ### 1.4 期待効果
 
@@ -49,11 +50,33 @@
 
 ### 3.1 テンプレートデータ
 
-テンプレートデータは `src/data/seed-templates.ts` に配置する。静的データ層 (`data/`) に置くことで、feature から独立した参照が可能になる (将来的に他の機能から参照する場合に備える)。
+テンプレートデータは `src/data/seed-templates.ts` に配置する。静的データ層 (`data/`) に置くことで、feature から独立した参照が可能になる。
 
 バージョン軸は DS 設定の `RomVersion` (`Black | White | Black2 | White2`) から `TemplateVersion` (`BW | BW2`) に集約してフィルタする。
 
-テンプレート名・説明はロケール別 (`Record<SupportedLocale, string>`) で保持する。`game-data-names.ts` のパターンに従い、ゲーム固有の用語 (IV パターン名、エンカウント種別名) を言語別に管理する。
+テンプレート名・説明はロケール別 (`Record<SupportedLocale, string>`) で保持する。`game-data-names.ts` のパターンに従い、ゲーム固有の用語を言語別に管理する。
+
+#### テンプレート対象範囲
+
+孵化テンプレートは本 spec の対象外とする (需要が低いため)。対象は以下の 2 カテゴリ:
+
+- **固定・野生 (stationary)**: `mt_offset=0` (BW) / `mt_offset=2` (BW2)、`is_roamer=false`
+- **徘徊 (roamer)**: `mt_offset=1`、`is_roamer=true` (BW のみ)
+
+#### パターン定義
+
+各テンプレートは「IV パターン」と「検索条件」の組み合わせで定義される。Seed 値は `MtseedSearcher` (CPU) / `GpuMtseedSearchIterator` (GPU) による全探索で導出したものを使用する。
+
+| ID | パターン名 | IV 条件 (H-A-B-C-D-S) | 備考 |
+|----|-----------|----------------------|------|
+| 6v | 6V | 31-31-31-31-31-31 | 理想個体 |
+| 5va0 | 5VA0 | 31-0-31-31-31-31 | 特殊型 (A 最低) |
+| 5vs0 | 5VS0 | 31-31-31-31-31-0 | トリル型 (S 最低) |
+| v0vvv0 | V0VVV0 | 31-0-31-31-31-0 | 特殊トリル型 |
+| hp-ice | めざ氷 | 31-2-30-31-31-31 | めざめるパワー氷 70 |
+| hp-fire | めざ炎 | 31-2-31-30-31-30 | めざめるパワー炎 70 |
+| hp-ground | めざ地面 | 31-2-31-30-30-31 | めざめるパワー地面 70 |
+| hp-grass | めざ草 | 31-2-31-30-31-31 | めざめるパワー草 70 |
 
 ### 3.2 UI 構成
 
@@ -80,8 +103,11 @@
 │  種別: [すべて ▼]                          │
 │                                          │
 │  ☐ BW 固定・野生 6V       (5 seeds)       │
-│     BW 標準（消費0）6V                     │
+│     31-31-31-31-31-31                     │
 │  ☐ BW 固定・野生 5VA0     (3 seeds)       │
+│     31-0-31-31-31-31                      │
+│  ☐ BW 固定・野生 5VS0     (4 seeds)       │
+│     31-31-31-31-31-0                      │
 │     ...                                  │
 │                                          │
 │  ☐ BW 徘徊 6V             (5 seeds)       │
@@ -93,7 +119,7 @@
 └──────────────────────────────────────────┘
 ```
 
-- カテゴリフィルタ: `all | stationary | roamer | egg` のドロップダウン
+- カテゴリフィルタ: `all | stationary | roamer` のドロップダウン
 - バージョンフィルタ: DS 設定の `version` から自動判定 (ユーザー操作不要)
 - 複数テンプレートを Checkbox で選択可
 - 「適用」ボタンに選択中の Seed 総数を表示
@@ -146,7 +172,8 @@ Store に追加する項目はない。テンプレート選択は一時的な�
 
 - ユーザー定義テンプレートの追加 (Store 永続化)
 - テンプレートのインポート/エクスポート
-- 他の検索機能 (egg-search 等) からの参照
+- 他の検索機能からの参照
+- 孵化テンプレートの追加
 
 現時点では事前定義テンプレートのみを扱い、上記は必要になった段階で検討する。
 
@@ -162,7 +189,7 @@ import type { RomVersion } from '@/wasm/wasm_pkg';
 export type TemplateVersion = 'BW' | 'BW2';
 
 /** テンプレート種別 */
-export type TemplateCategory = 'stationary' | 'roamer' | 'egg';
+export type TemplateCategory = 'stationary' | 'roamer';
 
 /** カテゴリフィルタ (UI 用、'all' を含む) */
 export type TemplateCategoryFilter = 'all' | TemplateCategory;
@@ -207,218 +234,50 @@ export const TEMPLATE_CATEGORY_LABELS: Record<
   all: { ja: 'すべて', en: 'All' },
   stationary: { ja: '固定・野生', en: 'Stationary/Wild' },
   roamer: { ja: '徘徊', en: 'Roamer' },
-  egg: { ja: '孵化', en: 'Egg' },
 };
-
-/**
- * 定義済み Seed テンプレート
- *
- * リファレンス実装 (niart120/pokemon-gen5-initseed) の
- * 定義済みテンプレートを移植。
- */
-export const SEED_TEMPLATES: SeedTemplate[] = [
-  // --- BW 固定・野生 ---
-  {
-    id: 'bw-stationary-6v',
-    name: { ja: 'BW 固定・野生 6V', en: 'BW Stationary/Wild 6V' },
-    description: {
-      ja: 'ブラック・ホワイト 標準（消費0）6V（5種類）',
-      en: 'Black/White Standard (0 advances) 6V — 5 seeds',
-    },
-    version: 'BW',
-    category: 'stationary',
-    seeds: [0x14b11ba6, 0x8a30480d, 0x9e02b0ae, 0xadfa2178, 0xfc4aa3ac],
-  },
-  {
-    id: 'bw-stationary-5va0',
-    name: { ja: 'BW 固定・野生 5VA0', en: 'BW Stationary/Wild 5VA0' },
-    description: {
-      ja: 'ブラック・ホワイト 標準（消費0）5VA0（3種類）',
-      en: 'Black/White Standard (0 advances) 5VA0 — 3 seeds',
-    },
-    version: 'BW',
-    category: 'stationary',
-    seeds: [0x4bd26fc3, 0xc59a441a, 0xdfe7ebf2],
-  },
-  {
-    id: 'bw-stationary-v0vvv0',
-    name: { ja: 'BW 固定・野生 V0VVV0', en: 'BW Stationary/Wild V0VVV0' },
-    description: {
-      ja: 'ブラック・ホワイト 標準（消費0）V0VVV0（2種類）',
-      en: 'Black/White Standard (0 advances) V0VVV0 — 2 seeds',
-    },
-    version: 'BW',
-    category: 'stationary',
-    seeds: [0x0b5a81f0, 0x5d6f6d1d],
-  },
-  {
-    id: 'bw-stationary-v2uvvv-ice',
-    name: {
-      ja: 'BW 固定・野生 V2UVVV めざ氷',
-      en: 'BW Stationary/Wild V2UVVV HP Ice',
-    },
-    description: {
-      ja: 'ブラック・ホワイト 標準（消費0）V2UVVV めざ氷（7種類）',
-      en: 'Black/White Standard (0 advances) V2UVVV HP Ice — 7 seeds',
-    },
-    version: 'BW',
-    category: 'stationary',
-    seeds: [
-      0x01117891, 0x2277228b, 0xa38fbaaf, 0xa49fdc53,
-      0xaf3ffbbf, 0xf0ee8f20, 0xf62667ee,
-    ],
-  },
-  // --- BW 徘徊 ---
-  {
-    id: 'bw-roamer-6v',
-    name: { ja: 'BW 徘徊 6V', en: 'BW Roamer 6V' },
-    description: {
-      ja: 'ブラック・ホワイト 徘徊（消費1）6V（5種類）',
-      en: 'Black/White Roamer (1 advance) 6V — 5 seeds',
-    },
-    version: 'BW',
-    category: 'roamer',
-    seeds: [0x35652a5f, 0x4707f449, 0x7541aad0, 0xbee598a7, 0xeaa27a05],
-  },
-  {
-    id: 'bw-roamer-v2uvvv-ice',
-    name: { ja: 'BW 徘徊 V2UVVV めざ氷', en: 'BW Roamer V2UVVV HP Ice' },
-    description: {
-      ja: 'ブラック・ホワイト 徘徊（消費1）V2UVVV めざ氷（6種類）',
-      en: 'Black/White Roamer (1 advance) V2UVVV HP Ice — 6 seeds',
-    },
-    version: 'BW',
-    category: 'roamer',
-    seeds: [0x5f3de7ef, 0x7f1983d4, 0xb8500799, 0xc18aa384, 0xc899e66e, 0xd8bfc637],
-  },
-  {
-    id: 'bw-roamer-u2uuuv-flying',
-    name: { ja: 'BW 徘徊 U2UUUV めざ飛', en: 'BW Roamer U2UUUV HP Flying' },
-    description: {
-      ja: 'ブラック・ホワイト 徘徊（消費1）U2UUUV めざ飛（5種類）',
-      en: 'Black/White Roamer (1 advance) U2UUUV HP Flying — 5 seeds',
-    },
-    version: 'BW',
-    category: 'roamer',
-    seeds: [0x4a28cbe0, 0x5b41c530, 0xa359c930, 0xc8175b8b, 0xdafa8540],
-  },
-  // --- BW2 固定・野生 ---
-  {
-    id: 'bw2-stationary-6v',
-    name: { ja: 'BW2 固定・野生 6V', en: 'BW2 Stationary/Wild 6V' },
-    description: {
-      ja: 'ブラック2・ホワイト2（消費2）6V（6種類）',
-      en: 'Black2/White2 (2 advances) 6V — 6 seeds',
-    },
-    version: 'BW2',
-    category: 'stationary',
-    seeds: [0x31c26de4, 0x519a0c07, 0xc28a882e, 0xdfe7ebf2, 0xe34372ae, 0xed01c9c2],
-  },
-  {
-    id: 'bw2-stationary-5va0',
-    name: { ja: 'BW2 固定・野生 5VA0', en: 'BW2 Stationary/Wild 5VA0' },
-    description: {
-      ja: 'ブラック2・ホワイト2（消費2）5VA0（10種類）',
-      en: 'Black2/White2 (2 advances) 5VA0 — 10 seeds',
-    },
-    version: 'BW2',
-    category: 'stationary',
-    seeds: [
-      0x14719922, 0x634cc2b0, 0x71afc896, 0x88efdec2, 0xaa333835,
-      0xabd93e44, 0xadd877c4, 0xb32b6b02, 0xc31ddef7, 0xd286653c,
-    ],
-  },
-  {
-    id: 'bw2-stationary-v0vvv0',
-    name: { ja: 'BW2 固定・野生 V0VVV0', en: 'BW2 Stationary/Wild V0VVV0' },
-    description: {
-      ja: 'ブラック2・ホワイト2（消費2）V0VVV0（4種類）',
-      en: 'Black2/White2 (2 advances) V0VVV0 — 4 seeds',
-    },
-    version: 'BW2',
-    category: 'stationary',
-    seeds: [0x54f39e0f, 0x6338dded, 0x7bf8cd77, 0xf9c432eb],
-  },
-  {
-    id: 'bw2-stationary-v2uvvv-ice',
-    name: {
-      ja: 'BW2 固定・野生 V2UVVV めざ氷',
-      en: 'BW2 Stationary/Wild V2UVVV HP Ice',
-    },
-    description: {
-      ja: 'ブラック2・ホワイト2（消費2）V2UVVV めざ氷（8種類）',
-      en: 'Black2/White2 (2 advances) V2UVVV HP Ice — 8 seeds',
-    },
-    version: 'BW2',
-    category: 'stationary',
-    seeds: [
-      0x03730f34, 0x2c9d32bf, 0x3f37a9b9, 0x440cb317,
-      0x6728fdbf, 0x7240a4ae, 0x9bfb3d33, 0xff1df7dc,
-    ],
-  },
-  // --- BW 孵化 ---
-  {
-    id: 'bw-egg-6v',
-    name: { ja: 'BW 孵化 6V', en: 'BW Egg 6V' },
-    description: {
-      ja: 'ブラック・ホワイト 孵化（消費7）6V（5種類）',
-      en: 'Black/White Egg (7 advances) 6V — 5 seeds',
-    },
-    version: 'BW',
-    category: 'egg',
-    seeds: [0xccda2eaf, 0x95943c17, 0x9e443917, 0x288144c5, 0x8b39431b],
-  },
-  {
-    id: 'bw-egg-5va0',
-    name: { ja: 'BW 孵化 5VA0', en: 'BW Egg 5VA0' },
-    description: {
-      ja: 'ブラック・ホワイト 孵化（消費7）5VA0（2種類）',
-      en: 'Black/White Egg (7 advances) 5VA0 — 2 seeds',
-    },
-    version: 'BW',
-    category: 'egg',
-    seeds: [0x25b4c159, 0xc825a2f0],
-  },
-  {
-    id: 'bw-egg-5vs0',
-    name: { ja: 'BW 孵化 5VS0', en: 'BW Egg 5VS0' },
-    description: {
-      ja: 'ブラック・ホワイト 孵化（消費7）5VS0（8種類）',
-      en: 'Black/White Egg (7 advances) 5VS0 — 8 seeds',
-    },
-    version: 'BW',
-    category: 'egg',
-    seeds: [
-      0x479b959f, 0xe1c396fb, 0x08cbe836, 0x33ac78ee,
-      0x50b3ec3d, 0x26f4371b, 0x435e8bb3, 0x52e6fe61,
-    ],
-  },
-  {
-    id: 'bw-egg-v0vvv0',
-    name: { ja: 'BW 孵化 V0VVV0', en: 'BW Egg V0VVV0' },
-    description: {
-      ja: 'ブラック・ホワイト 孵化（消費7）V0VVV0（4種類）',
-      en: 'Black/White Egg (7 advances) V0VVV0 — 4 seeds',
-    },
-    version: 'BW',
-    category: 'egg',
-    seeds: [0x63e3d233, 0x6737b419, 0xb4f1c576, 0xee571eec],
-  },
-  {
-    id: 'bw-egg-v2uvvv-ice',
-    name: { ja: 'BW 孵化 V2UVVV めざ氷', en: 'BW Egg V2UVVV HP Ice' },
-    description: {
-      ja: 'ブラック・ホワイト 孵化（消費7）V2UVVV めざ氷（1種類）',
-      en: 'Black/White Egg (7 advances) V2UVVV HP Ice — 1 seed',
-    },
-    version: 'BW',
-    category: 'egg',
-    seeds: [0xd07de3a6],
-  },
-];
 ```
 
-### 4.2 TemplateSelectionDialog (`features/datetime-search/components/template-selection-dialog.tsx`)
+### 4.2 テンプレートパターン一覧
+
+以下は GPU 全探索 (`GpuMtseedSearchIterator`) で確認済みの Seed 値一覧。ID 命名は `{version}-{category}-{pattern}` 形式。
+
+#### 4.2.1 BW 固定・野生 (`mt_offset=0`, `is_roamer=false`)
+
+| ID | パターン | IV (H-A-B-C-D-S) | Seed 数 | Seeds |
+|----|---------|-------------------|---------|-------|
+| `bw-stationary-6v` | 6V | 31-31-31-31-31-31 | 5 | `14B11BA6`, `8A30480D`, `9E02B0AE`, `ADFA2178`, `FC4AA3AC` |
+| `bw-stationary-5va0` | 5VA0 | 31-0-31-31-31-31 | 3 | `4BD26FC3`, `C59A441A`, `DFE7EBF2` |
+| `bw-stationary-5vs0` | 5VS0 | 31-31-31-31-31-0 | 4 | `47F4E4DD`, `9F97B296`, `A4686420`, `D5678C32` |
+| `bw-stationary-v0vvv0` | V0VVV0 | 31-0-31-31-31-0 | 2 | `0B5A81F0`, `5D6F6D1D` |
+| `bw-stationary-hp-ice` | めざ氷 | 31-2-30-31-31-31 | 7 | `01117891`, `2277228B`, `A38FBAAF`, `A49FDC53`, `AF3FFBBF`, `F0EE8F20`, `F62667EE` |
+| `bw-stationary-hp-fire` | めざ炎 | 31-2-31-30-31-30 | 3 | `B6594B3F`, `E5AE320C`, `ED81E12C` |
+| `bw-stationary-hp-ground` | めざ地面 | 31-2-31-30-30-31 | 2 | `E612EDE1`, `FE841EB2` |
+| `bw-stationary-hp-grass` | めざ草 | 31-2-31-30-31-31 | 3 | `85516C9E`, `A57DD3C3`, `A9A04E44` |
+
+#### 4.2.2 BW 徘徊 (`mt_offset=1`, `is_roamer=true`)
+
+| ID | パターン | IV (H-A-B-C-D-S) | Seed 数 | Seeds |
+|----|---------|-------------------|---------|-------|
+| `bw-roamer-6v` | 6V | 31-31-31-31-31-31 | 5 | `35652A5F`, `4707F449`, `7541AAD0`, `BEE598A7`, `EAA27A05` |
+| `bw-roamer-hp-ice` | めざ氷 | 31-2-30-31-31-31 | 6 | `5F3DE7EF`, `7F1983D4`, `B8500799`, `C18AA384`, `C899E66E`, `D8BFC637` |
+| `bw-roamer-hp-flying` | めざ飛 | 30-2-30-30-30-31 | 5 | `4A28CBE0`, `5B41C530`, `A359C930`, `C8175B8B`, `DAFA8540` |
+
+#### 4.2.3 BW2 固定・野生 (`mt_offset=2`, `is_roamer=false`)
+
+| ID | パターン | IV (H-A-B-C-D-S) | Seed 数 | Seeds |
+|----|---------|-------------------|---------|-------|
+| `bw2-stationary-6v` | 6V | 31-31-31-31-31-31 | 6 | `31C26DE4`, `519A0C07`, `C28A882E`, `DFE7EBF2`, `E34372AE`, `ED01C9C2` |
+| `bw2-stationary-5va0` | 5VA0 | 31-0-31-31-31-31 | 10 | `14719922`, `634CC2B0`, `71AFC896`, `88EFDEC2`, `AA333835`, `ABD93E44`, `ADD877C4`, `B32B6B02`, `C31DDEF7`, `D286653C` |
+| `bw2-stationary-5vs0` | 5VS0 | 31-31-31-31-31-0 | 4 | `6CCBF92D`, `88FF2415`, `AA2029BD`, `C31A4DEA` |
+| `bw2-stationary-v0vvv0` | V0VVV0 | 31-0-31-31-31-0 | 4 | `54F39E0F`, `6338DDED`, `7BF8CD77`, `F9C432EB` |
+| `bw2-stationary-hp-ice` | めざ氷 | 31-2-30-31-31-31 | 8 | `03730F34`, `2C9D32BF`, `3F37A9B9`, `440CB317`, `6728FDBF`, `7240A4AE`, `9BFB3D33`, `FF1DF7DC` |
+| `bw2-stationary-hp-fire` | めざ炎 | 31-2-31-30-31-30 | 3 | `06FC78D5`, `0CE3E9D3`, `AA7AE044` |
+| `bw2-stationary-hp-ground` | めざ地面 | 31-2-31-30-30-31 | 3 | `2FDC73A4`, `954952E5`, `D03B5325` |
+| `bw2-stationary-hp-grass` | めざ草 | 31-2-31-30-31-31 | 4 | `83CAA3D2`, `8B16C992`, `A7CBE40F`, `C751621A` |
+
+> 注: BW2 には徘徊ポケモンが存在しないため、roamer テンプレートは BW のみ。
+
+### 4.3 TemplateSelectionDialog (`features/datetime-search/components/template-selection-dialog.tsx`)
 
 ```typescript
 import type { MtSeed, RomVersion } from '@/wasm/wasm_pkg';
@@ -470,7 +329,7 @@ const handleApply = () => {
 };
 ```
 
-### 4.3 DatetimeSearchPage 変更
+### 4.4 DatetimeSearchPage 変更
 
 `datetime-search-page.tsx` に以下を追加する:
 
