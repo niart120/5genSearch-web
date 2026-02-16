@@ -94,6 +94,7 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
           )}
           {baseSeed !== undefined && (
             <SeedIvTooltip mtSeed={lcg_seed_to_mt_seed(baseSeed)} contexts={contexts}>
+              {/* Radix Tooltip の Trigger は単一子要素を要求するため div でラップ */}
               <div>
                 <DetailRow label="Base Seed" value={toBigintHex(baseSeed, 16)} />
               </div>
@@ -101,6 +102,7 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
           )}
           {mtSeed !== undefined && (
             <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+              {/* Radix Tooltip の Trigger は単一子要素を要求するため div でラップ */}
               <div>
                 <DetailRow label="MT Seed" value={toHex(mtSeed, 8)} />
               </div>

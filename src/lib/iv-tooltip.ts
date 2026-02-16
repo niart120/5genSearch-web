@@ -48,5 +48,5 @@ function formatIvSpread(ivs: Ivs, locale: SupportedLocale): string {
   return IV_STAT_KEYS.map((key) => `${getStatLabel(key, locale)}:${ivs[key]}`).join(' ');
 }
 
-export { getStandardContexts, getEggContexts, formatIvSpread, isBw };
+export { getStandardContexts, getEggContexts, formatIvSpread };
 export type { IvTooltipContext, IvTooltipLabelKey };

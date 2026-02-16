@@ -48,8 +48,7 @@ LCG Seed / MT Seed の表示箇所にホバーツールチップを追加し、�
 | `src/features/mtseed-search/components/mtseed-result-columns.tsx` | 修正 | MT Seed セルにツールチップ追加 |
 | `src/features/datetime-search/components/seed-origin-columns.tsx` | 修正 | Base Seed / MT Seed セルにツールチップ追加 |
 | `src/features/datetime-search/components/result-detail-dialog.tsx` | 修正 | MT Seed 行にツールチップ追加 |
-| `src/features/pokemon-list/components/pokemon-result-columns.tsx` | 修正 | (seed 列があれば) ツールチップ追加 |
-| `src/features/pokemon-list/components/result-detail-dialog.tsx` | 修正 | ツールチップ追加 + IV フォーマットを `getStatLabel` ベースに統一 |
+| `src/features/pokemon-list/components/result-detail-dialog.tsx` | 修正 | IV フォーマットを `getStatLabel` ベースに統一 (SeedIvTooltip 統合は不要 — ダイアログ内に IV 情報が既に表示されているため) |
 | `src/features/egg-list/components/result-detail-dialog.tsx` | 修正 | 同上 |
 | `src/components/forms/seed-input-section.tsx` | 修正 | manual-seeds 入力欄の解決済みシードにツールチップ追加 |
 | `src/i18n/locales/ja/messages.po` | 修正 | 翻訳キー追加 |
@@ -142,9 +141,10 @@ UI (Tooltip Component)
 
 ### 3.5 パフォーマンス考慮
 
-- DataTable のセルで WASM 関数を呼ぶため、ツールチップ表示時 (ホバー時) にのみ `compute_iv_spread` を呼び出す (遅延計算)
-- MT19937 の初期化 + 数回の消費は数μs 程度であり、ホバー時の遅延は体感不能
-- 列全体の事前計算やメモ化は不要 (テーブルの仮想スクロールにより表示行数は限定的)
+- `SeedIvTooltip` コンポーネント内で `useMemo` によりレンダリング時に `compute_iv_spread` を計算する
+- MT19937 の初期化 + 数回の消費は数μs 程度であり、計算コストは無視できる
+- テーブルは仮想スクロール実装済みのため、同時にレンダリングされるセル数は限定的 (数十行程度) であり、パフォーマンス問題は発生しない
+- ホバー時の遅延計算は不要と判断し、`useMemo` の deps (`mtSeed`, `contexts`) 変更時に再計算する方式を採用
 
 ## 4. 実装仕様
 
@@ -393,7 +393,7 @@ Base Seed と MT Seed の両セルにツールチップを追加する。
 - **MT Seed**: `origin.Startup.mt_seed` (または `origin.Seed.mt_seed`) を直接使用
 - **Base Seed**: `lcg_seed_to_mt_seed(origin.base_seed)` で MT Seed に変換してから使用
 
-#### 4.5.3 DetailRow (datetime-search / pokemon-list / egg-list)
+#### 4.5.3 DetailRow (datetime-search)
 
 `DetailRow` を直接変更するのではなく、詳細ダイアログ内の Base Seed / MT Seed 行を `SeedIvTooltip` でラップする形で統合する。
 
@@ -402,6 +402,7 @@ datetime-search の `result-detail-dialog.tsx` では MT Seed 行を `SeedIvTool
 ```tsx
 {mtSeed !== undefined && (
   <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+    {/* Radix Tooltip の Trigger は単一子要素を要求するため div でラップ */}
     <div>
       <DetailRow label="MT Seed" value={toHex(mtSeed, 8)} />
     </div>
@@ -409,16 +410,7 @@ datetime-search の `result-detail-dialog.tsx` では MT Seed 行を `SeedIvTool
 )}
 ```
 
-```tsx
-{/* Seed 情報 */}
-<SeedIvTooltip mtSeed={parseMtSeed(result.mt_seed)} contexts={contexts}>
-  <div>
-    <DetailRow label="MT Seed" value={result.mt_seed} />
-  </div>
-</SeedIvTooltip>
-```
-
-egg-list の場合は `getEggContexts(version)` を使用する。
+pokemon-list / egg-list の詳細ダイアログでは、IV・ステータス等の個体情報がダイアログ内に既に表示されているため、SeedIvTooltip の追加は不要。IV フォーマットの `getStatLabel` + i18n 対応への統一のみ実施する。
 
 #### 4.5.4 Seed 入力フォーム (seed-input-section.tsx)
 
@@ -429,7 +421,7 @@ egg-list の場合は `getEggContexts(version)` を使用する。
 | 状態 | 管理方式 | 永続化 |
 |------|----------|--------|
 | ツールチップの開閉状態 | Radix UI 内部 (非制御) | 不要 |
-| IV 計算結果 | `useMemo` (ホバー時に算出) | 不要 |
+| IV 計算結果 | `useMemo` (レンダリング時に算出) | 不要 |
 | バージョン情報 | `useDsConfigReadonly()` 経由で Store 参照 | 既存の persist |
 
 新規 Store の追加は不要。
@@ -494,8 +486,8 @@ Lingui の `<Trans>` / `t` マクロを使用する。
 - [x] `mtseed-result-columns.tsx` にツールチップ統合
 - [x] `seed-origin-columns.tsx` にツールチップ統合
 - [x] `datetime-search/result-detail-dialog.tsx` にツールチップ統合
-- [x] `pokemon-list/result-detail-dialog.tsx` にツールチップ統合
-- [x] `egg-list/result-detail-dialog.tsx` にツールチップ統合
+- [x] `pokemon-list/result-detail-dialog.tsx` の IV フォーマット統一 (SeedIvTooltip は不要 — ダイアログ内に IV 情報が既に表示されているため)
+- [x] `egg-list/result-detail-dialog.tsx` の IV フォーマット統一 (同上)
 - [x] `seed-input-section.tsx` にツールチップ統合 (該当する表示要素なし — スキップ)
 - [x] 詳細ダイアログの IV フォーマット統一 (pokemon-list / egg-list を `getStatLabel` + i18n 対応に統一)
 - [x] `TooltipProvider` をアプリルート (`app.tsx` 等) に追加
