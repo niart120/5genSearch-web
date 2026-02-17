@@ -14,6 +14,16 @@
 
 -
 
+## Commit Log
+
+<!-- squash マージで個別コミットが消えるため、ここにコミット履歴を残す。
+     `git log --oneline main..HEAD` の出力を貼り付ける。
+     各コミットメッセージが変更の "Why" を記録する役割を持つ -->
+
+```
+<git log --oneline main..HEAD の出力>
+```
+
 ## Testing
 
 <!-- 実行した検証コマンドとその結果を記載する -->
