@@ -32,7 +32,9 @@ tools:
 4. **PR作成**
    - `mcp_github_create_pull_request` でPRを作成
    - タイトル: ブランチ名から推測、または直近のコミットメッセージを使用
-   - 本文: 変更内容の要約（コミットログから生成）
+   - 本文: `.github/PULL_REQUEST_TEMPLATE.md` の構成に従って生成する
+     - `git log --oneline main..HEAD` の出力を Commit Log セクションに含める
+     - 実行した検証コマンドとその結果を Testing セクションに含める
 
 5. **PRマージ**
    - `mcp_github_merge_pull_request` でsquashマージを実行
