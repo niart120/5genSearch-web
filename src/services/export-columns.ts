@@ -21,7 +21,6 @@ import type { ExportColumn } from './export';
 import type {
   EggDatetimeSearchResult,
   MtseedResult,
-  NeedleSearchResult,
   SeedOrigin,
   TrainerInfoSearchResult,
   UiEggData,
@@ -385,57 +384,6 @@ function createMtseedSearchExportColumns(): ExportColumn<MtseedResult>[] {
 }
 
 // ---------------------------------------------------------------------------
-// needle columns
-// ---------------------------------------------------------------------------
-
-function createNeedleExportColumns(): ExportColumn<NeedleSearchResult>[] {
-  return [
-    { key: 'advance', header: 'Advance', accessor: (r) => String(r.advance) },
-    {
-      key: 'base_seed',
-      header: 'Initial Seed',
-      accessor: (r) => toBigintHex(getBaseSeed(r.source), 16),
-    },
-    {
-      key: 'date',
-      header: 'Date',
-      accessor: (r) => {
-        const s = getStartup(r.source);
-        if (!s) return '';
-        const { year, month, day } = s.datetime;
-        return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-      },
-    },
-    {
-      key: 'time',
-      header: 'Time',
-      accessor: (r) => {
-        const s = getStartup(r.source);
-        if (!s) return '';
-        const { hour, minute, second } = s.datetime;
-        return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
-      },
-    },
-    {
-      key: 'timer0',
-      header: 'Timer0',
-      accessor: (r) => {
-        const s = getStartup(r.source);
-        return s ? toHex(s.condition.timer0, 4) : '';
-      },
-    },
-    {
-      key: 'vcount',
-      header: 'VCount',
-      accessor: (r) => {
-        const s = getStartup(r.source);
-        return s ? toHex(s.condition.vcount, 2) : '';
-      },
-    },
-  ];
-}
-
-// ---------------------------------------------------------------------------
 // tid-adjust columns
 // ---------------------------------------------------------------------------
 
@@ -485,6 +433,5 @@ export {
   createDatetimeSearchExportColumns,
   createEggSearchExportColumns,
   createMtseedSearchExportColumns,
-  createNeedleExportColumns,
   createTidAdjustExportColumns,
 };
