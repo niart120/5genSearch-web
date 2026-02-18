@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { NumField } from '@/components/ui/spinner-num-field';
 import { DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
@@ -48,6 +49,23 @@ function NeedlePage(): ReactElement {
   const [userOffset, setUserOffset] = useState(DEFAULT_USER_OFFSET);
   const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
   const [autoSearch, setAutoSearch] = useState(true);
+
+  // pendingSeedOrigins の自動消費
+  useEffect(() => {
+    const pending = useSearchResultsStore.getState().pendingSeedOrigins;
+    if (pending.length > 0) {
+      useSearchResultsStore.getState().clearPendingSeedOrigins();
+      const first = pending[0];
+      if ('Startup' in first) {
+        setDatetime(first.Startup.datetime);
+        setSeedMode('datetime');
+      } else {
+        const hex = first.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+        setSeedHex(hex);
+        setSeedMode('seed');
+      }
+    }
+  }, []);
 
   // seedOrigins は入力状態から導出 (初回レンダーから計算される)
   const seedOrigins = useMemo(() => {

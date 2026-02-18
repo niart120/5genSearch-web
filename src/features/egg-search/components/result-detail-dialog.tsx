@@ -6,6 +6,7 @@
  */
 
 import { Trans, useLingui } from '@lingui/react/macro';
+import { ArrowRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { DetailRow } from '@/components/data-display/detail-row';
 import {
   toBigintHex,
@@ -24,6 +26,7 @@ import {
   formatAbilitySlot,
 } from '@/lib/format';
 import { getNatureName, getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
+import { navigateWithSeedOrigins } from '@/lib/navigate';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
@@ -85,6 +88,26 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
             label={t`Margin frames`}
             value={egg.margin_frames === undefined ? '-' : String(egg.margin_frames)}
           />
+        </div>
+
+        {/* 転記ボタン */}
+        <div className="flex flex-col gap-1 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateWithSeedOrigins([egg.source], 'egg-list')}
+          >
+            <ArrowRight className="mr-1 size-3" />
+            <Trans>Transfer to Egg list</Trans>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateWithSeedOrigins([egg.source], 'needle')}
+          >
+            <ArrowRight className="mr-1 size-3" />
+            <Trans>Transfer to Needle search</Trans>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

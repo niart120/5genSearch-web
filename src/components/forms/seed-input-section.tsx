@@ -4,23 +4,26 @@
  * タブ切り替えで 3 つの Seed 入力モードを提供する:
  * - manual-startup: DS 設定 + 日時 + キー入力から resolve_seeds で変換
  * - manual-seeds: LCG Seed を直接入力
- * - search-results: 直前の datetime-search 結果から SeedOrigin[] を引き継ぐ
+ * - import: JSON ファイル読み込み / Store 転記データの自動取り込み
  */
 
-import { useState, useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
+import { useState, useCallback, useEffect, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
+import { Upload } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { DatetimeInput, DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { KeyInputSelector } from '@/components/forms/key-input-selector';
-import { useSearchResultsReadonly } from '@/hooks/use-search-results';
+import { SeedOriginTable } from '@/components/forms/seed-origin-table';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
+import { parseSerializedSeedOrigins } from '@/services/seed-origin-serde';
 import type { SeedOrigin, LcgSeed, Datetime, KeyInput } from '@/wasm/wasm_pkg.js';
 
 /** Seed 入力モード */
-export type SeedInputMode = 'search-results' | 'manual-seeds' | 'manual-startup';
+export type SeedInputMode = 'import' | 'manual-seeds' | 'manual-startup';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -58,12 +61,15 @@ function SeedInputSection({
   disabled,
 }: SeedInputSectionProps): ReactElement {
   const { t } = useLingui();
-  const { results } = useSearchResultsReadonly();
   const { config: dsConfig, ranges } = useDsConfigReadonly();
 
   // Manual seeds state
   const [seedText, setSeedText] = useState('');
   const [resolveError, setResolveError] = useState<string | undefined>();
+
+  // Import state
+  const [importError, setImportError] = useState<string | undefined>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Startup state
   const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
@@ -72,19 +78,29 @@ function SeedInputSection({
   // 解決要求カウンタ (最新のリクエストのみ結果を適用する)
   const resolveIdRef = useRef(0);
 
-  // Store から SeedOrigin[] を抽出
-  const storeOrigins = useMemo(() => {
-    const flat: SeedOrigin[] = [];
-    for (const batch of results) {
-      if (Array.isArray(batch) && batch.length > 0) {
-        const first = batch[0];
-        if (first && ('Seed' in first || 'Startup' in first)) {
-          flat.push(...(batch as SeedOrigin[]));
-        }
-      }
+  // ---------------------------------------------------------------------------
+  // pendingSeedOrigins の自動消費 (Store 転記)
+  // ---------------------------------------------------------------------------
+
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+
+    const pending = useSearchResultsStore.getState().pendingSeedOrigins;
+    if (pending.length > 0) {
+      useSearchResultsStore.getState().clearPendingSeedOrigins();
+      onModeChange('import');
+      onOriginsChange(pending);
+      return;
     }
-    return flat;
-  }, [results]);
+
+    // pendingSeedOrigins がなく、Startup タブが初期選択なら自動解決
+    if (mode === 'manual-startup') {
+      autoResolveStartup(datetime, keyInput);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Auto-resolve helpers
@@ -154,9 +170,10 @@ function SeedInputSection({
       const m = newTab as SeedInputMode;
       onModeChange(m);
       setResolveError(undefined);
+      setImportError(undefined);
       switch (m) {
-        case 'search-results': {
-          onOriginsChange(storeOrigins);
+        case 'import': {
+          // Import タブ切り替え時は origins を維持 (クリアしない)
           break;
         }
         case 'manual-startup': {
@@ -169,22 +186,34 @@ function SeedInputSection({
         }
       }
     },
-    [
-      onModeChange,
-      onOriginsChange,
-      storeOrigins,
-      autoResolveStartup,
-      autoResolveSeeds,
-      datetime,
-      keyInput,
-      seedText,
-    ]
+    [onModeChange, autoResolveStartup, autoResolveSeeds, datetime, keyInput, seedText]
   );
 
-  // search-results: Store 結果を反映
-  const handleUseStoreResults = useCallback(() => {
-    onOriginsChange(storeOrigins);
-  }, [onOriginsChange, storeOrigins]);
+  // ---------------------------------------------------------------------------
+  // Import: JSON ファイル読み込み
+  // ---------------------------------------------------------------------------
+
+  const handleImportFile = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setImportError(undefined);
+      file
+        .text()
+        .then((text) => {
+          const parsed = parseSerializedSeedOrigins(text);
+          onOriginsChange(parsed);
+        })
+        .catch((error: unknown) => {
+          setImportError(error instanceof Error ? error.message : String(error));
+        });
+
+      // 同じファイルの再選択を可能にする
+      event.target.value = '';
+    },
+    [onOriginsChange]
+  );
 
   /** manual-seeds: テキスト変更ハンドラ */
   const handleSeedTextChange = useCallback(
@@ -213,17 +242,6 @@ function SeedInputSection({
     [datetime, autoResolveStartup]
   );
 
-  // 初回マウント時: Startup タブが初期選択なら自動解決
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-    if (mode === 'manual-startup') {
-      autoResolveStartup(datetime, keyInput);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <section className="flex flex-col gap-2">
       <h3 className="text-sm font-medium">
@@ -238,8 +256,8 @@ function SeedInputSection({
           <TabsTrigger value="manual-seeds" className="flex-1 text-xs" disabled={disabled}>
             {t`Seeds`}
           </TabsTrigger>
-          <TabsTrigger value="search-results" className="flex-1 text-xs" disabled={disabled}>
-            {t`Search results`}
+          <TabsTrigger value="import" className="flex-1 text-xs" disabled={disabled}>
+            {t`Import`}
           </TabsTrigger>
         </TabsList>
 
@@ -294,20 +312,35 @@ function SeedInputSection({
           </div>
         </TabsContent>
 
-        {/* Search Results */}
-        <TabsContent value="search-results">
-          <div className="flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">
-              <Trans>Seeds from search results</Trans>: {storeOrigins.length}
-            </p>
+        {/* Import */}
+        <TabsContent value="import">
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
             <Button
               variant="outline"
               size="sm"
-              onClick={handleUseStoreResults}
-              disabled={disabled || storeOrigins.length === 0}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled}
             >
-              <Trans>Load search results</Trans>
+              <Upload className="mr-1 size-3" />
+              <Trans>Import JSON file</Trans>
             </Button>
+
+            {importError && <p className="text-xs text-destructive">{importError}</p>}
+
+            <SeedOriginTable
+              origins={origins}
+              onOriginsChange={onOriginsChange}
+              disabled={disabled}
+              editable={true}
+            />
+
             <p className="text-xs text-muted-foreground">
               <Trans>Resolved seeds</Trans>: {origins.length}
             </p>

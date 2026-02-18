@@ -77,3 +77,20 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 観察: `serializeSeedOrigin` はエクスポート固有のロジックではなく、`SeedOrigin` 型の bigint → hex 文字列変換という汎用的なデータ変換である。将来デシリアライズ (`deserializeSeedOrigin`: hex 文字列 → bigint) を追加する際、`export.ts` に置くのは責務として不適切。
 
 当面の方針: デシリアライズ実装時に `src/services/seed-origin-serde.ts` を新設し、`serializeSeedOrigin` / `deserializeSeedOrigin` / `SerializedSeedOrigin` をまとめて移動する。`export.ts` からは `seed-origin-serde.ts` を import して `toSeedOriginJson` 内で使用する形に変更する。現時点では利用箇所がエクスポートのみであるため、移動は実需発生時で十分。
+
+## 2026-02-18: SeedOriginTable における KeyCode / KeyMask のユーザ露出
+
+背景: SEED_ORIGIN_IMPORT 仕様 (local_086) の SeedOriginTable §4.5.1 では、`key_code` を hex 入力させるカラムを定義している。この設計を見直す必要がある。
+
+問題: `KeyCode` は `KeyMask XOR 0x2FFF` で算出される SHA-1 計算用の内部表現であり、ユーザが直感的に理解できる値ではない。例:
+- ボタンなし: `KeyCode = 0x2FFF` / `KeyMask = 0x0000`
+- A ボタン: `KeyCode = 0x2FFE` / `KeyMask = 0x0001`
+- A+Start: `KeyCode = 0x2FF6` / `KeyMask = 0x0009`
+
+`KeyMask` の方がビットフラグとして素直であり、ユーザが各ボタンのビット割り当て (`A=0x0001, B=0x0002, ...`) から手計算する場合にも理解しやすい。
+
+現状の制約: `KeyMask` は Rust 側で `pub(crate)` であり、TypeScript に露出していない。`KeyCode` は `wasm-bindgen` 経由で公開済み。エクスポート JSON の `SerializedSeedOrigin` も `key_code` フィールドで `KeyCode` 値を格納している。
+
+判断: SeedOriginTable の手入力カラムは hex 入力が必要なニッチケースであり、JSON インポートが主要パスとなる想定。JSON にはエクスポート時点で `key_code` が含まれるため、手入力時の UX 問題は影響範囲が限定的。ただし、将来的にボタン選択 UI (チェックボックス等) を提供すれば hex 手入力自体が不要になるため、`KeyMask` 露出の必要性も薄れる。
+
+当面の方針: 仕様は `key_code` (= `KeyCode` 値) のまま据え置く。手入力 UX の改善が必要になった場合、ボタン選択 UI の導入を優先し、`KeyMask` の public 化は最終手段とする。

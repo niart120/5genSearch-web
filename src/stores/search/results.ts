@@ -19,6 +19,7 @@ interface SearchResultsState {
   results: SearchResult[];
   lastUpdatedAt: number | undefined;
   pendingTargetSeeds: MtSeed[];
+  pendingSeedOrigins: SeedOrigin[];
 }
 
 interface SearchResultsActions {
@@ -26,12 +27,15 @@ interface SearchResultsActions {
   clearResults: () => void;
   setPendingTargetSeeds: (seeds: MtSeed[]) => void;
   clearPendingTargetSeeds: () => void;
+  setPendingSeedOrigins: (origins: SeedOrigin[]) => void;
+  clearPendingSeedOrigins: () => void;
 }
 
 const DEFAULT_STATE: SearchResultsState = {
   results: [],
   lastUpdatedAt: undefined,
   pendingTargetSeeds: [],
+  pendingSeedOrigins: [],
 };
 
 export const useSearchResultsStore = create<SearchResultsState & SearchResultsActions>()((set) => ({
@@ -44,6 +48,8 @@ export const useSearchResultsStore = create<SearchResultsState & SearchResultsAc
   clearResults: () => set(DEFAULT_STATE),
   setPendingTargetSeeds: (seeds) => set({ pendingTargetSeeds: seeds }),
   clearPendingTargetSeeds: () => set({ pendingTargetSeeds: [] }),
+  setPendingSeedOrigins: (origins) => set({ pendingSeedOrigins: origins }),
+  clearPendingSeedOrigins: () => set({ pendingSeedOrigins: [] }),
 }));
 
 export const getSearchResultsInitialState = (): SearchResultsState => DEFAULT_STATE;
