@@ -22,6 +22,9 @@ import { EggParamsForm } from '@/components/forms/egg-params-form';
 import { EggFilterForm } from '@/components/forms/egg-filter-form';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
+import { useExport } from '@/hooks/use-export';
+import { createEggSearchExportColumns } from '@/services/export-columns';
 import { estimateEggSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import type {
   DateRangeParams,
@@ -142,6 +145,14 @@ function EggSearchPage(): ReactElement {
     () => createEggResultColumns(language, handleSelectResult),
     [language, handleSelectResult]
   );
+
+  // エクスポート
+  const exportColumns = useMemo(() => createEggSearchExportColumns(language), [language]);
+  const exportActions = useExport({
+    data: results,
+    columns: exportColumns,
+    featureId: 'egg-search',
+  });
 
   // KeySpec 組み合わせ数
   const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
@@ -266,9 +277,12 @@ function EggSearchPage(): ReactElement {
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
-          <p className="text-xs text-muted-foreground">
-            <Trans>Results</Trans>: {results.length.toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
+            </p>
+            <ExportToolbar resultCount={results.length} exportActions={exportActions} />
+          </div>
           <DataTable
             columns={columns}
             data={results}

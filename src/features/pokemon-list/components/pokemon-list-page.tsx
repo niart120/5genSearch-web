@@ -25,6 +25,9 @@ import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 import { ResultDetailDialog } from './result-detail-dialog';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
+import { useExport } from '@/hooks/use-export';
+import { createPokemonListExportColumns } from '@/services/export-columns';
 import type {
   GenerationConfig,
   PokemonFilter,
@@ -115,6 +118,15 @@ function PokemonListPage(): ReactElement {
       }),
     [handleSelectResult, statMode, language]
   );
+
+  // エクスポート
+  const exportColumns = useMemo(() => createPokemonListExportColumns(statMode), [statMode]);
+  const exportActions = useExport({
+    data: uiResults,
+    columns: exportColumns,
+    featureId: 'pokemon-list',
+    statMode,
+  });
 
   // statsFilter を PokemonFilter.stats に統合
   const mergedFilter = useMemo((): PokemonFilter | undefined => {
@@ -248,6 +260,7 @@ function PokemonListPage(): ReactElement {
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
                 <Trans>Stats</Trans>
               </Label>
+              <ExportToolbar resultCount={uiResults.length} exportActions={exportActions} />
             </div>
           </div>
           <DataTable

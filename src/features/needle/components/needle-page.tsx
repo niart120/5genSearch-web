@@ -17,6 +17,9 @@ import { NumField } from '@/components/ui/spinner-num-field';
 import { DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
+import { useExport } from '@/hooks/use-export';
+import { createNeedleExportColumns } from '@/services/export-columns';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
 import { createNeedleResultColumns } from './needle-result-columns';
@@ -92,6 +95,14 @@ function NeedlePage(): ReactElement {
 
   // 列定義
   const columns = useMemo(() => createNeedleResultColumns(), []);
+
+  // エクスポート
+  const exportColumns = useMemo(() => createNeedleExportColumns(), []);
+  const exportActions = useExport({
+    data: results,
+    columns: exportColumns,
+    featureId: 'needle',
+  });
 
   // 検索実行
   const executeSearch = useCallback(() => {
@@ -225,9 +236,12 @@ function NeedlePage(): ReactElement {
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
-          <p className="text-xs text-muted-foreground">
-            <Trans>Results</Trans>: {results.length.toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
+            </p>
+            <ExportToolbar resultCount={results.length} exportActions={exportActions} />
+          </div>
           {error ? <p className="text-xs text-destructive">{error}</p> : undefined}
           <DataTable
             columns={columns}
