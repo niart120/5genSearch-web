@@ -49,7 +49,6 @@
 | `src/features/datetime-search/components/datetime-search-page.tsx` | 変更 | ExportToolbar 統合 |
 | `src/features/egg-search/components/egg-search-page.tsx` | 変更 | ExportToolbar 統合 |
 | `src/features/mtseed-search/components/mtseed-search-page.tsx` | 変更 | ExportToolbar 統合 |
-| `src/features/needle/components/needle-page.tsx` | 変更 | ExportToolbar 統合 |
 | `src/features/tid-adjust/components/tid-adjust-page.tsx` | 変更 | ExportToolbar 統合 |
 | `src/i18n/locales/ja/messages.po` | 変更 | 翻訳キー追加 |
 | `src/i18n/locales/en/messages.po` | 変更 | 翻訳キー追加 |
@@ -82,7 +81,7 @@ services/export-columns.ts (feature 別列定義)
 
 - `services/export.ts` は純粋関数の集合。React / Store に依存しない
 - `services/export-columns.ts` は feature ごとの列定義マッピングを提供する
-- `useExport` フックが Store (DS 設定・検索結果) と UI をブリッジする
+- `useExport` フックが Store (DS 設定・検索結果) と UI をブリッジする。`jsonExporter` オプションにより feature 固有の JSON シリアライズを注入可能
 - `ExportToolbar` は UI のみ。ロジックを持たない
 
 ### 3.3 CSV / JSON 仕様
@@ -147,6 +146,7 @@ services/export-columns.ts (feature 別列定義)
 | 検索パラメータ (フィルタ条件、日付範囲等) | feature ごとにスキーマが異なり実装コストが高い。結果の再現が目的ではないため不要 |
 
 - `results` 配列の各要素は feature ごとに異なるスキーマ (Section 4.2 で定義)
+- **例外: datetime-search の JSON**: `results` は列定義ベースのフラット構造ではなく、`SeedOrigin` を構造的にシリアライズした形式で出力する (Section 4.5.1 参照)。CSV/TSV は列定義ベースのフラット形式を維持
 
 ### 3.4 ファイル命名規則
 
@@ -304,7 +304,7 @@ interface ExportColumn<T> {
 
 #### 4.3.4 datetime-search 列定義
 
-**テーブル列 (常時出力)**:
+**テーブル列 (常時出力)** — CSV/TSV エクスポートで使用:
 
 | key | header | source |
 |-----|--------|--------|
@@ -316,6 +316,8 @@ interface ExportColumn<T> {
 | `mt_seed` | MT Seed | `mt_seed` (hex) |
 
 **詳細列**: なし (テーブル列と detail dialog の内容が同一のため)
+
+**JSON エクスポート**: 列定義を使用せず、`toSeedOriginJson` により `SeedOrigin` を構造的にシリアライズする (Section 4.5.1 参照)
 
 #### 4.3.5 egg-search 列定義
 
@@ -352,22 +354,7 @@ interface ExportColumn<T> {
 
 **詳細列**: なし
 
-#### 4.3.7 needle 列定義
-
-**テーブル列 (常時出力)**:
-
-| key | header | source |
-|-----|--------|--------|
-| `advance` | Advance | `advance` |
-| `base_seed` | Initial Seed | `source.Startup.base_seed` (hex) |
-| `date` | Date | `source.Startup.datetime` (date 部分) |
-| `time` | Time | `source.Startup.datetime` (time 部分) |
-| `timer0` | Timer0 | `source.Startup.condition.timer0` (hex) |
-| `vcount` | VCount | `source.Startup.condition.vcount` (hex) |
-
-**詳細列**: なし
-
-#### 4.3.8 tid-adjust 列定義
+#### 4.3.7 tid-adjust 列定義
 
 **テーブル列 (常時出力)**:
 
@@ -462,6 +449,79 @@ function toJson<T>(
   return JSON.stringify({ meta, results }, undefined, 2);
 }
 ```
+
+#### 4.5.1 datetime-search 用 SeedOrigin JSON シリアライズ
+
+datetime-search の JSON エクスポートでは、列定義ベースの `toJson` ではなく、`SeedOrigin` の構造をそのまま保持する `toSeedOriginJson` を使用する。将来の pokemon-list 側でのインポート (デシリアライズ) を想定した設計。
+
+**変換仕様**:
+- `SeedOrigin` の `Seed` / `Startup` バリアント構造をそのまま保持
+- `bigint` 型の `base_seed` は 16 桁ゼロパディング hex 文字列に変換 (例: `"00000000AABBCCDD"`)
+- その他のフィールド (`mt_seed`, `datetime`, `condition`) は元の型のまま出力
+
+```typescript
+/** SeedOrigin のシリアライズ済み型 (bigint → hex 文字列) */
+type SerializedSeedOrigin =
+  | { Seed: { base_seed: string; mt_seed: number } }
+  | {
+      Startup: {
+        base_seed: string;
+        mt_seed: number;
+        datetime: {
+          year: number; month: number; day: number;
+          hour: number; minute: number; second: number;
+        };
+        condition: { timer0: number; vcount: number; key_code: number };
+      };
+    };
+
+function serializeSeedOrigin(origin: SeedOrigin): SerializedSeedOrigin {
+  if ('Seed' in origin) {
+    return {
+      Seed: {
+        base_seed: toBigintHex(origin.Seed.base_seed, 16),
+        mt_seed: origin.Seed.mt_seed,
+      },
+    };
+  }
+  return {
+    Startup: {
+      base_seed: toBigintHex(origin.Startup.base_seed, 16),
+      mt_seed: origin.Startup.mt_seed,
+      datetime: origin.Startup.datetime,
+      condition: origin.Startup.condition,
+    },
+  };
+}
+
+function toSeedOriginJson(
+  rows: readonly SeedOrigin[],
+  meta: ExportMeta
+): string {
+  const results = rows.map((origin) => serializeSeedOrigin(origin));
+  return JSON.stringify({ meta, results }, undefined, 2);
+}
+```
+
+**出力例**:
+
+```json
+{
+  "meta": { ... },
+  "results": [
+    {
+      "Startup": {
+        "base_seed": "00000000AABBCCDD",
+        "mt_seed": 305419896,
+        "datetime": { "year": 2025, "month": 6, "day": 15, "hour": 12, "minute": 30, "second": 0 },
+        "condition": { "timer0": 1552, "vcount": 80, "key_code": 0 }
+      }
+    }
+  ]
+}
+```
+
+CSV/TSV エクスポートでは従来どおり `createDatetimeSearchExportColumns` 列定義を使用する。
 
 ### 4.6 ファイルダウンロード / クリップボード
 
@@ -604,14 +664,16 @@ interface UseExportReturn<T> {
 function useExport<T>(options: {
   data: readonly T[];
   columns: ExportColumn<T>[];
-  detailColumns?: ExportColumn<T>[];
   featureId: string;
   statMode?: 'ivs' | 'stats';
+  /** JSON エクスポートのカスタムシリアライザー。指定時は列定義を使わずこの関数で出力生成 */
+  jsonExporter?: (data: readonly T[], meta: ExportMeta) => string;
 }): UseExportReturn<T>;
 ```
 
 - `includeDetails` は `useState` (ローカル state) で管理。永続化不要
 - DS 設定・GameStart・Timer0VCount 範囲は `useDsConfig` フックから取得 (ファイル名生成・meta 生成に使用)
+- `jsonExporter` 指定時 (`downloadJson` 内)、列定義ベースの `toJson` を使用せず `jsonExporter(data, meta)` を呼ぶ。CSV/TSV は常に列定義ベース
 - Toast 通知は `sonner` 等の Toast ライブラリまたは既存の Toast コンポーネント経由
 
 ### 4.10 既存ユーティリティの再利用
@@ -676,6 +738,12 @@ function formatMacAddress(mac: readonly number[]): string {
 | `escapeCsvField` — エスケープ不要 | そのまま返却されること |
 | `escapeCsvField` — エスケープ必要 | 正しくエスケープされること |
 | `detailOnly 列のフィルタリング` | `includeDetails=false` 時に detailOnly 列が除外されること |
+| `serializeSeedOrigin` — Seed バリアント | bigint が 16 桁ゼロパディング hex 文字列に変換されること |
+| `serializeSeedOrigin` — Startup バリアント | 全フィールドが正しく変換されること |
+| `serializeSeedOrigin` — base_seed=0 | `"0000000000000000"` が返ること |
+| `toSeedOriginJson` — 基本出力 | meta + results 構造が正しいこと |
+| `toSeedOriginJson` — Seed/Startup 混在 | 両バリアントが正しく処理されること |
+| `toSeedOriginJson` — 空配列 | 空 results で正常動作すること |
 | `pokemon-list columns — statMode=ivs` | IV 列が出力され Stats 列が detailOnly に分類されること |
 | `pokemon-list columns — statMode=stats` | Stats 列が出力され IV 列が detailOnly に分類されること |
 
@@ -775,15 +843,14 @@ DataTable 内部で `table.getSortedRowModel().rows` を `useEffect` で監視�
 
 - [x] `src/lib/format.ts` — `formatMacAddress` 追加
 - [x] `src/services/export.ts` — CSV/JSON/TSV 変換、ファイルダウンロード、クリップボードコピー、ファイル名生成
-- [x] `src/services/export-columns.ts` — feature 別列定義 (7 feature 分)
+- [x] `src/services/export-columns.ts` — feature 別列定義 (6 feature 分)
 - [x] `src/components/data-display/export-toolbar.tsx` — ExportToolbar コンポーネント
-- [x] `src/hooks/use-export.ts` — useExport フック
+- [x] `src/hooks/use-export.ts` — useExport フック (`jsonExporter` オプション含む)
 - [x] `src/features/pokemon-list/` — ExportToolbar 統合
 - [x] `src/features/egg-list/` — ExportToolbar 統合
-- [x] `src/features/datetime-search/` — ExportToolbar 統合
+- [x] `src/features/datetime-search/` — ExportToolbar 統合 (`jsonExporter: toSeedOriginJson` 指定)
 - [x] `src/features/egg-search/` — ExportToolbar 統合
 - [x] `src/features/mtseed-search/` — ExportToolbar 統合
-- [x] `src/features/needle/` — ExportToolbar 統合
 - [x] `src/features/tid-adjust/` — ExportToolbar 統合
 - [x] `src/i18n/locales/ja/messages.po` — 翻訳キー追加
 - [x] `src/i18n/locales/en/messages.po` — 翻訳キー追加
