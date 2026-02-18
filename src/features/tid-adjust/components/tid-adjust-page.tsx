@@ -132,6 +132,7 @@ function TidAdjustPage(): ReactElement {
     data: results,
     columns: exportColumns,
     featureId: 'tid-adjust',
+    gameStartOverride: tidGameStart,
   });
 
   // KeySpec 組み合わせ数

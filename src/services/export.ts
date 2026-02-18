@@ -20,19 +20,6 @@ import type {
 // Types
 // ---------------------------------------------------------------------------
 
-/** エクスポートファイル形式 */
-type ExportFormat = 'csv' | 'json';
-
-/** エクスポートアクション */
-type ExportAction = 'download' | 'clipboard';
-
-/** エクスポートオプション */
-interface ExportOptions {
-  format: ExportFormat;
-  action: ExportAction;
-  includeDetails: boolean;
-}
-
 /** エクスポート列定義 */
 interface ExportColumn<T> {
   /** CSV ヘッダー / JSON キー */
@@ -287,7 +274,7 @@ function downloadFile(content: string, filename: string, mimeType: string): void
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function copyToClipboard(text: string): Promise<void> {
@@ -316,9 +303,6 @@ export {
 };
 
 export type {
-  ExportFormat,
-  ExportAction,
-  ExportOptions,
   ExportColumn,
   ExportDsConfig,
   ExportGameStart,

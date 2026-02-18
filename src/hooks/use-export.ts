@@ -20,6 +20,7 @@ import {
   copyToClipboard,
 } from '@/services/export';
 import type { ExportColumn, ExportMeta } from '@/services/export';
+import type { GameStartConfig } from '@/wasm/wasm_pkg';
 
 interface UseExportOptions<T> {
   data: readonly T[];
@@ -28,6 +29,11 @@ interface UseExportOptions<T> {
   statMode?: 'ivs' | 'stats';
   /** JSON エクスポートのカスタムシリアライザー。指定時は列定義を使わずこの関数で出力生成 */
   jsonExporter?: (data: readonly T[], meta: ExportMeta) => string;
+  /**
+   * meta.gameStart に使用する GameStartConfig のオーバーライド。
+   * feature-local な GameStartConfig をサイドバーの値の代わりに使用したい場合 (例: tid-adjust) に指定する。
+   */
+  gameStartOverride?: GameStartConfig;
 }
 
 interface UseExportReturn {
@@ -40,9 +46,10 @@ interface UseExportReturn {
 }
 
 function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
-  const { data, columns, featureId, statMode, jsonExporter } = options;
+  const { data, columns, featureId, statMode, jsonExporter, gameStartOverride } = options;
   const { t } = useLingui();
-  const { config, ranges, gameStart } = useDsConfigReadonly();
+  const { config, ranges, gameStart: storeGameStart } = useDsConfigReadonly();
+  const gameStart = gameStartOverride ?? storeGameStart;
   const [includeDetails, setIncludeDetails] = useState(false);
 
   const hasDetailColumns = useMemo(() => columns.some((c) => c.detailOnly), [columns]);
