@@ -7,7 +7,15 @@
 
 import type { SupportedLocale } from '@/i18n';
 import type { AggregatedProgress } from '@/services/progress';
-import type { AbilitySlot, Datetime, Gender, Ivs, ShinyType } from '@/wasm/wasm_pkg';
+import type {
+  AbilitySlot,
+  Datetime,
+  DsButton,
+  Gender,
+  Ivs,
+  KeyInput,
+  ShinyType,
+} from '@/wasm/wasm_pkg';
 
 /**
  * rem 値をピクセル値に変換する。
@@ -249,6 +257,38 @@ function formatMacAddress(mac: readonly number[]): string {
   return mac.map((b) => b.toString(16).padStart(2, '0')).join(':');
 }
 
+/**
+ * KeyCode (number) → DsButton[] のビットマスク逆引きテーブル
+ * formatKeyCode の KEY_BUTTONS と同一のビット割り当てだが DsButton 型を返す。
+ */
+const KEY_BUTTON_MAP: readonly [number, DsButton][] = [
+  [0x00_01, 'A'],
+  [0x00_02, 'B'],
+  [0x04_00, 'X'],
+  [0x08_00, 'Y'],
+  [0x02_00, 'L'],
+  [0x01_00, 'R'],
+  [0x00_08, 'Start'],
+  [0x00_04, 'Select'],
+  [0x00_40, 'Up'],
+  [0x00_80, 'Down'],
+  [0x00_20, 'Left'],
+  [0x00_10, 'Right'],
+];
+
+/**
+ * KeyCode を KeyInput に変換する。
+ * key_code → mask (XOR 0x2FFF) → 各ビットから DsButton を逆引き。
+ */
+function keyCodeToKeyInput(keyCode: number): KeyInput {
+  const mask = keyCode ^ 0x2f_ff;
+  const buttons: DsButton[] = [];
+  for (const [bit, name] of KEY_BUTTON_MAP) {
+    if ((mask & bit) !== 0) buttons.push(name);
+  }
+  return { buttons };
+}
+
 export {
   remToPx,
   formatElapsedTime,
@@ -266,4 +306,5 @@ export {
   formatAbilitySlot,
   formatIvs,
   formatMacAddress,
+  keyCodeToKeyInput,
 };

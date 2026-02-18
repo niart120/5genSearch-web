@@ -6,7 +6,7 @@
  */
 
 import { Trans, useLingui } from '@lingui/react/macro';
-import { ArrowRight } from 'lucide-react';
+import { ClipboardCopy } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   formatAbilitySlot,
 } from '@/lib/format';
 import { getNatureName, getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
-import { navigateWithSeedOrigins } from '@/lib/navigate';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
@@ -90,23 +90,17 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
           />
         </div>
 
-        {/* 転記ボタン */}
+        {/* Seed 入力に転記 */}
         <div className="flex flex-col gap-1 pt-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigateWithSeedOrigins([egg.source], 'egg-list')}
+            onClick={() => {
+              useSearchResultsStore.getState().setPendingDetailOrigin(egg.source);
+            }}
           >
-            <ArrowRight className="mr-1 size-3" />
-            <Trans>Transfer to Egg list</Trans>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateWithSeedOrigins([egg.source], 'needle')}
-          >
-            <ArrowRight className="mr-1 size-3" />
-            <Trans>Transfer to Needle search</Trans>
+            <ClipboardCopy className="mr-1 size-3" />
+            <Trans>Copy to seed input</Trans>
           </Button>
         </div>
       </DialogContent>

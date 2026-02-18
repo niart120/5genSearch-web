@@ -14,6 +14,7 @@ import {
   toHex,
   formatDatetime,
   formatKeyCode,
+  keyCodeToKeyInput,
 } from '@/lib/format';
 
 describe('formatElapsedTime', () => {
@@ -183,5 +184,65 @@ describe('formatKeyCode', () => {
   it('全ボタン押下を表示する', () => {
     // all bits = 0x0FFF → keyCode = 0x2FFF ^ 0x0FFF = 0x2000
     expect(formatKeyCode(0x20_00)).toBe('A + B + X + Y + L + R + Start + Select + ↑ + ↓ + ← + →');
+  });
+});
+
+describe('keyCodeToKeyInput', () => {
+  it('ボタンなし (0x2FFF) の場合、空配列を返す', () => {
+    const result = keyCodeToKeyInput(0x2f_ff);
+    expect(result.buttons).toEqual([]);
+  });
+
+  it('A ボタンのみ (0x2FFE) を変換する', () => {
+    const result = keyCodeToKeyInput(0x2f_fe);
+    expect(result.buttons).toEqual(['A']);
+  });
+
+  it('A + Start (0x2FF6) を変換する', () => {
+    const result = keyCodeToKeyInput(0x2f_f6);
+    expect(result.buttons).toContain('A');
+    expect(result.buttons).toContain('Start');
+    expect(result.buttons).toHaveLength(2);
+  });
+
+  it('全ボタン押下 (0x2000) を変換する', () => {
+    const result = keyCodeToKeyInput(0x20_00);
+    expect(result.buttons).toHaveLength(12);
+    expect(result.buttons).toContain('A');
+    expect(result.buttons).toContain('B');
+    expect(result.buttons).toContain('X');
+    expect(result.buttons).toContain('Y');
+    expect(result.buttons).toContain('L');
+    expect(result.buttons).toContain('R');
+    expect(result.buttons).toContain('Start');
+    expect(result.buttons).toContain('Select');
+    expect(result.buttons).toContain('Up');
+    expect(result.buttons).toContain('Down');
+    expect(result.buttons).toContain('Left');
+    expect(result.buttons).toContain('Right');
+  });
+
+  it('L + R (0x2CFF) を変換する', () => {
+    // L=0x0200, R=0x0100 → mask=0x0300 → keyCode=0x2FFF^0x0300=0x2CFF
+    const result = keyCodeToKeyInput(0x2c_ff);
+    expect(result.buttons).toContain('L');
+    expect(result.buttons).toContain('R');
+    expect(result.buttons).toHaveLength(2);
+  });
+
+  it('formatKeyCode と同じボタンを検出する', () => {
+    // 任意の keyCode でボタン数が一致することを確認
+    const testCodes = [0x2f_ff, 0x2f_fe, 0x2f_f6, 0x20_00, 0x2c_ff];
+    for (const code of testCodes) {
+      const buttons = keyCodeToKeyInput(code).buttons;
+      const formatted = formatKeyCode(code);
+      if (buttons.length === 0) {
+        expect(formatted).toBe('なし');
+      } else {
+        // formatKeyCode は ' + ' 区切り
+        const parts = formatted.split(' + ');
+        expect(parts).toHaveLength(buttons.length);
+      }
+    }
   });
 });

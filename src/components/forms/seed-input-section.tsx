@@ -20,6 +20,7 @@ import { useSearchResultsStore } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
 import { parseSerializedSeedOrigins } from '@/services/seed-origin-serde';
+import { keyCodeToKeyInput } from '@/lib/format';
 import type { SeedOrigin, LcgSeed, Datetime, KeyInput } from '@/wasm/wasm_pkg.js';
 
 /** Seed 入力モード */
@@ -79,7 +80,7 @@ function SeedInputSection({
   const resolveIdRef = useRef(0);
 
   // ---------------------------------------------------------------------------
-  // pendingSeedOrigins の自動消費 (Store 転記)
+  // pending データの自動消費 (Store 転記)
   // ---------------------------------------------------------------------------
 
   const mountedRef = useRef(false);
@@ -87,15 +88,39 @@ function SeedInputSection({
     if (mountedRef.current) return;
     mountedRef.current = true;
 
-    const pending = useSearchResultsStore.getState().pendingSeedOrigins;
+    const store = useSearchResultsStore.getState();
+
+    // 1) pendingDetailOrigin: 詳細ダイアログからの単一転記
+    //    Startup → 起動日時タブに datetime + key_code を埋める
+    //    Seed → Seeds タブに Base Seed hex を埋める
+    const detail = store.pendingDetailOrigin;
+    if (detail) {
+      store.clearPendingDetailOrigin();
+      if ('Startup' in detail) {
+        const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
+        setDatetime(detail.Startup.datetime);
+        setKeyInput(ki);
+        onModeChange('manual-startup');
+        autoResolveStartup(detail.Startup.datetime, ki);
+      } else {
+        const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+        setSeedText(hex);
+        onModeChange('manual-seeds');
+        autoResolveSeeds(hex);
+      }
+      return;
+    }
+
+    // 2) pendingSeedOrigins: 全結果一括転記 → Import タブ
+    const pending = store.pendingSeedOrigins;
     if (pending.length > 0) {
-      useSearchResultsStore.getState().clearPendingSeedOrigins();
+      store.clearPendingSeedOrigins();
       onModeChange('import');
       onOriginsChange(pending);
       return;
     }
 
-    // pendingSeedOrigins がなく、Startup タブが初期選択なら自動解決
+    // どちらもなく、Startup タブが初期選択なら自動解決
     if (mode === 'manual-startup') {
       autoResolveStartup(datetime, keyInput);
     }

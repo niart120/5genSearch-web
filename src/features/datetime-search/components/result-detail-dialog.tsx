@@ -7,7 +7,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { Copy, ArrowRight } from 'lucide-react';
+import { Copy, ClipboardCopy } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
-import { navigateWithSeedOrigins } from '@/lib/navigate';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
@@ -111,23 +111,17 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
           )}
         </div>
 
-        {/* 転記ボタン */}
+        {/* Seed 入力に転記 */}
         <div className="flex flex-col gap-1 pt-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigateWithSeedOrigins([seedOrigin], 'pokemon-list')}
+            onClick={() => {
+              useSearchResultsStore.getState().setPendingDetailOrigin(seedOrigin);
+            }}
           >
-            <ArrowRight className="mr-1 size-3" />
-            <Trans>Transfer to Pokemon list</Trans>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateWithSeedOrigins([seedOrigin], 'needle')}
-          >
-            <ArrowRight className="mr-1 size-3" />
-            <Trans>Transfer to Needle search</Trans>
+            <ClipboardCopy className="mr-1 size-3" />
+            <Trans>Copy to seed input</Trans>
           </Button>
         </div>
       </DialogContent>

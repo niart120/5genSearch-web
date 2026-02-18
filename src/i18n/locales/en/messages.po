@@ -78,7 +78,7 @@ msgstr "About this app"
 msgid "Advance"
 msgstr "Advance"
 
-#: src/features/needle/components/needle-page.tsx:198
+#: src/features/needle/components/needle-page.tsx:200
 msgid "Advance Range"
 msgstr "Advance Range"
 
@@ -102,8 +102,8 @@ msgstr "Atk"
 
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
-#: src/features/needle/components/needle-page.tsx:169
-#: src/features/needle/components/needle-page.tsx:274
+#: src/features/needle/components/needle-page.tsx:171
+#: src/features/needle/components/needle-page.tsx:276
 msgid "Auto"
 msgstr "Auto"
 
@@ -164,7 +164,7 @@ msgstr "Category"
 msgid "Clear"
 msgstr "Clear"
 
-#: src/components/forms/seed-origin-table.tsx:169
+#: src/components/forms/seed-origin-table.tsx:164
 msgid "Clear all"
 msgstr "Clear all"
 
@@ -197,6 +197,11 @@ msgstr "Copy {label}"
 msgid "Copy to clipboard"
 msgstr "Copy to clipboard"
 
+#: src/features/datetime-search/components/result-detail-dialog.tsx:124
+#: src/features/egg-search/components/result-detail-dialog.tsx:103
+msgid "Copy to seed input"
+msgstr "Copy to seed input"
+
 #: src/features/about/components/about-page.tsx:22
 msgid "Data sources"
 msgstr "Data sources"
@@ -205,7 +210,7 @@ msgstr "Data sources"
 msgid "Date"
 msgstr "Date"
 
-#: src/components/forms/seed-input-section.tsx:281
+#: src/components/forms/seed-input-section.tsx:301
 msgid "Date & time"
 msgstr "Date & time"
 
@@ -213,7 +218,7 @@ msgstr "Date & time"
 msgid "Date range"
 msgstr "Date range"
 
-#: src/components/forms/seed-origin-table.tsx:92
+#: src/components/forms/seed-origin-table.tsx:91
 #: src/features/datetime-search/components/result-detail-dialog.tsx:90
 #: src/features/datetime-search/components/seed-origin-columns.tsx:52
 #: src/features/egg-list/components/result-detail-dialog.tsx:53
@@ -236,12 +241,12 @@ msgstr "Datetime Search"
 msgid "Def"
 msgstr "Def"
 
-#: src/components/forms/seed-origin-table.tsx:105
+#: src/components/forms/seed-origin-table.tsx:104
 msgid "Delete"
 msgstr "Delete"
 
 #. placeholder {0}: String(index + 1)
-#: src/components/forms/seed-origin-table.tsx:146
+#: src/components/forms/seed-origin-table.tsx:141
 msgid "Delete row {0}"
 msgstr "Delete row {0}"
 
@@ -274,7 +279,7 @@ msgstr "Download as JSON"
 msgid "Downloaded {filename}"
 msgstr "Downloaded {filename}"
 
-#: src/components/forms/seed-input-section.tsx:273
+#: src/components/forms/seed-input-section.tsx:293
 msgid "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 msgstr "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 
@@ -372,8 +377,8 @@ msgid "Export failed"
 msgstr "Export failed"
 
 #: src/components/forms/seed-input-section.tsx:213
-msgid "Failed to read file"
-msgstr "Failed to read file"
+#~ msgid "Failed to read file"
+#~ msgstr "Failed to read file"
 
 #: src/features/egg-search/components/egg-params-form.tsx:233
 #~ msgid "Female has HA"
@@ -455,11 +460,11 @@ msgstr "Hour"
 msgid "HP"
 msgstr "HP"
 
-#: src/components/forms/seed-input-section.tsx:265
+#: src/components/forms/seed-input-section.tsx:285
 msgid "Import"
 msgstr "Import"
 
-#: src/components/forms/seed-input-section.tsx:337
+#: src/components/forms/seed-input-section.tsx:357
 msgid "Import JSON file"
 msgstr "Import JSON file"
 
@@ -481,7 +486,7 @@ msgstr "IV Range"
 msgid "IVs must be in the range 0 to 31"
 msgstr "IVs must be in the range 0 to 31"
 
-#: src/components/forms/seed-origin-table.tsx:97
+#: src/components/forms/seed-origin-table.tsx:96
 #: src/features/datetime-search/components/seed-origin-columns.tsx:85
 msgid "Key"
 msgstr "Key"
@@ -510,7 +515,7 @@ msgstr "LCG Seed"
 msgid "LCG Seed (Hex)"
 msgstr "LCG Seed (Hex)"
 
-#: src/components/forms/seed-input-section.tsx:304
+#: src/components/forms/seed-input-section.tsx:324
 msgid "LCG Seeds (hex, one per line)"
 msgstr "LCG Seeds (hex, one per line)"
 
@@ -569,12 +574,12 @@ msgstr "Max"
 msgid "Max advance"
 msgstr "Max advance"
 
-#: src/features/needle/components/needle-page.tsx:219
-#: src/features/needle/components/needle-page.tsx:228
+#: src/features/needle/components/needle-page.tsx:221
+#: src/features/needle/components/needle-page.tsx:230
 msgid "Max Advance"
 msgstr "Max Advance"
 
-#: src/features/needle/components/needle-page.tsx:106
+#: src/features/needle/components/needle-page.tsx:108
 msgid "Max advance must be ≥ offset"
 msgstr "Max advance must be ≥ offset"
 
@@ -666,15 +671,15 @@ msgstr "Needle Direction (Arrow)"
 msgid "Needle Direction (Numeric)"
 msgstr "Needle Direction (Numeric)"
 
-#: src/features/needle/components/needle-page.tsx:190
+#: src/features/needle/components/needle-page.tsx:192
 msgid "Needle Pattern"
 msgstr "Needle Pattern"
 
-#: src/features/needle/components/needle-page.tsx:103
+#: src/features/needle/components/needle-page.tsx:105
 msgid "Needle pattern is empty"
 msgstr "Needle pattern is empty"
 
-#: src/features/needle/components/needle-page.tsx:104
+#: src/features/needle/components/needle-page.tsx:106
 msgid "Needle pattern must be digits 0-7"
 msgstr "Needle pattern must be digits 0-7"
 
@@ -688,7 +693,7 @@ msgstr "No default Timer0/VCount data for this combination. Switched to manual m
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:189
-#: src/features/needle/components/needle-page.tsx:254
+#: src/features/needle/components/needle-page.tsx:256
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:280
 msgid "No results"
 msgstr "No results"
@@ -710,7 +715,7 @@ msgstr "No results found. Please enter MT Seeds and start searching."
 msgid "No save"
 msgstr "No save"
 
-#: src/components/forms/seed-origin-table.tsx:160
+#: src/components/forms/seed-origin-table.tsx:155
 msgid "No seeds loaded"
 msgstr "No seeds loaded"
 
@@ -746,12 +751,12 @@ msgstr "Not specified"
 msgid "Not used"
 msgstr "Not used"
 
-#: src/features/needle/components/needle-page.tsx:203
-#: src/features/needle/components/needle-page.tsx:212
+#: src/features/needle/components/needle-page.tsx:205
+#: src/features/needle/components/needle-page.tsx:214
 msgid "Offset"
 msgstr "Offset"
 
-#: src/features/needle/components/needle-page.tsx:105
+#: src/features/needle/components/needle-page.tsx:107
 msgid "Offset must be 0 or positive"
 msgstr "Offset must be 0 or positive"
 
@@ -809,9 +814,9 @@ msgstr "Repository"
 msgid "Reset filter"
 msgstr "Reset filter"
 
-#: src/components/forms/seed-input-section.tsx:295
 #: src/components/forms/seed-input-section.tsx:315
-#: src/components/forms/seed-input-section.tsx:350
+#: src/components/forms/seed-input-section.tsx:335
+#: src/components/forms/seed-input-section.tsx:370
 msgid "Resolved seeds"
 msgstr "Resolved seeds"
 
@@ -826,7 +831,7 @@ msgstr "Result details"
 #: src/features/egg-list/components/egg-list-page.tsx:277
 #: src/features/egg-search/components/egg-search-page.tsx:282
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:179
-#: src/features/needle/components/needle-page.tsx:247
+#: src/features/needle/components/needle-page.tsx:249
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:249
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:272
 msgid "Results"
@@ -842,8 +847,8 @@ msgstr "Roamer"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
-#: src/features/needle/components/needle-page.tsx:160
-#: src/features/needle/components/needle-page.tsx:269
+#: src/features/needle/components/needle-page.tsx:162
+#: src/features/needle/components/needle-page.tsx:271
 msgid "Search"
 msgstr "Search"
 
@@ -872,11 +877,11 @@ msgstr "Secret ID"
 msgid "Seed"
 msgstr "Seed"
 
-#: src/components/forms/seed-input-section.tsx:253
+#: src/components/forms/seed-input-section.tsx:273
 msgid "Seed input"
 msgstr "Seed input"
 
-#: src/features/needle/components/needle-page.tsx:102
+#: src/features/needle/components/needle-page.tsx:104
 msgid "Seed is not set"
 msgstr "Seed is not set"
 
@@ -884,7 +889,7 @@ msgstr "Seed is not set"
 msgid "Seed template selection"
 msgstr "Seed template selection"
 
-#: src/components/forms/seed-input-section.tsx:262
+#: src/components/forms/seed-input-section.tsx:282
 msgid "Seeds"
 msgstr "Seeds"
 
@@ -1028,7 +1033,7 @@ msgstr "Start offset"
 msgid "Start offset must be ≥ 0"
 msgstr "Start offset must be ≥ 0"
 
-#: src/components/forms/seed-input-section.tsx:259
+#: src/components/forms/seed-input-section.tsx:279
 msgid "Startup"
 msgstr "Startup"
 
@@ -1137,16 +1142,15 @@ msgid "Trainer ID"
 msgstr "Trainer ID"
 
 #: src/features/egg-search/components/result-detail-dialog.tsx:101
-msgid "Transfer to Egg list"
-msgstr "Transfer to Egg list"
+#~ msgid "Transfer to Egg list"
+#~ msgstr "Transfer to Egg list"
 
 #: src/features/datetime-search/components/result-detail-dialog.tsx:130
 #: src/features/egg-search/components/result-detail-dialog.tsx:109
-msgid "Transfer to Needle search"
-msgstr "Transfer to Needle search"
+#~ msgid "Transfer to Needle search"
+#~ msgstr "Transfer to Needle search"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:294
-#: src/features/datetime-search/components/result-detail-dialog.tsx:122
 msgid "Transfer to Pokemon list"
 msgstr "Transfer to Pokemon list"
 

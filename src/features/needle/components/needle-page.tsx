@@ -18,6 +18,7 @@ import { DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
+import { keyCodeToKeyInput } from '@/lib/format';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
 import { createNeedleResultColumns } from './needle-result-columns';
@@ -50,17 +51,18 @@ function NeedlePage(): ReactElement {
   const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
   const [autoSearch, setAutoSearch] = useState(true);
 
-  // pendingSeedOrigins の自動消費
+  // pendingDetailOrigin の自動消費
   useEffect(() => {
-    const pending = useSearchResultsStore.getState().pendingSeedOrigins;
-    if (pending.length > 0) {
-      useSearchResultsStore.getState().clearPendingSeedOrigins();
-      const first = pending[0];
-      if ('Startup' in first) {
-        setDatetime(first.Startup.datetime);
+    const store = useSearchResultsStore.getState();
+    const detail = store.pendingDetailOrigin;
+    if (detail) {
+      store.clearPendingDetailOrigin();
+      if ('Startup' in detail) {
+        setDatetime(detail.Startup.datetime);
+        setKeyInput(keyCodeToKeyInput(detail.Startup.condition.key_code));
         setSeedMode('datetime');
       } else {
-        const hex = first.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+        const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
         setSeedHex(hex);
         setSeedMode('seed');
       }

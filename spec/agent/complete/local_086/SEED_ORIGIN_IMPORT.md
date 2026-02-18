@@ -21,7 +21,7 @@
 | `SerializedSeedOrigin` | `SeedOrigin` の JSON 互換型。`base_seed` (bigint) を 16 桁 hex 文字列に変換した構造 |
 | 転写元 | datetime-search、egg-search。全結果転記は datetime-search → pokemon-list のみ。egg-list / needle へは詳細ダイアログからのみ転記可 |
 | 転写先 | `SeedInputSection` を使用する feature (pokemon-list, egg-list, needle) |
-| Store 転記 | `pendingSeedOrigins` を Store にセットし `navigateToFeature` で遷移先に自動移動する方式 |
+| Store 転記 | `pendingSeedOrigins` を Store にセットし `navigateToFeature` で遷移先に自動移動する方式。全結果一括転記のみ使用 |
 | Import タブ | `SeedInputSection` の新規入力モード。JSON ファイル読み込み・テーブル手入力を提供 |
 
 ### 1.3 背景・問題
@@ -34,7 +34,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| 転写の確立 | datetime-search の全結果を pokemon-list に転記、詳細ダイアログから単一結果を pokemon-list / egg-list / needle に転記できるようになる |
+| 転写の確立 | datetime-search の全結果を pokemon-list に一括転記できる。詳細ダイアログでは「Seed 入力に転記」ボタンで `pendingDetailOrigin` にセットし、ユーザが転写先ページに移動すると自動反映される |
 | データの永続性 | JSON ファイル保存により、セッションを跨いだ検索結果の再利用が可能になる |
 | テーブル手入力 | datetime / timer0 / vcount を直接入力でき、外部ツールの結果を取り込める |
 
@@ -56,8 +56,10 @@
 | `src/lib/navigate.ts` | 変更 | `navigateToPokemonList`、`navigateToEggList`、`navigateToNeedle` を追加 |
 | `src/hooks/use-search-results.ts` | 変更 | `pendingSeedOrigins` 用のアクセサを追加 |
 | `src/features/datetime-search/components/datetime-search-page.tsx` | 変更 | 結果テーブルに「個体生成に転記」ボタンを追加 (全結果 → Store + 遷移) |
-| `src/features/datetime-search/components/result-detail-dialog.tsx` | 変更 | 詳細ダイアログに「個体生成に転記」ボタンを追加 (単一結果 → Store + 遷移) |
-| `src/features/egg-search/components/result-detail-dialog.tsx` | 変更 | 詳細ダイアログに「孵化リストに転記」ボタンを追加 (単一結果 → Store + 遷移) |
+| `src/features/datetime-search/components/result-detail-dialog.tsx` | 変更 | 詳細ダイアログに「Seed 入力に転記」ボタンを追加 (単一結果 → `pendingDetailOrigin`) |
+| `src/features/egg-search/components/result-detail-dialog.tsx` | 変更 | 詳細ダイアログに「Seed 入力に転記」ボタンを追加 (単一結果 → `pendingDetailOrigin`) |
+| `src/features/needle/components/needle-page.tsx` | 変更 | `pendingDetailOrigin` の自動消費ロジックを追加 |
+| `src/lib/format.ts` | 変更 | `keyCodeToKeyInput` ユーティリティを追加 |
 | `src/i18n/locales/ja/messages.po` | 変更 | 新規翻訳キー追加 |
 | `src/i18n/locales/en/messages.po` | 変更 | 新規翻訳キー追加 |
 
@@ -70,18 +72,29 @@
 ```
 経路 A: Store 転記 (アプリ内直接転記)
 
+  A-1: 全結果一括転記 (datetime-search → pokemon-list)
   [datetime-search 結果テーブル]
       │
-      ├─[個体リストに転記]─→ setPendingSeedOrigins(origins)
-      │                       + navigateToFeature('pokemon-list')
-      │                              │
-      │                              ▼
-      │                       [pokemon-list]
-      │                       SeedInputSection マウント時に
-      │                       pendingSeedOrigins を消費
-      │                       → Import タブに自動反映
+      └─[個体リストに転記]─→ setPendingSeedOrigins(origins)
+                              + navigateToFeature('pokemon-list')
+                                     │
+                                     ▼
+                              [pokemon-list]
+                              SeedInputSection マウント時に
+                              pendingSeedOrigins を消費
+                              → Import タブに自動反映
+
+  A-2: 詳細ダイアログからの単一転記 (ページ遷移なし)
+  [datetime-search / egg-search 詳細ダイアログ]
       │
-      └─[詳細ダイアログ → 転記]─→ 同上 (単一 SeedOrigin → pokemon-list / egg-list / needle)
+      └─[Seed 入力に転記]─→ setPendingDetailOrigin(origin)
+                              (ページ遷移なし)
+                                     │
+                                     ▼
+                              ユーザが任意のタイミングで転写先ページに移動
+                              SeedInputSection / needle-page がマウント時に消費:
+                              - Startup → 「起動日時」タブに datetime + key_code
+                              - Seed → 「Seeds」タブに Base Seed hex
 
 
 経路 B: Import タブ (手動取り込み)
@@ -106,15 +119,19 @@
 5. Import タブの `SeedOriginTable` に反映し、`onOriginsChange(origins)` で親に伝搬
 6. `clearPendingSeedOrigins()` で Store をクリア
 
-#### 3.2.2 Store 転記: 詳細ダイアログから単一結果
+#### 3.2.2 詳細ダイアログ: Seed 入力への転記 (ページ遷移なし)
 
-1. datetime-search / egg-search の詳細ダイアログで転記ボタン押下
-2. 遷移先を選択 (pokemon-list / egg-list / needle)
-3. `setPendingSeedOrigins([singleOrigin])` で Store にセット
-4. `navigateToFeature(target)` で自動ページ遷移
-5. 以降は 3.2.1 手順 4-6 と同様
+詳細ダイアログでは「Seed 入力に転記」ボタンを提供する。ページ遷移は行わず、`pendingDetailOrigin` に値をセットするのみ。ユーザが任意のタイミングで転写先ページに移動すると、SeedInputSection / needle-page がマウント時に消費する。
 
-全結果一括転記は datetime-search → pokemon-list のみ対応。egg-search / needle は詳細ダイアログからの単一転記に限定する。理由: 孵化の許容範囲が広く、複数候補をまとめて検索するユースケースがほぼないため。針についても同様にバラバラの起動時刻・条件の下で絞り込みを行うユースケースがほぼないため。
+1. datetime-search / egg-search の詳細ダイアログで「Seed 入力に転記」ボタン押下
+2. `setPendingDetailOrigin(origin)` で Store にセット。ページ遷移なし
+3. ユーザが任意のタイミングで転写先ページ (pokemon-list / egg-list / needle) に移動
+4. SeedInputSection / needle-page がマウント時に `pendingDetailOrigin` を確認:
+   - Startup バリアント → 「起動日時」タブに datetime + key_code を埋める (`keyCodeToKeyInput` で `KeyCode` → `KeyInput` 変換)
+   - Seed バリアント → 「Seeds」タブに Base Seed hex を埋める
+5. `clearPendingDetailOrigin()` で Store をクリア (一発消費)
+
+全結果一括転記は datetime-search → pokemon-list のみ Store + 自動遷移で対応する。
 
 #### 3.2.3 Import: JSON ファイル取り込み
 
@@ -136,7 +153,7 @@
 #### 3.3.1 新規追加: `pendingSeedOrigins`
 
 `useSearchResultsStore` に `pendingSeedOrigins: SeedOrigin[]` を追加する。
-`pendingTargetSeeds` と同様のワンショットパターン。
+`pendingTargetSeeds` と同様のワンショットパターン。全結果一括転記 (datetime-search → pokemon-list) で使用。
 
 | 項目 | 仕様 |
 |------|------|
@@ -146,11 +163,24 @@
 | 永続化 | なし (セッション中のみ) |
 | 消費タイミング | 転写先ページのマウント時 (SeedInputSection 内) |
 
-#### 3.3.2 廃止: `useSearchResultsStore.results` からの `SeedOrigin[]` 抽出
+#### 3.3.2 新規追加: `pendingDetailOrigin`
+
+詳細ダイアログからの単一転記用。ページ遷移なし。
+
+| 項目 | 仕様 |
+|------|------|
+| state | `pendingDetailOrigin: SeedOrigin \| undefined` |
+| set action | `setPendingDetailOrigin(origin: SeedOrigin)` |
+| clear action | `clearPendingDetailOrigin()` |
+| 永続化 | なし (セッション中のみ) |
+| 消費タイミング | 転写先ページのマウント時 (SeedInputSection / needle-page) |
+| 消費時の動作 | Startup → manual-startup タブに datetime + key_code を埋める / Seed → manual-seeds タブに Base Seed hex を埋める |
+
+#### 3.3.3 廃止: `useSearchResultsStore.results` からの `SeedOrigin[]` 抽出
 
 `SeedInputSection` の「Search results」タブで行っていた、`results` 内の全バッチから型ガードで `SeedOrigin[]` を抽出するロジックを削除する。
 
-#### 3.3.3 維持: `pendingTargetSeeds`
+#### 3.3.4 維持: `pendingTargetSeeds`
 
 `pendingTargetSeeds` (mtseed-search → datetime-search) は既存のまま維持する。
 
@@ -226,17 +256,20 @@ interface SearchResultsState {
   results: SearchResult[];
   lastUpdatedAt: number | undefined;
   pendingTargetSeeds: MtSeed[];         // 維持
-  pendingSeedOrigins: SeedOrigin[];     // 新規追加
+  pendingSeedOrigins: SeedOrigin[];     // 全結果一括転記用
+  pendingDetailOrigin: SeedOrigin | undefined;  // 詳細ダイアログ単一転記用
 }
 
 interface SearchResultsActions {
   // ... 既存 actions ...
-  setPendingSeedOrigins: (origins: SeedOrigin[]) => void;  // 新規追加
-  clearPendingSeedOrigins: () => void;                     // 新規追加
+  setPendingSeedOrigins: (origins: SeedOrigin[]) => void;
+  clearPendingSeedOrigins: () => void;
+  setPendingDetailOrigin: (origin: SeedOrigin) => void;
+  clearPendingDetailOrigin: () => void;
 }
 ```
 
-`DEFAULT_STATE` に `pendingSeedOrigins: []` を追加する。
+`DEFAULT_STATE` に `pendingSeedOrigins: []`, `pendingDetailOrigin: undefined` を追加する。
 
 ### 4.3 ナビゲーション関数
 
@@ -283,27 +316,45 @@ export type SeedInputMode = 'import' | 'manual-seeds' | 'manual-startup';
 
 #### 4.4.3 Store 転記データの自動消費
 
-`SeedInputSection` のマウント時に `pendingSeedOrigins` を確認し、データがあれば Import タブに自動反映する。 
+`SeedInputSection` のマウント時に `pendingDetailOrigin` → `pendingSeedOrigins` の順で確認し、データがあれば対応するタブに自動反映する。`pendingDetailOrigin` が優先される。
 
 ```typescript
 // SeedInputSection 内の初期化ロジック (概要)
-const [importedOrigins, setImportedOrigins] = useState<SeedOrigin[]>(() => {
-  const pending = useSearchResultsStore.getState().pendingSeedOrigins;
-  return pending;
-});
-
 useEffect(() => {
-  const pending = useSearchResultsStore.getState().pendingSeedOrigins;
+  const store = useSearchResultsStore.getState();
+
+  // 1) pendingDetailOrigin: 詳細ダイアログからの単一転記
+  const detail = store.pendingDetailOrigin;
+  if (detail) {
+    store.clearPendingDetailOrigin();
+    if ('Startup' in detail) {
+      // 起動日時タブに datetime + key_code を埋める
+      const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
+      setDatetime(detail.Startup.datetime);
+      setKeyInput(ki);
+      onModeChange('manual-startup');
+      autoResolveStartup(detail.Startup.datetime, ki);
+    } else {
+      // Seeds タブに Base Seed hex を埋める
+      const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+      setSeedText(hex);
+      onModeChange('manual-seeds');
+      autoResolveSeeds(hex);
+    }
+    return;
+  }
+
+  // 2) pendingSeedOrigins: 全結果一括転記 → Import タブ
+  const pending = store.pendingSeedOrigins;
   if (pending.length > 0) {
-    useSearchResultsStore.getState().clearPendingSeedOrigins();
-    // Import タブに切り替え
+    store.clearPendingSeedOrigins();
     onModeChange('import');
     onOriginsChange(pending);
   }
 }, []);
 ```
 
-`pendingTargetSeeds` (datetime-search で消費) と同じパターンを採用する。
+`pendingTargetSeeds` (datetime-search で消費) と同じワンショット消費パターンを採用する。
 
 #### 4.4.4 Import タブの UI 構成
 
@@ -389,24 +440,38 @@ const handleTransferToPokemonList = () => {
 
 #### 4.6.2 datetime-search: 詳細ダイアログから単一結果転記
 
-`result-detail-dialog.tsx` に転記ボタンを追加する。遷移先として pokemon-list / needle を選択可能。
+`result-detail-dialog.tsx` に「Seed 入力に転記」ボタンを 1 つ追加する。ページ遷移は行わず、`pendingDetailOrigin` にセットするのみ。
 
 ```typescript
-const handleTransferToGeneration = (target: FeatureId) => {
-  navigateWithSeedOrigins([origin], target);
-};
+<Button
+  variant="outline"
+  size="sm"
+  onClick={() => {
+    useSearchResultsStore.getState().setPendingDetailOrigin(seedOrigin);
+  }}
+>
+  <ClipboardCopy className="mr-1 size-3" />
+  <Trans>Copy to seed input</Trans>
+</Button>
 ```
 
-egg-list / needle への転記はこの詳細ダイアログからのみ行える。全結果一括転記は datetime-search → pokemon-list のみ対応。
+ユーザが任意のタイミングで転写先ページに移動すると、SeedInputSection / needle-page がマウント時に自動消費する。
 
 #### 4.6.3 egg-search: 詳細ダイアログから単一結果転記
 
-egg-search の `result-detail-dialog.tsx` に転記ボタンを追加する。遷移先として egg-list / needle を選択可能。
+egg-search の `result-detail-dialog.tsx` にも同様の「Seed 入力に転記」ボタンを追加する。
 
 ```typescript
-const handleTransferToGeneration = (target: FeatureId) => {
-  navigateWithSeedOrigins([origin], target);
-};
+<Button
+  variant="outline"
+  size="sm"
+  onClick={() => {
+    useSearchResultsStore.getState().setPendingDetailOrigin(egg.source);
+  }}
+>
+  <ClipboardCopy className="mr-1 size-3" />
+  <Trans>Copy to seed input</Trans>
+</Button>
 ```
 
 ### 4.7 バリデーション
@@ -439,10 +504,8 @@ const handleTransferToGeneration = (target: FeatureId) => {
 |-----------------|-------------|
 | `Import` | タブラベル |
 | `Import JSON file` | ボタン |
-| `Transfer to Pokemon list` | ボタン (datetime-search 全結果 → pokemon-list / 詳細ダイアログ → pokemon-list) |
-| `Transfer to Egg list` | ボタン (詳細ダイアログ → egg-list) |
-| `Transfer to generation` | ボタン (詳細ダイアログ) |
-| `Transfer to Needle search` | ボタン (詳細ダイアログ → needle) |
+| `Transfer to Pokemon list` | ボタン (datetime-search 全結果 → pokemon-list) |
+| `Copy to seed input` | ボタン (詳細ダイアログ → `pendingDetailOrigin` セット、ページ遷移なし) |
 | `Add row` | テーブル行追加ボタン |
 | `Clear all` | テーブル全削除ボタン |
 | `Import failed` | Toast エラー |
@@ -460,17 +523,27 @@ const handleTransferToGeneration = (target: FeatureId) => {
 | | `parseSerializedSeedOrigins` で `SerializedSeedOrigin[]` 配列をパースできること |
 | | `parseSerializedSeedOrigins` で `{ results: [...] }` 形式をパースできること |
 | | `parseSerializedSeedOrigins` で不正 JSON に対してエラーを投げること |
-| | ラウンドトリップ: `serialize → deserialize` で元の `SeedOrigin` と一致すること |
-
+| | ラウンドトリップ: `serialize → deserialize` で元の `SeedOrigin` と一致すること || `lib/format.test.ts` | `keyCodeToKeyInput` でボタンなし (0x2FFF) → 空配列 |
+| | `keyCodeToKeyInput` で A ボタンのみ → `['A']` |
+| | `keyCodeToKeyInput` で複数ボタン → 正しい DsButton 配列 |
+| | `keyCodeToKeyInput` と `formatKeyCode` のボタン数が一致すること |
+| `stores/results.test.ts` | `pendingDetailOrigin` の初期値が `undefined` であること |
+| | `setPendingDetailOrigin` / `clearPendingDetailOrigin` が動作すること |
+| | `clearResults` で `pendingDetailOrigin` もクリアされること |
+| | `pendingSeedOrigins` の set / clear が動作すること |
 ### 5.2 コンポーネントテスト (`src/test/components/`)
 
 | テスト | 検証内容 |
 |--------|---------|
-| `seed-input-section.test.tsx` | Import タブが表示されること |
-| | `pendingSeedOrigins` がある状態でマウントすると Import タブに自動反映されること |
-| | JSON ファイル選択で `SeedOrigin[]` が復元され `onOriginsChange` が呼ばれること |
+| `seed-input-section.test.tsx` | 3 つのタブ (Startup / Seeds / Import) が表示されること |
+| | `pendingDetailOrigin` (Startup) 消費で manual-startup に切り替わること |
+| | `pendingDetailOrigin` (Seed) 消費で manual-seeds に切り替わること |
+| | `pendingSeedOrigins` 消費で import タブに切り替わり `onOriginsChange` が呼ばれること |
+| | `pendingDetailOrigin` が `pendingSeedOrigins` より優先されること |
 | `seed-origin-table.test.tsx` | テーブルに `SeedOrigin[]` が正しく表示されること |
-| | 行追加・削除が動作すること |
+| | 行削除ボタンで `onOriginsChange` が呼ばれること |
+| | Clear all で全行削除されること |
+| | `editable=false` / `disabled=true` で削除ボタンが非表示になること |
 
 ### 5.3 統合テスト (`src/test/integration/`)
 
@@ -483,15 +556,18 @@ const handleTransferToGeneration = (target: FeatureId) => {
 - [x] `src/services/seed-origin-serde.ts` を新規作成 (`SerializedSeedOrigin`, `serializeSeedOrigin`, `deserializeSeedOrigin`, `parseSerializedSeedOrigins`)
 - [x] `src/services/export.ts` から `serializeSeedOrigin` / `SerializedSeedOrigin` を `seed-origin-serde.ts` に移動し、import 形式に変更
 - [x] `src/test/unit/seed-origin-serde.test.ts` を作成
-- [x] `src/stores/search/results.ts` に `pendingSeedOrigins` / `setPendingSeedOrigins` / `clearPendingSeedOrigins` を追加
+- [x] `src/stores/search/results.ts` に `pendingSeedOrigins` / `pendingDetailOrigin` および関連 actions を追加
 - [x] `src/lib/navigate.ts` に `navigateWithSeedOrigins` を追加
+- [x] `src/lib/format.ts` に `keyCodeToKeyInput` を追加
 - [x] `src/hooks/use-search-results.ts` に `pendingSeedOrigins` 用アクセサを追加
 - [x] `src/components/forms/seed-origin-table.tsx` を新規作成
 - [x] `src/components/forms/seed-input-section.tsx` を改修 (Search results → Import タブ + Store 転記自動消費)
-- [ ] `src/test/components/seed-input-section.test.tsx` を改修/新規作成 (既存テストなし、別途対応)
+- [x] `src/test/components/seed-input-section.test.tsx` を新規作成
+- [x] `src/test/components/seed-origin-table.test.tsx` を新規作成
 - [x] `src/features/datetime-search/components/datetime-search-page.tsx` を改修 (転記ボタン追加)
-- [x] `src/features/datetime-search/components/result-detail-dialog.tsx` を改修 (転記ボタン追加)
-- [x] `src/features/egg-search/components/result-detail-dialog.tsx` を改修 (詳細ダイアログに転記ボタン追加)
+- [x] `src/features/datetime-search/components/result-detail-dialog.tsx` を改修 (Seed 入力に転記ボタン → `setPendingDetailOrigin`)
+- [x] `src/features/egg-search/components/result-detail-dialog.tsx` を改修 (Seed 入力に転記ボタン → `setPendingDetailOrigin`)
+- [x] `src/features/needle/components/needle-page.tsx` を改修 (`pendingDetailOrigin` 自動消費ロジック追加)
 - [ ] `src/test/integration/seed-origin-import.test.ts` を作成 (別途対応)
 - [x] 翻訳キー追加 (`ja/messages.po`, `en/messages.po`)
 - [x] `pnpm lint` / `pnpm test:run` / `cargo clippy` 全パス確認
