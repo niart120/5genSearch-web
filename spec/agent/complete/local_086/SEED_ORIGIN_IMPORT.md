@@ -480,18 +480,18 @@ const handleTransferToGeneration = (target: FeatureId) => {
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/services/seed-origin-serde.ts` を新規作成 (`SerializedSeedOrigin`, `serializeSeedOrigin`, `deserializeSeedOrigin`, `parseSerializedSeedOrigins`)
-- [ ] `src/services/export.ts` から `serializeSeedOrigin` / `SerializedSeedOrigin` を `seed-origin-serde.ts` に移動し、import 形式に変更
-- [ ] `src/test/unit/seed-origin-serde.test.ts` を作成
-- [ ] `src/stores/search/results.ts` に `pendingSeedOrigins` / `setPendingSeedOrigins` / `clearPendingSeedOrigins` を追加
-- [ ] `src/lib/navigate.ts` に `navigateWithSeedOrigins` を追加
-- [ ] `src/hooks/use-search-results.ts` に `pendingSeedOrigins` 用アクセサを追加
-- [ ] `src/components/forms/seed-origin-table.tsx` を新規作成
-- [ ] `src/components/forms/seed-input-section.tsx` を改修 (Search results → Import タブ + Store 転記自動消費)
-- [ ] `src/test/components/seed-input-section.test.tsx` を改修/新規作成
-- [ ] `src/features/datetime-search/components/datetime-search-page.tsx` を改修 (転記ボタン追加)
-- [ ] `src/features/datetime-search/components/result-detail-dialog.tsx` を改修 (転記ボタン追加)
-- [ ] `src/features/egg-search/components/result-detail-dialog.tsx` を改修 (詳細ダイアログに転記ボタン追加)
-- [ ] `src/test/integration/seed-origin-import.test.ts` を作成
-- [ ] 翻訳キー追加 (`ja/messages.po`, `en/messages.po`)
-- [ ] `pnpm lint` / `pnpm test:run` / `cargo clippy` 全パス確認
+- [x] `src/services/seed-origin-serde.ts` を新規作成 (`SerializedSeedOrigin`, `serializeSeedOrigin`, `deserializeSeedOrigin`, `parseSerializedSeedOrigins`)
+- [x] `src/services/export.ts` から `serializeSeedOrigin` / `SerializedSeedOrigin` を `seed-origin-serde.ts` に移動し、import 形式に変更
+- [x] `src/test/unit/seed-origin-serde.test.ts` を作成
+- [x] `src/stores/search/results.ts` に `pendingSeedOrigins` / `setPendingSeedOrigins` / `clearPendingSeedOrigins` を追加
+- [x] `src/lib/navigate.ts` に `navigateWithSeedOrigins` を追加
+- [x] `src/hooks/use-search-results.ts` に `pendingSeedOrigins` 用アクセサを追加
+- [x] `src/components/forms/seed-origin-table.tsx` を新規作成
+- [x] `src/components/forms/seed-input-section.tsx` を改修 (Search results → Import タブ + Store 転記自動消費)
+- [ ] `src/test/components/seed-input-section.test.tsx` を改修/新規作成 (既存テストなし、別途対応)
+- [x] `src/features/datetime-search/components/datetime-search-page.tsx` を改修 (転記ボタン追加)
+- [x] `src/features/datetime-search/components/result-detail-dialog.tsx` を改修 (転記ボタン追加)
+- [x] `src/features/egg-search/components/result-detail-dialog.tsx` を改修 (詳細ダイアログに転記ボタン追加)
+- [ ] `src/test/integration/seed-origin-import.test.ts` を作成 (別途対応)
+- [x] 翻訳キー追加 (`ja/messages.po`, `en/messages.po`)
+- [x] `pnpm lint` / `pnpm test:run` / `cargo clippy` 全パス確認
