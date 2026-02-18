@@ -258,11 +258,3 @@ export {
 };
 
 export type { ExportColumn, ExportDsConfig, ExportGameStart, ExportTimer0VCountRange, ExportMeta };
-
-// Re-export from seed-origin-serde for backward compatibility
-export {
-  serializeSeedOrigin,
-  deserializeSeedOrigin,
-  parseSerializedSeedOrigins,
-} from '@/services/seed-origin-serde';
-export type { SerializedSeedOrigin } from '@/services/seed-origin-serde';

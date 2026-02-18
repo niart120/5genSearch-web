@@ -75,7 +75,7 @@ function SeedOriginTable({
     onOriginsChange([]);
   }, [onOriginsChange]);
 
-  const isStartup = origins.length > 0 && 'Startup' in origins[0];
+  const hasStartupOrigins = origins.some((o) => 'Startup' in o);
 
   return (
     <div className="flex flex-col gap-2">
@@ -85,7 +85,7 @@ function SeedOriginTable({
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                {isStartup && (
+                {hasStartupOrigins && (
                   <>
                     <th className="px-2 py-1 text-left font-medium">
                       <Trans>Date/Time</Trans>
@@ -114,8 +114,11 @@ function SeedOriginTable({
                 const keyCode = getKeyCode(origin);
 
                 return (
-                  <tr key={index} className="border-b border-border last:border-b-0">
-                    {isStartup && (
+                  <tr
+                    key={`${index}-${getBaseSeed(origin).toString(16)}`}
+                    className="border-b border-border last:border-b-0"
+                  >
+                    {hasStartupOrigins && (
                       <>
                         <td className="px-2 py-1 font-mono">{dt ? formatDatetime(dt) : '-'}</td>
                         <td className="px-2 py-1 font-mono">

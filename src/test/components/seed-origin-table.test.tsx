@@ -121,4 +121,20 @@ describe('SeedOriginTable', () => {
     expect(screen.queryByLabelText('Delete row 1')).toBeNull();
     expect(screen.queryByText('Clear all')).toBeNull();
   });
+
+  it('Startup と Seed が混在する場合、Startup カラムを表示し Seed 行は "-" を表示する', () => {
+    renderTable({ origins: [STARTUP_ORIGIN, SEED_ORIGIN] });
+
+    // Startup 行のデータが表示される
+    expect(screen.getByText('2025/01/05 09:03:07')).toBeDefined();
+    expect(screen.getByText('0600')).toBeDefined();
+
+    // 両方の Base Seed が表示される
+    expect(screen.getByText('0123456789ABCDEF')).toBeDefined();
+    expect(screen.getByText('ABCDEF0123456789')).toBeDefined();
+
+    // Seed 行の Startup 専用カラムは '-' が表示される
+    const cells = screen.getAllByText('-');
+    expect(cells.length).toBeGreaterThanOrEqual(4); // datetime, timer0, vcount, key_code
+  });
 });

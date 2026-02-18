@@ -70,14 +70,6 @@
 
 WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>` 統一と合わせて一括対応が望ましい。
 
-## 2026-02-18: SeedOrigin シリアライズ/デシリアライズの配置方針
-
-現状: `src/services/export.ts` に `serializeSeedOrigin` / `toSeedOriginJson` / `SerializedSeedOrigin` を追加した。これは datetime-search の JSON エクスポートで `SeedOrigin` の構造をそのまま保持し、将来 pokemon-list 側でインポート (デシリアライズ) できるようにする設計。現時点ではデシリアライズは未実装。
-
-観察: `serializeSeedOrigin` はエクスポート固有のロジックではなく、`SeedOrigin` 型の bigint → hex 文字列変換という汎用的なデータ変換である。将来デシリアライズ (`deserializeSeedOrigin`: hex 文字列 → bigint) を追加する際、`export.ts` に置くのは責務として不適切。
-
-当面の方針: デシリアライズ実装時に `src/services/seed-origin-serde.ts` を新設し、`serializeSeedOrigin` / `deserializeSeedOrigin` / `SerializedSeedOrigin` をまとめて移動する。`export.ts` からは `seed-origin-serde.ts` を import して `toSeedOriginJson` 内で使用する形に変更する。現時点では利用箇所がエクスポートのみであるため、移動は実需発生時で十分。
-
 ## 2026-02-18: SeedOriginTable における KeyCode / KeyMask のユーザ露出
 
 背景: SEED_ORIGIN_IMPORT 仕様 (local_086) の SeedOriginTable §4.5.1 では、`key_code` を hex 入力させるカラムを定義している。この設計を見直す必要がある。
