@@ -24,6 +24,9 @@ import { EggParamsForm } from '@/components/forms/egg-params-form';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import { EggFilterForm } from '@/components/forms/egg-filter-form';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
+import { useExport } from '@/hooks/use-export';
+import { createEggListExportColumns } from '@/services/export-columns';
 import type {
   GenerationConfig,
   EggFilter,
@@ -202,6 +205,15 @@ function EggListPage(): ReactElement {
     [handleSelectResult, statMode, language]
   );
 
+  // エクスポート
+  const exportColumns = useMemo(() => createEggListExportColumns(statMode), [statMode]);
+  const exportActions = useExport({
+    data: uiResults,
+    columns: exportColumns,
+    featureId: 'egg-list',
+    statMode,
+  });
+
   return (
     <>
       <FeaturePageLayout className="pb-32 lg:pb-4">
@@ -276,6 +288,7 @@ function EggListPage(): ReactElement {
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
                 <Trans>Stats</Trans>
               </Label>
+              <ExportToolbar resultCount={uiResults.length} exportActions={exportActions} />
             </div>
           </div>
           <DataTable

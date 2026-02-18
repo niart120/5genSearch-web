@@ -17,8 +17,11 @@ import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
+import { useExport } from '@/hooks/use-export';
+import { createTidAdjustExportColumns } from '@/services/export-columns';
 import { estimateTidAdjustResults, countKeyCombinations } from '@/services/search-estimation';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
@@ -122,6 +125,15 @@ function TidAdjustPage(): ReactElement {
 
   // 列定義
   const columns = useMemo(() => createTrainerInfoColumns(), []);
+
+  // エクスポート
+  const exportColumns = useMemo(() => createTidAdjustExportColumns(), []);
+  const exportActions = useExport({
+    data: results,
+    columns: exportColumns,
+    featureId: 'tid-adjust',
+    gameStartOverride: tidGameStart,
+  });
 
   // KeySpec 組み合わせ数
   const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
@@ -255,9 +267,12 @@ function TidAdjustPage(): ReactElement {
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
-          <p className="text-xs text-muted-foreground">
-            <Trans>Results</Trans>: {results.length.toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
+            </p>
+            <ExportToolbar resultCount={results.length} exportActions={exportActions} />
+          </div>
           <DataTable
             columns={columns}
             data={results}

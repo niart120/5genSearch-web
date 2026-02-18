@@ -23,6 +23,10 @@ import type { ValidationErrorCode, ParseErrorCode } from '../types';
 import { createSeedOriginColumns } from './seed-origin-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
 import { TemplateSelectionDialog } from './template-selection-dialog';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
+import { useExport } from '@/hooks/use-export';
+import { createDatetimeSearchExportColumns } from '@/services/export-columns';
+import { toSeedOriginJson } from '@/services/export';
 import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import type {
@@ -153,6 +157,15 @@ function DatetimeSearchPage(): ReactElement {
     [contexts, handleSelectOrigin]
   );
 
+  // エクスポート
+  const exportColumns = useMemo(() => createDatetimeSearchExportColumns(), []);
+  const exportActions = useExport({
+    data: results,
+    columns: exportColumns,
+    featureId: 'datetime-search',
+    jsonExporter: toSeedOriginJson,
+  });
+
   // KeySpec 組み合わせ数
   const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
 
@@ -261,9 +274,12 @@ function DatetimeSearchPage(): ReactElement {
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
-          <p className="text-xs text-muted-foreground">
-            <Trans>Results</Trans>: {results.length.toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
+            </p>
+            <ExportToolbar resultCount={results.length} exportActions={exportActions} />
+          </div>
           <DataTable
             columns={columns}
             data={results}

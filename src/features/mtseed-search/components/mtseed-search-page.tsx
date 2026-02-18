@@ -25,6 +25,9 @@ import type { IvFilter, RomVersion } from '@/wasm/wasm_pkg.js';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { navigateToDatetimeSearch } from '@/lib/navigate';
 import { getStandardContexts } from '@/lib/iv-tooltip';
+import { ExportToolbar } from '@/components/data-display/export-toolbar';
+import { useExport } from '@/hooks/use-export';
+import { createMtseedSearchExportColumns } from '@/services/export-columns';
 
 /** IvFilter のデフォルト値 (全 31-31, めざパ条件なし) */
 const DEFAULT_IV_FILTER: IvFilter = {
@@ -80,6 +83,14 @@ function MtseedSearchPage(): ReactElement {
   // コンテキスト・列定義
   const contexts = useMemo(() => getStandardContexts(config.version), [config.version]);
   const columns = useMemo(() => createMtseedResultColumns(contexts), [contexts]);
+
+  // エクスポート
+  const exportColumns = useMemo(() => createMtseedSearchExportColumns(), []);
+  const exportActions = useExport({
+    data: results,
+    columns: exportColumns,
+    featureId: 'mtseed-search',
+  });
 
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -155,14 +166,20 @@ function MtseedSearchPage(): ReactElement {
               <p className="text-sm text-muted-foreground">
                 <Trans>{results.length} seeds found</Trans>
               </p>
-              <Button variant="outline" size="sm" onClick={handleNavigateToDatetimeSearch}>
-                <Trans>Search Boot Timing</Trans>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleNavigateToDatetimeSearch}>
+                  <Trans>Search Boot Timing</Trans>
+                </Button>
+                <ExportToolbar resultCount={results.length} exportActions={exportActions} />
+              </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              <Trans>Results</Trans>: 0
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                <Trans>Results</Trans>: 0
+              </p>
+              <ExportToolbar resultCount={0} exportActions={exportActions} />
+            </div>
           )}
 
           <DataTable
