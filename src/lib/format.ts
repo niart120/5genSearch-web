@@ -241,6 +241,14 @@ function formatIvs(ivs: Ivs): string {
   return `${ivs.hp}-${ivs.atk}-${ivs.def}-${ivs.spa}-${ivs.spd}-${ivs.spe}`;
 }
 
+/**
+ * MAC アドレスをコロン区切り文字列にフォーマット
+ * 例: [0, 17, 34, 51, 68, 85] → "00:11:22:33:44:55"
+ */
+function formatMacAddress(mac: readonly number[]): string {
+  return mac.map((b) => b.toString(16).padStart(2, '0')).join(':');
+}
+
 export {
   remToPx,
   formatElapsedTime,
@@ -257,4 +265,5 @@ export {
   formatShinyDetailed,
   formatAbilitySlot,
   formatIvs,
+  formatMacAddress,
 };
