@@ -7,7 +7,8 @@
 
 import { useCallback, useMemo } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { Copy } from 'lucide-react';
+import { Copy, ClipboardCopy } from 'lucide-react';
+import { toast } from '@/components/ui/toast-state';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
@@ -108,6 +110,21 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
               </div>
             </SeedIvTooltip>
           )}
+        </div>
+
+        {/* Seed 入力に転記 */}
+        <div className="flex flex-col gap-1 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              useSearchResultsStore.getState().setPendingDetailOrigin(seedOrigin);
+              toast.success(t`Copied to seed input`);
+            }}
+          >
+            <ClipboardCopy className="mr-1 size-3" />
+            <Trans>Copy to seed input</Trans>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

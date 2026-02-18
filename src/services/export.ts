@@ -5,7 +5,8 @@
  * 純粋関数を提供する。React / Store に依存しない。
  */
 
-import { formatMacAddress, toBigintHex } from '@/lib/format';
+import { formatMacAddress } from '@/lib/format';
+import { serializeSeedOrigin } from '@/services/seed-origin-serde';
 import type {
   DsConfig,
   GameStartConfig,
@@ -138,51 +139,6 @@ function toJson<T>(rows: readonly T[], columns: ExportColumn<T>[], meta: ExportM
 // ---------------------------------------------------------------------------
 
 /**
- * SeedOrigin を JSON シリアライズ可能な形式に変換する。
- *
- * bigint (base_seed) を 16 桁ゼロパディング hex 文字列に変換し、
- * その他のフィールドはそのまま保持する。
- * 将来的な pokemon-list 側でのインポート (デシリアライズ) を想定した構造。
- */
-function serializeSeedOrigin(origin: SeedOrigin): SerializedSeedOrigin {
-  if ('Seed' in origin) {
-    return {
-      Seed: {
-        base_seed: toBigintHex(origin.Seed.base_seed, 16),
-        mt_seed: origin.Seed.mt_seed,
-      },
-    };
-  }
-  return {
-    Startup: {
-      base_seed: toBigintHex(origin.Startup.base_seed, 16),
-      mt_seed: origin.Startup.mt_seed,
-      datetime: origin.Startup.datetime,
-      condition: origin.Startup.condition,
-    },
-  };
-}
-
-/** SeedOrigin のシリアライズ済み型 (bigint → hex 文字列) */
-type SerializedSeedOrigin =
-  | { Seed: { base_seed: string; mt_seed: number } }
-  | {
-      Startup: {
-        base_seed: string;
-        mt_seed: number;
-        datetime: {
-          year: number;
-          month: number;
-          day: number;
-          hour: number;
-          minute: number;
-          second: number;
-        };
-        condition: { timer0: number; vcount: number; key_code: number };
-      };
-    };
-
-/**
  * SeedOrigin[] を構造的にシリアライズした JSON を生成する。
  *
  * CSV/TSV 用の列定義とは独立した出力形式。
@@ -291,7 +247,6 @@ export {
   toTsv,
   toJson,
   toSeedOriginJson,
-  serializeSeedOrigin,
   filterColumns,
   buildExportMeta,
   generateExportFilename,
@@ -302,11 +257,4 @@ export {
   HARDWARE_MAP,
 };
 
-export type {
-  ExportColumn,
-  ExportDsConfig,
-  ExportGameStart,
-  ExportTimer0VCountRange,
-  ExportMeta,
-  SerializedSeedOrigin,
-};
+export type { ExportColumn, ExportDsConfig, ExportGameStart, ExportTimer0VCountRange, ExportMeta };

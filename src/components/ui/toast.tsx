@@ -59,7 +59,7 @@ function Toaster() {
       {data && <ToastItem data={data} isDesktop={isDesktop} />}
       <ToastPrimitive.Viewport
         className={cn(
-          'fixed z-50 flex max-w-sm flex-col',
+          'fixed z-[100] flex max-w-sm flex-col',
           isDesktop ? 'bottom-4 right-4' : 'bottom-4 left-1/2 w-[calc(100%-2rem)] -translate-x-1/2'
         )}
       />

@@ -51,7 +51,7 @@ function PokemonListPage(): ReactElement {
   const { tid, sid } = useTrainer();
 
   // Seed 入力
-  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('search-results');
+  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('import');
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
   // エンカウント設定 (PokemonParamsForm の controlled state)
@@ -209,6 +209,7 @@ function PokemonListPage(): ReactElement {
           </div>
 
           <SeedInputSection
+            featureId="pokemon-list"
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}

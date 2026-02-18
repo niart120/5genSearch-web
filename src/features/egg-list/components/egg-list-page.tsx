@@ -233,6 +233,7 @@ function EggListPage(): ReactElement {
           </div>
 
           <SeedInputSection
+            featureId="egg-list"
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}

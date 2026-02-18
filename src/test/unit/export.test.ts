@@ -11,11 +11,11 @@ import {
   filterColumns,
   generateExportFilename,
   buildExportMeta,
-  serializeSeedOrigin,
   toSeedOriginJson,
   VERSION_MAP,
   HARDWARE_MAP,
 } from '@/services/export';
+import { serializeSeedOrigin } from '@/services/seed-origin-serde';
 import type { ExportColumn, ExportMeta } from '@/services/export';
 import { createPokemonListExportColumns } from '@/services/export-columns';
 import type { DsConfig, GameStartConfig, SeedOrigin, Timer0VCountRange } from '@/wasm/wasm_pkg';

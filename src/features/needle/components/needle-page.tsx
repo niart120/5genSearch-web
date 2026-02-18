@@ -16,7 +16,9 @@ import { Label } from '@/components/ui/label';
 import { NumField } from '@/components/ui/spinner-num-field';
 import { DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
+import { keyCodeToKeyInput } from '@/lib/format';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
 import { createNeedleResultColumns } from './needle-result-columns';
@@ -48,6 +50,26 @@ function NeedlePage(): ReactElement {
   const [userOffset, setUserOffset] = useState(DEFAULT_USER_OFFSET);
   const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
   const [autoSearch, setAutoSearch] = useState(true);
+
+  // pendingDetailOrigins の自動消費 (needle ページ分)
+  useEffect(() => {
+    const store = useSearchResultsStore.getState();
+    const detail = store.pendingDetailOrigins['needle'];
+    if (detail) {
+      store.clearPendingDetailOrigin('needle');
+      if ('Startup' in detail) {
+        const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
+        setDatetime(detail.Startup.datetime);
+        setKeyInput(keyCodeToKeyInput(detail.Startup.condition.key_code));
+        setSeedHex(hex);
+        setSeedMode('datetime');
+      } else {
+        const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+        setSeedHex(hex);
+        setSeedMode('seed');
+      }
+    }
+  }, []);
 
   // seedOrigins は入力状態から導出 (初回レンダーから計算される)
   const seedOrigins = useMemo(() => {

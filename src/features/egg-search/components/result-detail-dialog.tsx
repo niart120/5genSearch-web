@@ -6,6 +6,8 @@
  */
 
 import { Trans, useLingui } from '@lingui/react/macro';
+import { ClipboardCopy } from 'lucide-react';
+import { toast } from '@/components/ui/toast-state';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { DetailRow } from '@/components/data-display/detail-row';
 import {
   toBigintHex,
@@ -24,6 +27,7 @@ import {
   formatAbilitySlot,
 } from '@/lib/format';
 import { getNatureName, getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
+import { useSearchResultsStore } from '@/stores/search/results';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
 
@@ -85,6 +89,21 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
             label={t`Margin frames`}
             value={egg.margin_frames === undefined ? '-' : String(egg.margin_frames)}
           />
+        </div>
+
+        {/* Seed 入力に転記 */}
+        <div className="flex flex-col gap-1 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              useSearchResultsStore.getState().setPendingDetailOrigin(egg.source);
+              toast.success(t`Copied to seed input`);
+            }}
+          >
+            <ClipboardCopy className="mr-1 size-3" />
+            <Trans>Copy to seed input</Trans>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
