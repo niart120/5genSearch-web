@@ -105,17 +105,45 @@ services/export-columns.ts (feature 別列定義)
   "meta": {
     "exportedAt": "2026-02-18T12:00:00.000Z",
     "feature": "pokemon-list",
-    "version": "Black",
-    "region": "Jpn",
-    "hardware": "DsLite",
-    "macAddress": "00:11:22:33:44:55",
     "totalResults": 150,
     "includeDetails": true,
-    "statMode": "ivs"
+    "statMode": "ivs",
+    "dsConfig": {
+      "version": "Black",
+      "region": "Jpn",
+      "hardware": "DsLite",
+      "macAddress": "00:11:22:33:44:55"
+    },
+    "gameStart": {
+      "startMode": "Continue",
+      "save": "WithSave",
+      "memoryLink": "Disabled",
+      "shinyCharm": "NotObtained"
+    },
+    "timer0VCountRanges": [
+      { "timer0Min": 3193, "timer0Max": 3194, "vcountMin": 96, "vcountMax": 96 }
+    ]
   },
   "results": [...]
 }
 ```
+
+**meta フィールド分類**:
+
+| カテゴリ | フィールド | 説明 |
+|---------|-----------|------|
+| エクスポート文脈 | `exportedAt`, `feature`, `totalResults`, `includeDetails` | 全 feature 共通。必須 |
+| エクスポート文脈 | `statMode` | pokemon-list / egg-list のみ。IV/Stats どちらを出力したか |
+| DS 設定 | `dsConfig.version`, `.region`, `.hardware`, `.macAddress` | 全 feature 共通 |
+| 起動設定 | `gameStart.startMode`, `.save`, `.memoryLink`, `.shinyCharm` | 全 feature 共通。`game_offset` 計算・色違い確率に影響 |
+| 検索範囲 | `timer0VCountRanges[]` | 全 feature 共通。起動時刻検索系で検索空間を決定 |
+
+**含めないもの**:
+
+| 項目 | 除外理由 |
+|------|----------|
+| アプリバージョン | 現時点で互換性判定の需要がない |
+| 検索パラメータ (フィルタ条件、日付範囲等) | feature ごとにスキーマが異なり実装コストが高い。結果の再現が目的ではないため不要 |
 
 - `results` 配列の各要素は feature ごとに異なるスキーマ (Section 4.2 で定義)
 
@@ -384,18 +412,40 @@ function escapeCsvField(value: string): string {
 ### 4.5 JSON 変換ロジック
 
 ```typescript
-interface ExportMeta {
-  exportedAt: string;      // ISO 8601
-  feature: string;         // feature 識別子
+interface ExportDsConfig {
   version: string;         // RomVersion
   region: string;          // RomRegion
   hardware: string;        // Hardware
   macAddress: string;      // "00:11:22:33:44:55"
-  totalResults: number;
-  includeDetails: boolean;
-  statMode?: 'ivs' | 'stats';  // pokemon-list / egg-list のみ
 }
 
+interface ExportGameStart {
+  startMode: string;       // StartMode
+  save: string;            // SavePresence
+  memoryLink: string;      // MemoryLinkState
+  shinyCharm: string;      // ShinyCharmState
+}
+
+interface ExportTimer0VCountRange {
+  timer0Min: number;
+  timer0Max: number;
+  vcountMin: number;
+  vcountMax: number;
+}
+
+interface ExportMeta {
+  exportedAt: string;                       // ISO 8601
+  feature: string;                          // feature 識別子
+  totalResults: number;
+  includeDetails: boolean;
+  statMode?: 'ivs' | 'stats';              // pokemon-list / egg-list のみ
+  dsConfig: ExportDsConfig;
+  gameStart: ExportGameStart;
+  timer0VCountRanges: ExportTimer0VCountRange[];
+}
+```
+
+```typescript
 function toJson<T>(
   rows: readonly T[],
   columns: ExportColumn<T>[],
@@ -560,7 +610,7 @@ function useExport<T>(options: {
 ```
 
 - `includeDetails` は `useState` (ローカル state) で管理。永続化不要
-- DS 設定は `useDsConfig` フックから取得 (ファイル名生成に使用)
+- DS 設定・GameStart・Timer0VCount 範囲は `useDsConfig` フックから取得 (ファイル名生成・meta 生成に使用)
 - Toast 通知は `sonner` 等の Toast ライブラリまたは既存の Toast コンポーネント経由
 
 ### 4.10 egg-search の列アクセサ
@@ -581,6 +631,9 @@ function useExport<T>(options: {
 | `toCsv` — BOM 付き UTF-8 | 先頭に BOM (`\uFEFF`) が付与されること |
 | `toTsv` — 基本出力 | タブ区切りで正しく生成されること |
 | `toJson` — 基本出力 | meta + results 構造が正しいこと |
+| `toJson` — meta.dsConfig | DS 設定が正しく出力されること |
+| `toJson` — meta.gameStart | GameStartConfig が正しく出力されること |
+| `toJson` — meta.timer0VCountRanges | Timer0/VCount 範囲が正しく出力されること |
 | `toJson` — includeDetails 反映 | `meta.includeDetails` が正しく設定されること |
 | `generateExportFilename` — 正常系 | 各セグメントが正しくマッピングされること |
 | `generateExportFilename` — 全 version | `b1`, `w1`, `b2`, `w2` の全パターン |
@@ -616,7 +669,7 @@ function useExport<T>(options: {
 |------|---------|--------|------|
 | `includeDetails` | `useState` (useExport 内) | 不要 | セッション内の一時的な選択 |
 | `data` (ソート済み結果) | DataTable 内部 (`@tanstack/react-table`) | 不要 | テーブル表示のソート済みデータを参照 |
-| DS 設定 | `useDsConfigStore` (既存) | 既存 | ファイル名生成に使用 |
+| DS 設定 | `useDsConfigStore` (既存) | 既存 | ファイル名生成・JSON meta 生成に使用 |
 
 ### 6.2 Store 変更
 
