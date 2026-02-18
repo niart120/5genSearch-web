@@ -46,7 +46,7 @@ tools:
 
 7. **ブランチ削除**
    - `git branch -d <ブランチ名>` でローカルブランチを削除
-   - `git push origin --delete <ブランチ名> --no-verify` でリモートブランチを削除
+   - `git push origin --delete <ブランチ名>` でリモートブランチを削除
 
 ### エラー時の対応
 
