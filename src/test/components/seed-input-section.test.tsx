@@ -6,8 +6,10 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { SeedInputSection } from '@/components/forms/seed-input-section';
+import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { getSearchResultsInitialState, useSearchResultsStore } from '@/stores/search/results';
 import type { SeedOrigin } from '@/wasm/wasm_pkg';
@@ -37,6 +39,7 @@ function renderSection(
     origins: SeedOrigin[];
     onOriginsChange: Mock;
     disabled: boolean;
+    featureId: 'pokemon-list' | 'egg-list' | 'needle';
   }> = {}
 ) {
   const onModeChange = overrides.onModeChange ?? vi.fn();
@@ -47,6 +50,7 @@ function renderSection(
     ...render(
       <I18nTestWrapper>
         <SeedInputSection
+          featureId={overrides.featureId ?? 'pokemon-list'}
           mode={overrides.mode ?? 'manual-startup'}
           onModeChange={onModeChange}
           origins={overrides.origins ?? []}
@@ -56,6 +60,39 @@ function renderSection(
       </I18nTestWrapper>
     ),
   };
+}
+
+/** mode を内部で管理するラッパー。タブクリックで実際に切り替わる */
+function StatefulWrapper({
+  initialMode = 'manual-startup',
+  featureId = 'pokemon-list' as const,
+  onModeChangeSpy,
+  onOriginsChangeSpy,
+}: {
+  initialMode?: SeedInputMode;
+  featureId?: 'pokemon-list' | 'egg-list' | 'needle';
+  onModeChangeSpy?: Mock;
+  onOriginsChangeSpy?: Mock;
+}) {
+  const [mode, setMode] = useState<SeedInputMode>(initialMode);
+  const [origins, setOrigins] = useState<SeedOrigin[]>([]);
+  return (
+    <I18nTestWrapper>
+      <SeedInputSection
+        featureId={featureId}
+        mode={mode}
+        onModeChange={(m) => {
+          setMode(m);
+          onModeChangeSpy?.(m);
+        }}
+        origins={origins}
+        onOriginsChange={(o) => {
+          setOrigins(o);
+          onOriginsChangeSpy?.(o);
+        }}
+      />
+    </I18nTestWrapper>
+  );
 }
 
 const resetStore = () => {
@@ -88,7 +125,7 @@ describe('SeedInputSection', () => {
   // ---------------------------------------------------------------------------
 
   describe('pendingDetailOrigin 自動消費', () => {
-    it('Startup バリアントを消費すると manual-startup タブに切り替える', () => {
+    it('Startup バリアントを消費すると manual-startup タブに切り替え、Seeds タブにも base_seed hex が反映される', async () => {
       const origin: SeedOrigin = {
         Startup: {
           base_seed: 0x01_23_45_67_89_ab_cd_efn,
@@ -99,12 +136,21 @@ describe('SeedInputSection', () => {
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
 
-      const { onModeChange } = renderSection();
+      const onModeChangeSpy = vi.fn();
+      render(<StatefulWrapper onModeChangeSpy={onModeChangeSpy} />);
 
       // manual-startup に切り替えが呼ばれる
-      expect(onModeChange).toHaveBeenCalledWith('manual-startup');
-      // Store からクリアされる
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+      expect(onModeChangeSpy).toHaveBeenCalledWith('manual-startup');
+      // この consumer 分だけクリアされる
+      expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
+
+      // Seeds タブに切り替えて base_seed hex がテキストに反映されていることを確認
+      const user = userEvent.setup();
+      const seedsTab = screen.getByRole('tab', { name: /Seeds/i });
+      await user.click(seedsTab);
+
+      const textarea = screen.getByPlaceholderText('0123456789ABCDEF') as HTMLTextAreaElement;
+      expect(textarea.value).toBe('0123456789ABCDEF');
     });
 
     it('Seed バリアントを消費すると manual-seeds タブに切り替える', () => {
@@ -119,7 +165,7 @@ describe('SeedInputSection', () => {
       const { onModeChange } = renderSection();
 
       expect(onModeChange).toHaveBeenCalledWith('manual-seeds');
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+      expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
     });
   });
 
@@ -159,7 +205,7 @@ describe('SeedInputSection', () => {
 
     // detail が優先 → manual-seeds
     expect(onModeChange).toHaveBeenCalledWith('manual-seeds');
-    expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+    expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
     // bulk は消費されない (detail が先に return した)
     expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual(bulk);
   });

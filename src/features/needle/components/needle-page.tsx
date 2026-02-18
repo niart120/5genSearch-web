@@ -51,15 +51,17 @@ function NeedlePage(): ReactElement {
   const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
   const [autoSearch, setAutoSearch] = useState(true);
 
-  // pendingDetailOrigin の自動消費
+  // pendingDetailOrigins の自動消費 (needle ページ分)
   useEffect(() => {
     const store = useSearchResultsStore.getState();
-    const detail = store.pendingDetailOrigin;
+    const detail = store.pendingDetailOrigins['needle'];
     if (detail) {
-      store.clearPendingDetailOrigin();
+      store.clearPendingDetailOrigin('needle');
       if ('Startup' in detail) {
+        const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
         setDatetime(detail.Startup.datetime);
         setKeyInput(keyCodeToKeyInput(detail.Startup.condition.key_code));
+        setSeedHex(hex);
         setSeedMode('datetime');
       } else {
         const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');

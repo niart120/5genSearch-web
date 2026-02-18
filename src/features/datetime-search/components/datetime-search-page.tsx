@@ -28,6 +28,7 @@ import { useExport } from '@/hooks/use-export';
 import { createDatetimeSearchExportColumns } from '@/services/export-columns';
 import { toSeedOriginJson } from '@/services/export';
 import { navigateWithSeedOrigins } from '@/lib/navigate';
+import { toast } from '@/components/ui/toast-state';
 import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import type {
@@ -170,7 +171,8 @@ function DatetimeSearchPage(): ReactElement {
   // 転記: 全結果 → pokemon-list
   const handleTransferToPokemonList = useCallback(() => {
     navigateWithSeedOrigins(results, 'pokemon-list');
-  }, [results]);
+    toast.success(t`Transferred ${results.length} seeds`);
+  }, [results, t]);
 
   // KeySpec 組み合わせ数
   const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);

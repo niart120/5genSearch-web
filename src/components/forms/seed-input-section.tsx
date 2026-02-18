@@ -17,6 +17,7 @@ import { DatetimeInput, DEFAULT_DATETIME } from '@/components/ui/datetime-input'
 import { KeyInputSelector } from '@/components/forms/key-input-selector';
 import { SeedOriginTable } from '@/components/forms/seed-origin-table';
 import { useSearchResultsStore } from '@/stores/search/results';
+import type { DetailOriginConsumer } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
 import { parseSerializedSeedOrigins } from '@/services/seed-origin-serde';
@@ -31,6 +32,8 @@ export type SeedInputMode = 'import' | 'manual-seeds' | 'manual-startup';
 // ---------------------------------------------------------------------------
 
 interface SeedInputSectionProps {
+  /** この SeedInputSection が属する feature ID (pendingDetailOrigin 消費用) */
+  featureId: DetailOriginConsumer;
   mode: SeedInputMode;
   onModeChange: (mode: SeedInputMode) => void;
   origins: SeedOrigin[];
@@ -55,6 +58,7 @@ function parseLcgSeed(hex: string): LcgSeed | undefined {
 // ---------------------------------------------------------------------------
 
 function SeedInputSection({
+  featureId,
   mode,
   onModeChange,
   origins,
@@ -90,16 +94,18 @@ function SeedInputSection({
 
     const store = useSearchResultsStore.getState();
 
-    // 1) pendingDetailOrigin: 詳細ダイアログからの単一転記
-    //    Startup → 起動日時タブに datetime + key_code を埋める
-    //    Seed → Seeds タブに Base Seed hex を埋める
-    const detail = store.pendingDetailOrigin;
+    // 1) pendingDetailOrigins: 詳細ダイアログからの単一転記 (ページ別)
+    //    Startup → 起動条件タブに datetime + key_code、Seeds タブに base_seed hex を埋める
+    //    Seed → Seeds タブに base_seed hex を埋める
+    const detail = store.pendingDetailOrigins[featureId];
     if (detail) {
-      store.clearPendingDetailOrigin();
+      store.clearPendingDetailOrigin(featureId);
       if ('Startup' in detail) {
         const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
+        const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
         setDatetime(detail.Startup.datetime);
         setKeyInput(ki);
+        setSeedText(hex);
         onModeChange('manual-startup');
         autoResolveStartup(detail.Startup.datetime, ki);
       } else {

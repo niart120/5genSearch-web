@@ -209,6 +209,7 @@ function PokemonListPage(): ReactElement {
           </div>
 
           <SeedInputSection
+            featureId="pokemon-list"
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}

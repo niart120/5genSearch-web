@@ -54,12 +54,12 @@ describe('search results store', () => {
     expect(lastUpdatedAt).toBeUndefined();
   });
 
-  describe('pendingDetailOrigin', () => {
-    it('should have undefined as initial value', () => {
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+  describe('pendingDetailOrigins (per-page)', () => {
+    it('should have empty object as initial value', () => {
+      expect(useSearchResultsStore.getState().pendingDetailOrigins).toEqual({});
     });
 
-    it('should set and clear Startup origin', () => {
+    it('should set Startup origin for all consumers', () => {
       const origin: SeedOrigin = {
         Startup: {
           base_seed: 0x01_23_45_67_89_ab_cd_efn,
@@ -69,13 +69,13 @@ describe('search results store', () => {
         },
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toEqual(origin);
-
-      useSearchResultsStore.getState().clearPendingDetailOrigin();
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+      const { pendingDetailOrigins } = useSearchResultsStore.getState();
+      expect(pendingDetailOrigins['pokemon-list']).toEqual(origin);
+      expect(pendingDetailOrigins['egg-list']).toEqual(origin);
+      expect(pendingDetailOrigins['needle']).toEqual(origin);
     });
 
-    it('should set and clear Seed origin', () => {
+    it('should clear only the specified consumer', () => {
       const origin: SeedOrigin = {
         Seed: {
           base_seed: 0xab_cd_ef_01_23_45_67_89n,
@@ -83,10 +83,12 @@ describe('search results store', () => {
         },
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toEqual(origin);
+      useSearchResultsStore.getState().clearPendingDetailOrigin('pokemon-list');
 
-      useSearchResultsStore.getState().clearPendingDetailOrigin();
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+      const { pendingDetailOrigins } = useSearchResultsStore.getState();
+      expect(pendingDetailOrigins['pokemon-list']).toBeUndefined();
+      expect(pendingDetailOrigins['egg-list']).toEqual(origin);
+      expect(pendingDetailOrigins['needle']).toEqual(origin);
     });
 
     it('should be cleared on clearResults', () => {
@@ -95,7 +97,7 @@ describe('search results store', () => {
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
       useSearchResultsStore.getState().clearResults();
-      expect(useSearchResultsStore.getState().pendingDetailOrigin).toBeUndefined();
+      expect(useSearchResultsStore.getState().pendingDetailOrigins).toEqual({});
     });
   });
 

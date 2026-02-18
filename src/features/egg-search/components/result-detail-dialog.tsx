@@ -7,6 +7,7 @@
 
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ClipboardCopy } from 'lucide-react';
+import { toast } from '@/components/ui/toast-state';
 import {
   Dialog,
   DialogContent,
@@ -97,6 +98,7 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
             size="sm"
             onClick={() => {
               useSearchResultsStore.getState().setPendingDetailOrigin(egg.source);
+              toast.success(t`Copied to seed input`);
             }}
           >
             <ClipboardCopy className="mr-1 size-3" />

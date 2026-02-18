@@ -127,7 +127,7 @@
 2. `setPendingDetailOrigin(origin)` で Store にセット。ページ遷移なし
 3. ユーザが任意のタイミングで転写先ページ (pokemon-list / egg-list / needle) に移動
 4. SeedInputSection / needle-page がマウント時に `pendingDetailOrigin` を確認:
-   - Startup バリアント → 「起動日時」タブに datetime + key_code を埋める (`keyCodeToKeyInput` で `KeyCode` → `KeyInput` 変換)
+   - Startup バリアント → 「起動条件」タブに datetime + key_code を埋め、「Seeds」タブにも base_seed hex を埋める (`keyCodeToKeyInput` で `KeyCode` → `KeyInput` 変換)。アクティブタブは「起動条件」
    - Seed バリアント → 「Seeds」タブに Base Seed hex を埋める
 5. `clearPendingDetailOrigin()` で Store をクリア (一発消費)
 
@@ -163,18 +163,19 @@
 | 永続化 | なし (セッション中のみ) |
 | 消費タイミング | 転写先ページのマウント時 (SeedInputSection 内) |
 
-#### 3.3.2 新規追加: `pendingDetailOrigin`
+#### 3.3.2 新規追加: `pendingDetailOrigins` (ページ別)
 
-詳細ダイアログからの単一転記用。ページ遷移なし。
+詳細ダイアログからの単一転記用。ページ遷移なし。各消費先ページごとに独立したエントリを持ち、ページ間で消費状態が干渉しない。
 
 | 項目 | 仕様 |
 |------|------|
-| state | `pendingDetailOrigin: SeedOrigin \| undefined` |
-| set action | `setPendingDetailOrigin(origin: SeedOrigin)` |
-| clear action | `clearPendingDetailOrigin()` |
+| 消費先型 | `DetailOriginConsumer = 'pokemon-list' \| 'egg-list' \| 'needle'` |
+| state | `pendingDetailOrigins: Partial<Record<DetailOriginConsumer, SeedOrigin>>` |
+| set action | `setPendingDetailOrigin(origin: SeedOrigin)` — 全消費先に同一 origin をセット |
+| clear action | `clearPendingDetailOrigin(consumer: DetailOriginConsumer)` — 指定ページのみクリア |
 | 永続化 | なし (セッション中のみ) |
-| 消費タイミング | 転写先ページのマウント時 (SeedInputSection / needle-page) |
-| 消費時の動作 | Startup → manual-startup タブに datetime + key_code を埋める / Seed → manual-seeds タブに Base Seed hex を埋める |
+| 消費タイミング | 各転写先ページのマウント時 (SeedInputSection / needle-page) |
+| 消費時の動作 | Startup → manual-startup タブに datetime + key_code、manual-seeds タブに base_seed hex を埋める / Seed → manual-seeds タブに Base Seed hex を埋める |
 
 #### 3.3.3 廃止: `useSearchResultsStore.results` からの `SeedOrigin[]` 抽出
 
@@ -252,24 +253,26 @@ interface SearchResultsState {
 }
 
 // After
+type DetailOriginConsumer = 'pokemon-list' | 'egg-list' | 'needle';
+
 interface SearchResultsState {
   results: SearchResult[];
   lastUpdatedAt: number | undefined;
   pendingTargetSeeds: MtSeed[];         // 維持
   pendingSeedOrigins: SeedOrigin[];     // 全結果一括転記用
-  pendingDetailOrigin: SeedOrigin | undefined;  // 詳細ダイアログ単一転記用
+  pendingDetailOrigins: Partial<Record<DetailOriginConsumer, SeedOrigin>>; // ページ別
 }
 
 interface SearchResultsActions {
   // ... 既存 actions ...
   setPendingSeedOrigins: (origins: SeedOrigin[]) => void;
   clearPendingSeedOrigins: () => void;
-  setPendingDetailOrigin: (origin: SeedOrigin) => void;
-  clearPendingDetailOrigin: () => void;
+  setPendingDetailOrigin: (origin: SeedOrigin) => void;  // 全消費先にセット
+  clearPendingDetailOrigin: (consumer: DetailOriginConsumer) => void;  // 指定ページのみクリア
 }
 ```
 
-`DEFAULT_STATE` に `pendingSeedOrigins: []`, `pendingDetailOrigin: undefined` を追加する。
+`DEFAULT_STATE` に `pendingSeedOrigins: []`, `pendingDetailOrigins: {}` を追加する。
 
 ### 4.3 ナビゲーション関数
 
@@ -320,18 +323,21 @@ export type SeedInputMode = 'import' | 'manual-seeds' | 'manual-startup';
 
 ```typescript
 // SeedInputSection 内の初期化ロジック (概要)
+// featureId: DetailOriginConsumer — props から受け取る
 useEffect(() => {
   const store = useSearchResultsStore.getState();
 
-  // 1) pendingDetailOrigin: 詳細ダイアログからの単一転記
-  const detail = store.pendingDetailOrigin;
+  // 1) pendingDetailOrigins[featureId]: 詳細ダイアログからの単一転記 (ページ別)
+  const detail = store.pendingDetailOrigins[featureId];
   if (detail) {
-    store.clearPendingDetailOrigin();
+    store.clearPendingDetailOrigin(featureId);
     if ('Startup' in detail) {
-      // 起動日時タブに datetime + key_code を埋める
+      // 起動条件タブに datetime + key_code、Seeds タブに base_seed hex を埋める
       const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
+      const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
       setDatetime(detail.Startup.datetime);
       setKeyInput(ki);
+      setSeedText(hex);
       onModeChange('manual-startup');
       autoResolveStartup(detail.Startup.datetime, ki);
     } else {
@@ -383,6 +389,7 @@ Props インターフェースの形は変更なし。`mode` の取りうる値�
 
 ```typescript
 interface SeedInputSectionProps {
+  featureId: DetailOriginConsumer;  // 消費先ページの識別子
   mode: SeedInputMode;          // 'search-results' → 'import' に変更
   onModeChange: (mode: SeedInputMode) => void;
   origins: SeedOrigin[];
