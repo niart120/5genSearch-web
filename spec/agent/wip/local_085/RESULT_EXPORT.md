@@ -41,6 +41,7 @@
 |----------|---------|---------|
 | `src/services/export.ts` | 新規 | エクスポートコアロジック (CSV/JSON 変換、ファイルダウンロード、クリップボードコピー) |
 | `src/services/export-columns.ts` | 新規 | feature 別の列定義 (export 用) |
+| `src/lib/format.ts` | 変更 | `formatMacAddress` 追加 |
 | `src/components/data-display/export-toolbar.tsx` | 新規 | エクスポートツールバー UI (テーブル上部) |
 | `src/hooks/use-export.ts` | 新規 | エクスポート操作フック |
 | `src/features/pokemon-list/components/pokemon-list-page.tsx` | 変更 | ExportToolbar 統合 |
@@ -525,7 +526,7 @@ function generateExportFilename(
   const ver = VERSION_MAP[config.version];
   const reg = REGION_MAP[config.region];
   const hw = HARDWARE_MAP[config.hardware];
-  const mac = config.mac.map((b) => b.toString(16).padStart(2, '0')).join('');
+  const mac = formatMacAddress(config.mac).replaceAll(':', '');
   return `${ts}_${ver}_${reg}_${hw}_${mac}.${ext}`;
 }
 ```
@@ -613,11 +614,45 @@ function useExport<T>(options: {
 - DS 設定・GameStart・Timer0VCount 範囲は `useDsConfig` フックから取得 (ファイル名生成・meta 生成に使用)
 - Toast 通知は `sonner` 等の Toast ライブラリまたは既存の Toast コンポーネント経由
 
-### 4.10 egg-search の列アクセサ
+### 4.10 既存ユーティリティの再利用
 
-`egg-search` は解決済みデータ (`Ui*`) ではなく、生データ (`EggDatetimeSearchResult`) を直接扱う。列アクセサは生データから直接値を抽出し、`formatDatetime`, `toHex`, `formatKeyCode`, `formatGender`, `formatShiny`, `formatAbilitySlot`, `formatIvs` 等の既存フォーマッタを使用する。
+生データ系 feature (`egg-search`, `datetime-search`, `mtseed-search`, `needle`, `tid-adjust`) の列アクセサは、生データから値を抽出し既存フォーマッタで文字列化する。解決済みデータ系 (`pokemon-list`, `egg-list`) は `UiPokemonData` / `UiEggData` のフィールドをそのまま使用するが、一部フィールド (`needle_direction`) は変換が必要。
 
-同様に `datetime-search` (`SeedOrigin`)、`mtseed-search` (`MtseedResult`)、`needle` (`NeedleSearchResult`)、`tid-adjust` (`TrainerInfoSearchResult`) も生データから直接抽出する。
+**使用する既存関数 (`lib/format.ts`)**:
+
+| 関数 | 用途 | 使用 feature |
+|------|------|-------------|
+| `formatDatetime(dt)` | `Datetime` → `"2025/01/15 12:30:45"` | datetime-search, egg-search, needle, tid-adjust |
+| `toHex(value, digits)` | 数値 → hex 文字列 (timer0, vcount, mt_seed) | datetime-search, egg-search, mtseed-search, needle, tid-adjust |
+| `toBigintHex(value, digits)` | bigint → hex 文字列 (base_seed) | datetime-search, egg-search, needle |
+| `formatKeyCode(keyCode)` | KeyCode → ボタン名 (`"A + Start"`) | datetime-search, egg-search, tid-adjust |
+| `formatGender(gender)` | `Gender` → `"♂"` / `"♀"` / `"-"` | egg-search |
+| `formatShiny(shinyType)` | `ShinyType` → `"☆"` / `"◇"` / `""` | egg-search, tid-adjust |
+| `formatAbilitySlot(slot)` | `AbilitySlot` → `"1"` / `"2"` / `"H"` | egg-search |
+| `formatIvs(ivs)` | `Ivs` → `"31-31-31-31-31-31"` | mtseed-search |
+
+**使用する既存関数 (`lib/game-data-names.ts`)**:
+
+| 関数 | 用途 | 使用 feature |
+|------|------|-------------|
+| `getNeedleArrow(direction)` | `NeedleDirection` → 矢印文字 | pokemon-list, egg-list |
+| `getNatureName(nature, locale)` | `Nature` → ロケール別性格名 | egg-search |
+
+**新規ヘルパー (`lib/format.ts` に追加)**:
+
+| 関数 | 用途 |
+|------|------|
+| `formatMacAddress(mac: number[])` | `[0,17,34,51,68,85]` → `"00:11:22:33:44:55"` |
+
+`meta.dsConfig.macAddress` とファイル名 MAC 部分の両方で使用する。ファイル名側はコロンを除去して使用。
+
+```typescript
+function formatMacAddress(mac: readonly number[]): string {
+  return mac.map((b) => b.toString(16).padStart(2, '0')).join(':');
+}
+```
+
+**`toHex` の import 元**: `lib/format.ts` と `lib/hex.ts` に同一実装が存在する。`services/export.ts` では `lib/format.ts` から import する (他のフォーマッタと import 元を統一するため)。
 
 ## 5. テスト方針
 
@@ -738,6 +773,7 @@ DataTable 内部で `table.getSortedRowModel().rows` を `useEffect` で監視�
 
 ## 9. 実装チェックリスト
 
+- [ ] `src/lib/format.ts` — `formatMacAddress` 追加
 - [ ] `src/services/export.ts` — CSV/JSON/TSV 変換、ファイルダウンロード、クリップボードコピー、ファイル名生成
 - [ ] `src/services/export-columns.ts` — feature 別列定義 (7 feature 分)
 - [ ] `src/components/data-display/export-toolbar.tsx` — ExportToolbar コンポーネント
