@@ -11,12 +11,14 @@ import {
   filterColumns,
   generateExportFilename,
   buildExportMeta,
+  serializeSeedOrigin,
+  toSeedOriginJson,
   VERSION_MAP,
   HARDWARE_MAP,
 } from '@/services/export';
 import type { ExportColumn, ExportMeta } from '@/services/export';
 import { createPokemonListExportColumns } from '@/services/export-columns';
-import type { DsConfig, GameStartConfig, Timer0VCountRange } from '@/wasm/wasm_pkg';
+import type { DsConfig, GameStartConfig, SeedOrigin, Timer0VCountRange } from '@/wasm/wasm_pkg';
 
 // ---------------------------------------------------------------------------
 // テスト用型・データ
@@ -376,5 +378,127 @@ describe('createPokemonListExportColumns', () => {
     expect(hpAlt).toBeDefined();
     expect(hpAlt!.detailOnly).toBe(true);
     expect(hpAlt!.header).toContain('IV');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// serializeSeedOrigin
+// ---------------------------------------------------------------------------
+
+describe('serializeSeedOrigin', () => {
+  it('Seed バリアントの bigint を 16 桁ゼロパディング hex 文字列に変換する', () => {
+    const origin: SeedOrigin = {
+      Seed: { base_seed: 0x00_00_00_00_aa_bb_cc_ddn, mt_seed: 0x12_34_56_78 },
+    };
+    const result = serializeSeedOrigin(origin);
+    expect(result).toEqual({
+      Seed: { base_seed: '00000000AABBCCDD', mt_seed: 0x12_34_56_78 },
+    });
+  });
+
+  it('Startup バリアントの bigint を 16 桁ゼロパディング hex 文字列に変換する', () => {
+    const origin: SeedOrigin = {
+      Startup: {
+        base_seed: 0xff_ff_ff_ff_00_00_00_01n,
+        mt_seed: 42,
+        datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 0 },
+        condition: { timer0: 0x06_10, vcount: 0x50, key_code: 0 },
+      },
+    };
+    const result = serializeSeedOrigin(origin);
+    expect('Startup' in result).toBe(true);
+    if ('Startup' in result) {
+      expect(result.Startup.base_seed).toBe('FFFFFFFF00000001');
+      expect(result.Startup.mt_seed).toBe(42);
+      expect(result.Startup.datetime).toEqual({
+        year: 2025,
+        month: 6,
+        day: 15,
+        hour: 12,
+        minute: 30,
+        second: 0,
+      });
+      expect(result.Startup.condition).toEqual({
+        timer0: 0x06_10,
+        vcount: 0x50,
+        key_code: 0,
+      });
+    }
+  });
+
+  it('base_seed が 0 の場合 16 桁ゼロ文字列を返す', () => {
+    const origin: SeedOrigin = {
+      Seed: { base_seed: 0n, mt_seed: 0 },
+    };
+    const result = serializeSeedOrigin(origin);
+    expect(result).toEqual({
+      Seed: { base_seed: '0000000000000000', mt_seed: 0 },
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// toSeedOriginJson
+// ---------------------------------------------------------------------------
+
+describe('toSeedOriginJson', () => {
+  const meta: ExportMeta = {
+    exportedAt: '2025-01-01T00:00:00.000Z',
+    feature: 'datetime-search',
+    totalResults: 1,
+    includeDetails: false,
+    dsConfig: {
+      version: 'Black',
+      region: 'Jpn',
+      hardware: 'DsLite',
+      macAddress: '00:09:bf:aa:bb:cc',
+    },
+    gameStart: {
+      startMode: 'Continue',
+      save: 'NoSave',
+      memoryLink: 'Disabled',
+      shinyCharm: 'NotObtained',
+    },
+    timer0VCountRanges: [
+      { timer0Min: 0x06_10, timer0Max: 0x06_30, vcountMin: 0x50, vcountMax: 0x60 },
+    ],
+  };
+
+  it('meta と results を含む構造化 JSON を出力する', () => {
+    const rows: SeedOrigin[] = [{ Seed: { base_seed: 0x00_00_00_00_11_22_33_44n, mt_seed: 100 } }];
+    const json = toSeedOriginJson(rows, meta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta).toEqual(meta);
+    expect(parsed.results).toHaveLength(1);
+    expect(parsed.results[0]).toEqual({
+      Seed: { base_seed: '0000000011223344', mt_seed: 100 },
+    });
+  });
+
+  it('Seed / Startup 混在の配列を処理できる', () => {
+    const rows: SeedOrigin[] = [
+      { Seed: { base_seed: 1n, mt_seed: 10 } },
+      {
+        Startup: {
+          base_seed: 0xde_ad_be_ef_ca_fe_ba_ben,
+          mt_seed: 20,
+          datetime: { year: 2000, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
+          condition: { timer0: 0x06_00, vcount: 0x40, key_code: 0 },
+        },
+      },
+    ];
+    const json = toSeedOriginJson(rows, meta);
+    const parsed = JSON.parse(json);
+    expect(parsed.results).toHaveLength(2);
+    expect('Seed' in parsed.results[0]).toBe(true);
+    expect('Startup' in parsed.results[1]).toBe(true);
+    expect(parsed.results[1].Startup.base_seed).toBe('DEADBEEFCAFEBABE');
+  });
+
+  it('空配列でも正しく動作する', () => {
+    const json = toSeedOriginJson([], { ...meta, totalResults: 0 });
+    const parsed = JSON.parse(json);
+    expect(parsed.results).toEqual([]);
+    expect(parsed.meta.totalResults).toBe(0);
   });
 });

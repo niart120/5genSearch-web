@@ -26,6 +26,7 @@ import { TemplateSelectionDialog } from './template-selection-dialog';
 import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
 import { createDatetimeSearchExportColumns } from '@/services/export-columns';
+import { toSeedOriginJson } from '@/services/export';
 import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import type {
@@ -162,6 +163,7 @@ function DatetimeSearchPage(): ReactElement {
     data: results,
     columns: exportColumns,
     featureId: 'datetime-search',
+    jsonExporter: toSeedOriginJson,
   });
 
   // KeySpec 組み合わせ数

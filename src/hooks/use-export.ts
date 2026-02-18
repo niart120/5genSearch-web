@@ -19,13 +19,15 @@ import {
   downloadFile,
   copyToClipboard,
 } from '@/services/export';
-import type { ExportColumn } from '@/services/export';
+import type { ExportColumn, ExportMeta } from '@/services/export';
 
 interface UseExportOptions<T> {
   data: readonly T[];
   columns: ExportColumn<T>[];
   featureId: string;
   statMode?: 'ivs' | 'stats';
+  /** JSON エクスポートのカスタムシリアライザー。指定時は列定義を使わずこの関数で出力生成 */
+  jsonExporter?: (data: readonly T[], meta: ExportMeta) => string;
 }
 
 interface UseExportReturn {
@@ -38,7 +40,7 @@ interface UseExportReturn {
 }
 
 function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
-  const { data, columns, featureId, statMode } = options;
+  const { data, columns, featureId, statMode, jsonExporter } = options;
   const { t } = useLingui();
   const { config, ranges, gameStart } = useDsConfigReadonly();
   const [includeDetails, setIncludeDetails] = useState(false);
@@ -72,14 +74,25 @@ function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
         gameStart,
         ranges,
       });
-      const content = toJson(data, activeColumns, meta);
+      const content = jsonExporter ? jsonExporter(data, meta) : toJson(data, activeColumns, meta);
       const filename = generateExportFilename(config, 'json');
       downloadFile(content, filename, 'application/json;charset=utf-8');
       toast.success(t`Downloaded ${filename}`);
     } catch {
       toast.error(t`Export failed`);
     }
-  }, [data, activeColumns, config, gameStart, ranges, featureId, includeDetails, statMode, t]);
+  }, [
+    data,
+    activeColumns,
+    config,
+    gameStart,
+    ranges,
+    featureId,
+    includeDetails,
+    statMode,
+    jsonExporter,
+    t,
+  ]);
 
   const copyTsv = useCallback(async () => {
     try {
