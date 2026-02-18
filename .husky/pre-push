@@ -1,3 +1,22 @@
+zero_hash="0000000000000000000000000000000000000000"
+has_updates=false
+all_deletions=true
+
+while read -r local_ref local_sha remote_ref remote_sha
+do
+	has_updates=true
+
+	if [ "$local_sha" != "$zero_hash" ]; then
+		all_deletions=false
+		break
+	fi
+done
+
+if [ "$has_updates" = true ] && [ "$all_deletions" = true ]; then
+	echo "pre-push: deletion-only push detected, skipping checks."
+	exit 0
+fi
+
 pnpm lint
 pnpm exec tsc -b --noEmit
 pnpm format:check
