@@ -31,7 +31,7 @@
 
 許容理由: フィルタ無効時に入力値を破棄しない UX 要件を満たすには、何らかの内部保持が必要。現状の実装はこの要件を最小コストで実現しており、実際に動作上の問題は確認されていない。
 
-フォローアップ: フォームの複雑化が進む場合、`useReducer` への移行や状態保持を親コンポーネントに引き上げる案を検討する。関連ファイル: `src/features/pokemon-list/components/pokemon-filter-form.tsx`。
+フォローアップ: Feature Store 導入 (`spec/agent/wip/local_088/STATE_PERSISTENCE.md`) により、親側の `filter` / `statsFilter` が `useState` → Feature Store に移行する。pokemon-filter-form は controlled component のため直接の影響は小さいが、Feature Store で入力値が永続化されるため「フィルタ無効時でも値を保持したい」要件の一部が Store 側で自然に解決される可能性がある。local_088 の Phase 3 (Page コンポーネント改修) 実施時にこの箇所の整理を検討する。関連ファイル: `src/features/pokemon-list/components/pokemon-filter-form.tsx`。
 
 ## 2026-02-14: WASM Searcher API の共通化
 
