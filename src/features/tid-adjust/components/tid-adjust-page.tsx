@@ -23,6 +23,7 @@ import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useExport } from '@/hooks/use-export';
 import { createTidAdjustExportColumns } from '@/services/export-columns';
 import { estimateTidAdjustResults, countKeyCombinations } from '@/services/search-estimation';
+import { getTodayDateRange } from '@/lib/date-range';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
 import { useTidAdjust } from '../hooks/use-tid-adjust';
@@ -38,15 +39,6 @@ import type {
   DatetimeSearchContext,
   GameStartConfig,
 } from '@/wasm/wasm_pkg.js';
-
-const DEFAULT_DATE_RANGE: DateRangeParams = {
-  start_year: 2000,
-  start_month: 1,
-  start_day: 1,
-  end_year: 2000,
-  end_month: 1,
-  end_day: 1,
-};
 
 const DEFAULT_TIME_RANGE: TimeRangeParams = {
   hour_start: 0,
@@ -84,7 +76,7 @@ function TidAdjustPage(): ReactElement {
   );
 
   // フォーム状態
-  const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
+  const [dateRange, setDateRange] = useState<DateRangeParams>(getTodayDateRange);
   const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
   const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
   const [tid, setTid] = useState('');

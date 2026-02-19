@@ -56,7 +56,7 @@ const DEFAULT_EGG_PARAMS: EggGenerationParams = {
 
 const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> = {
   user_offset: 0,
-  max_advance: 100,
+  max_advance: 30,
 };
 
 function EggListPage(): ReactElement {

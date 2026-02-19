@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
+import { getDefaultTargetSeeds } from '../default-seeds';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -43,9 +44,9 @@ const DEFAULT_DATE_RANGE: DateRangeParams = {
   start_year: 2000,
   start_month: 1,
   start_day: 1,
-  end_year: 2000,
-  end_month: 1,
-  end_day: 1,
+  end_year: 2099,
+  end_month: 12,
+  end_day: 31,
 };
 
 const DEFAULT_TIME_RANGE: TimeRangeParams = {
@@ -70,7 +71,7 @@ function DatetimeSearchPage(): ReactElement {
   const { config: dsConfig, ranges } = useDsConfigReadonly();
 
   // GPU トグル
-  const [useGpu, setUseGpu] = useState(false);
+  const [useGpu, setUseGpu] = useState(true);
 
   // フォーム状態
   const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
@@ -82,7 +83,7 @@ function DatetimeSearchPage(): ReactElement {
     if (pending.length > 0) {
       return pending.map((s) => toHex(s, 8)).join('\n');
     }
-    return '';
+    return getDefaultTargetSeeds();
   });
 
   // 初回マウント時に pendingTargetSeeds を消費済みとしてクリア

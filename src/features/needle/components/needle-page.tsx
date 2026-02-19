@@ -32,7 +32,7 @@ import {
 import type { Datetime, KeyInput, GenerationConfig } from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_USER_OFFSET = 0;
-const DEFAULT_MAX_ADVANCE = 200;
+const DEFAULT_MAX_ADVANCE = 30;
 
 /** Hex パターン (最大 16 桁) */
 const LCG_SEED_RE = /^[\da-fA-F]{1,16}$/;

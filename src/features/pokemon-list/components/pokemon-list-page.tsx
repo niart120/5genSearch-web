@@ -51,7 +51,7 @@ function PokemonListPage(): ReactElement {
   const { tid, sid } = useTrainer();
 
   // Seed 入力
-  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('import');
+  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('manual-startup');
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
   // エンカウント設定 (PokemonParamsForm の controlled state)
