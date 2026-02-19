@@ -140,12 +140,17 @@ Feature Store 間の依存は禁止する。Feature 間の状態連携は既存�
 
 | 永続化する | 永続化しない |
 |-----------|-------------|
-| ユーザが直接入力した値 (テキスト, 数値, 選択) | BigInt を含む型 (`SeedOrigin` 等) |
+| ユーザが直接入力した値 (テキスト, 数値, 選択) | 他の永続化済み値から再導出可能な値 |
 | ユーザがトグルした設定値 (GPU 使用, 自動検索等) | 検索結果データ |
-| JSON.stringify で直接シリアライズ可能な値 | ダイアログ開閉状態 |
+| | ダイアログ開閉状態 |
 | | 他 feature からの連携値 (`pendingSeedOrigins` 等) |
 
-BigInt を含む `SeedOrigin` は `JSON.stringify` で直接シリアライズ不可のため、永続化対象から除外する。`SeedOrigin` は他の永続化済み値 (datetime, seedHex 等) から再導出可能であるか、Feature 間連携 (`pendingSeedOrigins`) により再設定される。
+`SeedOrigin` は永続化対象から除外する。BigInt を含むため `JSON.stringify` で直接シリアライズ不可という技術的制約はあるが (`seed-origin-serde.ts` に hex 文字列変換の仕組みは実装済み)、主たる除外理由は以下の通り:
+
+1. **needle**: `seedOrigins` は `seedMode` / `seedHex` / `datetime` / `keyInput` + DS 設定から `useMemo` で導出される。入力値を永続化すれば再導出可能
+2. **pokemon-list / egg-list**: `seedOrigins` は `SeedInputSection` 経由で設定される。manual-seeds / manual-startup モードでは入力値から再導出可能。import モードでは元の JSON テキストからの再パースで復元可能
+
+いずれのケースでも、元となる入力値 (seedHex, datetime 等) を永続化すれば `SeedOrigin` 自体を永続化する必要はない。導出元を永続化し、mount 時に再導出する方針で統一する。
 
 #### 3.3.2 Feature 別永続化フィールド
 
@@ -155,9 +160,9 @@ BigInt を含む `SeedOrigin` は `JSON.stringify` で直接シリアライズ�
 | mtseed-search | `ivFilter`, `mtOffset`, `isRoamer`, `useGpu` | 検索結果 |
 | egg-search | `dateRange`, `timeRange`, `keySpec`, `eggParams`, `genConfig`, `filter` | 検索結果, UI 状態 |
 | tid-adjust | `dateRange`, `timeRange`, `keySpec`, `tid`, `sid`, `shinyPidRaw`, `saveMode` | 検索結果, UI 状態 |
-| needle | `seedMode`, `datetime`, `keyInput`, `seedHex`, `patternRaw`, `userOffset`, `maxAdvance`, `autoSearch` | `seedOrigins` (導出値), 検索結果 |
-| pokemon-list | `seedInputMode`, `encounterParams`, `filter`, `statsFilter`, `statMode` | `seedOrigins` (BigInt 含), 検索結果 |
-| egg-list | `seedInputMode`, `eggParams`, `genConfig`, `speciesId`, `filter`, `statsFilter`, `statMode` | `seedOrigins` (BigInt 含), 検索結果 |
+| needle | `seedMode`, `datetime`, `keyInput`, `seedHex`, `patternRaw`, `userOffset`, `maxAdvance`, `autoSearch` | `seedOrigins` (入力値から再導出), 検索結果 |
+| pokemon-list | `seedInputMode`, `encounterParams`, `filter`, `statsFilter`, `statMode` | `seedOrigins` (入力値から再導出), 検索結果 |
+| egg-list | `seedInputMode`, `eggParams`, `genConfig`, `speciesId`, `filter`, `statsFilter`, `statMode` | `seedOrigins` (入力値から再導出), 検索結果 |
 
 #### 3.3.3 localStorage キー命名
 
@@ -477,9 +482,9 @@ interface DatetimeSearchResultState {
 }
 ```
 
-`results` が `SeedOrigin[]` (BigInt 含) のため `partialize` で除外する。`targetSeedsRaw` はテキスト形式 (hex 文字列) のため永続化可能。
+`results` は検索結果データのため `partialize` で除外する。`targetSeedsRaw` はテキスト形式 (hex 文字列) のため永続化可能。
 
-**注意**: `SeedOrigin` は BigInt を含むが、これは検索結果側のフィールドであるため `partialize` で除外される。フォーム入力側には BigInt を含むフィールドはない。
+**注意**: `SeedOrigin` は BigInt を含むため `JSON.stringify` で直接シリアライズ不可だが、これは検索結果側のフィールドであるため `partialize` による除外で問題ない。
 
 #### 4.2.2 mtseed-search
 
@@ -561,7 +566,7 @@ interface PokemonListResultState {
 }
 ```
 
-`seedOrigins` は永続化対象外 (BigInt 含)。Feature 間連携 (`pendingSeedOrigins`) または手動入力で再設定される。
+`seedOrigins` は永続化対象外。入力値 (seedInputMode に応じた seedHex / datetime 等) から再導出可能であり、`SeedInputSection` の mount 時に自動解決される。Feature 間連携 (`pendingSeedOrigins`) 経由の場合もワンショット消費後に入力値として定着する。
 
 `encounterParams` はエンカウントスロット情報を含む。選択したロケーション・種族の情報は永続化されるが、アプリ再起動時にエンカウントデータの読み込みが完了している前提で動作する。
 
