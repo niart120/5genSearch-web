@@ -2,6 +2,10 @@
  * ID 調整 Feature Store
  *
  * フォーム入力 (永続化) + 検索結果 (非永続化) を管理する。
+ *
+ * デフォルト値に動的値 (getTodayDateRange()) を含むため
+ * createDefaultFormState() 関数で毎回生成する。
+ * 静的デフォルトのみの Store では DEFAULT_FORM_STATE 定数を使用する。
  */
 
 import { create } from 'zustand';

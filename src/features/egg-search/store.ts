@@ -2,6 +2,10 @@
  * 孵化起動時刻検索 Feature Store
  *
  * フォーム入力 (永続化) + 検索結果 (非永続化) を管理する。
+ *
+ * デフォルト値に動的値 (getTodayDateRange()) を含むため
+ * createDefaultFormState() 関数で毎回生成する。
+ * 静的デフォルトのみの Store では DEFAULT_FORM_STATE 定数を使用する。
  */
 
 import { create } from 'zustand';
@@ -70,7 +74,8 @@ interface EggSearchActions {
 /*  Defaults                                                           */
 /* ------------------------------------------------------------------ */
 
-const DEFAULT_IVS: Ivs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+/** 条件未指定: 親個体値フィルタなし (全 0) */
+const DEFAULT_ZERO_IVS: Ivs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 
 const DEFAULT_TIME_RANGE: TimeRangeParams = {
   hour_start: 0,
@@ -91,8 +96,8 @@ const DEFAULT_EGG_PARAMS: EggGenerationParams = {
   gender_ratio: 'F1M1',
   nidoran_flag: false,
   masuda_method: false,
-  parent_male: { ...DEFAULT_IVS },
-  parent_female: { ...DEFAULT_IVS },
+  parent_male: { ...DEFAULT_ZERO_IVS },
+  parent_female: { ...DEFAULT_ZERO_IVS },
   consider_npc: false,
   species_id: undefined,
 };

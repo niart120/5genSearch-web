@@ -71,7 +71,8 @@ interface EggListActions {
 /*  Defaults                                                           */
 /* ------------------------------------------------------------------ */
 
-const DEFAULT_IVS: Ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
+/** 理想個体: リスト生成ではデフォルトで 6V 親を想定 */
+const DEFAULT_MAX_IVS: Ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 
 const DEFAULT_EGG_PARAMS: EggGenerationParams = {
   trainer: { tid: 0, sid: 0 },
@@ -81,8 +82,8 @@ const DEFAULT_EGG_PARAMS: EggGenerationParams = {
   gender_ratio: 'F1M1',
   nidoran_flag: false,
   masuda_method: false,
-  parent_male: { ...DEFAULT_IVS },
-  parent_female: { ...DEFAULT_IVS },
+  parent_male: { ...DEFAULT_MAX_IVS },
+  parent_female: { ...DEFAULT_MAX_IVS },
   consider_npc: false,
   species_id: undefined,
 };
