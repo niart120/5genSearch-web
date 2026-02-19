@@ -60,11 +60,26 @@ Zustand を選定した理由:
 |-----|------|----------|
 | 検索結果 | 生成されたリスト。機能横断で参照するため Store 化 | `stores/search/results.ts` |
 
-### 3.2.1 セッション状態 — ローカル (useState)
+### 3.2.1 Feature 入力 (永続化)
 
 | 状態 | 説明 | 管理方式 |
 |-----|------|----------|
-| 検索条件 | 各機能の入力パラメータ | 各 feature のローカル state |
+| フォーム入力値 | 各 feature の検索条件・パラメータ | Feature Store (`features/{name}/store.ts`) + `persist` |
+
+Feature Store は `persist` middleware の `partialize` で入力値のみ永続化し、検索結果は除外する。localStorage キーは `feature:{feature-id}`。
+
+### 3.2.2 Feature 結果 (非永続化)
+
+| 状態 | 説明 | 管理方式 |
+|-----|------|----------|
+| 検索結果 | 検索で得られたデータ | Feature Store (in-memory、`partialize` で除外) |
+
+Feature 切替 (コンポーネントアンマウント) 後も Zustand Store に保持される。ブラウザリロードで消失する (意図的)。
+
+### 3.2.3 セッション状態 — ローカル (useState)
+
+| 状態 | 説明 | 管理方式 |
+|-----|------|----------|
 | 進捗情報 | 処理割合、残り時間 | `use-search.ts` 内 useState |
 | Worker 状態 | 実行中/待機中 | `use-search.ts` 内 useState |
 
@@ -72,30 +87,40 @@ Zustand を選定した理由:
 
 | 状態 | 説明 |
 |-----|------|
-| フォーム入力中の値 | バリデーション前の一時値 |
-| UI 展開状態 | アコーディオン開閉など |
+| UI 展開状態 | アコーディオン開閉、ダイアログ開閉 |
+| 確認ダイアログ | 検索開始前の確認状態 |
+| 選択行 | テーブルの詳細表示対象行 |
 
 ## 4. Store 分割方針
 
 ### 4.1 機能単位分割
 
 ```
-stores/
+stores/                        # 機能横断の共有状態
 ├── settings/
-│   ├── ds-config.ts      # DS設定 (永続化)
-│   ├── trainer.ts        # トレーナー情報 (永続化)
-│   ├── ui.ts             # UI設定 (永続化)
-│   └── index.ts          # re-export
+│   ├── ds-config.ts           # DS設定 (永続化)
+│   ├── trainer.ts             # トレーナー情報 (永続化)
+│   ├── ui.ts                  # UI設定 (永続化)
+│   └── index.ts               # re-export
 │
 ├── search/
-│   ├── results.ts        # 検索結果 (非永続化)
-│   └── index.ts          # re-export
+│   ├── results.ts             # Feature 間連携データ (非永続化)
+│   └── index.ts               # re-export
 │
-├── sync.ts               # Store 間同期
-└── index.ts              # re-export
+├── sync.ts                    # Store 間同期
+└── index.ts                   # re-export
+
+features/{feature-name}/      # Feature 固有の状態
+└── store.ts                   # Feature Store (フォーム入力永続化 + 検索結果非永続化)
 ```
 
-**進捗 (progress) を Store 化しない理由**: 現時点で進捗を参照するのは `use-search.ts` を呼び出すコンポーネントのみ。コンポーネントツリーを跨ぐ参照が必要になった段階で Store 化を検討する。
+Feature Store は `features/` 内に配置する。`stores/` は機能横断の共有状態に限定する。
+
+Feature Store を `stores/` に配置しない理由:
+
+1. Feature Store はその feature の Page / Hook からのみ参照される (feature 外から参照されない)
+2. フォーム入力の型定義 (`types.ts`) と同じ feature 内に配置することで依存が局所化する
+3. `stores/` は機能横断の共有状態 (`settings/`, `search/`) に限定する方針を維持できる
 
 ### 4.2 分割基準
 
@@ -147,7 +172,36 @@ function DsConfigForm() {
 
 例外: features/ 内の機能固有コンポーネントが、同機能の Store を直接参照する場合は許容する (hooks 化の費用対効果が低いため)。
 
-### 5.3 Store 間同期パターン
+### 5.3 Feature Store の参照パターン
+
+Feature Store は Page コンポーネントと Hook から直接参照する。
+
+```tsx
+// features/mtseed-search/components/mtseed-search-page.tsx
+import { useMtseedSearchStore } from '../store';
+
+function MtseedSearchPage() {
+  const ivFilter = useMtseedSearchStore((s) => s.ivFilter);
+  const setIvFilter = useMtseedSearchStore((s) => s.setIvFilter);
+  // ...
+}
+```
+
+```tsx
+// features/mtseed-search/hooks/use-mtseed-search.ts
+import { useMtseedSearchStore } from '../store';
+
+// Hook 内で検索結果を Store に書き込み
+useMtseedSearchStore.getState().setResults(flatResults);
+```
+
+依存方向:
+
+```
+Feature Page → Feature Store ← Feature Hook
+```
+
+### 5.4 Store 間同期パターン
 
 DS 設定など共通状態を複数 Store が参照する場合、`useEffect` の散在を避け、`subscribe` ベースの一方向同期を使用する。
 

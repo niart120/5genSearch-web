@@ -17,13 +17,13 @@ import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
 import { usePokemonList } from '../hooks/use-pokemon-list';
-import { validatePokemonListForm, DEFAULT_ENCOUNTER_PARAMS } from '../types';
-import type { PokemonListValidationErrorCode, EncounterParamsOutput } from '../types';
-import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
+import { usePokemonListStore } from '../store';
+import { validatePokemonListForm } from '../types';
+import type { PokemonListValidationErrorCode } from '../types';
+import { SeedInputSection } from '@/components/forms/seed-input-section';
 import { PokemonParamsForm } from './pokemon-params-form';
 import { PokemonFilterForm } from './pokemon-filter-form';
 import { createPokemonResultColumns } from './pokemon-result-columns';
-import type { StatDisplayMode } from '@/lib/game-data-names';
 import { ResultDetailDialog } from './result-detail-dialog';
 import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
@@ -33,7 +33,6 @@ import type {
   PokemonFilter,
   PokemonGenerationParams,
   SeedOrigin,
-  StatsFilter,
   UiPokemonData,
 } from '@/wasm/wasm_pkg.js';
 import { estimatePokemonListResults } from '@/services/search-estimation';
@@ -50,17 +49,20 @@ function PokemonListPage(): ReactElement {
   const { config: dsConfig, gameStart } = useDsConfigReadonly();
   const { tid, sid } = useTrainer();
 
-  // Seed 入力
-  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('manual-startup');
+  // Seed 入力 (SeedOrigin は非永続化)
+  const seedInputMode = usePokemonListStore((s) => s.seedInputMode);
+  const setSeedInputMode = usePokemonListStore((s) => s.setSeedInputMode);
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
-  // エンカウント設定 (PokemonParamsForm の controlled state)
-  const [encounterParams, setEncounterParams] =
-    useState<EncounterParamsOutput>(DEFAULT_ENCOUNTER_PARAMS);
+  // エンカウント設定 (Feature Store)
+  const encounterParams = usePokemonListStore((s) => s.encounterParams);
+  const setEncounterParams = usePokemonListStore((s) => s.setEncounterParams);
 
-  // フィルタ
-  const [filter, setFilter] = useState<PokemonFilter | undefined>();
-  const [statsFilter, setStatsFilter] = useState<StatsFilter | undefined>();
+  // フィルタ (Feature Store)
+  const filter = usePokemonListStore((s) => s.filter);
+  const setFilter = usePokemonListStore((s) => s.setFilter);
+  const statsFilter = usePokemonListStore((s) => s.statsFilter);
+  const setStatsFilter = usePokemonListStore((s) => s.setStatsFilter);
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
@@ -101,8 +103,9 @@ function PokemonListPage(): ReactElement {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState<UiPokemonData | undefined>();
 
-  // ステータス/IV 表示切替
-  const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
+  // ステータス/IV 表示切替 (Feature Store)
+  const statMode = usePokemonListStore((s) => s.statMode);
+  const setStatMode = usePokemonListStore((s) => s.setStatMode);
 
   const handleSelectResult = useCallback((result: UiPokemonData) => {
     setSelectedResult(result);

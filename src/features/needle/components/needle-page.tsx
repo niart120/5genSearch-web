@@ -6,7 +6,7 @@
  * 自動検索トグル + 検索ボタンで制御する。
  */
 
-import { useState, useMemo, useCallback, useEffect, type ReactElement } from 'react';
+import { useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { DataTable } from '@/components/data-display/data-table';
@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { NumField } from '@/components/ui/spinner-num-field';
-import { DEFAULT_DATETIME } from '@/components/ui/datetime-input';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
@@ -23,16 +22,9 @@ import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
 import { createNeedleResultColumns } from './needle-result-columns';
 import { useNeedleSearch } from '../hooks/use-needle-search';
-import {
-  validateNeedleForm,
-  parseNeedlePattern,
-  type SeedMode,
-  type NeedleValidationErrorCode,
-} from '../types';
-import type { Datetime, KeyInput, GenerationConfig } from '@/wasm/wasm_pkg.js';
-
-const DEFAULT_USER_OFFSET = 0;
-const DEFAULT_MAX_ADVANCE = 30;
+import { useNeedleStore } from '../store';
+import { validateNeedleForm, parseNeedlePattern, type NeedleValidationErrorCode } from '../types';
+import type { GenerationConfig } from '@/wasm/wasm_pkg.js';
 
 /** Hex パターン (最大 16 桁) */
 const LCG_SEED_RE = /^[\da-fA-F]{1,16}$/;
@@ -41,15 +33,23 @@ function NeedlePage(): ReactElement {
   const { t } = useLingui();
   const { config: dsConfig, ranges, gameStart } = useDsConfigReadonly();
 
-  // フォーム状態
-  const [seedMode, setSeedMode] = useState<SeedMode>('datetime');
-  const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
-  const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
-  const [seedHex, setSeedHex] = useState('');
-  const [patternRaw, setPatternRaw] = useState('');
-  const [userOffset, setUserOffset] = useState(DEFAULT_USER_OFFSET);
-  const [maxAdvance, setMaxAdvance] = useState(DEFAULT_MAX_ADVANCE);
-  const [autoSearch, setAutoSearch] = useState(true);
+  // フォーム状態 (Feature Store)
+  const seedMode = useNeedleStore((s) => s.seedMode);
+  const setSeedMode = useNeedleStore((s) => s.setSeedMode);
+  const datetime = useNeedleStore((s) => s.datetime);
+  const setDatetime = useNeedleStore((s) => s.setDatetime);
+  const keyInput = useNeedleStore((s) => s.keyInput);
+  const setKeyInput = useNeedleStore((s) => s.setKeyInput);
+  const seedHex = useNeedleStore((s) => s.seedHex);
+  const setSeedHex = useNeedleStore((s) => s.setSeedHex);
+  const patternRaw = useNeedleStore((s) => s.patternRaw);
+  const setPatternRaw = useNeedleStore((s) => s.setPatternRaw);
+  const userOffset = useNeedleStore((s) => s.userOffset);
+  const setUserOffset = useNeedleStore((s) => s.setUserOffset);
+  const maxAdvance = useNeedleStore((s) => s.maxAdvance);
+  const setMaxAdvance = useNeedleStore((s) => s.setMaxAdvance);
+  const autoSearch = useNeedleStore((s) => s.autoSearch);
+  const setAutoSearch = useNeedleStore((s) => s.setAutoSearch);
 
   // pendingDetailOrigins の自動消費 (needle ページ分)
   useEffect(() => {
@@ -69,7 +69,7 @@ function NeedlePage(): ReactElement {
         setSeedMode('seed');
       }
     }
-  }, []);
+  }, [setDatetime, setKeyInput, setSeedHex, setSeedMode]);
 
   // seedOrigins は入力状態から導出 (初回レンダーから計算される)
   const seedOrigins = useMemo(() => {
@@ -210,7 +210,7 @@ function NeedlePage(): ReactElement {
                   id="user-offset"
                   value={userOffset}
                   onChange={setUserOffset}
-                  defaultValue={DEFAULT_USER_OFFSET}
+                  defaultValue={0}
                   min={0}
                   max={99_999}
                   label={t`Offset`}
@@ -226,7 +226,7 @@ function NeedlePage(): ReactElement {
                   id="max-advance"
                   value={maxAdvance}
                   onChange={setMaxAdvance}
-                  defaultValue={DEFAULT_MAX_ADVANCE}
+                  defaultValue={30}
                   min={0}
                   max={99_999}
                   label={t`Max Advance`}

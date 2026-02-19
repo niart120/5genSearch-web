@@ -5,7 +5,7 @@
  * 検索結果から起動時刻検索へ Seed を引き渡す連携フローも提供する。
  */
 
-import { useState, useMemo, useCallback, type ReactElement } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -15,29 +15,20 @@ import { Button } from '@/components/ui/button';
 import { MtseedSearchForm } from './mtseed-search-form';
 import { createMtseedResultColumns } from './mtseed-result-columns';
 import { useMtseedSearch } from '../hooks/use-mtseed-search';
+import { useMtseedSearchStore } from '../store';
 import { estimateMtseedSearchResults } from '@/services/search-estimation';
 import {
   validateMtseedIvSearchForm,
   toMtseedSearchContext,
   type MtseedIvValidationErrorCode,
 } from '../types';
-import type { IvFilter, RomVersion } from '@/wasm/wasm_pkg.js';
+import type { RomVersion } from '@/wasm/wasm_pkg.js';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { navigateToDatetimeSearch } from '@/lib/navigate';
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
 import { createMtseedSearchExportColumns } from '@/services/export-columns';
-
-/** IvFilter のデフォルト値 (全 31-31, めざパ条件なし) */
-const DEFAULT_IV_FILTER: IvFilter = {
-  hp: [31, 31],
-  atk: [31, 31],
-  def: [31, 31],
-  spa: [31, 31],
-  spd: [31, 31],
-  spe: [31, 31],
-};
 
 /** DS Config の ROM バージョンから MT オフセットのデフォルト値を導出 */
 function getDefaultMtOffset(version: RomVersion): number {
@@ -48,23 +39,36 @@ function MtseedSearchPage(): ReactElement {
   const { t } = useLingui();
   const { config } = useDsConfigReadonly();
 
-  // フォーム状態
-  const [ivFilter, setIvFilter] = useState<IvFilter>(DEFAULT_IV_FILTER);
-  const [mtOffset, setMtOffset] = useState(() => getDefaultMtOffset(config.version));
-  const [isRoamer, setIsRoamer] = useState(false);
-  const [useGpu, setUseGpu] = useState(true);
+  // フォーム状態 (Feature Store)
+  const ivFilter = useMtseedSearchStore((s) => s.ivFilter);
+  const setIvFilter = useMtseedSearchStore((s) => s.setIvFilter);
+  const mtOffset = useMtseedSearchStore((s) => s.mtOffset);
+  const setMtOffset = useMtseedSearchStore((s) => s.setMtOffset);
+  const isRoamer = useMtseedSearchStore((s) => s.isRoamer);
+  const setIsRoamer = useMtseedSearchStore((s) => s.setIsRoamer);
+  const useGpu = useMtseedSearchStore((s) => s.useGpu);
+  const setUseGpu = useMtseedSearchStore((s) => s.setUseGpu);
+
+  // DS Config バージョン変更時に mtOffset を補正
+  const prevVersionRef = useRef(config.version);
+  useEffect(() => {
+    if (prevVersionRef.current !== config.version) {
+      prevVersionRef.current = config.version;
+      setMtOffset(getDefaultMtOffset(config.version));
+    }
+  }, [config.version, setMtOffset]);
 
   // 徘徊ポケモン ON → MT オフセットを 1 に自動設定
-  const handleRoamerChange = useCallback((checked: boolean) => {
+  const handleRoamerChange = (checked: boolean) => {
     setIsRoamer(checked);
     if (checked) {
       setMtOffset(1);
     }
-  }, []);
+  };
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
-    useMtseedSearch(useGpu);
+    useMtseedSearch();
 
   // バリデーション
   const validation = useMemo(

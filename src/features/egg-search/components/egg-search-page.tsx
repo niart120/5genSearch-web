@@ -16,6 +16,7 @@ import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
 import { useEggSearch } from '../hooks/use-egg-search';
+import { useEggSearchStore } from '../store';
 import { validateEggSearchForm } from '../types';
 import type { EggValidationErrorCode } from '../types';
 import { EggParamsForm } from '@/components/forms/egg-params-form';
@@ -26,50 +27,12 @@ import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
 import { createEggSearchExportColumns } from '@/services/export-columns';
 import { estimateEggSearchResults, countKeyCombinations } from '@/services/search-estimation';
-import { getTodayDateRange } from '@/lib/date-range';
 import type {
-  DateRangeParams,
-  TimeRangeParams,
-  KeySpec,
   DatetimeSearchContext,
   EggGenerationParams,
   GenerationConfig,
-  EggFilter,
   EggDatetimeSearchResult,
-  Ivs,
 } from '@/wasm/wasm_pkg.js';
-
-const DEFAULT_TIME_RANGE: TimeRangeParams = {
-  hour_start: 0,
-  hour_end: 23,
-  minute_start: 0,
-  minute_end: 59,
-  second_start: 0,
-  second_end: 59,
-};
-
-const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
-
-const DEFAULT_IVS: Ivs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-
-const DEFAULT_EGG_PARAMS: EggGenerationParams = {
-  trainer: { tid: 0, sid: 0 },
-  everstone: 'None',
-  female_ability_slot: 'First',
-  uses_ditto: false,
-  gender_ratio: 'F1M1',
-  nidoran_flag: false,
-  masuda_method: false,
-  parent_male: { ...DEFAULT_IVS },
-  parent_female: { ...DEFAULT_IVS },
-  consider_npc: false,
-  species_id: undefined,
-};
-
-const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> = {
-  user_offset: 0,
-  max_advance: 30,
-};
 
 /* ------------------------------------------------------------------ */
 /*  EggSearchPage                                                       */
@@ -85,14 +48,19 @@ function EggSearchPage(): ReactElement {
   // トレーナー情報
   const { tid, sid } = useTrainer();
 
-  // フォーム状態
-  const [dateRange, setDateRange] = useState<DateRangeParams>(getTodayDateRange);
-  const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
-  const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
-  const [eggParams, setEggParams] = useState<EggGenerationParams>(DEFAULT_EGG_PARAMS);
-  const [genConfigPartial, setGenConfigPartial] =
-    useState<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>(DEFAULT_GEN_CONFIG);
-  const [filter, setFilter] = useState<EggFilter | undefined>();
+  // フォーム状態 (Feature Store)
+  const dateRange = useEggSearchStore((s) => s.dateRange);
+  const setDateRange = useEggSearchStore((s) => s.setDateRange);
+  const timeRange = useEggSearchStore((s) => s.timeRange);
+  const setTimeRange = useEggSearchStore((s) => s.setTimeRange);
+  const keySpec = useEggSearchStore((s) => s.keySpec);
+  const setKeySpec = useEggSearchStore((s) => s.setKeySpec);
+  const eggParams = useEggSearchStore((s) => s.eggParams);
+  const setEggParams = useEggSearchStore((s) => s.setEggParams);
+  const genConfigPartial = useEggSearchStore((s) => s.genConfig);
+  const setGenConfigPartial = useEggSearchStore((s) => s.setGenConfig);
+  const filter = useEggSearchStore((s) => s.filter);
+  const setFilter = useEggSearchStore((s) => s.setFilter);
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
