@@ -59,17 +59,12 @@ function MtseedSearchPage(): ReactElement {
   }, [config.version, setMtOffset]);
 
   // 徘徊ポケモン ON → MT オフセットを 1 に自動設定
-  const handleRoamerChange = useCallback(
-    (checked: boolean) => {
-      setIsRoamer(checked);
-      if (checked) {
-        setMtOffset(1);
-      }
-    },
-    // Zustand store actions are referentially stable
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const handleRoamerChange = (checked: boolean) => {
+    setIsRoamer(checked);
+    if (checked) {
+      setMtOffset(1);
+    }
+  };
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
