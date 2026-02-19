@@ -715,7 +715,7 @@ describe('mtseed-search store', () => {
 
 ### 5.2 Feature Hook テスト
 
-> **Status: 未実施** — WorkerPool 依存のため統合テストとして実装予定。`use-needle-search` はメインスレッド同期実行のためユニットテストで対応可能。
+> **Status: 実施済み** — `use-needle-search` はユニットテスト (WASM モック)、WorkerPool 系は `use-mtseed-search` を代表として `useSearch` モックで検証。
 
 Feature Hook の結果同期ロジックを検証する。WorkerPool 依存のため、統合テスト (`src/test/integration/`) またはモック環境で実施する。
 
