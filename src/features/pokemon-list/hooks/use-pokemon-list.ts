@@ -1,8 +1,9 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
 import { createPokemonListTask } from '@/services/search-tasks';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
+import { usePokemonListStore } from '../store';
 import type {
   SeedOrigin,
   PokemonGenerationParams,
@@ -35,6 +36,14 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
   const config = useSearchConfig(false);
   const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
+  // Store actions
+  const setStoreResults = usePokemonListStore((s) => s.setResults);
+  const clearStoreResults = usePokemonListStore((s) => s.clearResults);
+  const storedResults = usePokemonListStore((s) => s.results);
+
+  // mount 直後の空配列で Store 上書きを防止
+  const searchActiveRef = useRef(false);
+
   const rawResults = useMemo(
     () => flattenBatchResults<GeneratedPokemonData>(results, isGeneratedPokemonData),
     [results]
@@ -45,6 +54,19 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     return resolve_pokemon_data_batch(rawResults, version, locale);
   }, [rawResults, version, locale]);
 
+  // 結果同期 — UI 変換済みデータを Store に書き込み
+  useEffect(() => {
+    if (!searchActiveRef.current) return;
+    setStoreResults(uiResults);
+  }, [uiResults, setStoreResults]);
+
+  // 検索完了時にフラグリセット
+  useEffect(() => {
+    if (searchActiveRef.current && !isLoading) {
+      searchActiveRef.current = false;
+    }
+  }, [isLoading]);
+
   const generate = useCallback(
     (
       origins: SeedOrigin[],
@@ -52,10 +74,12 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
       genConfig: GenerationConfig,
       filter: PokemonFilter | undefined
     ) => {
+      searchActiveRef.current = true;
+      clearStoreResults();
       const task = createPokemonListTask(origins, params, genConfig, filter);
       start([task]);
     },
-    [start]
+    [start, clearStoreResults]
   );
 
   return {
@@ -63,7 +87,7 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     isInitialized,
     progress,
     rawResults,
-    uiResults,
+    uiResults: storedResults,
     error,
     generate,
     cancel,

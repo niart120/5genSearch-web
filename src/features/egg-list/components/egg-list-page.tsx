@@ -16,10 +16,10 @@ import { useUiStore } from '@/stores/settings/ui';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useEggList } from '../hooks/use-egg-list';
+import { useEggListStore } from '../store';
 import { validateEggListForm } from '../types';
 import type { EggListValidationErrorCode } from '../types';
-import type { StatDisplayMode } from '@/lib/game-data-names';
-import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
+import { SeedInputSection } from '@/components/forms/seed-input-section';
 import { EggParamsForm } from '@/components/forms/egg-params-form';
 import { createEggResultColumns } from './egg-result-columns';
 import { ResultDetailDialog } from './result-detail-dialog';
@@ -28,36 +28,13 @@ import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
 import { createEggListExportColumns } from '@/services/export-columns';
 import type {
-  GenerationConfig,
   EggFilter,
+  GenerationConfig,
   EggGenerationParams,
   SeedOrigin,
-  StatsFilter,
   UiEggData,
-  Ivs,
 } from '@/wasm/wasm_pkg.js';
 import { estimateEggListResults } from '@/services/search-estimation';
-
-const DEFAULT_IVS: Ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
-
-const DEFAULT_EGG_PARAMS: EggGenerationParams = {
-  trainer: { tid: 0, sid: 0 },
-  everstone: 'None',
-  female_ability_slot: 'First',
-  uses_ditto: false,
-  gender_ratio: 'F1M1',
-  nidoran_flag: false,
-  masuda_method: false,
-  parent_male: { ...DEFAULT_IVS },
-  parent_female: { ...DEFAULT_IVS },
-  consider_npc: false,
-  species_id: undefined,
-};
-
-const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> = {
-  user_offset: 0,
-  max_advance: 30,
-};
 
 function EggListPage(): ReactElement {
   const { t } = useLingui();
@@ -65,24 +42,28 @@ function EggListPage(): ReactElement {
   const { tid, sid } = useTrainer();
   const { config: dsConfig, gameStart } = useDsConfigReadonly();
 
-  // Seed 入力
-  const [seedInputMode, setSeedInputMode] = useState<SeedInputMode>('manual-startup');
+  // Seed 入力 (SeedOrigin は非永続化)
+  const seedInputMode = useEggListStore((s) => s.seedInputMode);
+  const setSeedInputMode = useEggListStore((s) => s.setSeedInputMode);
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
 
-  // パラメータ
-  const [eggParams, setEggParams] = useState<EggGenerationParams>(DEFAULT_EGG_PARAMS);
-  const [genConfig, setGenConfig] =
-    useState<Pick<GenerationConfig, 'user_offset' | 'max_advance'>>(DEFAULT_GEN_CONFIG);
-  const [speciesId, setSpeciesId] = useState<number | undefined>();
+  // パラメータ (Feature Store)
+  const eggParams = useEggListStore((s) => s.eggParams);
+  const setEggParams = useEggListStore((s) => s.setEggParams);
+  const genConfig = useEggListStore((s) => s.genConfig);
+  const setGenConfig = useEggListStore((s) => s.setGenConfig);
+  const speciesId = useEggListStore((s) => s.speciesId);
+  const setSpeciesId = useEggListStore((s) => s.setSpeciesId);
 
-  // フィルタ
-  const [filter, setFilter] = useState<EggFilter | undefined>();
+  // フィルタ (Feature Store)
+  const filter = useEggListStore((s) => s.filter);
+  const setFilter = useEggListStore((s) => s.setFilter);
+  const statsFilter = useEggListStore((s) => s.statsFilter);
+  const setStatsFilter = useEggListStore((s) => s.setStatsFilter);
 
-  // 実ステータスフィルタ
-  const [statsFilter, setStatsFilter] = useState<StatsFilter | undefined>();
-
-  // 表示モード
-  const [statMode, setStatMode] = useState<StatDisplayMode>('stats');
+  // 表示モード (Feature Store)
+  const statMode = useEggListStore((s) => s.statMode);
+  const setStatMode = useEggListStore((s) => s.setStatMode);
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = useEggList(

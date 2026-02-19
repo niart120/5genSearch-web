@@ -730,44 +730,44 @@ Feature Hook の結果同期ロジックを検証する。WorkerPool 依存の�
 
 ### Phase 1: Store 作成
 
-- [ ] `src/features/datetime-search/store.ts` 作成
-- [ ] `src/features/mtseed-search/store.ts` 作成
-- [ ] `src/features/egg-search/store.ts` 作成
-- [ ] `src/features/tid-adjust/store.ts` 作成
-- [ ] `src/features/needle/store.ts` 作成
-- [ ] `src/features/pokemon-list/store.ts` 作成
-- [ ] `src/features/egg-list/store.ts` 作成
-- [ ] Store ユニットテスト 7 件作成
+- [x] `src/features/datetime-search/store.ts` 作成
+- [x] `src/features/mtseed-search/store.ts` 作成
+- [x] `src/features/egg-search/store.ts` 作成
+- [x] `src/features/tid-adjust/store.ts` 作成
+- [x] `src/features/needle/store.ts` 作成
+- [x] `src/features/pokemon-list/store.ts` 作成
+- [x] `src/features/egg-list/store.ts` 作成
+- [x] Store ユニットテスト 7 件作成
 
 ### Phase 2: Feature Hook 改修
 
-- [ ] `use-datetime-search.ts` — 結果を Store に同期
-- [ ] `use-mtseed-search.ts` — 結果を Store に同期
-- [ ] `use-egg-search.ts` — 結果を Store に同期
-- [ ] `use-tid-adjust.ts` — 結果を Store に同期
-- [ ] `use-needle-search.ts` — 結果を Store に同期
-- [ ] `use-pokemon-list.ts` — 結果を Store に同期
-- [ ] `use-egg-list.ts` — 結果を Store に同期
+- [x] `use-datetime-search.ts` — 結果を Store に同期
+- [x] `use-mtseed-search.ts` — 結果を Store に同期
+- [x] `use-egg-search.ts` — 結果を Store に同期
+- [x] `use-tid-adjust.ts` — 結果を Store に同期
+- [x] `use-needle-search.ts` — 結果を Store に同期
+- [x] `use-pokemon-list.ts` — 結果を Store に同期
+- [x] `use-egg-list.ts` — 結果を Store に同期
 
 ### Phase 3: Page コンポーネント改修
 
-- [ ] `datetime-search-page.tsx` — `useState` → Store
-- [ ] `mtseed-search-page.tsx` — `useState` → Store
-- [ ] `egg-search-page.tsx` — `useState` → Store
-- [ ] `tid-adjust-page.tsx` — `useState` → Store
-- [ ] `needle-page.tsx` — `useState` → Store
-- [ ] `pokemon-list-page.tsx` — `useState` → Store
-- [ ] `egg-list-page.tsx` — `useState` → Store
+- [x] `datetime-search-page.tsx` — `useState` → Store
+- [x] `mtseed-search-page.tsx` — `useState` → Store
+- [x] `egg-search-page.tsx` — `useState` → Store
+- [x] `tid-adjust-page.tsx` — `useState` → Store
+- [x] `needle-page.tsx` — `useState` → Store
+- [x] `pokemon-list-page.tsx` — `useState` → Store
+- [x] `egg-list-page.tsx` — `useState` → Store
 
 ### Phase 4: アーキテクチャ文書更新
 
-- [ ] `spec/agent/architecture/state-management.md` 更新
-- [ ] `spec/agent/architecture/frontend-structure.md` 更新
+- [x] `spec/agent/architecture/state-management.md` 更新
+- [x] `spec/agent/architecture/frontend-structure.md` 更新
 
 ### Phase 5: 検証
 
 - [ ] 全 feature のフォーム入力→ブラウザリロード→入力値復元を確認
 - [ ] 全 feature の検索実行→タブ切替→復帰→結果表示を確認
-- [ ] `pnpm test:run` 全テスト pass
-- [ ] `pnpm lint` エラーなし
-- [ ] `pnpm exec tsc -b --noEmit` 型エラーなし
+- [x] `pnpm test:run` 全テスト pass
+- [x] `pnpm lint` エラーなし
+- [x] `pnpm exec tsc -b --noEmit` 型エラーなし

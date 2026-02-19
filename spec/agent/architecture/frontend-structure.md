@@ -123,6 +123,7 @@ Phase 3 で `features/` を追加予定。追加時の構成は以下を基準�
 ```
 features/{feature-name}/
 ├── index.ts                # 公開 API (re-export)
+├── store.ts                # Feature Store (フォーム入力永続化 + 検索結果非永続化)
 ├── components/             # 機能固有コンポーネント
 │   ├── {Feature}Page.tsx   # ページコンポーネント (FeaturePageLayout 使用)
 │   └── {Feature}Form.tsx   # 入力フォーム

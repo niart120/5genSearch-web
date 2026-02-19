@@ -23,40 +23,16 @@ import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useExport } from '@/hooks/use-export';
 import { createTidAdjustExportColumns } from '@/services/export-columns';
 import { estimateTidAdjustResults, countKeyCombinations } from '@/services/search-estimation';
-import { getTodayDateRange } from '@/lib/date-range';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
 import { useTidAdjust } from '../hooks/use-tid-adjust';
+import { useTidAdjustStore, type SaveMode } from '../store';
 import {
   validateTidAdjustForm,
   toTrainerInfoFilter,
   type TidAdjustValidationErrorCode,
 } from '../types';
-import type {
-  DateRangeParams,
-  TimeRangeParams,
-  KeySpec,
-  DatetimeSearchContext,
-  GameStartConfig,
-} from '@/wasm/wasm_pkg.js';
-
-const DEFAULT_TIME_RANGE: TimeRangeParams = {
-  hour_start: 0,
-  hour_end: 23,
-  minute_start: 0,
-  minute_end: 59,
-  second_start: 0,
-  second_end: 59,
-};
-
-const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
-
-/**
- * save と memory_link を統合したセーブ状態。
- * BW: 2 値 (NoSave / WithSave)
- * BW2: 3 値 (NoSave / WithSave / WithSaveMemoryLink)
- */
-type SaveMode = 'NoSave' | 'WithSave' | 'WithSaveMemoryLink';
+import type { DatetimeSearchContext, GameStartConfig } from '@/wasm/wasm_pkg.js';
 
 function toGameStartConfig(mode: SaveMode): GameStartConfig {
   return {
@@ -75,16 +51,21 @@ function TidAdjustPage(): ReactElement {
     (s) => s.config.version === 'Black2' || s.config.version === 'White2'
   );
 
-  // フォーム状態
-  const [dateRange, setDateRange] = useState<DateRangeParams>(getTodayDateRange);
-  const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
-  const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
-  const [tid, setTid] = useState('');
-  const [sid, setSid] = useState('');
-  const [shinyPidRaw, setShinyPidRaw] = useState('');
-
-  // GameStartConfig: サイドバーの値は使用しない (Feature-local state)
-  const [saveMode, setSaveMode] = useState<SaveMode>('NoSave');
+  // フォーム状態 (Feature Store)
+  const dateRange = useTidAdjustStore((s) => s.dateRange);
+  const setDateRange = useTidAdjustStore((s) => s.setDateRange);
+  const timeRange = useTidAdjustStore((s) => s.timeRange);
+  const setTimeRange = useTidAdjustStore((s) => s.setTimeRange);
+  const keySpec = useTidAdjustStore((s) => s.keySpec);
+  const setKeySpec = useTidAdjustStore((s) => s.setKeySpec);
+  const tid = useTidAdjustStore((s) => s.tid);
+  const setTid = useTidAdjustStore((s) => s.setTid);
+  const sid = useTidAdjustStore((s) => s.sid);
+  const setSid = useTidAdjustStore((s) => s.setSid);
+  const shinyPidRaw = useTidAdjustStore((s) => s.shinyPidRaw);
+  const setShinyPidRaw = useTidAdjustStore((s) => s.setShinyPidRaw);
+  const saveMode = useTidAdjustStore((s) => s.saveMode);
+  const setSaveMode = useTidAdjustStore((s) => s.setSaveMode);
 
   // BW2 → BW 切替時: WithSaveMemoryLink → WithSave にフォールバック
   const effectiveSaveMode = !isBw2 && saveMode === 'WithSaveMemoryLink' ? 'WithSave' : saveMode;

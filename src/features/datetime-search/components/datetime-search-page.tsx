@@ -7,7 +7,6 @@
 
 import { useState, useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { getDefaultTargetSeeds } from '../default-seeds';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -19,6 +18,7 @@ import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { toHex } from '@/lib/format';
 import { useDatetimeSearch } from '../hooks/use-datetime-search';
+import { useDatetimeSearchStore } from '../store';
 import { parseTargetSeeds, validateMtseedSearchForm } from '../types';
 import type { ValidationErrorCode, ParseErrorCode } from '../types';
 import { createSeedOriginColumns } from './seed-origin-columns';
@@ -32,33 +32,7 @@ import { navigateWithSeedOrigins } from '@/lib/navigate';
 import { toast } from '@/components/ui/toast-state';
 import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/search-estimation';
 import { getStandardContexts } from '@/lib/iv-tooltip';
-import type {
-  DateRangeParams,
-  TimeRangeParams,
-  KeySpec,
-  DatetimeSearchContext,
-  SeedOrigin,
-} from '@/wasm/wasm_pkg.js';
-
-const DEFAULT_DATE_RANGE: DateRangeParams = {
-  start_year: 2000,
-  start_month: 1,
-  start_day: 1,
-  end_year: 2099,
-  end_month: 12,
-  end_day: 31,
-};
-
-const DEFAULT_TIME_RANGE: TimeRangeParams = {
-  hour_start: 0,
-  hour_end: 23,
-  minute_start: 0,
-  minute_end: 59,
-  second_start: 0,
-  second_end: 59,
-};
-
-const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
+import type { DatetimeSearchContext, SeedOrigin } from '@/wasm/wasm_pkg.js';
 
 /* ------------------------------------------------------------------ */
 /*  DatetimeSearchPage                                                 */
@@ -70,32 +44,30 @@ function DatetimeSearchPage(): ReactElement {
   // DS 設定 (サイドバーで管理済み)
   const { config: dsConfig, ranges } = useDsConfigReadonly();
 
-  // GPU トグル
-  const [useGpu, setUseGpu] = useState(true);
+  // フォーム状態 (Feature Store)
+  const dateRange = useDatetimeSearchStore((s) => s.dateRange);
+  const setDateRange = useDatetimeSearchStore((s) => s.setDateRange);
+  const timeRange = useDatetimeSearchStore((s) => s.timeRange);
+  const setTimeRange = useDatetimeSearchStore((s) => s.setTimeRange);
+  const keySpec = useDatetimeSearchStore((s) => s.keySpec);
+  const setKeySpec = useDatetimeSearchStore((s) => s.setKeySpec);
+  const targetSeedsRaw = useDatetimeSearchStore((s) => s.targetSeedsRaw);
+  const setTargetSeedsRaw = useDatetimeSearchStore((s) => s.setTargetSeedsRaw);
+  const useGpu = useDatetimeSearchStore((s) => s.useGpu);
+  const setUseGpu = useDatetimeSearchStore((s) => s.setUseGpu);
 
-  // フォーム状態
-  const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
-  const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
-  const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
-  // MT Seed 検索からの連携: pendingTargetSeeds をフォームの初期値として反映
-  const [targetSeedsRaw, setTargetSeedsRaw] = useState(() => {
+  // MT Seed 検索からの連携: pendingTargetSeeds をフォームに反映
+  useEffect(() => {
     const pending = useSearchResultsStore.getState().pendingTargetSeeds;
     if (pending.length > 0) {
-      return pending.map((s) => toHex(s, 8)).join('\n');
-    }
-    return getDefaultTargetSeeds();
-  });
-
-  // 初回マウント時に pendingTargetSeeds を消費済みとしてクリア
-  useEffect(() => {
-    if (useSearchResultsStore.getState().pendingTargetSeeds.length > 0) {
+      setTargetSeedsRaw(pending.map((s) => toHex(s, 8)).join('\n'));
       useSearchResultsStore.getState().clearPendingTargetSeeds();
     }
-  }, []);
+  }, [setTargetSeedsRaw]);
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
-    useDatetimeSearch(useGpu);
+    useDatetimeSearch();
 
   // パース + バリデーション
   const parsedSeeds = useMemo(() => parseTargetSeeds(targetSeedsRaw), [targetSeedsRaw]);
