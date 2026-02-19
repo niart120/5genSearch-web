@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Cache files
+.eslintcache
+
 # Rust/WASM
 target/
 wasm-pkg/pkg/
