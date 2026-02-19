@@ -28,7 +28,7 @@ export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   slots: [],
   leadAbility: 'None',
   availableSpecies: [],
-  genConfig: { user_offset: 0, max_advance: 100 },
+  genConfig: { user_offset: 0, max_advance: 30 },
 };
 
 /** ポケモンリスト生成フォーム状態 */

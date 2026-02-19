@@ -52,7 +52,7 @@ function MtseedSearchPage(): ReactElement {
   const [ivFilter, setIvFilter] = useState<IvFilter>(DEFAULT_IV_FILTER);
   const [mtOffset, setMtOffset] = useState(() => getDefaultMtOffset(config.version));
   const [isRoamer, setIsRoamer] = useState(false);
-  const [useGpu, setUseGpu] = useState(false);
+  const [useGpu, setUseGpu] = useState(true);
 
   // 徘徊ポケモン ON → MT オフセットを 1 に自動設定
   const handleRoamerChange = useCallback((checked: boolean) => {

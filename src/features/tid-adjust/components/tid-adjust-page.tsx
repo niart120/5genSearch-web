@@ -23,6 +23,7 @@ import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useExport } from '@/hooks/use-export';
 import { createTidAdjustExportColumns } from '@/services/export-columns';
 import { estimateTidAdjustResults, countKeyCombinations } from '@/services/search-estimation';
+import { getTodayDateRange } from '@/lib/date-range';
 import { TidAdjustForm } from './tid-adjust-form';
 import { createTrainerInfoColumns } from './trainer-info-columns';
 import { useTidAdjust } from '../hooks/use-tid-adjust';
@@ -39,15 +40,6 @@ import type {
   GameStartConfig,
 } from '@/wasm/wasm_pkg.js';
 
-const DEFAULT_DATE_RANGE: DateRangeParams = {
-  start_year: 2000,
-  start_month: 1,
-  start_day: 1,
-  end_year: 2000,
-  end_month: 1,
-  end_day: 1,
-};
-
 const DEFAULT_TIME_RANGE: TimeRangeParams = {
   hour_start: 0,
   hour_end: 23,
@@ -58,6 +50,8 @@ const DEFAULT_TIME_RANGE: TimeRangeParams = {
 };
 
 const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
+
+const DEFAULT_DATE_RANGE: DateRangeParams = getTodayDateRange();
 
 /**
  * save と memory_link を統合したセーブ状態。

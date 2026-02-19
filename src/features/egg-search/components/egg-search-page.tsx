@@ -26,6 +26,7 @@ import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
 import { createEggSearchExportColumns } from '@/services/export-columns';
 import { estimateEggSearchResults, countKeyCombinations } from '@/services/search-estimation';
+import { getTodayDateRange } from '@/lib/date-range';
 import type {
   DateRangeParams,
   TimeRangeParams,
@@ -38,14 +39,7 @@ import type {
   Ivs,
 } from '@/wasm/wasm_pkg.js';
 
-const DEFAULT_DATE_RANGE: DateRangeParams = {
-  start_year: 2000,
-  start_month: 1,
-  start_day: 1,
-  end_year: 2000,
-  end_month: 1,
-  end_day: 1,
-};
+const DEFAULT_DATE_RANGE: DateRangeParams = getTodayDateRange();
 
 const DEFAULT_TIME_RANGE: TimeRangeParams = {
   hour_start: 0,
@@ -76,7 +70,7 @@ const DEFAULT_EGG_PARAMS: EggGenerationParams = {
 
 const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> = {
   user_offset: 0,
-  max_advance: 100,
+  max_advance: 30,
 };
 
 /* ------------------------------------------------------------------ */

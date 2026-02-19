@@ -246,6 +246,22 @@ function PokemonParamsForm({
     [gameVersion, encounterType, onChange]
   );
 
+  // 固定エンカウント: speciesOptions ロード完了時に先頭エントリを自動選択
+  useEffect(() => {
+    if (!isLocationBased && speciesOptions.length > 0 && selectedStaticEntry === '') {
+      const firstStatic = speciesOptions.find((s) => s.kind === 'static');
+      if (!firstStatic) return;
+      const entryId = firstStatic.id;
+      // 非同期で slots を取得し、selectedStaticEntry と parent state を同時更新
+      void (async () => {
+        const entry = await getStaticEncounterEntry(gameVersion, encounterType, entryId);
+        const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
+        setSelectedStaticEntry(entryId);
+        onChange((prev) => ({ ...prev, slots: newSlots }));
+      })();
+    }
+  }, [speciesOptions, isLocationBased, selectedStaticEntry, gameVersion, encounterType, onChange]);
+
   // offset / max_advance blur handlers
   const handleOffsetBlur = useCallback(() => {
     const clamped = clampOrDefault(localOffset, {
