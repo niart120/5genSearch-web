@@ -39,8 +39,6 @@ import type {
   Ivs,
 } from '@/wasm/wasm_pkg.js';
 
-const DEFAULT_DATE_RANGE: DateRangeParams = getTodayDateRange();
-
 const DEFAULT_TIME_RANGE: TimeRangeParams = {
   hour_start: 0,
   hour_end: 23,
@@ -88,7 +86,7 @@ function EggSearchPage(): ReactElement {
   const { tid, sid } = useTrainer();
 
   // フォーム状態
-  const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
+  const [dateRange, setDateRange] = useState<DateRangeParams>(getTodayDateRange);
   const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
   const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
   const [eggParams, setEggParams] = useState<EggGenerationParams>(DEFAULT_EGG_PARAMS);

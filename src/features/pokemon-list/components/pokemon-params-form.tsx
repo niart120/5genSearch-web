@@ -252,13 +252,18 @@ function PokemonParamsForm({
       const firstStatic = speciesOptions.find((s) => s.kind === 'static');
       if (!firstStatic) return;
       const entryId = firstStatic.id;
+      let ignore = false;
       // 非同期で slots を取得し、selectedStaticEntry と parent state を同時更新
       void (async () => {
         const entry = await getStaticEncounterEntry(gameVersion, encounterType, entryId);
+        if (ignore) return;
         const newSlots = entry ? [toEncounterSlotConfigFromEntry(entry)] : [];
         setSelectedStaticEntry(entryId);
         onChange((prev) => ({ ...prev, slots: newSlots }));
       })();
+      return () => {
+        ignore = true;
+      };
     }
   }, [speciesOptions, isLocationBased, selectedStaticEntry, gameVersion, encounterType, onChange]);
 
@@ -275,7 +280,7 @@ function PokemonParamsForm({
 
   const handleMaxAdvBlur = useCallback(() => {
     const clamped = clampOrDefault(localMaxAdv, {
-      defaultValue: 100,
+      defaultValue: 30,
       min: 0,
       max: 999_999,
     });

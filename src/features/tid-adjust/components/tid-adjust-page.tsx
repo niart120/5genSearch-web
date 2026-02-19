@@ -51,8 +51,6 @@ const DEFAULT_TIME_RANGE: TimeRangeParams = {
 
 const DEFAULT_KEY_SPEC: KeySpec = { available_buttons: [] };
 
-const DEFAULT_DATE_RANGE: DateRangeParams = getTodayDateRange();
-
 /**
  * save と memory_link を統合したセーブ状態。
  * BW: 2 値 (NoSave / WithSave)
@@ -78,7 +76,7 @@ function TidAdjustPage(): ReactElement {
   );
 
   // フォーム状態
-  const [dateRange, setDateRange] = useState<DateRangeParams>(DEFAULT_DATE_RANGE);
+  const [dateRange, setDateRange] = useState<DateRangeParams>(getTodayDateRange);
   const [timeRange, setTimeRange] = useState<TimeRangeParams>(DEFAULT_TIME_RANGE);
   const [keySpec, setKeySpec] = useState<KeySpec>(DEFAULT_KEY_SPEC);
   const [tid, setTid] = useState('');

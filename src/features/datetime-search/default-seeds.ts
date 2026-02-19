@@ -12,6 +12,9 @@ import { SEED_TEMPLATES } from '@/data/seed-templates';
  */
 export function getDefaultTargetSeeds(): string {
   const bw6v = SEED_TEMPLATES.find((t) => t.id === 'bw-stationary-6v');
-  if (!bw6v) return '';
+  if (!bw6v) {
+    console.warn('SEED_TEMPLATES に bw-stationary-6v が見つかりません');
+    return '';
+  }
   return bw6v.seeds.map((s) => s.toString(16).padStart(8, '0').toUpperCase()).join('\n');
 }
