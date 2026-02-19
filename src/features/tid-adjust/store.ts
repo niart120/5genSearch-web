@@ -53,6 +53,7 @@ interface TidAdjustActions {
   setSaveMode: (saveMode: SaveMode) => void;
 
   setResults: (results: TrainerInfoSearchResult[]) => void;
+  appendResults: (newItems: TrainerInfoSearchResult[]) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -106,6 +107,7 @@ export const useTidAdjustStore = create<TidAdjustState & TidAdjustActions>()(
       setSaveMode: (saveMode) => set({ saveMode }),
 
       setResults: (results) => set({ results }),
+      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
       resetForm: () => set(createDefaultFormState()),

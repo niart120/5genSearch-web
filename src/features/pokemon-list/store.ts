@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_ENCOUNTER_PARAMS, type EncounterParamsOutput } from './types';
-import type { PokemonFilter, StatsFilter, UiPokemonData } from '@/wasm/wasm_pkg.js';
+import type { PokemonFilter, StatsFilter, GeneratedPokemonData } from '@/wasm/wasm_pkg.js';
 import type { SeedInputMode } from '@/components/forms/seed-input-section';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
@@ -24,9 +24,9 @@ interface PokemonListFormState {
   statMode: StatDisplayMode;
 }
 
-/** 非永続化: 検索結果 */
+/** 非永続化: 検索結果 (raw データ; UI 変換は Hook 側で行う) */
 interface PokemonListResultState {
-  results: UiPokemonData[];
+  results: GeneratedPokemonData[];
 }
 
 type PokemonListState = PokemonListFormState & PokemonListResultState;
@@ -44,7 +44,8 @@ interface PokemonListActions {
   setStatsFilter: (statsFilter: StatsFilter | undefined) => void;
   setStatMode: (statMode: StatDisplayMode) => void;
 
-  setResults: (results: UiPokemonData[]) => void;
+  setResults: (results: GeneratedPokemonData[]) => void;
+  appendResults: (newItems: GeneratedPokemonData[]) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -86,6 +87,7 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
       setStatMode: (statMode) => set({ statMode }),
 
       setResults: (results) => set({ results }),
+      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
       resetForm: () => set(DEFAULT_FORM_STATE),

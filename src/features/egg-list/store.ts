@@ -11,7 +11,7 @@ import type {
   GenerationConfig,
   EggFilter,
   StatsFilter,
-  UiEggData,
+  GeneratedEggData,
   Ivs,
 } from '@/wasm/wasm_pkg.js';
 import type { SeedInputMode } from '@/components/forms/seed-input-section';
@@ -32,9 +32,9 @@ interface EggListFormState {
   statMode: StatDisplayMode;
 }
 
-/** 非永続化: 検索結果 */
+/** 非永続化: 検索結果 (raw データ; UI 変換は Hook 側で行う) */
 interface EggListResultState {
-  results: UiEggData[];
+  results: GeneratedEggData[];
 }
 
 type EggListState = EggListFormState & EggListResultState;
@@ -60,7 +60,8 @@ interface EggListActions {
   setStatsFilter: (statsFilter: StatsFilter | undefined) => void;
   setStatMode: (statMode: StatDisplayMode) => void;
 
-  setResults: (results: UiEggData[]) => void;
+  setResults: (results: GeneratedEggData[]) => void;
+  appendResults: (newItems: GeneratedEggData[]) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -130,6 +131,7 @@ export const useEggListStore = create<EggListState & EggListActions>()(
       setStatMode: (statMode) => set({ statMode }),
 
       setResults: (results) => set({ results }),
+      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
       resetForm: () => set(DEFAULT_FORM_STATE),

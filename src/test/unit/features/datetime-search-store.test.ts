@@ -70,6 +70,16 @@ describe('datetime-search store', () => {
     expect(useDatetimeSearchStore.getState().results).toEqual([]);
   });
 
+  it('should append results incrementally', () => {
+    const batch1 = [{ Seed: { base_seed: 1n, mt_seed: 1 } }] as never[];
+    const batch2 = [{ Seed: { base_seed: 2n, mt_seed: 2 } }] as never[];
+    useDatetimeSearchStore.getState().appendResults(batch1);
+    expect(useDatetimeSearchStore.getState().results).toEqual(batch1);
+
+    useDatetimeSearchStore.getState().appendResults(batch2);
+    expect(useDatetimeSearchStore.getState().results).toEqual([...batch1, ...batch2]);
+  });
+
   it('should preserve results on resetForm', () => {
     const mockResults = [{ Seed: { base_seed: 0n, mt_seed: 0 } }] as never[];
     useDatetimeSearchStore.getState().setResults(mockResults);

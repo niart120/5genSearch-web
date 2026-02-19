@@ -33,16 +33,19 @@ export function useMtseedSearch(): UseMtseedSearchReturn {
   const search = useSearch(config);
 
   // Store actions
-  const setResults = useMtseedSearchStore((s) => s.setResults);
+  const appendResults = useMtseedSearchStore((s) => s.appendResults);
   const clearResults = useMtseedSearchStore((s) => s.clearResults);
   const storedResults = useMtseedSearchStore((s) => s.results);
 
   // mount 直後の空配列で Store 上書きを防止
   const searchActiveRef = useRef(false);
+  // 差分同期: 処理済みバッチ数を追跡
+  const prevLengthRef = useRef(0);
 
   const startSearch = useCallback(
     (context: MtseedSearchContext) => {
       searchActiveRef.current = true;
+      prevLengthRef.current = 0;
       clearResults();
       if (useGpu) {
         const gpuTask: GpuMtseedIvSearchTask = {
@@ -59,12 +62,19 @@ export function useMtseedSearch(): UseMtseedSearchReturn {
     [useGpu, config.workerCount, search, clearResults]
   );
 
-  // 結果同期
+  // 結果差分同期 — 新しいバッチのみ処理して Store に追記
   useEffect(() => {
     if (!searchActiveRef.current) return;
-    const flat = flattenBatchResults<MtseedResult>(search.results, isMtseedResult);
-    setResults(flat);
-  }, [search.results, setResults]);
+    const prev = prevLengthRef.current;
+    const current = search.results.length;
+    if (prev >= current) return;
+    const newBatches = search.results.slice(prev);
+    prevLengthRef.current = current;
+    const newItems = flattenBatchResults<MtseedResult>(newBatches, isMtseedResult);
+    if (newItems.length > 0) {
+      appendResults(newItems);
+    }
+  }, [search.results, appendResults]);
 
   // 検索完了時にフラグリセット
   useEffect(() => {

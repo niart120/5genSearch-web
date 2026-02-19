@@ -47,6 +47,16 @@ describe('pokemon-list store', () => {
     expect(usePokemonListStore.getState().results).toEqual([]);
   });
 
+  it('should append results incrementally', () => {
+    const batch1 = [{ advance: 0 }] as never[];
+    const batch2 = [{ advance: 1 }] as never[];
+    usePokemonListStore.getState().appendResults(batch1);
+    expect(usePokemonListStore.getState().results).toEqual(batch1);
+
+    usePokemonListStore.getState().appendResults(batch2);
+    expect(usePokemonListStore.getState().results).toEqual([...batch1, ...batch2]);
+  });
+
   it('should preserve results on resetForm', () => {
     const mockResults = [{ advance: 0 }] as never[];
     usePokemonListStore.getState().setResults(mockResults);

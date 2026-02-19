@@ -46,29 +46,34 @@ export function useEggList(
   const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
   // Store actions
-  const setStoreResults = useEggListStore((s) => s.setResults);
+  const appendResults = useEggListStore((s) => s.appendResults);
   const clearStoreResults = useEggListStore((s) => s.clearResults);
-  const storedResults = useEggListStore((s) => s.results);
+  const storedRawResults = useEggListStore((s) => s.results);
 
   // mount 直後の空配列で Store 上書きを防止
   const searchActiveRef = useRef(false);
+  // 差分同期: 処理済みバッチ数を追跡
+  const prevLengthRef = useRef(0);
 
-  // バッチ結果の flat 化
-  const rawResults = useMemo(
-    () => flattenBatchResults<GeneratedEggData>(results, isGeneratedEggData),
-    [results]
-  );
-
-  const uiResults = useMemo(() => {
-    if (rawResults.length === 0) return [];
-    return resolve_egg_data_batch(rawResults, locale, speciesId);
-  }, [rawResults, locale, speciesId]);
-
-  // 結果同期 — UI 変換済みデータを Store に書き込み
+  // 差分同期 — 新しいバッチのみ処理して Store に追記
   useEffect(() => {
     if (!searchActiveRef.current) return;
-    setStoreResults(uiResults);
-  }, [uiResults, setStoreResults]);
+    const prev = prevLengthRef.current;
+    const current = results.length;
+    if (prev >= current) return;
+    const newBatches = results.slice(prev);
+    prevLengthRef.current = current;
+    const newItems = flattenBatchResults<GeneratedEggData>(newBatches, isGeneratedEggData);
+    if (newItems.length > 0) {
+      appendResults(newItems);
+    }
+  }, [results, appendResults]);
+
+  // UI 変換は Store の raw データ + locale/speciesId から導出
+  const uiResults = useMemo(() => {
+    if (storedRawResults.length === 0) return [];
+    return resolve_egg_data_batch(storedRawResults, locale, speciesId);
+  }, [storedRawResults, locale, speciesId]);
 
   // 検索完了時にフラグリセット
   useEffect(() => {
@@ -85,6 +90,7 @@ export function useEggList(
       filter: EggFilter | undefined
     ) => {
       searchActiveRef.current = true;
+      prevLengthRef.current = 0;
       clearStoreResults();
       const task = createEggListTask(origins, params, genConfig, filter);
       start([task]);
@@ -96,8 +102,8 @@ export function useEggList(
     isLoading,
     isInitialized,
     progress,
-    rawResults,
-    uiResults: storedResults,
+    rawResults: storedRawResults,
+    uiResults,
     error,
     generate,
     cancel,

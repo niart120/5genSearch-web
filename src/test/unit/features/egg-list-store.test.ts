@@ -61,6 +61,16 @@ describe('egg-list store', () => {
     expect(useEggListStore.getState().results).toEqual([]);
   });
 
+  it('should append results incrementally', () => {
+    const batch1 = [{ advance: 0, egg: {} }] as never[];
+    const batch2 = [{ advance: 1, egg: {} }] as never[];
+    useEggListStore.getState().appendResults(batch1);
+    expect(useEggListStore.getState().results).toEqual(batch1);
+
+    useEggListStore.getState().appendResults(batch2);
+    expect(useEggListStore.getState().results).toEqual([...batch1, ...batch2]);
+  });
+
   it('should preserve results on resetForm', () => {
     const mockResults = [{ advance: 0, egg: {} }] as never[];
     useEggListStore.getState().setResults(mockResults);

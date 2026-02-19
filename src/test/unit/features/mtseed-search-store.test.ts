@@ -60,6 +60,16 @@ describe('mtseed-search store', () => {
     expect(useMtseedSearchStore.getState().results).toEqual([]);
   });
 
+  it('should append results incrementally', () => {
+    const batch1 = [{ seed: 100 }] as never[];
+    const batch2 = [{ seed: 200 }] as never[];
+    useMtseedSearchStore.getState().appendResults(batch1);
+    expect(useMtseedSearchStore.getState().results).toEqual(batch1);
+
+    useMtseedSearchStore.getState().appendResults(batch2);
+    expect(useMtseedSearchStore.getState().results).toEqual([...batch1, ...batch2]);
+  });
+
   it('should preserve results on resetForm', () => {
     const mockResults = [{ seed: 99_999 }] as never[];
     useMtseedSearchStore.getState().setResults(mockResults);

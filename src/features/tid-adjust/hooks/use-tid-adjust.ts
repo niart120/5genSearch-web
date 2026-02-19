@@ -40,16 +40,19 @@ export function useTidAdjust(): UseTidAdjustReturn {
   const search = useSearch(config);
 
   // Store actions
-  const setResults = useTidAdjustStore((s) => s.setResults);
+  const appendResults = useTidAdjustStore((s) => s.appendResults);
   const clearResults = useTidAdjustStore((s) => s.clearResults);
   const storedResults = useTidAdjustStore((s) => s.results);
 
   // mount 直後の空配列で Store 上書きを防止
   const searchActiveRef = useRef(false);
+  // 差分同期: 処理済みバッチ数を追跡
+  const prevLengthRef = useRef(0);
 
   const startSearch = useCallback(
     (context: DatetimeSearchContext, filter: TrainerInfoFilter, gameStart: GameStartConfig) => {
       searchActiveRef.current = true;
+      prevLengthRef.current = 0;
       clearResults();
       const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
       const tasks = createTrainerInfoSearchTasks(context, filter, gameStart, workerCount);
@@ -58,12 +61,19 @@ export function useTidAdjust(): UseTidAdjustReturn {
     [config.workerCount, search, clearResults]
   );
 
-  // 結果同期
+  // 結果差分同期 — 新しいバッチのみ処理して Store に追記
   useEffect(() => {
     if (!searchActiveRef.current) return;
-    const flat = flattenBatchResults<TrainerInfoSearchResult>(search.results, isTrainerInfoResult);
-    setResults(flat);
-  }, [search.results, setResults]);
+    const prev = prevLengthRef.current;
+    const current = search.results.length;
+    if (prev >= current) return;
+    const newBatches = search.results.slice(prev);
+    prevLengthRef.current = current;
+    const newItems = flattenBatchResults<TrainerInfoSearchResult>(newBatches, isTrainerInfoResult);
+    if (newItems.length > 0) {
+      appendResults(newItems);
+    }
+  }, [search.results, appendResults]);
 
   // 検索完了時にフラグリセット
   useEffect(() => {

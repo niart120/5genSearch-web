@@ -41,6 +41,7 @@ interface DatetimeSearchActions {
   setUseGpu: (useGpu: boolean) => void;
 
   setResults: (results: SeedOrigin[]) => void;
+  appendResults: (newItems: SeedOrigin[]) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -99,6 +100,7 @@ export const useDatetimeSearchStore = create<DatetimeSearchState & DatetimeSearc
       setUseGpu: (useGpu) => set({ useGpu }),
 
       setResults: (results) => set({ results }),
+      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
       resetForm: () => set(DEFAULT_FORM_STATE),

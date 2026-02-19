@@ -51,6 +51,16 @@ describe('tid-adjust store', () => {
     expect(useTidAdjustStore.getState().results).toEqual([]);
   });
 
+  it('should append results incrementally', () => {
+    const batch1 = [{ tid: 1, sid: 1 }] as never[];
+    const batch2 = [{ tid: 2, sid: 2 }] as never[];
+    useTidAdjustStore.getState().appendResults(batch1);
+    expect(useTidAdjustStore.getState().results).toEqual(batch1);
+
+    useTidAdjustStore.getState().appendResults(batch2);
+    expect(useTidAdjustStore.getState().results).toEqual([...batch1, ...batch2]);
+  });
+
   it('should preserve results on resetForm', () => {
     const mockResults = [{ tid: 0, sid: 0 }] as never[];
     useTidAdjustStore.getState().setResults(mockResults);

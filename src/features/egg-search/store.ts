@@ -60,6 +60,7 @@ interface EggSearchActions {
   setFilter: (filter: EggFilter | undefined) => void;
 
   setResults: (results: EggDatetimeSearchResult[]) => void;
+  appendResults: (newItems: EggDatetimeSearchResult[]) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -138,6 +139,7 @@ export const useEggSearchStore = create<EggSearchState & EggSearchActions>()(
       setFilter: (filter) => set({ filter }),
 
       setResults: (results) => set({ results }),
+      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
       resetForm: () => set(createDefaultFormState()),

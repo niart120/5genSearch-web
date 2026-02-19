@@ -37,17 +37,15 @@ describe('egg-search store', () => {
   });
 
   it('should update filter', () => {
-    useEggSearchStore
-      .getState()
-      .setFilter({
-        iv: undefined,
-        natures: ['Adamant'],
-        gender: undefined,
-        ability_slot: undefined,
-        shiny: undefined,
-        min_margin_frames: undefined,
-        stats: undefined,
-      });
+    useEggSearchStore.getState().setFilter({
+      iv: undefined,
+      natures: ['Adamant'],
+      gender: undefined,
+      ability_slot: undefined,
+      shiny: undefined,
+      min_margin_frames: undefined,
+      stats: undefined,
+    });
     expect(useEggSearchStore.getState().filter?.natures).toEqual(['Adamant']);
   });
 
@@ -58,6 +56,16 @@ describe('egg-search store', () => {
 
     useEggSearchStore.getState().clearResults();
     expect(useEggSearchStore.getState().results).toEqual([]);
+  });
+
+  it('should append results incrementally', () => {
+    const batch1 = [{ egg: { id: 1 } }] as never[];
+    const batch2 = [{ egg: { id: 2 } }] as never[];
+    useEggSearchStore.getState().appendResults(batch1);
+    expect(useEggSearchStore.getState().results).toEqual(batch1);
+
+    useEggSearchStore.getState().appendResults(batch2);
+    expect(useEggSearchStore.getState().results).toEqual([...batch1, ...batch2]);
   });
 
   it('should preserve results on resetForm', () => {

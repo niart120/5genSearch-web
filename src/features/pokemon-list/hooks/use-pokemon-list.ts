@@ -37,28 +37,34 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
   const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
 
   // Store actions
-  const setStoreResults = usePokemonListStore((s) => s.setResults);
+  const appendResults = usePokemonListStore((s) => s.appendResults);
   const clearStoreResults = usePokemonListStore((s) => s.clearResults);
-  const storedResults = usePokemonListStore((s) => s.results);
+  const storedRawResults = usePokemonListStore((s) => s.results);
 
   // mount 直後の空配列で Store 上書きを防止
   const searchActiveRef = useRef(false);
+  // 差分同期: 処理済みバッチ数を追跡
+  const prevLengthRef = useRef(0);
 
-  const rawResults = useMemo(
-    () => flattenBatchResults<GeneratedPokemonData>(results, isGeneratedPokemonData),
-    [results]
-  );
-
-  const uiResults = useMemo(() => {
-    if (rawResults.length === 0) return [];
-    return resolve_pokemon_data_batch(rawResults, version, locale);
-  }, [rawResults, version, locale]);
-
-  // 結果同期 — UI 変換済みデータを Store に書き込み
+  // 差分同期 — 新しいバッチのみ処理して Store に追記
   useEffect(() => {
     if (!searchActiveRef.current) return;
-    setStoreResults(uiResults);
-  }, [uiResults, setStoreResults]);
+    const prev = prevLengthRef.current;
+    const current = results.length;
+    if (prev >= current) return;
+    const newBatches = results.slice(prev);
+    prevLengthRef.current = current;
+    const newItems = flattenBatchResults<GeneratedPokemonData>(newBatches, isGeneratedPokemonData);
+    if (newItems.length > 0) {
+      appendResults(newItems);
+    }
+  }, [results, appendResults]);
+
+  // UI 変換は Store の raw データ + locale/version から導出
+  const uiResults = useMemo(() => {
+    if (storedRawResults.length === 0) return [];
+    return resolve_pokemon_data_batch(storedRawResults, version, locale);
+  }, [storedRawResults, version, locale]);
 
   // 検索完了時にフラグリセット
   useEffect(() => {
@@ -75,6 +81,7 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
       filter: PokemonFilter | undefined
     ) => {
       searchActiveRef.current = true;
+      prevLengthRef.current = 0;
       clearStoreResults();
       const task = createPokemonListTask(origins, params, genConfig, filter);
       start([task]);
@@ -86,8 +93,8 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     isLoading,
     isInitialized,
     progress,
-    rawResults,
-    uiResults: storedResults,
+    rawResults: storedRawResults,
+    uiResults,
     error,
     generate,
     cancel,

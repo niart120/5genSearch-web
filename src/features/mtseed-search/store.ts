@@ -38,6 +38,7 @@ interface MtseedSearchActions {
   setUseGpu: (useGpu: boolean) => void;
 
   setResults: (results: MtseedResult[]) => void;
+  appendResults: (newItems: MtseedResult[]) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -83,6 +84,7 @@ export const useMtseedSearchStore = create<MtseedSearchState & MtseedSearchActio
       setUseGpu: (useGpu) => set({ useGpu }),
 
       setResults: (results) => set({ results }),
+      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
       resetForm: () => set(DEFAULT_FORM_STATE),
