@@ -86,33 +86,3 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 判断: SeedOriginTable の手入力カラムは hex 入力が必要なニッチケースであり、JSON インポートが主要パスとなる想定。JSON にはエクスポート時点で `key_code` が含まれるため、手入力時の UX 問題は影響範囲が限定的。ただし、将来的にボタン選択 UI (チェックボックス等) を提供すれば hex 手入力自体が不要になるため、`KeyMask` 露出の必要性も薄れる。
 
 当面の方針: 仕様は `key_code` (= `KeyCode` 値) のまま据え置く。手入力 UX の改善が必要になった場合、ボタン選択 UI の導入を優先し、`KeyMask` の public 化は最終手段とする。
-
-## 2026-02-19: pendingDetailOrigins の依存配列と pending パターン設計
-
-背景: `feature/state-persistence` ブランチのセルフレビュー (M-1) で検出。`stores/search/results.ts` の `pendingDetailOrigins` を `useEffect` 内で読み取り・クリアするパターンにおいて、`pendingDetailOrigins` 自体が依存配列に含まれるため、自己発火のリスクがある。
-
-現行コード概要:
-
-```ts
-// pokemon-list/page.tsx (概念)
-useEffect(() => {
-  const pending = usePendingDetailOrigins();
-  if (pending.length > 0) {
-    clearPendingDetailOrigins();
-    // pending を使って生成開始
-  }
-}, [pendingDetailOrigins, ...]);
-```
-
-浅い修正案: `getState()` で直接読み取ることで依存配列から除外できるが、React concurrent mode との整合性が低下し、根本的な解決にならない。
-
-根本的な問題: Feature 間データ受け渡しの「pending パターン」は、Store に一時値を書き込み → 受信側が消費してクリアする 2 段階方式であり、以下のトレードオフがある。
-
-| 観点 | pending パターン (現行) | 直接書き込みパターン (代替) |
-|------|------------------------|---------------------------|
-| 送信側の責務 | pending に書くだけ (受信側の内部構造を知らない) | 受信側 Store の action を直接呼ぶ (結合度高) |
-| 受信側の制御 | 自分のタイミングで消費できる | 受動的に書き込まれる |
-| 複雑性 | useEffect + クリア + ガード条件 | 単純な関数呼び出し |
-| テスト容易性 | pending → consume のフロー再現が必要 | action 単体テストで済む |
-
-判断: 現時点ではコード量が少なく実動作に問題がないため、コード変更は行わない。pending パターンの再設計は影響範囲が広いため、必要が生じた時点で別 issue として対応する。
