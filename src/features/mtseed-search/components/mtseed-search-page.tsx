@@ -66,7 +66,9 @@ function MtseedSearchPage(): ReactElement {
         setMtOffset(1);
       }
     },
-    [setIsRoamer, setMtOffset]
+    // Zustand store actions are referentially stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   // 検索フック

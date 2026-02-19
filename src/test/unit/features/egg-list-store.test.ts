@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useEggListStore, getEggListInitialState } from '@/features/egg-list/store';
+import { getPartializedState } from '@/test/helpers/store';
 
 const resetStore = () => {
   localStorage.clear();
@@ -83,22 +84,7 @@ describe('egg-list store', () => {
   });
 
   it('should exclude results from partialize', () => {
-    const persist = (
-      useEggListStore as unknown as {
-        persist: {
-          getOptions: () => {
-            partialize?: (state: Record<string, unknown>) => Record<string, unknown>;
-          };
-        };
-      }
-    ).persist;
-    const options = persist.getOptions();
-    const state = useEggListStore.getState();
-    const partialized = options.partialize?.(state as unknown as Record<string, unknown>) as
-      | Record<string, unknown>
-      | undefined;
-
-    expect(partialized).toBeDefined();
+    const partialized = getPartializedState(useEggListStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('eggParams');
     expect(partialized).toHaveProperty('speciesId');

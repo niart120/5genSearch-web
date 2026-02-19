@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { usePokemonListStore, getPokemonListInitialState } from '@/features/pokemon-list/store';
 import { DEFAULT_ENCOUNTER_PARAMS } from '@/features/pokemon-list/types';
+import { getPartializedState } from '@/test/helpers/store';
 
 const resetStore = () => {
   localStorage.clear();
@@ -69,22 +70,7 @@ describe('pokemon-list store', () => {
   });
 
   it('should exclude results from partialize', () => {
-    const persist = (
-      usePokemonListStore as unknown as {
-        persist: {
-          getOptions: () => {
-            partialize?: (state: Record<string, unknown>) => Record<string, unknown>;
-          };
-        };
-      }
-    ).persist;
-    const options = persist.getOptions();
-    const state = usePokemonListStore.getState();
-    const partialized = options.partialize?.(state as unknown as Record<string, unknown>) as
-      | Record<string, unknown>
-      | undefined;
-
-    expect(partialized).toBeDefined();
+    const partialized = getPartializedState(usePokemonListStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('seedInputMode');
     expect(partialized).toHaveProperty('encounterParams');

@@ -3,6 +3,7 @@ import {
   useDatetimeSearchStore,
   getDatetimeSearchInitialState,
 } from '@/features/datetime-search/store';
+import { getPartializedState } from '@/test/helpers/store';
 
 const resetStore = () => {
   localStorage.clear();
@@ -92,22 +93,7 @@ describe('datetime-search store', () => {
   });
 
   it('should exclude results from partialize', () => {
-    const persist = (
-      useDatetimeSearchStore as unknown as {
-        persist: {
-          getOptions: () => {
-            partialize?: (state: Record<string, unknown>) => Record<string, unknown>;
-          };
-        };
-      }
-    ).persist;
-    const options = persist.getOptions();
-    const state = useDatetimeSearchStore.getState();
-    const partialized = options.partialize?.(state as unknown as Record<string, unknown>) as
-      | Record<string, unknown>
-      | undefined;
-
-    expect(partialized).toBeDefined();
+    const partialized = getPartializedState(useDatetimeSearchStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('dateRange');
     expect(partialized).toHaveProperty('useGpu');

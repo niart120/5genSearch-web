@@ -40,13 +40,16 @@ export function useNeedleSearch(): UseNeedleSearchReturn {
         clearResults();
       }
     },
-    [setResults, clearResults]
+    // Zustand store actions are referentially stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const clear = useCallback(() => {
     clearResults();
     setError(undefined);
-  }, [clearResults]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return useMemo(
     () => ({ results: storedResults, error, search, clear }),

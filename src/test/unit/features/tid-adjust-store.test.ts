@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useTidAdjustStore, getTidAdjustInitialState } from '@/features/tid-adjust/store';
+import { getPartializedState } from '@/test/helpers/store';
 
 const resetStore = () => {
   localStorage.clear();
@@ -73,22 +74,7 @@ describe('tid-adjust store', () => {
   });
 
   it('should exclude results from partialize', () => {
-    const persist = (
-      useTidAdjustStore as unknown as {
-        persist: {
-          getOptions: () => {
-            partialize?: (state: Record<string, unknown>) => Record<string, unknown>;
-          };
-        };
-      }
-    ).persist;
-    const options = persist.getOptions();
-    const state = useTidAdjustStore.getState();
-    const partialized = options.partialize?.(state as unknown as Record<string, unknown>) as
-      | Record<string, unknown>
-      | undefined;
-
-    expect(partialized).toBeDefined();
+    const partialized = getPartializedState(useTidAdjustStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('tid');
     expect(partialized).toHaveProperty('saveMode');

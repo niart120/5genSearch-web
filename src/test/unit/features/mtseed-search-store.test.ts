@@ -4,6 +4,7 @@ import {
   getMtseedSearchInitialState,
   DEFAULT_IV_FILTER,
 } from '@/features/mtseed-search/store';
+import { getPartializedState } from '@/test/helpers/store';
 
 const resetStore = () => {
   localStorage.clear();
@@ -83,22 +84,7 @@ describe('mtseed-search store', () => {
   });
 
   it('should exclude results from partialize', () => {
-    const persist = (
-      useMtseedSearchStore as unknown as {
-        persist: {
-          getOptions: () => {
-            partialize?: (state: Record<string, unknown>) => Record<string, unknown>;
-          };
-        };
-      }
-    ).persist;
-    const options = persist.getOptions();
-    const state = useMtseedSearchStore.getState();
-    const partialized = options.partialize?.(state as unknown as Record<string, unknown>) as
-      | Record<string, unknown>
-      | undefined;
-
-    expect(partialized).toBeDefined();
+    const partialized = getPartializedState(useMtseedSearchStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('ivFilter');
     expect(partialized).toHaveProperty('mtOffset');
