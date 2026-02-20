@@ -71,6 +71,8 @@ ProfileSelector (UI) → use-profile hook → Profile Store
 
 Profile Store はプロファイルリストとアクティブ ID を保持する。`ds-config` / `trainer` Store は従来通り Sidebar フォームの「現在値」を保持する。プロファイル切替時に Profile Store → ds-config / trainer Store へ一方向同期する。
 
+`use-profile` hook は `hooks/` に配置する。理由: Profile Store は `stores/settings/` の機能横断 Store であり、`features/ds-config/` 固有ではない。`ds-config` feature 内のコンポーネント (`DsConfigForm` 等) が Store 直接参照しているのは feature 内例外ルールによるもので、Profile Store の参照パターンとは区別する。
+
 ### 3.2 状態の持ち方
 
 #### Profile Store (新規・永続化)
@@ -109,7 +111,7 @@ interface ProfileState {
 
 「ダーティ」= アクティブプロファイル保存時の `ProfileData` と、現在の `ds-config` + `trainer` Store の状態が不一致。
 
-判定は `use-profile` hook 内で `useMemo` を使い、アクティブプロファイルの `data` と現在の Store 状態を shallow compare する。ダーティ判定は UI 表示 (保存ボタンの強調) とプロファイル切替時の確認ダイアログ表示に使用する。
+判定は `use-profile` hook 内で `useMemo` を使い、アクティブプロファイルの `data` と現在の Store 状態を `JSON.stringify` で deep equal 比較する。ダーティ判定は UI 表示 (保存ボタンの強調) とプロファイル切替時の確認ダイアログ表示に使用する。
 
 ### 3.4 プロファイル切替フロー
 
@@ -192,7 +194,7 @@ function applyProfile(data: ProfileData): void {
 ```typescript
 // src/stores/settings/profile.ts
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, subscribeWithSelector } from 'zustand/middleware';
 import type { DsConfig, GameStartConfig, Timer0VCountRange } from '../../wasm/wasm_pkg.js';
 
 export interface ProfileData {
@@ -240,8 +242,9 @@ const DEFAULT_STATE: ProfileState = {
 };
 
 export const useProfileStore = create<ProfileState & ProfileActions>()(
-  persist(
-    (set, get) => ({
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
       ...DEFAULT_STATE,
 
       createProfile: (name, data) => {
@@ -299,10 +302,11 @@ export const useProfileStore = create<ProfileState & ProfileActions>()(
 
       reset: () => set(DEFAULT_STATE),
     }),
-    {
-      name: 'profiles',
-      version: 1,
-    }
+      {
+        name: 'profiles',
+        version: 1,
+      }
+    )
   )
 );
 
@@ -332,12 +336,10 @@ function isProfileDataEqual(a: ProfileData, b: ProfileData): boolean {
 export function useProfile() {
   const profiles = useProfileStore((s) => s.profiles);
   const activeProfileId = useProfileStore((s) => s.activeProfileId);
-  const createProfile = useProfileStore((s) => s.createProfile);
-  const saveActiveProfile = useProfileStore((s) => s.saveActiveProfile);
-  const renameProfile = useProfileStore((s) => s.renameProfile);
-  const deleteProfile = useProfileStore((s) => s.deleteProfile);
-  const setActiveProfileId = useProfileStore((s) => s.setActiveProfileId);
-  const importProfile = useProfileStore((s) => s.importProfile);
+
+  // Actions は参照安定のため getState() 経由で取得 (rerender-defer-reads)
+  // イベントハンドラ内でのみ使用するため購読不要
+  const actions = useProfileStore.getState();
 
   // 現在の Store 状態を購読 (ダーティ判定用)
   const config = useDsConfigStore((s) => s.config);
@@ -368,12 +370,12 @@ export function useProfile() {
     activeProfile,
     isDirty,
     currentData,
-    createProfile,
-    saveActiveProfile,
-    renameProfile,
-    deleteProfile,
-    setActiveProfileId,
-    importProfile,
+    createProfile: actions.createProfile,
+    saveActiveProfile: actions.saveActiveProfile,
+    renameProfile: actions.renameProfile,
+    deleteProfile: actions.deleteProfile,
+    setActiveProfileId: actions.setActiveProfileId,
+    importProfile: actions.importProfile,
     collectCurrentData,
   } as const;
 }
@@ -412,6 +414,7 @@ Sidebar 上部に配置。ドロップダウンでプロファイル選択 + 保
 ```tsx
 // src/features/ds-config/components/profile-import-export.tsx
 // エクスポート: アクティブプロファイルを JSON ダウンロード
+//   → services/export.ts の downloadFile を再利用する
 // インポート: ファイル選択 → バリデーション → 新規プロファイルとして追加
 ```
 
@@ -551,3 +554,5 @@ UI ラベルは `<Trans>` / `t` マクロで Lingui を使用する。主な翻�
 - [ ] ユニットテスト: Profile Store
 - [ ] ユニットテスト: JSON バリデーション
 - [ ] コンポーネントテスト: ProfileSelector
+- [ ] `spec/agent/architecture/state-management.md` Section 3.1 永続化対象一覧にプロファイルを追記
+- [ ] `spec/agent/architecture/frontend-structure.md` stores/settings/ ツリーに `profile.ts` を追記
