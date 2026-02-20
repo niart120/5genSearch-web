@@ -4,7 +4,6 @@ import { msg } from '@lingui/core/macro';
 import { i18n } from '@lingui/core';
 import { Save, Plus, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -146,65 +145,60 @@ function ProfileSelector() {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center">
-        <Label className="text-xs">
-          <Trans>Profile</Trans>
-        </Label>
-        <div className="ml-auto grid grid-cols-6">
-          {/* 上書き保存 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={handleSave}
-            disabled={!activeProfileId || !isDirty}
-            aria-label={t`Save`}
-            title={t`Save`}
-          >
-            <Save className="size-3.5" />
-          </Button>
+      <div className="grid grid-cols-6">
+        {/* 新規作成 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={handleNewClick}
+          aria-label={t`Save as new`}
+          title={t`Save as new`}
+        >
+          <Plus className="size-3.5" />
+        </Button>
 
-          {/* 新規作成 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={handleNewClick}
-            aria-label={t`Save as new`}
-            title={t`Save as new`}
-          >
-            <Plus className="size-3.5" />
-          </Button>
+        {/* 上書き保存 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={handleSave}
+          disabled={!activeProfileId || !isDirty}
+          aria-label={t`Save`}
+          title={t`Save`}
+        >
+          <Save className="size-3.5" />
+        </Button>
 
-          {/* リネーム */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={handleRename}
-            disabled={!activeProfileId}
-            aria-label={t`Rename`}
-            title={t`Rename`}
-          >
-            <Pencil className="size-3.5" />
-          </Button>
+        {/* リネーム */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={handleRename}
+          disabled={!activeProfileId}
+          aria-label={t`Rename`}
+          title={t`Rename`}
+        >
+          <Pencil className="size-3.5" />
+        </Button>
 
-          {/* 削除 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={handleDeleteClick}
-            disabled={!activeProfileId}
-            aria-label={t`Delete`}
-            title={t`Delete`}
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
+        {/* 削除 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={handleDeleteClick}
+          disabled={!activeProfileId}
+          aria-label={t`Delete`}
+          title={t`Delete`}
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
 
-          {/* インポート/エクスポート */}
-          <ProfileImportExport />
-        </div>
+        {/* インポート/エクスポート */}
+        <ProfileImportExport />
       </div>
 
       <Select value={activeProfileId ?? NO_PROFILE_VALUE} onValueChange={handleSelect}>
