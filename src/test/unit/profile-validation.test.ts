@@ -51,9 +51,9 @@ describe('validateProfileJson', () => {
 
   it('tid/sid が JSON の null でも undefined として正常', () => {
     // JSON.parse は null を生成し得る — 境界で undefined に正規化されることを検証
-    // eslint-disable-next-line unicorn/no-null -- JSON boundary test: null is the expected input
     const raw = JSON.stringify({
       ...VALID_JSON,
+      // eslint-disable-next-line unicorn/no-null -- JSON boundary test: null is the expected input from JSON.parse
       data: { ...VALID_JSON.data, tid: null, sid: null },
     });
     const parsed: unknown = JSON.parse(raw);

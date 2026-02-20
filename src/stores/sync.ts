@@ -7,10 +7,13 @@ import type { SupportedLocale } from '../i18n';
 import type { ProfileData } from './settings/profile';
 
 export function applyProfileData(data: ProfileData): void {
-  useDsConfigStore.getState().replaceConfig(data.config);
-  useDsConfigStore.getState().setRanges(data.ranges);
-  useDsConfigStore.getState().setTimer0Auto(data.timer0Auto);
-  useDsConfigStore.setState({ gameStart: data.gameStart });
+  // ds-config Store を 1 回の setState でバッチ更新し、persist の書き込み回数を抑える
+  useDsConfigStore.setState({
+    config: data.config,
+    ranges: data.ranges,
+    timer0Auto: data.timer0Auto,
+    gameStart: data.gameStart,
+  });
   useTrainerStore.getState().setTrainer(data.tid, data.sid);
 }
 
