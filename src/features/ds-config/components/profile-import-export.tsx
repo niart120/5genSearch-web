@@ -70,7 +70,7 @@ function ProfileImportExport() {
         aria-label={t`Import`}
         title={t`Import`}
       >
-        <Upload className="size-3.5" />
+        <Download className="size-3.5" />
       </Button>
       <Button
         variant="ghost"
@@ -81,7 +81,7 @@ function ProfileImportExport() {
         aria-label={t`Export`}
         title={t`Export`}
       >
-        <Download className="size-3.5" />
+        <Upload className="size-3.5" />
       </Button>
       <input
         ref={fileInputRef}
