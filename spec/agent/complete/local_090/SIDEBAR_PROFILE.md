@@ -46,6 +46,7 @@ Sidebar に表示される DS 設定・トレーナー情報を「プロファ�
 | `src/features/ds-config/components/profile-selector.tsx` | 新規 | プロファイル選択ドロップダウン + 保存/削除ボタン |
 | `src/features/ds-config/components/profile-name-dialog.tsx` | 新規 | プロファイル名入力ダイアログ (新規作成・リネーム) |
 | `src/features/ds-config/components/profile-confirm-dialog.tsx` | 新規 | 未保存変更の破棄/保存確認ダイアログ |
+| `src/features/ds-config/components/profile-delete-dialog.tsx` | 新規 | 削除確認ダイアログ (AlertDialog) |
 | `src/features/ds-config/components/profile-import-export.tsx` | 新規 | インポート/エクスポートボタン群 |
 | `src/features/ds-config/index.ts` | 修正 | 新コンポーネントの re-export 追加 |
 | `src/app.tsx` | 修正 | Sidebar 内に `ProfileSelector` を配置 |
@@ -55,6 +56,7 @@ Sidebar に表示される DS 設定・トレーナー情報を「プロファ�
 | `src/i18n/locales/en/messages.po` | 修正 | 英語翻訳追加 |
 | `src/test/unit/profile-store.test.ts` | 新規 | Profile Store ユニットテスト |
 | `src/test/components/profile-selector.test.tsx` | 新規 | ProfileSelector コンポーネントテスト |
+| `src/test/unit/stores/sync.test.ts` | 修正 | `applyProfileData` の Store 反映テスト追加 |
 
 ## 3. 設計方針
 
@@ -111,7 +113,7 @@ interface ProfileState {
 
 「ダーティ」= アクティブプロファイル保存時の `ProfileData` と、現在の `ds-config` + `trainer` Store の状態が不一致。
 
-判定は `use-profile` hook 内で `useMemo` を使い、アクティブプロファイルの `data` と現在の Store 状態を `JSON.stringify` で deep equal 比較する。ダーティ判定は UI 表示 (保存ボタンの強調) とプロファイル切替時の確認ダイアログ表示に使用する。
+判定は `use-profile` hook 内で `useMemo` を使い、アクティブプロファイルの `data` と現在の Store 状態をフィールド単位で deep equal 比較する。`JSON.stringify` はプロパティ順序依存・`undefined` フィールド除外の問題があるため使用しない。ダーティ判定は UI 表示 (保存ボタンの強調) とプロファイル切替時の確認ダイアログ表示に使用する。
 
 ### 3.4 プロファイル切替フロー
 
@@ -132,11 +134,14 @@ interface ProfileState {
 
 ```typescript
 // プロファイル切替時: Profile Store → ds-config / trainer Store
-function applyProfile(data: ProfileData): void {
-  useDsConfigStore.getState().replaceConfig(data.config);
-  useDsConfigStore.getState().setRanges(data.ranges);
-  useDsConfigStore.getState().setTimer0Auto(data.timer0Auto);
-  useDsConfigStore.getState().setGameStart(data.gameStart);
+// ds-config Store は 1 回の setState でバッチ更新し、persist の書き込み回数を抑える
+function applyProfileData(data: ProfileData): void {
+  useDsConfigStore.setState({
+    config: data.config,
+    ranges: data.ranges,
+    timer0Auto: data.timer0Auto,
+    gameStart: data.gameStart,
+  });
   useTrainerStore.getState().setTrainer(data.tid, data.sid);
 }
 ```
@@ -330,7 +335,12 @@ function collectCurrentData(): ProfileData {
 }
 
 function isProfileDataEqual(a: ProfileData, b: ProfileData): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  // フィールド単位で比較する (JSON.stringify はプロパティ順序依存・undefined 除外の問題がある)
+  if (a.timer0Auto !== b.timer0Auto) return false;
+  if (a.tid !== b.tid || a.sid !== b.sid) return false;
+  // config / mac / ranges / gameStart の各フィールドを順に比較
+  // (省略: 実装は use-profile.ts を参照)
+  return true;
 }
 
 export function useProfile() {
@@ -393,13 +403,43 @@ Sidebar 上部に配置。ドロップダウンでプロファイル選択 + 保
 // - ボタン群: 保存 (上書き) / 新規作成 / 削除 / インポート / エクスポート
 ```
 
+#### ダイアログ状態管理
+
+複数のダイアログ (名前入力・切替確認・削除確認) の開閉状態を `useReducer` + 判別共用体型 `DialogState` で管理する。
+
+```typescript
+type DialogState =
+  | { kind: 'closed' }
+  | { kind: 'name'; mode: 'create' | 'rename'; defaultName: string }
+  | { kind: 'confirm-switch'; pendingSwitchId: string | undefined }
+  | { kind: 'delete' };
+```
+
+同時に開くダイアログは 1 つだけであり、`kind` による排他制御で不正な状態の組み合わせを型レベルで防止する。
+
+#### Toast メッセージの i18n パターン
+
+Toast メッセージは `msg` (from `@lingui/core/macro`) + `i18n._()` (from `@lingui/core`) で翻訳する。`useLingui().t` は React コンポーネントのレンダリングスコープ用であり、`useCallback` 内で使用すると `t` が deps に入り言語切替のたびにコールバックが再生成される。`i18n._()` はシングルトン経由のため deps に含まれず、この問題を回避できる。
+
 ### 4.4 確認ダイアログ
+
+#### 切替確認ダイアログ
 
 ```tsx
 // src/features/ds-config/components/profile-confirm-dialog.tsx
 // プロファイル切替時にダーティ状態なら表示
 // 選択肢: 「保存して切替」「破棄して切替」「キャンセル」
 ```
+
+#### 削除確認ダイアログ
+
+```tsx
+// src/features/ds-config/components/profile-delete-dialog.tsx
+// プロファイル削除時に表示 (Radix AlertDialog)
+// 選択肢: 「削除」(destructive) / 「キャンセル」
+```
+
+削除は不可逆操作のため、切替確認と同様に AlertDialog で確認を必須とする。
 
 ### 4.5 名前入力ダイアログ
 
@@ -409,12 +449,15 @@ Sidebar 上部に配置。ドロップダウンでプロファイル選択 + 保
 // 入力: プロファイル名 (必須、空文字不可、最大 50 文字)
 ```
 
+Radix Dialog は `open={false}` 時に content を unmount するため、`useState(defaultName)` は再 open 時に正しく初期化される。`useEffect` による同期は不要。
+
 ### 4.6 インポート/エクスポート
 
 ```tsx
 // src/features/ds-config/components/profile-import-export.tsx
-// エクスポート: アクティブプロファイルを JSON ダウンロード
+// エクスポート: アクティブプロファイルの保存済みデータ (activeProfile.data) を JSON ダウンロード
 //   → services/export.ts の downloadFile を再利用する
+//   → 未保存の変更 (collectCurrentData()) は含めない
 // インポート: ファイル選択 → バリデーション → 新規プロファイルとして追加
 ```
 
@@ -439,12 +482,14 @@ import { useDsConfigStore } from './settings/ds-config';
 import { useTrainerStore } from './settings/trainer';
 import type { ProfileData } from './settings/profile';
 
+// ds-config Store は 1 回の setState でバッチ更新し、persist の書き込み回数を抑える
 function applyProfileData(data: ProfileData): void {
-  useDsConfigStore.getState().replaceConfig(data.config);
-  useDsConfigStore.getState().setRanges(data.ranges);
-  useDsConfigStore.getState().setTimer0Auto(data.timer0Auto);
-  // gameStart は setGameStart ではなく直接セット (normalize は不要、保存時の値をそのまま復元)
-  useDsConfigStore.setState({ gameStart: data.gameStart });
+  useDsConfigStore.setState({
+    config: data.config,
+    ranges: data.ranges,
+    timer0Auto: data.timer0Auto,
+    gameStart: data.gameStart,
+  });
   useTrainerStore.getState().setTrainer(data.tid, data.sid);
 }
 
@@ -500,6 +545,8 @@ UI ラベルは `<Trans>` / `t` マクロで Lingui を使用する。主な翻�
 | `Profile deleted` | プロファイルを削除しました | Profile deleted |
 | `Profile imported` | プロファイルをインポートしました | Profile imported |
 | `Invalid profile file` | 無効なプロファイルファイルです | Invalid profile file |
+| `Delete profile` | プロファイルを削除 | Delete profile |
+| `Are you sure you want to delete "{profileName}"? This action cannot be undone.` | 「{profileName}」を削除しますか？この操作は元に戻せません。 | Are you sure you want to delete “{profileName}”? This action cannot be undone. |
 
 ## 5. テスト方針
 
@@ -533,9 +580,17 @@ UI ラベルは `<Trans>` / `t` マクロで Lingui を使用する。主な翻�
 | プロファイル一覧表示 | Store にセットしたプロファイルがドロップダウンに列挙される |
 | 新規作成フロー | 「新規保存」→ 名前入力ダイアログ → 名前入力 → プロファイル作成 |
 
-### 5.4 統合テスト
+### 5.4 ユニットテスト: Store 間同期 (`src/test/unit/stores/sync.test.ts`)
 
-本機能は WASM / Worker を使用しないため、統合テストは不要。Store 間連携はユニットテストで「`applyProfileData` 後の ds-config / trainer Store の状態」としてカバーする。
+| テスト | 検証内容 |
+|--------|----------|
+| `applyProfileData` → ds-config | `config`, `ranges`, `timer0Auto`, `gameStart` が ds-config Store に反映される |
+| `applyProfileData` → trainer | `tid`, `sid` が trainer Store に反映される |
+| `applyProfileData` (tid/sid = undefined) | `undefined` の場合も正しく反映される |
+
+### 5.5 統合テスト
+
+本機能は WASM / Worker を使用しないため、統合テストは不要。Store 間連携はユニットテスト (§5.4) でカバーする。
 
 ## 6. 実装チェックリスト
 
@@ -545,6 +600,7 @@ UI ラベルは `<Trans>` / `t` マクロで Lingui を使用する。主な翻�
 - [x] `ProfileSelector` コンポーネント新規作成
 - [x] `ProfileNameDialog` コンポーネント新規作成
 - [x] `ProfileConfirmDialog` コンポーネント新規作成
+- [x] `ProfileDeleteDialog` コンポーネント新規作成
 - [x] `ProfileImportExport` コンポーネント新規作成
 - [x] `features/ds-config/index.ts` re-export 更新
 - [x] `app.tsx` に `ProfileSelector` 配置
@@ -553,6 +609,7 @@ UI ラベルは `<Trans>` / `t` マクロで Lingui を使用する。主な翻�
 - [x] 翻訳キー追加 (`pnpm lingui:extract` → `messages.po` 編集 → `pnpm lingui:compile`)
 - [x] ユニットテスト: Profile Store
 - [x] ユニットテスト: JSON バリデーション
+- [x] ユニットテスト: `applyProfileData` Store 間同期
 - [x] コンポーネントテスト: ProfileSelector
 - [x] `spec/agent/architecture/state-management.md` Section 3.1 永続化対象一覧にプロファイルを追記
 - [x] `spec/agent/architecture/frontend-structure.md` stores/settings/ ツリーに `profile.ts` を追記
