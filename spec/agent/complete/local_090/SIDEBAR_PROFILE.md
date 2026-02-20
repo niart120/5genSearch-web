@@ -539,20 +539,20 @@ UI ラベルは `<Trans>` / `t` マクロで Lingui を使用する。主な翻�
 
 ## 6. 実装チェックリスト
 
-- [ ] Profile Store (`stores/settings/profile.ts`) 新規作成
-- [ ] `stores/settings/index.ts` に re-export 追加
-- [ ] `use-profile` hook (`hooks/use-profile.ts`) 新規作成
-- [ ] `ProfileSelector` コンポーネント新規作成
-- [ ] `ProfileNameDialog` コンポーネント新規作成
-- [ ] `ProfileConfirmDialog` コンポーネント新規作成
-- [ ] `ProfileImportExport` コンポーネント新規作成
-- [ ] `features/ds-config/index.ts` re-export 更新
-- [ ] `app.tsx` に `ProfileSelector` 配置
-- [ ] `stores/sync.ts` に Profile 同期追加
-- [ ] `lib/validation.ts` に JSON バリデーション追加
-- [ ] 翻訳キー追加 (`pnpm lingui:extract` → `messages.po` 編集 → `pnpm lingui:compile`)
-- [ ] ユニットテスト: Profile Store
-- [ ] ユニットテスト: JSON バリデーション
-- [ ] コンポーネントテスト: ProfileSelector
-- [ ] `spec/agent/architecture/state-management.md` Section 3.1 永続化対象一覧にプロファイルを追記
-- [ ] `spec/agent/architecture/frontend-structure.md` stores/settings/ ツリーに `profile.ts` を追記
+- [x] Profile Store (`stores/settings/profile.ts`) 新規作成
+- [x] `stores/settings/index.ts` に re-export 追加
+- [x] `use-profile` hook (`hooks/use-profile.ts`) 新規作成
+- [x] `ProfileSelector` コンポーネント新規作成
+- [x] `ProfileNameDialog` コンポーネント新規作成
+- [x] `ProfileConfirmDialog` コンポーネント新規作成
+- [x] `ProfileImportExport` コンポーネント新規作成
+- [x] `features/ds-config/index.ts` re-export 更新
+- [x] `app.tsx` に `ProfileSelector` 配置
+- [x] `stores/sync.ts` に Profile 同期追加
+- [x] `lib/validation.ts` に JSON バリデーション追加
+- [x] 翻訳キー追加 (`pnpm lingui:extract` → `messages.po` 編集 → `pnpm lingui:compile`)
+- [x] ユニットテスト: Profile Store
+- [x] ユニットテスト: JSON バリデーション
+- [x] コンポーネントテスト: ProfileSelector
+- [x] `spec/agent/architecture/state-management.md` Section 3.1 永続化対象一覧にプロファイルを追記
+- [x] `spec/agent/architecture/frontend-structure.md` stores/settings/ ツリーに `profile.ts` を追記

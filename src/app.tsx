@@ -7,7 +7,12 @@ import { FeatureContent } from '@/components/layout/feature-content';
 import { Toaster } from '@/components/ui/toast';
 import { Tabs } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { DsConfigForm, TrainerConfigForm, GameStartConfigForm } from '@/features/ds-config';
+import {
+  DsConfigForm,
+  TrainerConfigForm,
+  GameStartConfigForm,
+  ProfileSelector,
+} from '@/features/ds-config';
 import { useUiStore } from '@/stores/settings/ui';
 import type { FeatureId } from '@/lib/navigation';
 
@@ -18,6 +23,7 @@ function App() {
 
   const sidebarContent = (
     <div className="space-y-6">
+      <ProfileSelector />
       <DsConfigForm />
       <TrainerConfigForm />
       <GameStartConfigForm />

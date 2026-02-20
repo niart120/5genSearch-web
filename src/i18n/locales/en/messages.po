@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: results.length
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:167
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:171
 msgid "{0} seeds found"
 msgstr "{0} seeds found"
 
@@ -82,7 +82,7 @@ msgstr "Advance"
 msgid "Advance Range"
 msgstr "Advance Range"
 
-#: src/features/egg-list/components/egg-list-page.tsx:191
+#: src/features/egg-list/components/egg-list-page.tsx:172
 msgid "Advance range invalid"
 msgstr "Advance range invalid"
 
@@ -153,6 +153,8 @@ msgstr "BW2 Stationary/Wild (offset 2)"
 #: src/components/forms/search-confirmation-dialog.tsx:53
 #: src/components/forms/search-controls.tsx:53
 #: src/features/datetime-search/components/template-selection-dialog.tsx:204
+#: src/features/ds-config/components/profile-confirm-dialog.tsx:38
+#: src/features/ds-config/components/profile-name-dialog.tsx:71
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -164,7 +166,7 @@ msgstr "Category"
 msgid "Clear"
 msgstr "Clear"
 
-#: src/components/forms/seed-origin-table.tsx:164
+#: src/components/forms/seed-origin-table.tsx:167
 msgid "Clear all"
 msgstr "Clear all"
 
@@ -215,7 +217,7 @@ msgstr "Data sources"
 msgid "Date"
 msgstr "Date"
 
-#: src/components/forms/seed-input-section.tsx:303
+#: src/components/forms/seed-input-section.tsx:307
 msgid "Date & time"
 msgstr "Date & time"
 
@@ -247,11 +249,13 @@ msgid "Def"
 msgstr "Def"
 
 #: src/components/forms/seed-origin-table.tsx:104
+#: src/features/ds-config/components/profile-selector.tsx:180
+#: src/features/ds-config/components/profile-selector.tsx:181
 msgid "Delete"
 msgstr "Delete"
 
 #. placeholder {0}: String(index + 1)
-#: src/components/forms/seed-origin-table.tsx:141
+#: src/components/forms/seed-origin-table.tsx:144
 msgid "Delete row {0}"
 msgstr "Delete row {0}"
 
@@ -266,6 +270,10 @@ msgstr "Deselect all"
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:39
 msgid "Details"
 msgstr "Details"
+
+#: src/features/ds-config/components/profile-confirm-dialog.tsx:41
+msgid "Discard and switch"
+msgstr "Discard and switch"
 
 #: src/features/about/components/about-page.tsx:73
 msgid "Disclaimer"
@@ -284,7 +292,7 @@ msgstr "Download as JSON"
 msgid "Downloaded {filename}"
 msgstr "Downloaded {filename}"
 
-#: src/components/forms/seed-input-section.tsx:295
+#: src/components/forms/seed-input-section.tsx:299
 msgid "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 msgstr "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 
@@ -334,7 +342,7 @@ msgstr "Enable filter"
 #~ msgid "Encounter category"
 #~ msgstr "Encounter category"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:374
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:395
 msgid "Encounter method"
 msgstr "Encounter method"
 
@@ -342,11 +350,11 @@ msgstr "Encounter method"
 msgid "Encounter result"
 msgstr "Encounter result"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:273
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:294
 msgid "Encounter settings"
 msgstr "Encounter settings"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:279
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:300
 msgid "Encounter type"
 msgstr "Encounter type"
 
@@ -354,11 +362,15 @@ msgstr "Encounter type"
 msgid "End date"
 msgstr "End date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:120
+#: src/features/datetime-search/components/datetime-search-page.tsx:93
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:111
+#: src/features/ds-config/components/profile-name-dialog.tsx:53
+msgid "Enter a profile name."
+msgstr "Enter a profile name."
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:84
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
@@ -372,6 +384,8 @@ msgid "Everstone"
 msgstr "Everstone"
 
 #: src/components/data-display/export-toolbar.tsx:58
+#: src/features/ds-config/components/profile-import-export.tsx:80
+#: src/features/ds-config/components/profile-import-export.tsx:83
 msgid "Export"
 msgstr "Export"
 
@@ -465,11 +479,13 @@ msgstr "Hour"
 msgid "HP"
 msgstr "HP"
 
-#: src/components/forms/seed-input-section.tsx:287
+#: src/components/forms/seed-input-section.tsx:291
+#: src/features/ds-config/components/profile-import-export.tsx:69
+#: src/features/ds-config/components/profile-import-export.tsx:72
 msgid "Import"
 msgstr "Import"
 
-#: src/components/forms/seed-input-section.tsx:359
+#: src/components/forms/seed-input-section.tsx:363
 msgid "Import JSON file"
 msgstr "Import JSON file"
 
@@ -477,17 +493,22 @@ msgstr "Import JSON file"
 msgid "Include details"
 msgstr "Include details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:254
+#: src/features/datetime-search/components/datetime-search-page.tsx:227
 #: src/features/needle/components/needle-result-columns.tsx:33
 #: src/features/needle/components/seed-input.tsx:119
 msgid "Initial Seed"
 msgstr "Initial Seed"
 
+#: src/features/ds-config/components/profile-import-export.tsx:47
+#: src/features/ds-config/components/profile-import-export.tsx:53
+msgid "Invalid profile file"
+msgstr "Invalid profile file"
+
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:102
 msgid "IV Range"
 msgstr "IV Range"
 
-#: src/features/egg-search/components/egg-search-page.tsx:130
+#: src/features/egg-search/components/egg-search-page.tsx:90
 msgid "IVs must be in the range 0 to 31"
 msgstr "IVs must be in the range 0 to 31"
 
@@ -520,7 +541,7 @@ msgstr "LCG Seed"
 msgid "LCG Seed (Hex)"
 msgstr "LCG Seed (Hex)"
 
-#: src/components/forms/seed-input-section.tsx:326
+#: src/components/forms/seed-input-section.tsx:330
 msgid "LCG Seeds (hex, one per line)"
 msgstr "LCG Seeds (hex, one per line)"
 
@@ -547,7 +568,7 @@ msgstr "Line {0}: \"{1}\" — {2}"
 #~ msgid "Load search results"
 #~ msgstr "Load search results"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:319
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:340
 msgid "Location"
 msgstr "Location"
 
@@ -575,7 +596,7 @@ msgid "Max"
 msgstr "Max"
 
 #: src/components/forms/egg-params-form.tsx:398
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:423
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:444
 msgid "Max advance"
 msgstr "Max advance"
 
@@ -588,14 +609,14 @@ msgstr "Max Advance"
 msgid "Max advance must be ≥ offset"
 msgstr "Max advance must be ≥ offset"
 
-#: src/features/egg-search/components/egg-search-page.tsx:128
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:94
+#: src/features/egg-search/components/egg-search-page.tsx:88
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:96
 msgid "Max advance must be ≥ start offset"
 msgstr "Max advance must be ≥ start offset"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:240
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:213
 msgid "Memory Link"
 msgstr "Memory Link"
 
@@ -604,7 +625,7 @@ msgstr "Memory Link"
 msgid "Min"
 msgstr "Min"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:77
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:81
 msgid "Min IV must be less than or equal to max IV"
 msgstr "Min IV must be less than or equal to max IV"
 
@@ -620,7 +641,7 @@ msgstr "Min power"
 msgid "Minute"
 msgstr "Minute"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:388
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:409
 msgid "Moving"
 msgstr "Moving"
 
@@ -633,7 +654,7 @@ msgstr "Moving encounter"
 msgid "MT Advances"
 msgstr "MT Advances"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:78
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:82
 msgid "MT Advances must be 0 or greater"
 msgstr "MT Advances must be 0 or greater"
 
@@ -642,7 +663,7 @@ msgstr "MT Advances must be 0 or greater"
 msgid "MT Seed"
 msgstr "MT Seed"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:112
+#: src/features/datetime-search/components/datetime-search-page.tsx:85
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 
@@ -696,35 +717,39 @@ msgstr "Nidoran♀"
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
 
+#: src/features/ds-config/components/profile-selector.tsx:128
+msgid "No profile"
+msgstr "No profile"
+
 #: src/components/data-display/empty-state.tsx:11
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:189
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:193
 #: src/features/needle/components/needle-page.tsx:258
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:280
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:253
 msgid "No results"
 msgstr "No results"
 
-#: src/features/egg-list/components/egg-list-page.tsx:298
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:270
+#: src/features/egg-list/components/egg-list-page.tsx:280
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:274
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
-#: src/features/egg-search/components/egg-search-page.tsx:290
+#: src/features/egg-search/components/egg-search-page.tsx:250
 msgid "No results found. Configure parameters and start searching."
 msgstr "No results found. Configure parameters and start searching."
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:305
+#: src/features/datetime-search/components/datetime-search-page.tsx:278
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:233
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:206
 msgid "No save"
 msgstr "No save"
 
-#: src/components/forms/seed-origin-table.tsx:155
+#: src/components/forms/seed-origin-table.tsx:158
 msgid "No seeds loaded"
 msgstr "No seeds loaded"
 
-#: src/features/egg-list/components/egg-list-page.tsx:190
+#: src/features/egg-list/components/egg-list-page.tsx:171
 msgid "No seeds specified"
 msgstr "No seeds specified"
 
@@ -765,11 +790,11 @@ msgstr "Offset"
 msgid "Offset must be 0 or positive"
 msgstr "Offset must be 0 or positive"
 
-#: src/features/egg-list/components/egg-list-page.tsx:192
+#: src/features/egg-list/components/egg-list-page.tsx:173
 msgid "Offset must be non-negative"
 msgstr "Offset must be non-negative"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:92
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:94
 msgid "One or more seeds are invalid"
 msgstr "One or more seeds are invalid"
 
@@ -781,7 +806,7 @@ msgstr "Parent ♀ IVs"
 msgid "Parent ♂ IVs"
 msgstr "Parent ♂ IVs"
 
-#: src/features/egg-list/components/egg-list-page.tsx:193
+#: src/features/egg-list/components/egg-list-page.tsx:174
 msgid "Parent IV out of range"
 msgstr "Parent IV out of range"
 
@@ -789,7 +814,7 @@ msgstr "Parent IV out of range"
 msgid "Pokemon"
 msgstr "Pokemon"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:344
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:365
 msgid "Pokémon"
 msgstr "Pokémon"
 
@@ -801,6 +826,30 @@ msgstr "Pokémon"
 msgid "Pokemon generation result details"
 msgstr "Pokemon generation result details"
 
+#: src/features/ds-config/components/profile-selector.tsx:118
+#: src/features/ds-config/components/profile-selector.tsx:123
+msgid "Profile"
+msgstr "Profile"
+
+#: src/features/ds-config/components/profile-selector.tsx:112
+msgid "Profile deleted"
+msgstr "Profile deleted"
+
+#: src/features/ds-config/components/profile-import-export.tsx:51
+msgid "Profile imported"
+msgstr "Profile imported"
+
+#: src/features/ds-config/components/profile-name-dialog.tsx:58
+#: src/features/ds-config/components/profile-name-dialog.tsx:66
+msgid "Profile name"
+msgstr "Profile name"
+
+#: src/features/ds-config/components/profile-selector.tsx:62
+#: src/features/ds-config/components/profile-selector.tsx:74
+#: src/features/ds-config/components/profile-selector.tsx:88
+msgid "Profile saved"
+msgstr "Profile saved"
+
 #: src/features/ds-config/components/ds-config-form.tsx:80
 #: src/features/ds-config/components/ds-config-form.tsx:83
 msgid "Region"
@@ -809,6 +858,13 @@ msgstr "Region"
 #: src/components/data-display/search-progress.tsx:60
 msgid "Remaining"
 msgstr "Remaining"
+
+#: src/features/ds-config/components/profile-name-dialog.tsx:50
+#: src/features/ds-config/components/profile-name-dialog.tsx:74
+#: src/features/ds-config/components/profile-selector.tsx:168
+#: src/features/ds-config/components/profile-selector.tsx:169
+msgid "Rename"
+msgstr "Rename"
 
 #: src/features/about/components/about-page.tsx:57
 msgid "Repository"
@@ -819,9 +875,9 @@ msgstr "Repository"
 msgid "Reset filter"
 msgstr "Reset filter"
 
-#: src/components/forms/seed-input-section.tsx:317
-#: src/components/forms/seed-input-section.tsx:337
-#: src/components/forms/seed-input-section.tsx:372
+#: src/components/forms/seed-input-section.tsx:321
+#: src/components/forms/seed-input-section.tsx:341
+#: src/components/forms/seed-input-section.tsx:376
 msgid "Resolved seeds"
 msgstr "Resolved seeds"
 
@@ -832,19 +888,35 @@ msgstr "Resolved seeds"
 msgid "Result details"
 msgstr "Result details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:287
-#: src/features/egg-list/components/egg-list-page.tsx:277
-#: src/features/egg-search/components/egg-search-page.tsx:282
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:179
+#: src/features/datetime-search/components/datetime-search-page.tsx:260
+#: src/features/egg-list/components/egg-list-page.tsx:259
+#: src/features/egg-search/components/egg-search-page.tsx:242
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:183
 #: src/features/needle/components/needle-page.tsx:251
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:249
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:272
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:253
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:245
 msgid "Results"
 msgstr "Results"
 
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:94
 msgid "Roamer"
 msgstr "Roamer"
+
+#: src/features/ds-config/components/profile-name-dialog.tsx:74
+#: src/features/ds-config/components/profile-selector.tsx:145
+#: src/features/ds-config/components/profile-selector.tsx:146
+msgid "Save"
+msgstr "Save"
+
+#: src/features/ds-config/components/profile-confirm-dialog.tsx:44
+msgid "Save and switch"
+msgstr "Save and switch"
+
+#: src/features/ds-config/components/profile-name-dialog.tsx:50
+#: src/features/ds-config/components/profile-selector.tsx:156
+#: src/features/ds-config/components/profile-selector.tsx:157
+msgid "Save as new"
+msgstr "Save as new"
 
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:169
 #~ msgid "Save state"
@@ -857,7 +929,7 @@ msgstr "Roamer"
 msgid "Search"
 msgstr "Search"
 
-#: src/features/mtseed-search/components/mtseed-search-page.tsx:171
+#: src/features/mtseed-search/components/mtseed-search-page.tsx:175
 msgid "Search Boot Timing"
 msgstr "Search Boot Timing"
 
@@ -882,7 +954,7 @@ msgstr "Secret ID"
 msgid "Seed"
 msgstr "Seed"
 
-#: src/components/forms/seed-input-section.tsx:275
+#: src/components/forms/seed-input-section.tsx:279
 msgid "Seed input"
 msgstr "Seed input"
 
@@ -894,7 +966,7 @@ msgstr "Seed is not set"
 msgid "Seed template selection"
 msgstr "Seed template selection"
 
-#: src/components/forms/seed-input-section.tsx:284
+#: src/components/forms/seed-input-section.tsx:288
 msgid "Seeds"
 msgstr "Seeds"
 
@@ -902,7 +974,7 @@ msgstr "Seeds"
 #~ msgid "Seeds from search results"
 #~ msgstr "Seeds from search results"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:93
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:95
 msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
@@ -911,15 +983,15 @@ msgstr "Select a location or Pokémon"
 msgid "Select all"
 msgstr "Select all"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:327
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:348
 msgid "Select location"
 msgstr "Select location"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:91
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:93
 msgid "Select or enter at least one seed"
 msgstr "Select or enter at least one seed"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:352
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:373
 msgid "Select Pokémon"
 msgstr "Select Pokémon"
 
@@ -961,7 +1033,7 @@ msgstr "Shiny Charm"
 msgid "Shiny PID"
 msgstr "Shiny PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:121
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:94
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 
@@ -969,7 +1041,7 @@ msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgid "SID"
 msgstr "SID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:120
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:93
 msgid "SID must be between 0 and 65535"
 msgstr "SID must be between 0 and 65535"
 
@@ -1017,9 +1089,9 @@ msgstr "Species (optional)"
 msgid "Start date"
 msgstr "Start date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:109
-#: src/features/egg-search/components/egg-search-page.tsx:126
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:117
+#: src/features/datetime-search/components/datetime-search-page.tsx:82
+#: src/features/egg-search/components/egg-search-page.tsx:86
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:90
 msgid "Start date must be on or before end date"
 msgstr "Start date must be on or before end date"
 
@@ -1029,16 +1101,16 @@ msgid "Start mode"
 msgstr "Start mode"
 
 #: src/components/forms/egg-params-form.tsx:381
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:406
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:427
 msgid "Start offset"
 msgstr "Start offset"
 
-#: src/features/egg-search/components/egg-search-page.tsx:129
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:95
+#: src/features/egg-search/components/egg-search-page.tsx:89
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:97
 msgid "Start offset must be ≥ 0"
 msgstr "Start offset must be ≥ 0"
 
-#: src/components/forms/seed-input-section.tsx:281
+#: src/components/forms/seed-input-section.tsx:285
 msgid "Startup"
 msgstr "Startup"
 
@@ -1046,13 +1118,13 @@ msgstr "Startup"
 msgid "Startup condition details"
 msgstr "Startup condition details"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:387
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:408
 msgid "Stationary"
 msgstr "Stationary"
 
-#: src/features/egg-list/components/egg-list-page.tsx:289
+#: src/features/egg-list/components/egg-list-page.tsx:271
 #: src/features/egg-list/components/result-detail-dialog.tsx:75
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:261
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:265
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:75
 msgid "Stats"
 msgstr "Stats"
@@ -1083,9 +1155,13 @@ msgstr "Synchronize nature"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "Tap the menu icon at the top left to configure search settings."
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:262
+#: src/features/datetime-search/components/datetime-search-page.tsx:235
 msgid "Template"
 msgstr "Template"
+
+#: src/features/ds-config/components/profile-confirm-dialog.tsx:33
+msgid "The current profile has unsaved changes. What would you like to do?"
+msgstr "The current profile has unsaved changes. What would you like to do?"
 
 #: src/components/layout/placeholder-page.tsx:20
 msgid "This feature is under development."
@@ -1099,7 +1175,7 @@ msgstr "This is an unofficial tool and is not affiliated with or endorsed by Nin
 msgid "This project is open source."
 msgstr "This project is open source."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:246
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:219
 msgid "This setting is independent of the sidebar."
 msgstr "This setting is independent of the sidebar."
 
@@ -1111,7 +1187,7 @@ msgstr "TID"
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:119
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:92
 msgid "TID must be between 0 and 65535"
 msgstr "TID must be between 0 and 65535"
 
@@ -1123,9 +1199,9 @@ msgstr "Time"
 msgid "Time range"
 msgstr "Time range"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:110
-#: src/features/egg-search/components/egg-search-page.tsx:127
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:118
+#: src/features/datetime-search/components/datetime-search-page.tsx:83
+#: src/features/egg-search/components/egg-search-page.tsx:87
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:91
 msgid "Time range is invalid"
 msgstr "Time range is invalid"
 
@@ -1155,18 +1231,22 @@ msgstr "Trainer ID"
 #~ msgid "Transfer to Needle search"
 #~ msgstr "Transfer to Needle search"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:296
+#: src/features/datetime-search/components/datetime-search-page.tsx:269
 msgid "Transfer to Pokemon list"
 msgstr "Transfer to Pokemon list"
 
 #. placeholder {0}: results.length
-#: src/features/datetime-search/components/datetime-search-page.tsx:174
+#: src/features/datetime-search/components/datetime-search-page.tsx:147
 msgid "Transferred {0} seeds"
 msgstr "Transferred {0} seeds"
 
 #: src/components/forms/iv-range-input.tsx:153
 #~ msgid "Unknown (any)"
 #~ msgstr "Unknown (any)"
+
+#: src/features/ds-config/components/profile-confirm-dialog.tsx:30
+msgid "Unsaved changes"
+msgstr "Unsaved changes"
 
 #: src/components/forms/egg-params-form.tsx:346
 msgid "Uses Ditto"
@@ -1191,6 +1271,6 @@ msgstr "Version"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:236
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:209
 msgid "With save"
 msgstr "With save"
