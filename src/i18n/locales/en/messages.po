@@ -159,7 +159,7 @@ msgstr "BW2 Stationary/Wild (offset 2)"
 #: src/features/datetime-search/components/template-selection-dialog.tsx:204
 #: src/features/ds-config/components/profile-confirm-dialog.tsx:38
 #: src/features/ds-config/components/profile-delete-dialog.tsx:43
-#: src/features/ds-config/components/profile-name-dialog.tsx:83
+#: src/features/ds-config/components/profile-name-dialog.tsx:87
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -254,9 +254,9 @@ msgid "Def"
 msgstr "Def"
 
 #: src/components/forms/seed-origin-table.tsx:104
-#: src/features/ds-config/components/profile-delete-dialog.tsx:46
-#: src/features/ds-config/components/profile-selector.tsx:188
-#: src/features/ds-config/components/profile-selector.tsx:189
+#: src/features/ds-config/components/profile-delete-dialog.tsx:49
+#: src/features/ds-config/components/profile-selector.tsx:212
+#: src/features/ds-config/components/profile-selector.tsx:213
 msgid "Delete"
 msgstr "Delete"
 
@@ -376,7 +376,7 @@ msgstr "End date"
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:65
+#: src/features/ds-config/components/profile-name-dialog.tsx:69
 msgid "Enter a profile name."
 msgstr "Enter a profile name."
 
@@ -727,7 +727,7 @@ msgstr "Nidoran♀"
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
 
-#: src/features/ds-config/components/profile-selector.tsx:136
+#: src/features/ds-config/components/profile-selector.tsx:160
 msgid "No profile"
 msgstr "No profile"
 
@@ -836,12 +836,12 @@ msgstr "Pokémon"
 msgid "Pokemon generation result details"
 msgstr "Pokemon generation result details"
 
-#: src/features/ds-config/components/profile-selector.tsx:126
-#: src/features/ds-config/components/profile-selector.tsx:131
+#: src/features/ds-config/components/profile-selector.tsx:150
+#: src/features/ds-config/components/profile-selector.tsx:155
 msgid "Profile"
 msgstr "Profile"
 
-#: src/features/ds-config/components/profile-selector.tsx:120
+#: src/features/ds-config/components/profile-selector.tsx:144
 msgid "Profile deleted"
 msgstr "Profile deleted"
 
@@ -849,14 +849,14 @@ msgstr "Profile deleted"
 msgid "Profile imported"
 msgstr "Profile imported"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:70
-#: src/features/ds-config/components/profile-name-dialog.tsx:78
+#: src/features/ds-config/components/profile-name-dialog.tsx:74
+#: src/features/ds-config/components/profile-name-dialog.tsx:82
 msgid "Profile name"
 msgstr "Profile name"
 
-#: src/features/ds-config/components/profile-selector.tsx:64
-#: src/features/ds-config/components/profile-selector.tsx:76
 #: src/features/ds-config/components/profile-selector.tsx:90
+#: src/features/ds-config/components/profile-selector.tsx:103
+#: src/features/ds-config/components/profile-selector.tsx:116
 msgid "Profile saved"
 msgstr "Profile saved"
 
@@ -869,10 +869,10 @@ msgstr "Region"
 msgid "Remaining"
 msgstr "Remaining"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:62
-#: src/features/ds-config/components/profile-name-dialog.tsx:86
-#: src/features/ds-config/components/profile-selector.tsx:176
-#: src/features/ds-config/components/profile-selector.tsx:177
+#: src/features/ds-config/components/profile-name-dialog.tsx:66
+#: src/features/ds-config/components/profile-name-dialog.tsx:90
+#: src/features/ds-config/components/profile-selector.tsx:200
+#: src/features/ds-config/components/profile-selector.tsx:201
 msgid "Rename"
 msgstr "Rename"
 
@@ -912,9 +912,9 @@ msgstr "Results"
 msgid "Roamer"
 msgstr "Roamer"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:86
-#: src/features/ds-config/components/profile-selector.tsx:153
-#: src/features/ds-config/components/profile-selector.tsx:154
+#: src/features/ds-config/components/profile-name-dialog.tsx:90
+#: src/features/ds-config/components/profile-selector.tsx:177
+#: src/features/ds-config/components/profile-selector.tsx:178
 msgid "Save"
 msgstr "Save"
 
@@ -922,9 +922,9 @@ msgstr "Save"
 msgid "Save and switch"
 msgstr "Save and switch"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:62
-#: src/features/ds-config/components/profile-selector.tsx:164
-#: src/features/ds-config/components/profile-selector.tsx:165
+#: src/features/ds-config/components/profile-name-dialog.tsx:66
+#: src/features/ds-config/components/profile-selector.tsx:188
+#: src/features/ds-config/components/profile-selector.tsx:189
 msgid "Save as new"
 msgstr "Save as new"
 

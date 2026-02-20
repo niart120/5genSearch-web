@@ -30,6 +30,10 @@ function ProfileNameDialog({
   mode,
 }: ProfileNameDialogProps) {
   const { t } = useLingui();
+  // Radix Dialog は open=false 時に content を unmount するため、
+  // 再オープン時に useState(defaultName) で正しく初期化される。
+  // handleOpenChange の name リセットはユーザが Escape / Overlay で閉じた後の
+  // 再オープン (Radix 内部からの onOpenChange(true)) をカバーする。
   const [name, setName] = useState(defaultName);
 
   // open が切り替わった際に defaultName でリセットする

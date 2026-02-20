@@ -159,7 +159,7 @@ msgstr "BW2 固定・野生 (消費2)"
 #: src/features/datetime-search/components/template-selection-dialog.tsx:204
 #: src/features/ds-config/components/profile-confirm-dialog.tsx:38
 #: src/features/ds-config/components/profile-delete-dialog.tsx:43
-#: src/features/ds-config/components/profile-name-dialog.tsx:83
+#: src/features/ds-config/components/profile-name-dialog.tsx:87
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -254,9 +254,9 @@ msgid "Def"
 msgstr "防御"
 
 #: src/components/forms/seed-origin-table.tsx:104
-#: src/features/ds-config/components/profile-delete-dialog.tsx:46
-#: src/features/ds-config/components/profile-selector.tsx:188
-#: src/features/ds-config/components/profile-selector.tsx:189
+#: src/features/ds-config/components/profile-delete-dialog.tsx:49
+#: src/features/ds-config/components/profile-selector.tsx:212
+#: src/features/ds-config/components/profile-selector.tsx:213
 msgid "Delete"
 msgstr "削除"
 
@@ -376,7 +376,7 @@ msgstr "終了日"
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "0からFFFFFFFFの範囲で16進数を入力してください"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:65
+#: src/features/ds-config/components/profile-name-dialog.tsx:69
 msgid "Enter a profile name."
 msgstr "プロファイル名を入力してください。"
 
@@ -723,7 +723,7 @@ msgstr "ニドラン♀"
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "この組み合わせのデフォルトTimer0/VCountデータがありません。手動モードに切り替えました。"
 
-#: src/features/ds-config/components/profile-selector.tsx:136
+#: src/features/ds-config/components/profile-selector.tsx:160
 msgid "No profile"
 msgstr "プロファイルなし"
 
@@ -832,12 +832,12 @@ msgstr "ポケモン"
 msgid "Pokemon generation result details"
 msgstr "ポケモン生成結果の詳細"
 
-#: src/features/ds-config/components/profile-selector.tsx:126
-#: src/features/ds-config/components/profile-selector.tsx:131
+#: src/features/ds-config/components/profile-selector.tsx:150
+#: src/features/ds-config/components/profile-selector.tsx:155
 msgid "Profile"
 msgstr "プロファイル"
 
-#: src/features/ds-config/components/profile-selector.tsx:120
+#: src/features/ds-config/components/profile-selector.tsx:144
 msgid "Profile deleted"
 msgstr "プロファイルを削除しました"
 
@@ -845,14 +845,14 @@ msgstr "プロファイルを削除しました"
 msgid "Profile imported"
 msgstr "プロファイルをインポートしました"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:70
-#: src/features/ds-config/components/profile-name-dialog.tsx:78
+#: src/features/ds-config/components/profile-name-dialog.tsx:74
+#: src/features/ds-config/components/profile-name-dialog.tsx:82
 msgid "Profile name"
 msgstr "プロファイル名"
 
-#: src/features/ds-config/components/profile-selector.tsx:64
-#: src/features/ds-config/components/profile-selector.tsx:76
 #: src/features/ds-config/components/profile-selector.tsx:90
+#: src/features/ds-config/components/profile-selector.tsx:103
+#: src/features/ds-config/components/profile-selector.tsx:116
 msgid "Profile saved"
 msgstr "プロファイルを保存しました"
 
@@ -865,10 +865,10 @@ msgstr "リージョン"
 msgid "Remaining"
 msgstr "残り"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:62
-#: src/features/ds-config/components/profile-name-dialog.tsx:86
-#: src/features/ds-config/components/profile-selector.tsx:176
-#: src/features/ds-config/components/profile-selector.tsx:177
+#: src/features/ds-config/components/profile-name-dialog.tsx:66
+#: src/features/ds-config/components/profile-name-dialog.tsx:90
+#: src/features/ds-config/components/profile-selector.tsx:200
+#: src/features/ds-config/components/profile-selector.tsx:201
 msgid "Rename"
 msgstr "名前変更"
 
@@ -908,9 +908,9 @@ msgstr "検索結果"
 msgid "Roamer"
 msgstr "徘徊ポケモン"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:86
-#: src/features/ds-config/components/profile-selector.tsx:153
-#: src/features/ds-config/components/profile-selector.tsx:154
+#: src/features/ds-config/components/profile-name-dialog.tsx:90
+#: src/features/ds-config/components/profile-selector.tsx:177
+#: src/features/ds-config/components/profile-selector.tsx:178
 msgid "Save"
 msgstr "保存"
 
@@ -918,9 +918,9 @@ msgstr "保存"
 msgid "Save and switch"
 msgstr "保存して切替"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:62
-#: src/features/ds-config/components/profile-selector.tsx:164
-#: src/features/ds-config/components/profile-selector.tsx:165
+#: src/features/ds-config/components/profile-name-dialog.tsx:66
+#: src/features/ds-config/components/profile-selector.tsx:188
+#: src/features/ds-config/components/profile-selector.tsx:189
 msgid "Save as new"
 msgstr "新規保存"
 

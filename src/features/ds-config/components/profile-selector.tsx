@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useReducer, useCallback } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
+import { msg } from '@lingui/core/macro';
+import { i18n } from '@lingui/core';
 import { Save, Plus, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,6 +22,36 @@ import { ProfileImportExport } from './profile-import-export';
 /** ドロップダウンが「プロファイルなし」を選択した際の値 */
 const NO_PROFILE_VALUE = '__none__';
 
+// ---- ダイアログ状態 (discriminated union) ----
+type DialogState =
+  | { kind: 'closed' }
+  | { kind: 'name'; mode: 'create' | 'rename'; defaultName: string }
+  | { kind: 'confirm-switch'; pendingSwitchId: string | undefined }
+  | { kind: 'delete' };
+
+type DialogAction =
+  | { type: 'open-name'; mode: 'create' | 'rename'; defaultName: string }
+  | { type: 'open-confirm-switch'; pendingSwitchId: string | undefined }
+  | { type: 'open-delete' }
+  | { type: 'close' };
+
+function dialogReducer(_state: DialogState, action: DialogAction): DialogState {
+  switch (action.type) {
+    case 'open-name': {
+      return { kind: 'name', mode: action.mode, defaultName: action.defaultName };
+    }
+    case 'open-confirm-switch': {
+      return { kind: 'confirm-switch', pendingSwitchId: action.pendingSwitchId };
+    }
+    case 'open-delete': {
+      return { kind: 'delete' };
+    }
+    case 'close': {
+      return { kind: 'closed' };
+    }
+  }
+}
+
 function ProfileSelector() {
   const { t } = useLingui();
   const {
@@ -33,13 +65,7 @@ function ProfileSelector() {
     setActiveProfileId,
   } = useProfile();
 
-  // ダイアログ状態
-  const [nameDialogOpen, setNameDialogOpen] = useState(false);
-  const [nameDialogMode, setNameDialogMode] = useState<'create' | 'rename'>('create');
-  const [nameDialogDefault, setNameDialogDefault] = useState('');
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [pendingSwitchId, setPendingSwitchId] = useState<string | undefined>();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dialog, dispatch] = useReducer(dialogReducer, { kind: 'closed' });
 
   // ---- プロファイル切替 ----
   const handleSelect = useCallback(
@@ -48,8 +74,7 @@ function ProfileSelector() {
       if (nextId === activeProfileId) return;
 
       if (isDirty) {
-        setPendingSwitchId(nextId);
-        setConfirmDialogOpen(true);
+        dispatch({ type: 'open-confirm-switch', pendingSwitchId: nextId });
         return;
       }
       setActiveProfileId(nextId);
@@ -58,67 +83,66 @@ function ProfileSelector() {
   );
 
   const handleConfirmSaveAndSwitch = useCallback(() => {
+    if (dialog.kind !== 'confirm-switch') return;
     saveActiveProfile(collectCurrentData());
-    setActiveProfileId(pendingSwitchId);
-    setConfirmDialogOpen(false);
-    toast.success(t`Profile saved`);
-  }, [saveActiveProfile, setActiveProfileId, pendingSwitchId, t]);
+    setActiveProfileId(dialog.pendingSwitchId);
+    dispatch({ type: 'close' });
+    toast.success(i18n._(msg`Profile saved`));
+  }, [dialog, saveActiveProfile, setActiveProfileId]);
 
   const handleConfirmDiscard = useCallback(() => {
-    setActiveProfileId(pendingSwitchId);
-    setConfirmDialogOpen(false);
-  }, [setActiveProfileId, pendingSwitchId]);
+    if (dialog.kind !== 'confirm-switch') return;
+    setActiveProfileId(dialog.pendingSwitchId);
+    dispatch({ type: 'close' });
+  }, [dialog, setActiveProfileId]);
 
   // ---- 保存 ----
   const handleSave = useCallback(() => {
     if (!activeProfileId) return;
     saveActiveProfile(collectCurrentData());
-    toast.success(t`Profile saved`);
-  }, [activeProfileId, saveActiveProfile, t]);
+    toast.success(i18n._(msg`Profile saved`));
+  }, [activeProfileId, saveActiveProfile]);
 
   // ---- 新規作成 ----
   const handleNewClick = useCallback(() => {
-    setNameDialogMode('create');
-    setNameDialogDefault('');
-    setNameDialogOpen(true);
+    dispatch({ type: 'open-name', mode: 'create', defaultName: '' });
   }, []);
 
   const handleNameSubmit = useCallback(
     (name: string) => {
-      if (nameDialogMode === 'create') {
+      if (dialog.kind !== 'name') return;
+      if (dialog.mode === 'create') {
         createProfile(name, collectCurrentData());
-        toast.success(t`Profile saved`);
+        toast.success(i18n._(msg`Profile saved`));
       } else {
         if (activeProfileId) {
           renameProfile(activeProfileId, name);
         }
       }
-      setNameDialogOpen(false);
+      dispatch({ type: 'close' });
     },
-    [nameDialogMode, createProfile, renameProfile, activeProfileId, t]
+    [dialog, createProfile, renameProfile, activeProfileId]
   );
 
   // ---- リネーム ----
   const handleRename = useCallback(() => {
     const active = profiles.find((p) => p.id === activeProfileId);
     if (!active) return;
-    setNameDialogMode('rename');
-    setNameDialogDefault(active.name);
-    setNameDialogOpen(true);
+    dispatch({ type: 'open-name', mode: 'rename', defaultName: active.name });
   }, [profiles, activeProfileId]);
 
   // ---- 削除 ----
   const handleDeleteClick = useCallback(() => {
     if (!activeProfileId) return;
-    setDeleteDialogOpen(true);
+    dispatch({ type: 'open-delete' });
   }, [activeProfileId]);
 
   const handleDeleteConfirm = useCallback(() => {
     if (!activeProfileId) return;
     deleteProfile(activeProfileId);
-    setDeleteDialogOpen(false);
-    toast.success(t`Profile deleted`);
-  }, [activeProfileId, deleteProfile, t]);
+    dispatch({ type: 'close' });
+    toast.success(i18n._(msg`Profile deleted`));
+  }, [activeProfileId, deleteProfile]);
 
   return (
     <div className="space-y-2">
@@ -197,25 +221,31 @@ function ProfileSelector() {
 
       {/* 名前入力ダイアログ */}
       <ProfileNameDialog
-        open={nameDialogOpen}
-        onOpenChange={setNameDialogOpen}
+        open={dialog.kind === 'name'}
+        onOpenChange={(open) => {
+          if (!open) dispatch({ type: 'close' });
+        }}
         onSubmit={handleNameSubmit}
-        defaultName={nameDialogDefault}
-        mode={nameDialogMode}
+        defaultName={dialog.kind === 'name' ? dialog.defaultName : ''}
+        mode={dialog.kind === 'name' ? dialog.mode : 'create'}
       />
 
       {/* 切替確認ダイアログ */}
       <ProfileConfirmDialog
-        open={confirmDialogOpen}
-        onOpenChange={setConfirmDialogOpen}
+        open={dialog.kind === 'confirm-switch'}
+        onOpenChange={(open) => {
+          if (!open) dispatch({ type: 'close' });
+        }}
         onSaveAndSwitch={handleConfirmSaveAndSwitch}
         onDiscard={handleConfirmDiscard}
       />
 
       {/* 削除確認ダイアログ */}
       <ProfileDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        open={dialog.kind === 'delete'}
+        onOpenChange={(open) => {
+          if (!open) dispatch({ type: 'close' });
+        }}
         onConfirm={handleDeleteConfirm}
         profileName={profiles.find((p) => p.id === activeProfileId)?.name ?? ''}
       />
