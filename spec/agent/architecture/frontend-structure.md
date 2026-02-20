@@ -49,6 +49,7 @@ src/
 │   ├── settings/
 │   │   ├── ds-config.ts    # DS設定 (永続化)
 │   │   ├── trainer.ts      # トレーナー情報 (永続化)
+│   │   ├── profile.ts      # プロファイル (永続化)
 │   │   ├── ui.ts           # UI設定 (永続化)
 │   │   └── index.ts        # re-export
 │   ├── search/
@@ -64,6 +65,7 @@ src/
 ├── hooks/                  # カスタムフック
 │   ├── use-search.ts       # 検索実行 (WorkerPool ラッパー)
 │   ├── use-ds-config.ts    # DS設定フック
+│   ├── use-profile.ts      # プロファイル管理フック
 │   ├── use-trainer.ts      # トレーナー情報フック
 │   ├── use-ui-settings.ts  # UI設定フック
 │   ├── use-search-results.ts # 検索結果フック

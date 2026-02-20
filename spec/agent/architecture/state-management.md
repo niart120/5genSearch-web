@@ -52,6 +52,7 @@ Zustand を選定した理由:
 | DS 設定 | MAC アドレス、Hardware、Version、Region |
 | Timer0/VCount 範囲 | 各 DS の個体差設定 |
 | トレーナー情報 | TID/SID |
+| プロファイル | DS 設定 + トレーナー情報のスナップショット複数セット、アクティブ ID |
 | UI 設定 | 言語、テーマ、ナビゲーション状態 (アクティブカテゴリ・機能・機能記憶) |
 
 ### 3.2 セッション状態 — Zustand Store (非永続化)
@@ -100,6 +101,7 @@ stores/                        # 機能横断の共有状態
 ├── settings/
 │   ├── ds-config.ts           # DS設定 (永続化)
 │   ├── trainer.ts             # トレーナー情報 (永続化)
+│   ├── profile.ts             # プロファイル (永続化)
 │   ├── ui.ts                  # UI設定 (永続化)
 │   └── index.ts               # re-export
 │
