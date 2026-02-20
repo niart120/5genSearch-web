@@ -11,7 +11,42 @@ export function collectCurrentData(): ProfileData {
 }
 
 function isProfileDataEqual(a: ProfileData, b: ProfileData): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  // フィールド単位で比較する (JSON.stringify はプロパティ順序依存・undefined 除外の問題がある)
+  if (a.timer0Auto !== b.timer0Auto) return false;
+  if (a.tid !== b.tid || a.sid !== b.sid) return false;
+  if (
+    a.config.hardware !== b.config.hardware ||
+    a.config.version !== b.config.version ||
+    a.config.region !== b.config.region
+  ) {
+    return false;
+  }
+  if (a.config.mac.length !== b.config.mac.length) return false;
+  for (let i = 0; i < a.config.mac.length; i++) {
+    if (a.config.mac[i] !== b.config.mac[i]) return false;
+  }
+  if (
+    a.gameStart.start_mode !== b.gameStart.start_mode ||
+    a.gameStart.save !== b.gameStart.save ||
+    a.gameStart.memory_link !== b.gameStart.memory_link ||
+    a.gameStart.shiny_charm !== b.gameStart.shiny_charm
+  ) {
+    return false;
+  }
+  if (a.ranges.length !== b.ranges.length) return false;
+  for (let i = 0; i < a.ranges.length; i++) {
+    const ra = a.ranges[i];
+    const rb = b.ranges[i];
+    if (
+      ra.timer0_min !== rb.timer0_min ||
+      ra.timer0_max !== rb.timer0_max ||
+      ra.vcount_min !== rb.vcount_min ||
+      ra.vcount_max !== rb.vcount_max
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export function useProfile() {

@@ -3,7 +3,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast-state';
-import { useProfile, collectCurrentData } from '@/hooks/use-profile';
+import { useProfile } from '@/hooks/use-profile';
 import { validateProfileJson, PROFILE_SCHEMA } from '@/lib/validation';
 import { downloadFile } from '@/services/export';
 
@@ -18,12 +18,13 @@ function ProfileImportExport() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ---- エクスポート ----
+  // 保存済みプロファイルデータを出力する (未保存の変更は含めない)
   const handleExport = useCallback(() => {
     if (!activeProfile) return;
     const json = {
       $schema: PROFILE_SCHEMA,
       name: activeProfile.name,
-      data: collectCurrentData(),
+      data: activeProfile.data,
     };
     const content = JSON.stringify(json, undefined, 2);
     const filename = `profile-${sanitizeFilename(activeProfile.name)}.json`;

@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/toast-state';
 import { useProfile, collectCurrentData } from '@/hooks/use-profile';
 import { ProfileNameDialog } from './profile-name-dialog';
 import { ProfileConfirmDialog } from './profile-confirm-dialog';
+import { ProfileDeleteDialog } from './profile-delete-dialog';
 import { ProfileImportExport } from './profile-import-export';
 
 /** ドロップダウンが「プロファイルなし」を選択した際の値 */
@@ -38,6 +39,7 @@ function ProfileSelector() {
   const [nameDialogDefault, setNameDialogDefault] = useState('');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingSwitchId, setPendingSwitchId] = useState<string | undefined>();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // ---- プロファイル切替 ----
   const handleSelect = useCallback(
@@ -106,9 +108,15 @@ function ProfileSelector() {
   }, [profiles, activeProfileId]);
 
   // ---- 削除 ----
-  const handleDelete = useCallback(() => {
+  const handleDeleteClick = useCallback(() => {
+    if (!activeProfileId) return;
+    setDeleteDialogOpen(true);
+  }, [activeProfileId]);
+
+  const handleDeleteConfirm = useCallback(() => {
     if (!activeProfileId) return;
     deleteProfile(activeProfileId);
+    setDeleteDialogOpen(false);
     toast.success(t`Profile deleted`);
   }, [activeProfileId, deleteProfile, t]);
 
@@ -175,7 +183,7 @@ function ProfileSelector() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           disabled={!activeProfileId}
           aria-label={t`Delete`}
           title={t`Delete`}
@@ -196,12 +204,20 @@ function ProfileSelector() {
         mode={nameDialogMode}
       />
 
-      {/* 確認ダイアログ */}
+      {/* 切替確認ダイアログ */}
       <ProfileConfirmDialog
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}
         onSaveAndSwitch={handleConfirmSaveAndSwitch}
         onDiscard={handleConfirmDiscard}
+      />
+
+      {/* 削除確認ダイアログ */}
+      <ProfileDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        profileName={profiles.find((p) => p.id === activeProfileId)?.name ?? ''}
       />
     </div>
   );

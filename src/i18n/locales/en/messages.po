@@ -96,6 +96,10 @@ msgstr "Any"
 msgid "Apply ({selectedSeedCount})"
 msgstr "Apply ({selectedSeedCount})"
 
+#: src/features/ds-config/components/profile-delete-dialog.tsx:35
+msgid "Are you sure you want to delete \"{profileName}\"? This action cannot be undone."
+msgstr "Are you sure you want to delete \"{profileName}\"? This action cannot be undone."
+
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:35
 msgid "Atk"
 msgstr "Atk"
@@ -154,7 +158,8 @@ msgstr "BW2 Stationary/Wild (offset 2)"
 #: src/components/forms/search-controls.tsx:53
 #: src/features/datetime-search/components/template-selection-dialog.tsx:204
 #: src/features/ds-config/components/profile-confirm-dialog.tsx:38
-#: src/features/ds-config/components/profile-name-dialog.tsx:71
+#: src/features/ds-config/components/profile-delete-dialog.tsx:43
+#: src/features/ds-config/components/profile-name-dialog.tsx:83
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -249,10 +254,15 @@ msgid "Def"
 msgstr "Def"
 
 #: src/components/forms/seed-origin-table.tsx:104
-#: src/features/ds-config/components/profile-selector.tsx:180
-#: src/features/ds-config/components/profile-selector.tsx:181
+#: src/features/ds-config/components/profile-delete-dialog.tsx:46
+#: src/features/ds-config/components/profile-selector.tsx:188
+#: src/features/ds-config/components/profile-selector.tsx:189
 msgid "Delete"
 msgstr "Delete"
+
+#: src/features/ds-config/components/profile-delete-dialog.tsx:32
+msgid "Delete profile"
+msgstr "Delete profile"
 
 #. placeholder {0}: String(index + 1)
 #: src/components/forms/seed-origin-table.tsx:144
@@ -366,7 +376,7 @@ msgstr "End date"
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:53
+#: src/features/ds-config/components/profile-name-dialog.tsx:65
 msgid "Enter a profile name."
 msgstr "Enter a profile name."
 
@@ -384,8 +394,8 @@ msgid "Everstone"
 msgstr "Everstone"
 
 #: src/components/data-display/export-toolbar.tsx:58
-#: src/features/ds-config/components/profile-import-export.tsx:80
-#: src/features/ds-config/components/profile-import-export.tsx:83
+#: src/features/ds-config/components/profile-import-export.tsx:81
+#: src/features/ds-config/components/profile-import-export.tsx:84
 msgid "Export"
 msgstr "Export"
 
@@ -480,8 +490,8 @@ msgid "HP"
 msgstr "HP"
 
 #: src/components/forms/seed-input-section.tsx:291
-#: src/features/ds-config/components/profile-import-export.tsx:69
-#: src/features/ds-config/components/profile-import-export.tsx:72
+#: src/features/ds-config/components/profile-import-export.tsx:70
+#: src/features/ds-config/components/profile-import-export.tsx:73
 msgid "Import"
 msgstr "Import"
 
@@ -499,8 +509,8 @@ msgstr "Include details"
 msgid "Initial Seed"
 msgstr "Initial Seed"
 
-#: src/features/ds-config/components/profile-import-export.tsx:47
-#: src/features/ds-config/components/profile-import-export.tsx:53
+#: src/features/ds-config/components/profile-import-export.tsx:48
+#: src/features/ds-config/components/profile-import-export.tsx:54
 msgid "Invalid profile file"
 msgstr "Invalid profile file"
 
@@ -717,7 +727,7 @@ msgstr "Nidoran♀"
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
 
-#: src/features/ds-config/components/profile-selector.tsx:128
+#: src/features/ds-config/components/profile-selector.tsx:136
 msgid "No profile"
 msgstr "No profile"
 
@@ -826,27 +836,27 @@ msgstr "Pokémon"
 msgid "Pokemon generation result details"
 msgstr "Pokemon generation result details"
 
-#: src/features/ds-config/components/profile-selector.tsx:118
-#: src/features/ds-config/components/profile-selector.tsx:123
+#: src/features/ds-config/components/profile-selector.tsx:126
+#: src/features/ds-config/components/profile-selector.tsx:131
 msgid "Profile"
 msgstr "Profile"
 
-#: src/features/ds-config/components/profile-selector.tsx:112
+#: src/features/ds-config/components/profile-selector.tsx:120
 msgid "Profile deleted"
 msgstr "Profile deleted"
 
-#: src/features/ds-config/components/profile-import-export.tsx:51
+#: src/features/ds-config/components/profile-import-export.tsx:52
 msgid "Profile imported"
 msgstr "Profile imported"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:58
-#: src/features/ds-config/components/profile-name-dialog.tsx:66
+#: src/features/ds-config/components/profile-name-dialog.tsx:70
+#: src/features/ds-config/components/profile-name-dialog.tsx:78
 msgid "Profile name"
 msgstr "Profile name"
 
-#: src/features/ds-config/components/profile-selector.tsx:62
-#: src/features/ds-config/components/profile-selector.tsx:74
-#: src/features/ds-config/components/profile-selector.tsx:88
+#: src/features/ds-config/components/profile-selector.tsx:64
+#: src/features/ds-config/components/profile-selector.tsx:76
+#: src/features/ds-config/components/profile-selector.tsx:90
 msgid "Profile saved"
 msgstr "Profile saved"
 
@@ -859,10 +869,10 @@ msgstr "Region"
 msgid "Remaining"
 msgstr "Remaining"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:50
-#: src/features/ds-config/components/profile-name-dialog.tsx:74
-#: src/features/ds-config/components/profile-selector.tsx:168
-#: src/features/ds-config/components/profile-selector.tsx:169
+#: src/features/ds-config/components/profile-name-dialog.tsx:62
+#: src/features/ds-config/components/profile-name-dialog.tsx:86
+#: src/features/ds-config/components/profile-selector.tsx:176
+#: src/features/ds-config/components/profile-selector.tsx:177
 msgid "Rename"
 msgstr "Rename"
 
@@ -902,9 +912,9 @@ msgstr "Results"
 msgid "Roamer"
 msgstr "Roamer"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:74
-#: src/features/ds-config/components/profile-selector.tsx:145
-#: src/features/ds-config/components/profile-selector.tsx:146
+#: src/features/ds-config/components/profile-name-dialog.tsx:86
+#: src/features/ds-config/components/profile-selector.tsx:153
+#: src/features/ds-config/components/profile-selector.tsx:154
 msgid "Save"
 msgstr "Save"
 
@@ -912,9 +922,9 @@ msgstr "Save"
 msgid "Save and switch"
 msgstr "Save and switch"
 
-#: src/features/ds-config/components/profile-name-dialog.tsx:50
-#: src/features/ds-config/components/profile-selector.tsx:156
-#: src/features/ds-config/components/profile-selector.tsx:157
+#: src/features/ds-config/components/profile-name-dialog.tsx:62
+#: src/features/ds-config/components/profile-selector.tsx:164
+#: src/features/ds-config/components/profile-selector.tsx:165
 msgid "Save as new"
 msgstr "Save as new"
 
