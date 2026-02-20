@@ -145,79 +145,84 @@ function ProfileSelector() {
   }, [activeProfileId, deleteProfile]);
 
   return (
-    <div className="space-y-2">
-      <Label className="text-xs">
-        <Trans>Profile</Trans>
-      </Label>
+    <div className="space-y-1">
+      <div className="flex items-center">
+        <Label className="text-xs">
+          <Trans>Profile</Trans>
+        </Label>
+        <div className="ml-auto grid grid-cols-6">
+          {/* 上書き保存 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={handleSave}
+            disabled={!activeProfileId || !isDirty}
+            aria-label={t`Save`}
+            title={t`Save`}
+          >
+            <Save className="size-3.5" />
+          </Button>
 
-      <div className="flex items-center gap-1.5">
-        <Select value={activeProfileId ?? NO_PROFILE_VALUE} onValueChange={handleSelect}>
-          <SelectTrigger className="flex-1 min-w-0" aria-label={t`Profile`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NO_PROFILE_VALUE}>
-              <Trans>No profile</Trans>
-            </SelectItem>
-            {profiles.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-                {p.id === activeProfileId && isDirty ? ' *' : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {/* 新規作成 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={handleNewClick}
+            aria-label={t`Save as new`}
+            title={t`Save as new`}
+          >
+            <Plus className="size-3.5" />
+          </Button>
 
-        {/* 上書き保存 */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleSave}
-          disabled={!activeProfileId || !isDirty}
-          aria-label={t`Save`}
-          title={t`Save`}
-        >
-          <Save className="size-4" />
-        </Button>
+          {/* リネーム */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={handleRename}
+            disabled={!activeProfileId}
+            aria-label={t`Rename`}
+            title={t`Rename`}
+          >
+            <Pencil className="size-3.5" />
+          </Button>
 
-        {/* 新規作成 */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleNewClick}
-          aria-label={t`Save as new`}
-          title={t`Save as new`}
-        >
-          <Plus className="size-4" />
-        </Button>
+          {/* 削除 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={handleDeleteClick}
+            disabled={!activeProfileId}
+            aria-label={t`Delete`}
+            title={t`Delete`}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
 
-        {/* リネーム */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleRename}
-          disabled={!activeProfileId}
-          aria-label={t`Rename`}
-          title={t`Rename`}
-        >
-          <Pencil className="size-4" />
-        </Button>
-
-        {/* 削除 */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDeleteClick}
-          disabled={!activeProfileId}
-          aria-label={t`Delete`}
-          title={t`Delete`}
-        >
-          <Trash2 className="size-4" />
-        </Button>
+          {/* インポート/エクスポート */}
+          <ProfileImportExport />
+        </div>
       </div>
 
-      {/* インポート/エクスポート */}
-      <ProfileImportExport />
+      <Select value={activeProfileId ?? NO_PROFILE_VALUE} onValueChange={handleSelect}>
+        <SelectTrigger aria-label={t`Profile`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NO_PROFILE_VALUE}>
+            <Trans>No profile</Trans>
+          </SelectItem>
+          {profiles.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
+              {p.id === activeProfileId && isDirty ? ' *' : ''}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {/* 名前入力ダイアログ */}
       <ProfileNameDialog

@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { Trans, useLingui } from '@lingui/react/macro';
+import { useLingui } from '@lingui/react/macro';
 import { Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast-state';
@@ -61,27 +61,27 @@ function ProfileImportExport() {
   );
 
   return (
-    <div className="flex gap-1.5">
+    <>
       <Button
-        variant="outline"
-        size="sm"
-        className="flex-1"
+        variant="ghost"
+        size="icon"
+        className="size-7"
         onClick={handleImportClick}
         aria-label={t`Import`}
+        title={t`Import`}
       >
-        <Upload className="mr-1 size-3.5" />
-        <Trans>Import</Trans>
+        <Upload className="size-3.5" />
       </Button>
       <Button
-        variant="outline"
-        size="sm"
-        className="flex-1"
+        variant="ghost"
+        size="icon"
+        className="size-7"
         onClick={handleExport}
         disabled={!activeProfile}
         aria-label={t`Export`}
+        title={t`Export`}
       >
-        <Download className="mr-1 size-3.5" />
-        <Trans>Export</Trans>
+        <Download className="size-3.5" />
       </Button>
       <input
         ref={fileInputRef}
@@ -90,7 +90,7 @@ function ProfileImportExport() {
         className="hidden"
         onChange={handleFileChange}
       />
-    </div>
+    </>
   );
 }
 
