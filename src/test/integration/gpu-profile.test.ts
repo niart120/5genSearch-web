@@ -15,23 +15,15 @@ import type { GpuKind, GpuProfile } from '../../wasm/wasm_pkg.js';
 // GPU Availability Check
 // =============================================================================
 
-/**
- * GPUAdapterInfo 拡張プロパティ (Chrome 131+)
- */
-interface GPUAdapterInfoExtended extends GPUAdapterInfo {
-  readonly type?: string;
-  readonly driver?: string;
-}
-
 function hasWebGpu(): boolean {
   return 'gpu' in navigator && navigator.gpu !== undefined;
 }
 
-async function requestAdapterInfo(): Promise<GPUAdapterInfoExtended | undefined> {
+async function requestAdapterInfo(): Promise<GPUAdapterInfo | undefined> {
   if (!hasWebGpu()) return undefined;
   try {
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
-    return adapter?.info as GPUAdapterInfoExtended | undefined;
+    return adapter?.info;
   } catch {
     return undefined;
   }
@@ -42,7 +34,7 @@ async function requestAdapterInfo(): Promise<GPUAdapterInfoExtended | undefined>
 // =============================================================================
 
 describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
-  let browserInfo: GPUAdapterInfoExtended | undefined;
+  let browserInfo: GPUAdapterInfo | undefined;
   let wasmProfile: GpuProfile | undefined;
 
   beforeAll(async () => {
@@ -51,10 +43,9 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
     // cacheGpuAdapterInfo 相当: globalThis にブラウザ情報を設定
     if (browserInfo) {
       (globalThis as Record<string, unknown>).__wgpu_browser_adapter_info = {
-        type: browserInfo.type ?? '',
-        description: browserInfo.description ?? '',
         vendor: browserInfo.vendor ?? '',
-        driver: browserInfo.driver ?? '',
+        architecture: browserInfo.architecture ?? '',
+        description: browserInfo.description ?? '',
       };
     }
 
@@ -70,42 +61,22 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
       expect(browserInfo).toBeDefined();
     });
 
-    it('description が空でない (Chrome/Edge)', () => {
-      // Chrome/Edge では description にデバイス名が入る
-      // Firefox/Safari では空の可能性がある
-      expect(browserInfo?.description).toBeDefined();
-      console.log('[GPUAdapterInfo] description:', browserInfo?.description);
-    });
-
     it('vendor が空でない', () => {
       expect(browserInfo?.vendor).toBeDefined();
       console.log('[GPUAdapterInfo] vendor:', browserInfo?.vendor);
     });
 
-    it('type プロパティの値を確認', () => {
-      // Chrome 131+ では "discrete GPU" / "integrated GPU" / "CPU" / ""
-      const validTypes = ['discrete GPU', 'integrated GPU', 'CPU', '', undefined];
-      console.log('[GPUAdapterInfo] type:', browserInfo?.type);
-      expect(validTypes).toContain(browserInfo?.type);
-    });
-
-    it('driver プロパティの値を確認', () => {
-      // Chrome 固有の非標準プロパティ
-      console.log('[GPUAdapterInfo] driver:', browserInfo?.driver);
-      // 型の存在のみ確認 (undefined も許容)
-      expect(typeof browserInfo?.driver === 'string' || browserInfo?.driver === undefined).toBe(
-        true
-      );
+    it('architecture が空でない', () => {
+      expect(browserInfo?.architecture).toBeDefined();
+      console.log('[GPUAdapterInfo] architecture:', browserInfo?.architecture);
     });
 
     it('全プロパティをダンプ', () => {
       console.log('[GPUAdapterInfo] full dump:', {
+        vendor: browserInfo?.vendor,
         architecture: browserInfo?.architecture,
         description: browserInfo?.description,
         device: browserInfo?.device,
-        vendor: browserInfo?.vendor,
-        type: browserInfo?.type,
-        driver: browserInfo?.driver,
       });
     });
   });
@@ -125,11 +96,11 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
       console.log('[GpuProfile] kind:', wasmProfile?.kind);
     });
 
-    it('name が空でない', () => {
-      // wgpu WebGPU バックエンドは空文字を返すが、
-      // ブラウザ情報からのフォールバックで補完される
-      console.log('[GpuProfile] name:', wasmProfile?.name);
-      expect(typeof wasmProfile?.name).toBe('string');
+    it('kind が Unknown でない', () => {
+      // vendor + architecture が取れる環境では Unknown にならない
+      if (browserInfo?.vendor) {
+        expect(wasmProfile?.kind).not.toBe('Unknown');
+      }
     });
 
     it('vendor が空でない', () => {
@@ -137,9 +108,9 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
       expect(typeof wasmProfile?.vendor).toBe('string');
     });
 
-    it('driver の値を確認', () => {
-      console.log('[GpuProfile] driver:', wasmProfile?.driver);
-      expect(typeof wasmProfile?.driver).toBe('string');
+    it('architecture の値を確認', () => {
+      console.log('[GpuProfile] architecture:', wasmProfile?.architecture);
+      expect(typeof wasmProfile?.architecture).toBe('string');
     });
 
     it('全プロパティをダンプ', () => {
@@ -152,26 +123,15 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
   // ---------------------------------------------------------------------------
 
   describe('Browser ↔ WASM 整合性', () => {
-    it('ブラウザの type が "discrete GPU" なら kind は Discrete', () => {
-      if (browserInfo?.type !== 'discrete GPU') return;
-      expect(wasmProfile?.kind).toBe('Discrete');
+    it('vendor がブラウザと一致する', () => {
+      if (browserInfo?.vendor) {
+        expect(wasmProfile?.vendor).toBe(browserInfo.vendor);
+      }
     });
 
-    it('ブラウザの type が "integrated GPU" なら kind は Integrated', () => {
-      if (browserInfo?.type !== 'integrated GPU') return;
-      expect(wasmProfile?.kind).toBe('Integrated');
-    });
-
-    it('name はブラウザの description と一致するか wgpu の name', () => {
-      // wgpu WebGPU バックエンドは name が空 → ブラウザの description にフォールバック
-      // wgpu が name を返すようになった場合はそちらが使われる
-      if (browserInfo?.description) {
-        console.log(
-          '[Consistency] browser.description:',
-          browserInfo.description,
-          '/ wasm.name:',
-          wasmProfile?.name
-        );
+    it('architecture がブラウザと一致する', () => {
+      if (browserInfo?.architecture) {
+        expect(wasmProfile?.architecture).toBe(browserInfo.architecture);
       }
     });
   });
