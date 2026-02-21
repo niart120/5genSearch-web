@@ -1608,6 +1608,17 @@ export function generate_trainer_info_search_tasks(context: DatetimeSearchContex
 export function get_needle_pattern_at(seed_value: bigint, advance: number, count: number): Uint8Array;
 
 /**
+ * 種族の性別比を取得
+ *
+ * # Arguments
+ * * `species_id` - 全国図鑑番号 (1-649)
+ *
+ * # Returns
+ * 性別比。範囲外の場合はインデックス0 (フシギダネ) の値。
+ */
+export function get_species_gender_ratio(species_id: number): GenderRatio;
+
+/**
  * 種族名を取得
  *
  * # Arguments

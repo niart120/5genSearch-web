@@ -4,6 +4,7 @@ import * as Popover from '@radix-ui/react-popover';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { NATURE_ORDER, getNatureName } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
@@ -37,60 +38,63 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
     value.length === 0 ? <Trans>Not specified</Trans> : <Trans>{value.length} selected</Trans>;
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild disabled={disabled}>
-        <Button
-          variant="outline"
-          className="h-8 w-full justify-between text-xs"
-          aria-label="nature-select-trigger"
-        >
-          <span className="truncate">
-            <Trans>Nature</Trans> ({triggerLabel})
-          </span>
-          <ChevronDown className="ml-1 size-3.5 shrink-0 opacity-50" />
-        </Button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          className={cn(
-            'z-50 rounded-sm border border-border bg-card p-3 shadow-md',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95'
-          )}
-          sideOffset={4}
-          align="start"
-        >
-          <div className="mb-2 flex gap-2">
-            <Button variant="ghost" size="sm" onClick={selectAll} type="button">
-              <Trans>Select all</Trans>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={clearAll} type="button">
-              <Trans>Deselect all</Trans>
-            </Button>
-          </div>
-          <div className="grid grid-cols-5 gap-1">
-            {NATURE_ORDER.map((nature) => (
-              <label
-                key={nature}
-                className={cn(
-                  'flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-xs',
-                  'hover:bg-accent/10',
-                  selectedSet.has(nature) && 'bg-accent/5'
-                )}
-              >
-                <Checkbox
-                  checked={selectedSet.has(nature)}
-                  onCheckedChange={() => toggleNature(nature)}
-                  className="size-3.5"
-                />
-                <span className="whitespace-nowrap">{getNatureName(nature, language)}</span>
-              </label>
-            ))}
-          </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+    <div className="flex flex-col gap-1">
+      <Label className="text-xs">
+        <Trans>Nature</Trans>
+      </Label>
+      <Popover.Root>
+        <Popover.Trigger asChild disabled={disabled}>
+          <Button
+            variant="outline"
+            className="h-8 w-full justify-between text-xs"
+            aria-label="nature-select-trigger"
+          >
+            <span className="truncate">{triggerLabel}</span>
+            <ChevronDown className="ml-1 size-3.5 shrink-0 opacity-50" />
+          </Button>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className={cn(
+              'z-50 rounded-sm border border-border bg-card p-3 shadow-md',
+              'data-[state=open]:animate-in data-[state=closed]:animate-out',
+              'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+              'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95'
+            )}
+            sideOffset={4}
+            align="start"
+          >
+            <div className="mb-2 flex gap-2">
+              <Button variant="ghost" size="sm" onClick={selectAll} type="button">
+                <Trans>Select all</Trans>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearAll} type="button">
+                <Trans>Deselect all</Trans>
+              </Button>
+            </div>
+            <div className="grid grid-cols-5 gap-1">
+              {NATURE_ORDER.map((nature) => (
+                <label
+                  key={nature}
+                  className={cn(
+                    'flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-xs',
+                    'hover:bg-accent/10',
+                    selectedSet.has(nature) && 'bg-accent/5'
+                  )}
+                >
+                  <Checkbox
+                    checked={selectedSet.has(nature)}
+                    onCheckedChange={() => toggleNature(nature)}
+                    className="size-3.5"
+                  />
+                  <span className="whitespace-nowrap">{getNatureName(nature, language)}</span>
+                </label>
+              ))}
+            </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+    </div>
   );
 }
 

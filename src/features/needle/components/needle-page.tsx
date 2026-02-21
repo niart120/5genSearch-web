@@ -198,7 +198,7 @@ function NeedlePage(): ReactElement {
             <div className="flex items-center gap-2">
               <div className="flex flex-col gap-1">
                 <Label htmlFor="user-offset" className="text-xs text-muted-foreground">
-                  <Trans>Offset</Trans>
+                  <Trans>Start offset</Trans>
                 </Label>
                 <NumField
                   id="user-offset"
@@ -207,14 +207,14 @@ function NeedlePage(): ReactElement {
                   defaultValue={0}
                   min={0}
                   max={99_999}
-                  label={t`Offset`}
+                  label={t`Start offset`}
                   className="w-20"
                 />
               </div>
               <span className="mt-5 text-muted-foreground">–</span>
               <div className="flex flex-col gap-1">
                 <Label htmlFor="max-advance" className="text-xs text-muted-foreground">
-                  <Trans>Max Advance</Trans>
+                  <Trans>Max advance</Trans>
                 </Label>
                 <NumField
                   id="max-advance"
@@ -223,7 +223,7 @@ function NeedlePage(): ReactElement {
                   defaultValue={30}
                   min={0}
                   max={99_999}
-                  label={t`Max Advance`}
+                  label={t`Max advance`}
                   className="w-20"
                 />
               </div>

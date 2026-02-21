@@ -53,6 +53,15 @@
 | P-20 | 検索ボタン高さ安定化 | GPU トグル有無による高さ変動を防止 | `search-controls.tsx` |
 | P-21 | TID/SID/PID グリッド化 | 3 列 grid で幅を均等化 | `tid-adjust-form.tsx` |
 | P-22 | 針読み Seed 表示省略 | SeedInput の初期 Seed 解決結果表示を削除 | `seed-input.tsx` |
+| P-23 | フィルター並び順 | ステータス → 特性スロット → 性別 → 性格 → 色違い → (種族) の順に変更 | `pokemon-filter-form.tsx`, `egg-filter-form.tsx` |
+| P-24 | フィルター ラベル追加 | NatureSelect / SpeciesSelect にラベルを追加し、トリガーからラベル重複を除去 | `nature-select.tsx`, `pokemon-filter-form.tsx` |
+| P-25 | フィルター 2 列化 | 特性スロット / 性別 / 性格 / 色違いを `grid-cols-2` で配置 | `pokemon-filter-form.tsx`, `egg-filter-form.tsx` |
+| P-26 | タマゴ IV 補足削除 | 「空欄にすると個体値が「?」で表示されます」を削除 | `egg-params-form.tsx` |
+| P-27 | SpinnerNumField 全選択修正 | ゼロ埋め値フォーカス時の全選択が解除される問題の修正 | `spinner-num-field.tsx` |
+| P-28 | タマゴパラメータ 2 列化 | ♀親特性 / かわらずのいし / 性別比 / 種族 を 2 列配置 | `egg-params-form.tsx` |
+| P-29 | 種族→性別比の自動導出 | 種族選択時に WASM から性別比を取得して自動設定 | `egg-params-form.tsx`, `lib.rs` |
+| P-30 | EggFilter デフォルト有効化 | `EggFilterForm` のフィルターをデフォルト有効化、リセットでも有効維持 | `egg-filter-form.tsx` |
+| P-31 | タマゴ結果 種族列削除 | タマゴ個体生成結果の種族列を削除 (検索条件から自明) | `egg-result-columns.tsx`, `export-columns.ts` |
 
 ## 3. 設計方針
 
@@ -429,6 +438,77 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 
 **変更**: `SeedInput` の末尾にある `seedDisplay` ブロック (Initial Seed 表示) を削除する。
 
+### P-23: フィルター並び順の統一
+
+**現状**: `PokemonFilterForm` は 特性スロット → 性別 → 性格 → 色違い → IV/Stats → 種族 の順。`EggFilterForm` は IV/Stats → 性格 → 性別 → 特性 → 色違い の順。IV/Stats フィルタの位置も不統一。
+
+**変更**: 両フォームとも以下の統一順序に変更する。
+
+1. IV / 実ステータス フィルター
+2. 特性スロット
+3. 性別
+4. 性格
+5. 色違い
+6. 種族 (PokemonFilterForm のみ)
+
+### P-24: NatureSelect / SpeciesSelect のラベル追加
+
+**現状**: `NatureSelect` のトリガーは `性格 (指定なし)` / `性格 (N件選択)` と、コンポーネント名を兼ねたラベルがトリガー文言に含まれている。`SpeciesSelect` も同様に `種族 (指定なし)` 表示。
+
+**変更**:
+1. `NatureSelect`: トリガー上に `Label` で「性格」を表示し、トリガー表示は `指定なし` / `N件選択` のみにする
+2. `SpeciesSelect`: トリガー上に `Label` で「種族」を表示し、同様にトリガー表示を簡素化
+
+### P-25: フィルター項目の 2 列レイアウト
+
+**現状**: 特性スロット / 性別 / 性格 / 色違いは各々全幅で縦積み。
+
+**変更**: `grid grid-cols-2 gap-2` で 2 列配置。各コンポーネントは既に `Label` + `Select` / `Popover` の構造を持つため、そのまま grid セル内に収まる。
+
+### P-26: タマゴ IV 補足テキストの削除
+
+**現状**: `EggParamsForm` の種族入力下に「空欄にすると個体値が「?」で表示されます」の `<p>` 要素。
+
+**変更**: 当該 `<p>` 要素を削除する。
+
+### P-27: SpinnerNumField 全選択修正
+
+**現状**: `SpinnerNumField` でゼロ埋め表示値 (例: `"001"`) をフォーカスすると `setLocalInput(String(value))` が `"1"` をセットし、React の再レンダーで全選択が解除される。
+
+**変更**:
+- `onFocus` 内で `setLocalInput(formatValue(value))` を使い、表示値を維持して不要な再レンダーを防止
+- `requestAnimationFrame(() => input.select())` で全選択を非同期化し、レンダー後に確実に選択
+
+### P-28: タマゴパラメータ 2 列化 + 種族→性別比の自動導出
+
+**現状**: `EggParamsForm` の ♀親特性 / かわらずのいし / 性別比 / 種族 が縦 1 列。種族と性別比が独立設定。
+
+**変更**:
+- 4 フィールドを `grid grid-cols-2 gap-2` で 2 列配置
+- WASM に `get_species_gender_ratio(species_id: u16) -> GenderRatio` を追加 (`lib.rs`)
+- `handleSpeciesChange` で種族選択時に性別比を自動設定
+
+### P-29: 種族→性別比の自動導出 (WASM 側)
+
+**現状**: WASM に種族から性別比を取得する関数がない。
+
+**変更**: `wasm-pkg/src/lib.rs` に `get_species_gender_ratio` を追加。`data::species::get_species_entry(species_id).gender_ratio` を返す。
+
+### P-30: EggFilter デフォルト有効化
+
+**現状**: `EggFilterForm` でフィルターがデフォルト無効 (`useState(false)`)。リセットでフィルターが無効化される。
+
+**変更**:
+- `filterEnabled` のデフォルトを `useState(true)` に変更
+- `handleReset` から `setFilterEnabled(false)` を削除
+- `PokemonFilterForm` の `handleReset` からも `setFilterEnabled(false)` を削除 (一貫性)
+
+### P-31: タマゴ結果 種族列削除
+
+**現状**: タマゴ個体生成結果テーブルに「種族」列がある。タマゴ検索では種族をパラメータで指定するため全行同一値となり冗長。
+
+**変更**: `egg-result-columns.tsx` から `species` 列を削除。`export-columns.ts` の `createEggListExportColumns` では通常エクスポートから削除し、`detailColumns` に `detailOnly: true` で追加 (詳細エクスポート時のみ出力)。
+
 ## 5. テスト方針
 
 | カテゴリ | テスト種別 | 内容 |
@@ -455,6 +535,15 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 | P-20 | 目視確認 | GPU トグル有無でボタン行高さが変わらないことを確認 |
 | P-21 | 目視確認 | 3 列均等配置の確認 |
 | P-22 | - | 表示削除のみ |
+| P-23 | 目視確認 | フィルター並び順が正しいことを確認 |
+| P-24 | 目視確認 | 性格・種族ラベルの表示確認 |
+| P-25 | 目視確認 | フィルター 2 列配置の確認 |
+| P-26 | - | 補足テキスト削除のみ |
+| P-27 | コンポーネントテスト | ゼロ埋め値フォーカス時の全選択維持を検証 |
+| P-28 | 目視確認 | タマゴパラメータ 2 列配置の確認。種族選択時の性別比自動設定を確認 |
+| P-29 | ユニットテスト | `get_species_gender_ratio` の戻り値検証 |
+| P-30 | コンポーネントテスト | フィルターデフォルト有効、リセット後も有効であることを検証 |
+| P-31 | - | 列削除のみ |
 
 ## 6. 実装チェックリスト
 
@@ -480,5 +569,14 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 - [x] P-20: 検索ボタン高さ — `min-h-9` で安定化
 - [x] P-21: TID/SID/PID — 3 列 grid 化
 - [x] P-22: 針読み Seed 表示 — 初期 Seed 解決結果の省略
+- [x] P-23: フィルター並び順 — ステータス → 特性スロット → 性別 → 性格 → 色違い → (種族)
+- [x] P-24: フィルター ラベル — NatureSelect / SpeciesSelect にラベル追加、トリガー簡素化
+- [x] P-25: フィルター 2 列化 — 特性スロット / 性別 / 性格 / 色違いを 2 列配置
+- [x] P-26: タマゴ IV 補足 — 種族下の補足テキスト削除
+- [x] P-27: SpinnerNumField 全選択 — `formatValue` + `requestAnimationFrame` で修正
+- [x] P-28: タマゴパラメータ 2 列化 — ♀親特性 / かわらずのいし / 性別比 / 種族 の 2 列配置 + 種族→性別比自動導出
+- [x] P-29: WASM `get_species_gender_ratio` — `lib.rs` に追加
+- [x] P-30: EggFilter デフォルト有効 — `useState(true)` + リセット時有効維持
+- [x] P-31: タマゴ結果 種族列削除 — テーブル列削除、通常エクスポートから削除、詳細エクスポート (`detailOnly`) には残す
 - [x] i18n: 変更に伴う翻訳キーの追加・更新 (`pnpm run extract` → `ja.po`, `en.po`)
 - [ ] 目視確認: 全ページのデスクトップ/モバイル/ライトモード/ダークモード表示

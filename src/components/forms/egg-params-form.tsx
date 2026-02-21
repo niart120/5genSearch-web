@@ -33,6 +33,7 @@ import {
 } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import { cn } from '@/lib/utils';
+import { get_species_gender_ratio } from '@/wasm/wasm_pkg.js';
 import type {
   EggGenerationParams,
   GenerationConfig,
@@ -211,6 +212,18 @@ function EggParamsForm({
     [update]
   );
 
+  /** 種族変更時に性別比を自動導出して親に伝播 */
+  const handleSpeciesChange = useCallback(
+    (id: number | undefined) => {
+      onSpeciesIdChange?.(id);
+      if (id !== undefined) {
+        const ratio = get_species_gender_ratio(id);
+        update({ gender_ratio: ratio });
+      }
+    },
+    [onSpeciesIdChange, update]
+  );
+
   const handleOffsetBlur = useCallback(() => {
     const clamped = clampOrDefault(localOffset, { defaultValue: 0, min: 0, max: 999_999 });
     setLocalOffset(String(clamped));
@@ -252,88 +265,92 @@ function EggParamsForm({
             language={language}
           />
 
-          {/* ♀親の特性 */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>♀ parent ability</Trans>
-            </Label>
-            <Select
-              value={value.female_ability_slot}
-              onValueChange={handleFemaleAbilityChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ABILITY_SLOT_ORDER.map((slot) => (
-                  <SelectItem key={slot} value={slot}>
-                    {getAbilitySlotName(slot, language)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* かわらずのいし */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>Everstone</Trans>
-            </Label>
-            <Select
-              value={everstoneValue()}
-              onValueChange={handleEverstoneChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">{t`Not used`}</SelectItem>
-                {NATURE_ORDER.map((nature) => (
-                  <SelectItem key={nature} value={nature}>
-                    {getNatureName(nature, language)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 性別比 */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">
-              <Trans>Gender ratio</Trans>
-            </Label>
-            <Select
-              value={value.gender_ratio}
-              onValueChange={handleGenderRatioChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {GENDER_RATIO_ORDER.map((ratio) => (
-                  <SelectItem key={ratio} value={ratio}>
-                    {getGenderRatioName(ratio, language)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 種族 (オプション) */}
-          {onSpeciesIdChange && (
+          {/* ♀親特性 / かわらずのいし / 性別比 / 種族 (2列レイアウト) */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* ♀親の特性 */}
             <div className="flex flex-col gap-1">
               <Label className="text-xs">
-                <Trans>Species (optional)</Trans>
+                <Trans>♀ parent ability</Trans>
               </Label>
-              <SpeciesCombobox value={speciesId} onChange={onSpeciesIdChange} disabled={disabled} />
-              <p className="text-xs text-muted-foreground">
-                <Trans>Leave empty to show "?" for stats</Trans>
-              </p>
+              <Select
+                value={value.female_ability_slot}
+                onValueChange={handleFemaleAbilityChange}
+                disabled={disabled}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ABILITY_SLOT_ORDER.map((slot) => (
+                    <SelectItem key={slot} value={slot}>
+                      {getAbilitySlotName(slot, language)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+
+            {/* かわらずのいし */}
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">
+                <Trans>Everstone</Trans>
+              </Label>
+              <Select
+                value={everstoneValue()}
+                onValueChange={handleEverstoneChange}
+                disabled={disabled}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">{t`Not used`}</SelectItem>
+                  {NATURE_ORDER.map((nature) => (
+                    <SelectItem key={nature} value={nature}>
+                      {getNatureName(nature, language)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 性別比 */}
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">
+                <Trans>Gender ratio</Trans>
+              </Label>
+              <Select
+                value={value.gender_ratio}
+                onValueChange={handleGenderRatioChange}
+                disabled={disabled}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDER_RATIO_ORDER.map((ratio) => (
+                    <SelectItem key={ratio} value={ratio}>
+                      {getGenderRatioName(ratio, language)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 種族 (オプション) */}
+            {onSpeciesIdChange && (
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs">
+                  <Trans>Species (optional)</Trans>
+                </Label>
+                <SpeciesCombobox
+                  value={speciesId}
+                  onChange={handleSpeciesChange}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+          </div>
 
           {/* チェックボックス群 */}
           <div className="grid grid-cols-2 gap-2">

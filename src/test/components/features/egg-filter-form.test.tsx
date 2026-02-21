@@ -133,9 +133,9 @@ describe('EggFilterForm', () => {
     expect(screen.getByRole('switch')).toBeInTheDocument();
   });
 
-  it('showToggle=true: value=undefined のとき Switch は OFF', () => {
+  it('showToggle=true: value=undefined のとき Switch は ON (デフォルト有効)', () => {
     renderFilterForm({ value: undefined, showToggle: true });
-    expect(screen.getByRole('switch')).not.toBeChecked();
+    expect(screen.getByRole('switch')).toBeChecked();
   });
 
   it('showToggle=true: value 指定時は Switch ON', () => {
@@ -171,6 +171,10 @@ describe('EggFilterForm', () => {
   it('showToggle: Switch OFF 時に子要素が opacity-50 になる', async () => {
     const user = userEvent.setup();
     renderFilterForm({ value: undefined, showToggle: true });
+
+    // デフォルト有効なのでまず OFF にする
+    const toggle = screen.getByRole('switch');
+    await user.click(toggle);
 
     await openFilter(user);
     const content = screen.getByText('Shiny').closest('.flex.flex-col.gap-3');

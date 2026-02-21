@@ -161,7 +161,6 @@ function createEggListExportColumns(statMode: StatDisplayMode): ExportColumn<UiE
   const baseColumns: ExportColumn<UiEggData>[] = [
     { key: 'advance', header: 'Advance', accessor: (r) => String(r.advance) },
     { key: 'needle', header: 'Needle', accessor: (r) => getNeedleArrow(r.needle_direction) },
-    { key: 'species', header: 'Species', accessor: (r) => r.species_name ?? '' },
     { key: 'nature', header: 'Nature', accessor: (r) => r.nature_name },
     { key: 'ability', header: 'Ability', accessor: (r) => r.ability_name },
     { key: 'gender', header: 'Gender', accessor: (r) => r.gender_symbol },
@@ -185,6 +184,7 @@ function createEggListExportColumns(statMode: StatDisplayMode): ExportColumn<UiE
   ];
 
   const detailColumns: ExportColumn<UiEggData>[] = [
+    { key: 'species', header: 'Species', accessor: (r) => r.species_name ?? '', detailOnly: true },
     { key: 'base_seed', header: 'Base Seed', accessor: (r) => r.base_seed, detailOnly: true },
     { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.mt_seed, detailOnly: true },
     {
