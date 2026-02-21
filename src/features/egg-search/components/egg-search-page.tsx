@@ -248,6 +248,7 @@ function EggSearchPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start searching.`}
             getRowId={(_row, index) => String(index)}
+            initialSorting={[{ id: 'datetime', desc: false }]}
           />
           <ResultDetailDialog
             open={detailOpen}

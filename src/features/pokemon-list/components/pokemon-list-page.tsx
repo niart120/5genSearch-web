@@ -273,6 +273,7 @@ function PokemonListPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}
+            initialSorting={[{ id: 'advance', desc: false }]}
           />
           <ResultDetailDialog
             open={detailOpen}

@@ -251,6 +251,7 @@ function NeedlePage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results`}
             getRowId={(_row, index) => String(index)}
+            initialSorting={[{ id: 'advance', desc: false }]}
           />
         </FeaturePageLayout.Results>
       </FeaturePageLayout>

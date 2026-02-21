@@ -276,6 +276,7 @@ function DatetimeSearchPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results found. Please enter MT Seeds and start searching.`}
             getRowId={(_row, index) => String(index)}
+            initialSorting={[{ id: 'datetime', desc: false }]}
           />
           <ResultDetailDialog
             open={detailOpen}

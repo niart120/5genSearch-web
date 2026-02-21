@@ -99,7 +99,7 @@ msgstr "Advance range invalid"
 msgid "Any"
 msgstr "Any"
 
-#: src/features/about/components/about-page.tsx:76
+#: src/features/about/components/about-page.tsx:77
 msgid "App icon by"
 msgstr "App icon by"
 
@@ -225,11 +225,11 @@ msgstr "Copy to clipboard"
 msgid "Copy to seed input"
 msgstr "Copy to seed input"
 
-#: src/features/about/components/about-page.tsx:73
+#: src/features/about/components/about-page.tsx:74
 msgid "Credits"
 msgstr "Credits"
 
-#: src/features/about/components/about-page.tsx:22
+#: src/features/about/components/about-page.tsx:23
 msgid "Data sources"
 msgstr "Data sources"
 
@@ -302,7 +302,7 @@ msgstr "Details"
 msgid "Discard and switch"
 msgstr "Discard and switch"
 
-#: src/features/about/components/about-page.tsx:83
+#: src/features/about/components/about-page.tsx:91
 msgid "Disclaimer"
 msgstr "Disclaimer"
 
@@ -588,7 +588,7 @@ msgstr "Lead ability"
 #~ msgid "Leave empty to show \"?\" for stats"
 #~ msgstr "Leave empty to show \"?\" for stats"
 
-#: src/features/about/components/about-page.tsx:40
+#: src/features/about/components/about-page.tsx:41
 msgid "License"
 msgstr "License"
 
@@ -894,7 +894,7 @@ msgstr "Remaining"
 msgid "Rename"
 msgstr "Rename"
 
-#: src/features/about/components/about-page.tsx:57
+#: src/features/about/components/about-page.tsx:58
 msgid "Repository"
 msgstr "Repository"
 
@@ -1198,15 +1198,19 @@ msgstr "Template"
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "The current profile has unsaved changes. What would you like to do?"
 
-#: src/components/layout/placeholder-page.tsx:20
+#: src/components/layout/feature-content.tsx:71
+msgid "This feature is only available in BW (Black/White)."
+msgstr "This feature is only available in BW (Black/White)."
+
+#: src/components/layout/placeholder-page.tsx:22
 msgid "This feature is under development."
 msgstr "This feature is under development."
 
-#: src/features/about/components/about-page.tsx:86
+#: src/features/about/components/about-page.tsx:94
 msgid "This is an unofficial tool and is not affiliated with or endorsed by Nintendo, Game Freak, or The Pokemon Company."
 msgstr "This is an unofficial tool and is not affiliated with or endorsed by Nintendo, Game Freak, or The Pokemon Company."
 
-#: src/features/about/components/about-page.tsx:43
+#: src/features/about/components/about-page.tsx:44
 msgid "This project is open source."
 msgstr "This project is open source."
 

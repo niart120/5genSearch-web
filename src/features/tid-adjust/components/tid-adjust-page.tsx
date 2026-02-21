@@ -251,6 +251,7 @@ function TidAdjustPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results`}
             getRowId={(_row, index) => String(index)}
+            initialSorting={[{ id: 'datetime', desc: false }]}
           />
         </FeaturePageLayout.Results>
       </FeaturePageLayout>
