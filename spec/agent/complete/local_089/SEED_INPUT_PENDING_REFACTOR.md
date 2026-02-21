@@ -273,9 +273,13 @@ useEffect(() => {
 
 ### 4.7 activeOrigins の初回親通知
 
-local_092 の設計で、activeOrigins は `mode` + 3つの origins state から導出される。初回レンダー時点で origins が lazy init で確定するため、local_092 の `onOriginsChange` 通知ロジック (タブ切り替え時 or resolve 完了時) がそのまま適用される。mount effect から `onOriginsChange` を呼ぶ必要はない。
+local_092 の設計で、activeOrigins は `mode` + 3つの origins state から導出される。初回レンダー時点で origins が lazy init で確定するため、local_092 の `onOriginsChange` 通知ロジック (タブ切り替え時 or resolve 完了時) がそのまま適用される。
 
-具体的には、lazy init で origins が確定した後の初回 render で、local_092 で導入する activeOrigins 導出 + 親通知の仕組み (useEffect or handleTabChange) が自然に動作する。
+mount effect では `onModeChange` に加え `onOriginsChange` も呼ぶ。親コールバックが inline lambda の場合に unstable な参照で effect が再実行されるのを防ぐため、callback ref パターン (`onModeChangeRef` / `onOriginsChangeRef`) を採用し、effect deps を `[initialPending, dsConfig, ranges]` のみとした。
+
+また、pending なし + Startup タブがデフォルトの場合にも初回 origins 通知が必要なため、`InitialPending` 型に `'default-startup'` バリアントを追加し、mount effect で統一的に処理する。
+
+`modeRef` は `autoResolveStartup` / `autoResolveSeeds` 内の条件付き `onOriginsChange` 呼び出しのために存在したが、これらのコールバックはタブ固有の入力操作からのみ呼ばれるため、条件は冗長であった。`modeRef` を削除し `onOriginsChange` 呼び出しを無条件化した。
 
 ## 5. テスト方針
 
@@ -283,7 +287,7 @@ local_092 の設計で、activeOrigins は `mode` + 3つの origins state から
 
 | テスト | 検証内容 | ファイル |
 |--------|---------|---------|
-| `consumePendingDetailOrigin` 正常系 | pending あり → 値を返却し、Store からクリアされる | `src/test/unit/stores/search-results-store.test.ts` |
+| `consumePendingDetailOrigin` 正常系 | pending あり → 値を返却し、Store からクリアされる | `src/test/unit/stores/results.test.ts` |
 | `consumePendingDetailOrigin` 空 | pending なし → `undefined` を返却、Store 変更なし | 同上 |
 | `consumePendingSeedOrigins` 正常系 | pending あり → 配列を返却、Store は空配列になる | 同上 |
 | `consumePendingSeedOrigins` 空 | pending 空 → 空配列返却、Store 変更なし | 同上 |
@@ -295,15 +299,18 @@ local_092 の設計で、activeOrigins は `mode` + 3つの origins state から
 
 ## 6. 実装チェックリスト
 
-- [ ] `results.ts`: `create` の引数に `get` を追加
-- [ ] `results.ts`: `consumePendingDetailOrigin` action 追加
-- [ ] `results.ts`: `consumePendingSeedOrigins` action 追加
-- [ ] `seed-input-section.tsx`: `initialPending` の lazy initializer 追加
-- [ ] `seed-input-section.tsx`: `datetime` / `keyInput` / `seedText` の lazy initializer 追加
-- [ ] `seed-input-section.tsx`: `startupOrigins` / `seedsOrigins` / `importOrigins` の lazy initializer 追加
-- [ ] `seed-input-section.tsx`: mount effect を `onModeChange` のみに簡素化
-- [ ] `seed-input-section.tsx`: `eslint-disable-next-line react-hooks/exhaustive-deps` コメントを **削除**
-- [ ] `seed-input-section.tsx`: `mountedRef` ガードを削除 (不要になるため)
-- [ ] ユニットテスト: `search-results-store.test.ts` 作成
-- [ ] 既存テスト通過確認 (`pnpm test:run`)
-- [ ] lint 通過確認 (`pnpm lint`) — `exhaustive-deps` disable が 0 箇所であること
+- [x] `results.ts`: `create` の引数に `get` を追加
+- [x] `results.ts`: `consumePendingDetailOrigin` action 追加
+- [x] `results.ts`: `consumePendingSeedOrigins` action 追加
+- [x] `seed-input-section.tsx`: `InitialPending` 型定義追加 (`'default-startup'` バリアント含む)
+- [x] `seed-input-section.tsx`: `initialPending` の lazy initializer 追加
+- [x] `seed-input-section.tsx`: `datetime` / `keyInput` / `seedText` の lazy initializer 追加
+- [x] `seed-input-section.tsx`: `startupOrigins` / `seedsOrigins` / `importOrigins` の lazy initializer 追加
+- [x] `seed-input-section.tsx`: mount effect を callback ref パターンで `onModeChange` + `onOriginsChange` 通知に簡素化
+- [x] `seed-input-section.tsx`: `eslint-disable-next-line react-hooks/exhaustive-deps` コメントを **削除** (0 箇所)
+- [x] `seed-input-section.tsx`: `mountedRef` ガードを削除
+- [x] `seed-input-section.tsx`: `modeRef` を削除、`autoResolve*` の条件付き呼び出しを無条件化
+- [x] ユニットテスト: `results.test.ts` に consume action テスト追加 (6 件)
+- [x] 既存テスト通過確認 (`pnpm test:run`) — 105 ファイル 1327 テスト全通過
+- [x] lint 通過確認 (`pnpm lint`) — `exhaustive-deps` disable が 0 箇所
+- [x] 型チェック通過確認 (`pnpm exec tsc -b --noEmit`)
