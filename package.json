@@ -56,6 +56,8 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "@eslint/js": "^9.39.1",
     "@lingui/babel-plugin-lingui-macro": "^5.9.0",
     "@lingui/cli": "^5.9.0",
