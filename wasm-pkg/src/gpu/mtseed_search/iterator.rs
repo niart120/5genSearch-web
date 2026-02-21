@@ -129,6 +129,7 @@ impl GpuMtseedSearchIterator {
 mod tests {
     use super::*;
     use crate::types::IvFilter;
+    use serial_test::serial;
 
     #[test]
     fn test_gpu_mtseed_search_known_seed() {
@@ -254,6 +255,7 @@ mod tests {
 
     /// 6V (offset=0): 14B11BA6, 8A30480D, 9E02B0AE, ADFA2178, FC4AA3AC
     #[test]
+    #[serial]
     fn test_gpu_full_search_6v_offset0() {
         use crate::generation::algorithm::generate_rng_ivs_with_offset;
         use crate::types::MtSeed;
@@ -296,6 +298,7 @@ mod tests {
 
     /// V0VVV0 (offset=2): 54F39E0F, 6338DDED, 7BF8CD77, F9C432EB
     #[test]
+    #[serial]
     fn test_gpu_full_search_v0vvv0_offset2() {
         use crate::generation::algorithm::generate_rng_ivs_with_offset;
         use crate::types::MtSeed;
@@ -340,6 +343,7 @@ mod tests {
 
     /// V2UVVV (roamer, offset=1): 5F3DE7EF, 7F1983D4, B8500799, C18AA384, C899E66E, D8BFC637
     #[test]
+    #[serial]
     fn test_gpu_full_search_v2uvvv_roamer_offset1() {
         use crate::generation::algorithm::generate_rng_ivs_with_offset;
         use crate::types::MtSeed;
