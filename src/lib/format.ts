@@ -289,6 +289,34 @@ function keyCodeToKeyInput(keyCode: number): KeyInput {
   return { buttons };
 }
 
+/**
+ * DsButton[] → 表示ラベルのマッピング
+ * KEY_BUTTONS (ビットマスク → 文字列) と同一の表記を使用する。
+ */
+const BUTTON_LABELS_FORMAT: Record<DsButton, string> = {
+  A: 'A',
+  B: 'B',
+  X: 'X',
+  Y: 'Y',
+  L: 'L',
+  R: 'R',
+  Start: 'Start',
+  Select: 'Select',
+  Up: '↑',
+  Down: '↓',
+  Left: '←',
+  Right: '→',
+};
+
+/**
+ * DsButton[] を表示用文字列にフォーマット
+ * 例: ['A', 'Start'] → "A + Start", [] → "なし"
+ */
+function formatDsButtons(buttons: DsButton[]): string {
+  if (buttons.length === 0) return 'なし';
+  return buttons.map((b) => BUTTON_LABELS_FORMAT[b]).join(' + ');
+}
+
 export {
   remToPx,
   formatElapsedTime,
@@ -307,4 +335,5 @@ export {
   formatIvs,
   formatMacAddress,
   keyCodeToKeyInput,
+  formatDsButtons,
 };

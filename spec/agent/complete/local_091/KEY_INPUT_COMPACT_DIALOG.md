@@ -51,6 +51,7 @@ DS ボタン選択 UI (`DsButtonToggleGroup`) がフォーム内で大きなス�
 | `src/i18n/locales/en/messages.po` | 修正 | 新規翻訳キー追加 |
 | `src/test/unit/lib/format.test.ts` | 修正 | `formatDsButtons` テスト追加 |
 | `src/test/components/forms/key-spec-selector.test.tsx` | 修正 | ダイアログ方式に対応したテスト更新 |
+| `src/test/components/forms/key-spec-input.test.tsx` | 修正 | ダイアログ方式に対応したテスト更新 (重複テストファイル) |
 
 ## 3. 設計方針
 
@@ -252,13 +253,14 @@ function KeyInputSelector({ value, onChange, disabled }: KeyInputSelectorProps) 
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/lib/format.ts` に `formatDsButtons` を追加
-- [ ] `src/test/unit/lib/format.test.ts` に `formatDsButtons` テストを追加
-- [ ] `src/components/forms/key-spec-selector.tsx` をダイアログ方式に変更
-- [ ] `src/components/forms/key-input-selector.tsx` をダイアログ方式に変更
-- [ ] `src/test/components/forms/key-spec-selector.test.tsx` をダイアログ方式に対応
-- [ ] i18n メッセージの追加・更新 (`pnpm lingui:extract`)
-- [ ] `pnpm lint` / `pnpm exec tsc -b --noEmit` 通過確認
-- [ ] `pnpm test:run` 通過確認
+- [x] `src/lib/format.ts` に `formatDsButtons` を追加
+- [x] `src/test/unit/lib/format.test.ts` に `formatDsButtons` テストを追加
+- [x] `src/components/forms/key-spec-selector.tsx` をダイアログ方式に変更
+- [x] `src/components/forms/key-input-selector.tsx` をダイアログ方式に変更
+- [x] `src/test/components/forms/key-spec-selector.test.tsx` をダイアログ方式に対応
+- [x] `src/test/components/forms/key-spec-input.test.tsx` をダイアログ方式に対応
+- [x] i18n メッセージの追加・更新 (`pnpm lingui:extract`) — 新規キーなし (既存キーのみ使用)
+- [x] `pnpm lint` / `pnpm exec tsc -b --noEmit` 通過確認
+- [x] `pnpm test:run` 通過確認 (105 files, 1314 passed)
 - [ ] 画面確認: 各ページでインジケータ行が 1 行で表示される
 - [ ] 画面確認: ダイアログ内で DS ボタンのトグルが正常に動作する

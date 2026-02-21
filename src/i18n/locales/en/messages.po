@@ -175,7 +175,7 @@ msgstr "Clear"
 msgid "Clear all"
 msgstr "Clear all"
 
-#: src/components/forms/key-spec-selector.tsx:42
+#: src/components/forms/key-spec-selector.tsx:81
 msgid "Combinations"
 msgstr "Combinations"
 
@@ -255,8 +255,8 @@ msgstr "Def"
 
 #: src/components/forms/seed-origin-table.tsx:104
 #: src/features/ds-config/components/profile-delete-dialog.tsx:49
-#: src/features/ds-config/components/profile-selector.tsx:212
-#: src/features/ds-config/components/profile-selector.tsx:213
+#: src/features/ds-config/components/profile-selector.tsx:194
+#: src/features/ds-config/components/profile-selector.tsx:195
 msgid "Delete"
 msgstr "Delete"
 
@@ -395,7 +395,7 @@ msgstr "Everstone"
 
 #: src/components/data-display/export-toolbar.tsx:58
 #: src/features/ds-config/components/profile-import-export.tsx:81
-#: src/features/ds-config/components/profile-import-export.tsx:84
+#: src/features/ds-config/components/profile-import-export.tsx:82
 msgid "Export"
 msgstr "Export"
 
@@ -491,7 +491,7 @@ msgstr "HP"
 
 #: src/components/forms/seed-input-section.tsx:291
 #: src/features/ds-config/components/profile-import-export.tsx:70
-#: src/features/ds-config/components/profile-import-export.tsx:73
+#: src/features/ds-config/components/profile-import-export.tsx:71
 msgid "Import"
 msgstr "Import"
 
@@ -527,7 +527,10 @@ msgstr "IVs must be in the range 0 to 31"
 msgid "Key"
 msgstr "Key"
 
-#: src/components/forms/key-spec-selector.tsx:37
+#: src/components/forms/key-input-selector.tsx:56
+#: src/components/forms/key-spec-selector.tsx:52
+#: src/components/forms/key-spec-selector.tsx:63
+#: src/components/forms/key-spec-selector.tsx:72
 #: src/features/datetime-search/components/result-detail-dialog.tsx:94
 #: src/features/egg-list/components/result-detail-dialog.tsx:58
 #: src/features/egg-search/components/result-detail-dialog.tsx:72
@@ -535,7 +538,8 @@ msgstr "Key"
 msgid "Key input"
 msgstr "Key input"
 
-#: src/components/forms/key-input-selector.tsx:35
+#: src/components/forms/key-input-selector.tsx:46
+#: src/components/forms/key-input-selector.tsx:65
 msgid "Key input (buttons held)"
 msgstr "Key input (buttons held)"
 
@@ -727,7 +731,7 @@ msgstr "Nidoran♀"
 msgid "No default Timer0/VCount data for this combination. Switched to manual mode."
 msgstr "No default Timer0/VCount data for this combination. Switched to manual mode."
 
-#: src/features/ds-config/components/profile-selector.tsx:160
+#: src/features/ds-config/components/profile-selector.tsx:210
 msgid "No profile"
 msgstr "No profile"
 
@@ -836,12 +840,11 @@ msgstr "Pokémon"
 msgid "Pokemon generation result details"
 msgstr "Pokemon generation result details"
 
-#: src/features/ds-config/components/profile-selector.tsx:150
-#: src/features/ds-config/components/profile-selector.tsx:155
+#: src/features/ds-config/components/profile-selector.tsx:205
 msgid "Profile"
 msgstr "Profile"
 
-#: src/features/ds-config/components/profile-selector.tsx:144
+#: src/features/ds-config/components/profile-selector.tsx:143
 msgid "Profile deleted"
 msgstr "Profile deleted"
 
@@ -854,9 +857,9 @@ msgstr "Profile imported"
 msgid "Profile name"
 msgstr "Profile name"
 
-#: src/features/ds-config/components/profile-selector.tsx:90
-#: src/features/ds-config/components/profile-selector.tsx:103
-#: src/features/ds-config/components/profile-selector.tsx:116
+#: src/features/ds-config/components/profile-selector.tsx:89
+#: src/features/ds-config/components/profile-selector.tsx:102
+#: src/features/ds-config/components/profile-selector.tsx:115
 msgid "Profile saved"
 msgstr "Profile saved"
 
@@ -871,8 +874,8 @@ msgstr "Remaining"
 
 #: src/features/ds-config/components/profile-name-dialog.tsx:66
 #: src/features/ds-config/components/profile-name-dialog.tsx:90
-#: src/features/ds-config/components/profile-selector.tsx:200
-#: src/features/ds-config/components/profile-selector.tsx:201
+#: src/features/ds-config/components/profile-selector.tsx:181
+#: src/features/ds-config/components/profile-selector.tsx:182
 msgid "Rename"
 msgstr "Rename"
 
@@ -913,8 +916,8 @@ msgid "Roamer"
 msgstr "Roamer"
 
 #: src/features/ds-config/components/profile-name-dialog.tsx:90
-#: src/features/ds-config/components/profile-selector.tsx:177
-#: src/features/ds-config/components/profile-selector.tsx:178
+#: src/features/ds-config/components/profile-selector.tsx:168
+#: src/features/ds-config/components/profile-selector.tsx:169
 msgid "Save"
 msgstr "Save"
 
@@ -923,8 +926,8 @@ msgid "Save and switch"
 msgstr "Save and switch"
 
 #: src/features/ds-config/components/profile-name-dialog.tsx:66
-#: src/features/ds-config/components/profile-selector.tsx:188
-#: src/features/ds-config/components/profile-selector.tsx:189
+#: src/features/ds-config/components/profile-selector.tsx:155
+#: src/features/ds-config/components/profile-selector.tsx:156
 msgid "Save as new"
 msgstr "Save as new"
 
@@ -1009,7 +1012,7 @@ msgstr "Select Pokémon"
 msgid "Select seed templates to apply to Target Seeds."
 msgstr "Select seed templates to apply to Target Seeds."
 
-#: src/components/forms/key-input-selector.tsx:40
+#: src/components/forms/key-input-selector.tsx:74
 msgid "Selected buttons"
 msgstr "Selected buttons"
 

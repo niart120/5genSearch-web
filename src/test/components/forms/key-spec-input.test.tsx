@@ -1,5 +1,5 @@
 /**
- * KeySpecSelector コンポーネントテスト
+ * KeySpecSelector コンポーネントテスト (key-spec-input)
  */
 
 import { render, screen } from '@testing-library/react';
@@ -28,23 +28,34 @@ describe('KeySpecSelector', () => {
     setupTestI18n('ja');
   });
 
-  it('12 個のチェックボックスが表示される', () => {
-    renderKeySpecSelector();
-    const checkboxes = screen.getAllByRole('checkbox');
-    expect(checkboxes).toHaveLength(12);
+  it('インジケータ行に選択中ボタンのテキストが表示される', () => {
+    renderKeySpecSelector({ value: { available_buttons: ['A', 'Start'] } });
+    expect(screen.getByText('A + Start')).toBeInTheDocument();
   });
 
-  it('初期状態で全てのチェックボックスが未選択', () => {
+  it('ボタン未選択時はインジケータに "なし" が表示される', () => {
     renderKeySpecSelector();
-    for (const checkbox of screen.getAllByRole('checkbox')) {
-      expect(checkbox).not.toBeChecked();
-    }
+    expect(screen.getByText('なし')).toBeInTheDocument();
+  });
+
+  it('ダイアログを開くと 12 個のチェックボックスが表示される', async () => {
+    const user = userEvent.setup();
+    renderKeySpecSelector();
+
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    await user.click(openButtons[0]);
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(12);
   });
 
   it('ボタンを選択すると onChange が発火する', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     renderKeySpecSelector({ onChange });
+
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    await user.click(openButtons[0]);
 
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
@@ -62,6 +73,9 @@ describe('KeySpecSelector', () => {
       onChange,
     });
 
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    await user.click(openButtons[0]);
+
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
 
@@ -70,11 +84,10 @@ describe('KeySpecSelector', () => {
     });
   });
 
-  it('disabled 時はチェックボックスが操作不可', () => {
+  it('disabled 時は編集ボタンが無効化される', () => {
     renderKeySpecSelector({ disabled: true });
-    for (const checkbox of screen.getAllByRole('checkbox')) {
-      expect(checkbox).toBeDisabled();
-    }
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    expect(openButtons[0]).toBeDisabled();
   });
 
   it('combinationCount が表示される', () => {

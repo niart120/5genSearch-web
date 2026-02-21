@@ -28,24 +28,39 @@ describe('KeySpecSelector', () => {
     setupTestI18n('ja');
   });
 
-  it('12 個のチェックボックスが表示される', () => {
+  it('インジケータ行に選択中ボタンのテキストが表示される', () => {
+    renderKeySpecSelector({ value: { available_buttons: ['A', 'Start'] } });
+    expect(screen.getByText('A + Start')).toBeInTheDocument();
+  });
+
+  it('ボタン未選択時はインジケータに "なし" が表示される', () => {
     renderKeySpecSelector();
+    expect(screen.getByText('なし')).toBeInTheDocument();
+  });
+
+  it('ボタンクリックでダイアログが開く', async () => {
+    const user = userEvent.setup();
+    renderKeySpecSelector();
+
+    // ダイアログを開くボタンをクリック
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    await user.click(openButtons[0]);
+
+    // ダイアログ内にチェックボックスが表示される
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(12);
   });
 
-  it('初期状態で全てのチェックボックスが未選択', () => {
-    renderKeySpecSelector();
-    for (const checkbox of screen.getAllByRole('checkbox')) {
-      expect(checkbox).not.toBeChecked();
-    }
-  });
-
-  it('ボタンを選択すると onChange が発火する', async () => {
+  it('ダイアログ内のボタンをトグルすると onChange が呼ばれる', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     renderKeySpecSelector({ onChange });
 
+    // ダイアログを開く
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    await user.click(openButtons[0]);
+
+    // ダイアログ内の A ボタンをトグル
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
 
@@ -62,6 +77,10 @@ describe('KeySpecSelector', () => {
       onChange,
     });
 
+    // ダイアログを開く
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    await user.click(openButtons[0]);
+
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
 
@@ -70,14 +89,13 @@ describe('KeySpecSelector', () => {
     });
   });
 
-  it('disabled 時はチェックボックスが操作不可', () => {
+  it('disabled 時は編集ボタンが無効化される', () => {
     renderKeySpecSelector({ disabled: true });
-    for (const checkbox of screen.getAllByRole('checkbox')) {
-      expect(checkbox).toBeDisabled();
-    }
+    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
+    expect(openButtons[0]).toBeDisabled();
   });
 
-  it('combinationCount が表示される', () => {
+  it('combinationCount がインジケータ行に表示される', () => {
     renderKeySpecSelector({ combinationCount: 256 });
     expect(screen.getByText(/256/)).toBeInTheDocument();
   });
