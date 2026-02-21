@@ -378,23 +378,23 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 
 ## 6. 実装チェックリスト
 
-- [ ] P-01: EmptyState — 全ページで `EmptyState` コンポーネントに置き換え
-- [ ] P-02: 二重パディング — `FeaturePageLayout` から `p-4` を削除
-- [ ] P-03: KeySpecSelector — 件数削除、ボタンラベル変更
-- [ ] P-04: KeyInputSelector — `(buttons held)` 削除、ダイアログ内表示削除、ボタンラベル変更
-- [ ] P-05: IvRangeInput — min/max ヘッダ行の常時表示
-- [ ] P-06: MtseedSearch — 結果表示エリアの統一
-- [ ] P-07: TID Adjust — 「セーブ状態」見出し追加 + 注記削除
-- [ ] P-08: キー入力表示順 — `formatDsButtons` にソート追加、`KEY_BUTTONS` 並び順変更
-- [ ] P-09: SeedInputSection — DS 設定説明文と解決済み Seed 件数の削除
-- [ ] P-10: フィルター初期状態 — `PokemonFilterForm` のデフォルト有効化
-- [ ] P-11: セレクタサイズ — `NatureSelect`, `HiddenPowerSelect` のトリガー高さ統一
-- [ ] P-12: エンカウント設定 — 場所 + エンカウント方法の同一行化、「固定」→「あまいかおり」
-- [ ] P-13: SpinnerNumField — `handleFocusSelectAll` の適用
-- [ ] P-14: ツール タブ並び順 — needle → tid-adjust → mtseed-search
-- [ ] P-15: TID Adjust — TID / SID / PID 一行配置
-- [ ] P-16: 針読み — プレースホルダ削除
-- [ ] P-17: 翻訳 — 「転記」→「コピー」
-- [ ] P-18: めざパフィルター — タイプ + 威力の同一行化
-- [ ] i18n: 変更に伴う翻訳キーの追加・更新 (`pnpm run extract` → `ja.po`, `en.po`)
+- [x] P-01: EmptyState — 全ページで `DataTable` 経由で `EmptyState` を使用済み (変更不要)
+- [x] P-02: 二重パディング — `FeaturePageLayout` から `p-4` を削除
+- [x] P-03: KeySpecSelector — 件数削除、ボタンラベル変更
+- [x] P-04: KeyInputSelector — `(buttons held)` 削除、ダイアログ内表示削除、ボタンラベル変更
+- [x] P-05: IvRangeInput — min/max ヘッダ行の常時表示
+- [x] P-06: MtseedSearch — 結果表示エリアの統一
+- [x] P-07: TID Adjust — 「セーブ状態」見出し追加 + 注記削除
+- [x] P-08: キー入力表示順 — `formatDsButtons` にソート追加、`KEY_BUTTONS` 並び順変更
+- [x] P-09: SeedInputSection — DS 設定説明文と解決済み Seed 件数の削除
+- [x] P-10: フィルター初期状態 — `PokemonFilterForm` のデフォルト有効化
+- [x] P-11: セレクタサイズ — `NatureSelect`, `HiddenPowerSelect` のトリガー高さ統一
+- [x] P-12: エンカウント設定 — 場所 + エンカウント方法の同一行化、「固定」→「あまいかおり」
+- [x] P-13: SpinnerNumField — `handleFocusSelectAll` の適用
+- [x] P-14: ツール タブ並び順 — needle → tid-adjust → mtseed-search
+- [x] P-15: TID Adjust — TID / SID / PID 一行配置
+- [x] P-16: 針読み — プレースホルダ削除
+- [x] P-17: 翻訳 — 「転記」→「コピー」
+- [x] P-18: めざパフィルター — タイプ + 威力の同一行化
+- [x] i18n: 変更に伴う翻訳キーの追加・更新 (`pnpm run extract` → `ja.po`, `en.po`)
 - [ ] 目視確認: 全ページのデスクトップ/モバイル/ライトモード/ダークモード表示
