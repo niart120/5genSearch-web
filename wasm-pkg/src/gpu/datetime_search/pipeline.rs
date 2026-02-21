@@ -192,7 +192,7 @@ impl SearchPipeline {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("mtseed-datetime-search-pipeline-layout"),
             bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
+            immediate_size: 0,
         });
 
         // コンピュートパイプライン
@@ -203,17 +203,9 @@ impl SearchPipeline {
             entry_point: Some("sha1_generate"),
             compilation_options: wgpu::PipelineCompilationOptions {
                 constants: &[
-                    (
-                        String::from("WORKGROUP_SIZE"),
-                        f64::from(limits.workgroup_size),
-                    ),
-                    (
-                        String::from("ITEMS_PER_THREAD"),
-                        f64::from(limits.items_per_thread),
-                    ),
-                ]
-                .into_iter()
-                .collect(),
+                    ("WORKGROUP_SIZE", f64::from(limits.workgroup_size)),
+                    ("ITEMS_PER_THREAD", f64::from(limits.items_per_thread)),
+                ],
                 ..Default::default()
             },
             cache: None,
@@ -472,10 +464,10 @@ impl SearchPipeline {
         // WASM: Poll で定期的にチェック + await で制御をイベントループに戻す
         // Native: Wait でブロッキング待機
         #[cfg(target_arch = "wasm32")]
-        self.device.poll(wgpu::Maintain::Poll);
+        let _ = self.device.poll(wgpu::PollType::Poll);
 
         #[cfg(not(target_arch = "wasm32"))]
-        self.device.poll(wgpu::Maintain::Wait);
+        let _ = self.device.poll(wgpu::PollType::wait_indefinitely());
 
         // rx.await: WASM では wasm_bindgen_futures が適切にポーリングする
         if rx.await.ok().and_then(Result::ok).is_none() {

@@ -45,10 +45,10 @@ impl GpuDeviceContext {
                 ..Default::default()
             })
             .await
-            .ok_or("GPU adapter not found")?;
+            .map_err(|_| String::from("GPU adapter not found"))?;
 
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .request_device(&wgpu::DeviceDescriptor::default())
             .await
             .map_err(|e| format!("Device request failed: {e}"))?;
 
