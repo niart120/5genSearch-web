@@ -28,6 +28,17 @@ import type { SeedOrigin, LcgSeed, Datetime, KeyInput } from '@/wasm/wasm_pkg.js
 export type SeedInputMode = 'import' | 'manual-seeds' | 'manual-startup';
 
 // ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+/** lazy initializer で消費した pending データのスナップショット (不変) */
+type InitialPending =
+  | { type: 'startup'; detail: Extract<SeedOrigin, { Startup: unknown }> }
+  | { type: 'seed'; detail: Extract<SeedOrigin, { Seed: unknown }> }
+  | { type: 'seeds'; seeds: SeedOrigin[] }
+  | { type: 'default-startup' };
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -88,8 +99,34 @@ function SeedInputSection({
   const { t } = useLingui();
   const { config: dsConfig, ranges } = useDsConfigReadonly();
 
-  // Manual seeds state
-  const [seedText, setSeedText] = useState('');
+  // ---------------------------------------------------------------------------
+  // pending データの同期消費 (lazy initializer)
+  // ---------------------------------------------------------------------------
+
+  /** mount 時に確定する pending データのスナップショット (不変) */
+  const [initialPending] = useState<InitialPending | undefined>(() => {
+    const store = useSearchResultsStore.getState();
+    const detail = store.consumePendingDetailOrigin(featureId);
+    if (detail && 'Startup' in detail) return { type: 'startup', detail };
+    if (detail && 'Seed' in detail) return { type: 'seed', detail };
+    const seeds = store.consumePendingSeedOrigins();
+    if (seeds.length > 0) return { type: 'seeds', seeds };
+    if (mode === 'manual-startup') return { type: 'default-startup' };
+  });
+
+  // ---------------------------------------------------------------------------
+  // 内部 state (lazy initializer で initialPending から導出)
+  // ---------------------------------------------------------------------------
+
+  const [seedText, setSeedText] = useState(() => {
+    if (initialPending?.type === 'startup') {
+      return initialPending.detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
+    }
+    if (initialPending?.type === 'seed') {
+      return initialPending.detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+    }
+    return '';
+  });
   const [resolveError, setResolveError] = useState<string | undefined>();
 
   // Import state
@@ -97,73 +134,143 @@ function SeedInputSection({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Startup state
-  const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
-  const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
+  const [datetime, setDatetime] = useState<Datetime>(() => {
+    if (initialPending?.type === 'startup') {
+      return initialPending.detail.Startup.datetime;
+    }
+    return DEFAULT_DATETIME;
+  });
+  const [keyInput, setKeyInput] = useState<KeyInput>(() => {
+    if (initialPending?.type === 'startup') {
+      return keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
+    }
+    return { buttons: [] };
+  });
 
-  // タブ別 独立 origins state
-  const [startupOrigins, setStartupOrigins] = useState<SeedOrigin[]>([]);
-  const [seedsOrigins, setSeedsOrigins] = useState<SeedOrigin[]>([]);
-  const [importOrigins, setImportOrigins] = useState<SeedOrigin[]>([]);
-
-  // mode の最新値を追跡する ref (useCallback 内で stale closure を防ぐ)
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
+  // タブ別 独立 origins state (lazy init)
+  const [startupOrigins, setStartupOrigins] = useState<SeedOrigin[]>(() => {
+    if (initialPending?.type === 'startup') {
+      const ki = keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
+      try {
+        return resolveSeedOrigins({
+          type: 'Startup',
+          ds: dsConfig,
+          datetime: initialPending.detail.Startup.datetime,
+          ranges,
+          key_input: ki,
+        });
+      } catch {
+        return [];
+      }
+    }
+    if (initialPending?.type === 'default-startup') {
+      try {
+        return resolveSeedOrigins({
+          type: 'Startup',
+          ds: dsConfig,
+          datetime: DEFAULT_DATETIME,
+          ranges,
+          key_input: { buttons: [] },
+        });
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  const [seedsOrigins, setSeedsOrigins] = useState<SeedOrigin[]>(() => {
+    if (initialPending?.type === 'seed') {
+      try {
+        return resolveSeedOrigins({
+          type: 'Seeds',
+          seeds: [initialPending.detail.Seed.base_seed],
+        });
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  const [importOrigins, setImportOrigins] = useState<SeedOrigin[]>(() => {
+    if (initialPending?.type === 'seeds') {
+      return initialPending.seeds;
+    }
+    return [];
+  });
 
   // 解決要求カウンタ (最新のリクエストのみ結果を適用する)
   const resolveIdRef = useRef(0);
 
-  // ---------------------------------------------------------------------------
-  // pending データの自動消費 (Store 転記)
-  // ---------------------------------------------------------------------------
-
-  const mountedRef = useRef(false);
+  // 親コールバックの安定参照 (mount effect で unstable lambda による再実行を防ぐ)
+  const onModeChangeRef = useRef(onModeChange);
+  const onOriginsChangeRef = useRef(onOriginsChange);
   useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
+    onModeChangeRef.current = onModeChange;
+    onOriginsChangeRef.current = onOriginsChange;
+  });
 
-    const store = useSearchResultsStore.getState();
+  // ---------------------------------------------------------------------------
+  // Mount effect: mode 通知 + 初回 origins 親通知
+  // ---------------------------------------------------------------------------
 
-    // 1) pendingDetailOrigins: 詳細ダイアログからの単一転記 (ページ別)
-    //    Startup → 起動条件タブに datetime + key_code、Seeds タブに base_seed hex を埋める
-    //    Seed → Seeds タブに base_seed hex を埋める
-    const detail = store.pendingDetailOrigins[featureId];
-    if (detail) {
-      store.clearPendingDetailOrigin(featureId);
-      if ('Startup' in detail) {
-        const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
-        const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
-        setDatetime(detail.Startup.datetime);
-        setKeyInput(ki);
-        setSeedText(hex);
-        modeRef.current = 'manual-startup';
-        onModeChange('manual-startup');
-        autoResolveStartup(detail.Startup.datetime, ki);
-      } else {
-        const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
-        setSeedText(hex);
-        modeRef.current = 'manual-seeds';
-        onModeChange('manual-seeds');
-        autoResolveSeeds(hex);
+  useEffect(() => {
+    if (!initialPending) return;
+    switch (initialPending.type) {
+      case 'startup': {
+        onModeChangeRef.current('manual-startup');
+        const ki = keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
+        try {
+          onOriginsChangeRef.current(
+            resolveSeedOrigins({
+              type: 'Startup',
+              ds: dsConfig,
+              datetime: initialPending.detail.Startup.datetime,
+              ranges,
+              key_input: ki,
+            })
+          );
+        } catch {
+          onOriginsChangeRef.current([]);
+        }
+        break;
       }
-      return;
+      case 'seed': {
+        onModeChangeRef.current('manual-seeds');
+        try {
+          onOriginsChangeRef.current(
+            resolveSeedOrigins({
+              type: 'Seeds',
+              seeds: [initialPending.detail.Seed.base_seed],
+            })
+          );
+        } catch {
+          onOriginsChangeRef.current([]);
+        }
+        break;
+      }
+      case 'seeds': {
+        onModeChangeRef.current('import');
+        onOriginsChangeRef.current(initialPending.seeds);
+        break;
+      }
+      case 'default-startup': {
+        try {
+          onOriginsChangeRef.current(
+            resolveSeedOrigins({
+              type: 'Startup',
+              ds: dsConfig,
+              datetime: DEFAULT_DATETIME,
+              ranges,
+              key_input: { buttons: [] },
+            })
+          );
+        } catch {
+          onOriginsChangeRef.current([]);
+        }
+        break;
+      }
     }
-
-    // 2) pendingSeedOrigins: 全結果一括転記 → Import タブ
-    const pending = store.pendingSeedOrigins;
-    if (pending.length > 0) {
-      store.clearPendingSeedOrigins();
-      onModeChange('import');
-      setImportOrigins(pending);
-      onOriginsChange(pending);
-      return;
-    }
-
-    // どちらもなく、Startup タブが初期選択なら自動解決
-    if (mode === 'manual-startup') {
-      autoResolveStartup(datetime, keyInput);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialPending, dsConfig, ranges]);
 
   // ---------------------------------------------------------------------------
   // Auto-resolve helpers
@@ -179,7 +286,7 @@ function SeedInputSection({
         .filter((l) => l.length > 0);
       if (lines.length === 0) {
         setSeedsOrigins([]);
-        if (modeRef.current === 'manual-seeds') onOriginsChange([]);
+        onOriginsChange([]);
         return;
       }
       const seeds: LcgSeed[] = [];
@@ -188,7 +295,7 @@ function SeedInputSection({
         if (seed === undefined) {
           // 入力途中: 解決せず origins はクリア
           setSeedsOrigins([]);
-          if (modeRef.current === 'manual-seeds') onOriginsChange([]);
+          onOriginsChange([]);
           return;
         }
         seeds.push(seed);
@@ -198,7 +305,7 @@ function SeedInputSection({
         const resolved = resolveSeedOrigins({ type: 'Seeds', seeds });
         if (resolveIdRef.current === id) {
           setSeedsOrigins(resolved);
-          if (modeRef.current === 'manual-seeds') onOriginsChange(resolved);
+          onOriginsChange(resolved);
         }
       } catch (error: unknown) {
         if (resolveIdRef.current === id) {
@@ -224,7 +331,7 @@ function SeedInputSection({
         });
         if (resolveIdRef.current === id) {
           setStartupOrigins(resolved);
-          if (modeRef.current === 'manual-startup') onOriginsChange(resolved);
+          onOriginsChange(resolved);
         }
       } catch (error: unknown) {
         if (resolveIdRef.current === id) {
