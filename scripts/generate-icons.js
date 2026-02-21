@@ -19,6 +19,8 @@ const variants = [
   { name: 'apple-touch-icon.png', size: 180 },
   { name: 'icon-192.png', size: 192 },
   { name: 'icon-512.png', size: 512 },
+  { name: 'icon-192-maskable.png', size: 192 },
+  { name: 'icon-512-maskable.png', size: 512 },
 ];
 
 for (const { name, size } of variants) {
