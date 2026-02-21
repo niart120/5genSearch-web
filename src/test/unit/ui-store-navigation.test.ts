@@ -30,7 +30,7 @@ describe('ui store navigation', () => {
       useUiStore.getState().setActiveCategory('tools');
       const { activeCategory, activeFeature } = useUiStore.getState();
       expect(activeCategory).toBe('tools');
-      expect(activeFeature).toBe('mtseed-search');
+      expect(activeFeature).toBe('needle');
     });
 
     it('featureMemory がある場合は記憶した機能に復帰する', () => {

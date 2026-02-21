@@ -76,7 +76,7 @@ describe('NeedleInput', () => {
       </I18nTestWrapper>
     );
 
-    const input = screen.getByPlaceholderText('24267');
+    const input = screen.getByLabelText('Needle Direction (Numeric)');
 
     // "2" を入力 → フィルタ後 "2" で onChange 呼び出し
     await user.type(input, '2');

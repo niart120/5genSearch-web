@@ -82,8 +82,8 @@ describe('navigation', () => {
       expect(getDefaultFeature('generation')).toBe('pokemon-list');
     });
 
-    it('tools のデフォルトは mtseed-search', () => {
-      expect(getDefaultFeature('tools')).toBe('mtseed-search');
+    it('tools のデフォルトは needle', () => {
+      expect(getDefaultFeature('tools')).toBe('needle');
     });
   });
 });
