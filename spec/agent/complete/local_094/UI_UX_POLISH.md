@@ -507,7 +507,7 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 
 **現状**: タマゴ個体生成結果テーブルに「種族」列がある。タマゴ検索では種族をパラメータで指定するため全行同一値となり冗長。
 
-**変更**: `egg-result-columns.tsx` から `species` 列を削除。`export-columns.ts` の `createEggListExportColumns` からも同列を削除。
+**変更**: `egg-result-columns.tsx` から `species` 列を削除。`export-columns.ts` の `createEggListExportColumns` では通常エクスポートから削除し、`detailColumns` に `detailOnly: true` で追加 (詳細エクスポート時のみ出力)。
 
 ## 5. テスト方針
 
@@ -577,6 +577,6 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 - [x] P-28: タマゴパラメータ 2 列化 — ♀親特性 / かわらずのいし / 性別比 / 種族 の 2 列配置 + 種族→性別比自動導出
 - [x] P-29: WASM `get_species_gender_ratio` — `lib.rs` に追加
 - [x] P-30: EggFilter デフォルト有効 — `useState(true)` + リセット時有効維持
-- [x] P-31: タマゴ結果 種族列削除 — `egg-result-columns.tsx` + `export-columns.ts`
+- [x] P-31: タマゴ結果 種族列削除 — テーブル列削除、通常エクスポートから削除、詳細エクスポート (`detailOnly`) には残す
 - [x] i18n: 変更に伴う翻訳キーの追加・更新 (`pnpm run extract` → `ja.po`, `en.po`)
 - [ ] 目視確認: 全ページのデスクトップ/モバイル/ライトモード/ダークモード表示
