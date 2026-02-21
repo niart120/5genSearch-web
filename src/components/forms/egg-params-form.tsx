@@ -329,9 +329,6 @@ function EggParamsForm({
                 <Trans>Species (optional)</Trans>
               </Label>
               <SpeciesCombobox value={speciesId} onChange={onSpeciesIdChange} disabled={disabled} />
-              <p className="text-xs text-muted-foreground">
-                <Trans>Leave empty to show "?" for stats</Trans>
-              </p>
             </div>
           )}
 

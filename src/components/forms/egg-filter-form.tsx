@@ -363,34 +363,33 @@ function EggFilterForm({
             </>
           )}
 
-          {/* 性格 */}
-          <NatureSelect
-            value={filter.natures ?? []}
-            onChange={handleNaturesChange}
-            disabled={filterDisabled}
-          />
+          {/* 特性スロット / 性別 / 性格 / 色違い (2列) */}
+          <div className="grid grid-cols-2 gap-2">
+            <AbilitySlotSelect
+              value={filter.ability_slot}
+              onChange={handleAbilitySlotChange}
+              disabled={filterDisabled}
+            />
 
-          {/* 性別 */}
-          <GenderSelect
-            value={filter.gender}
-            onChange={handleGenderChange}
-            showGenderless={false}
-            disabled={filterDisabled}
-          />
+            <GenderSelect
+              value={filter.gender}
+              onChange={handleGenderChange}
+              showGenderless={false}
+              disabled={filterDisabled}
+            />
 
-          {/* 特性スロット */}
-          <AbilitySlotSelect
-            value={filter.ability_slot}
-            onChange={handleAbilitySlotChange}
-            disabled={filterDisabled}
-          />
+            <NatureSelect
+              value={filter.natures ?? []}
+              onChange={handleNaturesChange}
+              disabled={filterDisabled}
+            />
 
-          {/* 色違い */}
-          <ShinySelect
-            value={filter.shiny}
-            onChange={handleShinyChange}
-            disabled={filterDisabled}
-          />
+            <ShinySelect
+              value={filter.shiny}
+              onChange={handleShinyChange}
+              disabled={filterDisabled}
+            />
+          </div>
 
           {/* 猶予フレーム下限 */}
           <div className="flex flex-col gap-1">

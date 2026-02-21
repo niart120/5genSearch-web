@@ -20,7 +20,7 @@ msgstr ""
 #. placeholder {0}: selectedIds.length
 #. placeholder {0}: value.length
 #: src/components/forms/hidden-power-select.tsx:51
-#: src/components/forms/nature-select.tsx:37
+#: src/components/forms/nature-select.tsx:38
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:112
 msgid "{0} selected"
 msgstr "{0} selected"
@@ -77,7 +77,7 @@ msgstr "About this app"
 msgid "Advance"
 msgstr "Advance"
 
-#: src/features/needle/components/needle-page.tsx:201
+#: src/features/needle/components/needle-page.tsx:196
 msgid "Advance Range"
 msgstr "Advance Range"
 
@@ -105,8 +105,8 @@ msgstr "Atk"
 
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
-#: src/features/needle/components/needle-page.tsx:173
-#: src/features/needle/components/needle-page.tsx:277
+#: src/features/needle/components/needle-page.tsx:168
+#: src/features/needle/components/needle-page.tsx:272
 msgid "Auto"
 msgstr "Auto"
 
@@ -182,7 +182,7 @@ msgstr "Clear all"
 msgid "Compound Eyes"
 msgstr "Compound Eyes"
 
-#: src/components/forms/egg-params-form.tsx:373
+#: src/components/forms/egg-params-form.tsx:370
 msgid "Consider NPC"
 msgstr "Consider NPC"
 
@@ -269,9 +269,9 @@ msgid "Delete row {0}"
 msgstr "Delete row {0}"
 
 #: src/components/forms/hidden-power-select.tsx:93
-#: src/components/forms/key-input-selector.tsx:104
-#: src/components/forms/key-spec-selector.tsx:104
-#: src/components/forms/nature-select.tsx:69
+#: src/components/forms/key-input-selector.tsx:98
+#: src/components/forms/key-spec-selector.tsx:98
+#: src/components/forms/nature-select.tsx:72
 msgid "Deselect all"
 msgstr "Deselect all"
 
@@ -307,8 +307,8 @@ msgstr "Downloaded {filename}"
 #~ msgid "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 #~ msgstr "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 
-#: src/components/forms/key-input-selector.tsx:86
-#: src/components/forms/key-spec-selector.tsx:86
+#: src/components/forms/key-input-selector.tsx:80
+#: src/components/forms/key-spec-selector.tsx:80
 msgid "Edit"
 msgstr "Edit"
 
@@ -350,7 +350,7 @@ msgid "Elapsed"
 msgstr "Elapsed"
 
 #: src/components/forms/egg-filter-form.tsx:312
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:393
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:396
 msgid "Enable filter"
 msgstr "Enable filter"
 
@@ -420,7 +420,7 @@ msgstr "Export failed"
 #~ msgstr "Female has HA"
 
 #: src/components/forms/egg-filter-form.tsx:304
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:386
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:389
 msgid "Filter"
 msgstr "Filter"
 
@@ -533,9 +533,9 @@ msgid "Key"
 msgstr "Key"
 
 #: src/components/forms/key-input-selector.tsx:74
-#: src/components/forms/key-input-selector.tsx:95
+#: src/components/forms/key-input-selector.tsx:89
 #: src/components/forms/key-spec-selector.tsx:74
-#: src/components/forms/key-spec-selector.tsx:95
+#: src/components/forms/key-spec-selector.tsx:89
 #: src/features/datetime-search/components/result-detail-dialog.tsx:94
 #: src/features/egg-list/components/result-detail-dialog.tsx:58
 #: src/features/egg-search/components/result-detail-dialog.tsx:72
@@ -569,8 +569,8 @@ msgid "Lead ability"
 msgstr "Lead ability"
 
 #: src/components/forms/egg-params-form.tsx:333
-msgid "Leave empty to show \"?\" for stats"
-msgstr "Leave empty to show \"?\" for stats"
+#~ msgid "Leave empty to show \"?\" for stats"
+#~ msgstr "Leave empty to show \"?\" for stats"
 
 #: src/features/about/components/about-page.tsx:40
 msgid "License"
@@ -605,7 +605,7 @@ msgstr "Margin"
 msgid "Margin frames"
 msgstr "Margin frames"
 
-#: src/components/forms/egg-params-form.tsx:364
+#: src/components/forms/egg-params-form.tsx:361
 msgid "Masuda Method"
 msgstr "Masuda Method"
 
@@ -614,13 +614,13 @@ msgstr "Masuda Method"
 msgid "Max"
 msgstr "Max"
 
-#: src/components/forms/egg-params-form.tsx:398
+#: src/components/forms/egg-params-form.tsx:395
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:442
 msgid "Max advance"
 msgstr "Max advance"
 
-#: src/features/needle/components/needle-page.tsx:222
-#: src/features/needle/components/needle-page.tsx:231
+#: src/features/needle/components/needle-page.tsx:217
+#: src/features/needle/components/needle-page.tsx:226
 msgid "Max Advance"
 msgstr "Max Advance"
 
@@ -648,7 +648,7 @@ msgstr "Min"
 msgid "Min IV must be less than or equal to max IV"
 msgstr "Min IV must be less than or equal to max IV"
 
-#: src/components/forms/egg-filter-form.tsx:398
+#: src/components/forms/egg-filter-form.tsx:397
 msgid "Min margin frames"
 msgstr "Min margin frames"
 
@@ -690,7 +690,7 @@ msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 msgid "MT Seed Search"
 msgstr "MT Seed Search"
 
-#: src/components/forms/nature-select.tsx:48
+#: src/components/forms/nature-select.tsx:43
 #: src/features/egg-list/components/egg-result-columns.tsx:62
 #: src/features/egg-list/components/result-detail-dialog.tsx:64
 #: src/features/egg-search/components/egg-result-columns.tsx:83
@@ -716,7 +716,7 @@ msgstr "Needle Direction (Arrow)"
 msgid "Needle Direction (Numeric)"
 msgstr "Needle Direction (Numeric)"
 
-#: src/features/needle/components/needle-page.tsx:193
+#: src/features/needle/components/needle-page.tsx:188
 msgid "Needle Pattern"
 msgstr "Needle Pattern"
 
@@ -728,7 +728,7 @@ msgstr "Needle pattern is empty"
 msgid "Needle pattern must be digits 0-7"
 msgstr "Needle pattern must be digits 0-7"
 
-#: src/components/forms/egg-params-form.tsx:355
+#: src/components/forms/egg-params-form.tsx:352
 msgid "Nidoran♀"
 msgstr "Nidoran♀"
 
@@ -742,7 +742,7 @@ msgstr "No profile"
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
-#: src/features/needle/components/needle-page.tsx:257
+#: src/features/needle/components/needle-page.tsx:252
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:252
 msgid "No results"
 msgstr "No results"
@@ -787,10 +787,10 @@ msgid "None"
 msgstr "None"
 
 #: src/components/forms/ability-slot-select.tsx:44
-#: src/components/forms/egg-filter-form.tsx:405
+#: src/components/forms/egg-filter-form.tsx:404
 #: src/components/forms/gender-select.tsx:47
 #: src/components/forms/hidden-power-select.tsx:51
-#: src/components/forms/nature-select.tsx:37
+#: src/components/forms/nature-select.tsx:38
 #: src/components/forms/shiny-select.tsx:44
 #: src/components/forms/species-combobox.tsx:74
 #: src/components/forms/species-combobox.tsx:95
@@ -802,8 +802,8 @@ msgstr "Not specified"
 msgid "Not used"
 msgstr "Not used"
 
-#: src/features/needle/components/needle-page.tsx:206
-#: src/features/needle/components/needle-page.tsx:215
+#: src/features/needle/components/needle-page.tsx:201
+#: src/features/needle/components/needle-page.tsx:210
 msgid "Offset"
 msgstr "Offset"
 
@@ -891,7 +891,7 @@ msgid "Repository"
 msgstr "Repository"
 
 #: src/components/forms/egg-filter-form.tsx:322
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:401
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:404
 msgid "Reset filter"
 msgstr "Reset filter"
 
@@ -912,7 +912,7 @@ msgstr "Result details"
 #: src/features/egg-list/components/egg-list-page.tsx:259
 #: src/features/egg-search/components/egg-search-page.tsx:241
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:169
-#: src/features/needle/components/needle-page.tsx:250
+#: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:253
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:244
 msgid "Results"
@@ -944,8 +944,8 @@ msgstr "Save state"
 
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
-#: src/features/needle/components/needle-page.tsx:164
-#: src/features/needle/components/needle-page.tsx:272
+#: src/features/needle/components/needle-page.tsx:159
+#: src/features/needle/components/needle-page.tsx:267
 msgid "Search"
 msgstr "Search"
 
@@ -999,9 +999,9 @@ msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
 #: src/components/forms/hidden-power-select.tsx:90
-#: src/components/forms/key-input-selector.tsx:101
-#: src/components/forms/key-spec-selector.tsx:101
-#: src/components/forms/nature-select.tsx:66
+#: src/components/forms/key-input-selector.tsx:95
+#: src/components/forms/key-spec-selector.tsx:95
+#: src/components/forms/nature-select.tsx:69
 msgid "Select all"
 msgstr "Select all"
 
@@ -1089,7 +1089,7 @@ msgstr "Special encounter"
 
 #: src/features/egg-list/components/egg-result-columns.tsx:57
 #: src/features/egg-list/components/result-detail-dialog.tsx:63
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:124
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:118
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:57
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:63
 msgid "Species"
@@ -1122,7 +1122,7 @@ msgstr "Start date must be on or before end date"
 msgid "Start mode"
 msgstr "Start mode"
 
-#: src/components/forms/egg-params-form.tsx:381
+#: src/components/forms/egg-params-form.tsx:378
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:425
 msgid "Start offset"
 msgstr "Start offset"
@@ -1152,7 +1152,7 @@ msgid "Stats"
 msgstr "Stats"
 
 #: src/components/forms/egg-filter-form.tsx:335
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:441
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:416
 msgid "Stats filter"
 msgstr "Stats filter"
 
@@ -1274,7 +1274,7 @@ msgstr "Transferred {0} seeds"
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
 
-#: src/components/forms/egg-params-form.tsx:346
+#: src/components/forms/egg-params-form.tsx:343
 msgid "Uses Ditto"
 msgstr "Uses Ditto"
 
