@@ -41,7 +41,7 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
       <Popover.Trigger asChild disabled={disabled}>
         <Button
           variant="outline"
-          className="w-full justify-between"
+          className="h-8 w-full justify-between text-xs"
           aria-label="nature-select-trigger"
         >
           <span className="truncate">

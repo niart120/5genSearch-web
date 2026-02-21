@@ -20,8 +20,6 @@ interface SearchContextFormProps {
   onTimeRangeChange: (range: TimeRangeParams) => void;
   onKeySpecChange: (spec: KeySpec) => void;
   disabled?: boolean;
-  /** KeySpec の組み合わせ数 (WASM 計算値) */
-  keyCombinationCount?: number;
 }
 
 function SearchContextForm({
@@ -32,7 +30,6 @@ function SearchContextForm({
   onTimeRangeChange,
   onKeySpecChange,
   disabled,
-  keyCombinationCount,
 }: SearchContextFormProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -51,12 +48,7 @@ function SearchContextForm({
       </section>
 
       <section>
-        <KeySpecSelector
-          value={keySpec}
-          onChange={onKeySpecChange}
-          disabled={disabled}
-          combinationCount={keyCombinationCount}
-        />
+        <KeySpecSelector value={keySpec} onChange={onKeySpecChange} disabled={disabled} />
       </section>
     </div>
   );

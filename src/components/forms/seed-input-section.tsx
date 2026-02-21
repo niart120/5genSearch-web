@@ -422,12 +422,6 @@ function SeedInputSection({
         {/* Startup */}
         <TabsContent value="manual-startup">
           <div className="flex flex-col gap-3">
-            <p className="text-xs text-muted-foreground">
-              <Trans>
-                DS config and Timer0/VCount ranges are loaded from the sidebar settings.
-              </Trans>
-            </p>
-
             {/* Datetime */}
             <div className="flex flex-col gap-1">
               <Label className="text-xs">
@@ -444,9 +438,6 @@ function SeedInputSection({
             />
 
             {resolveError && <p className="text-xs text-destructive">{resolveError}</p>}
-            <p className="text-xs text-muted-foreground">
-              <Trans>Resolved seeds</Trans>: {origins.length}
-            </p>
           </div>
         </TabsContent>
 
@@ -464,9 +455,6 @@ function SeedInputSection({
               disabled={disabled}
             />
             {resolveError && <p className="text-xs text-destructive">{resolveError}</p>}
-            <p className="text-xs text-muted-foreground">
-              <Trans>Resolved seeds</Trans>: {origins.length}
-            </p>
           </div>
         </TabsContent>
 
@@ -498,10 +486,6 @@ function SeedInputSection({
               disabled={disabled}
               editable={true}
             />
-
-            <p className="text-xs text-muted-foreground">
-              <Trans>Resolved seeds</Trans>: {origins.length}
-            </p>
           </div>
         </TabsContent>
       </Tabs>

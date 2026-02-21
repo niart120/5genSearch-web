@@ -47,7 +47,7 @@ function SearchControls({
   const gpuToggleId = layout === 'mobile' ? 'gpu-toggle-mobile' : 'gpu-toggle';
 
   const buttonRow = (
-    <div className={cn('flex items-center gap-3', layout === 'mobile' && 'mt-2')}>
+    <div className={cn('flex min-h-9 items-center gap-3', layout === 'mobile' && 'mt-2')}>
       {isLoading ? (
         <Button variant="outline" onClick={onCancel} className="flex-1" size={buttonSize}>
           <Trans>Cancel</Trans>

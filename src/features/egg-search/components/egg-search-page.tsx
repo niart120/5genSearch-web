@@ -213,7 +213,6 @@ function EggSearchPage(): ReactElement {
             onTimeRangeChange={setTimeRange}
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
-            keyCombinationCount={keyCombinationCount}
           />
 
           <EggParamsForm

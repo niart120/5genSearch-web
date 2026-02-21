@@ -164,27 +164,19 @@ function MtseedSearchPage(): ReactElement {
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>
-          {/* 連携ボタン */}
-          {results.length > 0 ? (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                <Trans>{results.length} seeds found</Trans>
-              </p>
-              <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
+            </p>
+            <div className="flex items-center gap-2">
+              {results.length > 0 && (
                 <Button variant="outline" size="sm" onClick={handleNavigateToDatetimeSearch}>
                   <Trans>Search Boot Timing</Trans>
                 </Button>
-                <ExportToolbar resultCount={results.length} exportActions={exportActions} />
-              </div>
+              )}
+              <ExportToolbar resultCount={results.length} exportActions={exportActions} />
             </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                <Trans>Results</Trans>: 0
-              </p>
-              <ExportToolbar resultCount={0} exportActions={exportActions} />
-            </div>
-          )}
+          </div>
 
           <DataTable
             columns={columns}

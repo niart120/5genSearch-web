@@ -184,7 +184,7 @@ describe('formatKeyCode', () => {
 
   it('全ボタン押下を表示する', () => {
     // all bits = 0x0FFF → keyCode = 0x2FFF ^ 0x0FFF = 0x2000
-    expect(formatKeyCode(0x20_00)).toBe('A + B + X + Y + L + R + Start + Select + ↑ + ↓ + ← + →');
+    expect(formatKeyCode(0x20_00)).toBe('A + B + X + Y + L + R + ↑ + ↓ + ← + → + Start + Select');
   });
 });
 
@@ -281,6 +281,6 @@ describe('formatDsButtons', () => {
         'Left',
         'Right',
       ])
-    ).toBe('A + B + X + Y + L + R + Start + Select + ↑ + ↓ + ← + →');
+    ).toBe('A + B + X + Y + L + R + ↑ + ↓ + ← + → + Start + Select');
   });
 });

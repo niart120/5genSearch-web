@@ -154,13 +154,8 @@ function NeedlePage(): ReactElement {
       <FeaturePageLayout className="pb-32 lg:pb-4">
         <FeaturePageLayout.Controls>
           {/* PC: 検索ボタン + 自動検索トグル */}
-          <div className="hidden lg:flex lg:items-center lg:gap-2">
-            <Button
-              onClick={executeSearch}
-              disabled={!validation.isValid}
-              size="sm"
-              className="flex-1"
-            >
+          <div className="hidden lg:flex lg:min-h-9 lg:items-center lg:gap-3">
+            <Button onClick={executeSearch} disabled={!validation.isValid} className="flex-1">
               <Trans>Search</Trans>
             </Button>
             <div className="flex items-center gap-1">
@@ -185,7 +180,6 @@ function NeedlePage(): ReactElement {
             onKeyInputChange={setKeyInput}
             seedHex={seedHex}
             onSeedHexChange={setSeedHex}
-            seedOrigins={seedOrigins}
           />
 
           {/* 針パターン入力 */}
@@ -263,7 +257,7 @@ function NeedlePage(): ReactElement {
 
       {/* モバイル: 下部固定バー */}
       <div className="fixed bottom-14 left-0 right-0 z-40 border-t border-border bg-background p-3 lg:hidden">
-        <div className="flex items-center gap-2">
+        <div className="flex min-h-9 items-center gap-2">
           <Button
             onClick={executeSearch}
             disabled={!validation.isValid}

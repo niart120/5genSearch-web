@@ -60,12 +60,12 @@ function HiddenPowerSelect({
   }, [minPower]);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex items-center gap-2">
       <Popover.Root>
         <Popover.Trigger asChild disabled={disabled}>
           <Button
             variant="outline"
-            className="w-full justify-between"
+            className="h-8 min-w-0 flex-1 justify-between text-xs"
             aria-label="hidden-power-select-trigger"
           >
             <span className="truncate">
@@ -118,10 +118,10 @@ function HiddenPowerSelect({
 
       {/* 威力下限 (onMinPowerChange が渡された場合のみ表示) */}
       {onMinPowerChange && (
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           <Label className="shrink-0 text-xs">{t`Min power`}</Label>
           <Input
-            className="h-7 w-20 text-xs tabular-nums"
+            className="h-7 w-16 text-xs tabular-nums"
             inputMode="numeric"
             value={localMinPower}
             onChange={(e) => setLocalMinPower(e.target.value)}

@@ -76,7 +76,7 @@ function NeedleInput({ value, onChange, disabled }: NeedleInputProps): ReactElem
               onChange(filtered);
             }}
             inputMode="numeric"
-            placeholder="24267"
+            placeholder=""
             disabled={disabled}
             className="font-mono"
           />

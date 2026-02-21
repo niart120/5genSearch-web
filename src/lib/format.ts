@@ -153,12 +153,12 @@ const KEY_BUTTONS: readonly [number, string][] = [
   [0x08_00, 'Y'],
   [0x02_00, 'L'],
   [0x01_00, 'R'],
-  [0x00_08, 'Start'],
-  [0x00_04, 'Select'],
   [0x00_40, '↑'],
   [0x00_80, '↓'],
   [0x00_20, '←'],
   [0x00_10, '→'],
+  [0x00_08, 'Start'],
+  [0x00_04, 'Select'],
 ];
 
 /**
@@ -289,6 +289,25 @@ function keyCodeToKeyInput(keyCode: number): KeyInput {
   return { buttons };
 }
 
+/**
+ * DsButton の表示順序 (固定)
+ * formatDsButtons でソートに使用する。
+ */
+const DISPLAY_ORDER: readonly DsButton[] = [
+  'A',
+  'B',
+  'X',
+  'Y',
+  'L',
+  'R',
+  'Up',
+  'Down',
+  'Left',
+  'Right',
+  'Start',
+  'Select',
+];
+
 /** DsButton の表示ラベルマッピング */
 const BUTTON_LABELS: Record<DsButton, string> = {
   A: 'A',
@@ -313,11 +332,13 @@ const BUTTON_LABELS: Record<DsButton, string> = {
  */
 function formatDsButtons(buttons: DsButton[]): string {
   if (buttons.length === 0) return '';
-  return buttons.map((b) => BUTTON_LABELS[b]).join(' + ');
+  const sorted = buttons.toSorted((a, b) => DISPLAY_ORDER.indexOf(a) - DISPLAY_ORDER.indexOf(b));
+  return sorted.map((b) => BUTTON_LABELS[b]).join(' + ');
 }
 
 export {
   BUTTON_LABELS,
+  DISPLAY_ORDER,
   remToPx,
   formatElapsedTime,
   toBigintHex,

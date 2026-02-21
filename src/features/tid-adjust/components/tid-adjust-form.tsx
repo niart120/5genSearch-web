@@ -32,53 +32,51 @@ function TidAdjustForm({
   const { t } = useLingui();
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start gap-4">
-        {/* TID */}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tid-filter">TID</Label>
-          <Input
-            id="tid-filter"
-            type="number"
-            min={0}
-            max={65_535}
-            value={tid}
-            onChange={(e) => onTidChange(e.target.value)}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (v === '') return;
-              onTidChange(String(clampOrDefault(v, { defaultValue: 0, min: 0, max: 65_535 })));
-            }}
-            onFocus={handleFocusSelectAll}
-            disabled={disabled}
-            className="w-24"
-            placeholder={t`Any`}
-            aria-label="TID"
-          />
-        </div>
+    <div className="grid grid-cols-3 gap-4">
+      {/* TID */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="tid-filter">TID</Label>
+        <Input
+          id="tid-filter"
+          type="number"
+          min={0}
+          max={65_535}
+          value={tid}
+          onChange={(e) => onTidChange(e.target.value)}
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            if (v === '') return;
+            onTidChange(String(clampOrDefault(v, { defaultValue: 0, min: 0, max: 65_535 })));
+          }}
+          onFocus={handleFocusSelectAll}
+          disabled={disabled}
+          className="w-full"
+          placeholder={t`Any`}
+          aria-label="TID"
+        />
+      </div>
 
-        {/* SID */}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="sid-filter">SID</Label>
-          <Input
-            id="sid-filter"
-            type="number"
-            min={0}
-            max={65_535}
-            value={sid}
-            onChange={(e) => onSidChange(e.target.value)}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (v === '') return;
-              onSidChange(String(clampOrDefault(v, { defaultValue: 0, min: 0, max: 65_535 })));
-            }}
-            onFocus={handleFocusSelectAll}
-            disabled={disabled}
-            className="w-24"
-            placeholder={t`Any`}
-            aria-label="SID"
-          />
-        </div>
+      {/* SID */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="sid-filter">SID</Label>
+        <Input
+          id="sid-filter"
+          type="number"
+          min={0}
+          max={65_535}
+          value={sid}
+          onChange={(e) => onSidChange(e.target.value)}
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            if (v === '') return;
+            onSidChange(String(clampOrDefault(v, { defaultValue: 0, min: 0, max: 65_535 })));
+          }}
+          onFocus={handleFocusSelectAll}
+          disabled={disabled}
+          className="w-full"
+          placeholder={t`Any`}
+          aria-label="SID"
+        />
       </div>
 
       {/* Shiny PID */}
@@ -93,7 +91,7 @@ function TidAdjustForm({
           onChange={(e) => onShinyPidChange(e.target.value)}
           onFocus={handleFocusSelectAll}
           disabled={disabled}
-          className="w-40 font-mono"
+          className="w-full font-mono"
           placeholder="0xABCD1234"
           aria-label={t`Shiny PID`}
         />
