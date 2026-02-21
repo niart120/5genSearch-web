@@ -184,6 +184,7 @@ function createEggListExportColumns(statMode: StatDisplayMode): ExportColumn<UiE
   ];
 
   const detailColumns: ExportColumn<UiEggData>[] = [
+    { key: 'species', header: 'Species', accessor: (r) => r.species_name ?? '', detailOnly: true },
     { key: 'base_seed', header: 'Base Seed', accessor: (r) => r.base_seed, detailOnly: true },
     { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.mt_seed, detailOnly: true },
     {
