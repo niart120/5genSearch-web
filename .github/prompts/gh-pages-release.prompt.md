@@ -1,5 +1,5 @@
 ---
-name: release
+name: gh-pages-release
 description: release-please PR の確認・バージョン決定・マージによるリリース実行
 argument-hint: releaseType=patch|minor|major
 agent: agent
