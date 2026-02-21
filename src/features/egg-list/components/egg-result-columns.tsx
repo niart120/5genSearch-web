@@ -52,11 +52,6 @@ function createEggResultColumns(options: EggResultColumnsOptions = {}) {
       header: () => t`Needle`,
       size: 36,
     }),
-    columnHelper.accessor((row) => row.species_name, {
-      id: 'species',
-      header: () => t`Species`,
-      size: 100,
-    }),
     columnHelper.accessor((row) => row.nature_name, {
       id: 'nature',
       header: () => t`Nature`,

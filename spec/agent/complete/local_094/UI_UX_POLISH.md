@@ -61,6 +61,7 @@
 | P-28 | タマゴパラメータ 2 列化 | ♀親特性 / かわらずのいし / 性別比 / 種族 を 2 列配置 | `egg-params-form.tsx` |
 | P-29 | 種族→性別比の自動導出 | 種族選択時に WASM から性別比を取得して自動設定 | `egg-params-form.tsx`, `lib.rs` |
 | P-30 | EggFilter デフォルト有効化 | `EggFilterForm` のフィルターをデフォルト有効化、リセットでも有効維持 | `egg-filter-form.tsx` |
+| P-31 | タマゴ結果 種族列削除 | タマゴ個体生成結果の種族列を削除 (検索条件から自明) | `egg-result-columns.tsx`, `export-columns.ts` |
 
 ## 3. 設計方針
 
@@ -502,6 +503,12 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 - `handleReset` から `setFilterEnabled(false)` を削除
 - `PokemonFilterForm` の `handleReset` からも `setFilterEnabled(false)` を削除 (一貫性)
 
+### P-31: タマゴ結果 種族列削除
+
+**現状**: タマゴ個体生成結果テーブルに「種族」列がある。タマゴ検索では種族をパラメータで指定するため全行同一値となり冗長。
+
+**変更**: `egg-result-columns.tsx` から `species` 列を削除。`export-columns.ts` の `createEggListExportColumns` からも同列を削除。
+
 ## 5. テスト方針
 
 | カテゴリ | テスト種別 | 内容 |
@@ -536,6 +543,7 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 | P-28 | 目視確認 | タマゴパラメータ 2 列配置の確認。種族選択時の性別比自動設定を確認 |
 | P-29 | ユニットテスト | `get_species_gender_ratio` の戻り値検証 |
 | P-30 | コンポーネントテスト | フィルターデフォルト有効、リセット後も有効であることを検証 |
+| P-31 | - | 列削除のみ |
 
 ## 6. 実装チェックリスト
 
@@ -569,5 +577,6 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 - [x] P-28: タマゴパラメータ 2 列化 — ♀親特性 / かわらずのいし / 性別比 / 種族 の 2 列配置 + 種族→性別比自動導出
 - [x] P-29: WASM `get_species_gender_ratio` — `lib.rs` に追加
 - [x] P-30: EggFilter デフォルト有効 — `useState(true)` + リセット時有効維持
+- [x] P-31: タマゴ結果 種族列削除 — `egg-result-columns.tsx` + `export-columns.ts`
 - [x] i18n: 変更に伴う翻訳キーの追加・更新 (`pnpm run extract` → `ja.po`, `en.po`)
 - [ ] 目視確認: 全ページのデスクトップ/モバイル/ライトモード/ダークモード表示
