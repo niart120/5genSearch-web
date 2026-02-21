@@ -42,7 +42,7 @@ describe('KeyInputSelector', () => {
     const user = userEvent.setup();
     renderKeyInputSelector();
 
-    const openButton = screen.getByRole('button', { name: /Key input/i });
+    const openButton = screen.getByRole('button', { name: /Edit/i });
     await user.click(openButton);
 
     const checkboxes = screen.getAllByRole('checkbox');
@@ -54,8 +54,8 @@ describe('KeyInputSelector', () => {
     const onChange = vi.fn();
     renderKeyInputSelector({ onChange });
 
-    const openButton = screen.getByRole('button', { name: /Key input/i });
-    await user.click(openButton);
+    const openButton2 = screen.getByRole('button', { name: /Edit/i });
+    await user.click(openButton2);
 
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
@@ -71,8 +71,8 @@ describe('KeyInputSelector', () => {
       onChange,
     });
 
-    const openButton = screen.getByRole('button', { name: /Key input/i });
-    await user.click(openButton);
+    const openButton3 = screen.getByRole('button', { name: /Edit/i });
+    await user.click(openButton3);
 
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
@@ -82,18 +82,8 @@ describe('KeyInputSelector', () => {
 
   it('disabled 時は編集ボタンが無効化される', () => {
     renderKeyInputSelector({ disabled: true });
-    const openButton = screen.getByRole('button', { name: /Key input/i });
-    expect(openButton).toBeDisabled();
-  });
-
-  it('選択ボタン数がダイアログ内に表示される', async () => {
-    const user = userEvent.setup();
-    renderKeyInputSelector({ value: { buttons: ['A', 'B'] } });
-
-    const openButton = screen.getByRole('button', { name: /Key input/i });
-    await user.click(openButton);
-
-    expect(screen.getByText(/2/)).toBeInTheDocument();
+    const openButton4 = screen.getByRole('button', { name: /Edit/i });
+    expect(openButton4).toBeDisabled();
   });
 
   it('ダイアログを閉じるとチェックボックスが非表示になる', async () => {
@@ -101,8 +91,8 @@ describe('KeyInputSelector', () => {
     renderKeyInputSelector();
 
     // ダイアログを開く
-    const openButton = screen.getByRole('button', { name: /Key input/i });
-    await user.click(openButton);
+    const openButton5 = screen.getByRole('button', { name: /Edit/i });
+    await user.click(openButton5);
     expect(screen.getAllByRole('checkbox')).toHaveLength(12);
 
     // 閉じるボタンをクリック

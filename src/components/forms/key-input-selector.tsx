@@ -38,7 +38,7 @@ function KeyInputSelector({ value, onChange, disabled }: KeyInputSelectorProps) 
       {/* インジケータ行 */}
       <div className="flex items-center gap-2">
         <Label className="shrink-0 text-xs text-muted-foreground">
-          <Trans>Key input (buttons held)</Trans>
+          <Trans>Key input</Trans>
         </Label>
         <span className="min-w-0 flex-1 truncate text-xs font-mono">
           {displayText || <Trans>None</Trans>}
@@ -50,7 +50,7 @@ function KeyInputSelector({ value, onChange, disabled }: KeyInputSelectorProps) 
           disabled={disabled}
           onClick={() => setDialogOpen(true)}
         >
-          <Trans>Key input</Trans>
+          <Trans>Edit</Trans>
         </Button>
       </div>
 
@@ -59,7 +59,7 @@ function KeyInputSelector({ value, onChange, disabled }: KeyInputSelectorProps) 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              <Trans>Key input (buttons held)</Trans>
+              <Trans>Key input</Trans>
             </DialogTitle>
           </DialogHeader>
           <DsButtonToggleGroup
@@ -67,9 +67,6 @@ function KeyInputSelector({ value, onChange, disabled }: KeyInputSelectorProps) 
             onToggle={handleToggle}
             disabled={disabled}
           />
-          <p className="text-xs text-muted-foreground">
-            <Trans>Selected buttons</Trans>: {value.buttons.length}
-          </p>
         </DialogContent>
       </Dialog>
     </>
