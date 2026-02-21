@@ -49,6 +49,10 @@
 | P-16 | 針読み入力プレースホルダ | 方向数値入力のプレースホルダ "24267" を削除 | `needle-input.tsx` |
 | P-17 | 「転記」→「コピー」 | UI 上の "転記" 表現を "コピー" に統一 | i18n (`ja.po`) |
 | P-18 | めざパフィルター同行化 | タイプ選択と威力下限を同一行に配置 | `hidden-power-select.tsx` |
+| P-19 | キー入力ダイアログ改善 | OK 確定 + 全選択/全解除ボタン追加 | `key-spec-selector.tsx`, `key-input-selector.tsx` |
+| P-20 | 検索ボタン高さ安定化 | GPU トグル有無による高さ変動を防止 | `search-controls.tsx` |
+| P-21 | TID/SID/PID グリッド化 | 3 列 grid で幅を均等化 | `tid-adjust-form.tsx` |
+| P-22 | 針読み Seed 表示省略 | SeedInput の初期 Seed 解決結果表示を削除 | `seed-input.tsx` |
 
 ## 3. 設計方針
 
@@ -353,6 +357,78 @@ const [filterEnabled, setFilterEnabled] = useState(true);
 
 Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入力を横に配置。威力入力の幅を `w-20` → `w-16` に縮小してコンパクトにする。
 
+### P-19: キー入力ダイアログ — OK 確定 + 全選択/全解除
+
+**現状**: `KeySpecSelector` / `KeyInputSelector` はダイアログ内でボタンをトグルすると即座に `onChange` が親に伝播する。キャンセル操作がない。
+
+**変更**:
+1. ダイアログ内でローカル state (`draft`) にトグル結果を保持し、親の `onChange` は呼ばない
+2. ダイアログフッターに「全選択」「全解除」「OK」ボタンを追加
+3. 「OK」クリック時のみ `onChange(draft)` を親に反映
+4. ダイアログを閉じた場合 (×ボタン、オーバーレイクリック) は変更を破棄
+5. ダイアログオープン時に `value` → `draft` をコピーして初期化
+
+```tsx
+// key-spec-selector.tsx (変更後のダイアログ部分)
+<Dialog open={dialogOpen} onOpenChange={(open) => {
+  if (!open) setDialogOpen(false); // キャンセル扱い
+  else { setDraft(value.available_buttons); setDialogOpen(true); }
+}}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle><Trans>Key input</Trans></DialogTitle>
+    </DialogHeader>
+    <DsButtonToggleGroup selected={draft} onToggle={setDraft} disabled={disabled} />
+    <DialogFooter>
+      <Button variant="outline" size="sm" onClick={handleSelectAll}><Trans>Select all</Trans></Button>
+      <Button variant="outline" size="sm" onClick={handleDeselectAll}><Trans>Deselect all</Trans></Button>
+      <Button size="sm" onClick={handleConfirm}><Trans>OK</Trans></Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+`KeyInputSelector` も同様の変更を行う。
+
+### P-20: 検索ボタン高さの安定化
+
+**現状**: `SearchControls` の `buttonRow` は `flex items-center gap-3`。GPU トグルが存在するとき Switch + Label の高さでボタン行が高くなり、GPU トグルが無い場合と高さが異なる。
+
+**変更**: `buttonRow` の `div` に `min-h-9` を追加し、GPU トグルの有無にかかわらず最低高さを統一する。
+
+```tsx
+<div className={cn('flex min-h-9 items-center gap-3', layout === 'mobile' && 'mt-2')}>
+```
+
+### P-21: TID/SID/PID 3 列 grid
+
+**現状**: `TidAdjustForm` は `flex items-start gap-4` で TID (`w-24`) / SID (`w-24`) / Shiny PID (`min-w-0 flex-1`) を横並び。幅が不均一。
+
+**変更**: `grid grid-cols-3 gap-4` で 3 列均等配置。各入力から固定幅クラスを除去。
+
+```tsx
+<div className="grid grid-cols-3 gap-4">
+  <div className="flex flex-col gap-1.5">
+    <Label htmlFor="tid-filter">TID</Label>
+    <Input ... className="w-full" />
+  </div>
+  <div className="flex flex-col gap-1.5">
+    <Label htmlFor="sid-filter">SID</Label>
+    <Input ... className="w-full" />
+  </div>
+  <div className="flex flex-col gap-1.5">
+    <Label htmlFor="shiny-pid"><Trans>Shiny PID</Trans></Label>
+    <Input ... className="w-full font-mono" />
+  </div>
+</div>
+```
+
+### P-22: 針読み Seed 解決結果表示の省略
+
+**現状**: `SeedInput` コンポーネント末尾に `Initial Seed: XXXXXXXXXXXXXXXX (+Y)` 形式で解決結果を表示している。情報量が少なく、テーブル結果側で同等の情報を確認できる。
+
+**変更**: `SeedInput` の末尾にある `seedDisplay` ブロック (Initial Seed 表示) を削除する。
+
 ## 5. テスト方針
 
 | カテゴリ | テスト種別 | 内容 |
@@ -375,6 +451,10 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 | P-16 | - | プレースホルダ削除のみ |
 | P-17 | - | 翻訳変更のみ |
 | P-18 | 目視確認 | タイプ選択と威力入力が同一行に並ぶことを確認 |
+| P-19 | コンポーネントテスト | OK 確定でのみ onChange が呼ばれること、全選択/全解除の動作を検証 |
+| P-20 | 目視確認 | GPU トグル有無でボタン行高さが変わらないことを確認 |
+| P-21 | 目視確認 | 3 列均等配置の確認 |
+| P-22 | - | 表示削除のみ |
 
 ## 6. 実装チェックリスト
 
@@ -396,5 +476,9 @@ Popover トリガーの `w-full` を `min-w-0 flex-1` に変更し、威力入�
 - [x] P-16: 針読み — プレースホルダ削除
 - [x] P-17: 翻訳 — 「転記」→「コピー」
 - [x] P-18: めざパフィルター — タイプ + 威力の同一行化
+- [x] P-19: キー入力ダイアログ — OK 確定 + 全選択/全解除
+- [x] P-20: 検索ボタン高さ — `min-h-9` で安定化
+- [x] P-21: TID/SID/PID — 3 列 grid 化
+- [x] P-22: 針読み Seed 表示 — 初期 Seed 解決結果の省略
 - [x] i18n: 変更に伴う翻訳キーの追加・更新 (`pnpm run extract` → `ja.po`, `en.po`)
 - [ ] 目視確認: 全ページのデスクトップ/モバイル/ライトモード/ダークモード表示
