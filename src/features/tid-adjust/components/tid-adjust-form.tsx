@@ -32,7 +32,7 @@ function TidAdjustForm({
   const { t } = useLingui();
 
   return (
-    <div className="flex items-start gap-4">
+    <div className="grid grid-cols-3 gap-4">
       {/* TID */}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="tid-filter">TID</Label>
@@ -50,7 +50,7 @@ function TidAdjustForm({
           }}
           onFocus={handleFocusSelectAll}
           disabled={disabled}
-          className="w-24"
+          className="w-full"
           placeholder={t`Any`}
           aria-label="TID"
         />
@@ -73,14 +73,14 @@ function TidAdjustForm({
           }}
           onFocus={handleFocusSelectAll}
           disabled={disabled}
-          className="w-24"
+          className="w-full"
           placeholder={t`Any`}
           aria-label="SID"
         />
       </div>
 
       {/* Shiny PID */}
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="shiny-pid">
           <Trans>Shiny PID</Trans>
         </Label>
@@ -91,7 +91,7 @@ function TidAdjustForm({
           onChange={(e) => onShinyPidChange(e.target.value)}
           onFocus={handleFocusSelectAll}
           disabled={disabled}
-          className="min-w-0 flex-1 font-mono"
+          className="w-full font-mono"
           placeholder="0xABCD1234"
           aria-label={t`Shiny PID`}
         />
