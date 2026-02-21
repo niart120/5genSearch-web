@@ -16,27 +16,12 @@
 import { useMemo, useCallback, type ReactNode } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { cn } from '@/lib/utils';
+import { BUTTON_LABELS } from '@/lib/format';
 import type { DsButton } from '@/wasm/wasm_pkg';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-/** ボタンの表示ラベル */
-const BUTTON_LABELS: Record<DsButton, string> = {
-  A: 'A',
-  B: 'B',
-  X: 'X',
-  Y: 'Y',
-  L: 'L',
-  R: 'R',
-  Start: 'Start',
-  Select: 'Select',
-  Up: '↑',
-  Down: '↓',
-  Left: '←',
-  Right: '→',
-};
 
 /** D-Pad 3x3 グリッド配置 (undefined = 空セル) */
 const DPAD_LAYOUT: (DsButton | undefined)[][] = [
@@ -101,10 +86,6 @@ interface DsButtonToggleGroupProps {
   /** トグル時のコールバック (更新後の全選択リストを返す) */
   onToggle: (next: DsButton[]) => void;
   disabled?: boolean;
-  /** コントローラ上部に表示するラベル (ReactNode) */
-  label?: ReactNode;
-  /** コントローラ下部に表示するフッター (ReactNode) */
-  footer?: ReactNode;
 }
 
 /**
@@ -112,13 +93,7 @@ interface DsButtonToggleGroupProps {
  *
  * 12 個の DS ボタンをトグル形式で選択する。
  */
-function DsButtonToggleGroup({
-  selected,
-  onToggle,
-  disabled,
-  label,
-  footer,
-}: DsButtonToggleGroupProps) {
+function DsButtonToggleGroup({ selected, onToggle, disabled }: DsButtonToggleGroupProps) {
   const { t } = useLingui();
   const selectedSet = useMemo(() => new Set<DsButton>(selected), [selected]);
 
@@ -153,62 +128,55 @@ function DsButtonToggleGroup({
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      {label}
-
-      {/* Controller layout */}
-      <div className="mx-auto flex max-w-72 flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3">
-        {/* Shoulder: L ... R */}
-        <div className="flex items-center justify-between px-1">
-          <ToggleBtn
-            pressed={selectedSet.has('L')}
-            onToggle={(pressed) => handleToggle('L', pressed)}
-            disabled={disabled}
-            label="L"
-            ariaLabel={t`Button ${BUTTON_LABELS['L']}`}
-            className="h-7 w-12 rounded-t-lg text-xs"
-          />
-          <ToggleBtn
-            pressed={selectedSet.has('R')}
-            onToggle={(pressed) => handleToggle('R', pressed)}
-            disabled={disabled}
-            label="R"
-            ariaLabel={t`Button ${BUTTON_LABELS['R']}`}
-            className="h-7 w-12 rounded-t-lg text-xs"
-          />
-        </div>
-
-        {/* Main body: D-Pad | Face */}
-        <div className="flex items-center justify-center gap-8">
-          {renderGrid(DPAD_LAYOUT)}
-          {renderGrid(FACE_LAYOUT)}
-        </div>
-
-        {/* Bottom: Select / Start */}
-        <div className="flex items-center justify-center gap-3">
-          <ToggleBtn
-            pressed={selectedSet.has('Select')}
-            onToggle={(pressed) => handleToggle('Select', pressed)}
-            disabled={disabled}
-            label="Select"
-            ariaLabel={t`Button ${BUTTON_LABELS['Select']}`}
-            className="h-6 w-14 rounded-full text-[10px]"
-          />
-          <ToggleBtn
-            pressed={selectedSet.has('Start')}
-            onToggle={(pressed) => handleToggle('Start', pressed)}
-            disabled={disabled}
-            label="Start"
-            ariaLabel={t`Button ${BUTTON_LABELS['Start']}`}
-            className="h-6 w-14 rounded-full text-[10px]"
-          />
-        </div>
+    <div className="mx-auto flex max-w-72 flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3">
+      {/* Shoulder: L ... R */}
+      <div className="flex items-center justify-between px-1">
+        <ToggleBtn
+          pressed={selectedSet.has('L')}
+          onToggle={(pressed) => handleToggle('L', pressed)}
+          disabled={disabled}
+          label="L"
+          ariaLabel={t`Button ${BUTTON_LABELS['L']}`}
+          className="h-7 w-12 rounded-t-lg text-xs"
+        />
+        <ToggleBtn
+          pressed={selectedSet.has('R')}
+          onToggle={(pressed) => handleToggle('R', pressed)}
+          disabled={disabled}
+          label="R"
+          ariaLabel={t`Button ${BUTTON_LABELS['R']}`}
+          className="h-7 w-12 rounded-t-lg text-xs"
+        />
       </div>
 
-      {footer}
+      {/* Main body: D-Pad | Face */}
+      <div className="flex items-center justify-center gap-8">
+        {renderGrid(DPAD_LAYOUT)}
+        {renderGrid(FACE_LAYOUT)}
+      </div>
+
+      {/* Bottom: Select / Start */}
+      <div className="flex items-center justify-center gap-3">
+        <ToggleBtn
+          pressed={selectedSet.has('Select')}
+          onToggle={(pressed) => handleToggle('Select', pressed)}
+          disabled={disabled}
+          label="Select"
+          ariaLabel={t`Button ${BUTTON_LABELS['Select']}`}
+          className="h-6 w-14 rounded-full text-[10px]"
+        />
+        <ToggleBtn
+          pressed={selectedSet.has('Start')}
+          onToggle={(pressed) => handleToggle('Start', pressed)}
+          disabled={disabled}
+          label="Start"
+          ariaLabel={t`Button ${BUTTON_LABELS['Start']}`}
+          className="h-6 w-14 rounded-full text-[10px]"
+        />
+      </div>
     </div>
   );
 }
 
-export { DsButtonToggleGroup, ToggleBtn, BUTTON_LABELS };
+export { DsButtonToggleGroup, ToggleBtn };
 export type { DsButtonToggleGroupProps, ToggleBtnProps };

@@ -40,7 +40,9 @@ function KeyInputSelector({ value, onChange, disabled }: KeyInputSelectorProps) 
         <Label className="shrink-0 text-xs text-muted-foreground">
           <Trans>Key input (buttons held)</Trans>
         </Label>
-        <span className="min-w-0 flex-1 truncate text-xs font-mono">{displayText}</span>
+        <span className="min-w-0 flex-1 truncate text-xs font-mono">
+          {displayText || <Trans>None</Trans>}
+        </span>
         <Button
           type="button"
           variant="outline"

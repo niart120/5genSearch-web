@@ -46,7 +46,9 @@ function KeySpecSelector({ value, onChange, disabled, combinationCount }: KeySpe
         <Label className="shrink-0 text-xs text-muted-foreground">
           <Trans>Key input</Trans>
         </Label>
-        <span className="min-w-0 flex-1 truncate text-xs font-mono">{displayText}</span>
+        <span className="min-w-0 flex-1 truncate text-xs font-mono">
+          {displayText || <Trans>None</Trans>}
+        </span>
         <span className="shrink-0 text-xs text-muted-foreground">({countText})</span>
         <Button
           type="button"

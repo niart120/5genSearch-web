@@ -249,8 +249,8 @@ describe('keyCodeToKeyInput', () => {
 });
 
 describe('formatDsButtons', () => {
-  it('空配列の場合 "なし" を返す', () => {
-    expect(formatDsButtons([])).toBe('なし');
+  it('空配列の場合 空文字列を返す', () => {
+    expect(formatDsButtons([])).toBe('');
   });
 
   it('単一ボタンをそのまま返す', () => {

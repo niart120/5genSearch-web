@@ -118,11 +118,11 @@ msgstr "Back"
 #. placeholder {0}: BUTTON_LABELS['L']
 #. placeholder {0}: BUTTON_LABELS['R']
 #. placeholder {0}: BUTTON_LABELS['Select']
-#: src/components/forms/ds-button-toggle-group.tsx:146
-#: src/components/forms/ds-button-toggle-group.tsx:168
-#: src/components/forms/ds-button-toggle-group.tsx:176
-#: src/components/forms/ds-button-toggle-group.tsx:194
-#: src/components/forms/ds-button-toggle-group.tsx:202
+#: src/components/forms/ds-button-toggle-group.tsx:125
+#: src/components/forms/ds-button-toggle-group.tsx:143
+#: src/components/forms/ds-button-toggle-group.tsx:151
+#: src/components/forms/ds-button-toggle-group.tsx:169
+#: src/components/forms/ds-button-toggle-group.tsx:177
 msgid "Button {0}"
 msgstr "Button {0}"
 
@@ -175,7 +175,7 @@ msgstr "Clear"
 msgid "Clear all"
 msgstr "Clear all"
 
-#: src/components/forms/key-spec-selector.tsx:81
+#: src/components/forms/key-spec-selector.tsx:78
 msgid "Combinations"
 msgstr "Combinations"
 
@@ -527,10 +527,10 @@ msgstr "IVs must be in the range 0 to 31"
 msgid "Key"
 msgstr "Key"
 
-#: src/components/forms/key-input-selector.tsx:56
-#: src/components/forms/key-spec-selector.tsx:52
-#: src/components/forms/key-spec-selector.tsx:63
-#: src/components/forms/key-spec-selector.tsx:72
+#: src/components/forms/key-input-selector.tsx:53
+#: src/components/forms/key-spec-selector.tsx:47
+#: src/components/forms/key-spec-selector.tsx:60
+#: src/components/forms/key-spec-selector.tsx:69
 #: src/features/datetime-search/components/result-detail-dialog.tsx:94
 #: src/features/egg-list/components/result-detail-dialog.tsx:58
 #: src/features/egg-search/components/result-detail-dialog.tsx:72
@@ -538,8 +538,8 @@ msgstr "Key"
 msgid "Key input"
 msgstr "Key input"
 
-#: src/components/forms/key-input-selector.tsx:46
-#: src/components/forms/key-input-selector.tsx:65
+#: src/components/forms/key-input-selector.tsx:41
+#: src/components/forms/key-input-selector.tsx:62
 msgid "Key input (buttons held)"
 msgstr "Key input (buttons held)"
 
@@ -775,6 +775,8 @@ msgstr "No species found"
 msgid "No templates match the current filter."
 msgstr "No templates match the current filter."
 
+#: src/components/forms/key-input-selector.tsx:44
+#: src/components/forms/key-spec-selector.tsx:50
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
 msgid "None"
 msgstr "None"
@@ -1012,7 +1014,7 @@ msgstr "Select Pokémon"
 msgid "Select seed templates to apply to Target Seeds."
 msgstr "Select seed templates to apply to Target Seeds."
 
-#: src/components/forms/key-input-selector.tsx:74
+#: src/components/forms/key-input-selector.tsx:71
 msgid "Selected buttons"
 msgstr "Selected buttons"
 

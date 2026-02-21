@@ -289,11 +289,8 @@ function keyCodeToKeyInput(keyCode: number): KeyInput {
   return { buttons };
 }
 
-/**
- * DsButton[] → 表示ラベルのマッピング
- * KEY_BUTTONS (ビットマスク → 文字列) と同一の表記を使用する。
- */
-const BUTTON_LABELS_FORMAT: Record<DsButton, string> = {
+/** DsButton の表示ラベルマッピング */
+const BUTTON_LABELS: Record<DsButton, string> = {
   A: 'A',
   B: 'B',
   X: 'X',
@@ -310,14 +307,17 @@ const BUTTON_LABELS_FORMAT: Record<DsButton, string> = {
 
 /**
  * DsButton[] を表示用文字列にフォーマット
- * 例: ['A', 'Start'] → "A + Start", [] → "なし"
+ * 例: ['A', 'Start'] → "A + Start", [] → ""
+ *
+ * 空配列時は空文字列を返す。表示用の「なし」等は呼び出し側で i18n 対応すること。
  */
 function formatDsButtons(buttons: DsButton[]): string {
-  if (buttons.length === 0) return 'なし';
-  return buttons.map((b) => BUTTON_LABELS_FORMAT[b]).join(' + ');
+  if (buttons.length === 0) return '';
+  return buttons.map((b) => BUTTON_LABELS[b]).join(' + ');
 }
 
 export {
+  BUTTON_LABELS,
   remToPx,
   formatElapsedTime,
   toBigintHex,

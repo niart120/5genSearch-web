@@ -118,11 +118,11 @@ msgstr "戻す"
 #. placeholder {0}: BUTTON_LABELS['L']
 #. placeholder {0}: BUTTON_LABELS['R']
 #. placeholder {0}: BUTTON_LABELS['Select']
-#: src/components/forms/ds-button-toggle-group.tsx:146
-#: src/components/forms/ds-button-toggle-group.tsx:168
-#: src/components/forms/ds-button-toggle-group.tsx:176
-#: src/components/forms/ds-button-toggle-group.tsx:194
-#: src/components/forms/ds-button-toggle-group.tsx:202
+#: src/components/forms/ds-button-toggle-group.tsx:125
+#: src/components/forms/ds-button-toggle-group.tsx:143
+#: src/components/forms/ds-button-toggle-group.tsx:151
+#: src/components/forms/ds-button-toggle-group.tsx:169
+#: src/components/forms/ds-button-toggle-group.tsx:177
 msgid "Button {0}"
 msgstr "{0}ボタン"
 
@@ -175,7 +175,7 @@ msgstr "クリア"
 msgid "Clear all"
 msgstr "全削除"
 
-#: src/components/forms/key-spec-selector.tsx:81
+#: src/components/forms/key-spec-selector.tsx:78
 msgid "Combinations"
 msgstr "組み合わせ"
 
@@ -523,10 +523,10 @@ msgstr "個体値は0から31の範囲で入力してください"
 msgid "Key"
 msgstr "キー"
 
-#: src/components/forms/key-input-selector.tsx:56
-#: src/components/forms/key-spec-selector.tsx:52
-#: src/components/forms/key-spec-selector.tsx:63
-#: src/components/forms/key-spec-selector.tsx:72
+#: src/components/forms/key-input-selector.tsx:53
+#: src/components/forms/key-spec-selector.tsx:47
+#: src/components/forms/key-spec-selector.tsx:60
+#: src/components/forms/key-spec-selector.tsx:69
 #: src/features/datetime-search/components/result-detail-dialog.tsx:94
 #: src/features/egg-list/components/result-detail-dialog.tsx:58
 #: src/features/egg-search/components/result-detail-dialog.tsx:72
@@ -534,8 +534,8 @@ msgstr "キー"
 msgid "Key input"
 msgstr "キー入力"
 
-#: src/components/forms/key-input-selector.tsx:46
-#: src/components/forms/key-input-selector.tsx:65
+#: src/components/forms/key-input-selector.tsx:41
+#: src/components/forms/key-input-selector.tsx:62
 msgid "Key input (buttons held)"
 msgstr "キー入力 (押すボタン)"
 
@@ -771,6 +771,8 @@ msgstr "種族が見つかりません"
 msgid "No templates match the current filter."
 msgstr "条件に一致するテンプレートがありません。"
 
+#: src/components/forms/key-input-selector.tsx:44
+#: src/components/forms/key-spec-selector.tsx:50
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
 msgid "None"
 msgstr "なし"
@@ -1008,7 +1010,7 @@ msgstr "ポケモンを選択"
 msgid "Select seed templates to apply to Target Seeds."
 msgstr "Target Seeds に適用する Seed テンプレートを選択してください。"
 
-#: src/components/forms/key-input-selector.tsx:74
+#: src/components/forms/key-input-selector.tsx:71
 msgid "Selected buttons"
 msgstr "選択中のボタン"
 
