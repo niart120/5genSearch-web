@@ -1,5 +1,9 @@
 # 5genSearch-web
 
+<p align="center">
+  <img src="public/icon.png" alt="5genSearch-web" width="128" />
+</p>
+
 Gen5 RNG web app (React + Rust/WASM)
 
 ## データの出典
@@ -14,3 +18,7 @@ Gen5 RNG web app (React + Rust/WASM)
 ### 参照実装
 
 本プロジェクトのアーキテクチャは [niart120/pokemon-gen5-initseed](https://github.com/niart120/pokemon-gen5-initseed) を参照し、別設計として再構成したものです。
+
+## クレジット
+
+- アプリアイコン: [KEN Naganawa](https://x.com/ken_naganawa)

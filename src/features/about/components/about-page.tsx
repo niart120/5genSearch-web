@@ -12,7 +12,8 @@ function AboutPage(): ReactElement {
         </h2>
         <p className="text-sm text-muted-foreground">
           <Trans>
-            5genSearch is a tool for RNG manipulation in Pokemon Black / White / Black 2 / White 2.
+            5genSearch-web is a tool for RNG manipulation in Pokemon Black / White / Black 2 / White
+            2.
           </Trans>
         </p>
       </section>
@@ -64,6 +65,23 @@ function AboutPage(): ReactElement {
             className="underline hover:text-foreground"
           >
             {REPO_URL}
+          </a>
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold">
+          <Trans>Credits</Trans>
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          <Trans>App icon by</Trans>{' '}
+          <a
+            href="https://x.com/ken_naganawa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-foreground"
+          >
+            KEN Naganawa
           </a>
         </p>
       </section>
