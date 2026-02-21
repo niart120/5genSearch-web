@@ -9,7 +9,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { clampOrDefault } from '@/components/forms/input-helpers';
+import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 
 // ---------------------------------------------------------------------------
 // NumField
@@ -57,7 +57,7 @@ function NumField({
       onChange={(e) => setLocalInput(e.target.value)}
       onFocus={(e) => {
         setLocalInput(String(value));
-        e.target.select();
+        handleFocusSelectAll(e);
       }}
       onBlur={() => {
         if (localInput !== undefined) {
