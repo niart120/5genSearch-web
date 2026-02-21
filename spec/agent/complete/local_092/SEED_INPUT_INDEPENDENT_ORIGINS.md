@@ -48,7 +48,7 @@
 | `src/features/egg-list/components/egg-list-page.tsx` | 変更なし | 同上 |
 | `src/features/needle/components/seed-input.tsx` | 変更なし | `SeedInputSection` を使用していないため影響なし |
 | `src/stores/search/results.ts` | 変更なし | `pendingDetailOrigins` / `pendingSeedOrigins` の構造は維持 |
-| `src/test/components/forms/seed-input-section.test.tsx` | 修正 or 新規 | 独立 origins の保持・タブ切り替え挙動のテスト |
+| `src/test/components/seed-input-section.test.tsx` | 修正 | 独立 origins の保持・タブ切り替え挙動のテスト |
 
 ## 3. 設計方針
 
@@ -284,13 +284,14 @@ useEffect(() => {
 
 | テスト | ファイル | 検証内容 |
 |--------|----------|----------|
-| Startup 解決→保持 | `src/test/components/forms/seed-input-section.test.tsx` | Startup タブで datetime 変更 → `onOriginsChange` に Startup 由来の origins が通知される |
+| Startup 解決→保持 | `src/test/components/seed-input-section.test.tsx` | Startup タブで datetime 変更 → `onOriginsChange` に Startup 由来の origins が通知される |
 | Seeds 解決→保持 | 同上 | Seeds タブで hex 入力 → `onOriginsChange` に Seeds 由来の origins が通知される |
 | タブ切替で保持 | 同上 | Startup タブで解決後に Seeds タブに切り替え → Seeds の origins が通知される。Startup に戻ると Startup の origins が再通知される |
-| Import 独立 | 同上 | Startup タブで解決後に Import タブに切り替え → Import の origins (空) が通知される。JSON 読み込みで importOrigins が更新される |
+| Import 独立 | 同上 | Seeds タブで解決後に Import タブに切り替え → Import の origins (空) が通知される |
 | 転記 Startup | 同上 | `pendingDetailOrigins` に Startup 型をセット → Startup タブに切り替わり `startupOrigins` にセットされる |
 | 転記 Seed | 同上 | `pendingDetailOrigins` に Seed 型をセット → Seeds タブに切り替わり `seedsOrigins` にセットされる |
 | 一括転記 | 同上 | `pendingSeedOrigins` をセット → Import タブに切り替わり `importOrigins` にセットされる |
+| 一括転記→保持 | 同上 | 一括転記後に他タブに切り替えても `importOrigins` は保持される |
 
 ### 5.2 テスト環境
 
@@ -299,14 +300,14 @@ useEffect(() => {
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/components/forms/seed-input-section.tsx`: 3 つの独立 origins state を導入
-- [ ] `src/components/forms/seed-input-section.tsx`: `getActiveOrigins` 導出関数を追加
-- [ ] `src/components/forms/seed-input-section.tsx`: `autoResolveStartup` / `autoResolveSeeds` の出力先を個別 state に変更
-- [ ] `src/components/forms/seed-input-section.tsx`: `handleTabChange` を簡素化 (resolve 呼び出し削除)
-- [ ] `src/components/forms/seed-input-section.tsx`: Import タブの操作を `importOrigins` に向ける
-- [ ] `src/components/forms/seed-input-section.tsx`: 初回マウント時の外部転記を対応タブの origins に注入
-- [ ] `src/test/components/forms/seed-input-section.test.tsx`: タブ独立テスト追加
-- [ ] `pnpm lint` / `pnpm exec tsc -b --noEmit` 通過確認
-- [ ] `pnpm test:run` 通過確認
+- [x] `src/components/forms/seed-input-section.tsx`: 3 つの独立 origins state を導入
+- [x] `src/components/forms/seed-input-section.tsx`: `getActiveOrigins` 導出関数を追加
+- [x] `src/components/forms/seed-input-section.tsx`: `autoResolveStartup` / `autoResolveSeeds` の出力先を個別 state に変更
+- [x] `src/components/forms/seed-input-section.tsx`: `handleTabChange` を簡素化 (resolve 呼び出し削除)
+- [x] `src/components/forms/seed-input-section.tsx`: Import タブの操作を `importOrigins` に向ける
+- [x] `src/components/forms/seed-input-section.tsx`: 初回マウント時の外部転記を対応タブの origins に注入
+- [x] `src/test/components/seed-input-section.test.tsx`: タブ独立テスト追加
+- [x] `pnpm lint` / `pnpm exec tsc -b --noEmit` 通過確認
+- [x] `pnpm test:run` 通過確認
 - [ ] 画面確認: Startup → Seeds → Startup とタブを行き来しても各タブの origins が保持される
 - [ ] 画面確認: 外部転記 (詳細ダイアログ / 一括転記) が正しいタブに注入される
