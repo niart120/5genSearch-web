@@ -185,7 +185,6 @@ function NeedlePage(): ReactElement {
             onKeyInputChange={setKeyInput}
             seedHex={seedHex}
             onSeedHexChange={setSeedHex}
-            seedOrigins={seedOrigins}
           />
 
           {/* 針パターン入力 */}
