@@ -1,13 +1,15 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Trans } from '@lingui/react/macro';
 import type { FeatureId } from '@/lib/navigation';
 import { FEATURE_LABELS } from './navigation-labels';
 
 interface PlaceholderPageProps {
   featureId: FeatureId;
+  /** デフォルト: "This feature is under development." */
+  message?: ReactNode;
 }
 
-function PlaceholderPage({ featureId }: PlaceholderPageProps): ReactElement {
+function PlaceholderPage({ featureId, message }: PlaceholderPageProps): ReactElement {
   const Label = FEATURE_LABELS[featureId];
 
   return (
@@ -17,7 +19,7 @@ function PlaceholderPage({ featureId }: PlaceholderPageProps): ReactElement {
           <Label />
         </h2>
         <p className="text-sm text-muted-foreground">
-          <Trans>This feature is under development.</Trans>
+          {message ?? <Trans>This feature is under development.</Trans>}
         </p>
       </div>
     </div>

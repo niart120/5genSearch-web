@@ -99,7 +99,7 @@ msgstr "消費範囲が不正です"
 msgid "Any"
 msgstr "任意"
 
-#: src/features/about/components/about-page.tsx:76
+#: src/features/about/components/about-page.tsx:77
 msgid "App icon by"
 msgstr "アプリアイコン制作"
 
@@ -225,11 +225,11 @@ msgstr "クリップボードにコピー"
 msgid "Copy to seed input"
 msgstr "Seed 入力にコピー"
 
-#: src/features/about/components/about-page.tsx:73
+#: src/features/about/components/about-page.tsx:74
 msgid "Credits"
 msgstr "クレジット"
 
-#: src/features/about/components/about-page.tsx:22
+#: src/features/about/components/about-page.tsx:23
 msgid "Data sources"
 msgstr "データの出典"
 
@@ -302,7 +302,7 @@ msgstr "詳細"
 msgid "Discard and switch"
 msgstr "破棄して切替"
 
-#: src/features/about/components/about-page.tsx:83
+#: src/features/about/components/about-page.tsx:91
 msgid "Disclaimer"
 msgstr "免責事項"
 
@@ -584,7 +584,7 @@ msgstr "先頭特性"
 #~ msgid "Leave empty to show \"?\" for stats"
 #~ msgstr "空欄にすると個体値が「?」で表示されます"
 
-#: src/features/about/components/about-page.tsx:40
+#: src/features/about/components/about-page.tsx:41
 msgid "License"
 msgstr "ライセンス"
 
@@ -890,7 +890,7 @@ msgstr "残り"
 msgid "Rename"
 msgstr "名前変更"
 
-#: src/features/about/components/about-page.tsx:57
+#: src/features/about/components/about-page.tsx:58
 msgid "Repository"
 msgstr "リポジトリ"
 
@@ -1194,15 +1194,19 @@ msgstr "テンプレート"
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "現在のプロファイルに未保存の変更があります。どうしますか？"
 
-#: src/components/layout/placeholder-page.tsx:20
+#: src/components/layout/feature-content.tsx:71
+msgid "This feature is only available in BW (Black/White)."
+msgstr "この機能はBW（ブラック・ホワイト）専用です。"
+
+#: src/components/layout/placeholder-page.tsx:22
 msgid "This feature is under development."
 msgstr "この機能は準備中です。"
 
-#: src/features/about/components/about-page.tsx:86
+#: src/features/about/components/about-page.tsx:94
 msgid "This is an unofficial tool and is not affiliated with or endorsed by Nintendo, Game Freak, or The Pokemon Company."
 msgstr "本アプリは非公式のツールであり、任天堂、ゲームフリーク、株式会社ポケモンとは一切関係ありません。"
 
-#: src/features/about/components/about-page.tsx:43
+#: src/features/about/components/about-page.tsx:44
 msgid "This project is open source."
 msgstr "このプロジェクトはオープンソースです。"
 

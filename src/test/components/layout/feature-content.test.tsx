@@ -4,6 +4,7 @@ import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { FeatureContent } from '@/components/layout/feature-content';
 import { Tabs } from '@/components/ui/tabs';
 import { useUiStore, getUiInitialState } from '@/stores/settings/ui';
+import { useDsConfigStore, getDsConfigInitialState } from '@/stores/settings/ds-config';
 
 // jsdom 環境では WASM バイナリをロードできないためモック
 vi.mock('@/wasm/wasm_pkg.js', () => ({
@@ -26,6 +27,7 @@ describe('FeatureContent', () => {
     setupTestI18n('en');
     localStorage.clear();
     useUiStore.setState(getUiInitialState());
+    useDsConfigStore.setState(getDsConfigInitialState());
   });
 
   it('datetime-search がアクティブのとき DatetimeSearchPage が表示される', () => {
@@ -35,9 +37,28 @@ describe('FeatureContent', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('egg-search がアクティブのとき EggSearchPage が表示される', () => {
+  it('egg-search がアクティブのとき EggSearchPage が表示される (BW)', () => {
     renderFeatureContent('egg-search');
     // EggSearchPage はフォームを含む — Search ボタンが表示される
+    const buttons = screen.getAllByRole('button', { name: /Search/i });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('egg-search がアクティブで BW2 のとき placeholder が表示される', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    renderFeatureContent('egg-search');
+    expect(screen.getByText(/only available in BW/i)).toBeInTheDocument();
+  });
+
+  it('egg-list がアクティブで BW2 のとき placeholder が表示される', () => {
+    useDsConfigStore.getState().setConfig({ version: 'White2' });
+    renderFeatureContent('egg-list');
+    expect(screen.getByText(/only available in BW/i)).toBeInTheDocument();
+  });
+
+  it('BW2 でも egg 以外の機能は正常に表示される', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    renderFeatureContent('datetime-search');
     const buttons = screen.getAllByRole('button', { name: /Search/i });
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
@@ -56,7 +77,7 @@ describe('FeatureContent', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('egg-list がアクティブのとき EggListPage が表示される', () => {
+  it('egg-list がアクティブのとき EggListPage が表示される (BW)', () => {
     renderFeatureContent('egg-list');
     // EggListPage はフォームを含む — Search ボタンが表示される
     const buttons = screen.getAllByRole('button', { name: /Search/i });

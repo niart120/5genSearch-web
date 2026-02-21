@@ -11,7 +11,7 @@ import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
-import { DataTable } from '@/components/data-display/data-table';
+import { DataTable, DATETIME_ASC_SORTING } from '@/components/data-display';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useTrainer } from '@/hooks/use-trainer';
 import { useUiStore } from '@/stores/settings/ui';
@@ -248,6 +248,7 @@ function EggSearchPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start searching.`}
             getRowId={(_row, index) => String(index)}
+            initialSorting={DATETIME_ASC_SORTING}
           />
           <ResultDetailDialog
             open={detailOpen}
