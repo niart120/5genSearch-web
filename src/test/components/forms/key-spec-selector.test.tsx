@@ -51,7 +51,7 @@ describe('KeySpecSelector', () => {
     expect(checkboxes).toHaveLength(12);
   });
 
-  it('ダイアログ内のボタンをトグルすると onChange が呼ばれる', async () => {
+  it('ダイアログ内のボタンをトグルしてOKを押すと onChange が呼ばれる', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     renderKeySpecSelector({ onChange });
@@ -64,12 +64,19 @@ describe('KeySpecSelector', () => {
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
 
+    // この時点では onChange は呼ばれない
+    expect(onChange).not.toHaveBeenCalled();
+
+    // OK ボタンをクリック
+    const okButton = screen.getByRole('button', { name: 'OK' });
+    await user.click(okButton);
+
     expect(onChange).toHaveBeenCalledWith({
       available_buttons: ['A'],
     });
   });
 
-  it('選択済みボタンを解除すると onChange が発火する', async () => {
+  it('選択済みボタンを解除してOKを押すと onChange が発火する', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     renderKeySpecSelector({
@@ -83,6 +90,10 @@ describe('KeySpecSelector', () => {
 
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
+
+    // OK ボタンをクリック
+    const okButton = screen.getByRole('button', { name: 'OK' });
+    await user.click(okButton);
 
     expect(onChange).toHaveBeenCalledWith({
       available_buttons: ['B'],

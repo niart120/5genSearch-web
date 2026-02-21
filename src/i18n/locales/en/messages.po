@@ -77,7 +77,7 @@ msgstr "About this app"
 msgid "Advance"
 msgstr "Advance"
 
-#: src/features/needle/components/needle-page.tsx:202
+#: src/features/needle/components/needle-page.tsx:201
 msgid "Advance Range"
 msgstr "Advance Range"
 
@@ -106,7 +106,7 @@ msgstr "Atk"
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
 #: src/features/needle/components/needle-page.tsx:173
-#: src/features/needle/components/needle-page.tsx:278
+#: src/features/needle/components/needle-page.tsx:277
 msgid "Auto"
 msgstr "Auto"
 
@@ -240,7 +240,7 @@ msgstr "Date range"
 msgid "Date/Time"
 msgstr "Date/Time"
 
-#: src/features/needle/components/seed-input.tsx:82
+#: src/features/needle/components/seed-input.tsx:61
 msgid "Datetime"
 msgstr "Datetime"
 
@@ -269,6 +269,8 @@ msgid "Delete row {0}"
 msgstr "Delete row {0}"
 
 #: src/components/forms/hidden-power-select.tsx:93
+#: src/components/forms/key-input-selector.tsx:104
+#: src/components/forms/key-spec-selector.tsx:104
 #: src/components/forms/nature-select.tsx:69
 msgid "Deselect all"
 msgstr "Deselect all"
@@ -305,8 +307,8 @@ msgstr "Downloaded {filename}"
 #~ msgid "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 #~ msgstr "DS config and Timer0/VCount ranges are loaded from the sidebar settings."
 
-#: src/components/forms/key-input-selector.tsx:53
-#: src/components/forms/key-spec-selector.tsx:53
+#: src/components/forms/key-input-selector.tsx:86
+#: src/components/forms/key-spec-selector.tsx:86
 msgid "Edit"
 msgstr "Edit"
 
@@ -509,7 +511,6 @@ msgstr "Include details"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:226
 #: src/features/needle/components/needle-result-columns.tsx:33
-#: src/features/needle/components/seed-input.tsx:119
 msgid "Initial Seed"
 msgstr "Initial Seed"
 
@@ -531,10 +532,10 @@ msgstr "IVs must be in the range 0 to 31"
 msgid "Key"
 msgstr "Key"
 
-#: src/components/forms/key-input-selector.tsx:41
-#: src/components/forms/key-input-selector.tsx:62
-#: src/components/forms/key-spec-selector.tsx:41
-#: src/components/forms/key-spec-selector.tsx:62
+#: src/components/forms/key-input-selector.tsx:74
+#: src/components/forms/key-input-selector.tsx:95
+#: src/components/forms/key-spec-selector.tsx:74
+#: src/components/forms/key-spec-selector.tsx:95
 #: src/features/datetime-search/components/result-detail-dialog.tsx:94
 #: src/features/egg-list/components/result-detail-dialog.tsx:58
 #: src/features/egg-search/components/result-detail-dialog.tsx:72
@@ -551,11 +552,11 @@ msgstr "Key input"
 msgid "Large number of results expected"
 msgstr "Large number of results expected"
 
-#: src/features/needle/components/seed-input.tsx:85
+#: src/features/needle/components/seed-input.tsx:64
 msgid "LCG Seed"
 msgstr "LCG Seed"
 
-#: src/features/needle/components/seed-input.tsx:101
+#: src/features/needle/components/seed-input.tsx:80
 msgid "LCG Seed (Hex)"
 msgstr "LCG Seed (Hex)"
 
@@ -618,8 +619,8 @@ msgstr "Max"
 msgid "Max advance"
 msgstr "Max advance"
 
-#: src/features/needle/components/needle-page.tsx:223
-#: src/features/needle/components/needle-page.tsx:232
+#: src/features/needle/components/needle-page.tsx:222
+#: src/features/needle/components/needle-page.tsx:231
 msgid "Max Advance"
 msgstr "Max Advance"
 
@@ -715,7 +716,7 @@ msgstr "Needle Direction (Arrow)"
 msgid "Needle Direction (Numeric)"
 msgstr "Needle Direction (Numeric)"
 
-#: src/features/needle/components/needle-page.tsx:194
+#: src/features/needle/components/needle-page.tsx:193
 msgid "Needle Pattern"
 msgstr "Needle Pattern"
 
@@ -741,7 +742,7 @@ msgstr "No profile"
 
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
-#: src/features/needle/components/needle-page.tsx:258
+#: src/features/needle/components/needle-page.tsx:257
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:252
 msgid "No results"
 msgstr "No results"
@@ -779,8 +780,8 @@ msgstr "No species found"
 msgid "No templates match the current filter."
 msgstr "No templates match the current filter."
 
-#: src/components/forms/key-input-selector.tsx:44
-#: src/components/forms/key-spec-selector.tsx:44
+#: src/components/forms/key-input-selector.tsx:77
+#: src/components/forms/key-spec-selector.tsx:77
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
 msgid "None"
 msgstr "None"
@@ -801,8 +802,8 @@ msgstr "Not specified"
 msgid "Not used"
 msgstr "Not used"
 
-#: src/features/needle/components/needle-page.tsx:207
-#: src/features/needle/components/needle-page.tsx:216
+#: src/features/needle/components/needle-page.tsx:206
+#: src/features/needle/components/needle-page.tsx:215
 msgid "Offset"
 msgstr "Offset"
 
@@ -911,7 +912,7 @@ msgstr "Result details"
 #: src/features/egg-list/components/egg-list-page.tsx:259
 #: src/features/egg-search/components/egg-search-page.tsx:241
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:169
-#: src/features/needle/components/needle-page.tsx:251
+#: src/features/needle/components/needle-page.tsx:250
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:253
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:244
 msgid "Results"
@@ -944,7 +945,7 @@ msgstr "Save state"
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
 #: src/features/needle/components/needle-page.tsx:164
-#: src/features/needle/components/needle-page.tsx:273
+#: src/features/needle/components/needle-page.tsx:272
 msgid "Search"
 msgstr "Search"
 
@@ -969,7 +970,7 @@ msgstr "Second"
 msgid "Secret ID"
 msgstr "Secret ID"
 
-#: src/features/needle/components/seed-input.tsx:77
+#: src/features/needle/components/seed-input.tsx:56
 msgid "Seed"
 msgstr "Seed"
 
@@ -998,6 +999,8 @@ msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
 #: src/components/forms/hidden-power-select.tsx:90
+#: src/components/forms/key-input-selector.tsx:101
+#: src/components/forms/key-spec-selector.tsx:101
 #: src/components/forms/nature-select.tsx:66
 msgid "Select all"
 msgstr "Select all"

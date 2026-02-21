@@ -338,6 +338,7 @@ function formatDsButtons(buttons: DsButton[]): string {
 
 export {
   BUTTON_LABELS,
+  DISPLAY_ORDER,
   remToPx,
   formatElapsedTime,
   toBigintHex,
