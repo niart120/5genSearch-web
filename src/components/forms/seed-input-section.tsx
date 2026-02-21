@@ -57,6 +57,26 @@ function parseLcgSeed(hex: string): LcgSeed | undefined {
 // Main Component
 // ---------------------------------------------------------------------------
 
+/** アクティブタブの origins を取得 */
+function getActiveOrigins(
+  mode: SeedInputMode,
+  startupOrigins: SeedOrigin[],
+  seedsOrigins: SeedOrigin[],
+  importOrigins: SeedOrigin[]
+): SeedOrigin[] {
+  switch (mode) {
+    case 'manual-startup': {
+      return startupOrigins;
+    }
+    case 'manual-seeds': {
+      return seedsOrigins;
+    }
+    case 'import': {
+      return importOrigins;
+    }
+  }
+}
+
 function SeedInputSection({
   featureId,
   mode,
@@ -79,6 +99,15 @@ function SeedInputSection({
   // Startup state
   const [datetime, setDatetime] = useState<Datetime>(DEFAULT_DATETIME);
   const [keyInput, setKeyInput] = useState<KeyInput>({ buttons: [] });
+
+  // タブ別 独立 origins state
+  const [startupOrigins, setStartupOrigins] = useState<SeedOrigin[]>([]);
+  const [seedsOrigins, setSeedsOrigins] = useState<SeedOrigin[]>([]);
+  const [importOrigins, setImportOrigins] = useState<SeedOrigin[]>([]);
+
+  // mode の最新値を追跡する ref (useCallback 内で stale closure を防ぐ)
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   // 解決要求カウンタ (最新のリクエストのみ結果を適用する)
   const resolveIdRef = useRef(0);
@@ -106,11 +135,13 @@ function SeedInputSection({
         setDatetime(detail.Startup.datetime);
         setKeyInput(ki);
         setSeedText(hex);
+        modeRef.current = 'manual-startup';
         onModeChange('manual-startup');
         autoResolveStartup(detail.Startup.datetime, ki);
       } else {
         const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
         setSeedText(hex);
+        modeRef.current = 'manual-seeds';
         onModeChange('manual-seeds');
         autoResolveSeeds(hex);
       }
@@ -122,6 +153,7 @@ function SeedInputSection({
     if (pending.length > 0) {
       store.clearPendingSeedOrigins();
       onModeChange('import');
+      setImportOrigins(pending);
       onOriginsChange(pending);
       return;
     }
@@ -146,7 +178,8 @@ function SeedInputSection({
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
       if (lines.length === 0) {
-        onOriginsChange([]);
+        setSeedsOrigins([]);
+        if (modeRef.current === 'manual-seeds') onOriginsChange([]);
         return;
       }
       const seeds: LcgSeed[] = [];
@@ -154,7 +187,8 @@ function SeedInputSection({
         const seed = parseLcgSeed(line);
         if (seed === undefined) {
           // 入力途中: 解決せず origins はクリア
-          onOriginsChange([]);
+          setSeedsOrigins([]);
+          if (modeRef.current === 'manual-seeds') onOriginsChange([]);
           return;
         }
         seeds.push(seed);
@@ -162,7 +196,10 @@ function SeedInputSection({
       const id = ++resolveIdRef.current;
       try {
         const resolved = resolveSeedOrigins({ type: 'Seeds', seeds });
-        if (resolveIdRef.current === id) onOriginsChange(resolved);
+        if (resolveIdRef.current === id) {
+          setSeedsOrigins(resolved);
+          if (modeRef.current === 'manual-seeds') onOriginsChange(resolved);
+        }
       } catch (error: unknown) {
         if (resolveIdRef.current === id) {
           setResolveError(error instanceof Error ? error.message : String(error));
@@ -185,7 +222,10 @@ function SeedInputSection({
           ranges,
           key_input: ki,
         });
-        if (resolveIdRef.current === id) onOriginsChange(resolved);
+        if (resolveIdRef.current === id) {
+          setStartupOrigins(resolved);
+          if (modeRef.current === 'manual-startup') onOriginsChange(resolved);
+        }
       } catch (error: unknown) {
         if (resolveIdRef.current === id) {
           setResolveError(error instanceof Error ? error.message : String(error));
@@ -202,22 +242,12 @@ function SeedInputSection({
       onModeChange(m);
       setResolveError(undefined);
       setImportError(undefined);
-      switch (m) {
-        case 'import': {
-          // Import タブ切り替え時は origins を維持 (クリアしない)
-          break;
-        }
-        case 'manual-startup': {
-          autoResolveStartup(datetime, keyInput);
-          break;
-        }
-        case 'manual-seeds': {
-          autoResolveSeeds(seedText);
-          break;
-        }
-      }
+
+      // 切り替え先タブの既存 origins を親に通知
+      const nextOrigins = getActiveOrigins(m, startupOrigins, seedsOrigins, importOrigins);
+      onOriginsChange(nextOrigins);
     },
-    [onModeChange, autoResolveStartup, autoResolveSeeds, datetime, keyInput, seedText]
+    [onModeChange, onOriginsChange, startupOrigins, seedsOrigins, importOrigins]
   );
 
   // ---------------------------------------------------------------------------
@@ -234,6 +264,7 @@ function SeedInputSection({
         .text()
         .then((text) => {
           const parsed = parseSerializedSeedOrigins(text);
+          setImportOrigins(parsed);
           onOriginsChange(parsed);
         })
         .catch((error: unknown) => {
@@ -367,7 +398,10 @@ function SeedInputSection({
 
             <SeedOriginTable
               origins={origins}
-              onOriginsChange={onOriginsChange}
+              onOriginsChange={(o) => {
+                setImportOrigins(o);
+                onOriginsChange(o);
+              }}
               disabled={disabled}
               editable={true}
             />
