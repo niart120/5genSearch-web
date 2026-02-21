@@ -199,6 +199,9 @@ function TidAdjustPage(): ReactElement {
           />
 
           {/* セーブ状態 (サイドバーの値は使用しない) */}
+          <h3 className="text-sm font-medium">
+            <Trans>Save state</Trans>
+          </h3>
           <Tabs value={effectiveSaveMode} onValueChange={(v) => setSaveMode(v as SaveMode)}>
             <TabsList className="w-full">
               <TabsTrigger value="NoSave" disabled={isLoading} className="flex-1">
@@ -214,9 +217,6 @@ function TidAdjustPage(): ReactElement {
               ) : undefined}
             </TabsList>
           </Tabs>
-          <p className="text-xs text-muted-foreground">
-            <Trans>This setting is independent of the sidebar.</Trans>
-          </p>
 
           <TidAdjustForm
             tid={tid}
