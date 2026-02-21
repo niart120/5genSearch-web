@@ -49,7 +49,7 @@ GitHub Pages への自動デプロイパイプラインを構築し、リリー�
 | `package.json` | 修正 | `version` フィールドの管理方針確認 |
 | `.commitlintrc.json` | 新規 | Conventional Commits 検証設定 |
 | `.github/workflows/commitlint.yml` | 新規 | PR コミットメッセージ検証ワークフロー |
-| `.github/prompts/release.prompt.md` | 新規 | リリース実行用 prompt (既存 `github-pages-deploy.prompt.md` を置換) |
+| `.github/prompts/gh-pages-release.prompt.md` | 新規 | リリース実行用 prompt (既存 `github-pages-deploy.prompt.md` を置換) |
 | `.github/prompts/github-pages-deploy.prompt.md` | 削除 | 旧手動デプロイ prompt (CD パイプラインで代替) |
 
 ## 3. 設計方針
@@ -505,19 +505,19 @@ npx commitlint --from HEAD~1 --to HEAD --verbose
 
 ## 6. 実装チェックリスト
 
-- [ ] `vite.config.ts` に `base: '/5genSearch-web/'` を追加
-- [ ] `ci.yml` のトリガーに `tags: ['v*']` を追加
-- [ ] `.github/workflows/cd.yml` を作成
-- [ ] `.github/workflows/release-please.yml` を作成
-- [ ] `release-please-config.json` を作成
-- [ ] `.release-please-manifest.json` を作成
-- [ ] `@commitlint/cli`, `@commitlint/config-conventional` をインストール
-- [ ] `.commitlintrc.json` を作成
-- [ ] `.github/workflows/commitlint.yml` を作成
-- [ ] `.github/prompts/release.prompt.md` を作成
-- [ ] `.github/prompts/github-pages-deploy.prompt.md` を削除
+- [x] `vite.config.ts` に `base: '/5genSearch-web/'` を追加
+- [x] `ci.yml` のトリガーに `tags: ['v*']` を追加
+- [x] `.github/workflows/cd.yml` を作成
+- [x] `.github/workflows/release-please.yml` を作成
+- [x] `release-please-config.json` を作成
+- [x] `.release-please-manifest.json` を作成
+- [x] `@commitlint/cli`, `@commitlint/config-conventional` をインストール
+- [x] `.commitlintrc.json` を作成
+- [x] `.github/workflows/commitlint.yml` を作成
+- [x] `.github/prompts/gh-pages-release.prompt.md` を作成
+- [x] `.github/prompts/github-pages-deploy.prompt.md` を削除
 - [ ] GitHub リポジトリ設定で Pages ソースを "GitHub Actions" に変更
-- [ ] ローカルで `pnpm build` して base パスを検証
+- [x] ローカルで `pnpm build` して base パスを検証
 - [ ] main マージ後に release-please の動作を確認
 - [ ] リリース prompt でリリース PR マージ → タグ作成 → デプロイの一連フローを確認
 
@@ -532,7 +532,7 @@ npx commitlint --from HEAD~1 --to HEAD --verbose
 ### 7.2 リリース実行
 
 1. VS Code で Copilot Chat を開く
-2. `release.prompt.md` を実行し、`releaseType` を指定 (`patch` / `minor` / `major`)
+2. `gh-pages-release.prompt.md` を実行し、`releaseType` を指定 (`patch` / `minor` / `major`)
 3. prompt が以下を実行:
    - 最新タグ以降の差分を表示
    - release-please PR のバージョンと `releaseType` を照合
@@ -559,7 +559,7 @@ npx commitlint --from HEAD~1 --to HEAD --verbose
 |---|------|------|------|
 | 1 | GitHub Pages のソースを **GitHub Actions** に変更 | リポジトリ → Settings → Pages → Source | デフォルトは "Deploy from a branch"。Actions に切り替えないと `deploy-pages` が失敗する |
 | 2 | GitHub Pages の公開確認 | Settings → Pages | "Your site is live at ..." と表示されれば OK |
-| 3 | `GITHUB_TOKEN` の権限確認 | Settings → Actions → General → Workflow permissions | **Read and write permissions** が必要。release-please がタグ・PR を作成するため |
+| 3 | `GITHUB_TOKEN` の権限確認 | Settings → Actions → General → Workflow permissions | **Read and write permissions** + **Allow GitHub Actions to create and approve pull requests** が必要。release-please がタグ・PR を作成するため |
 
 ### 8.2 初回リリース前
 
@@ -567,7 +567,7 @@ npx commitlint --from HEAD~1 --to HEAD --verbose
 |---|------|------|
 | 1 | main ブランチに本 PR をマージ | release-please が初回のリリース PR を作成する前提 |
 | 2 | release-please がリリース PR を作成したことを確認 | main push 後、数分以内に PR が作成される |
-| 3 | `release.prompt.md` で初回リリースを実行 | `releaseType=minor` (v0.1.0) を推奨 |
+| 3 | `gh-pages-release.prompt.md` で初回リリースを実行 | `releaseType=minor` (v0.1.0) を推奨 |
 | 4 | デプロイ後に `https://niart120.github.io/5genSearch-web/` にアクセスして動作確認 | WASM ロード・検索実行まで確認 |
 
 ### 8.3 継続運用
