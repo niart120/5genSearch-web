@@ -1490,6 +1490,18 @@ export class TrainerInfoSearcher {
 export function compute_iv_spread(mt_seed: MtSeed, mt_offset: number, is_roamer: boolean): Ivs;
 
 /**
+ * GPU プロファイルを検出する。
+ *
+ * WebGPU アダプターから GPU デバイス情報を取得し、
+ * `GpuProfile` を返す。
+ *
+ * # Errors
+ *
+ * GPU アダプターが見つからない場合。
+ */
+export function detect_gpu_profile(): Promise<GpuProfile>;
+
+/**
  * タマゴ一括生成 (公開 API)
  *
  * - 解決済み Seed 対応: `Vec<SeedOrigin>` を受け取る

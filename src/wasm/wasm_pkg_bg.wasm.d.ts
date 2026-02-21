@@ -8,6 +8,7 @@ export const __wbg_mtseeddatetimesearcher_free: (a: number, b: number) => void;
 export const __wbg_mtseedsearcher_free: (a: number, b: number) => void;
 export const __wbg_trainerinfosearcher_free: (a: number, b: number) => void;
 export const compute_iv_spread: (a: any, b: number, c: number) => any;
+export const detect_gpu_profile: () => any;
 export const eggdatetimesearcher_is_done: (a: number) => number;
 export const eggdatetimesearcher_new: (a: any) => [number, number, number];
 export const eggdatetimesearcher_next_batch: (a: number, b: number) => any;
