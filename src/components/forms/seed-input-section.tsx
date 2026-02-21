@@ -33,10 +33,10 @@ export type SeedInputMode = 'import' | 'manual-seeds' | 'manual-startup';
 
 /** lazy initializer で消費した pending データのスナップショット (不変) */
 type InitialPending =
-  | { type: 'startup'; detail: Extract<SeedOrigin, { Startup: unknown }> }
-  | { type: 'seed'; detail: Extract<SeedOrigin, { Seed: unknown }> }
+  | { type: 'startup'; detail: Extract<SeedOrigin, { Startup: unknown }>; origins: SeedOrigin[] }
+  | { type: 'seed'; detail: Extract<SeedOrigin, { Seed: unknown }>; origins: SeedOrigin[] }
   | { type: 'seeds'; seeds: SeedOrigin[] }
-  | { type: 'default-startup' };
+  | { type: 'default-startup'; origins: SeedOrigin[] };
 
 // ---------------------------------------------------------------------------
 // Props
@@ -107,11 +107,51 @@ function SeedInputSection({
   const [initialPending] = useState<InitialPending | undefined>(() => {
     const store = useSearchResultsStore.getState();
     const detail = store.consumePendingDetailOrigin(featureId);
-    if (detail && 'Startup' in detail) return { type: 'startup', detail };
-    if (detail && 'Seed' in detail) return { type: 'seed', detail };
+    if (detail && 'Startup' in detail) {
+      const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
+      let origins: SeedOrigin[] = [];
+      try {
+        origins = resolveSeedOrigins({
+          type: 'Startup',
+          ds: dsConfig,
+          datetime: detail.Startup.datetime,
+          ranges,
+          key_input: ki,
+        });
+      } catch {
+        /* resolve failure */
+      }
+      return { type: 'startup', detail, origins };
+    }
+    if (detail && 'Seed' in detail) {
+      let origins: SeedOrigin[] = [];
+      try {
+        origins = resolveSeedOrigins({
+          type: 'Seeds',
+          seeds: [detail.Seed.base_seed],
+        });
+      } catch {
+        /* resolve failure */
+      }
+      return { type: 'seed', detail, origins };
+    }
     const seeds = store.consumePendingSeedOrigins();
     if (seeds.length > 0) return { type: 'seeds', seeds };
-    if (mode === 'manual-startup') return { type: 'default-startup' };
+    if (mode === 'manual-startup') {
+      let origins: SeedOrigin[] = [];
+      try {
+        origins = resolveSeedOrigins({
+          type: 'Startup',
+          ds: dsConfig,
+          datetime: DEFAULT_DATETIME,
+          ranges,
+          key_input: { buttons: [] },
+        });
+      } catch {
+        /* resolve failure */
+      }
+      return { type: 'default-startup', origins };
+    }
   });
 
   // ---------------------------------------------------------------------------
@@ -147,48 +187,15 @@ function SeedInputSection({
     return { buttons: [] };
   });
 
-  // タブ別 独立 origins state (lazy init)
+  // タブ別 独立 origins state (lazy init — initialPending の resolve 結果を再利用)
   const [startupOrigins, setStartupOrigins] = useState<SeedOrigin[]>(() => {
-    if (initialPending?.type === 'startup') {
-      const ki = keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
-      try {
-        return resolveSeedOrigins({
-          type: 'Startup',
-          ds: dsConfig,
-          datetime: initialPending.detail.Startup.datetime,
-          ranges,
-          key_input: ki,
-        });
-      } catch {
-        return [];
-      }
-    }
-    if (initialPending?.type === 'default-startup') {
-      try {
-        return resolveSeedOrigins({
-          type: 'Startup',
-          ds: dsConfig,
-          datetime: DEFAULT_DATETIME,
-          ranges,
-          key_input: { buttons: [] },
-        });
-      } catch {
-        return [];
-      }
+    if (initialPending?.type === 'startup' || initialPending?.type === 'default-startup') {
+      return initialPending.origins;
     }
     return [];
   });
   const [seedsOrigins, setSeedsOrigins] = useState<SeedOrigin[]>(() => {
-    if (initialPending?.type === 'seed') {
-      try {
-        return resolveSeedOrigins({
-          type: 'Seeds',
-          seeds: [initialPending.detail.Seed.base_seed],
-        });
-      } catch {
-        return [];
-      }
-    }
+    if (initialPending?.type === 'seed') return initialPending.origins;
     return [];
   });
   const [importOrigins, setImportOrigins] = useState<SeedOrigin[]>(() => {
@@ -204,9 +211,16 @@ function SeedInputSection({
   // 親コールバックの安定参照 (mount effect で unstable lambda による再実行を防ぐ)
   const onModeChangeRef = useRef(onModeChange);
   const onOriginsChangeRef = useRef(onOriginsChange);
+  // 各 state の最新参照 (useCallback の依存最小化用)
+  const datetimeRef = useRef(datetime);
+  const keyInputRef = useRef(keyInput);
+  const originsMapRef = useRef({ startupOrigins, seedsOrigins, importOrigins });
   useEffect(() => {
     onModeChangeRef.current = onModeChange;
     onOriginsChangeRef.current = onOriginsChange;
+    datetimeRef.current = datetime;
+    keyInputRef.current = keyInput;
+    originsMapRef.current = { startupOrigins, seedsOrigins, importOrigins };
   });
 
   // ---------------------------------------------------------------------------
@@ -218,34 +232,12 @@ function SeedInputSection({
     switch (initialPending.type) {
       case 'startup': {
         onModeChangeRef.current('manual-startup');
-        const ki = keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
-        try {
-          onOriginsChangeRef.current(
-            resolveSeedOrigins({
-              type: 'Startup',
-              ds: dsConfig,
-              datetime: initialPending.detail.Startup.datetime,
-              ranges,
-              key_input: ki,
-            })
-          );
-        } catch {
-          onOriginsChangeRef.current([]);
-        }
+        onOriginsChangeRef.current(initialPending.origins);
         break;
       }
       case 'seed': {
         onModeChangeRef.current('manual-seeds');
-        try {
-          onOriginsChangeRef.current(
-            resolveSeedOrigins({
-              type: 'Seeds',
-              seeds: [initialPending.detail.Seed.base_seed],
-            })
-          );
-        } catch {
-          onOriginsChangeRef.current([]);
-        }
+        onOriginsChangeRef.current(initialPending.origins);
         break;
       }
       case 'seeds': {
@@ -254,23 +246,11 @@ function SeedInputSection({
         break;
       }
       case 'default-startup': {
-        try {
-          onOriginsChangeRef.current(
-            resolveSeedOrigins({
-              type: 'Startup',
-              ds: dsConfig,
-              datetime: DEFAULT_DATETIME,
-              ranges,
-              key_input: { buttons: [] },
-            })
-          );
-        } catch {
-          onOriginsChangeRef.current([]);
-        }
+        onOriginsChangeRef.current(initialPending.origins);
         break;
       }
     }
-  }, [initialPending, dsConfig, ranges]);
+  }, [initialPending]);
 
   // ---------------------------------------------------------------------------
   // Auto-resolve helpers
@@ -350,11 +330,11 @@ function SeedInputSection({
       setResolveError(undefined);
       setImportError(undefined);
 
-      // 切り替え先タブの既存 origins を親に通知
-      const nextOrigins = getActiveOrigins(m, startupOrigins, seedsOrigins, importOrigins);
-      onOriginsChange(nextOrigins);
+      // 切り替え先タブの既存 origins を親に通知 (ref 経由で最新値を参照)
+      const { startupOrigins: su, seedsOrigins: se, importOrigins: im } = originsMapRef.current;
+      onOriginsChange(getActiveOrigins(m, su, se, im));
     },
-    [onModeChange, onOriginsChange, startupOrigins, seedsOrigins, importOrigins]
+    [onModeChange, onOriginsChange]
   );
 
   // ---------------------------------------------------------------------------
@@ -384,6 +364,15 @@ function SeedInputSection({
     [onOriginsChange]
   );
 
+  /** Import タブ: SeedOriginTable 経由の origins 更新 */
+  const handleImportOriginsChange = useCallback(
+    (o: SeedOrigin[]) => {
+      setImportOrigins(o);
+      onOriginsChange(o);
+    },
+    [onOriginsChange]
+  );
+
   /** manual-seeds: テキスト変更ハンドラ */
   const handleSeedTextChange = useCallback(
     (text: string) => {
@@ -397,18 +386,18 @@ function SeedInputSection({
   const handleDatetimeChange = useCallback(
     (dt: Datetime) => {
       setDatetime(dt);
-      autoResolveStartup(dt, keyInput);
+      autoResolveStartup(dt, keyInputRef.current);
     },
-    [keyInput, autoResolveStartup]
+    [autoResolveStartup]
   );
 
   /** Startup key input 変更 */
   const handleKeyInputChange = useCallback(
     (ki: KeyInput) => {
       setKeyInput(ki);
-      autoResolveStartup(datetime, ki);
+      autoResolveStartup(datetimeRef.current, ki);
     },
-    [datetime, autoResolveStartup]
+    [autoResolveStartup]
   );
 
   return (
@@ -505,10 +494,7 @@ function SeedInputSection({
 
             <SeedOriginTable
               origins={origins}
-              onOriginsChange={(o) => {
-                setImportOrigins(o);
-                onOriginsChange(o);
-              }}
+              onOriginsChange={handleImportOriginsChange}
               disabled={disabled}
               editable={true}
             />
