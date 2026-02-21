@@ -176,9 +176,7 @@ function PokemonFilterForm({
   const [isOpen, setIsOpen] = useState(false);
 
   // フィルター有効/無効トグル (内部状態を保持したまま切り替え)
-  const [filterEnabled, setFilterEnabled] = useState(
-    value !== undefined || statsFilter !== undefined
-  );
+  const [filterEnabled, setFilterEnabled] = useState(true);
 
   // 内部フィルタ状態 (トグル OFF 時も保持)
   const [internalFilter, setInternalFilter] = useState<PokemonFilter>(value ?? DEFAULT_FILTER);
