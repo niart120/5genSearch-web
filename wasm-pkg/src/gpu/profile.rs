@@ -1,7 +1,7 @@
 //! GPU プロファイル
 //!
 //! GPU デバイスの種類と特性を検出する。
-//! WASM 環境では vendor + architecture テーブルで GpuKind を判定する。
+//! WASM 環境では vendor + architecture テーブルで `GpuKind` を判定する。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -43,11 +43,11 @@ impl GpuProfile {
     /// ネイティブ環境では wgpu の `AdapterInfo` から `DeviceType` を使用。
     /// WASM 環境ではブラウザの `GPUAdapterInfo` から取得した
     /// `vendor` + `architecture` でテーブル判定を行う。
+    #[allow(unused_variables)]
     pub fn detect(adapter: &wgpu::Adapter) -> Self {
-        let info = adapter.get_info();
-
         #[cfg(not(target_arch = "wasm32"))]
         {
+            let info = adapter.get_info();
             let kind = match info.device_type {
                 wgpu::DeviceType::DiscreteGpu => GpuKind::Discrete,
                 wgpu::DeviceType::IntegratedGpu => GpuKind::Integrated,
@@ -91,9 +91,10 @@ impl Default for GpuProfile {
     }
 }
 
-/// vendor + architecture から GpuKind を判定する。
+/// vendor + architecture から `GpuKind` を判定する。
 ///
 /// WASM/ネイティブ両方のテストで使用するため `cfg` なしで定義する。
+#[cfg_attr(not(target_arch = "wasm32"), cfg(test))]
 fn detect_kind(vendor: &str, architecture: &str) -> GpuKind {
     match vendor {
         "nvidia" => {

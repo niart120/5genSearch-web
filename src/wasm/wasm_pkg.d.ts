@@ -73,17 +73,17 @@ export interface GpuProfile {
      */
     kind: GpuKind;
     /**
-     * デバイス名
-     */
-    name: string;
-    /**
-     * ベンダー名
+     * ベンダー名 (\"nvidia\", \"amd\", \"intel\", \"apple\", ...)
      */
     vendor: string;
     /**
-     * ドライバー情報
+     * アーキテクチャ名 (\"blackwell\", \"rdna3\", \"xe-lpg\", ...)
      */
-    driver: string;
+    architecture: string;
+    /**
+     * デバイス記述 (表示用、判定には使用しない)
+     */
+    description: string;
 }
 
 /**
