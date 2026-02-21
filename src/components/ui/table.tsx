@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 function Table({ className, ref, ...props }: ComponentPropsWithRef<'table'>) {
   return (
-    <div className="relative w-full overflow-auto">
+    <div className="relative w-full">
       <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
   );
