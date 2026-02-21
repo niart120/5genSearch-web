@@ -333,28 +333,50 @@ function PokemonParamsForm({
         </div>
       </div>
 
-      {/* ロケーション (ロケーションベースのみ) */}
+      {/* ロケーション + エンカウント方法 (同一行配置、ロケーションベースのみ) */}
       {isLocationBased && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">
-            <Trans>Location</Trans>
-          </Label>
-          <Select
-            value={selectedLocation}
-            onValueChange={handleLocationChange}
-            disabled={disabled || locations.length === 0}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder={t`Select location`} />
-            </SelectTrigger>
-            <SelectContent>
-              {locations.map((loc) => (
-                <SelectItem key={loc.key} value={loc.key}>
-                  {getEncounterLocationName(loc.displayNameKey, language)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <Label className="text-xs">
+              <Trans>Location</Trans>
+            </Label>
+            <Select
+              value={selectedLocation}
+              onValueChange={handleLocationChange}
+              disabled={disabled || locations.length === 0}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder={t`Select location`} />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((loc) => (
+                  <SelectItem key={loc.key} value={loc.key}>
+                    {getEncounterLocationName(loc.displayNameKey, language)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex w-32 shrink-0 flex-col gap-1">
+            <Label className="text-xs">
+              <Trans>Encounter method</Trans>
+            </Label>
+            <Select
+              value={encounterMethod}
+              onValueChange={(v) =>
+                onChange((prev) => ({ ...prev, encounterMethod: v as EncounterMethod }))
+              }
+              disabled={disabled}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Stationary">{t`Sweet Scent`}</SelectItem>
+                <SelectItem value="Moving">{t`Moving`}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 
@@ -383,30 +405,6 @@ function PokemonParamsForm({
                     {speciesNames.get(entry.speciesId) ?? entry.displayNameKey} (Lv.{entry.level})
                   </SelectItem>
                 ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {/* エンカウント方法 (ロケーションベースのみ) */}
-      {isLocationBased && (
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">
-            <Trans>Encounter method</Trans>
-          </Label>
-          <Select
-            value={encounterMethod}
-            onValueChange={(v) =>
-              onChange((prev) => ({ ...prev, encounterMethod: v as EncounterMethod }))
-            }
-            disabled={disabled}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Stationary">{t`Stationary`}</SelectItem>
-              <SelectItem value="Moving">{t`Moving`}</SelectItem>
             </SelectContent>
           </Select>
         </div>
