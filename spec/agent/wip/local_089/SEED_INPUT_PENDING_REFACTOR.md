@@ -4,7 +4,7 @@
 
 ### 1.1 目的
 
-`SeedInputSection` コンポーネントのマウント時 pending データ消費パターンを改善し、`react-hooks/exhaustive-deps` の lint 抑制を解消する。
+`SeedInputSection` コンポーネントのマウント時 pending データ消費パターンを改善し、`react-hooks/exhaustive-deps` の lint 抑制を **完全に** 解消する。
 
 ### 1.2 用語定義
 
@@ -14,28 +14,43 @@
 | DetailOriginConsumer | pending detail origin の消費先 feature。`'pokemon-list' \| 'egg-list' \| 'needle'` の 3 種 |
 | SeedInputSection | 3 つの入力モード (startup / seeds / import) を持つ共通 Seed 入力コンポーネント |
 | atomic consume | Store から pending データを「読み取り + クリア」を 1 つの action で行う操作 |
+| initialPending | lazy initializer で消費した pending データのスナップショット。mount 時に1回だけ確定する不変値 |
 
 ### 1.3 背景・問題
 
-`feature/state-persistence` ブランチ (local_088) で導入した Feature Store 化に伴い、`SeedInputSection` はマウント時に `useEffect` で pending データを消費する。この effect は空の依存配列 `[]` で mount-only として動作させるため、`eslint-disable-next-line react-hooks/exhaustive-deps` で lint を抑制している。
+`SeedInputSection` はマウント時に `useEffect` で pending データを消費する。この effect は空の依存配列 `[]` で mount-only として動作させるため、`eslint-disable-next-line react-hooks/exhaustive-deps` で lint を抑制している。
 
-抑制が必要な理由:
+抑制が必要だった理由:
 
-1. effect 内で `setDatetime` / `setKeyInput` / `setSeedText` を呼ぶため、依存配列を正直に追加すると `react-hooks/set-state-in-effect` (effect 内 setState の検出) と矛盾する
-2. `onModeChange` / `onOriginsChange` 等のコールバックを依存配列に含めると、mount-only の意図に反して再実行されるリスクがある
+1. effect 内で `setDatetime` / `setKeyInput` / `setSeedText` を呼ぶため、依存配列を正直に追加すると再実行を引き起こす
+2. `onModeChange` / `onOriginsChange` 等の親コールバックを依存配列に含めると mount-only の意図に反する
 3. `autoResolveStartup` / `autoResolveSeeds` が `dsConfig` / `ranges` に依存しており、それらも巻き込まれる
 
-### 1.4 期待効果
+### 1.4 前提: local_092 による構造変更
+
+本仕様は **local_092 (SeedInputSection タブ別 Origins 独立管理) の完了を前提とする**。
+
+local_092 により、`autoResolveStartup` / `autoResolveSeeds` の出力先が `onOriginsChange` (親コールバック) から `setStartupOrigins` / `setSeedsOrigins` (内部 state) に変わる。この変更により:
+
+- mount effect 内の `onOriginsChange` / `autoResolve*` 呼び出しが不要になる
+- 全ての内部 state 初期化を `useState` lazy initializer で完結できる
+- mount effect に残る親コールバックは `onModeChange` のみになる
+- `onModeChange` は `initialPending` (参照安定) と組み合わせて `exhaustive-deps` を正直に満たせる
+
+結果として、**lint 抑制が完全に不要になる**。
+
+### 1.5 期待効果
 
 | 指標 | 現状 | 変更後 |
 |------|------|--------|
-| `exhaustive-deps` disable 数 | ブランチ内 1 箇所 | 0 箇所 |
-| pending 消費の実行タイミング | effect (非同期、React 管理) | 同期的な初期化 |
+| `exhaustive-deps` disable 数 | 1 箇所 | **0 箇所** |
+| pending 消費の実行タイミング | effect (非同期、React 管理) | 同期的な初期化 (lazy initializer) |
+| mount effect の責務 | 内部 state 初期化 + 親通知 + auto-resolve | `onModeChange` のみ |
 | UX | 現状維持 | 現状維持 |
 
-### 1.5 着手条件
+### 1.6 着手条件
 
-- `feature/state-persistence` ブランチの Feature Store 化 (local_088) が完了していること
+- **local_092 (SeedInputSection タブ別 Origins 独立管理) が完了していること**
 - `SeedInputSection` の既存テスト・lint が通過していること
 
 ## 2. 対象ファイル
@@ -43,28 +58,23 @@
 | ファイル | 変更種別 | 変更内容 |
 |---------|----------|---------|
 | `src/stores/search/results.ts` | 修正 | `consumePendingDetailOrigin` / `consumePendingSeedOrigins` action 追加 |
-| `src/components/forms/seed-input-section.tsx` | 修正 | mount effect の pending 消費を lazy initializer ベースに書き換え |
+| `src/components/forms/seed-input-section.tsx` | 修正 | mount effect → lazy initializer 化、lint 抑制コメント削除 |
 | `src/test/unit/stores/search-results-store.test.ts` | 新規 | atomic consume action のテスト |
 
 ## 3. 設計方針
 
-### 3.1 案の比較と判断
+### 3.1 解決アプローチ
 
-セルフレビューで検出した問題に対し、3 つの代替案を検討した。
+mount effect 内の操作を2層に分離する:
 
-| 観点 | 案A: atomic consume | 案B: pending 廃止 (直接書き込み) | 案C: 内部 state 全面外出し |
-|------|---------------------|--------------------------------|--------------------------|
-| 概要 | Store に「読む+消す」を 1 action 化。effect → lazy init に置き換え | 送信側が受信側 Store action を直接呼ぶ。mount 消費を不要にする | `datetime` / `keyInput` / `seedText` を全て feature store に移管 |
-| 変更範囲 | `results.ts` + `seed-input-section.tsx` | 送信側 (detail dialog) + 受信側 (3 feature page) + `results.ts` | 3 feature store + `seed-input-section.tsx` + 3 feature page |
-| Feature 間結合 | 低 (現状維持) | 高 (送信側が受信側の内部構造を知る) | 低 |
-| lint 抑制解消 | 解消可能 | 解消可能 | 解消可能 |
-| リスク | 低 | 将来の feature 追加時に送信側の改修が必要 | 改修範囲が広く、テスト負荷が高い |
+| 層 | 手段 | 対象 | lint 問題 |
+|----|------|------|-----------|
+| **同期初期化** | `useState` lazy initializer | pending 消費 + 内部 state 初期値 + origins 初期値 | なし (依存配列不要) |
+| **親への通知** | `useEffect` | `onModeChange` のみ | なし (後述) |
 
-**判断**: 案A を採用する。変更範囲が最小で、feature 間の結合度を維持したまま lint 抑制を解消できる。案B は feature 間結合が強まるため不採用。案C は正しい方向性だが改修範囲が広く、本件の目的（lint 抑制解消）に対してコストが見合わない。案C は将来的に `SeedInputSection` の controlled 化が必要になった時点で別途検討する。
+local_092 前の構造では、resolve 結果を `onOriginsChange` で親に通知する必要があり、effect の依存配列が膨張していた。local_092 後は origins が内部 state になるため、lazy initializer で resolve 結果を直接セットできる。
 
-### 3.2 設計
-
-#### Store 側: atomic consume action
+### 3.2 Store 側: atomic consume action
 
 `results.ts` に 2 つの consume action を追加する。いずれも「現在値を返却し、同時に Store をクリアする」動作を行う。
 
@@ -73,35 +83,23 @@
 
 Zustand の `getState()` を介して同期的に呼び出すため、React レンダリングサイクルとの競合がない。
 
-#### SeedInputSection 側: lazy initializer
+### 3.3 SeedInputSection 側: 全面 lazy initializer 化
 
-mount effect を削除し、代わりに `useState` の lazy initializer (初期化関数) で pending データを消費する。
+```
+useState(() => consumePending())       → initialPending (不変)
+useState(() => derive(initialPending)) → datetime, keyInput, seedText
+useState(() => resolve(initialPending))→ startupOrigins, seedsOrigins, importOrigins
 
-```tsx
-// 概念コード
-const [initialPending] = useState(() => {
-  const store = useSearchResultsStore.getState();
-  const detail = store.consumePendingDetailOrigin(featureId);
-  if (detail) return { type: 'detail' as const, detail };
-  const seeds = store.consumePendingSeedOrigins();
-  if (seeds.length > 0) return { type: 'seeds' as const, seeds };
-  return undefined;
-});
+useEffect([initialPending, onModeChange]) → onModeChange のみ
 ```
 
-lazy initializer は React の state 初期化時に 1 回だけ実行され、effect と異なり以下の利点がある:
-
-- 依存配列が不要 (mount-only が構造的に保証される)
-- 同期的に実行される (render 中に完了する)
-- `set-state-in-effect` lint に抵触しない
-
-pending データの消費結果に基づく `onModeChange` / `onOriginsChange` / `autoResolve` の呼び出しは、別途 mount effect で `initialPending` を参照して実行する。この effect は `initialPending` のみを依存に持つため、exhaustive-deps を満たしつつ mount-only になる（`useState` の lazy init 結果は参照が安定する）。
+`initialPending` は lazy init で確定する不変値のため、effect の依存配列に含めても再実行されない。`onModeChange` は親側の `useCallback` で参照安定。この2つだけの依存配列で `exhaustive-deps` を正直に満たせる。
 
 ## 4. 実装仕様
 
 ### 4.1 `stores/search/results.ts` — consume action 追加
 
-```ts
+```typescript
 interface SearchResultsActions {
   // ... 既存 action ...
 
@@ -114,7 +112,7 @@ interface SearchResultsActions {
 
 実装:
 
-```ts
+```typescript
 consumePendingDetailOrigin: (consumer) => {
   const current = get().pendingDetailOrigins[consumer];
   if (current !== undefined) {
@@ -137,22 +135,20 @@ consumePendingSeedOrigins: () => {
 
 注意: `create` の引数を `(set)` → `(set, get)` に変更して `get` を受け取る。
 
-### 4.2 `seed-input-section.tsx` — mount effect → lazy initializer
+### 4.2 pending 消費の型定義
 
-#### 4.2.1 pending 消費の型定義
-
-```ts
-type PendingDetail =
+```typescript
+type InitialPending =
   | { type: 'startup'; detail: SeedOrigin & { Startup: unknown } }
   | { type: 'seed'; detail: SeedOrigin & { Seed: unknown } }
   | { type: 'seeds'; seeds: SeedOrigin[] }
   | undefined;
 ```
 
-#### 4.2.2 useState lazy initializer で pending 消費
+### 4.3 lazy initializer: pending 消費
 
-```tsx
-const [initialPending] = useState<PendingDetail>(() => {
+```typescript
+const [initialPending] = useState<InitialPending>(() => {
   const store = useSearchResultsStore.getState();
   const detail = store.consumePendingDetailOrigin(featureId);
   if (detail) {
@@ -165,58 +161,9 @@ const [initialPending] = useState<PendingDetail>(() => {
 });
 ```
 
-#### 4.2.3 pending の副作用を effect で処理
+### 4.4 lazy initializer: 内部 state 初期値
 
-```tsx
-useEffect(() => {
-  if (!initialPending) {
-    if (mode === 'manual-startup') {
-      autoResolveStartup(datetime, keyInput);
-    }
-    return;
-  }
-  switch (initialPending.type) {
-    case 'startup': {
-      const d = initialPending.detail;
-      if ('Startup' in d) {
-        const ki = keyCodeToKeyInput(d.Startup.condition.key_code);
-        const hex = d.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
-        setDatetime(d.Startup.datetime);
-        setKeyInput(ki);
-        setSeedText(hex);
-        onModeChange('manual-startup');
-        autoResolveStartup(d.Startup.datetime, ki);
-      }
-      break;
-    }
-    case 'seed': {
-      const d = initialPending.detail;
-      if ('Seed' in d) {
-        const hex = d.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
-        setSeedText(hex);
-        onModeChange('manual-seeds');
-        autoResolveSeeds(hex);
-      }
-      break;
-    }
-    case 'seeds':
-      onModeChange('import');
-      onOriginsChange(initialPending.seeds);
-      break;
-  }
-  // initialPending は useState の初期化結果で参照安定
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [initialPending]);
-```
-
-**注**: この effect にも `exhaustive-deps` disable が残る可能性がある。`initialPending` は mount 時に確定する不変値だが、`autoResolveStartup` / `onModeChange` 等の関数が依存配列に要求される。
-
-### 4.3 代替: effect を使わず initializer 内で完結させる
-
-§4.2 の approach では effect 内の setState 問題が残る可能性がある。以下の方針で effect 自体を不要にできるか検討する。
-
-```tsx
-// useState の initializer で state 初期値を直接設定
+```typescript
 const [datetime, setDatetime] = useState<Datetime>(() => {
   if (initialPending?.type === 'startup' && 'Startup' in initialPending.detail) {
     return initialPending.detail.Startup.datetime;
@@ -242,56 +189,93 @@ const [seedText, setSeedText] = useState(() => {
 });
 ```
 
-`onModeChange` / `onOriginsChange` / `autoResolve` は render 中に呼べないため、これらについては mount effect が依然として必要。ただし、内部 state の初期化を lazy initializer で済ませることで、effect 内の `setDatetime` / `setKeyInput` / `setSeedText` 呼び出しが不要になり、`set-state-in-effect` との矛盾が解消される。
+### 4.5 lazy initializer: origins 初期値 (local_092 の独立 state)
 
-**この方針 (§4.3) を実装の主軸とする。** mount effect は `onModeChange` + `onOriginsChange` + auto-resolve のみを担当する。
-
-### 4.4 mount effect の最終形
-
-§4.3 の方針により、mount effect から内部 setState を除去した形:
-
-```tsx
-const mountedRef = useRef(false);
-useEffect(() => {
-  if (mountedRef.current) return;
-  mountedRef.current = true;
-
-  if (!initialPending) {
-    if (mode === 'manual-startup') {
-      autoResolveStartup(datetime, keyInput);
+```typescript
+const [startupOrigins, setStartupOrigins] = useState<SeedOrigin[]>(() => {
+  if (initialPending?.type === 'startup' && 'Startup' in initialPending.detail) {
+    const ki = keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
+    try {
+      return resolveSeedOrigins({
+        type: 'Startup',
+        ds: dsConfig,
+        datetime: initialPending.detail.Startup.datetime,
+        ranges,
+        key_input: ki,
+      });
+    } catch {
+      return [];
     }
-    return;
   }
-  switch (initialPending.type) {
-    case 'startup': {
-      const d = initialPending.detail;
-      if ('Startup' in d) {
-        onModeChange('manual-startup');
-        autoResolveStartup(d.Startup.datetime, keyCodeToKeyInput(d.Startup.condition.key_code));
-      }
-      break;
+  // pending なし + Startup タブがデフォルトの場合にも初期解決
+  if (!initialPending && mode === 'manual-startup') {
+    try {
+      return resolveSeedOrigins({
+        type: 'Startup',
+        ds: dsConfig,
+        datetime: DEFAULT_DATETIME,
+        ranges,
+        key_input: { buttons: [] },
+      });
+    } catch {
+      return [];
     }
-    case 'seed': {
-      const d = initialPending.detail;
-      if ('Seed' in d) {
-        onModeChange('manual-seeds');
-        autoResolveSeeds(
-          d.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0')
-        );
-      }
-      break;
-    }
-    case 'seeds':
-      onModeChange('import');
-      onOriginsChange(initialPending.seeds);
-      break;
   }
-  // mountedRef ガードにより実質 mount-only
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [initialPending]);
+  return [];
+});
+
+const [seedsOrigins, setSeedsOrigins] = useState<SeedOrigin[]>(() => {
+  if (initialPending?.type === 'seed' && 'Seed' in initialPending.detail) {
+    const hex = initialPending.detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+    // autoResolveSeeds 相当のロジック
+    const seed = parseLcgSeed(hex);
+    if (seed !== undefined) {
+      try {
+        return resolveSeedOrigins({ type: 'Seeds', seeds: [seed] });
+      } catch {
+        return [];
+      }
+    }
+  }
+  return [];
+});
+
+const [importOrigins, setImportOrigins] = useState<SeedOrigin[]>(() => {
+  if (initialPending?.type === 'seeds') {
+    return initialPending.seeds;
+  }
+  return [];
+});
 ```
 
-**現実的な結論**: `onModeChange` 等の parent callback が依存に入るため、`exhaustive-deps` の完全な lint 適合は `mountedRef` ガードと組み合わせても困難。ただし §4.3 により `set-state-in-effect` は解消され、effect の責務は「親への通知 + auto-resolve 発火」に限定される。disable コメントは残るが、正当性の根拠が明確になる。
+### 4.6 mount effect: `onModeChange` のみ
+
+```typescript
+useEffect(() => {
+  if (!initialPending) return;
+  switch (initialPending.type) {
+    case 'startup':
+      onModeChange('manual-startup');
+      break;
+    case 'seed':
+      onModeChange('manual-seeds');
+      break;
+    case 'seeds':
+      onModeChange('import');
+      break;
+  }
+}, [initialPending, onModeChange]);
+```
+
+- `initialPending` は lazy init 結果で参照安定 (mount 後に変化しない)
+- `onModeChange` は親の `useCallback` で参照安定
+- **`exhaustive-deps` を正直に書いて lint 適合し、かつ mount-only で動作する**
+
+### 4.7 activeOrigins の初回親通知
+
+local_092 の設計で、activeOrigins は `mode` + 3つの origins state から導出される。初回レンダー時点で origins が lazy init で確定するため、local_092 の `onOriginsChange` 通知ロジック (タブ切り替え時 or resolve 完了時) がそのまま適用される。mount effect から `onOriginsChange` を呼ぶ必要はない。
+
+具体的には、lazy init で origins が確定した後の初回 render で、local_092 で導入する activeOrigins 導出 + 親通知の仕組み (useEffect or handleTabChange) が自然に動作する。
 
 ## 5. テスト方針
 
@@ -311,14 +295,15 @@ useEffect(() => {
 
 ## 6. 実装チェックリスト
 
-- [ ] `results.ts`: `create` の第2引数 `get` を受け取るよう変更
+- [ ] `results.ts`: `create` の引数に `get` を追加
 - [ ] `results.ts`: `consumePendingDetailOrigin` action 追加
 - [ ] `results.ts`: `consumePendingSeedOrigins` action 追加
-- [ ] `seed-input-section.tsx`: `initialPending` の useState lazy initializer 追加
-- [ ] `seed-input-section.tsx`: `datetime` / `keyInput` / `seedText` の useState に lazy initializer 追加
-- [ ] `seed-input-section.tsx`: mount effect から内部 setState を除去
-- [ ] `seed-input-section.tsx`: mount effect の依存配列・コメントを更新
+- [ ] `seed-input-section.tsx`: `initialPending` の lazy initializer 追加
+- [ ] `seed-input-section.tsx`: `datetime` / `keyInput` / `seedText` の lazy initializer 追加
+- [ ] `seed-input-section.tsx`: `startupOrigins` / `seedsOrigins` / `importOrigins` の lazy initializer 追加
+- [ ] `seed-input-section.tsx`: mount effect を `onModeChange` のみに簡素化
+- [ ] `seed-input-section.tsx`: `eslint-disable-next-line react-hooks/exhaustive-deps` コメントを **削除**
+- [ ] `seed-input-section.tsx`: `mountedRef` ガードを削除 (不要になるため)
 - [ ] ユニットテスト: `search-results-store.test.ts` 作成
 - [ ] 既存テスト通過確認 (`pnpm test:run`)
-- [ ] lint 通過確認 (`pnpm lint`)
-- [ ] `exhaustive-deps` disable の残存理由をコメントに明記
+- [ ] lint 通過確認 (`pnpm lint`) — `exhaustive-deps` disable が 0 箇所であること
