@@ -611,13 +611,10 @@ msgid "Max"
 msgstr "Max"
 
 #: src/components/forms/egg-params-form.tsx:411
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:442
-msgid "Max advance"
-msgstr "最大消費数"
-
 #: src/features/needle/components/needle-page.tsx:217
 #: src/features/needle/components/needle-page.tsx:226
-msgid "Max Advance"
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:442
+msgid "Max advance"
 msgstr "最大消費数"
 
 #: src/features/needle/components/needle-page.tsx:110
@@ -797,11 +794,6 @@ msgstr "指定なし"
 #: src/components/forms/egg-params-form.tsx:307
 msgid "Not used"
 msgstr "使用しない"
-
-#: src/features/needle/components/needle-page.tsx:201
-#: src/features/needle/components/needle-page.tsx:210
-msgid "Offset"
-msgstr "オフセット"
 
 #: src/features/needle/components/needle-page.tsx:109
 msgid "Offset must be 0 or positive"
@@ -1119,6 +1111,8 @@ msgid "Start mode"
 msgstr "起動モード"
 
 #: src/components/forms/egg-params-form.tsx:394
+#: src/features/needle/components/needle-page.tsx:201
+#: src/features/needle/components/needle-page.tsx:210
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:425
 msgid "Start offset"
 msgstr "開始オフセット"

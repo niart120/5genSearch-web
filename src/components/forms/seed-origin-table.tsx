@@ -81,9 +81,9 @@ function SeedOriginTable({
     <div className="flex flex-col gap-2">
       {/* テーブル */}
       {origins.length > 0 ? (
-        <div className="overflow-x-auto rounded-sm border border-border">
+        <div className="max-h-64 overflow-auto rounded-sm border border-border">
           <table className="w-full text-xs">
-            <thead>
+            <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-muted/50">
                 {hasStartupOrigins && (
                   <>
