@@ -15,6 +15,18 @@ import type { GpuKind, GpuProfile } from '../../wasm/wasm_pkg.js';
 // GPU Availability Check
 // =============================================================================
 
+// detect_kind() のテーブルに登録済みのベンダー (wasm-pkg/src/gpu/profile.rs と同期)
+const KNOWN_VENDORS = new Set([
+  'nvidia',
+  'amd',
+  'intel',
+  'apple',
+  'qualcomm',
+  'arm',
+  'samsung',
+  'imgtec',
+]);
+
 function hasWebGpu(): boolean {
   return 'gpu' in navigator && navigator.gpu !== undefined;
 }
@@ -96,9 +108,11 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
       console.log('[GpuProfile] kind:', wasmProfile?.kind);
     });
 
-    it('kind が Unknown でない', () => {
-      // vendor + architecture が取れる環境では Unknown にならない
-      if (browserInfo?.vendor) {
+    it('kind が Unknown でない (既知ベンダーの場合)', () => {
+      // detect_kind() のテーブルに登録済みの vendor であれば Unknown にならない。
+      // CI 環境 (SwiftShader 等) では vendor が "google" 等の未登録値になるためスキップ。
+      // ベンダーと GpuKind のマッピング検証は Rust ユニットテスト (profile.rs) で網羅する。
+      if (browserInfo?.vendor && KNOWN_VENDORS.has(browserInfo.vendor)) {
         expect(wasmProfile?.kind).not.toBe('Unknown');
       }
     });
