@@ -196,7 +196,6 @@ function TidAdjustPage(): ReactElement {
             onTimeRangeChange={setTimeRange}
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
-            keyCombinationCount={keyCombinationCount}
           />
 
           {/* セーブ状態 (サイドバーの値は使用しない) */}

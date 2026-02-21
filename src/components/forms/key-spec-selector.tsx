@@ -19,11 +19,9 @@ interface KeySpecSelectorProps {
   value: KeySpec;
   onChange: (value: KeySpec) => void;
   disabled?: boolean;
-  /** countKeyCombinations で計算した組み合わせ数 */
-  combinationCount?: number;
 }
 
-function KeySpecSelector({ value, onChange, disabled, combinationCount }: KeySpecSelectorProps) {
+function KeySpecSelector({ value, onChange, disabled }: KeySpecSelectorProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleToggle = useCallback(
@@ -34,10 +32,6 @@ function KeySpecSelector({ value, onChange, disabled, combinationCount }: KeySpe
   );
 
   const displayText = formatDsButtons(value.available_buttons);
-  const countText =
-    combinationCount === undefined
-      ? value.available_buttons.length
-      : combinationCount.toLocaleString();
 
   return (
     <>
@@ -49,7 +43,6 @@ function KeySpecSelector({ value, onChange, disabled, combinationCount }: KeySpe
         <span className="min-w-0 flex-1 truncate text-xs font-mono">
           {displayText || <Trans>None</Trans>}
         </span>
-        <span className="shrink-0 text-xs text-muted-foreground">({countText})</span>
         <Button
           type="button"
           variant="outline"
@@ -57,7 +50,7 @@ function KeySpecSelector({ value, onChange, disabled, combinationCount }: KeySpe
           disabled={disabled}
           onClick={() => setDialogOpen(true)}
         >
-          <Trans>Key input</Trans>
+          <Trans>Edit</Trans>
         </Button>
       </div>
 
@@ -74,9 +67,6 @@ function KeySpecSelector({ value, onChange, disabled, combinationCount }: KeySpe
             onToggle={handleToggle}
             disabled={disabled}
           />
-          <p className="text-xs text-muted-foreground">
-            <Trans>Combinations</Trans>: {countText}
-          </p>
         </DialogContent>
       </Dialog>
     </>

@@ -219,7 +219,6 @@ function DatetimeSearchPage(): ReactElement {
             onTimeRangeChange={setTimeRange}
             onKeySpecChange={setKeySpec}
             disabled={isLoading}
-            keyCombinationCount={keyCombinationCount}
           />
 
           <section className="flex flex-col gap-2">
