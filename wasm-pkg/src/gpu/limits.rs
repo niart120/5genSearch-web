@@ -123,9 +123,9 @@ mod tests {
         };
         let profile = GpuProfile {
             kind: GpuKind::Discrete,
-            name: "Test GPU".into(),
-            vendor: "Test".into(),
-            driver: "1.0".into(),
+            vendor: "nvidia".into(),
+            architecture: "blackwell".into(),
+            description: "Test GPU".into(),
         };
 
         let limits = SearchJobLimits::from_device_limits(&wgpu_limits, &profile);
@@ -144,9 +144,9 @@ mod tests {
         };
         let profile = GpuProfile {
             kind: GpuKind::Mobile,
-            name: "Mobile GPU".into(),
-            vendor: "Test".into(),
-            driver: "1.0".into(),
+            vendor: "qualcomm".into(),
+            architecture: "adreno-740".into(),
+            description: "Mobile GPU".into(),
         };
 
         let limits = SearchJobLimits::from_device_limits(&wgpu_limits, &profile);

@@ -287,21 +287,9 @@ function buildProgressInfo(
 }
 
 /**
- * ブラウザの GPUAdapterInfo 拡張プロパティ
- *
- * @webgpu/types v0.1.69 では `type` / `driver` が未定義。
- * Chrome 131+ で追加されたプロパティを補完する。
- * @see https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapterInfo
- */
-interface GPUAdapterInfoExtended extends GPUAdapterInfo {
-  readonly type?: string;
-  readonly driver?: string;
-}
-
-/**
  * ブラウザの GPUAdapterInfo を globalThis に保存
  *
- * wgpu v24 の WebGPU バックエンドは AdapterInfo のフィールドを
+ * wgpu v28 の WebGPU バックエンドは AdapterInfo のフィールドを
  * 空/デフォルト値で返すため、WASM 側の GpuProfile::detect() が
  * globalThis.__wgpu_browser_adapter_info を参照して GPU 種別を判定する。
  */
@@ -313,12 +301,11 @@ async function cacheGpuAdapterInfo(): Promise<void> {
     const adapter = await gpu.requestAdapter({ powerPreference: 'high-performance' });
     if (!adapter?.info) return;
 
-    const info = adapter.info as GPUAdapterInfoExtended;
+    const info = adapter.info;
     (globalThis as Record<string, unknown>).__wgpu_browser_adapter_info = {
-      type: info.type ?? '',
-      description: info.description ?? '',
       vendor: info.vendor ?? '',
-      driver: info.driver ?? '',
+      architecture: info.architecture ?? '',
+      description: info.description ?? '',
     };
   } catch {
     // WebGPU 未対応環境では無視

@@ -149,6 +149,21 @@ pub fn lcg_seed_to_mt_seed(seed: LcgSeed) -> MtSeed {
     seed.derive_mt_seed()
 }
 
+/// GPU プロファイルを検出する。
+///
+/// WebGPU アダプターから GPU デバイス情報を取得し、
+/// `GpuProfile` を返す。
+///
+/// # Errors
+///
+/// GPU アダプターが見つからない場合。
+#[cfg(feature = "gpu")]
+#[wasm_bindgen]
+pub async fn detect_gpu_profile() -> Result<GpuProfile, String> {
+    let ctx = gpu::GpuDeviceContext::new().await?;
+    Ok(ctx.gpu_profile().clone())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

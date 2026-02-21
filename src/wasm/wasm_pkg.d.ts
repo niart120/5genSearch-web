@@ -73,17 +73,17 @@ export interface GpuProfile {
      */
     kind: GpuKind;
     /**
-     * デバイス名
-     */
-    name: string;
-    /**
-     * ベンダー名
+     * ベンダー名 (\"nvidia\", \"amd\", \"intel\", \"apple\", ...)
      */
     vendor: string;
     /**
-     * ドライバー情報
+     * アーキテクチャ名 (\"blackwell\", \"rdna3\", \"xe-lpg\", ...)
      */
-    driver: string;
+    architecture: string;
+    /**
+     * デバイス記述 (表示用、判定には使用しない)
+     */
+    description: string;
 }
 
 /**
@@ -1488,6 +1488,18 @@ export class TrainerInfoSearcher {
  * * `is_roamer` - true の場合 IV 読み取り順が H/A/B/S/C/D になる (BW 徘徊)
  */
 export function compute_iv_spread(mt_seed: MtSeed, mt_offset: number, is_roamer: boolean): Ivs;
+
+/**
+ * GPU プロファイルを検出する。
+ *
+ * WebGPU アダプターから GPU デバイス情報を取得し、
+ * `GpuProfile` を返す。
+ *
+ * # Errors
+ *
+ * GPU アダプターが見つからない場合。
+ */
+export function detect_gpu_profile(): Promise<GpuProfile>;
 
 /**
  * タマゴ一括生成 (公開 API)
