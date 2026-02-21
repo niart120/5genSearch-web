@@ -2,7 +2,8 @@
  * SeedInputSection コンポーネントテスト
  *
  * WASM 依存の resolveSeedOrigins をモックし、
- * タブ表示・pendingDetailOrigin / pendingSeedOrigins の自動消費をテストする。
+ * タブ表示・pendingDetailOrigin / pendingSeedOrigins の自動消費・
+ * タブ別 origins 独立保持をテストする。
  */
 
 import { render, screen } from '@testing-library/react';
@@ -18,9 +19,10 @@ import type { SeedOrigin } from '@/wasm/wasm_pkg';
 // Mocks
 // ---------------------------------------------------------------------------
 
-// resolveSeedOrigins はデフォルトで空配列を返す
+const mockResolveSeedOrigins = vi.fn((): SeedOrigin[] => []);
 vi.mock('@/services/seed-resolve', () => ({
-  resolveSeedOrigins: vi.fn(() => []),
+  resolveSeedOrigins: (...args: unknown[]) =>
+    (mockResolveSeedOrigins as (...args: unknown[]) => SeedOrigin[])(...args),
 }));
 
 // parseSerializedSeedOrigins
@@ -100,6 +102,23 @@ const resetStore = () => {
 };
 
 // ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
+
+const STARTUP_ORIGINS: SeedOrigin[] = [
+  {
+    Startup: {
+      base_seed: 0x11n,
+      mt_seed: 0x11,
+      datetime: { year: 2025, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
+      condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0 },
+    },
+  },
+];
+
+const SEEDS_ORIGINS: SeedOrigin[] = [{ Seed: { base_seed: 0x22n, mt_seed: 0x22 } }];
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -107,6 +126,7 @@ describe('SeedInputSection', () => {
   beforeEach(() => {
     setupTestI18n('en');
     resetStore();
+    mockResolveSeedOrigins.mockReset().mockReturnValue([]);
   });
 
   // ---------------------------------------------------------------------------
@@ -118,6 +138,63 @@ describe('SeedInputSection', () => {
     expect(screen.getByRole('tab', { name: /Startup/i })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Seeds/i })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Import/i })).toBeDefined();
+  });
+
+  // ---------------------------------------------------------------------------
+  // タブ別 origins 独立保持
+  // ---------------------------------------------------------------------------
+
+  describe('タブ別 origins 独立保持', () => {
+    it('Startup タブで解決後、Seeds タブに切り替えると Seeds の origins (空) が通知される', async () => {
+      mockResolveSeedOrigins.mockReturnValue(STARTUP_ORIGINS);
+      const onOriginsChangeSpy = vi.fn();
+      render(<StatefulWrapper onOriginsChangeSpy={onOriginsChangeSpy} />);
+
+      // 初回マウントで Startup が自動解決 → STARTUP_ORIGINS が通知
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(STARTUP_ORIGINS);
+
+      const user = userEvent.setup();
+      onOriginsChangeSpy.mockClear();
+
+      // Seeds タブに切り替え → seedsOrigins (空) が通知
+      await user.click(screen.getByRole('tab', { name: /Seeds/i }));
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith([]);
+    });
+
+    it('Startup タブで解決後 → Seeds → Startup に戻ると startupOrigins が再通知される', async () => {
+      mockResolveSeedOrigins.mockReturnValue(STARTUP_ORIGINS);
+      const onOriginsChangeSpy = vi.fn();
+      render(<StatefulWrapper onOriginsChangeSpy={onOriginsChangeSpy} />);
+
+      const user = userEvent.setup();
+
+      // Seeds タブへ切り替え
+      await user.click(screen.getByRole('tab', { name: /Seeds/i }));
+      onOriginsChangeSpy.mockClear();
+
+      // Startup タブに戻る → startupOrigins が再通知
+      await user.click(screen.getByRole('tab', { name: /Startup/i }));
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(STARTUP_ORIGINS);
+    });
+
+    it('Seeds タブで解決後、Import タブに切り替えると importOrigins (空) が通知される', async () => {
+      mockResolveSeedOrigins.mockReturnValue(SEEDS_ORIGINS);
+      const onOriginsChangeSpy = vi.fn();
+      render(
+        <StatefulWrapper initialMode="manual-seeds" onOriginsChangeSpy={onOriginsChangeSpy} />
+      );
+
+      const user = userEvent.setup();
+
+      // Seeds タブで入力して解決
+      const textarea = screen.getByPlaceholderText('0123456789ABCDEF') as HTMLTextAreaElement;
+      await user.type(textarea, '0000000000000022');
+      onOriginsChangeSpy.mockClear();
+
+      // Import タブに切り替え → importOrigins (空) が通知
+      await user.click(screen.getByRole('tab', { name: /Import/i }));
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith([]);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -153,7 +230,37 @@ describe('SeedInputSection', () => {
       expect(textarea.value).toBe('0123456789ABCDEF');
     });
 
-    it('Seed バリアントを消費すると manual-seeds タブに切り替える', () => {
+    it('Startup バリアント消費で startupOrigins に resolve 結果がセットされる', () => {
+      const resolvedOrigins: SeedOrigin[] = [
+        {
+          Startup: {
+            base_seed: 0x01_23_45_67_89_ab_cd_efn,
+            mt_seed: 0x89_ab_cd_ef,
+            datetime: { year: 2025, month: 1, day: 5, hour: 12, minute: 0, second: 0 },
+            condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+          },
+        },
+      ];
+      mockResolveSeedOrigins.mockReturnValue(resolvedOrigins);
+
+      const origin: SeedOrigin = {
+        Startup: {
+          base_seed: 0x01_23_45_67_89_ab_cd_efn,
+          mt_seed: 0x89_ab_cd_ef,
+          datetime: { year: 2025, month: 1, day: 5, hour: 12, minute: 0, second: 0 },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+        },
+      };
+      useSearchResultsStore.getState().setPendingDetailOrigin(origin);
+
+      const onOriginsChangeSpy = vi.fn();
+      render(<StatefulWrapper onOriginsChangeSpy={onOriginsChangeSpy} />);
+
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(resolvedOrigins);
+    });
+
+    it('Seed バリアントを消費すると manual-seeds タブに切り替え、seedsOrigins にセットされる', () => {
+      mockResolveSeedOrigins.mockReturnValue(SEEDS_ORIGINS);
       const origin: SeedOrigin = {
         Seed: {
           base_seed: 0xab_cd_ef_01_23_45_67_89n,
@@ -162,10 +269,18 @@ describe('SeedInputSection', () => {
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
 
-      const { onModeChange } = renderSection();
+      const onModeChangeSpy = vi.fn();
+      const onOriginsChangeSpy = vi.fn();
+      render(
+        <StatefulWrapper
+          onModeChangeSpy={onModeChangeSpy}
+          onOriginsChangeSpy={onOriginsChangeSpy}
+        />
+      );
 
-      expect(onModeChange).toHaveBeenCalledWith('manual-seeds');
+      expect(onModeChangeSpy).toHaveBeenCalledWith('manual-seeds');
       expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(SEEDS_ORIGINS);
     });
   });
 
@@ -174,7 +289,7 @@ describe('SeedInputSection', () => {
   // ---------------------------------------------------------------------------
 
   describe('pendingSeedOrigins 自動消費', () => {
-    it('データがあれば import タブに切り替え、onOriginsChange が呼ばれる', () => {
+    it('データがあれば import タブに切り替え、importOrigins にセットされる', () => {
       const origins: SeedOrigin[] = [
         { Seed: { base_seed: 1n, mt_seed: 1 } },
         { Seed: { base_seed: 2n, mt_seed: 2 } },
@@ -186,6 +301,30 @@ describe('SeedInputSection', () => {
       expect(onModeChange).toHaveBeenCalledWith('import');
       expect(onOriginsChange).toHaveBeenCalledWith(origins);
       expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+    });
+
+    it('一括転記後に他タブに切り替えても importOrigins は保持される', async () => {
+      const origins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+
+      const onOriginsChangeSpy = vi.fn();
+      render(<StatefulWrapper initialMode="import" onOriginsChangeSpy={onOriginsChangeSpy} />);
+
+      // import タブに切り替わり importOrigins がセット
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(origins);
+
+      const user = userEvent.setup();
+      onOriginsChangeSpy.mockClear();
+
+      // Startup タブに切り替え → startupOrigins (空) が通知
+      await user.click(screen.getByRole('tab', { name: /Startup/i }));
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith([]);
+
+      onOriginsChangeSpy.mockClear();
+
+      // Import タブに戻る → importOrigins が再通知
+      await user.click(screen.getByRole('tab', { name: /Import/i }));
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(origins);
     });
   });
 

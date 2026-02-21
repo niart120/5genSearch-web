@@ -15,6 +15,7 @@ import {
   formatDatetime,
   formatKeyCode,
   keyCodeToKeyInput,
+  formatDsButtons,
 } from '@/lib/format';
 
 describe('formatElapsedTime', () => {
@@ -244,5 +245,42 @@ describe('keyCodeToKeyInput', () => {
         expect(parts).toHaveLength(buttons.length);
       }
     }
+  });
+});
+
+describe('formatDsButtons', () => {
+  it('空配列の場合 空文字列を返す', () => {
+    expect(formatDsButtons([])).toBe('');
+  });
+
+  it('単一ボタンをそのまま返す', () => {
+    expect(formatDsButtons(['A'])).toBe('A');
+  });
+
+  it('複数ボタンを " + " 区切りで返す', () => {
+    expect(formatDsButtons(['A', 'Start'])).toBe('A + Start');
+  });
+
+  it('D-Pad ボタンを矢印表記で返す', () => {
+    expect(formatDsButtons(['Up', 'Left'])).toBe('↑ + ←');
+  });
+
+  it('全ボタンを表示する', () => {
+    expect(
+      formatDsButtons([
+        'A',
+        'B',
+        'X',
+        'Y',
+        'L',
+        'R',
+        'Start',
+        'Select',
+        'Up',
+        'Down',
+        'Left',
+        'Right',
+      ])
+    ).toBe('A + B + X + Y + L + R + Start + Select + ↑ + ↓ + ← + →');
   });
 });

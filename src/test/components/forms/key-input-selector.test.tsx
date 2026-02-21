@@ -1,52 +1,50 @@
 /**
- * KeySpecSelector コンポーネントテスト
+ * KeyInputSelector コンポーネントテスト
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { KeySpecSelector } from '@/components/forms/key-spec-selector';
+import { KeyInputSelector } from '@/components/forms/key-input-selector';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
-import type { KeySpec } from '@/wasm/wasm_pkg';
+import type { KeyInput } from '@/wasm/wasm_pkg';
 
-const DEFAULT_VALUE: KeySpec = { available_buttons: [] };
+const DEFAULT_VALUE: KeyInput = { buttons: [] };
 
-function renderKeySpecSelector(props: Partial<Parameters<typeof KeySpecSelector>[0]> = {}) {
+function renderKeyInputSelector(props: Partial<Parameters<typeof KeyInputSelector>[0]> = {}) {
   const onChange = props.onChange ?? vi.fn();
   return {
     onChange,
     ...render(
       <I18nTestWrapper>
-        <KeySpecSelector value={DEFAULT_VALUE} onChange={onChange} {...props} />
+        <KeyInputSelector value={DEFAULT_VALUE} onChange={onChange} {...props} />
       </I18nTestWrapper>
     ),
   };
 }
 
-describe('KeySpecSelector', () => {
+describe('KeyInputSelector', () => {
   beforeEach(() => {
     setupTestI18n('ja');
   });
 
   it('インジケータ行に選択中ボタンのテキストが表示される', () => {
-    renderKeySpecSelector({ value: { available_buttons: ['A', 'Start'] } });
+    renderKeyInputSelector({ value: { buttons: ['A', 'Start'] } });
     expect(screen.getByText('A + Start')).toBeInTheDocument();
   });
 
   it('ボタン未選択時はインジケータに "None" が表示される', () => {
-    renderKeySpecSelector();
+    renderKeyInputSelector();
     expect(screen.getByText('None')).toBeInTheDocument();
   });
 
-  it('ボタンクリックでダイアログが開く', async () => {
+  it('ダイアログを開くと 12 個のチェックボックスが表示される', async () => {
     const user = userEvent.setup();
-    renderKeySpecSelector();
+    renderKeyInputSelector();
 
-    // ダイアログを開くボタンをクリック
-    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
-    await user.click(openButtons[0]);
+    const openButton = screen.getByRole('button', { name: /Key input/i });
+    await user.click(openButton);
 
-    // ダイアログ内にチェックボックスが表示される
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(12);
   });
@@ -54,59 +52,57 @@ describe('KeySpecSelector', () => {
   it('ダイアログ内のボタンをトグルすると onChange が呼ばれる', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    renderKeySpecSelector({ onChange });
+    renderKeyInputSelector({ onChange });
 
-    // ダイアログを開く
-    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
-    await user.click(openButtons[0]);
+    const openButton = screen.getByRole('button', { name: /Key input/i });
+    await user.click(openButton);
 
-    // ダイアログ内の A ボタンをトグル
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
 
-    expect(onChange).toHaveBeenCalledWith({
-      available_buttons: ['A'],
-    });
+    expect(onChange).toHaveBeenCalledWith({ buttons: ['A'] });
   });
 
   it('選択済みボタンを解除すると onChange が発火する', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    renderKeySpecSelector({
-      value: { available_buttons: ['A', 'B'] },
+    renderKeyInputSelector({
+      value: { buttons: ['A', 'B'] },
       onChange,
     });
 
-    // ダイアログを開く
-    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
-    await user.click(openButtons[0]);
+    const openButton = screen.getByRole('button', { name: /Key input/i });
+    await user.click(openButton);
 
     const aCheckbox = screen.getByRole('checkbox', { name: /Button A/i });
     await user.click(aCheckbox);
 
-    expect(onChange).toHaveBeenCalledWith({
-      available_buttons: ['B'],
-    });
+    expect(onChange).toHaveBeenCalledWith({ buttons: ['B'] });
   });
 
   it('disabled 時は編集ボタンが無効化される', () => {
-    renderKeySpecSelector({ disabled: true });
-    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
-    expect(openButtons[0]).toBeDisabled();
+    renderKeyInputSelector({ disabled: true });
+    const openButton = screen.getByRole('button', { name: /Key input/i });
+    expect(openButton).toBeDisabled();
   });
 
-  it('combinationCount がインジケータ行に表示される', () => {
-    renderKeySpecSelector({ combinationCount: 256 });
-    expect(screen.getByText(/256/)).toBeInTheDocument();
+  it('選択ボタン数がダイアログ内に表示される', async () => {
+    const user = userEvent.setup();
+    renderKeyInputSelector({ value: { buttons: ['A', 'B'] } });
+
+    const openButton = screen.getByRole('button', { name: /Key input/i });
+    await user.click(openButton);
+
+    expect(screen.getByText(/2/)).toBeInTheDocument();
   });
 
   it('ダイアログを閉じるとチェックボックスが非表示になる', async () => {
     const user = userEvent.setup();
-    renderKeySpecSelector();
+    renderKeyInputSelector();
 
     // ダイアログを開く
-    const openButtons = screen.getAllByRole('button', { name: /Key input/i });
-    await user.click(openButtons[0]);
+    const openButton = screen.getByRole('button', { name: /Key input/i });
+    await user.click(openButton);
     expect(screen.getAllByRole('checkbox')).toHaveLength(12);
 
     // 閉じるボタンをクリック

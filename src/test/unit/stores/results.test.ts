@@ -115,4 +115,83 @@ describe('search results store', () => {
       expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // consumePendingDetailOrigin (atomic consume)
+  // -------------------------------------------------------------------------
+
+  describe('consumePendingDetailOrigin', () => {
+    it('should return and clear pending detail origin for the specified consumer', () => {
+      const origin: SeedOrigin = {
+        Startup: {
+          base_seed: 0x01_23_45_67_89_ab_cd_efn,
+          mt_seed: 0x89_ab_cd_ef,
+          datetime: { year: 2025, month: 6, day: 1, hour: 12, minute: 0, second: 0 },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+        },
+      };
+      useSearchResultsStore.getState().setPendingDetailOrigin(origin);
+
+      const consumed = useSearchResultsStore.getState().consumePendingDetailOrigin('pokemon-list');
+      expect(consumed).toEqual(origin);
+      expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
+      // Other consumers are not affected
+      expect(useSearchResultsStore.getState().pendingDetailOrigins['egg-list']).toEqual(origin);
+      expect(useSearchResultsStore.getState().pendingDetailOrigins['needle']).toEqual(origin);
+    });
+
+    it('should return undefined when no pending detail origin exists', () => {
+      const consumed = useSearchResultsStore.getState().consumePendingDetailOrigin('pokemon-list');
+      expect(consumed).toBeUndefined();
+      // Store should not be modified
+      expect(useSearchResultsStore.getState().pendingDetailOrigins).toEqual({});
+    });
+
+    it('should prevent double consumption', () => {
+      const origin: SeedOrigin = {
+        Seed: { base_seed: 0xabn, mt_seed: 0xab },
+      };
+      useSearchResultsStore.getState().setPendingDetailOrigin(origin);
+
+      const first = useSearchResultsStore.getState().consumePendingDetailOrigin('egg-list');
+      const second = useSearchResultsStore.getState().consumePendingDetailOrigin('egg-list');
+      expect(first).toEqual(origin);
+      expect(second).toBeUndefined();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // consumePendingSeedOrigins (atomic consume)
+  // -------------------------------------------------------------------------
+
+  describe('consumePendingSeedOrigins', () => {
+    it('should return and clear pending seed origins', () => {
+      const origins: SeedOrigin[] = [
+        { Seed: { base_seed: 1n, mt_seed: 1 } },
+        { Seed: { base_seed: 2n, mt_seed: 2 } },
+      ];
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+
+      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      expect(consumed).toEqual(origins);
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+    });
+
+    it('should return empty array when no pending seed origins exist', () => {
+      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      expect(consumed).toEqual([]);
+      // Store should not be modified (already empty)
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+    });
+
+    it('should prevent double consumption', () => {
+      const origins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+
+      const first = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      const second = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      expect(first).toEqual(origins);
+      expect(second).toEqual([]);
+    });
+  });
 });

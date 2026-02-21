@@ -289,7 +289,35 @@ function keyCodeToKeyInput(keyCode: number): KeyInput {
   return { buttons };
 }
 
+/** DsButton の表示ラベルマッピング */
+const BUTTON_LABELS: Record<DsButton, string> = {
+  A: 'A',
+  B: 'B',
+  X: 'X',
+  Y: 'Y',
+  L: 'L',
+  R: 'R',
+  Start: 'Start',
+  Select: 'Select',
+  Up: '↑',
+  Down: '↓',
+  Left: '←',
+  Right: '→',
+};
+
+/**
+ * DsButton[] を表示用文字列にフォーマット
+ * 例: ['A', 'Start'] → "A + Start", [] → ""
+ *
+ * 空配列時は空文字列を返す。表示用の「なし」等は呼び出し側で i18n 対応すること。
+ */
+function formatDsButtons(buttons: DsButton[]): string {
+  if (buttons.length === 0) return '';
+  return buttons.map((b) => BUTTON_LABELS[b]).join(' + ');
+}
+
 export {
+  BUTTON_LABELS,
   remToPx,
   formatElapsedTime,
   toBigintHex,
@@ -307,4 +335,5 @@ export {
   formatIvs,
   formatMacAddress,
   keyCodeToKeyInput,
+  formatDsButtons,
 };

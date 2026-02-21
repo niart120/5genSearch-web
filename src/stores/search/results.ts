@@ -44,6 +44,10 @@ interface SearchResultsActions {
   setPendingDetailOrigin: (origin: SeedOrigin) => void;
   /** 指定ページの pending detail origin をクリア (ワンショット消費) */
   clearPendingDetailOrigin: (consumer: DetailOriginConsumer) => void;
+  /** pendingDetailOrigin を消費 (読み取り + クリア) */
+  consumePendingDetailOrigin: (consumer: DetailOriginConsumer) => SeedOrigin | undefined;
+  /** pendingSeedOrigins を消費 (読み取り + クリア) */
+  consumePendingSeedOrigins: () => SeedOrigin[];
 }
 
 const DEFAULT_STATE: SearchResultsState = {
@@ -54,30 +58,50 @@ const DEFAULT_STATE: SearchResultsState = {
   pendingDetailOrigins: {},
 };
 
-export const useSearchResultsStore = create<SearchResultsState & SearchResultsActions>()((set) => ({
-  ...DEFAULT_STATE,
-  addResult: (result) =>
-    set((state) => ({
-      results: [...state.results, result],
-      lastUpdatedAt: Date.now(),
-    })),
-  clearResults: () => set(DEFAULT_STATE),
-  setPendingTargetSeeds: (seeds) => set({ pendingTargetSeeds: seeds }),
-  clearPendingTargetSeeds: () => set({ pendingTargetSeeds: [] }),
-  setPendingSeedOrigins: (origins) => set({ pendingSeedOrigins: origins }),
-  clearPendingSeedOrigins: () => set({ pendingSeedOrigins: [] }),
-  setPendingDetailOrigin: (origin) =>
-    set({
-      pendingDetailOrigins: Object.fromEntries(
-        DETAIL_ORIGIN_CONSUMERS.map((c) => [c, origin])
-      ) as Record<DetailOriginConsumer, SeedOrigin>,
-    }),
-  clearPendingDetailOrigin: (consumer) =>
-    set((state) => {
-      const next = { ...state.pendingDetailOrigins };
-      delete next[consumer];
-      return { pendingDetailOrigins: next };
-    }),
-}));
+export const useSearchResultsStore = create<SearchResultsState & SearchResultsActions>()(
+  (set, get) => ({
+    ...DEFAULT_STATE,
+    addResult: (result) =>
+      set((state) => ({
+        results: [...state.results, result],
+        lastUpdatedAt: Date.now(),
+      })),
+    clearResults: () => set(DEFAULT_STATE),
+    setPendingTargetSeeds: (seeds) => set({ pendingTargetSeeds: seeds }),
+    clearPendingTargetSeeds: () => set({ pendingTargetSeeds: [] }),
+    setPendingSeedOrigins: (origins) => set({ pendingSeedOrigins: origins }),
+    clearPendingSeedOrigins: () => set({ pendingSeedOrigins: [] }),
+    setPendingDetailOrigin: (origin) =>
+      set({
+        pendingDetailOrigins: Object.fromEntries(
+          DETAIL_ORIGIN_CONSUMERS.map((c) => [c, origin])
+        ) as Record<DetailOriginConsumer, SeedOrigin>,
+      }),
+    clearPendingDetailOrigin: (consumer) =>
+      set((state) => {
+        const next = { ...state.pendingDetailOrigins };
+        delete next[consumer];
+        return { pendingDetailOrigins: next };
+      }),
+    consumePendingDetailOrigin: (consumer) => {
+      const current = get().pendingDetailOrigins[consumer];
+      if (current !== undefined) {
+        set((state) => {
+          const next = { ...state.pendingDetailOrigins };
+          delete next[consumer];
+          return { pendingDetailOrigins: next };
+        });
+      }
+      return current;
+    },
+    consumePendingSeedOrigins: () => {
+      const current = get().pendingSeedOrigins;
+      if (current.length > 0) {
+        set({ pendingSeedOrigins: [] });
+      }
+      return current;
+    },
+  })
+);
 
 export const getSearchResultsInitialState = (): SearchResultsState => DEFAULT_STATE;
