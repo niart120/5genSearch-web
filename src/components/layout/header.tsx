@@ -29,7 +29,12 @@ function Header({ onMenuClick }: HeaderProps) {
             <Menu className="size-4" />
           </button>
         )}
-        <img src="/icon.png" alt="" className="size-7 lg:size-8" aria-hidden="true" />
+        <img
+          src={`${import.meta.env.BASE_URL}icon.png`}
+          alt=""
+          className="size-7 lg:size-8"
+          aria-hidden="true"
+        />
         <h1 className="text-base font-semibold">
           <Trans>5genSearch-web</Trans>
         </h1>
