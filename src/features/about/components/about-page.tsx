@@ -74,7 +74,15 @@ function AboutPage(): ReactElement {
           <Trans>Credits</Trans>
         </h2>
         <p className="text-sm text-muted-foreground">
-          <Trans>App icon by</Trans> {/* TODO: アイコン作成者名を記入 */}
+          <Trans>App icon by</Trans>{' '}
+          <a
+            href="https://x.com/ken_naganawa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-foreground"
+          >
+            KEN Naganawa
+          </a>
         </p>
       </section>
 
