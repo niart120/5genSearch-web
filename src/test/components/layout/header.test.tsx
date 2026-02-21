@@ -12,13 +12,13 @@ describe('Header', () => {
     useUiStore.setState(getUiInitialState());
   });
 
-  it('タイトル "5genSearch" が表示される', () => {
+  it('タイトル "5genSearch-web" が表示される', () => {
     render(
       <I18nTestWrapper>
         <Header />
       </I18nTestWrapper>
     );
-    expect(screen.getByRole('heading', { name: '5genSearch' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '5genSearch-web' })).toBeInTheDocument();
   });
 
   it('onMenuClick が渡された場合、ハンバーガーボタンが表示される', () => {

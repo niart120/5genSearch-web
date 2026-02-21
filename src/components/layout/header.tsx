@@ -29,8 +29,9 @@ function Header({ onMenuClick }: HeaderProps) {
             <Menu className="size-4" />
           </button>
         )}
-        <h1 className="text-sm font-medium">
-          <Trans>5genSearch</Trans>
+        <img src="/icon.png" alt="" className="size-7 lg:size-8" aria-hidden="true" />
+        <h1 className="text-base font-semibold">
+          <Trans>5genSearch-web</Trans>
         </h1>
       </div>
 
