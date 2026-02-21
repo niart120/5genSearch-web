@@ -1,6 +1,7 @@
 //! GPU プロファイル
 //!
 //! GPU デバイスの種類と特性を検出する。
+//! WASM 環境では vendor + architecture テーブルで GpuKind を判定する。
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -28,65 +29,48 @@ pub enum GpuKind {
 pub struct GpuProfile {
     /// GPU の種類
     pub kind: GpuKind,
-    /// デバイス名
-    pub name: String,
-    /// ベンダー名
+    /// ベンダー名 ("nvidia", "amd", "intel", "apple", ...)
     pub vendor: String,
-    /// ドライバー情報
-    pub driver: String,
+    /// アーキテクチャ名 ("blackwell", "rdna3", "xe-lpg", ...)
+    pub architecture: String,
+    /// デバイス記述 (表示用、判定には使用しない)
+    pub description: String,
 }
 
 impl GpuProfile {
     /// アダプター情報からプロファイルを検出
     ///
-    /// ネイティブ環境では wgpu の `AdapterInfo` を使用。
-    /// WASM 環境では wgpu v24 の WebGPU バックエンドが `DeviceType::Other` と
-    /// 空の `name` を常に返すため、ブラウザの `GPUAdapterInfo` から直接取得した
-    /// 情報で補完する。
+    /// ネイティブ環境では wgpu の `AdapterInfo` から `DeviceType` を使用。
+    /// WASM 環境ではブラウザの `GPUAdapterInfo` から取得した
+    /// `vendor` + `architecture` でテーブル判定を行う。
     pub fn detect(adapter: &wgpu::Adapter) -> Self {
         let info = adapter.get_info();
 
-        // WASM 環境: wgpu が DeviceType::Other かつ name が空の場合、
-        // JS API から取得した情報で補完する
-        #[cfg(target_arch = "wasm32")]
-        let (kind, name, vendor, driver) = {
-            let js_info = query_browser_gpu_adapter_info();
-            let kind = detect_kind_from_browser_info(&js_info, &info);
-            let name = if info.name.is_empty() {
-                js_info.description
-            } else {
-                info.name
-            };
-            let vendor = if info.vendor == 0 {
-                js_info.vendor
-            } else {
-                format!("{:?}", info.vendor)
-            };
-            let driver = if info.driver.is_empty() {
-                js_info.driver
-            } else {
-                info.driver
-            };
-            (kind, name, vendor, driver)
-        };
-
         #[cfg(not(target_arch = "wasm32"))]
-        let (kind, name, vendor, driver) = {
+        {
             let kind = match info.device_type {
                 wgpu::DeviceType::DiscreteGpu => GpuKind::Discrete,
                 wgpu::DeviceType::IntegratedGpu => GpuKind::Integrated,
-                wgpu::DeviceType::VirtualGpu | wgpu::DeviceType::Cpu | wgpu::DeviceType::Other => {
-                    detect_kind_from_name(&info.name)
-                }
+                _ => GpuKind::Unknown,
             };
-            (kind, info.name, format!("{:?}", info.vendor), info.driver)
-        };
+            Self {
+                kind,
+                vendor: info.driver.clone(),
+                architecture: String::new(),
+                description: info.name,
+            }
+        }
 
-        Self {
-            kind,
-            name,
-            vendor,
-            driver,
+        #[cfg(target_arch = "wasm32")]
+        {
+            let browser = query_browser_gpu_info();
+            let kind = detect_kind(&browser.vendor, &browser.architecture);
+            Self {
+                kind,
+                vendor: browser.vendor,
+                architecture: browser.architecture,
+                description: browser.description,
+            }
         }
     }
 
@@ -94,145 +78,92 @@ impl GpuProfile {
     pub fn unknown() -> Self {
         Self {
             kind: GpuKind::Unknown,
-            name: "Unknown".into(),
-            vendor: "Unknown".into(),
-            driver: "Unknown".into(),
+            vendor: String::new(),
+            architecture: String::new(),
+            description: String::new(),
         }
-    }
-}
-
-/// デバイス名から GPU 種別を推定
-fn detect_kind_from_name(name: &str) -> GpuKind {
-    let name_lower = name.to_lowercase();
-
-    // モバイル GPU
-    if name_lower.contains("adreno")
-        || name_lower.contains("mali")
-        || name_lower.contains("powervr")
-    {
-        return GpuKind::Mobile;
-    }
-
-    // Apple Silicon: macOS = Integrated, iOS/iPadOS = Mobile
-    // WASM からは OS 判別が難しいため Integrated とする
-    // (Apple Silicon の GPU コア数は Discrete に匹敵するが、
-    //  メモリ帯域は統合メモリのため Integrated 寄り)
-    if name_lower.contains("apple") {
-        return GpuKind::Integrated;
-    }
-
-    // 独立 GPU (NVIDIA / AMD / Intel Arc)
-    if name_lower.contains("geforce")
-        || name_lower.contains("rtx")
-        || name_lower.contains("gtx")
-        || name_lower.contains("quadro")
-        || name_lower.contains("radeon")
-        || name_lower.contains("arc a")
-    {
-        return GpuKind::Discrete;
-    }
-
-    // 統合 GPU (Intel HD/UHD/Iris)
-    if name_lower.contains("intel")
-        && (name_lower.contains("hd") || name_lower.contains("uhd") || name_lower.contains("iris"))
-    {
-        return GpuKind::Integrated;
-    }
-
-    GpuKind::Unknown
-}
-
-/// ブラウザの GPUAdapterInfo から取得した情報
-#[cfg(target_arch = "wasm32")]
-struct BrowserGpuAdapterInfo {
-    /// GPUAdapterInfo.type: "discrete GPU", "integrated GPU", "CPU", ""
-    gpu_type: String,
-    /// GPUAdapterInfo.description
-    description: String,
-    /// GPUAdapterInfo.vendor
-    vendor: String,
-    /// GPUAdapterInfo.driver (非標準、Chrome が公開)
-    driver: String,
-}
-
-/// ブラウザの GPUAdapterInfo を JS API から直接取得
-///
-/// wgpu v24 の WebGPU バックエンドは `AdapterInfo` のフィールドを
-/// 空/デフォルト値で返すため、ブラウザの `GPUAdapterInfo` から
-/// `type`, `description`, `vendor` を直接読み取る。
-#[cfg(target_arch = "wasm32")]
-fn query_browser_gpu_adapter_info() -> BrowserGpuAdapterInfo {
-    use js_sys::Reflect;
-    use wasm_bindgen::JsValue;
-
-    let empty_info = BrowserGpuAdapterInfo {
-        gpu_type: String::new(),
-        description: String::new(),
-        vendor: String::new(),
-        driver: String::new(),
-    };
-
-    // globalThis.__wgpu_browser_adapter_info を読み取る。
-    // GPU Worker の TypeScript 側で requestAdapter() を呼び、
-    // adapter.info のプロパティをこのグローバルに設定してから
-    // WASM を呼び出す前提。
-    let global = js_sys::global();
-    let adapter_info =
-        match Reflect::get(&global, &JsValue::from_str("__wgpu_browser_adapter_info")) {
-            Ok(v) if !v.is_undefined() && !v.is_null() => v,
-            _ => return empty_info,
-        };
-
-    let get_str = |obj: &JsValue, key: &str| -> String {
-        Reflect::get(obj, &JsValue::from_str(key))
-            .ok()
-            .and_then(|v| v.as_string())
-            .unwrap_or_default()
-    };
-
-    BrowserGpuAdapterInfo {
-        gpu_type: get_str(&adapter_info, "type"),
-        description: get_str(&adapter_info, "description"),
-        vendor: get_str(&adapter_info, "vendor"),
-        driver: get_str(&adapter_info, "driver"),
-    }
-}
-
-/// ブラウザの GPUAdapterInfo.type から GpuKind を判定
-#[cfg(target_arch = "wasm32")]
-fn detect_kind_from_browser_info(
-    browser_info: &BrowserGpuAdapterInfo,
-    wgpu_info: &wgpu::AdapterInfo,
-) -> GpuKind {
-    // ブラウザの type プロパティを優先
-    match browser_info.gpu_type.as_str() {
-        "discrete GPU" => return GpuKind::Discrete,
-        "integrated GPU" => return GpuKind::Integrated,
-        "CPU" => return GpuKind::Unknown,
-        _ => {}
-    }
-
-    // type が空の場合 (Safari / Firefox 等)、description から判定
-    if !browser_info.description.is_empty() {
-        return detect_kind_from_name(&browser_info.description);
-    }
-
-    // description も空の場合、vendor から推定
-    if !browser_info.vendor.is_empty() {
-        return detect_kind_from_name(&browser_info.vendor);
-    }
-
-    // wgpu の情報にフォールバック
-    match wgpu_info.device_type {
-        wgpu::DeviceType::DiscreteGpu => GpuKind::Discrete,
-        wgpu::DeviceType::IntegratedGpu => GpuKind::Integrated,
-        _ => detect_kind_from_name(&wgpu_info.name),
     }
 }
 
 impl Default for GpuProfile {
     fn default() -> Self {
         Self::unknown()
+    }
+}
+
+/// vendor + architecture から GpuKind を判定する。
+///
+/// WASM/ネイティブ両方のテストで使用するため `cfg` なしで定義する。
+fn detect_kind(vendor: &str, architecture: &str) -> GpuKind {
+    match vendor {
+        "nvidia" => {
+            if architecture.starts_with("tegra") {
+                GpuKind::Mobile
+            } else {
+                GpuKind::Discrete
+            }
+        }
+        "amd" => {
+            if architecture.starts_with("van-gogh") {
+                GpuKind::Integrated
+            } else {
+                GpuKind::Discrete
+            }
+        }
+        "intel" => {
+            if architecture.starts_with("arc") {
+                GpuKind::Discrete
+            } else {
+                GpuKind::Integrated
+            }
+        }
+        "apple" => GpuKind::Integrated,
+        "qualcomm" | "arm" | "samsung" | "imgtec" => GpuKind::Mobile,
+        _ => GpuKind::Unknown,
+    }
+}
+
+/// ブラウザの GPUAdapterInfo から取得した情報
+#[cfg(target_arch = "wasm32")]
+struct BrowserGpuInfo {
+    vendor: String,
+    architecture: String,
+    description: String,
+}
+
+/// ブラウザの GPUAdapterInfo を globalThis から取得
+///
+/// GPU Worker の TypeScript 側で `cacheGpuAdapterInfo()` が
+/// `globalThis.__wgpu_browser_adapter_info` に `vendor`, `architecture`,
+/// `description` を設定する前提。
+#[cfg(target_arch = "wasm32")]
+fn query_browser_gpu_info() -> BrowserGpuInfo {
+    use js_sys::Reflect;
+    use wasm_bindgen::JsValue;
+
+    let empty = BrowserGpuInfo {
+        vendor: String::new(),
+        architecture: String::new(),
+        description: String::new(),
+    };
+
+    let global = js_sys::global();
+    let info = match Reflect::get(&global, &JsValue::from_str("__wgpu_browser_adapter_info")) {
+        Ok(v) if !v.is_undefined() && !v.is_null() => v,
+        _ => return empty,
+    };
+
+    let get = |key: &str| -> String {
+        Reflect::get(&info, &JsValue::from_str(key))
+            .ok()
+            .and_then(|v| v.as_string())
+            .unwrap_or_default()
+    };
+
+    BrowserGpuInfo {
+        vendor: get("vendor"),
+        architecture: get("architecture"),
+        description: get("description"),
     }
 }
 
@@ -249,63 +180,103 @@ mod tests {
     fn test_gpu_profile_unknown() {
         let profile = GpuProfile::unknown();
         assert_eq!(profile.kind, GpuKind::Unknown);
-        assert_eq!(profile.name, "Unknown");
+        assert!(profile.vendor.is_empty());
+        assert!(profile.architecture.is_empty());
+        assert!(profile.description.is_empty());
+    }
+
+    // -----------------------------------------------------------------------
+    // NVIDIA
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_detect_kind_nvidia_discrete() {
+        assert_eq!(detect_kind("nvidia", "blackwell"), GpuKind::Discrete);
     }
 
     #[test]
-    fn test_detect_kind_from_name_discrete() {
-        assert_eq!(
-            detect_kind_from_name("NVIDIA GeForce RTX 5090"),
-            GpuKind::Discrete
-        );
-        assert_eq!(
-            detect_kind_from_name("NVIDIA GeForce GTX 1080"),
-            GpuKind::Discrete
-        );
-        assert_eq!(
-            detect_kind_from_name("AMD Radeon RX 7900 XTX"),
-            GpuKind::Discrete
-        );
-        assert_eq!(
-            detect_kind_from_name("NVIDIA Quadro RTX 6000"),
-            GpuKind::Discrete
-        );
-        assert_eq!(detect_kind_from_name("Intel Arc A770"), GpuKind::Discrete);
+    fn test_detect_kind_nvidia_tegra() {
+        assert_eq!(detect_kind("nvidia", "tegra"), GpuKind::Mobile);
     }
 
     #[test]
-    fn test_detect_kind_from_name_integrated() {
-        assert_eq!(
-            detect_kind_from_name("Intel UHD Graphics 630"),
-            GpuKind::Integrated
-        );
-        assert_eq!(
-            detect_kind_from_name("Intel HD Graphics 4000"),
-            GpuKind::Integrated
-        );
-        assert_eq!(
-            detect_kind_from_name("Intel Iris Xe Graphics"),
-            GpuKind::Integrated
-        );
-        assert_eq!(detect_kind_from_name("Apple M3 Pro"), GpuKind::Integrated);
+    fn test_detect_kind_nvidia_empty_arch() {
+        assert_eq!(detect_kind("nvidia", ""), GpuKind::Discrete);
+    }
+
+    // -----------------------------------------------------------------------
+    // AMD
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_detect_kind_amd_discrete() {
+        assert_eq!(detect_kind("amd", "rdna3"), GpuKind::Discrete);
     }
 
     #[test]
-    fn test_detect_kind_from_name_mobile() {
-        assert_eq!(
-            detect_kind_from_name("Qualcomm Adreno 740"),
-            GpuKind::Mobile
-        );
-        assert_eq!(detect_kind_from_name("ARM Mali-G78"), GpuKind::Mobile);
-        assert_eq!(
-            detect_kind_from_name("Imagination PowerVR"),
-            GpuKind::Mobile
-        );
+    fn test_detect_kind_amd_van_gogh() {
+        assert_eq!(detect_kind("amd", "van-gogh"), GpuKind::Integrated);
+    }
+
+    // -----------------------------------------------------------------------
+    // Intel
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_detect_kind_intel_arc() {
+        assert_eq!(detect_kind("intel", "arc"), GpuKind::Discrete);
     }
 
     #[test]
-    fn test_detect_kind_from_name_unknown() {
-        assert_eq!(detect_kind_from_name(""), GpuKind::Unknown);
-        assert_eq!(detect_kind_from_name("Some Unknown GPU"), GpuKind::Unknown);
+    fn test_detect_kind_intel_integrated() {
+        assert_eq!(detect_kind("intel", "xe-lpg"), GpuKind::Integrated);
+    }
+
+    #[test]
+    fn test_detect_kind_intel_empty_arch() {
+        assert_eq!(detect_kind("intel", ""), GpuKind::Integrated);
+    }
+
+    // -----------------------------------------------------------------------
+    // Apple / Mobile vendors
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_detect_kind_apple() {
+        assert_eq!(detect_kind("apple", "apple-m3"), GpuKind::Integrated);
+    }
+
+    #[test]
+    fn test_detect_kind_qualcomm() {
+        assert_eq!(detect_kind("qualcomm", "adreno-740"), GpuKind::Mobile);
+    }
+
+    #[test]
+    fn test_detect_kind_arm() {
+        assert_eq!(detect_kind("arm", "mali-g78"), GpuKind::Mobile);
+    }
+
+    #[test]
+    fn test_detect_kind_samsung() {
+        assert_eq!(detect_kind("samsung", "xclipse"), GpuKind::Mobile);
+    }
+
+    #[test]
+    fn test_detect_kind_imgtec() {
+        assert_eq!(detect_kind("imgtec", "powervr"), GpuKind::Mobile);
+    }
+
+    // -----------------------------------------------------------------------
+    // Unknown
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_detect_kind_unknown_vendor() {
+        assert_eq!(detect_kind("", ""), GpuKind::Unknown);
+    }
+
+    #[test]
+    fn test_detect_kind_unknown_vendor_with_arch() {
+        assert_eq!(detect_kind("unknown-vendor", "some-arch"), GpuKind::Unknown);
     }
 }
