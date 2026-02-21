@@ -170,7 +170,7 @@ impl SearchPipeline {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("mtseed-iv-search-pipeline-layout"),
             bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
+            immediate_size: 0,
         });
 
         // コンピュートパイプライン
@@ -181,17 +181,9 @@ impl SearchPipeline {
             entry_point: Some("mt_iv_search"),
             compilation_options: wgpu::PipelineCompilationOptions {
                 constants: &[
-                    (
-                        String::from("WORKGROUP_SIZE"),
-                        f64::from(limits.workgroup_size),
-                    ),
-                    (
-                        String::from("ITEMS_PER_THREAD"),
-                        f64::from(items_per_thread),
-                    ),
-                ]
-                .into_iter()
-                .collect(),
+                    ("WORKGROUP_SIZE", f64::from(limits.workgroup_size)),
+                    ("ITEMS_PER_THREAD", f64::from(items_per_thread)),
+                ],
                 ..Default::default()
             },
             cache: None,
@@ -368,10 +360,10 @@ impl SearchPipeline {
         });
 
         #[cfg(target_arch = "wasm32")]
-        self.device.poll(wgpu::Maintain::Poll);
+        let _ = self.device.poll(wgpu::PollType::Poll);
 
         #[cfg(not(target_arch = "wasm32"))]
-        self.device.poll(wgpu::Maintain::Wait);
+        let _ = self.device.poll(wgpu::PollType::wait_indefinitely());
 
         if rx.await.ok().and_then(Result::ok).is_none() {
             return vec![];
