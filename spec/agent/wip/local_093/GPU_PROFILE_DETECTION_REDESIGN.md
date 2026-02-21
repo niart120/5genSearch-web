@@ -434,21 +434,21 @@ async function cacheGpuAdapterInfo(): Promise<void> {
 
 ## 6. 実装チェックリスト
 
-- [ ] `wasm-pkg/src/gpu/profile.rs` を全面書き換え
-  - [ ] `GpuProfile` 構造体のフィールド変更 (`name`/`driver` → `architecture`/`description`)
-  - [ ] `detect_kind(vendor, architecture)` テーブル判定関数を実装
-  - [ ] `query_browser_gpu_info()` を実装 (`architecture` 読み取り追加)
-  - [ ] `detect_kind_from_name()`, `detect_kind_from_browser_info()` を削除
-  - [ ] ユニットテスト追加
-- [ ] `src/workers/gpu.worker.ts` の `cacheGpuAdapterInfo()` を修正
-  - [ ] `architecture` フィールド追加
-  - [ ] `type`/`driver` フィールド削除
-  - [ ] `GPUAdapterInfoExtended` インターフェース削除
-- [ ] `src/test/integration/gpu-profile.test.ts` を更新
-  - [ ] 新フィールドに合わせてアサーション修正
-  - [ ] `kind` が `Unknown` にならないことの検証追加
-- [ ] WASM リビルド (`pnpm build:wasm`)
-- [ ] Rust テスト (`cargo test --features gpu`)
+- [x] `wasm-pkg/src/gpu/profile.rs` を全面書き換え
+  - [x] `GpuProfile` 構造体のフィールド変更 (`name`/`driver` → `architecture`/`description`)
+  - [x] `detect_kind(vendor, architecture)` テーブル判定関数を実装
+  - [x] `query_browser_gpu_info()` を実装 (`architecture` 読み取り追加)
+  - [x] `detect_kind_from_name()`, `detect_kind_from_browser_info()` を削除
+  - [x] ユニットテスト追加
+- [x] `src/workers/gpu.worker.ts` の `cacheGpuAdapterInfo()` を修正
+  - [x] `architecture` フィールド追加
+  - [x] `type`/`driver` フィールド削除
+  - [x] `GPUAdapterInfoExtended` インターフェース削除
+- [x] `src/test/integration/gpu-profile.test.ts` を更新
+  - [x] 新フィールドに合わせてアサーション修正
+  - [x] `kind` が `Unknown` にならないことの検証追加
+- [x] WASM リビルド (`pnpm build:wasm`)
+- [x] Rust テスト (`cargo test --features gpu`)
 - [ ] Vitest Browser Mode テスト (`pnpm exec vitest run --project integration -- gpu-profile`)
-- [ ] clippy (`cargo clippy --all-targets --features gpu -- -D warnings`)
-- [ ] lint (`pnpm lint`)
+- [x] clippy (`cargo clippy --all-targets --features gpu -- -D warnings`)
+- [x] lint (`pnpm lint`)
