@@ -31,8 +31,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
   },
   {
     id: 'tools',
-    features: ['mtseed-search', 'tid-adjust', 'needle'],
-    defaultFeature: 'mtseed-search',
+    features: ['needle', 'tid-adjust', 'mtseed-search'],
+    defaultFeature: 'needle',
   },
   {
     id: 'about',
