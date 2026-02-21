@@ -264,7 +264,6 @@ function PokemonFilterForm({
   const handleReset = useCallback(() => {
     setInternalFilter(DEFAULT_FILTER);
     setInternalStats(DEFAULT_STATS_FILTER);
-    setFilterEnabled(false);
     onChange();
     onStatsFilterChange();
   }, [onChange, onStatsFilterChange]);

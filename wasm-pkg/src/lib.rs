@@ -69,6 +69,18 @@ pub fn get_species_name(species_id: u16, locale: &str) -> String {
     data::get_species_name(species_id, locale).to_string()
 }
 
+/// 種族の性別比を取得
+///
+/// # Arguments
+/// * `species_id` - 全国図鑑番号 (1-649)
+///
+/// # Returns
+/// 性別比。範囲外の場合はインデックス0 (フシギダネ) の値。
+#[wasm_bindgen]
+pub fn get_species_gender_ratio(species_id: u16) -> types::GenderRatio {
+    data::species::get_species_entry(species_id).gender_ratio
+}
+
 // Re-export GPU module (when enabled)
 #[cfg(feature = "gpu")]
 pub use gpu::{

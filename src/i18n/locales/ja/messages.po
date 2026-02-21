@@ -25,7 +25,7 @@ msgstr ""
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
-#: src/components/forms/egg-params-form.tsx:258
+#: src/components/forms/egg-params-form.tsx:273
 msgid "♀ parent ability"
 msgstr "♀親の特性"
 
@@ -182,7 +182,7 @@ msgstr "全削除"
 msgid "Compound Eyes"
 msgstr "ふくがん"
 
-#: src/components/forms/egg-params-form.tsx:370
+#: src/components/forms/egg-params-form.tsx:386
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
 
@@ -333,7 +333,7 @@ msgstr "タマゴ (消費7)"
 msgid "Egg generation result details"
 msgstr "孵化個体生成の結果詳細"
 
-#: src/components/forms/egg-params-form.tsx:234
+#: src/components/forms/egg-params-form.tsx:247
 msgid "Egg parameters"
 msgstr "孵化パラメータ"
 
@@ -349,8 +349,8 @@ msgstr "孵化検索結果の詳細"
 msgid "Elapsed"
 msgstr "経過"
 
-#: src/components/forms/egg-filter-form.tsx:312
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:396
+#: src/components/forms/egg-filter-form.tsx:309
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:398
 msgid "Enable filter"
 msgstr "フィルター有効"
 
@@ -395,7 +395,7 @@ msgstr "MT Seedを最低1つ入力してください"
 msgid "Estimated results: {0}. This may cause high memory usage or slow rendering. Do you want to continue?"
 msgstr "推定結果件数: {0}。メモリ使用量の增大や描画が遅くなる可能性があります。続行しますか？"
 
-#: src/components/forms/egg-params-form.tsx:281
+#: src/components/forms/egg-params-form.tsx:296
 msgid "Everstone"
 msgstr "かわらずのいし"
 
@@ -415,8 +415,8 @@ msgstr "エクスポートに失敗しました"
 #~ msgid "Failed to read file"
 #~ msgstr "ファイルの読み込みに失敗しました"
 
-#: src/components/forms/egg-filter-form.tsx:304
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:389
+#: src/components/forms/egg-filter-form.tsx:301
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:391
 msgid "Filter"
 msgstr "フィルター"
 
@@ -435,7 +435,7 @@ msgstr "フィルター"
 msgid "Gender"
 msgstr "性別"
 
-#: src/components/forms/egg-params-form.tsx:305
+#: src/components/forms/egg-params-form.tsx:320
 msgid "Gender ratio"
 msgstr "性別比"
 
@@ -601,7 +601,7 @@ msgstr "猶予"
 msgid "Margin frames"
 msgstr "猶予フレーム"
 
-#: src/components/forms/egg-params-form.tsx:361
+#: src/components/forms/egg-params-form.tsx:377
 msgid "Masuda Method"
 msgstr "国際孵化"
 
@@ -610,7 +610,7 @@ msgstr "国際孵化"
 msgid "Max"
 msgstr "Max"
 
-#: src/components/forms/egg-params-form.tsx:395
+#: src/components/forms/egg-params-form.tsx:411
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:442
 msgid "Max advance"
 msgstr "最大消費数"
@@ -644,7 +644,7 @@ msgstr "Min"
 msgid "Min IV must be less than or equal to max IV"
 msgstr "個体値の最小値は最大値以下にしてください"
 
-#: src/components/forms/egg-filter-form.tsx:397
+#: src/components/forms/egg-filter-form.tsx:394
 msgid "Min margin frames"
 msgstr "最低猶予フレーム"
 
@@ -724,7 +724,7 @@ msgstr "針読みパターンが空です"
 msgid "Needle pattern must be digits 0-7"
 msgstr "針読みパターンは0-7の数字で入力してください"
 
-#: src/components/forms/egg-params-form.tsx:352
+#: src/components/forms/egg-params-form.tsx:368
 msgid "Nidoran♀"
 msgstr "ニドラン♀"
 
@@ -783,7 +783,7 @@ msgid "None"
 msgstr "なし"
 
 #: src/components/forms/ability-slot-select.tsx:44
-#: src/components/forms/egg-filter-form.tsx:404
+#: src/components/forms/egg-filter-form.tsx:401
 #: src/components/forms/gender-select.tsx:47
 #: src/components/forms/hidden-power-select.tsx:51
 #: src/components/forms/nature-select.tsx:38
@@ -794,7 +794,7 @@ msgstr "なし"
 msgid "Not specified"
 msgstr "指定なし"
 
-#: src/components/forms/egg-params-form.tsx:292
+#: src/components/forms/egg-params-form.tsx:307
 msgid "Not used"
 msgstr "使用しない"
 
@@ -815,11 +815,11 @@ msgstr "オフセットは0以上で指定してください"
 msgid "One or more seeds are invalid"
 msgstr "無効なSeedが含まれています"
 
-#: src/components/forms/egg-params-form.tsx:248
+#: src/components/forms/egg-params-form.tsx:261
 msgid "Parent ♀ IVs"
 msgstr "♀親の個体値"
 
-#: src/components/forms/egg-params-form.tsx:241
+#: src/components/forms/egg-params-form.tsx:254
 msgid "Parent ♂ IVs"
 msgstr "♂親の個体値"
 
@@ -886,8 +886,8 @@ msgstr "名前変更"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/forms/egg-filter-form.tsx:322
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:404
+#: src/components/forms/egg-filter-form.tsx:319
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:406
 msgid "Reset filter"
 msgstr "フィルターリセット"
 
@@ -1091,7 +1091,7 @@ msgstr "特殊エンカウント"
 msgid "Species"
 msgstr "種族"
 
-#: src/components/forms/egg-params-form.tsx:329
+#: src/components/forms/egg-params-form.tsx:344
 msgid "Species (optional)"
 msgstr "種族 (任意)"
 
@@ -1118,7 +1118,7 @@ msgstr "開始日は終了日以前である必要があります"
 msgid "Start mode"
 msgstr "起動モード"
 
-#: src/components/forms/egg-params-form.tsx:378
+#: src/components/forms/egg-params-form.tsx:394
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:425
 msgid "Start offset"
 msgstr "開始オフセット"
@@ -1147,8 +1147,8 @@ msgstr "起動条件の詳細"
 msgid "Stats"
 msgstr "ステータス"
 
-#: src/components/forms/egg-filter-form.tsx:335
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:416
+#: src/components/forms/egg-filter-form.tsx:332
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:418
 msgid "Stats filter"
 msgstr "ステータス指定"
 
@@ -1270,7 +1270,7 @@ msgstr "{0} 件の Seed をコピーしました"
 msgid "Unsaved changes"
 msgstr "未保存の変更"
 
-#: src/components/forms/egg-params-form.tsx:343
+#: src/components/forms/egg-params-form.tsx:359
 msgid "Uses Ditto"
 msgstr "メタモン使用"
 

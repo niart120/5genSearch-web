@@ -91,9 +91,7 @@ function EggFilterForm({
   const [localMarginFrames, setLocalMarginFrames] = useState('');
 
   // --- Toggle mode: internal state management ---
-  const [filterEnabled, setFilterEnabled] = useState(
-    !showToggle || value !== undefined || statsFilter !== undefined
-  );
+  const [filterEnabled, setFilterEnabled] = useState(true);
   const [internalFilter, setInternalFilter] = useState<EggFilter>(value ?? DEFAULT_FILTER);
   const [internalStats, setInternalStats] = useState<StatsFilter | undefined>(statsFilter);
 
@@ -161,7 +159,6 @@ function EggFilterForm({
     if (showToggle) {
       setInternalFilter(DEFAULT_FILTER);
       setInternalStats(undefined);
-      setFilterEnabled(false);
     }
     onChange();
     onStatsFilterChange?.();

@@ -9,7 +9,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
+import { clampOrDefault } from '@/components/forms/input-helpers';
 
 // ---------------------------------------------------------------------------
 // NumField
@@ -56,8 +56,12 @@ function NumField({
       value={displayValue}
       onChange={(e) => setLocalInput(e.target.value)}
       onFocus={(e) => {
-        setLocalInput(String(value));
-        handleFocusSelectAll(e);
+        // フォーマット済みの表示値をそのままローカルバッファに移行し、
+        // value 属性が変化しないようにして全選択が解除されるのを防ぐ
+        setLocalInput(formatValue(value));
+        // React の再レンダリング後に全選択を適用
+        const input = e.target;
+        requestAnimationFrame(() => input.select());
       }}
       onBlur={() => {
         if (localInput !== undefined) {
