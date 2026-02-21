@@ -40,3 +40,11 @@ interface DataTableOptions<TData> {
 }
 
 export type { DataTableOptions };
+
+/** datetime 列昇順の初期ソート */
+const DATETIME_ASC_SORTING: SortingState = [{ id: 'datetime', desc: false }];
+
+/** advance 列昇順の初期ソート */
+const ADVANCE_ASC_SORTING: SortingState = [{ id: 'advance', desc: false }];
+
+export { DATETIME_ASC_SORTING, ADVANCE_ASC_SORTING };

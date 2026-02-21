@@ -9,7 +9,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
-import { DataTable } from '@/components/data-display/data-table';
+import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useUiStore } from '@/stores/settings/ui';
@@ -279,7 +279,7 @@ function EggListPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}
-            initialSorting={[{ id: 'advance', desc: false }]}
+            initialSorting={ADVANCE_ASC_SORTING}
           />
           <ResultDetailDialog
             open={detailOpen}

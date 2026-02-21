@@ -56,6 +56,13 @@ describe('FeatureContent', () => {
     expect(screen.getByText(/only available in BW/i)).toBeInTheDocument();
   });
 
+  it('BW2 でも egg 以外の機能は正常に表示される', () => {
+    useDsConfigStore.getState().setConfig({ version: 'Black2' });
+    renderFeatureContent('datetime-search');
+    const buttons = screen.getAllByRole('button', { name: /Search/i });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('mtseed-search がアクティブのとき MtseedSearchPage が表示される', () => {
     renderFeatureContent('mtseed-search');
     // MtseedSearchPage はフォームを含む — Search ボタンが表示される

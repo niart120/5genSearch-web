@@ -13,7 +13,7 @@ import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/data-display/data-table';
+import { DataTable, DATETIME_ASC_SORTING } from '@/components/data-display';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { toHex } from '@/lib/format';
@@ -276,7 +276,7 @@ function DatetimeSearchPage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results found. Please enter MT Seeds and start searching.`}
             getRowId={(_row, index) => String(index)}
-            initialSorting={[{ id: 'datetime', desc: false }]}
+            initialSorting={DATETIME_ASC_SORTING}
           />
           <ResultDetailDialog
             open={detailOpen}

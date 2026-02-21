@@ -9,7 +9,7 @@
 import { useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
-import { DataTable } from '@/components/data-display/data-table';
+import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -251,7 +251,7 @@ function NeedlePage(): ReactElement {
             className="flex-1"
             emptyMessage={t`No results`}
             getRowId={(_row, index) => String(index)}
-            initialSorting={[{ id: 'advance', desc: false }]}
+            initialSorting={ADVANCE_ASC_SORTING}
           />
         </FeaturePageLayout.Results>
       </FeaturePageLayout>
