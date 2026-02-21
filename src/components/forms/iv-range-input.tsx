@@ -142,18 +142,16 @@ function IvRangeInput({ value, onChange, allowUnknown, disabled }: IvRangeInputP
 
   return (
     <div>
-      {allowUnknown && (
-        <div
-          className={cn('grid items-center gap-x-2 gap-y-0 mb-1', 'grid-cols-[auto_1fr_1fr_auto]')}
-        >
-          <span className="text-xs text-muted-foreground" />
-          <span className="text-xs text-muted-foreground text-center">min</span>
-          <span className="text-xs text-muted-foreground text-center">max</span>
+      <div className={cn('grid items-center gap-x-2 gap-y-0 mb-1', gridCols)}>
+        <span className="text-xs text-muted-foreground" />
+        <span className="text-xs text-muted-foreground text-center">min</span>
+        <span className="text-xs text-muted-foreground text-center">max</span>
+        {allowUnknown && (
           <span className="text-xs text-muted-foreground text-center">
             <Trans>Any</Trans>
           </span>
-        </div>
-      )}
+        )}
+      </div>
       <div className={cn('grid items-center gap-x-2 gap-y-1', gridCols)}>
         {IV_STAT_KEYS.map((key) => {
           const isUnknown = value[key][1] === IV_MAX_WITH_UNKNOWN;
