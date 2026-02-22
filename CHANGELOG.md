@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/niart120/5genSearch-web/compare/v1.0.0...v1.0.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* **ci:** integrate deploy job into release-please workflow ([#112](https://github.com/niart120/5genSearch-web/issues/112)) ([ff414df](https://github.com/niart120/5genSearch-web/commit/ff414dfe3e3ebdb4821ecf25e11ee9d1b0e03a71))
+
 ## 1.0.0 (2026-02-21)
 
 
