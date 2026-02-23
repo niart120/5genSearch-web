@@ -112,6 +112,32 @@ export function createPokemonListTask(
   };
 }
 
+/**
+ * ポケモンリスト生成タスクを生成 (並列)
+ *
+ * origins を workerCount 個に分割し、複数タスクを返す。
+ * origins 数が workerCount 以下の場合は単一タスクにフォールバックする。
+ */
+export function createPokemonListTasks(
+  origins: SeedOrigin[],
+  params: PokemonGenerationParams,
+  config: GenerationConfig,
+  filter: PokemonFilter | undefined,
+  workerCount: number
+): PokemonListTask[] {
+  if (origins.length <= workerCount) {
+    return [{ kind: 'pokemon-list', origins, params, config, filter }];
+  }
+
+  return splitOrigins(origins, workerCount).map((chunk) => ({
+    kind: 'pokemon-list' as const,
+    origins: chunk,
+    params,
+    config,
+    filter,
+  }));
+}
+
 export function createEggListTask(
   origins: SeedOrigin[],
   params: EggGenerationParams,
@@ -125,4 +151,47 @@ export function createEggListTask(
     config,
     filter,
   };
+}
+
+/**
+ * タマゴリスト生成タスクを生成 (並列)
+ *
+ * origins を workerCount 個に分割し、複数タスクを返す。
+ * origins 数が workerCount 以下の場合は単一タスクにフォールバックする。
+ */
+export function createEggListTasks(
+  origins: SeedOrigin[],
+  params: EggGenerationParams,
+  config: GenerationConfig,
+  filter: EggFilter | undefined,
+  workerCount: number
+): EggListTask[] {
+  if (origins.length <= workerCount) {
+    return [{ kind: 'egg-list', origins, params, config, filter }];
+  }
+
+  return splitOrigins(origins, workerCount).map((chunk) => ({
+    kind: 'egg-list' as const,
+    origins: chunk,
+    params,
+    config,
+    filter,
+  }));
+}
+
+/**
+ * SeedOrigin 配列を指定数に均等分割する
+ *
+ * 端数は先頭チャンクに寄せる (Math.ceil ベースの分割)。
+ */
+export function splitOrigins(origins: SeedOrigin[], count: number): SeedOrigin[][] {
+  if (origins.length === 0 || count <= 0) return [];
+
+  const effectiveCount = Math.min(count, origins.length);
+  const chunkSize = Math.ceil(origins.length / effectiveCount);
+  const chunks: SeedOrigin[][] = [];
+  for (let i = 0; i < origins.length; i += chunkSize) {
+    chunks.push(origins.slice(i, i + chunkSize));
+  }
+  return chunks;
 }
