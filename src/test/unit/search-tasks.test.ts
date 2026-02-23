@@ -2,7 +2,11 @@
  * search-tasks — splitOrigins / タスク生成関数のユニットテスト
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// search-tasks.ts が WASM モジュールを import するためモック
+vi.mock('@/wasm/wasm_pkg.js', () => ({}));
+
 import { splitOrigins, createPokemonListTasks, createEggListTasks } from '@/services/search-tasks';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
 
@@ -20,18 +24,18 @@ function dummyOrigins(count: number): SeedOrigin[] {
 // =============================================================================
 
 describe('splitOrigins', () => {
-  it('10 origins / 4 workers → [3, 3, 2, 2]', () => {
+  it('10 origins / 4 workers → [3, 3, 3, 1]', () => {
     const origins = dummyOrigins(10);
     const chunks = splitOrigins(origins, 4);
     expect(chunks).toHaveLength(4);
-    expect(chunks.map((c) => c.length)).toEqual([3, 3, 2, 2]);
+    expect(chunks.map((c) => c.length)).toEqual([3, 3, 3, 1]);
   });
 
-  it('origins < workers → 単一チャンク', () => {
+  it('origins < workers → origins 数分のチャンク', () => {
     const origins = dummyOrigins(2);
     const chunks = splitOrigins(origins, 8);
-    expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toHaveLength(2);
+    expect(chunks).toHaveLength(2);
+    expect(chunks.every((c) => c.length === 1)).toBe(true);
   });
 
   it('空配列 → 空', () => {
