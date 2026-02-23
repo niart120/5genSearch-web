@@ -24,7 +24,7 @@
 
 - **ビルド**: wasm-pack + wasm-bindgen
 - **型共有**: tsify + serde + serde-wasm-bindgen
-- **CPU最適化**: SIMD128
+- **CPU最適化**: portable-simd (x86-64 SIMD, WebAssembly SIMD)
 - **GPU計算**: wgpu (WebGPU)
 - **Formatter**: rustfmt
 - **静的解析**: clippy
@@ -35,12 +35,6 @@
 - **Worker構成**: Web Workers + 独立WASMインスタンス
 - **SharedArrayBuffer**: 不使用 (GitHub Pages + iOS制約)
 - **wasm threads**: 不使用 (上記と同様)
-
-## アーキテクチャ原則
-
-- **本番・開発コードの分離**: 本番環境に不要なコードを含めない
-- **依存関係の整理**: 循環依存や不適切な依存を避ける
-- **テスト環境の整備**: 開発効率を高める包括的テストシステム
 
 ## コーディング規約
 
@@ -69,26 +63,14 @@
 - 型チェック: `pnpm exec tsc -b --noEmit`
 - ベンチマーク: `cargo bench --package wasm-pkg` / `cargo bench --package wasm-pkg --features gpu`
 
-## TypeScript テスト方針
+## コミットルール
 
-### テスト分類
-
-| 分類 | 対象 | 実行環境 | ディレクトリ |
-|------|------|----------|--------------|
-| ユニットテスト | 純粋な TS ロジック | jsdom | `src/test/unit/` |
-| 統合テスト | WASM / Web Worker | Browser Mode (headless Chromium) | `src/test/integration/` |
-| コンポーネントテスト | React コンポーネント | jsdom | `src/test/components/` |
-
-### 配置ルール
-
-- **unit/**: 外部依存なし、モック最小限、高速実行
-- **integration/**: WASM / Worker / ブラウザ API を使用するテスト
-- **components/**: React コンポーネントの描画・操作テスト
-
-### CI 環境での制約
-
-- GPU なし環境でのテスト
-- WebGPU 関連テストは `describe.skipIf(!navigator.gpu)` でスキップ
+- [Conventional Commits](https://www.conventionalcommits.org/) に準拠する
+- フォーマット: `<type>(<scope>): <subject>`
+  - `<scope>` は省略可
+- 許可される type:
+  - `feat` / `fix` / `docs` / `style` / `refactor` / `perf` / `test` / `build` / `ci` / `chore` / `revert`
+- subject は日本語で記述・末尾句点なし
 
 ## シェルの前提
 

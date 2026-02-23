@@ -43,9 +43,9 @@ applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 
 ---
 
-# TypeScript テスト規約
+## TypeScript テスト規約
 
-## テスト分類
+### テスト分類
 
 | 分類 | 対象 | 実行環境 | ディレクトリ |
 |------|------|----------|--------------|
@@ -53,29 +53,29 @@ applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 | 統合テスト | WASM / Web Worker 連携 | Browser Mode (headless) | `src/test/integration/` |
 | コンポーネントテスト | React コンポーネント | jsdom | `src/test/components/` |
 
-## 配置ルール
+### 配置ルール
 
-### unit/ (ユニットテスト)
+#### unit/ (ユニットテスト)
 
 - 純粋な TypeScript ロジックのテスト
 - 外部依存（WASM, Worker, ネットワーク）を持たない
 - モック不要、または最小限のモックで完結
 - 実行速度が速い（数ms〜数十ms/テスト）
 
-### integration/ (統合テスト)
+#### integration/ (統合テスト)
 
 - WASM モジュールの初期化・呼び出しテスト
 - Web Worker との通信テスト
 - ブラウザ API（fetch, WebAssembly 等）を使用するテスト
 - headless Chromium 環境で実行
 
-### components/ (コンポーネントテスト)
+#### components/ (コンポーネントテスト)
 
 - React コンポーネントの描画・操作テスト
 - Testing Library を使用
 - jsdom 環境で実行
 
-## テスト記述規約
+### テスト記述規約
 
 - `describe` / `it` を使用（`test` も可）
 - テスト名は「何をテストしているか」が明確に分かるように記述
@@ -83,7 +83,7 @@ applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 - 1 テスト 1 アサーション を基本とする（複数でも可だが過度に複雑にしない）
 - `null` を前提にせず `toBeUndefined()` を使用する
 
-## GPU テスト
+### GPU テスト
 
 - CI 環境では GPU が利用できない
 - WebGPU 関連のテストは `describe.skipIf(!navigator.gpu)` でスキップ
@@ -95,7 +95,7 @@ describe.skipIf(!hasGPU)('WebGPU Tests', () => {
 });
 ```
 
-## 実行コマンド
+### 実行コマンド
 
 ```powershell
 # 全テスト実行
