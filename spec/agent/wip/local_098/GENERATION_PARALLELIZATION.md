@@ -100,6 +100,8 @@ function splitOrigins(origins: SeedOrigin[], workerCount: number): SeedOrigin[][
 
 個体生成でもこのループを再利用する。`generate_pokemon_list` / `generate_egg_list` は stateless な一括呼び出しだが、origins をチャンク単位で逐次処理するアダプタオブジェクトを作成し `runSearchLoop` に渡す。
 
+**配置**: `OriginChunkIterator` は `search.worker.ts` 内にファイルローカルで定義する。`runSearchLoop` 自体が同ファイル内のプライベート関数であり、Worker 外から参照する必要がないため。
+
 ```typescript
 const BATCH_SIZE = {
   // ...既存...
