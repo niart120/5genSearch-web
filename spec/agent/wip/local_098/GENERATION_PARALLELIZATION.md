@@ -53,10 +53,17 @@
 
 ### 3.1 全体アプローチ
 
-Rust/WASM 側は変更せず、TS 側のみで並列化を実現する。
+Rust/WASM 側は変更せず、TS 側のみで並列化を実現する。既存の並列化基盤を最大限再利用し、新規コードをタスク分割とアダプタに限定する。
+
+| レイヤー | 既存基盤 | 本仕様で追加するもの |
+|---------|---------|-------------------|
+| タスク分割 | — | `splitOrigins`, `createPokemonListTasks`, `createEggListTasks` |
+| Worker 配布・進捗集約 | `WorkerPool`, `ProgressAggregator` | 変更なし (そのまま利用) |
+| Worker 内バッチループ | `runSearchLoop` (cancel / progress / yield 内蔵) | `OriginChunkIterator` アダプタのみ |
+| Hook → UI | `useSearch`, `flattenBatchResults`, Store 差分同期 | `workerCount` 公開のみ |
 
 1. **タスク分割層** (`search-tasks.ts`): `SeedOrigin[]` を `workerCount` 個に分割し、`PokemonListTask[]` / `EggListTask[]` を生成
-2. **Worker 内バッチループ** (`search.worker.ts`): 各タスクの origins をさらに小チャンクに分割し、チャンクごとに WASM API を呼び出す。チャンク間で進捗報告・キャンセルチェック・`yieldToMain()` を実行
+2. **Worker 内バッチループ** (`search.worker.ts`): 既存 `runSearchLoop` に `OriginChunkIterator` アダプタを渡す。cancel / progress / yield は `runSearchLoop` に委譲
 3. **Hook 層** (`use-pokemon-list.ts` / `use-egg-list.ts`): 複数タスクを `start(tasks)` で開始
 
 ```
@@ -87,9 +94,11 @@ function splitOrigins(origins: SeedOrigin[], workerCount: number): SeedOrigin[][
 }
 ```
 
-### 3.3 Worker 内バッチループ
+### 3.3 Worker 内バッチループ — `runSearchLoop` の再利用
 
-各 Worker は受け取った部分 origins をさらに `BATCH_SIZE.generation` 件ずつに分割し、`generate_pokemon_list` / `generate_egg_list` を繰り返し呼び出す。Rust 側の変更は不要。
+既存の `runSearchLoop` は、`{ is_done: boolean; free(): void }` インターフェースを満たすオブジェクトに対してキャンセルチェック・進捗スロットリング・`yieldToMain()` を提供する汎用ループである。
+
+個体生成でもこのループを再利用する。`generate_pokemon_list` / `generate_egg_list` は stateless な一括呼び出しだが、origins をチャンク単位で逐次処理するアダプタオブジェクトを作成し `runSearchLoop` に渡す。
 
 ```typescript
 const BATCH_SIZE = {
@@ -98,48 +107,62 @@ const BATCH_SIZE = {
   generation: 50,
 } as const;
 
-async function runPokemonListGeneration(taskId: string, task: PokemonListTask): Promise<void> {
-  const startTime = performance.now();
-  const totalOrigins = task.origins.length;
-  let processedOrigins = 0;
-  let lastProgressTime = performance.now();
+/**
+ * origins チャンク反復アダプタ
+ *
+ * runSearchLoop が要求する { is_done, free() } インターフェースを満たし、
+ * origins 配列をチャンク単位で消費する。
+ */
+class OriginChunkIterator {
+  private offset = 0;
+  constructor(private readonly origins: SeedOrigin[]) {}
 
-  for (let i = 0; i < totalOrigins; i += BATCH_SIZE.generation) {
-    if (cancelled) break;
-
-    const chunk = task.origins.slice(i, i + BATCH_SIZE.generation);
-    const results = generate_pokemon_list(chunk, task.params, task.config, task.filter);
-
-    if (results.length > 0) {
-      postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results });
-    }
-
-    processedOrigins += chunk.length;
-
-    const now = performance.now();
-    if (now - lastProgressTime >= PROGRESS_INTERVAL_MS) {
-      postResponse({
-        type: 'progress',
-        taskId,
-        progress: calculateProgress(processedOrigins, totalOrigins, startTime),
-      });
-      lastProgressTime = now;
-    }
-
-    await yieldToMain();
+  get is_done(): boolean {
+    return this.offset >= this.origins.length;
   }
 
-  // 最終進捗
-  postResponse({
-    type: 'progress',
-    taskId,
-    progress: calculateProgress(processedOrigins, totalOrigins, startTime),
-  });
-  postResponse({ type: 'done', taskId });
+  /** 次のチャンクを切り出し、offset を進める */
+  nextChunk(batchSize: number): SeedOrigin[] {
+    const chunk = this.origins.slice(this.offset, this.offset + batchSize);
+    this.offset += chunk.length;
+    return chunk;
+  }
+
+  get processed(): number {
+    return this.offset;
+  }
+
+  get total(): number {
+    return this.origins.length;
+  }
+
+  free(): void {
+    // stateless — 解放不要
+  }
 }
 ```
 
-`runEggList` も同一パターン。
+使用側は検索系と同じ `runSearchLoop` + `processBatch` コールバックのパターンに乗る:
+
+```typescript
+async function runPokemonListGeneration(taskId: string, task: PokemonListTask): Promise<void> {
+  const iter = new OriginChunkIterator(task.origins);
+  const startTime = performance.now();
+
+  await runSearchLoop(taskId, iter, startTime, (it) => {
+    const chunk = it.nextChunk(BATCH_SIZE.generation);
+    const results = generate_pokemon_list(chunk, task.params, task.config, task.filter);
+    if (results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results });
+    }
+    return { processed: it.processed, total: it.total };
+  });
+}
+```
+
+`runEggList` も同一パターン (`generate_egg_list` に差し替え)。
+
+これにより、キャンセル・進捗スロットリング・yield のロジックを一切複製せず、既存の `runSearchLoop` にそのまま委譲できる。
 
 ### 3.4 結果順序
 
@@ -209,9 +232,9 @@ export function createEggListTasks(
 function splitOrigins(origins: SeedOrigin[], count: number): SeedOrigin[][] { /* ... */ }
 ```
 
-### 4.2 search.worker.ts: バッチループ化
+### 4.2 search.worker.ts: `runSearchLoop` アダプタ化
 
-`runPokemonListGeneration` / `runEggList` を同期一括呼び出しからバッチループに変更する。
+`runPokemonListGeneration` / `runEggList` を同期一括呼び出しから `runSearchLoop` + `OriginChunkIterator` パターンに変更する。
 
 変更前:
 
@@ -227,11 +250,23 @@ function runPokemonListGeneration(taskId: string, task: PokemonListTask): void {
 
 ```typescript
 async function runPokemonListGeneration(taskId: string, task: PokemonListTask): Promise<void> {
-  // 3.3 節のバッチループ実装
+  const iter = new OriginChunkIterator(task.origins);
+  const startTime = performance.now();
+  await runSearchLoop(taskId, iter, startTime, (it) => {
+    const chunk = it.nextChunk(BATCH_SIZE.generation);
+    const results = generate_pokemon_list(chunk, task.params, task.config, task.filter);
+    if (results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results });
+    }
+    return { processed: it.processed, total: it.total };
+  });
 }
 ```
 
-`BATCH_SIZE` オブジェクトに `generation` キーを追加する。
+追加:
+
+- `OriginChunkIterator` クラス (3.3 節参照)
+- `BATCH_SIZE` オブジェクトに `generation` キー
 
 ### 4.3 use-pokemon-list.ts / use-egg-list.ts: 複数タスク対応
 
@@ -286,8 +321,9 @@ export interface UseSearchResult {
 - [ ] `splitOrigins` ユーティリティ関数の実装
 - [ ] `createPokemonListTasks` の実装
 - [ ] `createEggListTasks` の実装
-- [ ] `search.worker.ts`: `runPokemonListGeneration` のバッチループ化
-- [ ] `search.worker.ts`: `runEggList` のバッチループ化
+- [ ] `search.worker.ts`: `OriginChunkIterator` アダプタクラスの実装
+- [ ] `search.worker.ts`: `runPokemonListGeneration` を `runSearchLoop` + アダプタに変更
+- [ ] `search.worker.ts`: `runEggList` を `runSearchLoop` + アダプタに変更
 - [ ] `search.worker.ts`: `BATCH_SIZE.generation` の追加
 - [ ] `useSearch`: `workerCount` の公開
 - [ ] `use-pokemon-list.ts`: 複数タスク生成に対応
