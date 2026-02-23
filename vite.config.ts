@@ -4,12 +4,14 @@ import { lingui } from '@lingui/vite-plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
 import wasm from 'vite-plugin-wasm';
+import mkcert from 'vite-plugin-mkcert';
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/5genSearch-web/',
   plugins: [
     wasm(),
+    mkcert(),
     tailwindcss(),
     react({
       babel: {
