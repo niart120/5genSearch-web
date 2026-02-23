@@ -320,16 +320,16 @@ export interface UseSearchResult {
 
 ## 6. 実装チェックリスト
 
-- [ ] `splitOrigins` ユーティリティ関数の実装
-- [ ] `createPokemonListTasks` の実装
-- [ ] `createEggListTasks` の実装
-- [ ] `search.worker.ts`: `OriginChunkIterator` アダプタクラスの実装
-- [ ] `search.worker.ts`: `runPokemonListGeneration` を `runSearchLoop` + アダプタに変更
-- [ ] `search.worker.ts`: `runEggList` を `runSearchLoop` + アダプタに変更
-- [ ] `search.worker.ts`: `BATCH_SIZE.generation` の追加
-- [ ] `useSearch`: `workerCount` の公開
-- [ ] `use-pokemon-list.ts`: 複数タスク生成に対応
-- [ ] `use-egg-list.ts`: 複数タスク生成に対応
-- [ ] ユニットテスト: `splitOrigins` / タスク生成
-- [ ] 統合テスト: 並列生成 / キャンセル / 進捗
-- [ ] 手動検証: 大量 Seed での体感速度確認
+- [x] `splitOrigins` ユーティリティ関数の実装
+- [x] `createPokemonListTasks` の実装
+- [x] `createEggListTasks` の実装
+- [x] `search.worker.ts`: `OriginChunkIterator` アダプタクラスの実装
+- [x] `search.worker.ts`: `runPokemonListGeneration` を `runSearchLoop` + アダプタに変更
+- [x] `search.worker.ts`: `runEggList` を `runSearchLoop` + アダプタに変更
+- [x] `search.worker.ts`: `BATCH_SIZE.generation` の追加
+- [x] `useSearch`: `workerCount` の公開
+- [x] `use-pokemon-list.ts`: 複数タスク生成に対応
+- [x] `use-egg-list.ts`: 複数タスク生成に対応
+- [x] ユニットテスト: `splitOrigins` / タスク生成
+- [x] 統合テスト: 並列生成 / キャンセル / 進捗
+- [x] 手動検証: 大量 Seed での体感速度確認
