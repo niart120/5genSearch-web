@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
-import { createEggListTask } from '@/services/search-tasks';
+import { createEggListTasks } from '@/services/search-tasks';
 import { flattenBatchResults, isGeneratedEggData } from '@/services/batch-utils';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
 import { useEggListStore } from '../store';
@@ -43,7 +43,8 @@ export function useEggList(
   speciesId: number | undefined
 ): UseEggListReturn {
   const config = useSearchConfig(false);
-  const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
+  const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
+    useSearch(config);
 
   // Store actions
   const appendResults = useEggListStore((s) => s.appendResults);
@@ -92,10 +93,10 @@ export function useEggList(
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearStoreResults();
-      const task = createEggListTask(origins, params, genConfig, filter);
-      start([task]);
+      const tasks = createEggListTasks(origins, params, genConfig, filter, workerCount);
+      start(tasks);
     },
-    [start, clearStoreResults]
+    [start, clearStoreResults, workerCount]
   );
 
   return {

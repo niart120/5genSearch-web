@@ -19,6 +19,7 @@ import type {
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
   TrainerInfoSearchParams,
+  SeedOrigin,
 } from '../wasm/wasm_pkg.js';
 import type {
   WorkerRequest,
@@ -69,6 +70,8 @@ const BATCH_SIZE = {
   mtseed: 500_000,
   /** TrainerInfo: SHA-1 SIMD 4並列 + LCG ~20-50消費 + filter (軽量, ~45ms/batch) */
   trainerInfo: 3_000_000,
+  /** 個体生成: origin 数ベース (~数ms/origin, 50 origins/batch) */
+  generation: 50,
 } as const;
 
 // =============================================================================
@@ -162,11 +165,11 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
         break;
       }
       case 'pokemon-list': {
-        runPokemonListGeneration(taskId, task);
+        await runPokemonListGeneration(taskId, task);
         break;
       }
       case 'egg-list': {
-        runEggList(taskId, task);
+        await runEggList(taskId, task);
         break;
       }
     }
@@ -329,37 +332,81 @@ async function runTrainerInfoSearch(
 }
 
 // =============================================================================
+// Origin Chunk Iterator
+// =============================================================================
+
+/**
+ * origins チャンク反復アダプタ
+ *
+ * runSearchLoop が要求する { is_done, free() } インターフェースを満たし、
+ * origins 配列をチャンク単位で消費する。
+ */
+class OriginChunkIterator {
+  private offset = 0;
+  private readonly origins: SeedOrigin[];
+
+  constructor(origins: SeedOrigin[]) {
+    this.origins = origins;
+  }
+
+  get is_done(): boolean {
+    return this.offset >= this.origins.length;
+  }
+
+  /** 次のチャンクを切り出し、offset を進める */
+  nextChunk(batchSize: number): SeedOrigin[] {
+    const chunk = this.origins.slice(this.offset, this.offset + batchSize);
+    this.offset += chunk.length;
+    return chunk;
+  }
+
+  get processed(): number {
+    return this.offset;
+  }
+
+  get total(): number {
+    return this.origins.length;
+  }
+
+  free(): void {
+    // stateless — 解放不要
+  }
+}
+
+// =============================================================================
 // Pokemon List Generation
 // =============================================================================
 
-function runPokemonListGeneration(taskId: string, task: PokemonListTask): void {
-  const results = generate_pokemon_list(task.origins, task.params, task.config, task.filter);
+async function runPokemonListGeneration(taskId: string, task: PokemonListTask): Promise<void> {
+  const iter = new OriginChunkIterator(task.origins);
+  const startTime = performance.now();
 
-  postResponse({
-    type: 'result',
-    taskId,
-    resultType: 'pokemon-list',
-    results,
+  await runSearchLoop(taskId, iter, startTime, (it) => {
+    const chunk = it.nextChunk(BATCH_SIZE.generation);
+    const results = generate_pokemon_list(chunk, task.params, task.config, task.filter);
+    if (results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results });
+    }
+    return { processed: it.processed, total: it.total };
   });
-
-  postResponse({ type: 'done', taskId });
 }
 
 // =============================================================================
 // Egg List Generation
 // =============================================================================
 
-function runEggList(taskId: string, task: EggListTask): void {
-  const results = generate_egg_list(task.origins, task.params, task.config, task.filter);
+async function runEggList(taskId: string, task: EggListTask): Promise<void> {
+  const iter = new OriginChunkIterator(task.origins);
+  const startTime = performance.now();
 
-  postResponse({
-    type: 'result',
-    taskId,
-    resultType: 'egg-list',
-    results,
+  await runSearchLoop(taskId, iter, startTime, (it) => {
+    const chunk = it.nextChunk(BATCH_SIZE.generation);
+    const results = generate_egg_list(chunk, task.params, task.config, task.filter);
+    if (results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'egg-list', results });
+    }
+    return { processed: it.processed, total: it.total };
   });
-
-  postResponse({ type: 'done', taskId });
 }
 
 // =============================================================================
