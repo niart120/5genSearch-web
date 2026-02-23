@@ -23,6 +23,8 @@ export interface UseSearchResult {
   results: SearchResult[];
   /** エラー */
   error: Error | undefined;
+  /** Worker 数 */
+  workerCount: number;
   /** 検索を開始 */
   start: (tasks: SearchTask[]) => void;
   /** 検索をキャンセル */
@@ -49,6 +51,7 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
   const poolRef = useRef<WorkerPool | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [workerCount, setWorkerCount] = useState(0);
   const [progress, setProgress] = useState<AggregatedProgress | undefined>();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<Error | undefined>();
@@ -63,6 +66,7 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
       .initialize()
       .then(() => {
         setIsInitialized(true);
+        setWorkerCount(pool.size);
       })
       .catch((error) => {
         setError(error instanceof Error ? error : new Error(String(error)));
@@ -116,6 +120,7 @@ export function useSearch(config: WorkerPoolConfig): UseSearchResult {
     progress,
     results,
     error,
+    workerCount,
     start,
     cancel,
   };

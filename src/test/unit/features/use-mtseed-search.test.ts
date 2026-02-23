@@ -33,6 +33,7 @@ function createMockSearchReturn(overrides: Partial<UseSearchResult> = {}): UseSe
     progress: undefined,
     results: [],
     error: undefined,
+    workerCount: 4,
     start: mockStart,
     cancel: mockCancel,
     ...overrides,

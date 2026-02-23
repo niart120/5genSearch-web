@@ -343,7 +343,11 @@ async function runTrainerInfoSearch(
  */
 class OriginChunkIterator {
   private offset = 0;
-  constructor(private readonly origins: SeedOrigin[]) {}
+  private readonly origins: SeedOrigin[];
+
+  constructor(origins: SeedOrigin[]) {
+    this.origins = origins;
+  }
 
   get is_done(): boolean {
     return this.offset >= this.origins.length;

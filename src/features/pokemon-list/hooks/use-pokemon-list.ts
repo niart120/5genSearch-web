@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
-import { createPokemonListTask } from '@/services/search-tasks';
+import { createPokemonListTasks } from '@/services/search-tasks';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
 import { usePokemonListStore } from '../store';
@@ -34,7 +34,8 @@ interface UsePokemonListReturn {
 
 export function usePokemonList(version: RomVersion, locale: SupportedLocale): UsePokemonListReturn {
   const config = useSearchConfig(false);
-  const { results, isLoading, isInitialized, progress, error, start, cancel } = useSearch(config);
+  const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
+    useSearch(config);
 
   // Store actions
   const appendResults = usePokemonListStore((s) => s.appendResults);
@@ -83,10 +84,10 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearStoreResults();
-      const task = createPokemonListTask(origins, params, genConfig, filter);
-      start([task]);
+      const tasks = createPokemonListTasks(origins, params, genConfig, filter, workerCount);
+      start(tasks);
     },
-    [start, clearStoreResults]
+    [start, clearStoreResults, workerCount]
   );
 
   return {
