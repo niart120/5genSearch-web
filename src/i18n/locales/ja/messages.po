@@ -19,9 +19,10 @@ msgstr ""
 
 #. placeholder {0}: selectedIds.length
 #. placeholder {0}: value.length
+#: src/components/forms/held-item-slot-select.tsx:50
 #: src/components/forms/hidden-power-select.tsx:51
 #: src/components/forms/nature-select.tsx:38
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:112
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:139
 msgid "{0} selected"
 msgstr "{0}件選択中"
 
@@ -37,7 +38,7 @@ msgstr "♀親の特性"
 #~ msgid "5genSearch is a tool for RNG manipulation in Pokemon Black / White / Black 2 / White 2."
 #~ msgstr "5genSearch はポケットモンスター ブラック・ホワイト / ブラック2・ホワイト2 の乱数調整ツールです。"
 
-#: src/components/layout/header.tsx:34
+#: src/components/layout/header.tsx:39
 msgid "5genSearch-web"
 msgstr "5genSearch-web"
 
@@ -118,7 +119,7 @@ msgstr "攻撃"
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
 #: src/features/needle/components/needle-page.tsx:168
-#: src/features/needle/components/needle-page.tsx:272
+#: src/features/needle/components/needle-page.tsx:273
 msgid "Auto"
 msgstr "自動"
 
@@ -189,6 +190,10 @@ msgstr "全削除"
 #: src/components/forms/key-spec-selector.tsx:78
 #~ msgid "Combinations"
 #~ msgstr "組み合わせ"
+
+#: src/components/forms/held-item-slot-select.tsx:33
+msgid "Common (50%)"
+msgstr "かなりの確率 (50%)"
 
 #: src/features/pokemon-list/components/lead-ability-section.tsx:102
 msgid "Compound Eyes"
@@ -366,7 +371,7 @@ msgid "Elapsed"
 msgstr "経過"
 
 #: src/components/forms/egg-filter-form.tsx:309
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:398
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:474
 msgid "Enable filter"
 msgstr "フィルター有効"
 
@@ -378,9 +383,10 @@ msgstr "フィルター有効"
 msgid "Encounter method"
 msgstr "エンカウント方法"
 
+#: src/components/forms/encounter-result-select.tsx:45
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:102
 msgid "Encounter result"
-msgstr "エンカウント結果"
+msgstr "エンカウント"
 
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:294
 msgid "Encounter settings"
@@ -432,7 +438,7 @@ msgstr "エクスポートに失敗しました"
 #~ msgstr "ファイルの読み込みに失敗しました"
 
 #: src/components/forms/egg-filter-form.tsx:301
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:391
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:467
 msgid "Filter"
 msgstr "フィルター"
 
@@ -473,6 +479,7 @@ msgstr "個体生成"
 msgid "Hardware"
 msgstr "ハードウェア"
 
+#: src/components/forms/held-item-slot-select.tsx:55
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:112
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:88
 msgid "Held item"
@@ -531,6 +538,10 @@ msgstr "初期Seed"
 msgid "Invalid profile file"
 msgstr "無効なプロファイルファイルです"
 
+#: src/components/forms/encounter-result-select.tsx:54
+msgid "Item only"
+msgstr "アイテムのみ"
+
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:102
 msgid "IV Range"
 msgstr "個体値範囲"
@@ -583,6 +594,14 @@ msgstr "先頭特性"
 #: src/components/forms/egg-params-form.tsx:333
 #~ msgid "Leave empty to show \"?\" for stats"
 #~ msgstr "空欄にすると個体値が「?」で表示されます"
+
+#: src/components/forms/level-range-input.tsx:95
+msgid "Level max"
+msgstr "レベル上限"
+
+#: src/components/forms/level-range-input.tsx:76
+msgid "Level min"
+msgstr "レベル下限"
 
 #: src/features/about/components/about-page.tsx:41
 msgid "License"
@@ -757,7 +776,7 @@ msgid "No results"
 msgstr "結果なし"
 
 #: src/features/egg-list/components/egg-list-page.tsx:280
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:274
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:277
 msgid "No results found. Configure parameters and start generating."
 msgstr "結果が見つかりませんでした。パラメータを設定して生成を開始してください。"
 
@@ -789,6 +808,7 @@ msgstr "種族が見つかりません"
 msgid "No templates match the current filter."
 msgstr "条件に一致するテンプレートがありません。"
 
+#: src/components/forms/held-item-slot-select.tsx:36
 #: src/components/forms/key-input-selector.tsx:77
 #: src/components/forms/key-spec-selector.tsx:77
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
@@ -797,13 +817,15 @@ msgstr "なし"
 
 #: src/components/forms/ability-slot-select.tsx:44
 #: src/components/forms/egg-filter-form.tsx:401
+#: src/components/forms/encounter-result-select.tsx:52
 #: src/components/forms/gender-select.tsx:47
+#: src/components/forms/held-item-slot-select.tsx:50
 #: src/components/forms/hidden-power-select.tsx:51
 #: src/components/forms/nature-select.tsx:38
 #: src/components/forms/shiny-select.tsx:44
 #: src/components/forms/species-combobox.tsx:74
 #: src/components/forms/species-combobox.tsx:95
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:110
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:137
 msgid "Not specified"
 msgstr "指定なし"
 
@@ -851,6 +873,10 @@ msgstr "ポケモン"
 msgid "Pokemon generation result details"
 msgstr "ポケモン生成結果の詳細"
 
+#: src/components/forms/encounter-result-select.tsx:53
+msgid "Pokémon only"
+msgstr "ポケモンのみ"
+
 #: src/features/ds-config/components/profile-selector.tsx:205
 msgid "Profile"
 msgstr "プロファイル"
@@ -874,6 +900,10 @@ msgstr "プロファイル名"
 msgid "Profile saved"
 msgstr "プロファイルを保存しました"
 
+#: src/components/forms/held-item-slot-select.tsx:34
+msgid "Rare (5%)"
+msgstr "まれに (5%)"
+
 #: src/features/ds-config/components/ds-config-form.tsx:80
 #: src/features/ds-config/components/ds-config-form.tsx:83
 msgid "Region"
@@ -895,7 +925,7 @@ msgid "Repository"
 msgstr "リポジトリ"
 
 #: src/components/forms/egg-filter-form.tsx:319
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:406
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:482
 msgid "Reset filter"
 msgstr "フィルターリセット"
 
@@ -917,7 +947,7 @@ msgstr "結果の詳細"
 #: src/features/egg-search/components/egg-search-page.tsx:241
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:169
 #: src/features/needle/components/needle-page.tsx:245
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:253
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:256
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:244
 msgid "Results"
 msgstr "検索結果"
@@ -949,7 +979,7 @@ msgstr "セーブ状態"
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
 #: src/features/needle/components/needle-page.tsx:159
-#: src/features/needle/components/needle-page.tsx:267
+#: src/features/needle/components/needle-page.tsx:268
 msgid "Search"
 msgstr "検索"
 
@@ -1092,7 +1122,7 @@ msgid "Special encounter"
 msgstr "特殊エンカウント"
 
 #: src/features/egg-list/components/result-detail-dialog.tsx:63
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:118
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:145
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:57
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:63
 msgid "Species"
@@ -1151,13 +1181,13 @@ msgstr "起動条件の詳細"
 
 #: src/features/egg-list/components/egg-list-page.tsx:271
 #: src/features/egg-list/components/result-detail-dialog.tsx:75
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:265
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:268
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:75
 msgid "Stats"
 msgstr "ステータス"
 
 #: src/components/forms/egg-filter-form.tsx:332
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:418
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:494
 msgid "Stats filter"
 msgstr "ステータス指定"
 
@@ -1194,7 +1224,7 @@ msgstr "テンプレート"
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "現在のプロファイルに未保存の変更があります。どうしますか？"
 
-#: src/components/layout/feature-content.tsx:71
+#: src/components/layout/feature-content.tsx:67
 msgid "This feature is only available in BW (Black/White)."
 msgstr "この機能はBW（ブラック・ホワイト）専用です。"
 
@@ -1303,6 +1333,10 @@ msgstr "VCount min"
 #: src/features/ds-config/components/ds-config-form.tsx:64
 msgid "Version"
 msgstr "バージョン"
+
+#: src/components/forms/held-item-slot-select.tsx:35
+msgid "Very rare (1%)"
+msgstr "ごくまれに (1%)"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
