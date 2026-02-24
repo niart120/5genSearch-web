@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { useUiStore } from '@/stores/settings/ui';
-import type { PokemonFilter } from '@/wasm/wasm_pkg.js';
+import type { PokemonFilter, EncounterType } from '@/wasm/wasm_pkg.js';
 
 // WASM を jsdom 環境でロードできないためスタブ化
 vi.mock('@/wasm/wasm_pkg.js', () => ({
@@ -30,23 +30,34 @@ const DEFAULT_FILTER: PokemonFilter = {
 function renderFilterForm(props: Partial<Parameters<typeof PokemonFilterForm>[0]> = {}) {
   const onChange = props.onChange ?? vi.fn();
   const onStatsFilterChange = props.onStatsFilterChange ?? vi.fn();
+  const resolvedProps = {
+    value: DEFAULT_FILTER as PokemonFilter | undefined,
+    onChange,
+    statsFilter: undefined,
+    onStatsFilterChange,
+    statMode: 'ivs' as const,
+    availableSpecies: [] as Parameters<typeof PokemonFilterForm>[0]['availableSpecies'],
+    encounterType: 'Normal' as EncounterType,
+    ...props,
+  };
+  const result = render(
+    <I18nTestWrapper>
+      <PokemonFilterForm {...resolvedProps} />
+    </I18nTestWrapper>
+  );
   return {
     onChange,
     onStatsFilterChange,
-    ...render(
-      <I18nTestWrapper>
-        <PokemonFilterForm
-          value={DEFAULT_FILTER}
-          onChange={onChange}
-          statsFilter={undefined}
-          onStatsFilterChange={onStatsFilterChange}
-          statMode="ivs"
-          availableSpecies={[]}
-          encounterType={props.encounterType ?? 'Normal'}
-          {...props}
-        />
-      </I18nTestWrapper>
-    ),
+    ...result,
+    /** encounterType 等の props を差し替えて再描画する */
+    rerenderWith: (overrides: Partial<Parameters<typeof PokemonFilterForm>[0]>) => {
+      const nextProps = { ...resolvedProps, ...overrides, onChange, onStatsFilterChange };
+      result.rerender(
+        <I18nTestWrapper>
+          <PokemonFilterForm {...nextProps} />
+        </I18nTestWrapper>
+      );
+    },
   };
 }
 
@@ -122,5 +133,34 @@ describe('PokemonFilterForm', () => {
     renderFilterForm({ encounterType: 'Normal' });
     await openFilter(user);
     expect(screen.queryByText('Encounter result')).not.toBeInTheDocument();
+  });
+
+  it('encounterType 変更で非表示になったフィルタが undefined で伝播される', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    // 持ち物フィルタが有効な Surfing で描画し、持ち物を選択する
+    const initialFilter: PokemonFilter = {
+      ...DEFAULT_FILTER,
+      held_item_slots: ['Common'],
+    };
+    const { rerenderWith } = renderFilterForm({
+      value: initialFilter,
+      encounterType: 'Surfing',
+      onChange,
+    });
+    await openFilter(user);
+    expect(screen.getByLabelText('held-item-slot-select-trigger')).toBeInTheDocument();
+
+    // encounterType を Normal に切り替え (持ち物フィルタが非表示になる)
+    onChange.mockClear();
+    await act(async () => {
+      rerenderWith({ encounterType: 'Normal', value: initialFilter });
+    });
+
+    // onChange が呼ばれ、held_item_slots が undefined になっている
+    const calls = onChange.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    const lastFilter = calls.at(-1)![0] as PokemonFilter | undefined;
+    expect(lastFilter?.held_item_slots).toBeUndefined();
   });
 });
