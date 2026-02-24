@@ -25,6 +25,9 @@ interface EncounterResultSelectProps {
 
 const SENTINEL = '__none__';
 
+const isEncounterResultFilter = (v: string): v is EncounterResultFilter =>
+  v === 'PokemonOnly' || v === 'ItemOnly';
+
 function EncounterResultSelect({
   value,
   onChange,
@@ -34,7 +37,7 @@ function EncounterResultSelect({
   const { t } = useLingui();
 
   const handleChange = (v: string) => {
-    onChange(v === SENTINEL ? undefined : (v as EncounterResultFilter));
+    onChange(isEncounterResultFilter(v) ? v : undefined);
   };
 
   const showItemOnly = encounterType !== 'Fishing';
