@@ -5,9 +5,9 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::generation::{CorePokemonData, GeneratedEggData, GeneratedPokemonData};
+use super::generation::{CorePokemonData, EncounterResult, GeneratedEggData, GeneratedPokemonData};
 use super::pokemon::{
-    AbilitySlot, Gender, HiddenPowerType, Ivs, Nature, Pid, ShinyType, TrainerInfo,
+    AbilitySlot, Gender, HeldItemSlot, HiddenPowerType, Ivs, Nature, Pid, ShinyType, TrainerInfo,
 };
 use crate::data::Stats;
 
@@ -352,11 +352,23 @@ impl CoreDataFilter {
     }
 }
 
+// ===== EncounterResultFilter =====
+
+/// エンカウント結果フィルタ
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum EncounterResultFilter {
+    /// ポケモンのみ通過 (`Item` / `FishingFailed` を除外)
+    PokemonOnly,
+    /// アイテムのみ通過 (`DustCloud` / `PokemonShadow` 用)
+    ItemOnly,
+}
+
 // ===== PokemonFilter =====
 
 /// ポケモンフィルター (野生/固定用)
 ///
-/// `CoreDataFilter` に加え、種族・レベル条件をサポート。
+/// `CoreDataFilter` に加え、種族・レベル・持ち物・エンカウント結果条件をサポート。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonFilter {
@@ -367,6 +379,10 @@ pub struct PokemonFilter {
     pub species_ids: Option<Vec<u16>>,
     /// レベル範囲 (min, max)
     pub level_range: Option<(u8, u8)>,
+    /// 持ち物スロットフィルタ (いずれかに一致)
+    pub held_item_slots: Option<Vec<HeldItemSlot>>,
+    /// エンカウント結果フィルタ
+    pub encounter_result_filter: Option<EncounterResultFilter>,
 }
 
 impl PokemonFilter {
@@ -376,6 +392,8 @@ impl PokemonFilter {
             base: CoreDataFilter::any(),
             species_ids: None,
             level_range: None,
+            held_item_slots: None,
+            encounter_result_filter: None,
         }
     }
 
@@ -399,6 +417,30 @@ impl PokemonFilter {
             && (data.core.level < min || data.core.level > max)
         {
             return false;
+        }
+
+        // 持ち物スロットフィルタ
+        if let Some(ref slots) = self.held_item_slots
+            && !slots.is_empty()
+            && !slots.contains(&data.held_item_slot)
+        {
+            return false;
+        }
+
+        // エンカウント結果フィルタ
+        if let Some(ref result_filter) = self.encounter_result_filter {
+            match result_filter {
+                EncounterResultFilter::PokemonOnly => {
+                    if !matches!(data.encounter_result, EncounterResult::Pokemon) {
+                        return false;
+                    }
+                }
+                EncounterResultFilter::ItemOnly => {
+                    if !matches!(data.encounter_result, EncounterResult::Item { .. }) {
+                        return false;
+                    }
+                }
+            }
         }
 
         true
@@ -454,6 +496,7 @@ impl EggFilter {
 mod tests {
     use super::*;
     use crate::data::Stats;
+    use crate::types::{EncounterResult, ItemContent};
     use crate::types::{HiddenPowerType, InheritanceSlot, Ivs, NeedleDirection, Pid, SeedOrigin};
 
     // テスト用ヘルパー: GeneratedPokemonData を生成
@@ -465,6 +508,32 @@ mod tests {
         shiny_type: ShinyType,
         species_id: u16,
         level: u8,
+    ) -> GeneratedPokemonData {
+        make_pokemon_ext(
+            ivs,
+            nature,
+            gender,
+            ability_slot,
+            shiny_type,
+            species_id,
+            level,
+            HeldItemSlot::None,
+            EncounterResult::Pokemon,
+        )
+    }
+
+    // テスト用ヘルパー: GeneratedPokemonData を生成 (持ち物・エンカウント結果指定)
+    #[allow(clippy::too_many_arguments)]
+    fn make_pokemon_ext(
+        ivs: Ivs,
+        nature: Nature,
+        gender: Gender,
+        ability_slot: AbilitySlot,
+        shiny_type: ShinyType,
+        species_id: u16,
+        level: u8,
+        held_item_slot: HeldItemSlot,
+        encounter_result: EncounterResult,
     ) -> GeneratedPokemonData {
         GeneratedPokemonData {
             advance: 0,
@@ -482,10 +551,10 @@ mod tests {
                 level,
             },
             sync_applied: false,
-            held_item_slot: crate::types::HeldItemSlot::None,
+            held_item_slot,
             moving_encounter: None,
             special_encounter: None,
-            encounter_result: crate::types::EncounterResult::Pokemon,
+            encounter_result,
         }
     }
 
@@ -842,6 +911,198 @@ mod tests {
         assert!(filter.matches(&pokemon_in_range));
         assert!(!filter.matches(&pokemon_below));
         assert!(!filter.matches(&pokemon_above));
+    }
+
+    #[test]
+    fn test_held_item_slots_filter_matches() {
+        let filter = PokemonFilter {
+            held_item_slots: Some(vec![HeldItemSlot::Common, HeldItemSlot::Rare]),
+            ..Default::default()
+        };
+        let pokemon_common = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::Common,
+            EncounterResult::Pokemon,
+        );
+        let pokemon_rare = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::Rare,
+            EncounterResult::Pokemon,
+        );
+        let pokemon_none = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Pokemon,
+        );
+        assert!(filter.matches(&pokemon_common));
+        assert!(filter.matches(&pokemon_rare));
+        assert!(!filter.matches(&pokemon_none));
+    }
+
+    #[test]
+    fn test_held_item_slots_filter_none_passes_all() {
+        let filter = PokemonFilter {
+            held_item_slots: None,
+            ..Default::default()
+        };
+        let pokemon = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::VeryRare,
+            EncounterResult::Pokemon,
+        );
+        assert!(filter.matches(&pokemon));
+    }
+
+    #[test]
+    fn test_encounter_result_filter_pokemon_only() {
+        let filter = PokemonFilter {
+            encounter_result_filter: Some(EncounterResultFilter::PokemonOnly),
+            ..Default::default()
+        };
+        let pokemon = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Pokemon,
+        );
+        let item = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Item(ItemContent::Jewel),
+        );
+        assert!(filter.matches(&pokemon));
+        assert!(!filter.matches(&item));
+    }
+
+    #[test]
+    fn test_encounter_result_filter_item_only() {
+        let filter = PokemonFilter {
+            encounter_result_filter: Some(EncounterResultFilter::ItemOnly),
+            ..Default::default()
+        };
+        let pokemon = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Pokemon,
+        );
+        let item = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Item(ItemContent::EvolutionStone),
+        );
+        assert!(!filter.matches(&pokemon));
+        assert!(filter.matches(&item));
+    }
+
+    #[test]
+    fn test_encounter_result_filter_pokemon_only_excludes_fishing_failed() {
+        let filter = PokemonFilter {
+            encounter_result_filter: Some(EncounterResultFilter::PokemonOnly),
+            ..Default::default()
+        };
+        let fishing_failed = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::FishingFailed,
+        );
+        assert!(!filter.matches(&fishing_failed));
+    }
+
+    #[test]
+    fn test_encounter_result_filter_none_passes_all() {
+        let filter = PokemonFilter {
+            encounter_result_filter: None,
+            ..Default::default()
+        };
+        let pokemon = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Pokemon,
+        );
+        let item = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::Item(ItemContent::Feather),
+        );
+        let fishing_failed = make_pokemon_ext(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+            HeldItemSlot::None,
+            EncounterResult::FishingFailed,
+        );
+        assert!(filter.matches(&pokemon));
+        assert!(filter.matches(&item));
+        assert!(filter.matches(&fishing_failed));
     }
 
     // === EggFilter Tests ===

@@ -475,6 +475,11 @@ export type EncounterType = "Normal" | "ShakingGrass" | "DustCloud" | "PokemonSh
 export type EncounterResult = { type: "Pokemon" } | { type: "Item"; item: ItemContent } | { type: "FishingFailed" };
 
 /**
+ * エンカウント結果フィルタ
+ */
+export type EncounterResultFilter = "PokemonOnly" | "ItemOnly";
+
+/**
  * キー入力 (Generator 用)
  *
  * 固定のボタン組み合わせを指定し、単一の `KeyCode` を生成。
@@ -582,7 +587,7 @@ export type Pid = number;
 /**
  * ポケモンフィルター (野生/固定用)
  *
- * `CoreDataFilter` に加え、種族・レベル条件をサポート。
+ * `CoreDataFilter` に加え、種族・レベル・持ち物・エンカウント結果条件をサポート。
  */
 export interface PokemonFilter extends CoreDataFilter {
     /**
@@ -593,6 +598,14 @@ export interface PokemonFilter extends CoreDataFilter {
      * レベル範囲 (min, max)
      */
     level_range: [number, number] | undefined;
+    /**
+     * 持ち物スロットフィルタ (いずれかに一致)
+     */
+    held_item_slots: HeldItemSlot[] | undefined;
+    /**
+     * エンカウント結果フィルタ
+     */
+    encounter_result_filter: EncounterResultFilter | undefined;
 }
 
 /**

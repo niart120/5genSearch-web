@@ -33,7 +33,8 @@ pub use search::{
 
 // filter
 pub use filter::{
-    CoreDataFilter, EggFilter, IvFilter, PokemonFilter, ShinyFilter, StatsFilter, TrainerInfoFilter,
+    CoreDataFilter, EggFilter, EncounterResultFilter, IvFilter, PokemonFilter, ShinyFilter,
+    StatsFilter, TrainerInfoFilter,
 };
 
 // generation

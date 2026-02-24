@@ -142,6 +142,8 @@ function PokemonListPage(): ReactElement {
       shiny: filter?.shiny,
       species_ids: filter?.species_ids,
       level_range: filter?.level_range,
+      held_item_slots: filter?.held_item_slots,
+      encounter_result_filter: filter?.encounter_result_filter,
       stats: statsFilter,
     };
   }, [filter, statsFilter]);
@@ -234,6 +236,7 @@ function PokemonListPage(): ReactElement {
             onStatsFilterChange={setStatsFilter}
             statMode={statMode}
             availableSpecies={encounterParams.availableSpecies}
+            encounterType={encounterParams.encounterType}
             disabled={isLoading}
           />
 

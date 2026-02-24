@@ -1,7 +1,13 @@
 export { AbilitySlotSelect } from './ability-slot-select';
 export type { AbilitySlotSelectProps } from './ability-slot-select';
+export { EncounterResultSelect } from './encounter-result-select';
+export type { EncounterResultSelectProps } from './encounter-result-select';
 export { GenderSelect } from './gender-select';
 export type { GenderSelectProps } from './gender-select';
+export { HeldItemSlotSelect } from './held-item-slot-select';
+export type { HeldItemSlotSelectProps } from './held-item-slot-select';
+export { LevelRangeInput } from './level-range-input';
+export type { LevelRangeInputProps } from './level-range-input';
 export { ShinySelect } from './shiny-select';
 export type { ShinySelectProps } from './shiny-select';
 export { StatsFixedInput } from './stats-fixed-input';

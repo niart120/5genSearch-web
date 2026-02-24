@@ -19,9 +19,10 @@ msgstr ""
 
 #. placeholder {0}: selectedIds.length
 #. placeholder {0}: value.length
+#: src/components/forms/held-item-slot-select.tsx:50
 #: src/components/forms/hidden-power-select.tsx:51
 #: src/components/forms/nature-select.tsx:38
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:112
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:139
 msgid "{0} selected"
 msgstr "{0} selected"
 
@@ -37,7 +38,7 @@ msgstr "♀ parent ability"
 #~ msgid "5genSearch is a tool for RNG manipulation in Pokemon Black / White / Black 2 / White 2."
 #~ msgstr "5genSearch is a tool for RNG manipulation in Pokemon Black / White / Black 2 / White 2."
 
-#: src/components/layout/header.tsx:34
+#: src/components/layout/header.tsx:39
 msgid "5genSearch-web"
 msgstr "5genSearch-web"
 
@@ -118,7 +119,7 @@ msgstr "Atk"
 #: src/features/ds-config/components/timer0-vcount-section.tsx:20
 #: src/features/ds-config/components/timer0-vcount-section.tsx:26
 #: src/features/needle/components/needle-page.tsx:168
-#: src/features/needle/components/needle-page.tsx:272
+#: src/features/needle/components/needle-page.tsx:273
 msgid "Auto"
 msgstr "Auto"
 
@@ -189,6 +190,10 @@ msgstr "Clear all"
 #: src/components/forms/key-spec-selector.tsx:78
 #~ msgid "Combinations"
 #~ msgstr "Combinations"
+
+#: src/components/forms/held-item-slot-select.tsx:33
+msgid "Common (50%)"
+msgstr "Common (50%)"
 
 #: src/features/pokemon-list/components/lead-ability-section.tsx:102
 msgid "Compound Eyes"
@@ -366,7 +371,7 @@ msgid "Elapsed"
 msgstr "Elapsed"
 
 #: src/components/forms/egg-filter-form.tsx:309
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:398
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:474
 msgid "Enable filter"
 msgstr "Enable filter"
 
@@ -378,6 +383,7 @@ msgstr "Enable filter"
 msgid "Encounter method"
 msgstr "Encounter method"
 
+#: src/components/forms/encounter-result-select.tsx:45
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:102
 msgid "Encounter result"
 msgstr "Encounter result"
@@ -436,7 +442,7 @@ msgstr "Export failed"
 #~ msgstr "Female has HA"
 
 #: src/components/forms/egg-filter-form.tsx:301
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:391
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:467
 msgid "Filter"
 msgstr "Filter"
 
@@ -477,6 +483,7 @@ msgstr "Generation"
 msgid "Hardware"
 msgstr "Hardware"
 
+#: src/components/forms/held-item-slot-select.tsx:55
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:112
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:88
 msgid "Held item"
@@ -535,6 +542,10 @@ msgstr "Initial Seed"
 msgid "Invalid profile file"
 msgstr "Invalid profile file"
 
+#: src/components/forms/encounter-result-select.tsx:54
+msgid "Item only"
+msgstr "Item only"
+
 #: src/features/mtseed-search/components/mtseed-search-form.tsx:102
 msgid "IV Range"
 msgstr "IV Range"
@@ -587,6 +598,14 @@ msgstr "Lead ability"
 #: src/components/forms/egg-params-form.tsx:333
 #~ msgid "Leave empty to show \"?\" for stats"
 #~ msgstr "Leave empty to show \"?\" for stats"
+
+#: src/components/forms/level-range-input.tsx:95
+msgid "Level max"
+msgstr "Level max"
+
+#: src/components/forms/level-range-input.tsx:76
+msgid "Level min"
+msgstr "Level min"
 
 #: src/features/about/components/about-page.tsx:41
 msgid "License"
@@ -761,7 +780,7 @@ msgid "No results"
 msgstr "No results"
 
 #: src/features/egg-list/components/egg-list-page.tsx:280
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:274
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:277
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
@@ -793,6 +812,7 @@ msgstr "No species found"
 msgid "No templates match the current filter."
 msgstr "No templates match the current filter."
 
+#: src/components/forms/held-item-slot-select.tsx:36
 #: src/components/forms/key-input-selector.tsx:77
 #: src/components/forms/key-spec-selector.tsx:77
 #: src/features/pokemon-list/components/lead-ability-section.tsx:100
@@ -801,13 +821,15 @@ msgstr "None"
 
 #: src/components/forms/ability-slot-select.tsx:44
 #: src/components/forms/egg-filter-form.tsx:401
+#: src/components/forms/encounter-result-select.tsx:52
 #: src/components/forms/gender-select.tsx:47
+#: src/components/forms/held-item-slot-select.tsx:50
 #: src/components/forms/hidden-power-select.tsx:51
 #: src/components/forms/nature-select.tsx:38
 #: src/components/forms/shiny-select.tsx:44
 #: src/components/forms/species-combobox.tsx:74
 #: src/components/forms/species-combobox.tsx:95
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:110
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:137
 msgid "Not specified"
 msgstr "Not specified"
 
@@ -855,6 +877,10 @@ msgstr "Pokémon"
 msgid "Pokemon generation result details"
 msgstr "Pokemon generation result details"
 
+#: src/components/forms/encounter-result-select.tsx:53
+msgid "Pokémon only"
+msgstr "Pokémon only"
+
 #: src/features/ds-config/components/profile-selector.tsx:205
 msgid "Profile"
 msgstr "Profile"
@@ -878,6 +904,10 @@ msgstr "Profile name"
 msgid "Profile saved"
 msgstr "Profile saved"
 
+#: src/components/forms/held-item-slot-select.tsx:34
+msgid "Rare (5%)"
+msgstr "Rare (5%)"
+
 #: src/features/ds-config/components/ds-config-form.tsx:80
 #: src/features/ds-config/components/ds-config-form.tsx:83
 msgid "Region"
@@ -899,7 +929,7 @@ msgid "Repository"
 msgstr "Repository"
 
 #: src/components/forms/egg-filter-form.tsx:319
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:406
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:482
 msgid "Reset filter"
 msgstr "Reset filter"
 
@@ -921,7 +951,7 @@ msgstr "Result details"
 #: src/features/egg-search/components/egg-search-page.tsx:241
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:169
 #: src/features/needle/components/needle-page.tsx:245
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:253
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:256
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:244
 msgid "Results"
 msgstr "Results"
@@ -953,7 +983,7 @@ msgstr "Save state"
 #: src/components/forms/search-controls.tsx:62
 #: src/components/layout/navigation-labels.tsx:6
 #: src/features/needle/components/needle-page.tsx:159
-#: src/features/needle/components/needle-page.tsx:267
+#: src/features/needle/components/needle-page.tsx:268
 msgid "Search"
 msgstr "Search"
 
@@ -1096,7 +1126,7 @@ msgid "Special encounter"
 msgstr "Special encounter"
 
 #: src/features/egg-list/components/result-detail-dialog.tsx:63
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:118
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:145
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:57
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:63
 msgid "Species"
@@ -1155,13 +1185,13 @@ msgstr "Startup condition details"
 
 #: src/features/egg-list/components/egg-list-page.tsx:271
 #: src/features/egg-list/components/result-detail-dialog.tsx:75
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:265
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:268
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:75
 msgid "Stats"
 msgstr "Stats"
 
 #: src/components/forms/egg-filter-form.tsx:332
-#: src/features/pokemon-list/components/pokemon-filter-form.tsx:418
+#: src/features/pokemon-list/components/pokemon-filter-form.tsx:494
 msgid "Stats filter"
 msgstr "Stats filter"
 
@@ -1198,7 +1228,7 @@ msgstr "Template"
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "The current profile has unsaved changes. What would you like to do?"
 
-#: src/components/layout/feature-content.tsx:71
+#: src/components/layout/feature-content.tsx:67
 msgid "This feature is only available in BW (Black/White)."
 msgstr "This feature is only available in BW (Black/White)."
 
@@ -1307,6 +1337,10 @@ msgstr "VCount min"
 #: src/features/ds-config/components/ds-config-form.tsx:64
 msgid "Version"
 msgstr "Version"
+
+#: src/components/forms/held-item-slot-select.tsx:35
+msgid "Very rare (1%)"
+msgstr "Very rare (1%)"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64

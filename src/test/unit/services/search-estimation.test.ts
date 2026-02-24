@@ -422,6 +422,8 @@ describe('estimatePokemonFilterHitRate', () => {
       stats: undefined,
       species_ids: [25], // 概算対象外
       level_range: [5, 10], // 概算対象外
+      held_item_slots: undefined,
+      encounter_result_filter: undefined,
     };
     expect(estimatePokemonFilterHitRate(filter)).toBeCloseTo((1 / 25) * 0.5);
   });
@@ -586,6 +588,8 @@ describe('estimatePokemonListResults', () => {
       stats: undefined,
       species_ids: undefined,
       level_range: undefined,
+      held_item_slots: undefined,
+      encounter_result_filter: undefined,
     };
     const result = estimatePokemonListResults(100, 1000, 0, filter);
     expect(result.hitRate).toBeCloseTo(1 / 25);
