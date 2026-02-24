@@ -212,10 +212,10 @@ interface HeldItemSlotSelectProps {
 
 ### 4.6 `EncounterResultSelect` コンポーネント
 
-フィルタラベル: 英語 `Encounter` / 日本語 `エンカウント`
+フィルタラベル: i18n キー `"Encounter result"` を使用。
 
-> 既存の i18n キー `"Encounter result"` → `"エンカウント結果"` はテーブル列・詳細ダイアログ用。
-> フィルタ UI のラベルは新規キー `"Encounter"` → `"エンカウント"` を使用する。
+> 既存の i18n マッピング `"Encounter result"` → `"エンカウント結果"` を
+> `"Encounter result"` → `"エンカウント"` に修正し、これを使用。
 
 ```tsx
 interface EncounterResultSelectProps {
@@ -362,6 +362,6 @@ const mergedFilter = useMemo((): PokemonFilter | undefined => {
 - [ ] TS: `pokemon-list-page.tsx` から `encounterType` を渡す
 - [ ] TS: `mergedFilter` に新フィールド反映
 - [ ] TS: コンポーネントテスト追加
-- [ ] i18n: フィルタ項目のラベル翻訳追加
+- [ ] i18n: `"Encounter result"` の訳語を `"エンカウント結果"` から `"エンカウント"` に修正
 - [ ] `cargo clippy` / `pnpm lint` 通過確認
 - [ ] `cargo test` / `pnpm test:run` 通過確認
