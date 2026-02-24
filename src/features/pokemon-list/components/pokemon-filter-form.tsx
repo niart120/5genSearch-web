@@ -6,7 +6,7 @@
  * statMode に応じて IV / 実ステータスフィルターを切り替える。
  */
 
-import { useState, useCallback, useMemo, type ReactElement } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
@@ -21,6 +21,9 @@ import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
 import { GenderSelect } from '@/components/forms/gender-select';
 import { ShinySelect } from '@/components/forms/shiny-select';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
+import { LevelRangeInput } from '@/components/forms/level-range-input';
+import { HeldItemSlotSelect } from '@/components/forms/held-item-slot-select';
+import { EncounterResultSelect } from '@/components/forms/encounter-result-select';
 import { cn } from '@/lib/utils';
 import { IV_STAT_KEYS } from '@/lib/game-data-names';
 
@@ -36,6 +39,9 @@ import type {
   ShinyFilter,
   HiddenPowerType,
   StatsFilter,
+  EncounterType,
+  EncounterResultFilter,
+  HeldItemSlot,
 } from '@/wasm/wasm_pkg.js';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
@@ -50,6 +56,7 @@ interface PokemonFilterFormProps {
   onStatsFilterChange: (filter?: StatsFilter) => void;
   statMode: StatDisplayMode;
   availableSpecies: EncounterSpeciesOption[];
+  encounterType: EncounterType;
   disabled?: boolean;
 }
 
@@ -83,8 +90,28 @@ const DEFAULT_FILTER: PokemonFilter = {
   shiny: undefined,
   species_ids: undefined,
   level_range: undefined,
+  held_item_slots: undefined,
+  encounter_result_filter: undefined,
   stats: undefined,
 };
+
+// ---------------------------------------------------------------------------
+// Conditional display sets
+// ---------------------------------------------------------------------------
+
+const HELD_ITEM_ENCOUNTER_TYPES: Set<EncounterType> = new Set([
+  'Surfing',
+  'SurfingBubble',
+  'Fishing',
+  'FishingBubble',
+  'ShakingGrass',
+]);
+
+const ENCOUNTER_RESULT_ENCOUNTER_TYPES: Set<EncounterType> = new Set([
+  'DustCloud',
+  'PokemonShadow',
+  'Fishing',
+]);
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -175,6 +202,7 @@ function PokemonFilterForm({
   onStatsFilterChange,
   statMode,
   availableSpecies,
+  encounterType,
   disabled,
 }: PokemonFilterFormProps): ReactElement {
   const { t } = useLingui();
@@ -211,7 +239,9 @@ function PokemonFilterForm({
       f.ability_slot !== undefined ||
       f.shiny !== undefined ||
       (f.species_ids !== undefined && f.species_ids.length > 0) ||
-      f.level_range !== undefined
+      f.level_range !== undefined ||
+      (f.held_item_slots !== undefined && f.held_item_slots.length > 0) ||
+      f.encounter_result_filter !== undefined
     );
   }, []);
 
@@ -231,6 +261,31 @@ function PokemonFilterForm({
     },
     [onChange, onStatsFilterChange, hasAnyFilter, isStatsDefault]
   );
+
+  // --- 条件付き表示判定 ---
+
+  const showHeldItem = HELD_ITEM_ENCOUNTER_TYPES.has(encounterType);
+  const showEncounterResult = ENCOUNTER_RESULT_ENCOUNTER_TYPES.has(encounterType);
+
+  // encounterType 変更時に非表示フィルタを undefined で伝播
+  const prevEncounterType = useRef(encounterType);
+  useEffect(() => {
+    if (prevEncounterType.current === encounterType) return;
+    prevEncounterType.current = encounterType;
+    const nextHeldItem = HELD_ITEM_ENCOUNTER_TYPES.has(encounterType)
+      ? internalFilter.held_item_slots
+      : undefined;
+    const nextEncResult = ENCOUNTER_RESULT_ENCOUNTER_TYPES.has(encounterType)
+      ? internalFilter.encounter_result_filter
+      : undefined;
+    const next = {
+      ...internalFilter,
+      held_item_slots: nextHeldItem,
+      encounter_result_filter: nextEncResult,
+    };
+    // 内部状態は保持し、親への伝播値のみ調整
+    propagate(next, internalStats, filterEnabled);
+  }, [encounterType, internalFilter, internalStats, filterEnabled, propagate]);
 
   // --- update helpers ---
 
@@ -364,6 +419,27 @@ function PokemonFilterForm({
     [internalFilter.species_ids, updateFilter]
   );
 
+  const handleLevelRangeChange = useCallback(
+    (range: [number, number] | undefined) => {
+      updateFilter({ level_range: range });
+    },
+    [updateFilter]
+  );
+
+  const handleHeldItemSlotsChange = useCallback(
+    (slots: HeldItemSlot[]) => {
+      updateFilter({ held_item_slots: slots.length > 0 ? slots : undefined });
+    },
+    [updateFilter]
+  );
+
+  const handleEncounterResultChange = useCallback(
+    (filter: EncounterResultFilter | undefined) => {
+      updateFilter({ encounter_result_filter: filter });
+    },
+    [updateFilter]
+  );
+
   const ivValue = internalFilter.iv ?? DEFAULT_IV_FILTER;
 
   // 種族選択用 (重複排除)
@@ -441,7 +517,7 @@ function PokemonFilterForm({
             </>
           )}
 
-          {/* 2-5. 特性スロット / 性別 / 性格 / 色違い (2列) */}
+          {/* 2-5. 個体属性系 (2列グリッド) */}
           <div className="grid grid-cols-2 gap-2">
             <AbilitySlotSelect
               value={internalFilter.ability_slot}
@@ -466,15 +542,39 @@ function PokemonFilterForm({
               onChange={handleShinyChange}
               disabled={filterDisabled}
             />
+
+            {/* レベル範囲 (min / max を2列に配置) */}
+            <LevelRangeInput
+              value={internalFilter.level_range}
+              onChange={handleLevelRangeChange}
+              disabled={filterDisabled}
+            />
           </div>
 
-          {/* 6. 種族フィルタ (Popover) */}
+          {/* エンカウント系 (条件付き表示) */}
           {uniqueSpecies.length > 0 && (
             <SpeciesSelect
               uniqueSpecies={uniqueSpecies}
               speciesNames={effectiveSpeciesNames}
               selectedIds={internalFilter.species_ids ?? []}
               onToggle={handleSpeciesToggle}
+              disabled={filterDisabled}
+            />
+          )}
+
+          {showHeldItem && (
+            <HeldItemSlotSelect
+              value={internalFilter.held_item_slots ?? []}
+              onChange={handleHeldItemSlotsChange}
+              disabled={filterDisabled}
+            />
+          )}
+
+          {showEncounterResult && (
+            <EncounterResultSelect
+              value={internalFilter.encounter_result_filter}
+              onChange={handleEncounterResultChange}
+              encounterType={encounterType}
               disabled={filterDisabled}
             />
           )}
