@@ -103,10 +103,10 @@ pub enum EncounterResultFilter {
     PokemonOnly,
     /// アイテムのみ通過 (DustCloud / PokemonShadow 用)
     ItemOnly,
-    /// 釣り成功のみ通過 (FishingFailed を除外、Item は通過しない)
-    FishingSuccessOnly,
 }
 ```
+
+> **補足**: `Fishing` では結果が `Pokemon` または `FishingFailed` の二択のため、`PokemonOnly` で釣り失敗を除外できる。専用バリアントは不要。
 
 ### 3.4 レイヤー構成
 
@@ -161,11 +161,6 @@ pub fn matches(&self, data: &GeneratedPokemonData) -> bool {
                     return false;
                 }
             }
-            EncounterResultFilter::FishingSuccessOnly => {
-                if matches!(data.encounter_result, EncounterResult::FishingFailed) {
-                    return false;
-                }
-            }
         }
     }
 
@@ -183,7 +178,7 @@ export interface PokemonFilter extends CoreDataFilter {
     encounter_result_filter: EncounterResultFilter | undefined;
 }
 
-export type EncounterResultFilter = "PokemonOnly" | "ItemOnly" | "FishingSuccessOnly";
+export type EncounterResultFilter = "PokemonOnly" | "ItemOnly";
 ```
 
 ### 4.4 `LevelRangeInput` コンポーネント
@@ -226,9 +221,8 @@ interface EncounterResultSelectProps {
 ```
 
 - セレクト形式 (単一選択 + 未指定)
-- 選択肢はエンカウントタイプに応じて動的に決定:
-  - `DustCloud` / `PokemonShadow`: 未指定 / `PokemonOnly` / `ItemOnly`
-  - `Fishing`: 未指定 / `FishingSuccessOnly`
+- 選択肢: 未指定 / `PokemonOnly` / `ItemOnly`
+- `Fishing` 時は `ItemOnly` は選択肢に含めない (釣りでアイテムは発生しないため)
 - ローカライズ対応
 
 ### 4.7 `PokemonFilterForm` の変更
@@ -321,7 +315,7 @@ const mergedFilter = useMemo((): PokemonFilter | undefined => {
 | `test_held_item_slots_filter_none_passes_all` | `held_item_slots` が `None` なら全件通過する |
 | `test_encounter_result_filter_pokemon_only` | `PokemonOnly` 時に `EncounterResult::Pokemon` のみ通過する |
 | `test_encounter_result_filter_item_only` | `ItemOnly` 時に `EncounterResult::Item` のみ通過する |
-| `test_encounter_result_filter_fishing_success_only` | `FishingSuccessOnly` 時に `FishingFailed` が除外される |
+| `test_encounter_result_filter_pokemon_only_excludes_fishing_failed` | `PokemonOnly` 時に `FishingFailed` が除外される |
 | `test_encounter_result_filter_none_passes_all` | `encounter_result_filter` が `None` なら全件通過する |
 | `test_level_range_existing` | 既存テストの確認 (level_range フィルタの動作) |
 
