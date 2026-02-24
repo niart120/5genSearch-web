@@ -86,3 +86,14 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 判断: SeedOriginTable の手入力カラムは hex 入力が必要なニッチケースであり、JSON インポートが主要パスとなる想定。JSON にはエクスポート時点で `key_code` が含まれるため、手入力時の UX 問題は影響範囲が限定的。ただし、将来的にボタン選択 UI (チェックボックス等) を提供すれば hex 手入力自体が不要になるため、`KeyMask` 露出の必要性も薄れる。
 
 当面の方針: 仕様は `key_code` (= `KeyCode` 値) のまま据え置く。手入力 UX の改善が必要になった場合、ボタン選択 UI の導入を優先し、`KeyMask` の public 化は最終手段とする。
+
+## 2026-02-25: フォームコンポーネントの onChange シグネチャ不統一
+
+現状: `src/components/forms/` 配下のコンポーネントで、`undefined` を返しうる `onChange` コールバックのシグネチャが2パターン混在している。
+
+1. `onChange: (value: T | undefined) => void` — `shiny-select`, `species-combobox`, `gender-select`, `ability-slot-select`
+2. `onChange: (value?: T) => void` — `egg-filter-form`, `level-range-input`, `encounter-result-select`
+
+観察: パターン 1 は `onChange(cond ? undefined : v)` のように常に引数を明示渡ししているため現時点では問題ない。ただし `onChange()` と引数なしで呼ぶコードを追加した場合、`Expected 1 arguments, but got 0` のコンパイルエラーになる。`level-range-input` (local_099) で実際にこの問題が発生し、パターン 2 に修正した。
+
+当面の方針: 既存の4コンポーネントは動作上問題ないため即時修正はしない。次にこれらのファイルに触れる機会があればパターン 2 (`?` オプショナル引数) に統一する。関連コミット: `962d17a`。
