@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/niart120/5genSearch-web/compare/v1.0.1...v1.1.0) (2026-02-24)
+
+
+### Features
+
+* **pokemon-list:** フィルタフォームにレベル範囲・持ち物・エンカウント結果UIを統合 ([#116](https://github.com/niart120/5genSearch-web/issues/116)) ([6553806](https://github.com/niart120/5genSearch-web/commit/6553806438c4bc41de6af21d7eb32bc0125ab8f5))
+* 個体生成の並列化 (local_098) ([#114](https://github.com/niart120/5genSearch-web/issues/114)) ([9a943a9](https://github.com/niart120/5genSearch-web/commit/9a943a9d337047dd0554986e47e33954de3d1bf3))
+
 ## [1.0.1](https://github.com/niart120/5genSearch-web/compare/v1.0.0...v1.0.1) (2026-02-22)
 
 
