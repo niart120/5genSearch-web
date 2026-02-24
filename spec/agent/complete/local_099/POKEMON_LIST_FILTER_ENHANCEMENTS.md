@@ -349,19 +349,19 @@ const mergedFilter = useMemo((): PokemonFilter | undefined => {
 
 ## 6. 実装チェックリスト
 
-- [ ] Rust: `EncounterResultFilter` enum 追加
-- [ ] Rust: `PokemonFilter` に `held_item_slots` / `encounter_result_filter` 追加
-- [ ] Rust: `PokemonFilter::matches` に新フィールドの判定ロジック追加
-- [ ] Rust: ユニットテスト追加
-- [ ] WASM ビルド・型生成確認
-- [ ] TS: `LevelRangeInput` コンポーネント作成
-- [ ] TS: `HeldItemSlotSelect` コンポーネント作成
-- [ ] TS: `EncounterResultSelect` コンポーネント作成
-- [ ] TS: `PokemonFilterForm` に `encounterType` props 追加、条件付き表示ロジック実装
-- [ ] TS: `PokemonFilterForm` にレベル範囲 / 持ち物 / エンカウント結果フィルタ UI 追加
-- [ ] TS: `pokemon-list-page.tsx` から `encounterType` を渡す
-- [ ] TS: `mergedFilter` に新フィールド反映
-- [ ] TS: コンポーネントテスト追加
-- [ ] i18n: `"Encounter result"` の訳語を `"エンカウント結果"` から `"エンカウント"` に修正
-- [ ] `cargo clippy` / `pnpm lint` 通過確認
-- [ ] `cargo test` / `pnpm test:run` 通過確認
+- [x] Rust: `EncounterResultFilter` enum 追加
+- [x] Rust: `PokemonFilter` に `held_item_slots` / `encounter_result_filter` 追加
+- [x] Rust: `PokemonFilter::matches` に新フィールドの判定ロジック追加
+- [x] Rust: ユニットテスト追加
+- [x] WASM ビルド・型生成確認
+- [x] TS: `LevelRangeInput` コンポーネント作成
+- [x] TS: `HeldItemSlotSelect` コンポーネント作成
+- [x] TS: `EncounterResultSelect` コンポーネント作成
+- [x] TS: `PokemonFilterForm` に `encounterType` props 追加、条件付き表示ロジック実装
+- [x] TS: `PokemonFilterForm` にレベル範囲 / 持ち物 / エンカウント結果フィルタ UI 追加
+- [x] TS: `pokemon-list-page.tsx` から `encounterType` を渡す
+- [x] TS: `mergedFilter` に新フィールド反映
+- [x] TS: コンポーネントテスト追加
+- [x] i18n: `"Encounter result"` の訳語を `"エンカウント結果"` から `"エンカウント"` に修正
+- [x] `cargo clippy` / `pnpm lint` 通過確認
+- [x] `cargo test` / `pnpm test:run` 通過確認
