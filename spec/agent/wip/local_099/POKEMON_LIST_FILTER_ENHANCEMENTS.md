@@ -212,6 +212,11 @@ interface HeldItemSlotSelectProps {
 
 ### 4.6 `EncounterResultSelect` コンポーネント
 
+フィルタラベル: 英語 `Encounter` / 日本語 `エンカウント`
+
+> 既存の i18n キー `"Encounter result"` → `"エンカウント結果"` はテーブル列・詳細ダイアログ用。
+> フィルタ UI のラベルは新規キー `"Encounter"` → `"エンカウント"` を使用する。
+
 ```tsx
 interface EncounterResultSelectProps {
   value: EncounterResultFilter | undefined;
@@ -248,15 +253,28 @@ const ENCOUNTER_RESULT_ENCOUNTER_TYPES: Set<EncounterType> = new Set([
 ]);
 ```
 
-フォーム内レイアウト (既存フィルタの下に追加):
+フォーム内レイアウト (案B: レベル範囲を2列グリッド内に統合):
 
 ```
-[既存フィルタ: IV/Stats, 性格, 性別, 特性, 色違い, 種族]
----
-[レベル範囲]           ← 常時表示
-[持ち物スロット]       ← 条件付き表示
-[エンカウント結果]     ← 条件付き表示
+── ステータス系 ──────────────────
+ IV/Stats フィルター
+ めざパタイプ + 威力 (IVモード時)
+
+── 個体属性系 (2列グリッド) ──────
+ [特性]           [性別]
+ [性格]           [色違い]
+ [レベル範囲 min]  [レベル範囲 max]
+
+── エンカウント系 ────────────────
+ 種族          ← 条件付き (スロットあり時)
+ 持ち物        ← 条件付き
+ エンカウント  ← 条件付き
 ```
+
+配置根拠:
+- レベル範囲は常時表示かつ min/max の 2 入力であり、2列グリッドに収まる
+- 「常時表示」と「条件付き」が明確に分離される
+- 条件付き項目がすべて非表示のエンカウント (固定シンボル等) ではエンカウント系セクションが空になりフォームがコンパクトになる
 
 ### 4.8 `pokemon-list-page.tsx` の変更
 
@@ -326,7 +344,7 @@ const mergedFilter = useMemo((): PokemonFilter | undefined => {
 | レベル範囲入力の表示 | フィルタ展開時にレベル範囲入力が表示される |
 | レベル範囲の値変更 | min/max 入力で `onChange` が `[min, max]` を返す |
 | 持ち物フィルタの条件付き表示 | `encounterType=Surfing` で表示、`encounterType=Normal` で非表示 |
-| エンカウント結果フィルタの条件付き表示 | `encounterType=DustCloud` / `Fishing` で表示、`encounterType=Normal` で非表示 |
+| エンカウント結果フィルタの条件付き表示 | `encounterType=DustCloud` / `Fishing` で表示、`encounterType=Normal` で非表示。ラベルは「エンカウント」 |
 | 条件外切替時のフィルタクリア | `encounterType` 変更で非表示になったフィルタが `undefined` で伝播される |
 
 ## 6. 実装チェックリスト
