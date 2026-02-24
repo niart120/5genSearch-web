@@ -24,6 +24,14 @@ function LevelRangeInput({ value, onChange, disabled }: LevelRangeInputProps): R
   const [minText, setMinText] = useState(value ? String(value[0]) : '');
   const [maxText, setMaxText] = useState(value ? String(value[1]) : '');
 
+  // 外部 prop 変更時 (リセット等) に内部テキストを同期 (レンダー中の state 調整)
+  const [prevValue, setPrevValue] = useState(value);
+  if (prevValue?.[0] !== value?.[0] || prevValue?.[1] !== value?.[1]) {
+    setPrevValue(value);
+    setMinText(value ? String(value[0]) : '');
+    setMaxText(value ? String(value[1]) : '');
+  }
+
   const emit = useCallback(
     (nextMin: string, nextMax: string) => {
       if (nextMin.trim() === '' && nextMax.trim() === '') {
