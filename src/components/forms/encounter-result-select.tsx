@@ -18,7 +18,7 @@ import type { EncounterResultFilter, EncounterType } from '@/wasm/wasm_pkg.js';
 
 interface EncounterResultSelectProps {
   value: EncounterResultFilter | undefined;
-  onChange: (filter: EncounterResultFilter | undefined) => void;
+  onChange: (filter?: EncounterResultFilter) => void;
   encounterType: EncounterType;
   disabled?: boolean;
 }

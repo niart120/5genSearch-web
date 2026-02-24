@@ -13,7 +13,7 @@ import { clampOrDefault, handleFocusSelectAll } from './input-helpers';
 
 interface LevelRangeInputProps {
   value: [number, number] | undefined;
-  onChange: (range: [number, number] | undefined) => void;
+  onChange: (range?: [number, number]) => void;
   disabled?: boolean;
 }
 

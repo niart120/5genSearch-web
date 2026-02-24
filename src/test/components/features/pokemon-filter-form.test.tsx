@@ -85,7 +85,7 @@ describe('PokemonFilterForm', () => {
     // onChange が level_range を含むフィルタで呼ばれた
     const lastCall = onChange.mock.calls.at(-1);
     expect(lastCall).toBeDefined();
-    const filter = lastCall[0] as PokemonFilter | undefined;
+    const filter = lastCall![0] as PokemonFilter | undefined;
     expect(filter?.level_range).toBeDefined();
   });
 
