@@ -6,6 +6,9 @@
 
 Gen5 RNG web app (React + Rust/WASM)
 
+## Live
+アプリ: [5genSearch-web](https://niart120.github.io/5genSearch-web/)
+
 ## データの出典
 
 ### エンカウントデータ
