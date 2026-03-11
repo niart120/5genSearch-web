@@ -87,6 +87,33 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 
 当面の方針: 仕様は `key_code` (= `KeyCode` 値) のまま据え置く。手入力 UX の改善が必要になった場合、ボタン選択 UI の導入を優先し、`KeyMask` の public 化は最終手段とする。
 
+## 2026-03-11: `getStartup()` のコードクローン
+
+現状: `getStartup(origin: SeedOrigin)` ヘルパー（`Startup` バリアントを抽出する1行関数）が以下 5 箇所にそれぞれローカル定義されている。
+
+- `src/features/tid-adjust/components/trainer-info-columns.tsx`
+- `src/features/datetime-search/components/seed-origin-columns.tsx`
+- `src/features/egg-search/components/egg-result-columns.tsx`
+- `src/features/needle/components/needle-result-columns.tsx`
+- `src/services/export-columns.ts`
+
+観察: 実装は全箇所で同一（`if ('Startup' in origin) return origin.Startup; return;`）。`export-columns.ts` にはさらに `getBaseSeed()` / `getMtSeed()` も定義されているが、これらはカラム定義側には伝播していない。
+
+当面の方針: 現状はすべて同一実装のため動作上の問題はない。`src/lib/seed-origin-helpers.ts` 等の共通モジュールへの抽出はフロントエンドリファクタリングのタイミングで対応する。
+
+## 2026-03-11: `Base Seed` と `LCG Seed` の呼称不統一
+
+現状: 同一の概念（`LcgSeed` 型 / `base_seed` フィールド）に対して UI 内で2つの呼称が混在している。
+
+| 呼称 | 使用箇所 |
+|------|----------|
+| `LCG Seed` | Seed 入力フォーム系（i18n キー `sLdnxh`、`xHRBig`、`wFBYpK` など）|
+| `Base Seed` | 検索結果テーブル・CSV エクスポートヘッダー（plain string、非翻訳）|
+
+観察: Rust 型名は `LcgSeed`、フィールド名は `base_seed`。TS 型定義（`wasm_pkg.d.ts`）も `LcgSeed = bigint` / `base_seed: LcgSeed`。i18n 翻訳ファイルには `LCG Seed` として登録されているが、結果テーブルのカラムヘッダーは翻訳を通さず `'Base Seed'` のまま表示している。ユーザ向けには `LCG Seed` に統一する方が型名・翻訳ファイルとの整合性が高い。
+
+当面の方針: 本仕様（local_100）では既存の `datetime-search` パターンに揃えて `'Base Seed'` を採用する。統一するならば全結果テーブルと CSV エクスポートヘッダーの一括変更が必要であり、別途仕様化する。
+
 ## 2026-02-25: フォームコンポーネントの onChange シグネチャ不統一
 
 現状: `src/components/forms/` 配下のコンポーネントで、`undefined` を返しうる `onChange` コールバックのシグネチャが2パターン混在している。

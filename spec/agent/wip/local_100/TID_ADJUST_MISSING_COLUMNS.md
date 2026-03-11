@@ -66,18 +66,6 @@ TID 調整の検索結果には現在 6 カラム（日時、Timer0、VCount、T
 | Export header | `Key` | `Base Seed` | CSV ヘッダーは英語固定（既存方針） |
 | Cell style | なし | `font-mono text-xs` | `datetime-search` の `baseSeed` カラムと同一 |
 
-### 3.2 `getStartup()` の重複について
-
-`getStartup(origin: SeedOrigin)` ヘルパーは現時点で以下 5 箇所にローカル定義が存在する:
-
-1. `src/features/tid-adjust/components/trainer-info-columns.tsx`
-2. `src/features/datetime-search/components/seed-origin-columns.tsx`
-3. `src/features/egg-search/components/egg-result-columns.tsx`
-4. `src/features/needle/components/needle-result-columns.tsx`
-5. `src/services/export-columns.ts`
-
-本仕様では既存の `trainer-info-columns.tsx` 内のローカル定義と `export-columns.ts` 内のローカル定義をそのまま利用する。共通ユーティリティへの抽出は本仕様のスコープ外とし、別途リファクタリングで対応する。
-
 ## 4. 実装仕様
 
 ### 4.1 テーブル列定義の変更
