@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/niart120/5genSearch-web/compare/v1.1.0...v1.2.0) (2026-03-11)
+
+
+### Features
+
+* **tid-adjust:** key・base seed カラムをテーブルとエクスポートに追加 ([#117](https://github.com/niart120/5genSearch-web/issues/117)) ([577e86b](https://github.com/niart120/5genSearch-web/commit/577e86bbfcf09ed6689b8de04ef54e331f08425c))
+
 ## [1.1.0](https://github.com/niart120/5genSearch-web/compare/v1.0.1...v1.1.0) (2026-02-24)
 
 
