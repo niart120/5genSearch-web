@@ -54,11 +54,37 @@ TID 調整の検索結果には現在 6 カラム（日時、Timer0、VCount、T
   - Base Seed は末尾に配置（テーブル幅を圧迫しないよう右端に寄せる）
 - CSV エクスポートのカラム順序もテーブルと一致させる
 
+### 3.1 カラム名称の一貫性
+
+追加する 2 カラムの ID・ヘッダー・i18n 方式・スタイルは `datetime-search` と同一パターンに揃える。
+
+| 属性 | Key カラム | Base Seed カラム | 根拠（`datetime-search` 側の定義） |
+|------|-----------|-----------------|----------------------------------|
+| Column ID | `key` | `baseSeed` | `seed-origin-columns.tsx` と同一 |
+| Header | `t\`Key\`` | `'Base Seed'`（plain string） | `Key` は i18n 対象、`Base Seed` は技術用語で非翻訳。既存と同一 |
+| Export key | `key_input` | `base_seed` | `export-columns.ts` の `datetime-search` セクションと同一 |
+| Export header | `Key` | `Base Seed` | CSV ヘッダーは英語固定（既存方針） |
+| Cell style | なし | `font-mono text-xs` | `datetime-search` の `baseSeed` カラムと同一 |
+
+### 3.2 `getStartup()` の重複について
+
+`getStartup(origin: SeedOrigin)` ヘルパーは現時点で以下 5 箇所にローカル定義が存在する:
+
+1. `src/features/tid-adjust/components/trainer-info-columns.tsx`
+2. `src/features/datetime-search/components/seed-origin-columns.tsx`
+3. `src/features/egg-search/components/egg-result-columns.tsx`
+4. `src/features/needle/components/needle-result-columns.tsx`
+5. `src/services/export-columns.ts`
+
+本仕様では既存の `trainer-info-columns.tsx` 内のローカル定義と `export-columns.ts` 内のローカル定義をそのまま利用する。共通ユーティリティへの抽出は本仕様のスコープ外とし、別途リファクタリングで対応する。
+
 ## 4. 実装仕様
 
 ### 4.1 テーブル列定義の変更
 
 `src/features/tid-adjust/components/trainer-info-columns.tsx` に以下の 2 カラムを追加する。
+
+`datetime-search` の `seed-origin-columns.tsx` では Base Seed カラムに `SeedIvTooltip`（個体値ツールチップ）を付与しているが、TID 調整は個体値を扱わないためツールチップは不要。単純な `font-mono text-xs` 表示のみとする。
 
 ```typescript
 import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyCode } from '@/lib/format';
