@@ -183,14 +183,14 @@ import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyCode } from '
 
 ## 6. 実装チェックリスト
 
-- [ ] `trainer-info-columns.tsx` に `Key` カラムを追加
-- [ ] `trainer-info-columns.tsx` に `Base Seed` カラムを追加（`SeedIvTooltip` 付き）
-- [ ] `trainer-info-columns.tsx` の関数シグネチャに `contexts: IvTooltipContext[]` を追加
-- [ ] `trainer-info-columns.tsx` の import に `toBigintHex`、`formatKeyCode`、`SeedIvTooltip`、`IvTooltipContext`、`lcg_seed_to_mt_seed` を追加
-- [ ] `tid-adjust-page.tsx` の `createTrainerInfoColumns()` 呼び出しに `getStandardContexts(dsConfig.version)` を渡すよう修正
-- [ ] `export-columns.ts` の `createTidAdjustExportColumns()` に `key_input` を追加
-- [ ] `export-columns.ts` の `createTidAdjustExportColumns()` に `base_seed` を追加
-- [ ] `export-columns.ts` の import に不足があれば追加
-- [ ] ユニットテスト追加・実行
-- [ ] 翻訳ファイルの更新（必要な場合）
+- [x] `trainer-info-columns.tsx` に `Key` カラムを追加
+- [x] `trainer-info-columns.tsx` に `Base Seed` カラムを追加（`SeedIvTooltip` 付き）
+- [x] `trainer-info-columns.tsx` の関数シグネチャに `contexts: IvTooltipContext[]` を追加
+- [x] `trainer-info-columns.tsx` の import に `toBigintHex`、`formatKeyCode`、`SeedIvTooltip`、`IvTooltipContext`、`lcg_seed_to_mt_seed` を追加
+- [x] `tid-adjust-page.tsx` の `createTrainerInfoColumns()` 呼び出しに `getStandardContexts(dsConfig.version)` を渡すよう修正
+- [x] `export-columns.ts` の `createTidAdjustExportColumns()` に `key_input` を追加
+- [x] `export-columns.ts` の `createTidAdjustExportColumns()` に `base_seed` を追加
+- [x] `export-columns.ts` の import に不足があれば追加
+- [x] ユニットテスト追加・実行
+- [x] 翻訳ファイルの更新（必要な場合）
 - [ ] 手動動作確認（テーブル表示・CSV エクスポート）
