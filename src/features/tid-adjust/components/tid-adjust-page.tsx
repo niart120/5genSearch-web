@@ -21,6 +21,7 @@ import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useExport } from '@/hooks/use-export';
+import { getStandardContexts } from '@/lib/iv-tooltip';
 import { createTidAdjustExportColumns } from '@/services/export-columns';
 import { estimateTidAdjustResults, countKeyCombinations } from '@/services/search-estimation';
 import { TidAdjustForm } from './tid-adjust-form';
@@ -97,7 +98,10 @@ function TidAdjustPage(): ReactElement {
   );
 
   // 列定義
-  const columns = useMemo(() => createTrainerInfoColumns(), []);
+  const columns = useMemo(
+    () => createTrainerInfoColumns(getStandardContexts(dsConfig.version)),
+    [dsConfig.version]
+  );
 
   // エクスポート
   const exportColumns = useMemo(() => createTidAdjustExportColumns(), []);

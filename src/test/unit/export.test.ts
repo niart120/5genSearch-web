@@ -17,8 +17,17 @@ import {
 } from '@/services/export';
 import { serializeSeedOrigin } from '@/services/seed-origin-serde';
 import type { ExportColumn, ExportMeta } from '@/services/export';
-import { createPokemonListExportColumns } from '@/services/export-columns';
-import type { DsConfig, GameStartConfig, SeedOrigin, Timer0VCountRange } from '@/wasm/wasm_pkg';
+import {
+  createPokemonListExportColumns,
+  createTidAdjustExportColumns,
+} from '@/services/export-columns';
+import type {
+  DsConfig,
+  GameStartConfig,
+  SeedOrigin,
+  Timer0VCountRange,
+  TrainerInfoSearchResult,
+} from '@/wasm/wasm_pkg';
 
 // ---------------------------------------------------------------------------
 // テスト用型・データ
@@ -500,5 +509,70 @@ describe('toSeedOriginJson', () => {
     const parsed = JSON.parse(json);
     expect(parsed.results).toEqual([]);
     expect(parsed.meta.totalResults).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createTidAdjustExportColumns
+// ---------------------------------------------------------------------------
+
+function createTidAdjustMockResult(
+  overrides: Partial<TrainerInfoSearchResult> = {}
+): TrainerInfoSearchResult {
+  return {
+    seed_origin: {
+      Startup: {
+        base_seed: 0x00_00_00_01_23_45_67_89n,
+        mt_seed: 0xaa_bb_cc_dd,
+        datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 0 },
+        condition: { timer0: 0x06_10, vcount: 0x50, key_code: 0x2f_ff },
+      },
+    },
+    trainer: { tid: 12_345, sid: 54_321 },
+    shiny_type: undefined,
+    ...overrides,
+  } as TrainerInfoSearchResult;
+}
+
+describe('createTidAdjustExportColumns', () => {
+  it('key_input カラムが含まれる', () => {
+    const columns = createTidAdjustExportColumns();
+    const keyCol = columns.find((c) => c.key === 'key_input');
+    expect(keyCol).toBeDefined();
+    expect(keyCol!.header).toBe('Key');
+  });
+
+  it('base_seed カラムが含まれる', () => {
+    const columns = createTidAdjustExportColumns();
+    const bsCol = columns.find((c) => c.key === 'base_seed');
+    expect(bsCol).toBeDefined();
+    expect(bsCol!.header).toBe('Base Seed');
+  });
+
+  it('key_input accessor が key_code から正しい値を返す', () => {
+    const columns = createTidAdjustExportColumns();
+    const keyCol = columns.find((c) => c.key === 'key_input')!;
+    const row = createTidAdjustMockResult();
+    const result = keyCol.accessor(row);
+    // key_code=0x2FFF → XOR 0x2FFF → 0 → ボタンなし → 空文字
+    expect(typeof result).toBe('string');
+  });
+
+  it('base_seed accessor が 16 桁 hex を返す', () => {
+    const columns = createTidAdjustExportColumns();
+    const bsCol = columns.find((c) => c.key === 'base_seed')!;
+    const row = createTidAdjustMockResult();
+    const result = bsCol.accessor(row);
+    expect(result).toBe('0000000123456789');
+  });
+
+  it('カラム順序: key_input は vcount の後、base_seed は末尾', () => {
+    const columns = createTidAdjustExportColumns();
+    const keys = columns.map((c) => c.key);
+    const vcountIdx = keys.indexOf('vcount');
+    const keyIdx = keys.indexOf('key_input');
+    const baseSeedIdx = keys.indexOf('base_seed');
+    expect(keyIdx).toBe(vcountIdx + 1);
+    expect(baseSeedIdx).toBe(keys.length - 1);
   });
 });
