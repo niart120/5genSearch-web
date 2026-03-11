@@ -72,6 +72,14 @@
   - `feat` / `fix` / `docs` / `style` / `refactor` / `perf` / `test` / `build` / `ci` / `chore` / `revert`
 - subject は日本語で記述・末尾句点なし
 
+### type の選択基準
+
+- 変更の動機 (Why) に基づいて type を選択する。変更の形式 (What) ではない
+  - バグ報告・不具合への対応 → `fix` (たとえ実装上はカラム追加等の「追加」であっても)
+  - ユーザ要望・企画起点の新機能 → `feat`
+- type は release-please のバージョン自動判定に直結する (`feat` → minor, `fix` → patch)
+  - 意図しないバージョン bump を防ぐため、マージ前に prefix の妥当性を確認すること
+
 ## シェルの前提
 
 - コマンド例は **PowerShell（pwsh）構文**で書くこと。
