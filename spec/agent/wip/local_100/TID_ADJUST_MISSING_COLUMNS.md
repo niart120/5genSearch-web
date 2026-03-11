@@ -39,7 +39,8 @@ TID 調整の検索結果には現在 6 カラム（日時、Timer0、VCount、T
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `src/features/tid-adjust/components/trainer-info-columns.tsx` | 修正 | `Key` カラムと `Base Seed` カラムを追加 |
+| `src/features/tid-adjust/components/trainer-info-columns.tsx` | 修正 | `Key` カラムと `Base Seed` カラムを追加。引数に `contexts: IvTooltipContext[]` を追加 |
+| `src/features/tid-adjust/components/tid-adjust-page.tsx` | 修正 | `createTrainerInfoColumns()` の呼び出しに `getStandardContexts(dsConfig.version)` を渡す |
 | `src/services/export-columns.ts` | 修正 | `createTidAdjustExportColumns()` に `key_input` と `base_seed` を追加 |
 | `src/i18n/locales/en.po` | 修正 | 新規翻訳キーがあれば追加（既存の `Key` を再利用するため不要の可能性あり） |
 | `src/i18n/locales/ja.po` | 修正 | 同上 |
@@ -72,10 +73,18 @@ TID 調整の検索結果には現在 6 カラム（日時、Timer0、VCount、T
 
 `src/features/tid-adjust/components/trainer-info-columns.tsx` に以下の 2 カラムを追加する。
 
-`datetime-search` の `seed-origin-columns.tsx` では Base Seed カラムに `SeedIvTooltip`（個体値ツールチップ）を付与しているが、TID 調整は個体値を扱わないためツールチップは不要。単純な `font-mono text-xs` 表示のみとする。
+Base Seed カラムには `datetime-search` と同様に `SeedIvTooltip` を付与する。これにより、Base Seed を起点とした個体値確認がホバーで行える。
+
+`createTrainerInfoColumns()` の引数に `contexts: IvTooltipContext[]` を追加し、呼び出し元の `tid-adjust-page.tsx` では `getStandardContexts(dsConfig.version)` から生成して渡す。
 
 ```typescript
 import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyCode } from '@/lib/format';
+import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
+import type { IvTooltipContext } from '@/lib/iv-tooltip';
+import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
+
+// 関数シグネチャ変更
+export function createTrainerInfoColumns(contexts: IvTooltipContext[]) {
 
 // VCount カラムの後に追加
 columnHelper.accessor(
@@ -100,9 +109,30 @@ columnHelper.accessor(
     id: 'baseSeed',
     header: () => 'Base Seed',
     size: 160,
-    cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+    cell: (info) => {
+      const s = getStartup(info.row.original.seed_origin);
+      if (!s) return <span className="font-mono text-xs">{info.getValue()}</span>;
+      const mtSeed = lcg_seed_to_mt_seed(s.base_seed);
+      return (
+        <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+          <span className="font-mono text-xs">{info.getValue()}</span>
+        </SeedIvTooltip>
+      );
+    },
   }
 ),
+```
+
+呼び出し元 `tid-adjust-page.tsx` の変更:
+
+```typescript
+import { getStandardContexts } from '@/lib/iv-tooltip';
+
+// useMemo 内で version を参照して contexts を生成
+const columns = useMemo(
+  () => createTrainerInfoColumns(getStandardContexts(dsConfig.version)),
+  [dsConfig.version]
+);
 ```
 
 ### 4.2 エクスポート列定義の変更
@@ -154,8 +184,10 @@ import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyCode } from '
 ## 6. 実装チェックリスト
 
 - [ ] `trainer-info-columns.tsx` に `Key` カラムを追加
-- [ ] `trainer-info-columns.tsx` に `Base Seed` カラムを追加
-- [ ] `trainer-info-columns.tsx` の import に `toBigintHex`、`formatKeyCode` を追加
+- [ ] `trainer-info-columns.tsx` に `Base Seed` カラムを追加（`SeedIvTooltip` 付き）
+- [ ] `trainer-info-columns.tsx` の関数シグネチャに `contexts: IvTooltipContext[]` を追加
+- [ ] `trainer-info-columns.tsx` の import に `toBigintHex`、`formatKeyCode`、`SeedIvTooltip`、`IvTooltipContext`、`lcg_seed_to_mt_seed` を追加
+- [ ] `tid-adjust-page.tsx` の `createTrainerInfoColumns()` 呼び出しに `getStandardContexts(dsConfig.version)` を渡すよう修正
 - [ ] `export-columns.ts` の `createTidAdjustExportColumns()` に `key_input` を追加
 - [ ] `export-columns.ts` の `createTidAdjustExportColumns()` に `base_seed` を追加
 - [ ] `export-columns.ts` の import に不足があれば追加
