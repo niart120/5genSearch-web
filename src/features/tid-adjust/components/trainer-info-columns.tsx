@@ -4,8 +4,11 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
-import { toHex, formatDatetime, formatShiny } from '@/lib/format';
+import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyCode } from '@/lib/format';
+import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
+import type { IvTooltipContext } from '@/lib/iv-tooltip';
 import type { TrainerInfoSearchResult, SeedOrigin } from '@/wasm/wasm_pkg.js';
+import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
 
 /** Startup バリアントのアクセサヘルパー */
 function getStartup(origin: SeedOrigin) {
@@ -15,7 +18,7 @@ function getStartup(origin: SeedOrigin) {
 
 const columnHelper = createColumnHelper<TrainerInfoSearchResult>();
 
-export function createTrainerInfoColumns() {
+export function createTrainerInfoColumns(contexts: IvTooltipContext[]) {
   return [
     columnHelper.accessor(
       (row) => {
@@ -52,6 +55,17 @@ export function createTrainerInfoColumns() {
         cell: (info) => <span className="font-mono">{info.getValue()}</span>,
       }
     ),
+    columnHelper.accessor(
+      (row) => {
+        const s = getStartup(row.seed_origin);
+        return s ? formatKeyCode(s.condition.key_code) : '';
+      },
+      {
+        id: 'key',
+        header: () => t`Key`,
+        size: 100,
+      }
+    ),
     columnHelper.accessor((row) => row.trainer.tid, {
       id: 'tid',
       header: () => 'TID',
@@ -67,5 +81,26 @@ export function createTrainerInfoColumns() {
       header: () => t`Shiny`,
       size: 50,
     }),
+    columnHelper.accessor(
+      (row) => {
+        const s = getStartup(row.seed_origin);
+        return s ? toBigintHex(s.base_seed, 16) : '';
+      },
+      {
+        id: 'baseSeed',
+        header: () => 'Base Seed',
+        size: 160,
+        cell: (info) => {
+          const s = getStartup(info.row.original.seed_origin);
+          if (!s) return <span className="font-mono text-xs">{info.getValue()}</span>;
+          const mtSeed = lcg_seed_to_mt_seed(s.base_seed);
+          return (
+            <SeedIvTooltip mtSeed={mtSeed} contexts={contexts}>
+              <span className="font-mono text-xs">{info.getValue()}</span>
+            </SeedIvTooltip>
+          );
+        },
+      }
+    ),
   ];
 }

@@ -413,12 +413,28 @@ function createTidAdjustExportColumns(): ExportColumn<TrainerInfoSearchResult>[]
         return s ? toHex(s.condition.vcount, 2) : '';
       },
     },
+    {
+      key: 'key_input',
+      header: 'Key',
+      accessor: (r) => {
+        const s = getStartup(r.seed_origin);
+        return s ? formatKeyCode(s.condition.key_code) : '';
+      },
+    },
     { key: 'tid', header: 'TID', accessor: (r) => String(r.trainer.tid) },
     { key: 'sid', header: 'SID', accessor: (r) => String(r.trainer.sid) },
     {
       key: 'shiny',
       header: 'Shiny',
       accessor: (r) => (r.shiny_type ? formatShiny(r.shiny_type) : ''),
+    },
+    {
+      key: 'base_seed',
+      header: 'Base Seed',
+      accessor: (r) => {
+        const s = getStartup(r.seed_origin);
+        return s ? toBigintHex(s.base_seed, 16) : '';
+      },
     },
   ];
 }
