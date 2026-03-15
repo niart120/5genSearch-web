@@ -269,7 +269,12 @@ async function checkGpuDeviceAvailable(): Promise<boolean> {
 
 const hasWebGpuApi = typeof navigator !== 'undefined' && 'gpu' in navigator;
 
-describe('MtseedDatetimeSearch: GPU vs CPU 100年全探索比較', () => {
+// CI 環境または重いテストを明示的に有効化していない場合はスキップ。
+// ローカルで実行する場合は環境変数 RUN_HEAVY_TESTS=1 を設定する:
+//   RUN_HEAVY_TESTS=1 pnpm test:run -- gpu-cpu-mtseed-comparison
+const isHeavyTestEnabled = import.meta.env['RUN_HEAVY_TESTS'] === '1';
+
+describe.skipIf(!isHeavyTestEnabled)('MtseedDatetimeSearch: GPU vs CPU 100年全探索比較', () => {
   let gpuDeviceAvailable = false;
   let cpuResults: NormalizedResult[] | undefined;
   let gpuResults: NormalizedResult[] | undefined;
