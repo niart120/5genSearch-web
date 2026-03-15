@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/niart120/5genSearch-web/compare/v1.2.0...v1.2.1) (2026-03-15)
+
+
+### Bug Fixes
+
+* gpu vs cpu mtseed datetime search の比較テスト追加 ([#119](https://github.com/niart120/5genSearch-web/issues/119)) ([ea7d132](https://github.com/niart120/5genSearch-web/commit/ea7d132e4a156aa0057382ee37fef8d7ba8a5d1b))
+
 ## [1.2.0](https://github.com/niart120/5genSearch-web/compare/v1.1.0...v1.2.0) (2026-03-11)
 
 
