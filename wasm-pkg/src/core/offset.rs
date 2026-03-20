@@ -107,13 +107,15 @@ fn extra_process(lcg: &mut Lcg64) -> u32 {
 /// BW `NewGame` の TID/SID 決定直前まで LCG を進める
 ///
 /// - `WithSave`: PT(2) → Rand(2)
-/// - `NoSave`:   PT(3) → Rand(2)
+/// - `NoSave`:   PT(2) → Rand(1) → PT(1) → Rand(2)
 fn bw_new_game_before_tid_sid(lcg: &mut Lcg64, save: SavePresence) -> u32 {
-    let pt_count = match save {
-        SavePresence::WithSave => 2,
-        SavePresence::NoSave => 3,
-    };
-    let mut advances = probability_table_multiple(lcg, pt_count);
+    // 共通: PT(2)
+    let mut advances = probability_table_multiple(lcg, 2);
+    // NoSave: セーブ未検出時の追加初期化 Rand(1) → PT(1)
+    if save == SavePresence::NoSave {
+        advances += consume_random(lcg, 1);
+        advances += probability_table_process(lcg);
+    }
     // チラーミィ PID + ID
     advances += consume_random(lcg, 2);
     advances
@@ -312,6 +314,52 @@ pub fn calculate_trainer_info(
 mod tests {
     use super::*;
     use crate::types::ShinyCharmState;
+
+    // ===== 実機検証データに基づくテスト =====
+    // Source: https://milk4724.hatenablog.com/entry/20260314/00000000
+    // BW1 White, NewGame, NoSave, New3DS 環境での実機 TID 出力
+
+    #[test]
+    fn test_blog_bw1_new_game_no_save_tid_case2_match() {
+        // 事例②: 実機 TID と一致したケース
+        let seed = LcgSeed::new(0x732A_6956_1D8A_4759);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
+        };
+        let trainer = calculate_trainer_info(seed, RomVersion::White, config).unwrap();
+        assert_eq!(trainer.tid, 53774, "事例② 実機TID=53774 と一致すべき");
+    }
+
+    #[test]
+    fn test_blog_bw1_new_game_no_save_tid_case3() {
+        // 事例③: 実機 TID=4219, ツール計算=10266 (ずれ)
+        let seed = LcgSeed::new(0x4A26_3601_12FA_8697);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
+        };
+        let trainer = calculate_trainer_info(seed, RomVersion::White, config).unwrap();
+        assert_eq!(trainer.tid, 4219, "事例③ 実機TID=4219 と一致すべき");
+    }
+
+    #[test]
+    fn test_blog_bw1_new_game_no_save_tid_case4() {
+        // 事例④: 実機 TID=20020, ツール計算=37174 (ずれ)
+        let seed = LcgSeed::new(0x9DEB_7BCC_6ABA_562A);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
+        };
+        let trainer = calculate_trainer_info(seed, RomVersion::White, config).unwrap();
+        assert_eq!(trainer.tid, 20020, "事例④ 実機TID=20020 と一致すべき");
+    }
 
     // ===== 元実装との互換性テスト =====
     // 元実装: https://github.com/niart120/pokemon-gen5-initseed
@@ -513,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_bw_new_game_no_save_tid_sid() {
-        // 元実装互換性テスト
+        // BW1 NoSave: PT(2) + Rand(1) + PT(1) + Rand(2) → TID/SID
         let seed = LcgSeed::new(0x96FD_2CBD_8A22_63A3);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
@@ -522,8 +570,8 @@ mod tests {
             shiny_charm: ShinyCharmState::NotObtained,
         };
         let trainer = calculate_trainer_info(seed, RomVersion::Black, config).unwrap();
-        assert_eq!(trainer.tid, 42267);
-        assert_eq!(trainer.sid, 29515);
+        assert_eq!(trainer.tid, 28363);
+        assert_eq!(trainer.sid, 18153);
     }
 
     #[test]
