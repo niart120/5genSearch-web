@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/niart120/5genSearch-web/compare/v1.2.1...v1.2.2) (2026-03-21)
+
+
+### Bug Fixes
+
+* **doc:** correct formatting of seed value in TID calculation table ([bcefd4e](https://github.com/niart120/5genSearch-web/commit/bcefd4e0a204cff8e71f87cc9a749dda0bc36772))
+* **wasm:** bw1 NewGame NoSave のオフセット計算を仮説B (Rand(1)+PT(3)+Rand(2)) に修正 ([#123](https://github.com/niart120/5genSearch-web/issues/123)) ([d41d8ec](https://github.com/niart120/5genSearch-web/commit/d41d8ecfb49ffafcffda8bea3448e8b468cae716))
+
 ## [1.2.1](https://github.com/niart120/5genSearch-web/compare/v1.2.0...v1.2.1) (2026-03-20)
 
 
