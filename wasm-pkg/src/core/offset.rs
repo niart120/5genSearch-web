@@ -107,15 +107,15 @@ fn extra_process(lcg: &mut Lcg64) -> u32 {
 /// BW `NewGame` の TID/SID 決定直前まで LCG を進める
 ///
 /// - `WithSave`: PT(2) → Rand(2)
-/// - `NoSave`:   PT(2) → Rand(1) → PT(1) → Rand(2)
+/// - `NoSave`:   Rand(1) → PT(3) → Rand(2)
 fn bw_new_game_before_tid_sid(lcg: &mut Lcg64, save: SavePresence) -> u32 {
-    // 共通: PT(2)
-    let mut advances = probability_table_multiple(lcg, 2);
-    // NoSave: セーブ未検出時の追加初期化 Rand(1) → PT(1)
-    if save == SavePresence::NoSave {
-        advances += consume_random(lcg, 1);
-        advances += probability_table_process(lcg);
-    }
+    let mut advances = match save {
+        SavePresence::WithSave => probability_table_multiple(lcg, 2),
+        SavePresence::NoSave => {
+            let a = consume_random(lcg, 1);
+            a + probability_table_multiple(lcg, 3)
+        }
+    };
     // チラーミィ PID + ID
     advances += consume_random(lcg, 2);
     advances
@@ -561,7 +561,8 @@ mod tests {
 
     #[test]
     fn test_bw_new_game_no_save_tid_sid() {
-        // BW1 NoSave: PT(2) + Rand(1) + PT(1) + Rand(2) → TID/SID
+        // BW1 NoSave: Rand(1) + PT(3) + Rand(2) → TID/SID
+        // 実機未検証 seed — アルゴリズム変更時の回帰確認用
         let seed = LcgSeed::new(0x96FD_2CBD_8A22_63A3);
         let config = GameStartConfig {
             start_mode: StartMode::NewGame,
@@ -570,8 +571,8 @@ mod tests {
             shiny_charm: ShinyCharmState::NotObtained,
         };
         let trainer = calculate_trainer_info(seed, RomVersion::Black, config).unwrap();
-        assert_eq!(trainer.tid, 28363);
-        assert_eq!(trainer.sid, 18153);
+        assert_eq!(trainer.tid, 42267);
+        assert_eq!(trainer.sid, 29515);
     }
 
     #[test]
@@ -587,5 +588,19 @@ mod tests {
         let trainer = calculate_trainer_info(seed, RomVersion::Black2, config).unwrap();
         assert_eq!(trainer.tid, 910);
         assert_eq!(trainer.sid, 42056);
+    }
+
+    #[test]
+    fn test_report_bw1_new_game_no_save_tid_seed_40d3() {
+        // 追加報告: 実機 TID=54363, Version=Black1, NoSave
+        let seed = LcgSeed::new(0x40D3_1D93_0731_647C);
+        let config = GameStartConfig {
+            start_mode: StartMode::NewGame,
+            save: SavePresence::NoSave,
+            memory_link: MemoryLinkState::Disabled,
+            shiny_charm: ShinyCharmState::NotObtained,
+        };
+        let trainer = calculate_trainer_info(seed, RomVersion::Black, config).unwrap();
+        assert_eq!(trainer.tid, 54363, "実機TID=54363 と一致すべき");
     }
 }
