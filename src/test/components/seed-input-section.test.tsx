@@ -111,7 +111,7 @@ const STARTUP_ORIGINS: SeedOrigin[] = [
       base_seed: 0x11n,
       mt_seed: 0x11,
       datetime: { year: 2025, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
-      condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0 },
+      condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
     },
   },
 ];
@@ -208,7 +208,7 @@ describe('SeedInputSection', () => {
           base_seed: 0x01_23_45_67_89_ab_cd_efn,
           mt_seed: 0x89_ab_cd_ef,
           datetime: { year: 2025, month: 1, day: 5, hour: 12, minute: 0, second: 0 },
-          condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
         },
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
@@ -237,7 +237,7 @@ describe('SeedInputSection', () => {
             base_seed: 0x01_23_45_67_89_ab_cd_efn,
             mt_seed: 0x89_ab_cd_ef,
             datetime: { year: 2025, month: 1, day: 5, hour: 12, minute: 0, second: 0 },
-            condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+            condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
           },
         },
       ];
@@ -248,7 +248,7 @@ describe('SeedInputSection', () => {
           base_seed: 0x01_23_45_67_89_ab_cd_efn,
           mt_seed: 0x89_ab_cd_ef,
           datetime: { year: 2025, month: 1, day: 5, hour: 12, minute: 0, second: 0 },
-          condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
         },
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);

@@ -1,7 +1,7 @@
 //! GPU 起動時刻検索イテレータ
 //!
 //! `AsyncIterator` パターンで GPU 検索を実行する。
-//! 複数の `StartupCondition` (`Timer0` × `VCount` × `KeyCode`) を順次処理し、
+//! 複数の `StartupCondition` (`Timer0` × `VCount` × `KeyMask`) を順次処理し、
 //! 全体の進捗を統合して報告する。
 
 use serde::{Deserialize, Serialize};
@@ -41,7 +41,7 @@ pub struct GpuSearchBatch {
 /// `next()` を呼び出すたびに最適バッチサイズで GPU ディスパッチを実行し、
 /// 結果・進捗・スループットを返す。
 ///
-/// 複数の `StartupCondition` (`Timer0` × `VCount` × `KeyCode`) を順次処理し、
+/// 複数の `StartupCondition` (`Timer0` × `VCount` × `KeyMask`) を順次処理し、
 /// 全体の進捗を統合して報告する。
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct GpuDatetimeSearchIterator {
@@ -378,7 +378,7 @@ mod tests {
     /// - Region: JPN
     /// - Timer0: `0x0C79`
     /// - `VCount`: `0x60`
-    /// - `KeyCode`: `0x2FFF`
+    /// - `KeyMask`: `0x0000`
     #[test]
     fn test_gpu_search_finds_known_mtseed() {
         // CPU テストと同じパラメータ

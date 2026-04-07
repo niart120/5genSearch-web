@@ -30,7 +30,7 @@ pub use types::{
     EggFilter, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
     EncounterType, EverstonePlan, GameStartConfig, GenderRatio, GeneratedEggData,
     GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
-    ItemContent, IvFilter, Ivs, KeyCode, KeyInput, KeySpec, LcgSeed, LeadAbilityEffect,
+    ItemContent, IvFilter, Ivs, KeyInput, KeyMask, KeySpec, LcgSeed, LeadAbilityEffect,
     MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed,
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch,
     MtseedSearchContext, MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,

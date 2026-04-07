@@ -31,7 +31,7 @@ const STARTUP_ORIGIN: SeedOrigin = {
     base_seed: 0x01_23_45_67_89_ab_cd_efn,
     mt_seed: 0x89_ab_cd_ef,
     datetime: { year: 2025, month: 1, day: 5, hour: 9, minute: 3, second: 7 },
-    condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+    condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
   },
 };
 
@@ -135,6 +135,6 @@ describe('SeedOriginTable', () => {
 
     // Seed 行の Startup 専用カラムは '-' が表示される
     const cells = screen.getAllByText('-');
-    expect(cells.length).toBeGreaterThanOrEqual(4); // datetime, timer0, vcount, key_code
+    expect(cells.length).toBeGreaterThanOrEqual(4); // datetime, timer0, vcount, key_mask
   });
 });

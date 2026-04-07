@@ -8,7 +8,7 @@
 import {
   formatDatetime,
   formatGender,
-  formatKeyCode,
+  formatKeyMask,
   formatShiny,
   formatAbilitySlot,
   toHex,
@@ -256,10 +256,10 @@ function createDatetimeSearchExportColumns(): ExportColumn<SeedOrigin>[] {
     },
     {
       key: 'key_input',
-      header: 'Key',
+      header: 'Key input',
       accessor: (r) => {
         const s = getStartup(r);
-        return s ? formatKeyCode(s.condition.key_code) : '';
+        return s ? formatKeyMask(s.condition.key_mask) : '';
       },
     },
     {
@@ -354,7 +354,7 @@ function createEggSearchExportColumns(
       header: 'Key input',
       accessor: (r) => {
         const s = getEggStartup(r);
-        return s ? formatKeyCode(s.condition.key_code) : '';
+        return s ? formatKeyMask(s.condition.key_mask) : '';
       },
       detailOnly: true,
     },
@@ -415,10 +415,10 @@ function createTidAdjustExportColumns(): ExportColumn<TrainerInfoSearchResult>[]
     },
     {
       key: 'key_input',
-      header: 'Key',
+      header: 'Key input',
       accessor: (r) => {
         const s = getStartup(r.seed_origin);
-        return s ? formatKeyCode(s.condition.key_code) : '';
+        return s ? formatKeyMask(s.condition.key_mask) : '';
       },
     },
     { key: 'tid', header: 'TID', accessor: (r) => String(r.trainer.tid) },

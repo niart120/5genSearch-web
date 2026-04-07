@@ -60,7 +60,8 @@ mod tests {
         BaseMessageBuilder, build_date_code, build_time_code, get_frame,
     };
     use crate::core::sha1::nazo::get_nazo_values;
-    use crate::types::{DsConfig, Hardware, KeyCode, RomRegion, RomVersion};
+    use crate::types::keyinput::KeyCode;
+    use crate::types::{DsConfig, Hardware, RomRegion, RomVersion};
 
     /// 実計算値に基づくテストケース
     ///

@@ -29,7 +29,7 @@ const STARTUP_ORIGIN: SeedOrigin = {
     base_seed: 0xfe_dc_ba_98_76_54_32_10n,
     mt_seed: 0x76_54_32_10,
     datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 45 },
-    condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x00_00 },
+    condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
   },
 };
 
@@ -62,7 +62,7 @@ describe('serializeSeedOrigin', () => {
         base_seed: 'FEDCBA9876543210',
         mt_seed: 0x76_54_32_10,
         datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 45 },
-        condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x00_00 },
+        condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
       },
     });
   });
@@ -97,7 +97,7 @@ describe('deserializeSeedOrigin', () => {
         base_seed: 'FEDCBA9876543210',
         mt_seed: 0x76_54_32_10,
         datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 45 },
-        condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x00_00 },
+        condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
       },
     };
     const result = deserializeSeedOrigin(serialized);
@@ -157,7 +157,7 @@ describe('parseSerializedSeedOrigins', () => {
             base_seed: 'FEDCBA9876543210',
             mt_seed: 0x76_54_32_10,
             datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 45 },
-            condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x00_00 },
+            condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
           },
         },
       ],

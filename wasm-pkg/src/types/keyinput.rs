@@ -55,27 +55,54 @@ impl DsButton {
 ///
 /// `KeyMask` を XOR `0x2FFF` で変換した値。
 /// ゲーム内部の SHA-1 メッセージ生成で使用される。
-#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct KeyCode(pub u32);
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[repr(transparent)]
+pub(crate) struct KeyCode(pub(crate) u32);
 
+#[allow(dead_code)]
 impl KeyCode {
     /// キー入力なしの値
     pub const NONE: Self = Self(0x2FFF);
 
     /// 新しい `KeyCode` を作成
-    pub const fn new(value: u32) -> Self {
+    pub(crate) const fn new(value: u32) -> Self {
         Self(value)
     }
 
     /// 内部値を取得
-    pub const fn value(self) -> u32 {
+    pub(crate) const fn value(self) -> u32 {
         self.0
     }
 
     /// `KeyMask` から変換
     pub(crate) const fn from_mask(mask: KeyMask) -> Self {
         Self(mask.0 ^ 0x2FFF)
+    }
+}
+
+// ===== KeyMask =====
+
+/// キー入力マスク
+///
+/// ユーザーが押したキーのビットマスク。
+/// `KeyCode` との関係: `key_code = key_mask XOR 0x2FFF`
+///
+/// ビット割り当て:
+/// - bit0=A, bit1=B, bit2=Select, bit3=Start
+/// - bit4=→, bit5=←, bit6=↑, bit7=↓
+/// - bit8=R, bit9=L, bit10=X, bit11=Y
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[repr(transparent)]
+pub struct KeyMask(pub u32);
+
+impl KeyMask {
+    /// キー入力なしの値
+    pub const NONE: Self = Self(0);
+
+    /// 新しい `KeyMask` を作成
+    pub const fn new(value: u32) -> Self {
+        Self(value)
     }
 
     /// 表示用文字列に変換
@@ -84,9 +111,9 @@ impl KeyCode {
     /// A, B, X, Y, L, R, Start, Select, Up, Down, Left, Right
     ///
     /// # Examples
-    /// - `KeyCode::NONE` (ボタンなし) → `""`
-    /// - `KeyCode(0x2FFE)` (A) → `"[A]"`
-    /// - `KeyCode(0x2FF6)` (A+Start) → `"[A]+[Start]"`
+    /// - `KeyMask::NONE` (ボタンなし) → `""`
+    /// - `KeyMask(0x0001)` (A) → `"[A]"`
+    /// - `KeyMask(0x0009)` (A+Start) → `"[A]+[Start]"`
     pub fn to_display_string(self) -> String {
         /// ボタン定義 (表示順序)
         const BUTTONS: [(u32, &str); 12] = [
@@ -104,12 +131,9 @@ impl KeyCode {
             (0x0010, "Right"),
         ];
 
-        // KeyCode から KeyMask を復元: mask = key_code XOR 0x2FFF
-        let mask = self.0 ^ 0x2FFF;
-
         let pressed: Vec<&str> = BUTTONS
             .iter()
-            .filter(|(bit, _)| mask & bit != 0)
+            .filter(|(bit, _)| self.0 & bit != 0)
             .map(|(_, name)| *name)
             .collect();
 
@@ -122,27 +146,6 @@ impl KeyCode {
                 .collect::<Vec<_>>()
                 .join("+")
         }
-    }
-}
-
-// ===== KeyMask (内部使用) =====
-
-/// キー入力マスク (内部使用)
-///
-/// ユーザーが押したキーのビットマスク。
-/// `KeyCode` との関係: `key_code = key_mask XOR 0x2FFF`
-///
-/// ビット割り当て:
-/// - bit0=A, bit1=B, bit2=Select, bit3=Start
-/// - bit4=→, bit5=←, bit6=↑, bit7=↓
-/// - bit8=R, bit9=L, bit10=X, bit11=Y
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub(crate) struct KeyMask(pub u32);
-
-impl KeyMask {
-    /// 新しい `KeyMask` を作成
-    pub(crate) const fn new(value: u32) -> Self {
-        Self(value)
     }
 }
 
@@ -178,10 +181,10 @@ impl KeyInput {
         }
     }
 
-    /// `KeyCode` に変換
-    pub fn to_key_code(&self) -> KeyCode {
+    /// `KeyMask` に変換
+    pub fn to_key_mask(&self) -> KeyMask {
         let mask = self.buttons.iter().fold(0u32, |acc, b| acc | b.bit_mask());
-        KeyCode::from_mask(KeyMask::new(mask))
+        KeyMask::new(mask)
     }
 }
 
@@ -217,10 +220,10 @@ impl KeySpec {
         self.combinations().len() as u32
     }
 
-    /// 有効な全組み合わせの `KeyCode` を生成 (crate 内部用)
+    /// 有効な全組み合わせの `KeyMask` を生成
     ///
     /// 無効パターン (上下/左右同時押し、ソフトリセット) は除外される
-    pub(crate) fn combinations(&self) -> Vec<KeyCode> {
+    pub fn combinations(&self) -> Vec<KeyMask> {
         generate_key_combinations(&self.available_buttons)
     }
 }
@@ -254,10 +257,10 @@ fn is_invalid_button_combination(mask: u32) -> bool {
     has_up_down || has_left_right || has_soft_reset
 }
 
-/// ボタンリストから有効な全組み合わせの `KeyCode` を生成
+/// ボタンリストから有効な全組み合わせの `KeyMask` を生成
 ///
 /// 無効パターン (上下/左右同時押し、ソフトリセット) は除外される
-fn generate_key_combinations(buttons: &[DsButton]) -> Vec<KeyCode> {
+fn generate_key_combinations(buttons: &[DsButton]) -> Vec<KeyMask> {
     let n = buttons.len();
     let mut result = Vec::with_capacity(1 << n);
 
@@ -269,7 +272,7 @@ fn generate_key_combinations(buttons: &[DsButton]) -> Vec<KeyCode> {
             .fold(0u32, |acc, (_, b)| acc | b.bit_mask());
 
         if !is_invalid_button_combination(mask) {
-            result.push(KeyCode::from_mask(KeyMask::new(mask)));
+            result.push(KeyMask::new(mask));
         }
     }
     result
@@ -338,11 +341,11 @@ mod tests {
 
         // 上下同時押しが含まれていないことを確認
         let up_down_mask = DsButton::Up.bit_mask() | DsButton::Down.bit_mask();
-        for code in &combos {
-            let mask = code.0 ^ 0x2FFF;
+        for key_mask in &combos {
             assert!(
-                (mask & up_down_mask) != up_down_mask,
-                "上下同時押しが含まれている: {mask:#06X}"
+                (key_mask.0 & up_down_mask) != up_down_mask,
+                "上下同時押しが含まれている: {:#06X}",
+                key_mask.0
             );
         }
     }
@@ -393,37 +396,37 @@ mod tests {
 
         // 空のボタンリスト → キー入力なしの1パターンのみ
         assert_eq!(combos.len(), 1);
-        assert_eq!(combos[0], KeyCode::NONE);
+        assert_eq!(combos[0], KeyMask::NONE);
     }
 
-    // === KeyCode::to_display_string tests ===
+    // === KeyMask::to_display_string tests ===
 
     #[test]
-    fn key_code_to_display_string_none() {
+    fn key_mask_to_display_string_none() {
         // ボタンなし → 空文字列
-        assert_eq!(KeyCode::NONE.to_display_string(), "");
+        assert_eq!(KeyMask::NONE.to_display_string(), "");
     }
 
     #[test]
-    fn key_code_to_display_string_single() {
-        // A ボタンのみ: mask = 0x0001 → key_code = 0x2FFE
-        let key_code = KeyCode::new(0x2FFF ^ 0x0001);
-        assert_eq!(key_code.to_display_string(), "[A]");
+    fn key_mask_to_display_string_single() {
+        // A ボタンのみ: mask = 0x0001
+        let key_mask = KeyMask::new(0x0001);
+        assert_eq!(key_mask.to_display_string(), "[A]");
     }
 
     #[test]
-    fn key_code_to_display_string_multi() {
-        // A + Start: mask = 0x0001 | 0x0008 = 0x0009 → key_code = 0x2FF6
-        let key_code = KeyCode::new(0x2FFF ^ 0x0009);
-        assert_eq!(key_code.to_display_string(), "[A]+[Start]");
+    fn key_mask_to_display_string_multi() {
+        // A + Start: mask = 0x0001 | 0x0008 = 0x0009
+        let key_mask = KeyMask::new(0x0009);
+        assert_eq!(key_mask.to_display_string(), "[A]+[Start]");
     }
 
     #[test]
-    fn key_code_to_display_string_all_buttons() {
-        // 全ボタン押し: mask = 0x0FFF → key_code = 0x2000
-        let key_code = KeyCode::new(0x2FFF ^ 0x0FFF);
+    fn key_mask_to_display_string_all_buttons() {
+        // 全ボタン押し: mask = 0x0FFF
+        let key_mask = KeyMask::new(0x0FFF);
         assert_eq!(
-            key_code.to_display_string(),
+            key_mask.to_display_string(),
             "[A]+[B]+[X]+[Y]+[L]+[R]+[Start]+[Select]+[Up]+[Down]+[Left]+[Right]"
         );
     }

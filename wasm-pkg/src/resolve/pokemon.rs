@@ -43,7 +43,7 @@ pub fn resolve_pokemon_data(
                 Some(datetime_str),
                 Some(format!("{:04X}", condition.timer0)),
                 Some(format!("{:02X}", condition.vcount)),
-                Some(condition.key_code.to_display_string()),
+                Some(condition.key_mask.to_display_string()),
             )
         }
         SeedOrigin::Seed { .. } => (None, None, None, None),
@@ -192,7 +192,7 @@ mod tests {
     use crate::data::{calculate_stats, get_species_entry};
     use crate::types::{
         AbilitySlot, CorePokemonData, Datetime, EncounterResult, Gender, HeldItemSlot, Ivs,
-        KeyCode, LcgSeed, MtSeed, Nature, NeedleDirection, Pid, ShinyType, StartupCondition,
+        KeyMask, LcgSeed, MtSeed, Nature, NeedleDirection, Pid, ShinyType, StartupCondition,
     };
 
     fn make_test_data() -> GeneratedPokemonData {
@@ -220,7 +220,7 @@ mod tests {
                 condition: StartupCondition {
                     timer0: 0x0C80,
                     vcount: 0x5E,
-                    key_code: KeyCode::NONE,
+                    key_mask: KeyMask::NONE,
                 },
             },
             core: CorePokemonData {

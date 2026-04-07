@@ -8,7 +8,7 @@ use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::{EggDatetimeSearcher, MtseedDatetimeSearcher};
 use wasm_pkg::types::{
     AbilitySlot, DsConfig, EggGenerationParams, EverstonePlan, GameStartConfig, GenderRatio,
-    GenerationConfig, Hardware, Ivs, KeyCode, MemoryLinkState, MtSeed, RomRegion, RomVersion,
+    GenerationConfig, Hardware, Ivs, KeyMask, MemoryLinkState, MtSeed, RomRegion, RomVersion,
     SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition, TimeRangeParams,
     TrainerInfo,
 };
@@ -57,7 +57,7 @@ fn create_search_range_year(start_year: u16) -> SearchRangeParams {
 }
 
 fn create_condition() -> StartupCondition {
-    StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE)
+    StartupCondition::new(0x0C79, 0x5F, KeyMask::NONE)
 }
 
 fn create_mtseed_searcher() -> MtseedDatetimeSearcher {

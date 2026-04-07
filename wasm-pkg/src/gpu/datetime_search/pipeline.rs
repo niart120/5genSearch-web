@@ -270,7 +270,7 @@ impl SearchPipeline {
         let data7_swapped = (mac_upper ^ GX_STAT ^ u32::from(frame)).swap_bytes();
 
         // キー入力
-        let key_input_swapped = condition.key_code.0.swap_bytes();
+        let key_input_swapped = condition.key_code().0.swap_bytes();
 
         // ハードウェアタイプ
         let hardware_type = match ds.hardware {

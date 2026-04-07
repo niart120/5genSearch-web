@@ -65,7 +65,7 @@ describe('search results store', () => {
           base_seed: 0x01_23_45_67_89_ab_cd_efn,
           mt_seed: 0x89_ab_cd_ef,
           datetime: { year: 2025, month: 6, day: 1, hour: 12, minute: 0, second: 0 },
-          condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
         },
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);
@@ -127,7 +127,7 @@ describe('search results store', () => {
           base_seed: 0x01_23_45_67_89_ab_cd_efn,
           mt_seed: 0x89_ab_cd_ef,
           datetime: { year: 2025, month: 6, day: 1, hour: 12, minute: 0, second: 0 },
-          condition: { timer0: 0x06_00, vcount: 0x5e, key_code: 0x2f_ff },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
         },
       };
       useSearchResultsStore.getState().setPendingDetailOrigin(origin);

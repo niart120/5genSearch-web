@@ -150,7 +150,7 @@ impl EggDatetimeSearcher {
 /// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
 ///
 /// # Arguments
-/// - `context`: 検索コンテキスト (Timer0/VCount/KeyCode 範囲)
+/// - `context`: 検索コンテキスト (Timer0/VCount/KeyMask 範囲)
 /// - `date_range`: 日付範囲 (開始日〜終了日)
 /// - `egg_params`: 孵化生成パラメータ
 /// - `gen_config`: 生成共通設定
@@ -200,7 +200,7 @@ pub fn generate_egg_search_tasks(
 mod tests {
     use crate::types::{
         AbilitySlot, DateRangeParams, DsConfig, EggDatetimeSearchParams, EverstonePlan,
-        GameStartConfig, GenderRatio, Hardware, KeyCode, KeySpec, MemoryLinkState, RomRegion,
+        GameStartConfig, GenderRatio, Hardware, KeyMask, KeySpec, MemoryLinkState, RomRegion,
         RomVersion, SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition,
         TimeRangeParams, Timer0VCountRange, TrainerInfo,
     };
@@ -230,7 +230,7 @@ mod tests {
                 start_second_offset: 0,
                 range_seconds: 60, // Search only 60 seconds for test
             },
-            condition: StartupCondition::new(0x0C79, 0x5A, KeyCode::NONE),
+            condition: StartupCondition::new(0x0C79, 0x5A, KeyMask::NONE),
             egg_params: EggGenerationParams {
                 trainer: TrainerInfo {
                     tid: 12345,

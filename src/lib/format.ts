@@ -140,7 +140,6 @@ function formatDatetime(dt: Datetime): string {
 /**
  * ボタンビットマスク定義 (bit → 表示名、表示順固定)
  *
- * KeyCode = KeyMask XOR 0x2FFF
  * KeyMask のビット割り当て:
  *   bit0=A, bit1=B, bit2=Select, bit3=Start,
  *   bit4=→, bit5=←, bit6=↑, bit7=↓,
@@ -162,14 +161,13 @@ const KEY_BUTTONS: readonly [number, string][] = [
 ];
 
 /**
- * KeyCode からボタン名リストを逆引き
- * 例: 0x2FFF → "なし", 0x2FFE → "A", 0x2FF6 → "A + Start"
+ * KeyMask からボタン名リストを逆引き
+ * 例: 0x0000 → "なし", 0x0001 → "A", 0x0009 → "A + Start"
  */
-function formatKeyCode(keyCode: number): string {
-  const mask = keyCode ^ 0x2f_ff;
+function formatKeyMask(keyMask: number): string {
   const pressed: string[] = [];
   for (const [bit, name] of KEY_BUTTONS) {
-    if ((mask & bit) !== 0) pressed.push(name);
+    if ((keyMask & bit) !== 0) pressed.push(name);
   }
   return pressed.length === 0 ? 'なし' : pressed.join(' + ');
 }
@@ -258,8 +256,8 @@ function formatMacAddress(mac: readonly number[]): string {
 }
 
 /**
- * KeyCode (number) → DsButton[] のビットマスク逆引きテーブル
- * formatKeyCode の KEY_BUTTONS と同一のビット割り当てだが DsButton 型を返す。
+ * KeyMask (number) → DsButton[] のビットマスク逆引きテーブル
+ * formatKeyMask の KEY_BUTTONS と同一のビット割り当てだが DsButton 型を返す。
  */
 const KEY_BUTTON_MAP: readonly [number, DsButton][] = [
   [0x00_01, 'A'],
@@ -277,14 +275,13 @@ const KEY_BUTTON_MAP: readonly [number, DsButton][] = [
 ];
 
 /**
- * KeyCode を KeyInput に変換する。
- * key_code → mask (XOR 0x2FFF) → 各ビットから DsButton を逆引き。
+ * KeyMask を KeyInput に変換する。
+ * KeyMask の各ビットから DsButton を逆引き。
  */
-function keyCodeToKeyInput(keyCode: number): KeyInput {
-  const mask = keyCode ^ 0x2f_ff;
+function keyMaskToKeyInput(keyMask: number): KeyInput {
   const buttons: DsButton[] = [];
   for (const [bit, name] of KEY_BUTTON_MAP) {
-    if ((mask & bit) !== 0) buttons.push(name);
+    if ((keyMask & bit) !== 0) buttons.push(name);
   }
   return { buttons };
 }
@@ -348,13 +345,13 @@ export {
   formatThroughput,
   toHex,
   formatDatetime,
-  formatKeyCode,
+  formatKeyMask,
   formatGender,
   formatShiny,
   formatShinyDetailed,
   formatAbilitySlot,
   formatIvs,
   formatMacAddress,
-  keyCodeToKeyInput,
+  keyMaskToKeyInput,
   formatDsButtons,
 };

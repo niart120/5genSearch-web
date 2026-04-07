@@ -48,14 +48,15 @@ pub fn resolve_single_seed(input: &SeedSpec) -> Result<(LcgSeed, SeedOrigin), St
             let range = ranges.first().ok_or("Startup ranges is empty")?;
             let timer0 = range.timer0_min;
             let vcount = range.vcount_min;
-            let key_code = key_input.to_key_code();
+            let key_mask = key_input.to_key_mask();
 
             // SHA-1 計算
             let nazo = get_nazo_values(ds);
             let frame = get_frame(ds.hardware);
 
+            let condition = StartupCondition::new(timer0, vcount, key_mask);
             let mut builder =
-                BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, key_code, frame);
+                BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, condition.key_code(), frame);
 
             let date_code = build_date_code(datetime.year, datetime.month, datetime.day);
             let time_code = build_time_code(
@@ -74,11 +75,7 @@ pub fn resolve_single_seed(input: &SeedSpec) -> Result<(LcgSeed, SeedOrigin), St
 
             Ok((
                 lcg_seed,
-                SeedOrigin::startup(
-                    lcg_seed,
-                    *datetime,
-                    StartupCondition::new(timer0, vcount, key_code),
-                ),
+                SeedOrigin::startup(lcg_seed, *datetime, condition),
             ))
         }
     }
@@ -113,7 +110,7 @@ pub fn resolve_all_seeds(input: &SeedSpec) -> Result<Vec<(LcgSeed, SeedOrigin)>,
                 return Err("Startup ranges is empty".into());
             }
 
-            let key_code = key_input.to_key_code();
+            let key_mask = key_input.to_key_mask();
             let nazo = get_nazo_values(ds);
             let frame = get_frame(ds.hardware);
             let is_ds_or_lite = matches!(
@@ -133,8 +130,15 @@ pub fn resolve_all_seeds(input: &SeedSpec) -> Result<Vec<(LcgSeed, SeedOrigin)>,
             for range in ranges {
                 for timer0 in range.timer0_min..=range.timer0_max {
                     for vcount in range.vcount_min..=range.vcount_max {
-                        let mut builder =
-                            BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, key_code, frame);
+                        let condition = StartupCondition::new(timer0, vcount, key_mask);
+                        let mut builder = BaseMessageBuilder::new(
+                            &nazo,
+                            ds.mac,
+                            vcount,
+                            timer0,
+                            condition.key_code(),
+                            frame,
+                        );
                         builder.set_datetime(date_code, time_code);
 
                         let hash = calculate_pokemon_sha1(builder.message());
@@ -142,11 +146,7 @@ pub fn resolve_all_seeds(input: &SeedSpec) -> Result<Vec<(LcgSeed, SeedOrigin)>,
 
                         results.push((
                             lcg_seed,
-                            SeedOrigin::startup(
-                                lcg_seed,
-                                *datetime,
-                                StartupCondition::new(timer0, vcount, key_code),
-                            ),
+                            SeedOrigin::startup(lcg_seed, *datetime, condition),
                         ));
                     }
                 }

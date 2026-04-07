@@ -484,57 +484,57 @@ const condition = { timer0: condRaw.timer0 as number, vcount: condRaw.vcount as 
 
 ### Phase 1: Rust 側変更
 
-- [ ] `wasm-pkg/src/types/keyinput.rs`: `KeyMask` を `pub` + Tsify export に変更
-- [ ] `wasm-pkg/src/types/keyinput.rs`: `to_display_string()` を `KeyMask` に移動
-- [ ] `wasm-pkg/src/types/keyinput.rs`: `KeyCode` を `pub(crate)` に降格、Tsify 除去
-- [ ] `wasm-pkg/src/types/keyinput.rs`: `KeyInput::to_key_code()` → `to_key_mask()`
-- [ ] `wasm-pkg/src/types/keyinput.rs`: `KeySpec::combinations()` の返り値を `Vec<KeyMask>` に変更
-- [ ] `wasm-pkg/src/types/config.rs`: `StartupCondition.key_code` → `key_mask`、`key_code()` メソッド追加
-- [ ] `wasm-pkg/src/core/sha1/message.rs`: `key_code` 引数の呼び出し元を更新
-- [ ] `wasm-pkg/src/core/seed_resolver.rs`: `to_key_code()` → `to_key_mask()`、`StartupCondition::new()` 更新
-- [ ] `wasm-pkg/src/datetime_search/mod.rs`: `expand_combinations()` を `Vec<KeyMask>` に対応
-- [ ] `wasm-pkg/src/datetime_search/{base,egg,mtseed,trainer_info}.rs`: `StartupCondition` 生成箇所の更新
-- [ ] `wasm-pkg/src/resolve/{pokemon,egg}.rs`: `to_display_string()` を `key_mask` 経由に変更
-- [ ] `wasm-pkg/src/lib.rs`: `pub use` の `KeyCode` → `KeyMask` 差し替え
-- [ ] `cargo test` 通過
-- [ ] `cargo clippy --all-targets -- -D warnings` 通過
+- [x] `wasm-pkg/src/types/keyinput.rs`: `KeyMask` を `pub` + Tsify export に変更
+- [x] `wasm-pkg/src/types/keyinput.rs`: `to_display_string()` を `KeyMask` に移動
+- [x] `wasm-pkg/src/types/keyinput.rs`: `KeyCode` を `pub(crate)` に降格、Tsify 除去
+- [x] `wasm-pkg/src/types/keyinput.rs`: `KeyInput::to_key_code()` → `to_key_mask()`
+- [x] `wasm-pkg/src/types/keyinput.rs`: `KeySpec::combinations()` の返り値を `Vec<KeyMask>` に変更
+- [x] `wasm-pkg/src/types/config.rs`: `StartupCondition.key_code` → `key_mask`、`key_code()` メソッド追加
+- [x] `wasm-pkg/src/core/sha1/message.rs`: `key_code` 引数の呼び出し元を更新
+- [x] `wasm-pkg/src/core/seed_resolver.rs`: `to_key_code()` → `to_key_mask()`、`StartupCondition::new()` 更新
+- [x] `wasm-pkg/src/datetime_search/mod.rs`: `expand_combinations()` を `Vec<KeyMask>` に対応
+- [x] `wasm-pkg/src/datetime_search/{base,egg,mtseed,trainer_info}.rs`: `StartupCondition` 生成箇所の更新
+- [x] `wasm-pkg/src/resolve/{pokemon,egg}.rs`: `to_display_string()` を `key_mask` 経由に変更
+- [x] `wasm-pkg/src/lib.rs`: `pub use` の `KeyCode` → `KeyMask` 差し替え
+- [x] `cargo test` 通過
+- [x] `cargo clippy --all-targets -- -D warnings` 通過
 
 ### Phase 2: WASM ビルド & 型生成
 
-- [ ] `pnpm build:wasm` で型定義 (`wasm_pkg.d.ts`) が `KeyMask` に更新されることを確認
+- [x] `pnpm build:wasm` で型定義 (`wasm_pkg.d.ts`) が `KeyMask` に更新されることを確認
 
 ### Phase 3: TypeScript 側変更
 
-- [ ] `src/lib/format.ts`: `formatKeyCode()` → `formatKeyMask()`、XOR 除去
-- [ ] `src/lib/format.ts`: `keyCodeToKeyInput()` → `keyMaskToKeyInput()`、XOR 除去
-- [ ] `src/services/seed-origin-serde.ts`: `SerializedSeedOrigin` の `key_code` → `key_mask` + 旧形式フォールバック
-- [ ] `src/services/export-columns.ts`: `condition.key_code` → `condition.key_mask` (全箇所)
-- [ ] `src/services/export-columns.ts`: `header: 'Key'` → `header: 'Key input'` (2 箇所)
-- [ ] `src/components/forms/seed-origin-table.tsx`: `getKeyCode()` → `getKeyMask()` + `formatKeyMask()` 表示
-- [ ] `src/features/datetime-search/components/seed-origin-columns.tsx`: `key_code` → `key_mask`
-- [ ] `src/features/datetime-search/components/result-detail-dialog.tsx`: `key_code` → `key_mask`
-- [ ] `src/features/tid-adjust/components/trainer-info-columns.tsx`: `key_code` → `key_mask`
-- [ ] `src/features/egg-search/components/result-detail-dialog.tsx`: `key_code` → `key_mask`
-- [ ] `src/components/forms/seed-input-section.tsx`: `keyCodeToKeyInput()` → `keyMaskToKeyInput()`
-- [ ] `src/features/needle/components/needle-page.tsx`: `keyCodeToKeyInput()` → `keyMaskToKeyInput()`
+- [x] `src/lib/format.ts`: `formatKeyCode()` → `formatKeyMask()`、XOR 除去
+- [x] `src/lib/format.ts`: `keyCodeToKeyInput()` → `keyMaskToKeyInput()`、XOR 除去
+- [x] `src/services/seed-origin-serde.ts`: `SerializedSeedOrigin` の `key_code` → `key_mask` + 旧形式フォールバック
+- [x] `src/services/export-columns.ts`: `condition.key_code` → `condition.key_mask` (全箇所)
+- [x] `src/services/export-columns.ts`: `header: 'Key'` → `header: 'Key input'` (2 箇所)
+- [x] `src/components/forms/seed-origin-table.tsx`: `getKeyCode()` → `getKeyMask()` + `formatKeyMask()` 表示
+- [x] `src/features/datetime-search/components/seed-origin-columns.tsx`: `key_code` → `key_mask`
+- [x] `src/features/datetime-search/components/result-detail-dialog.tsx`: `key_code` → `key_mask`
+- [x] `src/features/tid-adjust/components/trainer-info-columns.tsx`: `key_code` → `key_mask`
+- [x] `src/features/egg-search/components/result-detail-dialog.tsx`: `key_code` → `key_mask`
+- [x] `src/components/forms/seed-input-section.tsx`: `keyCodeToKeyInput()` → `keyMaskToKeyInput()`
+- [x] `src/features/needle/components/needle-page.tsx`: `keyCodeToKeyInput()` → `keyMaskToKeyInput()`
 
 ### Phase 4: テスト更新
 
-- [ ] `src/test/unit/lib/format.test.ts`: `formatKeyMask` テスト、入力値を KeyMask 値に変更
-- [ ] `src/test/unit/seed-origin-serde.test.ts`: `key_mask` テスト + 旧形式フォールバックテスト
-- [ ] `src/test/integration/seed-origin-import.test.ts`: `key_code` → `key_mask`
-- [ ] `src/test/integration/wasm-binding.test.ts`: `key_code: 0x2f_ff` → `key_mask: 0x0000`
-- [ ] `src/test/integration/workers/searcher.test.ts`: `key_code` → `key_mask`
-- [ ] `src/test/integration/helpers/worker-test-utils.ts`: `key_code` → `key_mask`
-- [ ] `src/test/unit/export.test.ts`: `key_code` → `key_mask`、ヘッダー検証更新
-- [ ] `src/test/unit/stores/results.test.ts`: `key_code` → `key_mask`
-- [ ] `src/test/unit/workers/types.test.ts`: `key_code` → `key_mask`
-- [ ] `src/test/unit/pokemon-list-validation.test.ts`: `key_code` → `key_mask`
+- [x] `src/test/unit/lib/format.test.ts`: `formatKeyMask` テスト、入力値を KeyMask 値に変更
+- [x] `src/test/unit/seed-origin-serde.test.ts`: `key_mask` テスト + 旧形式フォールバックテスト
+- [x] `src/test/integration/seed-origin-import.test.ts`: 変更不要（condition 全体の等価比較で自動追従）
+- [x] `src/test/integration/wasm-binding.test.ts`: `key_code: 0x2f_ff` → `key_mask: 0`
+- [x] `src/test/integration/workers/searcher.test.ts`: `key_code` → `key_mask`
+- [x] `src/test/integration/helpers/worker-test-utils.ts`: `key_code` → `key_mask`
+- [x] `src/test/unit/export.test.ts`: `key_code` → `key_mask`、ヘッダー検証更新
+- [x] `src/test/unit/stores/results.test.ts`: `key_code` → `key_mask`
+- [x] `src/test/unit/workers/types.test.ts`: `key_code` → `key_mask`
+- [x] `src/test/unit/pokemon-list-validation.test.ts`: `key_code` → `key_mask`
 
 ### Phase 5: 検証
 
-- [ ] `pnpm exec tsc -b --noEmit` でコンパイルエラーなし
-- [ ] `pnpm lint` でエラーなし
-- [ ] `cargo fmt --check` で差分なし
-- [ ] `pnpm test:run` で既存テスト通過
-- [ ] `pnpm test:wasm` で WASM テスト通過
+- [x] `pnpm exec tsc -b --noEmit` でコンパイルエラーなし
+- [x] `pnpm lint` でエラーなし
+- [x] `cargo fmt --check` で差分なし
+- [x] `pnpm test:run` で既存テスト通過 (1393 tests)
+- [x] `pnpm test:wasm` で WASM テスト通過

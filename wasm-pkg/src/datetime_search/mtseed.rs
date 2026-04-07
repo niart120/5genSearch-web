@@ -118,7 +118,7 @@ impl MtseedDatetimeSearcher {
 /// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
 ///
 /// # Arguments
-/// - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyCode 範囲)
+/// - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyMask 範囲)
 /// - `target_seeds`: 検索対象の MT Seed
 /// - `worker_count`: Worker 数
 #[wasm_bindgen]
@@ -158,7 +158,7 @@ pub fn generate_mtseed_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, Datetime, DsButton, DsConfig, Hardware, KeyCode, KeySpec, LcgSeed,
+        DateRangeParams, Datetime, DsButton, DsConfig, Hardware, KeyMask, KeySpec, LcgSeed,
         MtseedDatetimeSearchParams, RomRegion, RomVersion, SearchRangeParams, StartupCondition,
         TimeRangeParams, Timer0VCountRange,
     };
@@ -189,7 +189,7 @@ mod tests {
                 start_second_offset: 0,
                 range_seconds: 60, // Search only 60 seconds for test
             },
-            condition: StartupCondition::new(0x0C79, 0x5A, KeyCode::NONE),
+            condition: StartupCondition::new(0x0C79, 0x5A, KeyMask::NONE),
         }
     }
 
@@ -233,7 +233,7 @@ mod tests {
     /// - MAC: `8C:56:C5:86:15:28`
     /// - Timer0: `0x0C79`
     /// - `VCount`: `0x60`
-    /// - keyCode: `0x2FFF` (入力なし)
+    /// - keyMask: `0x0000` (入力なし)
     /// - 期待 LCG Seed: `0x768360781D1CE6DD`
     #[test]
     fn test_searcher_finds_known_seed() {
@@ -266,7 +266,7 @@ mod tests {
                 start_second_offset: 0, // 00:00:00
                 range_seconds: 86400,   // 1日分
             },
-            condition: StartupCondition::new(0x0C79, 0x60, KeyCode::NONE),
+            condition: StartupCondition::new(0x0C79, 0x60, KeyMask::NONE),
         };
 
         let mut searcher = MtseedDatetimeSearcher::new(params).expect("Failed to create searcher");
@@ -320,10 +320,10 @@ mod tests {
             datetime.second
         );
 
-        // 検証: Timer0, VCount, KeyCode
+        // 検証: Timer0, VCount, KeyMask
         assert_eq!(condition.timer0, 0x0C79);
         assert_eq!(condition.vcount, 0x60);
-        assert_eq!(condition.key_code, KeyCode::NONE);
+        assert_eq!(condition.key_mask, KeyMask::NONE);
     }
 
     #[test]
@@ -487,7 +487,7 @@ mod tests {
         let origin_startup = SeedOrigin::startup(
             lcg_seed,
             Datetime::new(2010, 9, 18, 18, 13, 11),
-            StartupCondition::new(0x0C79, 0x60, KeyCode::NONE),
+            StartupCondition::new(0x0C79, 0x60, KeyMask::NONE),
         );
         assert_eq!(origin_startup.mt_seed(), expected_mt_seed);
     }
