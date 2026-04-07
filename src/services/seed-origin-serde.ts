@@ -27,13 +27,28 @@ export type SerializedSeedOrigin =
           minute: number;
           second: number;
         };
-        condition: { timer0: number; vcount: number; key_code: number };
+        condition: { timer0: number; vcount: number; key_mask: number };
       };
     };
 
 // ---------------------------------------------------------------------------
 // Serialize / Deserialize
 // ---------------------------------------------------------------------------
+
+/** 旧形式 (key_code) から新形式 (key_mask) への変換 */
+function migrateCondition(cond: Record<string, unknown>): {
+  timer0: number;
+  vcount: number;
+  key_mask: number;
+} {
+  const timer0 = cond.timer0 as number;
+  const vcount = cond.vcount as number;
+  if (typeof cond.key_mask === 'number') {
+    return { timer0, vcount, key_mask: cond.key_mask };
+  }
+  // 旧形式: key_code → key_mask (XOR 0x2FFF)
+  return { timer0, vcount, key_mask: (cond.key_code as number) ^ 0x2f_ff };
+}
 
 /** SeedOrigin → SerializedSeedOrigin */
 export function serializeSeedOrigin(origin: SeedOrigin): SerializedSeedOrigin {
@@ -70,7 +85,7 @@ export function deserializeSeedOrigin(serialized: SerializedSeedOrigin): SeedOri
       base_seed: BigInt(`0x${serialized.Startup.base_seed}`),
       mt_seed: serialized.Startup.mt_seed,
       datetime: serialized.Startup.datetime,
-      condition: serialized.Startup.condition,
+      condition: migrateCondition(serialized.Startup.condition),
     },
   };
 }
@@ -105,14 +120,15 @@ function isValidSerializedSeedOrigin(value: unknown): value is SerializedSeedOri
     const dt = s.datetime as Record<string, unknown>;
     const cond = s.condition as Record<string, unknown>;
     return (
-      typeof dt.year === 'number' &&
-      typeof dt.month === 'number' &&
-      typeof dt.day === 'number' &&
-      typeof dt.hour === 'number' &&
-      typeof dt.minute === 'number' &&
-      typeof dt.second === 'number' &&
-      typeof cond.timer0 === 'number' &&
-      typeof cond.vcount === 'number' &&
+      (typeof dt.year === 'number' &&
+        typeof dt.month === 'number' &&
+        typeof dt.day === 'number' &&
+        typeof dt.hour === 'number' &&
+        typeof dt.minute === 'number' &&
+        typeof dt.second === 'number' &&
+        typeof cond.timer0 === 'number' &&
+        typeof cond.vcount === 'number' &&
+        typeof cond.key_mask === 'number') ||
       typeof cond.key_code === 'number'
     );
   }

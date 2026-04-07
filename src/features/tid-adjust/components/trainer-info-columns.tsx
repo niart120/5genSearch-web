@@ -4,7 +4,7 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
-import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyCode } from '@/lib/format';
+import { toBigintHex, toHex, formatDatetime, formatShiny, formatKeyMask } from '@/lib/format';
 import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import type { IvTooltipContext } from '@/lib/iv-tooltip';
 import type { TrainerInfoSearchResult, SeedOrigin } from '@/wasm/wasm_pkg.js';
@@ -58,7 +58,7 @@ export function createTrainerInfoColumns(contexts: IvTooltipContext[]) {
     columnHelper.accessor(
       (row) => {
         const s = getStartup(row.seed_origin);
-        return s ? formatKeyCode(s.condition.key_code) : '';
+        return s ? formatKeyMask(s.condition.key_mask) : '';
       },
       {
         id: 'key',

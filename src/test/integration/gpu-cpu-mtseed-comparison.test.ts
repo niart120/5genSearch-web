@@ -8,7 +8,7 @@
  * - Version: Black, Region: Jpn, Hardware: DsLite
  * - MAC: 8C:56:C5:86:15:28
  * - Timer0: 0x0C79, VCount: 0x60
- * - キー入力なし (KeyCode: 0x2FFF)
+ * - キー入力なし (KeyMask: 0)
  * - 日付範囲: 2000-01-01 〜 2099-12-31
  * - 時間範囲: 00:00:00 〜 23:59:59
  * - Target Seeds: BW 固定・野生 6V (5件)

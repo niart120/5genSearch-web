@@ -69,10 +69,10 @@ describe('MtseedDatetimeSearcher', () => {
       expect(found.Startup.datetime.minute).toBe(13);
       expect(found.Startup.datetime.second).toBe(11);
 
-      // Timer0, VCount, KeyCode
+      // Timer0, VCount, KeyMask
       expect(found.Startup.condition.timer0).toBe(0x0c_79);
       expect(found.Startup.condition.vcount).toBe(0x60);
-      expect(found.Startup.condition.key_code).toBe(0x2f_ff);
+      expect(found.Startup.condition.key_mask).toBe(0);
     }
   });
 });

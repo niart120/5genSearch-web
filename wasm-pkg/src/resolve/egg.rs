@@ -43,7 +43,7 @@ pub fn resolve_egg_data(
                 Some(datetime_str),
                 Some(format!("{:04X}", condition.timer0)),
                 Some(format!("{:02X}", condition.vcount)),
-                Some(condition.key_code.to_display_string()),
+                Some(condition.key_mask.to_display_string()),
             )
         }
         SeedOrigin::Seed { .. } => (None, None, None, None),
@@ -152,7 +152,7 @@ mod tests {
     use super::*;
     use crate::data::Stats;
     use crate::types::{
-        CorePokemonData, Datetime, Gender, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed, Nature,
+        CorePokemonData, Datetime, Gender, InheritanceSlot, Ivs, KeyMask, LcgSeed, MtSeed, Nature,
         NeedleDirection, Pid, ShinyType, StartupCondition,
     };
 
@@ -174,7 +174,7 @@ mod tests {
                 condition: StartupCondition {
                     timer0: 0x0C80,
                     vcount: 0x5E,
-                    key_code: KeyCode::NONE,
+                    key_mask: KeyMask::NONE,
                 },
             },
             core: CorePokemonData {

@@ -147,7 +147,7 @@ impl TrainerInfoSearcher {
 /// Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
 ///
 /// # Arguments
-/// - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyCode 範囲)
+/// - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyMask 範囲)
 /// - `filter`: 検索フィルタ
 /// - `game_start`: 起動設定
 /// - `worker_count`: Worker 数
@@ -190,7 +190,7 @@ pub fn generate_trainer_info_search_tasks(
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, DsConfig, GameStartConfig, Hardware, KeyCode, KeySpec, MemoryLinkState,
+        DateRangeParams, DsConfig, GameStartConfig, Hardware, KeyMask, KeySpec, MemoryLinkState,
         Pid, RomRegion, RomVersion, SavePresence, SearchRangeParams, ShinyCharmState, StartMode,
         StartupCondition, TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoSearchParams,
     };
@@ -221,7 +221,7 @@ mod tests {
                 start_second_offset: 0,
                 range_seconds: 60,
             },
-            condition: StartupCondition::new(0x0C79, 0x5F, KeyCode::NONE),
+            condition: StartupCondition::new(0x0C79, 0x5F, KeyMask::NONE),
             game_start: GameStartConfig {
                 start_mode: StartMode::NewGame,
                 save: SavePresence::NoSave,
@@ -380,7 +380,7 @@ mod tests {
 
         let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2);
 
-        // Timer0: 2パターン × VCount: 1パターン × KeyCode: 1パターン × time_chunks: 1 = 2タスク
+        // Timer0: 2パターン × VCount: 1パターン × KeyMask: 1パターン × time_chunks: 1 = 2タスク
         // (worker_count = 2, combo_count = 2 → time_chunks = 1)
         assert_eq!(tasks.len(), 2);
     }

@@ -237,7 +237,7 @@ impl DatetimeHashGenerator {
             ds.mac,
             condition.vcount,
             condition.timer0,
-            condition.key_code,
+            condition.key_code(),
             frame,
         );
 

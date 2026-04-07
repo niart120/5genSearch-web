@@ -490,12 +490,17 @@ export interface KeyInput {
 }
 
 /**
- * キー入力コード (SHA-1 計算用)
+ * キー入力マスク
  *
- * `KeyMask` を XOR `0x2FFF` で変換した値。
- * ゲーム内部の SHA-1 メッセージ生成で使用される。
+ * ユーザーが押したキーのビットマスク。
+ * `KeyCode` との関係: `key_code = key_mask XOR 0x2FFF`
+ *
+ * ビット割り当て:
+ * - bit0=A, bit1=B, bit2=Select, bit3=Start
+ * - bit4=→, bit5=←, bit6=↑, bit7=↓
+ * - bit8=R, bit9=L, bit10=X, bit11=Y
  */
-export type KeyCode = number;
+export type KeyMask = number;
 
 /**
  * キー入力仕様 (Searcher 用)
@@ -1295,14 +1300,14 @@ export interface DatetimeSearchContext {
 }
 
 /**
- * 起動条件 (`Timer0` / `VCount` / `KeyCode` の組み合わせ)
+ * 起動条件 (`Timer0` / `VCount` / `KeyMask` の組み合わせ)
  *
  * 起動時刻検索結果や `SeedOrigin::Startup` で使用される共通型。
  */
 export interface StartupCondition {
     timer0: number;
     vcount: number;
-    key_code: KeyCode;
+    key_mask: KeyMask;
 }
 
 /**
@@ -1359,7 +1364,7 @@ export class EggDatetimeSearcher {
  * `next()` を呼び出すたびに最適バッチサイズで GPU ディスパッチを実行し、
  * 結果・進捗・スループットを返す。
  *
- * 複数の `StartupCondition` (`Timer0` × `VCount` × `KeyCode`) を順次処理し、
+ * 複数の `StartupCondition` (`Timer0` × `VCount` × `KeyMask`) を順次処理し、
  * 全体の進捗を統合して報告する。
  */
 export class GpuDatetimeSearchIterator {
@@ -1541,7 +1546,7 @@ export function generate_egg_list(origins: SeedOrigin[], params: EggGenerationPa
  * Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
  *
  * # Arguments
- * - `context`: 検索コンテキスト (Timer0/VCount/KeyCode 範囲)
+ * - `context`: 検索コンテキスト (Timer0/VCount/KeyMask 範囲)
  * - `date_range`: 日付範囲 (開始日〜終了日)
  * - `egg_params`: 孵化生成パラメータ
  * - `gen_config`: 生成共通設定
@@ -1572,7 +1577,7 @@ export function generate_mtseed_iv_search_tasks(context: MtseedSearchContext, wo
  * Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
  *
  * # Arguments
- * - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyCode 範囲)
+ * - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyMask 範囲)
  * - `target_seeds`: 検索対象の MT Seed
  * - `worker_count`: Worker 数
  */
@@ -1606,7 +1611,7 @@ export function generate_pokemon_list(origins: SeedOrigin[], params: PokemonGene
  * Worker 数を考慮して時間分割を行い、Worker 活用率を最大化する。
  *
  * # Arguments
- * - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyCode 範囲)
+ * - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyMask 範囲)
  * - `filter`: 検索フィルタ
  * - `game_start`: 起動設定
  * - `worker_count`: Worker 数

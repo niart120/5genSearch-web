@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use super::keyinput::KeyCode;
+use super::keyinput::{KeyCode, KeyMask};
 
 // ===== ハードウェア列挙型 =====
 
@@ -131,7 +131,7 @@ impl Timer0VCountRange {
     }
 }
 
-/// 起動条件 (`Timer0` / `VCount` / `KeyCode` の組み合わせ)
+/// 起動条件 (`Timer0` / `VCount` / `KeyMask` の組み合わせ)
 ///
 /// 起動時刻検索結果や `SeedOrigin::Startup` で使用される共通型。
 #[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -139,16 +139,21 @@ impl Timer0VCountRange {
 pub struct StartupCondition {
     pub timer0: u16,
     pub vcount: u8,
-    pub key_code: KeyCode,
+    pub key_mask: KeyMask,
 }
 
 impl StartupCondition {
-    pub const fn new(timer0: u16, vcount: u8, key_code: KeyCode) -> Self {
+    pub const fn new(timer0: u16, vcount: u8, key_mask: KeyMask) -> Self {
         Self {
             timer0,
             vcount,
-            key_code,
+            key_mask,
         }
+    }
+
+    /// SHA-1 計算用の `KeyCode` を返す (crate 内部のみ)
+    pub(crate) fn key_code(self) -> KeyCode {
+        KeyCode::from_mask(self.key_mask)
     }
 }
 

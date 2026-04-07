@@ -114,7 +114,7 @@ describe('WASM Binding Verification', () => {
         condition: {
           timer0: 0x0c_79,
           vcount: 0x60,
-          key_code: 0x2f_ff,
+          key_mask: 0,
         },
       };
 

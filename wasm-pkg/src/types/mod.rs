@@ -6,7 +6,7 @@
 mod config;
 mod filter;
 mod generation;
-mod keyinput;
+pub(crate) mod keyinput;
 mod needle;
 mod pokemon;
 mod search;
@@ -21,7 +21,7 @@ pub use config::{
 };
 
 // keyinput
-pub use keyinput::{DsButton, KeyCode, KeyInput, KeySpec};
+pub use keyinput::{DsButton, KeyInput, KeyMask, KeySpec};
 
 // search
 pub use search::{

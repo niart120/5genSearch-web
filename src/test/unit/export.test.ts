@@ -411,7 +411,7 @@ describe('serializeSeedOrigin', () => {
         base_seed: 0xff_ff_ff_ff_00_00_00_01n,
         mt_seed: 42,
         datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 0 },
-        condition: { timer0: 0x06_10, vcount: 0x50, key_code: 0 },
+        condition: { timer0: 0x06_10, vcount: 0x50, key_mask: 0 },
       },
     };
     const result = serializeSeedOrigin(origin);
@@ -430,7 +430,7 @@ describe('serializeSeedOrigin', () => {
       expect(result.Startup.condition).toEqual({
         timer0: 0x06_10,
         vcount: 0x50,
-        key_code: 0,
+        key_mask: 0,
       });
     }
   });
@@ -492,7 +492,7 @@ describe('toSeedOriginJson', () => {
           base_seed: 0xde_ad_be_ef_ca_fe_ba_ben,
           mt_seed: 20,
           datetime: { year: 2000, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
-          condition: { timer0: 0x06_00, vcount: 0x40, key_code: 0 },
+          condition: { timer0: 0x06_00, vcount: 0x40, key_mask: 0 },
         },
       },
     ];
@@ -525,7 +525,7 @@ function createTidAdjustMockResult(
         base_seed: 0x00_00_00_01_23_45_67_89n,
         mt_seed: 0xaa_bb_cc_dd,
         datetime: { year: 2025, month: 6, day: 15, hour: 12, minute: 30, second: 0 },
-        condition: { timer0: 0x06_10, vcount: 0x50, key_code: 0x2f_ff },
+        condition: { timer0: 0x06_10, vcount: 0x50, key_mask: 0 },
       },
     },
     trainer: { tid: 12_345, sid: 54_321 },
@@ -539,7 +539,7 @@ describe('createTidAdjustExportColumns', () => {
     const columns = createTidAdjustExportColumns();
     const keyCol = columns.find((c) => c.key === 'key_input');
     expect(keyCol).toBeDefined();
-    expect(keyCol!.header).toBe('Key');
+    expect(keyCol!.header).toBe('Key input');
   });
 
   it('base_seed カラムが含まれる', () => {
@@ -549,12 +549,12 @@ describe('createTidAdjustExportColumns', () => {
     expect(bsCol!.header).toBe('Base Seed');
   });
 
-  it('key_input accessor が key_code から正しい値を返す', () => {
+  it('key_input accessor が key_mask から正しい値を返す', () => {
     const columns = createTidAdjustExportColumns();
     const keyCol = columns.find((c) => c.key === 'key_input')!;
     const row = createTidAdjustMockResult();
     const result = keyCol.accessor(row);
-    // key_code=0x2FFF → XOR 0x2FFF → 0 → ボタンなし → 空文字
+    // key_mask=0 → ボタンなし → 空文字
     expect(typeof result).toBe('string');
   });
 

@@ -9,7 +9,7 @@ import { useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toBigintHex, toHex, formatDatetime } from '@/lib/format';
+import { toBigintHex, toHex, formatDatetime, formatKeyMask } from '@/lib/format';
 import type { SeedOrigin, Datetime } from '@/wasm/wasm_pkg.js';
 
 // ---------------------------------------------------------------------------
@@ -48,8 +48,8 @@ function getVcount(origin: SeedOrigin): number | undefined {
   return 'Startup' in origin ? origin.Startup.condition.vcount : undefined;
 }
 
-function getKeyCode(origin: SeedOrigin): number | undefined {
-  return 'Startup' in origin ? origin.Startup.condition.key_code : undefined;
+function getKeyMask(origin: SeedOrigin): number | undefined {
+  return 'Startup' in origin ? origin.Startup.condition.key_mask : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ function SeedOriginTable({
                 const dt = getDatetime(origin);
                 const timer0 = getTimer0(origin);
                 const vcount = getVcount(origin);
-                const keyCode = getKeyCode(origin);
+                const keyMask = getKeyMask(origin);
 
                 return (
                   <tr
@@ -128,7 +128,7 @@ function SeedOriginTable({
                           {vcount === undefined ? '-' : toHex(vcount, 2)}
                         </td>
                         <td className="px-2 py-1 font-mono">
-                          {keyCode === undefined ? '-' : toHex(keyCode, 4)}
+                          {keyMask === undefined ? '-' : formatKeyMask(keyMask)}
                         </td>
                       </>
                     )}

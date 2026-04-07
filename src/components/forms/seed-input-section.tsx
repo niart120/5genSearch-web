@@ -21,7 +21,7 @@ import type { DetailOriginConsumer } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
 import { parseSerializedSeedOrigins } from '@/services/seed-origin-serde';
-import { keyCodeToKeyInput } from '@/lib/format';
+import { keyMaskToKeyInput } from '@/lib/format';
 import type { SeedOrigin, LcgSeed, Datetime, KeyInput } from '@/wasm/wasm_pkg.js';
 
 /** Seed 入力モード */
@@ -108,7 +108,7 @@ function SeedInputSection({
     const store = useSearchResultsStore.getState();
     const detail = store.consumePendingDetailOrigin(featureId);
     if (detail && 'Startup' in detail) {
-      const ki = keyCodeToKeyInput(detail.Startup.condition.key_code);
+      const ki = keyMaskToKeyInput(detail.Startup.condition.key_mask);
       let origins: SeedOrigin[] = [];
       try {
         origins = resolveSeedOrigins({
@@ -182,7 +182,7 @@ function SeedInputSection({
   });
   const [keyInput, setKeyInput] = useState<KeyInput>(() => {
     if (initialPending?.type === 'startup') {
-      return keyCodeToKeyInput(initialPending.detail.Startup.condition.key_code);
+      return keyMaskToKeyInput(initialPending.detail.Startup.condition.key_mask);
     }
     return { buttons: [] };
   });

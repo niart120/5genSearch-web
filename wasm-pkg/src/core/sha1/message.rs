@@ -1,7 +1,8 @@
 //! SHA-1 メッセージビルダー
 
 use crate::core::bcd::to_bcd;
-use crate::types::{Hardware, KeyCode};
+use crate::types::Hardware;
+use crate::types::keyinput::KeyCode;
 
 use super::nazo::NazoValues;
 
@@ -120,7 +121,7 @@ impl BaseMessageBuilder {
     /// 新しいビルダーを作成
     ///
     /// エンディアン変換は内部で自動適用される。
-    pub fn new(
+    pub(crate) fn new(
         nazo: &NazoValues,
         mac: [u8; 6],
         vcount: u8,

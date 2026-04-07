@@ -6,7 +6,7 @@ use wasm_pkg::data::{calculate_stats, get_species_entry};
 use wasm_pkg::resolve::{resolve_egg_data, resolve_pokemon_data};
 use wasm_pkg::types::{
     AbilitySlot, CorePokemonData, Datetime, EncounterResult, Gender, GeneratedEggData,
-    GeneratedPokemonData, HeldItemSlot, InheritanceSlot, Ivs, KeyCode, LcgSeed, MtSeed, Nature,
+    GeneratedPokemonData, HeldItemSlot, InheritanceSlot, Ivs, KeyMask, LcgSeed, MtSeed, Nature,
     NeedleDirection, Pid, RomVersion, SeedOrigin, ShinyType, StartupCondition, Stats,
 };
 
@@ -29,7 +29,7 @@ fn create_test_pokemon_data() -> GeneratedPokemonData {
             condition: StartupCondition {
                 timer0: 0x0C80,
                 vcount: 0x5E,
-                key_code: KeyCode::NONE,
+                key_mask: KeyMask::NONE,
             },
         },
         core: {
@@ -78,7 +78,7 @@ fn create_test_egg_data() -> GeneratedEggData {
             condition: StartupCondition {
                 timer0: 0x0C80,
                 vcount: 0x5E,
-                key_code: KeyCode::NONE,
+                key_mask: KeyMask::NONE,
             },
         },
         core: CorePokemonData {

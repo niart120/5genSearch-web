@@ -8,7 +8,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
+import { toBigintHex, toHex, formatDatetime, formatKeyMask } from '@/lib/format';
 import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import type { IvTooltipContext } from '@/lib/iv-tooltip';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
@@ -78,7 +78,7 @@ function createSeedOriginColumns(
     columnHelper.accessor(
       (row) => {
         const s = getStartup(row);
-        return s ? formatKeyCode(s.condition.key_code) : '';
+        return s ? formatKeyMask(s.condition.key_mask) : '';
       },
       {
         id: 'key',

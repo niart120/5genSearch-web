@@ -17,7 +17,7 @@ import { NumField } from '@/components/ui/spinner-num-field';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
-import { keyCodeToKeyInput } from '@/lib/format';
+import { keyMaskToKeyInput } from '@/lib/format';
 import { SeedInput } from './seed-input';
 import { NeedleInput } from './needle-input';
 import { createNeedleResultColumns } from './needle-result-columns';
@@ -60,7 +60,7 @@ function NeedlePage(): ReactElement {
       if ('Startup' in detail) {
         const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
         setDatetime(detail.Startup.datetime);
-        setKeyInput(keyCodeToKeyInput(detail.Startup.condition.key_code));
+        setKeyInput(keyMaskToKeyInput(detail.Startup.condition.key_mask));
         setSeedHex(hex);
         setSeedMode('datetime');
       } else {

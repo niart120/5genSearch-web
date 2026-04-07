@@ -26,7 +26,7 @@ import { createTestDsConfig, createTestStartupCondition } from '../helpers/worke
  * - MAC Address: 8C:56:C5:86:15:28
  * - Timer0: 0x0C79
  * - VCount: 0x60
- * - KeyCode: なし (0x2FFF)
+ * - KeyMask: なし (0)
  * - 日付範囲: 2000-01-01 ～ 2099-12-31
  * - 時間範囲: 00:00:00 ～ 23:59:59
  *

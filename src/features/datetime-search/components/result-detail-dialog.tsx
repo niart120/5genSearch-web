@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { SeedIvTooltip } from '@/components/data-display/seed-iv-tooltip';
 import { getStandardContexts } from '@/lib/iv-tooltip';
-import { toBigintHex, toHex, formatDatetime, formatKeyCode } from '@/lib/format';
+import { toBigintHex, toHex, formatDatetime, formatKeyMask } from '@/lib/format';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { lcg_seed_to_mt_seed } from '@/wasm/wasm_pkg.js';
@@ -91,7 +91,7 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
               <DetailRow label={t`Date/Time`} value={formatDatetime(startup.datetime)} />
               <DetailRow label="Timer0" value={toHex(startup.condition.timer0, 4)} />
               <DetailRow label="VCount" value={toHex(startup.condition.vcount, 2)} />
-              <DetailRow label={t`Key input`} value={formatKeyCode(startup.condition.key_code)} />
+              <DetailRow label={t`Key input`} value={formatKeyMask(startup.condition.key_mask)} />
             </>
           )}
           {baseSeed !== undefined && (

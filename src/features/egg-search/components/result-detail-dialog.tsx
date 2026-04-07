@@ -21,7 +21,7 @@ import {
   toBigintHex,
   toHex,
   formatDatetime,
-  formatKeyCode,
+  formatKeyMask,
   formatGender,
   formatShinyDetailed,
   formatAbilitySlot,
@@ -69,7 +69,7 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
               <DetailRow label={t`Date/Time`} value={formatDatetime(startup.datetime)} />
               <DetailRow label="Timer0" value={toHex(startup.condition.timer0, 4)} />
               <DetailRow label="VCount" value={toHex(startup.condition.vcount, 2)} />
-              <DetailRow label={t`Key input`} value={formatKeyCode(startup.condition.key_code)} />
+              <DetailRow label={t`Key input`} value={formatKeyMask(startup.condition.key_mask)} />
             </>
           )}
           {baseSeed !== undefined && (
