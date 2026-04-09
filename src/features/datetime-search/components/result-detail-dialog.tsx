@@ -98,7 +98,7 @@ function ResultDetailDialog({ open, onOpenChange, seedOrigin }: ResultDetailDial
             <SeedIvTooltip mtSeed={lcg_seed_to_mt_seed(baseSeed)} contexts={contexts}>
               {/* Radix Tooltip の Trigger は単一子要素を要求するため div でラップ */}
               <div>
-                <DetailRow label="Base Seed" value={toBigintHex(baseSeed, 16)} />
+                <DetailRow label={t`LCG Seed`} value={toBigintHex(baseSeed, 16)} />
               </div>
             </SeedIvTooltip>
           )}

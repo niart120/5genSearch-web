@@ -124,3 +124,11 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 観察: パターン 1 は `onChange(cond ? undefined : v)` のように常に引数を明示渡ししているため現時点では問題ない。ただし `onChange()` と引数なしで呼ぶコードを追加した場合、`Expected 1 arguments, but got 0` のコンパイルエラーになる。`level-range-input` (local_099) で実際にこの問題が発生し、パターン 2 に修正した。
 
 当面の方針: 既存の4コンポーネントは動作上問題ないため即時修正はしない。次にこれらのファイルに触れる機会があればパターン 2 (`?` オプショナル引数) に統一する。関連コミット: `962d17a`。
+
+## 2026-04-09: 個体生成時点の LCG64 状態が外部に露出していない
+
+現状: `GeneratedPokemonData` / `GeneratedEggData` は `source: SeedOrigin`（初期 `base_seed` + `mt_seed`）と `advance: u32` のみを保持する。Generator 内部では各 advance 時点の LCG64 状態（`self.lcg.current_seed()`）を計算しているが、結果構造体には含めず破棄している。`UiPokemonData` / `UiEggData` にも対応フィールドはなく、wasm-bindgen で `(base_seed, advance) → LCG64 状態` を返す API も存在しない。
+
+観察: `base_seed` + `advance` から LCG64 状態は決定的に再計算可能なため、データの欠損ではない。ただし、ユーザが「この個体の LCG Seed は何か」を知りたい場合、現状では自力で計算するしかない。乱数調整ツールの用途を考えると、advance 時点の LCG64 状態を詳細ダイアログやエクスポートで提供する需要はありうる。実装する場合、Rust 側に `lcg_seed_at_advance(base_seed: LcgSeed, advance: u32) -> LcgSeed` のような関数を追加し、UI 側で呼び出す形になる。
+
+当面の方針: 現時点で具体的なユーザ要求はないため対応しない。需要が確認された場合に別途仕様化する。

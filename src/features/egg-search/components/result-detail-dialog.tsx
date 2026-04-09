@@ -73,7 +73,7 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
             </>
           )}
           {baseSeed !== undefined && (
-            <DetailRow label="Base Seed" value={toBigintHex(baseSeed, 16)} />
+            <DetailRow label={t`LCG Seed`} value={toBigintHex(baseSeed, 16)} />
           )}
 
           {/* 個体データ */}

@@ -85,7 +85,7 @@ function createPokemonListExportColumns(statMode: StatDisplayMode): ExportColumn
 
   // Detail-only columns
   const detailColumns: ExportColumn<UiPokemonData>[] = [
-    { key: 'base_seed', header: 'Base Seed', accessor: (r) => r.base_seed, detailOnly: true },
+    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.base_seed, detailOnly: true },
     { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.mt_seed, detailOnly: true },
     {
       key: 'datetime',
@@ -185,7 +185,7 @@ function createEggListExportColumns(statMode: StatDisplayMode): ExportColumn<UiE
 
   const detailColumns: ExportColumn<UiEggData>[] = [
     { key: 'species', header: 'Species', accessor: (r) => r.species_name ?? '', detailOnly: true },
-    { key: 'base_seed', header: 'Base Seed', accessor: (r) => r.base_seed, detailOnly: true },
+    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.base_seed, detailOnly: true },
     { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.mt_seed, detailOnly: true },
     {
       key: 'datetime',
@@ -264,7 +264,7 @@ function createDatetimeSearchExportColumns(): ExportColumn<SeedOrigin>[] {
     },
     {
       key: 'base_seed',
-      header: 'Base Seed',
+      header: 'LCG Seed',
       accessor: (r) => toBigintHex(getBaseSeed(r), 16),
     },
     {
@@ -345,7 +345,7 @@ function createEggSearchExportColumns(
   const detailColumns: ExportColumn<EggDatetimeSearchResult>[] = [
     {
       key: 'base_seed',
-      header: 'Base Seed',
+      header: 'LCG Seed',
       accessor: (r) => toBigintHex(getBaseSeed(r.egg.source), 16),
       detailOnly: true,
     },
@@ -430,7 +430,7 @@ function createTidAdjustExportColumns(): ExportColumn<TrainerInfoSearchResult>[]
     },
     {
       key: 'base_seed',
-      header: 'Base Seed',
+      header: 'LCG Seed',
       accessor: (r) => {
         const s = getStartup(r.seed_origin);
         return s ? toBigintHex(s.base_seed, 16) : '';

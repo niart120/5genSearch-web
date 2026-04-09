@@ -47,7 +47,7 @@ function ResultDetailDialog({
         </DialogHeader>
         <div className="max-h-[60vh] divide-y divide-border overflow-y-auto">
           {/* Seed 情報 */}
-          <DetailRow label="Base Seed" value={result.base_seed} />
+          <DetailRow label={t`LCG Seed`} value={result.base_seed} />
           <DetailRow label="MT Seed" value={result.mt_seed} />
           {result.datetime_iso !== undefined && (
             <DetailRow label={t`Date/Time`} value={result.datetime_iso} />

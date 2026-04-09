@@ -59,7 +59,7 @@ describe('SeedOriginTable', () => {
     const table = screen.getByRole('table');
     expect(table).toBeDefined();
 
-    // Base Seed が表示される
+    // LCG Seed が表示される
     expect(screen.getByText('0123456789ABCDEF')).toBeDefined();
     // MT Seed が表示される
     expect(screen.getByText('89ABCDEF')).toBeDefined();
@@ -129,7 +129,7 @@ describe('SeedOriginTable', () => {
     expect(screen.getByText('2025/01/05 09:03:07')).toBeDefined();
     expect(screen.getByText('0600')).toBeDefined();
 
-    // 両方の Base Seed が表示される
+    // 両方の LCG Seed が表示される
     expect(screen.getByText('0123456789ABCDEF')).toBeDefined();
     expect(screen.getByText('ABCDEF0123456789')).toBeDefined();
 

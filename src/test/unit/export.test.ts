@@ -546,7 +546,7 @@ describe('createTidAdjustExportColumns', () => {
     const columns = createTidAdjustExportColumns();
     const bsCol = columns.find((c) => c.key === 'base_seed');
     expect(bsCol).toBeDefined();
-    expect(bsCol!.header).toBe('Base Seed');
+    expect(bsCol!.header).toBe('LCG Seed');
   });
 
   it('key_input accessor が key_mask から正しい値を返す', () => {

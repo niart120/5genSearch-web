@@ -80,7 +80,7 @@ msgstr "このアプリについて"
 #: src/features/egg-list/components/result-detail-dialog.tsx:87
 #: src/features/egg-search/components/egg-result-columns.tsx:112
 #: src/features/egg-search/components/result-detail-dialog.tsx:87
-#: src/features/needle/components/needle-result-columns.tsx:21
+#: src/features/needle/components/needle-result-columns.tsx:22
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:47
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:92
 msgid "Advance"
@@ -183,7 +183,7 @@ msgstr "種別"
 msgid "Clear"
 msgstr "クリア"
 
-#: src/components/forms/seed-origin-table.tsx:167
+#: src/components/forms/seed-origin-table.tsx:169
 msgid "Clear all"
 msgstr "全削除"
 
@@ -238,7 +238,7 @@ msgstr "クレジット"
 msgid "Data sources"
 msgstr "データの出典"
 
-#: src/features/needle/components/needle-result-columns.tsx:45
+#: src/features/needle/components/needle-result-columns.tsx:46
 msgid "Date"
 msgstr "日付"
 
@@ -257,7 +257,7 @@ msgstr "日付範囲"
 #: src/features/egg-search/components/egg-result-columns.tsx:55
 #: src/features/egg-search/components/result-detail-dialog.tsx:69
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:53
-#: src/features/tid-adjust/components/trainer-info-columns.tsx:27
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:30
 msgid "Date/Time"
 msgstr "日時"
 
@@ -273,7 +273,7 @@ msgstr "起動時刻検索"
 msgid "Def"
 msgstr "防御"
 
-#: src/components/forms/seed-origin-table.tsx:104
+#: src/components/forms/seed-origin-table.tsx:106
 #: src/features/ds-config/components/profile-delete-dialog.tsx:49
 #: src/features/ds-config/components/profile-selector.tsx:194
 #: src/features/ds-config/components/profile-selector.tsx:195
@@ -285,7 +285,7 @@ msgid "Delete profile"
 msgstr "プロファイルを削除"
 
 #. placeholder {0}: String(index + 1)
-#: src/components/forms/seed-origin-table.tsx:144
+#: src/components/forms/seed-origin-table.tsx:146
 msgid "Delete row {0}"
 msgstr "行 {0} を削除"
 
@@ -383,7 +383,7 @@ msgstr "フィルター有効"
 msgid "Encounter method"
 msgstr "エンカウント方法"
 
-#: src/components/forms/encounter-result-select.tsx:45
+#: src/components/forms/encounter-result-select.tsx:48
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:102
 msgid "Encounter result"
 msgstr "エンカウント"
@@ -529,7 +529,6 @@ msgid "Include details"
 msgstr "詳細を含める"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:226
-#: src/features/needle/components/needle-result-columns.tsx:33
 msgid "Initial Seed"
 msgstr "初期Seed"
 
@@ -538,7 +537,7 @@ msgstr "初期Seed"
 msgid "Invalid profile file"
 msgstr "無効なプロファイルファイルです"
 
-#: src/components/forms/encounter-result-select.tsx:54
+#: src/components/forms/encounter-result-select.tsx:57
 msgid "Item only"
 msgstr "アイテムのみ"
 
@@ -552,6 +551,7 @@ msgstr "個体値は0から31の範囲で入力してください"
 
 #: src/components/forms/seed-origin-table.tsx:96
 #: src/features/datetime-search/components/seed-origin-columns.tsx:85
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:65
 msgid "Key"
 msgstr "キー"
 
@@ -575,7 +575,15 @@ msgstr "キー入力"
 msgid "Large number of results expected"
 msgstr "多数の結果が予想されます"
 
+#: src/components/forms/seed-origin-table.tsx:101
+#: src/features/datetime-search/components/result-detail-dialog.tsx:101
+#: src/features/datetime-search/components/seed-origin-columns.tsx:98
+#: src/features/egg-list/components/result-detail-dialog.tsx:50
+#: src/features/egg-search/components/result-detail-dialog.tsx:76
+#: src/features/needle/components/needle-result-columns.tsx:34
 #: src/features/needle/components/seed-input.tsx:64
+#: src/features/pokemon-list/components/result-detail-dialog.tsx:50
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:91
 msgid "LCG Seed"
 msgstr "LCG Seed"
 
@@ -595,11 +603,11 @@ msgstr "先頭特性"
 #~ msgid "Leave empty to show \"?\" for stats"
 #~ msgstr "空欄にすると個体値が「?」で表示されます"
 
-#: src/components/forms/level-range-input.tsx:95
+#: src/components/forms/level-range-input.tsx:103
 msgid "Level max"
 msgstr "レベル上限"
 
-#: src/components/forms/level-range-input.tsx:76
+#: src/components/forms/level-range-input.tsx:84
 msgid "Level min"
 msgstr "レベル下限"
 
@@ -663,7 +671,7 @@ msgstr "最大消費数は開始オフセット以上である必要がありま
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:215
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:219
 msgid "Memory Link"
 msgstr "思い出リンク"
 
@@ -771,7 +779,7 @@ msgstr "プロファイルなし"
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:252
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:252
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:256
 msgid "No results"
 msgstr "結果なし"
 
@@ -788,11 +796,11 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:208
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:212
 msgid "No save"
 msgstr "セーブなし"
 
-#: src/components/forms/seed-origin-table.tsx:158
+#: src/components/forms/seed-origin-table.tsx:160
 msgid "No seeds loaded"
 msgstr "Seed が読み込まれていません"
 
@@ -817,7 +825,7 @@ msgstr "なし"
 
 #: src/components/forms/ability-slot-select.tsx:44
 #: src/components/forms/egg-filter-form.tsx:401
-#: src/components/forms/encounter-result-select.tsx:52
+#: src/components/forms/encounter-result-select.tsx:55
 #: src/components/forms/gender-select.tsx:47
 #: src/components/forms/held-item-slot-select.tsx:50
 #: src/components/forms/hidden-power-select.tsx:51
@@ -873,7 +881,7 @@ msgstr "ポケモン"
 msgid "Pokemon generation result details"
 msgstr "ポケモン生成結果の詳細"
 
-#: src/components/forms/encounter-result-select.tsx:53
+#: src/components/forms/encounter-result-select.tsx:56
 msgid "Pokémon only"
 msgstr "ポケモンのみ"
 
@@ -948,7 +956,7 @@ msgstr "結果の詳細"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:169
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:256
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:244
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:248
 msgid "Results"
 msgstr "検索結果"
 
@@ -972,7 +980,7 @@ msgstr "保存して切替"
 msgid "Save as new"
 msgstr "新規保存"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:203
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:207
 msgid "Save state"
 msgstr "セーブ状態"
 
@@ -1071,7 +1079,7 @@ msgstr "設定"
 #: src/features/egg-search/components/result-detail-dialog.tsx:84
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:77
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:67
-#: src/features/tid-adjust/components/trainer-info-columns.tsx:67
+#: src/features/tid-adjust/components/trainer-info-columns.tsx:81
 msgid "Shiny"
 msgstr "色違い"
 
@@ -1089,7 +1097,7 @@ msgstr "ひかるおまもり"
 msgid "Shiny PID"
 msgstr "色違い PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:94
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:95
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 
@@ -1097,7 +1105,7 @@ msgstr "色違い PID は 0〜FFFFFFFF の16進数で入力してください"
 msgid "SID"
 msgstr "SID (裏ID)"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:93
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:94
 msgid "SID must be between 0 and 65535"
 msgstr "SID は 0〜65535 の範囲で入力してください"
 
@@ -1146,7 +1154,7 @@ msgstr "開始日"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:82
 #: src/features/egg-search/components/egg-search-page.tsx:86
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:90
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:91
 msgid "Start date must be on or before end date"
 msgstr "開始日は終了日以前である必要があります"
 
@@ -1252,11 +1260,11 @@ msgstr "TID (表ID)"
 msgid "TID Adjust"
 msgstr "TID 調整"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:92
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:93
 msgid "TID must be between 0 and 65535"
 msgstr "TID は 0〜65535 の範囲で入力してください"
 
-#: src/features/needle/components/needle-result-columns.tsx:57
+#: src/features/needle/components/needle-result-columns.tsx:58
 msgid "Time"
 msgstr "時刻"
 
@@ -1266,7 +1274,7 @@ msgstr "時刻範囲"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:83
 #: src/features/egg-search/components/egg-search-page.tsx:87
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:91
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:92
 msgid "Time range is invalid"
 msgstr "時刻範囲が不正です"
 
@@ -1340,6 +1348,6 @@ msgstr "ごくまれに (1%)"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:211
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:215
 msgid "With save"
 msgstr "セーブあり"
