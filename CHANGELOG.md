@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/niart120/5genSearch-web/compare/v1.2.2...v1.3.0) (2026-04-09)
+
+
+### Features
+
+* a抜け5V / c抜け5V 初期seedテンプレートを追加 ([#124](https://github.com/niart120/5genSearch-web/issues/124)) ([22bce9a](https://github.com/niart120/5genSearch-web/commit/22bce9a97b2a70da7e67e1d5141e46de393ed599))
+
 ## [1.2.2](https://github.com/niart120/5genSearch-web/compare/v1.2.1...v1.2.2) (2026-03-21)
 
 
