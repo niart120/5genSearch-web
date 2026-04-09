@@ -3,6 +3,7 @@
  */
 
 import type { ColumnDef } from '@tanstack/react-table';
+import { t } from '@lingui/core/macro';
 import { Trans } from '@lingui/react/macro';
 import { toBigintHex, toHex } from '@/lib/format';
 import type { NeedleSearchResult } from '@/wasm/wasm_pkg.js';
@@ -30,7 +31,7 @@ export function createNeedleResultColumns(): ColumnDef<NeedleSearchResult>[] {
         return '';
       },
       id: 'initialSeed',
-      header: () => <Trans>Initial Seed</Trans>,
+      header: () => t`LCG Seed`,
       size: 160,
       cell: ({ getValue }) => <span className="font-mono text-xs">{getValue<string>()}</span>,
     },

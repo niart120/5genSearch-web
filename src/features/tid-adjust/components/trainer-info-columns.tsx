@@ -88,7 +88,7 @@ export function createTrainerInfoColumns(contexts: IvTooltipContext[]) {
       },
       {
         id: 'baseSeed',
-        header: () => 'Base Seed',
+        header: () => t`LCG Seed`,
         size: 160,
         cell: (info) => {
           const s = getStartup(info.row.original.seed_origin);

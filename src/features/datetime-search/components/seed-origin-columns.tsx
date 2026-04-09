@@ -95,7 +95,7 @@ function createSeedOriginColumns(
       },
       {
         id: 'baseSeed',
-        header: () => 'Base Seed',
+        header: () => t`LCG Seed`,
         size: 160,
         cell: (info) => {
           const row = info.row.original;

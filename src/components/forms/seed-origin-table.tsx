@@ -97,7 +97,9 @@ function SeedOriginTable({
                     </th>
                   </>
                 )}
-                <th className="px-2 py-1 text-left font-medium">Base Seed</th>
+                <th className="px-2 py-1 text-left font-medium">
+                  <Trans>LCG Seed</Trans>
+                </th>
                 <th className="px-2 py-1 text-left font-medium">MT Seed</th>
                 {editable && !disabled && (
                   <th className="w-8 px-1 py-1">
