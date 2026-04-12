@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/niart120/5genSearch-web/compare/v1.3.0...v1.3.1) (2026-04-12)
+
+
+### Bug Fixes
+
+* 起動時刻検索の見出しを Initial Seed から MT Seed に変更 ([#128](https://github.com/niart120/5genSearch-web/issues/128)) ([d85e7dd](https://github.com/niart120/5genSearch-web/commit/d85e7dd449969b38a809155bd34d89b13e1a4a00))
+
 ## [1.3.0](https://github.com/niart120/5genSearch-web/compare/v1.2.2...v1.3.0) (2026-04-09)
 
 
