@@ -45,25 +45,15 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-wasm-
+          cache-targets: false
 
       - name: Install wasm-pack
-        run: |
-          if ! command -v wasm-pack; then
-            cargo install wasm-pack --locked --version 0.14.0
-          fi
+        run: cargo install wasm-pack --locked --version 0.14.0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: 10
 
@@ -78,9 +68,9 @@ jobs:
 
       - name: Install wasm-opt (binaryen)
         run: |
-          curl -L -o binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/version_125/binaryen-version_125-x86_64-linux.tar.gz
+          curl -L -o binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/version_129/binaryen-version_129-x86_64-linux.tar.gz
           tar -xzf binaryen.tar.gz
-          echo "$PWD/binaryen-version_125/bin" >> $GITHUB_PATH
+          echo "$PWD/binaryen-version_129/bin" >> $GITHUB_PATH
 
       - name: Build
         run: pnpm build
