@@ -1051,6 +1051,10 @@ msgstr "Select all"
 msgid "Select location"
 msgstr "Select location"
 
+#: src/features/datetime-search/components/template-selection-dialog.tsx:142
+msgid "Select MT Seed templates to apply."
+msgstr "Select MT Seed templates to apply."
+
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:93
 msgid "Select or enter at least one seed"
 msgstr "Select or enter at least one seed"
@@ -1058,10 +1062,6 @@ msgstr "Select or enter at least one seed"
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:395
 msgid "Select Pokémon"
 msgstr "Select Pokémon"
-
-#: src/features/datetime-search/components/template-selection-dialog.tsx:142
-msgid "Select seed templates to apply to Target Seeds."
-msgstr "Select seed templates to apply to Target Seeds."
 
 #: src/components/forms/key-input-selector.tsx:71
 #~ msgid "Selected buttons"

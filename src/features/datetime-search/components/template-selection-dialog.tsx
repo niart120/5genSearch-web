@@ -139,7 +139,7 @@ function TemplateSelectionDialog({
             <Trans>Seed template selection</Trans>
           </DialogTitle>
           <DialogDescription>
-            <Trans>Select seed templates to apply to Target Seeds.</Trans>
+            <Trans>Select MT Seed templates to apply.</Trans>
           </DialogDescription>
         </DialogHeader>
 
