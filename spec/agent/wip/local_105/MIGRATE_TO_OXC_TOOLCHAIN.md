@@ -311,26 +311,26 @@ pnpm format:check:ts
 
 ## 6. 実装チェックリスト
 
-- [ ] 作業ブランチ作成 (`chore/migrate-oxc-toolchain` 等)
-- [ ] `oxfmt`, `oxlint` を `pnpm add -D` でインストール
-- [ ] `npx @oxlint/migrate eslint.config.js` で `.oxlintrc.json` 生成・調整
-- [ ] `npx oxfmt --migrate=prettier` で `.oxfmtrc.jsonc` 生成・調整
-- [ ] `eslint.config.js`, `.prettierrc`, `.prettierignore` を削除
-- [ ] ESLint/Prettier 関連 devDependencies を削除 (`pnpm remove`)
-- [ ] `lint-staged` を削除 (`pnpm remove`)
-- [ ] `package.json` の scripts を更新
-- [ ] `.husky/pre-commit` を更新
-- [ ] `.gitignore` から `.eslintcache` を削除
-- [ ] `.vscode/settings.json` を更新
-- [ ] `.vscode/extensions.json` を新規作成
-- [ ] `.github/workflows/ci.yml` を更新
-- [ ] `.github/copilot-instructions.md` を更新
-- [ ] `.github/instructions/typescript.instructions.md` を更新
-- [ ] `.github/prompts/pr-merge-cleanup.prompt.md` を更新
-- [ ] `oxfmt` でフォーマット実行、差分コミット
-- [ ] `pnpm lint:ts` 通過確認
-- [ ] `pnpm format:check:ts` 通過確認
-- [ ] `pnpm exec tsc -b --noEmit` 通過確認
-- [ ] `pnpm test:run` 通過確認
+- [x] 作業ブランチ作成 (`chore/migrate-oxc-toolchain` 等)
+- [x] `oxfmt`, `oxlint` を `pnpm add -D` でインストール
+- [x] `npx @oxlint/migrate eslint.config.js` で `.oxlintrc.json` 生成・調整
+- [x] `npx oxfmt --migrate=prettier` で `.oxfmtrc.json` 生成・調整
+- [x] `eslint.config.js`, `.prettierrc`, `.prettierignore` を削除
+- [x] ESLint/Prettier 関連 devDependencies を削除 (`pnpm remove`)
+- [x] `lint-staged` を削除 (`pnpm remove`)
+- [x] `package.json` の scripts を更新
+- [x] `.husky/pre-commit` を更新
+- [x] `.gitignore` から `.eslintcache` を削除
+- [x] `.vscode/settings.json` を更新
+- [x] `.vscode/extensions.json` を新規作成
+- [x] `.github/workflows/ci.yml` を更新
+- [x] `.github/copilot-instructions.md` を更新
+- [x] `.github/instructions/typescript.instructions.md` を更新
+- [x] `.github/prompts/pr-merge-cleanup.prompt.md` を更新
+- [x] `oxfmt` でフォーマット実行、差分コミット
+- [x] `pnpm lint:ts` 通過確認
+- [x] `pnpm format:check:ts` 通過確認
+- [x] `pnpm exec tsc -b --noEmit` 通過確認
+- [x] `pnpm test:run` 通過確認
 - [ ] `.git-blame-ignore-revs` にフォーマットコミット SHA を記録
 - [ ] CI 全ジョブ green 確認
