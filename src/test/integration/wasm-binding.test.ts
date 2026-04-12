@@ -57,25 +57,25 @@ describe('WASM Binding Verification', () => {
 
   describe('generate_pokemon_list', () => {
     it('should be callable', () => {
-      expect(typeof generate_pokemon_list).toBe('function');
+      expect(generate_pokemon_list).toBeTypeOf('function');
     });
   });
 
   describe('generate_egg_list', () => {
     it('should be callable', () => {
-      expect(typeof generate_egg_list).toBe('function');
+      expect(generate_egg_list).toBeTypeOf('function');
     });
   });
 
   describe('resolve_pokemon_data_batch', () => {
     it('should be callable', () => {
-      expect(typeof resolve_pokemon_data_batch).toBe('function');
+      expect(resolve_pokemon_data_batch).toBeTypeOf('function');
     });
   });
 
   describe('resolve_egg_data_batch', () => {
     it('should be callable', () => {
-      expect(typeof resolve_egg_data_batch).toBe('function');
+      expect(resolve_egg_data_batch).toBeTypeOf('function');
     });
   });
 

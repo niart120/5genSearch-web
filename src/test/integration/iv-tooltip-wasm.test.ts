@@ -60,7 +60,7 @@ describe('compute_iv_spread', () => {
 describe('lcg_seed_to_mt_seed', () => {
   it('既知の LCG Seed → MT Seed 変換', () => {
     const mtSeed = lcg_seed_to_mt_seed(0n);
-    expect(typeof mtSeed).toBe('number');
+    expect(mtSeed).toBeTypeOf('number');
     expect(mtSeed).toBeGreaterThanOrEqual(0);
   });
 

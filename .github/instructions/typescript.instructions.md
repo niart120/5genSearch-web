@@ -13,8 +13,8 @@ applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 ## ツールチェイン
 
 - **TypeScript**: strict mode 有効
-- **Linter**: ESLint (eslint.config.js)
-- **Formatter**: Prettier (.prettierrc)
+- **Linter**: oxlint (.oxlintrc.json)
+- **Formatter**: oxfmt (.oxfmtrc.json)
 
 ## 基本規約
 
@@ -23,7 +23,7 @@ applyTo: '{src/**/*.{ts,tsx},spec/agent/*/local_*/*.md}'
 - 型定義を厳密に行う（`any`, `unknown`, 型アサーションの多用禁止）
 - React function-based components 使用
 - React Hooks 使用
-- ESLint/Prettier 設定に準拠
+- oxlint/oxfmt 設定に準拠
 - `null` は原則使わず `undefined` を採用する
   - 省略可能な値は `foo?: T` または `foo: T | undefined` で表現する
   - 外部 API/永続化/JSON 由来の `null` は境界で `undefined` に正規化する

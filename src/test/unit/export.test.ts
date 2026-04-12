@@ -555,7 +555,7 @@ describe('createTidAdjustExportColumns', () => {
     const row = createTidAdjustMockResult();
     const result = keyCol.accessor(row);
     // key_mask=0 → ボタンなし → 空文字
-    expect(typeof result).toBe('string');
+    expect(result).toBeTypeOf('string');
   });
 
   it('base_seed accessor が 16 桁 hex を返す', () => {

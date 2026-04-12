@@ -134,7 +134,6 @@ if (workerCount === 0) {
     s.free();
   }
 
-  const totalMs = Number(totalNs) / 1e6;
   const avgThroughput = Number(totalElements) / (Number(totalNs) / 1e9) / 1e6;
   const nativeThroughput = 12.6;
   const ratio = (avgThroughput / nativeThroughput) * 100;

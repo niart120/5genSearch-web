@@ -94,7 +94,7 @@ describe('NeedlePage 初期表示', () => {
 
     // NumField id="max-advance" の input 要素を探す
     const input = document.querySelector<HTMLInputElement>('#max-advance');
-    expect(input).toBeTruthy();
+    expect(input).not.toBeNull();
     expect(input?.value).toBe('30');
   });
 });
@@ -115,7 +115,7 @@ describe('MtseedSearchPage 初期表示', () => {
 
     // SearchControls の GPU スイッチ (id="gpu-toggle") を確認
     const gpuSwitch = document.querySelector('#gpu-toggle');
-    expect(gpuSwitch).toBeTruthy();
+    expect(gpuSwitch).not.toBeNull();
     expect(gpuSwitch?.getAttribute('aria-checked')).toBe('true');
   });
 });
