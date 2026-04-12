@@ -79,7 +79,11 @@ Rust 型名は `LcgSeed`、i18n 翻訳カタログには `LCG Seed`（キー `sL
 
 ### 3.2 "Initial Seed" の扱い
 
-needle カラムヘッダーの `Initial Seed`（`r909m2`）は `LCG Seed` に変更する。`datetime-search-page.tsx` のセクション見出し `<Trans>Initial Seed</Trans>` は、入力セクションのタイトルであり、データフィールドのラベルではないため変更対象外とする。
+needle カラムヘッダーの `Initial Seed`（`r909m2`）は `LCG Seed` に変更する。
+
+`datetime-search-page.tsx` のセクション見出し `<Trans>Initial Seed</Trans>` は、当初は変更対象外としていたが、LCG Seed / MT Seed との区別がつきにくいという問題が生じたため、`<Trans>MT Seed</Trans>` に変更した。同時に `TargetSeedsInput` 内の `<Label>MT Seed</Label>` を除去し、セクション見出しの `<h3>` に `id="mt-seed-heading"` を付与、`textarea` に `aria-labelledby="mt-seed-heading"` を設定してアクセシビリティを維持した。
+
+これにより i18n キー `r909m2`（`Initial Seed` / `初期Seed`）の参照箇所はゼロになったため、PO カタログから当該エントリを削除した。
 
 ### 3.3 対象外
 

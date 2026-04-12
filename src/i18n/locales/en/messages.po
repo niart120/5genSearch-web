@@ -532,10 +532,6 @@ msgstr "Import JSON file"
 msgid "Include details"
 msgstr "Include details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:226
-msgid "Initial Seed"
-msgstr "Initial Seed"
-
 #: src/features/ds-config/components/profile-import-export.tsx:48
 #: src/features/ds-config/components/profile-import-export.tsx:54
 msgid "Invalid profile file"
@@ -622,7 +618,7 @@ msgstr "License"
 #. placeholder {0}: err.line
 #. placeholder {1}: err.value
 #. placeholder {2}: err.message
-#: src/components/forms/target-seeds-input.tsx:52
+#: src/components/forms/target-seeds-input.tsx:48
 msgid "Line {0}: \"{1}\" — {2}"
 msgstr "Line {0}: \"{1}\" — {2}"
 
@@ -717,7 +713,7 @@ msgstr "MT Advances"
 msgid "MT Advances must be 0 or greater"
 msgstr "MT Advances must be 0 or greater"
 
-#: src/components/forms/target-seeds-input.tsx:34
+#: src/features/datetime-search/components/datetime-search-page.tsx:226
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:17
 msgid "MT Seed"
 msgstr "MT Seed"
@@ -1329,7 +1325,7 @@ msgstr "Unsaved changes"
 msgid "Uses Ditto"
 msgstr "Uses Ditto"
 
-#: src/components/forms/target-seeds-input.tsx:46
+#: src/components/forms/target-seeds-input.tsx:42
 msgid "Valid seeds"
 msgstr "Valid seeds"
 

@@ -5,7 +5,6 @@
  */
 
 import { Trans } from '@lingui/react/macro';
-import { Label } from '@/components/ui/label';
 import type { MtSeed } from '@/wasm/wasm_pkg';
 
 interface TargetSeedsInputProps {
@@ -30,11 +29,8 @@ function TargetSeedsInput({
 }: TargetSeedsInputProps) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor="target-seeds" className="text-xs text-muted-foreground">
-        <Trans>MT Seed</Trans>
-      </Label>
       <textarea
-        id="target-seeds"
+        aria-labelledby="mt-seed-heading"
         className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm tabular-nums placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         rows={4}
         placeholder={`1A2B3C4D\n0x12345678`}
