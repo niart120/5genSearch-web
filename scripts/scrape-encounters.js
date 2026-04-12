@@ -530,7 +530,6 @@ function findSectionTables($, method) {
     Fishing: (t) => t.includes('なみのり') || t.includes('つり'),
     FishingBubble: (t) => t.includes('なみのり') || t.includes('つり'),
   };
-  const isHeader = (el) => /^h[1-6]$/i.test(el.tagName || el.name || '');
 
   let startIdx = -1;
   for (let i = 0; i < headers.length; i++) {

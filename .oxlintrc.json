@@ -2,7 +2,7 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["unicorn"],
   "categories": {
-    "correctness": "off"
+    "correctness": "error"
   },
   "env": {
     "builtin": true
@@ -241,6 +241,27 @@
         "registerProcessor": "readonly",
         "sampleRate": "readonly",
         "WorkletGlobalScope": "readonly"
+      }
+    },
+    {
+      "files": [
+        "src/test/**/*.test.{ts,tsx}",
+        "src/test/setup.ts",
+        "src/test/setup.browser.ts",
+        "src/test/helpers/**/*.ts"
+      ],
+      "plugins": ["typescript", "react", "import", "vitest"],
+      "rules": {
+        "vitest/no-conditional-tests": "error",
+        "vitest/no-import-node-test": "error",
+        "vitest/consistent-test-filename": "error",
+        "vitest/no-identical-title": "error",
+        "vitest/prefer-expect-type-of": "warn",
+        "vitest/prefer-strict-boolean-matchers": "warn",
+        "vitest/require-mock-type-parameters": "off"
+      },
+      "env": {
+        "es2026": true
       }
     }
   ]

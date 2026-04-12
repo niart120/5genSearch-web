@@ -46,7 +46,7 @@ describe('Needle Search Integration', () => {
 
     // 結果がある場合、各要素の構造を検証
     for (const r of results) {
-      expect(typeof r.advance).toBe('number');
+      expect(r.advance).toBeTypeOf('number');
       expect(r.advance).toBeGreaterThanOrEqual(0);
       expect(r.source).toBeDefined();
     }

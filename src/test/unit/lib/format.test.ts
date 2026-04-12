@@ -133,7 +133,7 @@ describe('remToPx', () => {
     // デフォルト font-size は 16px
     const result = remToPx(2);
     expect(result).toBeGreaterThan(0);
-    expect(typeof result).toBe('number');
+    expect(result).toBeTypeOf('number');
   });
 });
 

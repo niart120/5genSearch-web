@@ -332,5 +332,13 @@ pnpm format:check:ts
 - [x] `pnpm format:check:ts` 通過確認
 - [x] `pnpm exec tsc -b --noEmit` 通過確認
 - [x] `pnpm test:run` 通過確認
+- [x] `.oxlintrc.json`: `correctness` カテゴリを `"error"` に変更（`@oxlint/migrate` が `"off"` を生成していた問題の修正）
+- [x] `.oxlintrc.json`: vitest プラグインオーバーライドを追加（テストファイル向け）
+- [x] `scripts/bench-wasm-node.mjs`: 未使用変数 `totalMs` を削除（correctness ルール検出）
+- [x] `scripts/scrape-encounters.js`: 未使用関数 `isHeader` を削除（correctness ルール検出）
+- [x] テストファイル: `prefer-strict-boolean-matchers` 違反 2 件を修正（`.not.toBeNull()` に変更）
+- [x] テストファイル: `prefer-expect-type-of` 違反 10 件を修正（`.toBeTypeOf()` に変更）
+- [x] `pnpm lint:ts` 再通過確認（0 errors, 1 warning: warn-todo）
+- [x] `pnpm test:run` 再通過確認（109 files, 1393 tests passed）
 - [ ] `.git-blame-ignore-revs` にフォーマットコミット SHA を記録
 - [ ] CI 全ジョブ green 確認

@@ -119,12 +119,12 @@ describe.skipIf(!hasWebGpu())('GPU Profile Detection', () => {
 
     it('vendor が空でない', () => {
       console.log('[GpuProfile] vendor:', wasmProfile?.vendor);
-      expect(typeof wasmProfile?.vendor).toBe('string');
+      expect(wasmProfile?.vendor).toBeTypeOf('string');
     });
 
     it('architecture の値を確認', () => {
       console.log('[GpuProfile] architecture:', wasmProfile?.architecture);
-      expect(typeof wasmProfile?.architecture).toBe('string');
+      expect(wasmProfile?.architecture).toBeTypeOf('string');
     });
 
     it('全プロパティをダンプ', () => {
