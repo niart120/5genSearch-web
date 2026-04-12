@@ -18,7 +18,7 @@
 - **状態管理**: Zustand
 - **UIコンポーネント**: Radix UI + Tailwind CSS
 - **テスト**: Vitest + Playwright
-- **Linter/Formatter**: ESLint + Prettier
+- **Linter/Formatter**: oxlint + oxfmt
 
 ### 計算エンジン (Rust/WASM)
 
@@ -43,7 +43,7 @@
   - 型定義を厳密に行う (any, unknown, 型アサーションの多用禁止)
 - React function-based components 使用
   - React Hooks 使用
-- ESLint/Prettier設定に準拠
+- oxlint/oxfmt 設定に準拠
 - 技術文書は事実ベース・簡潔に記述
 - t_wada氏が推奨するテスト駆動開発(TDD)指針/コーディング指針を遵守
   - Code → How

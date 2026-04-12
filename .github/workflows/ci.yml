@@ -101,10 +101,10 @@ jobs:
         with:
           name: wasm-pkg
 
-      - name: ESLint
+      - name: oxlint
         run: pnpm lint:ts
 
-      - name: Prettier check
+      - name: oxfmt check
         run: pnpm format:check:ts
 
       - name: TypeScript check

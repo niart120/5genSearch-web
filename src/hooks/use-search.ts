@@ -48,6 +48,7 @@ export interface UseSearchResult {
  * ```
  */
 export function useSearch(config: WorkerPoolConfig): UseSearchResult {
+  // oxlint-disable-next-line unicorn/no-useless-undefined -- useRef requires explicit initial value for TypeScript
   const poolRef = useRef<WorkerPool | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);

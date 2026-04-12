@@ -1,1 +1,2 @@
-pnpm exec lint-staged
+pnpm lint:ts
+pnpm format:check:ts
