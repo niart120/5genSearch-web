@@ -262,7 +262,7 @@ impl SearchPipeline {
         let mac_lower = (u32::from(ds.mac[4]) << 8) | u32::from(ds.mac[5]);
 
         // message[7]: MAC 上位 32bit (mac[0..4] as little-endian) XOR GX_STAT XOR frame
-        let frame = get_frame(ds.hardware);
+        let frame = get_frame(ds.hardware, ds.version);
         let mac_upper = u32::from(ds.mac[0])
             | (u32::from(ds.mac[1]) << 8)
             | (u32::from(ds.mac[2]) << 16)

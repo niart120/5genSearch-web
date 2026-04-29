@@ -52,7 +52,7 @@ pub fn resolve_single_seed(input: &SeedSpec) -> Result<(LcgSeed, SeedOrigin), St
 
             // SHA-1 計算
             let nazo = get_nazo_values(ds);
-            let frame = get_frame(ds.hardware);
+            let frame = get_frame(ds.hardware, ds.version);
 
             let condition = StartupCondition::new(timer0, vcount, key_mask);
             let mut builder =
@@ -112,7 +112,7 @@ pub fn resolve_all_seeds(input: &SeedSpec) -> Result<Vec<(LcgSeed, SeedOrigin)>,
 
             let key_mask = key_input.to_key_mask();
             let nazo = get_nazo_values(ds);
-            let frame = get_frame(ds.hardware);
+            let frame = get_frame(ds.hardware, ds.version);
             let is_ds_or_lite = matches!(
                 ds.hardware,
                 crate::types::Hardware::Ds | crate::types::Hardware::DsLite
