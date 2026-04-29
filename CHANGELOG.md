@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.3.3](https://github.com/niart120/5genSearch-web/compare/v1.3.2...v1.3.3) (2026-04-29)
+
+
+### Bug Fixes
+
+* **wasm:** 3DS×BW2 の初期 Seed frame を 8 に補正 ([#133](https://github.com/niart120/5genSearch-web/issues/133)) ([6b4ed70](https://github.com/niart120/5genSearch-web/commit/6b4ed709358ddc0a5ef86b19b581284eb37c1727))
+
+
+### Code Refactoring
+
+* **wasm:** hardware enum リネームと dsi×bw2 frame 値補正 ([#135](https://github.com/niart120/5genSearch-web/issues/135)) ([48949c9](https://github.com/niart120/5genSearch-web/commit/48949c9afdf9a94014ae4a3ab926923542c940e6))
+
+
+### Continuous Integration
+
+* **release:** release-please 設定ファイルを参照する ([8c6cfd2](https://github.com/niart120/5genSearch-web/commit/8c6cfd2feb138ee21ca308c7d19d6bdd4dc76d2b))
+* ツールチェイン更新とキャッシュ管理改善 ([733e159](https://github.com/niart120/5genSearch-web/commit/733e159af59af3fd7b18cbe3d1cbc8d7f8c8cedb))
+
+
+### Tests
+
+* **wasm:** gpu 全探索テストを ignore 化 ([#136](https://github.com/niart120/5genSearch-web/issues/136)) ([f28ca89](https://github.com/niart120/5genSearch-web/commit/f28ca89afbe0beb0f1a09ba77cafea021986bd5e))
+
+
+### Miscellaneous Chores
+
+* ESLint/Prettier から oxlint/oxfmt へ移行 ([#132](https://github.com/niart120/5genSearch-web/issues/132)) ([30d38ce](https://github.com/niart120/5genSearch-web/commit/30d38cebeb528cd2d77facbfe1fed6b8e88760a4))
+* **release:** changelog section 設定を追加 ([9cf14c1](https://github.com/niart120/5genSearch-web/commit/9cf14c168cad1f81ae45e09b241854bc27f73b66))
+
 ## [1.3.2](https://github.com/niart120/5genSearch-web/compare/v1.3.1...v1.3.2) (2026-04-12)
 
 
