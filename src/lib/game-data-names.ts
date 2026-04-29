@@ -230,13 +230,13 @@ function getRegionName(region: RomRegion, locale: SupportedLocale): string {
 // Hardware
 // ---------------------------------------------------------------------------
 
-const HARDWARE_ORDER: Hardware[] = ['Ds', 'DsLite', 'Dsi', 'Dsi3ds'];
+const HARDWARE_ORDER: Hardware[] = ['Ds', 'DsLite', 'Dsi', 'N3ds'];
 
 const HARDWARE_NAMES: Record<Hardware, Record<SupportedLocale, string>> = {
   Ds: { ja: 'DS', en: 'DS' },
   DsLite: { ja: 'DS Lite', en: 'DS Lite' },
   Dsi: { ja: 'DSi', en: 'DSi' },
-  Dsi3ds: { ja: '3DS', en: '3DS' },
+  N3ds: { ja: '3DS', en: '3DS' },
 };
 
 function getHardwareName(hardware: Hardware, locale: SupportedLocale): string {

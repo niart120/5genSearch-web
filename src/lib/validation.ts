@@ -56,7 +56,7 @@ import type {
 
 const PROFILE_SCHEMA = '5genSearch-profile-v1';
 
-const VALID_HARDWARE: Hardware[] = ['Ds', 'DsLite', 'Dsi', 'Dsi3ds'];
+const VALID_HARDWARE: Hardware[] = ['Ds', 'DsLite', 'Dsi', 'N3ds'];
 const VALID_VERSION: RomVersion[] = ['Black', 'White', 'Black2', 'White2'];
 const VALID_REGION: RomRegion[] = ['Jpn', 'Kor', 'Usa', 'Ger', 'Fra', 'Spa', 'Ita'];
 const VALID_START_MODE: StartMode[] = ['NewGame', 'Continue'];

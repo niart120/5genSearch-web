@@ -41,12 +41,12 @@ describe('timer0-vcount-defaults', () => {
     }
   });
 
-  describe('DSi と Dsi3ds は同一の値を返す (JPN)', () => {
+  describe('DSi と N3ds は同一の値を返す (JPN)', () => {
     for (const version of DS_LITE_VERSIONS) {
       it(`${version} / Jpn`, () => {
         const dsiRanges = lookupDefaultRanges('Dsi', version, 'Jpn');
-        const dsi3dsRanges = lookupDefaultRanges('Dsi3ds', version, 'Jpn');
-        expect(dsiRanges).toEqual(dsi3dsRanges);
+        const n3dsRanges = lookupDefaultRanges('N3ds', version, 'Jpn');
+        expect(dsiRanges).toEqual(n3dsRanges);
       });
     }
   });

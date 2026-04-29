@@ -19,7 +19,7 @@ use wasm_pkg::types::{
 /// | --- | --- |
 /// | MAC | 98 B6 E9 1D 7C 3B |
 /// | ROM | Black2 (JPN) |
-/// | Hardware | 3DS (`Dsi3ds`) |
+/// | Hardware | 3DS (`N3ds`) |
 /// | 日付 | 2026/04/29 |
 /// | 時刻 | 10:00:35 〜 10:00:40 |
 /// | セーブ | あり |
@@ -31,7 +31,7 @@ use wasm_pkg::types::{
 fn test_3ds_bw2_initial_seed_yields_real_tid() {
     let ds = DsConfig {
         mac: [0x98, 0xB6, 0xE9, 0x1D, 0x7C, 0x3B],
-        hardware: Hardware::Dsi3ds,
+        hardware: Hardware::N3ds,
         version: RomVersion::Black2,
         region: RomRegion::Jpn,
     };

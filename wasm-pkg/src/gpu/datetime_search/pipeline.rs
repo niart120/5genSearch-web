@@ -277,7 +277,7 @@ impl SearchPipeline {
             Hardware::Ds => 0,
             Hardware::DsLite => 1,
             Hardware::Dsi => 2,
-            Hardware::Dsi3ds => 3,
+            Hardware::N3ds => 3,
         };
 
         // 開始年・通算日・曜日を計算
