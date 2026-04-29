@@ -88,7 +88,7 @@ mod tests {
             region: RomRegion::Jpn,
         };
         let nazo = get_nazo_values(&ds);
-        let frame = get_frame(ds.hardware);
+        let frame = get_frame(ds.hardware, ds.version);
         let timer0: u16 = 0x10F8;
         let vcount: u8 = 0x82;
         let key_code = KeyCode::NONE;
@@ -159,7 +159,7 @@ mod tests {
             region: RomRegion::Jpn,
         };
         let nazo = get_nazo_values(&ds);
-        let frame = get_frame(ds.hardware);
+        let frame = get_frame(ds.hardware, ds.version);
 
         let mut builder =
             BaseMessageBuilder::new(&nazo, ds.mac, 0x82, 0x10F8, KeyCode::NONE, frame);
@@ -184,7 +184,7 @@ mod tests {
             region: RomRegion::Jpn,
         };
         let nazo = get_nazo_values(&ds);
-        let frame = get_frame(ds.hardware);
+        let frame = get_frame(ds.hardware, ds.version);
 
         let mut builder =
             BaseMessageBuilder::new(&nazo, ds.mac, 0x82, 0x10F8, KeyCode::NONE, frame);

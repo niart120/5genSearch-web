@@ -1,8 +1,8 @@
 //! SHA-1 メッセージビルダー
 
 use crate::core::bcd::to_bcd;
-use crate::types::Hardware;
 use crate::types::keyinput::KeyCode;
+use crate::types::{Hardware, RomVersion};
 
 use super::nazo::NazoValues;
 
@@ -83,12 +83,20 @@ fn calc_weekday(year: u16, month: u8, day: u8) -> u8 {
     ((h + 6) % 7) as u8
 }
 
-/// Hardware から frame 値を取得
-pub const fn get_frame(hardware: Hardware) -> u8 {
+/// `Hardware` と `RomVersion` から frame 値を取得
+///
+/// 3DS × BW2 のみ 8 を返す特例あり。それ以外は `Hardware` で一意決定。
+pub const fn get_frame(hardware: Hardware, version: RomVersion) -> u8 {
     match hardware {
         Hardware::Ds => 8,
         Hardware::DsLite | Hardware::Dsi => 6,
-        Hardware::Dsi3ds => 9,
+        Hardware::Dsi3ds => {
+            if version.is_bw2() {
+                8
+            } else {
+                9
+            }
+        }
     }
 }
 
@@ -229,9 +237,19 @@ mod tests {
 
     #[test]
     fn test_get_frame() {
-        assert_eq!(get_frame(Hardware::Ds), 8);
-        assert_eq!(get_frame(Hardware::DsLite), 6);
-        assert_eq!(get_frame(Hardware::Dsi), 6);
-        assert_eq!(get_frame(Hardware::Dsi3ds), 9);
+        use RomVersion::{Black, Black2, White, White2};
+
+        // Hardware で一意決定されるケース (RomVersion 不問)
+        for v in [Black, White, Black2, White2] {
+            assert_eq!(get_frame(Hardware::Ds, v), 8);
+            assert_eq!(get_frame(Hardware::DsLite, v), 6);
+            assert_eq!(get_frame(Hardware::Dsi, v), 6);
+        }
+
+        // 3DS は BW1 / BW2 で値が異なる
+        assert_eq!(get_frame(Hardware::Dsi3ds, Black), 9);
+        assert_eq!(get_frame(Hardware::Dsi3ds, White), 9);
+        assert_eq!(get_frame(Hardware::Dsi3ds, Black2), 8);
+        assert_eq!(get_frame(Hardware::Dsi3ds, White2), 8);
     }
 }
