@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.4](https://github.com/niart120/5genSearch-web/compare/v1.3.3...v1.3.4) (2026-04-29)
+
+
+### Miscellaneous Chores
+
+* **ci:** github actionsのmajor更新 ([0a3ff24](https://github.com/niart120/5genSearch-web/commit/0a3ff24a4b9e04cdd8d242d6452dbd290296c57d))
+* **ci:** github actionsのmajor更新 ([0a3ff24](https://github.com/niart120/5genSearch-web/commit/0a3ff24a4b9e04cdd8d242d6452dbd290296c57d))
+* **ci:** github actionsのmajor更新 ([ed75a59](https://github.com/niart120/5genSearch-web/commit/ed75a59cb8f755e00300bc49f2021a20c7ad6356))
+
 ## [1.3.3](https://github.com/niart120/5genSearch-web/compare/v1.3.2...v1.3.3) (2026-04-29)
 
 
