@@ -15,7 +15,7 @@ export interface TimeRangeParams {
 /**
  * DS ハードウェア種別
  */
-export type Hardware = "Ds" | "DsLite" | "Dsi" | "Dsi3ds";
+export type Hardware = "Ds" | "DsLite" | "Dsi" | "N3ds";
 
 /**
  * DS ボタン

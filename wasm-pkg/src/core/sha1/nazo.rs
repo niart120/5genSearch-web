@@ -25,7 +25,7 @@ impl NazoValues {
 pub const fn get_nazo_values(ds: &DsConfig) -> NazoValues {
     match ds.hardware {
         Hardware::Ds | Hardware::DsLite => get_nazo_values_ds(ds.version, ds.region),
-        Hardware::Dsi | Hardware::Dsi3ds => get_nazo_values_dsi(ds.version, ds.region),
+        Hardware::Dsi | Hardware::N3ds => get_nazo_values_dsi(ds.version, ds.region),
     }
 }
 
@@ -562,7 +562,7 @@ mod tests {
     #[test]
     fn test_dsi_and_3ds_return_same_values() {
         let dsi = ds_config(Hardware::Dsi, RomVersion::Black2, RomRegion::Usa);
-        let three_ds = ds_config(Hardware::Dsi3ds, RomVersion::Black2, RomRegion::Usa);
+        let three_ds = ds_config(Hardware::N3ds, RomVersion::Black2, RomRegion::Usa);
         assert_eq!(
             get_nazo_values(&dsi).values,
             get_nazo_values(&three_ds).values

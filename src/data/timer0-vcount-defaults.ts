@@ -6,7 +6,7 @@ type HardwareGroup = 'DsLite' | 'Dsi';
 type DefaultRangeKey = `${HardwareGroup}_${RomVersion}_${RomRegion}`;
 
 function toHardwareGroup(hardware: Hardware): HardwareGroup {
-  return hardware === 'Dsi' || hardware === 'Dsi3ds' ? 'Dsi' : 'DsLite';
+  return hardware === 'Dsi' || hardware === 'N3ds' ? 'Dsi' : 'DsLite';
 }
 
 // Partial — 未収集エントリは存在しない (undefined)

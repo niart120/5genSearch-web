@@ -94,7 +94,7 @@ const HARDWARE_MAP: Record<Hardware, string> = {
   Ds: 'ods',
   DsLite: 'dsL',
   Dsi: 'dsi',
-  Dsi3ds: '3ds',
+  N3ds: '3ds',
 };
 
 // ---------------------------------------------------------------------------

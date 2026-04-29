@@ -85,12 +85,13 @@ fn calc_weekday(year: u16, month: u8, day: u8) -> u8 {
 
 /// `Hardware` と `RomVersion` から frame 値を取得
 ///
-/// 3DS × BW2 のみ 8 を返す特例あり。それ以外は `Hardware` で一意決定。
+/// `DSi` / 3DS は BW1 で 9、BW2 で 8 となる仕様。
+/// DS / DS Lite は `RomVersion` 不問で一意決定。
 pub const fn get_frame(hardware: Hardware, version: RomVersion) -> u8 {
     match hardware {
         Hardware::Ds => 8,
-        Hardware::DsLite | Hardware::Dsi => 6,
-        Hardware::Dsi3ds => {
+        Hardware::DsLite => 6,
+        Hardware::Dsi | Hardware::N3ds => {
             if version.is_bw2() {
                 8
             } else {
@@ -239,17 +240,18 @@ mod tests {
     fn test_get_frame() {
         use RomVersion::{Black, Black2, White, White2};
 
-        // Hardware で一意決定されるケース (RomVersion 不問)
+        // DS / DS Lite は RomVersion 不問
         for v in [Black, White, Black2, White2] {
             assert_eq!(get_frame(Hardware::Ds, v), 8);
             assert_eq!(get_frame(Hardware::DsLite, v), 6);
-            assert_eq!(get_frame(Hardware::Dsi, v), 6);
         }
 
-        // 3DS は BW1 / BW2 で値が異なる
-        assert_eq!(get_frame(Hardware::Dsi3ds, Black), 9);
-        assert_eq!(get_frame(Hardware::Dsi3ds, White), 9);
-        assert_eq!(get_frame(Hardware::Dsi3ds, Black2), 8);
-        assert_eq!(get_frame(Hardware::Dsi3ds, White2), 8);
+        // DSi / 3DS は BW1 → 9, BW2 → 8 (両者同一)
+        for hw in [Hardware::Dsi, Hardware::N3ds] {
+            assert_eq!(get_frame(hw, Black), 9);
+            assert_eq!(get_frame(hw, White), 9);
+            assert_eq!(get_frame(hw, Black2), 8);
+            assert_eq!(get_frame(hw, White2), 8);
+        }
     }
 }

@@ -16,7 +16,7 @@ pub enum Hardware {
     Ds,
     DsLite,
     Dsi,
-    Dsi3ds,
+    N3ds,
 }
 
 /// ROM バージョン
