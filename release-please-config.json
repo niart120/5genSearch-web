@@ -6,6 +6,15 @@
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance Improvements" },
+        { "type": "refactor", "section": "Code Refactoring" },
+        { "type": "ci", "section": "Continuous Integration" },
+        { "type": "test", "section": "Tests" },
+        { "type": "chore", "section": "Miscellaneous Chores" }
+      ],
       "include-component-in-tag": false,
       "extra-files": []
     }
