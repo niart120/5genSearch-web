@@ -235,7 +235,10 @@ mod tests {
     //
     // 各テストケースは 2^32 の全 Seed 空間を GPU で探索し、
     // 期待する Seed が結果に含まれかつ CPU 版と IV が一致することを確認する。
-    // =========================================================================
+    //
+    // 1 ケースあたり数十秒〜数分かかるため `#[ignore]` で隔離している。
+    // 実行する場合は `cargo test --features gpu -- --ignored` を使用する。
+    // ==========================================================================
 
     /// GPU 全探索を実行し、全候補を収集するヘルパー
     fn run_gpu_full_search(context: MtseedSearchContext) -> Vec<MtseedResult> {
@@ -256,6 +259,7 @@ mod tests {
     /// 6V (offset=0): 14B11BA6, 8A30480D, 9E02B0AE, ADFA2178, FC4AA3AC
     #[test]
     #[serial]
+    #[ignore = "long-running GPU full-space search; run with --ignored"]
     fn test_gpu_full_search_6v_offset0() {
         use crate::generation::algorithm::generate_rng_ivs_with_offset;
         use crate::types::MtSeed;
@@ -299,6 +303,7 @@ mod tests {
     /// V0VVV0 (offset=2): 54F39E0F, 6338DDED, 7BF8CD77, F9C432EB
     #[test]
     #[serial]
+    #[ignore = "long-running GPU full-space search; run with --ignored"]
     fn test_gpu_full_search_v0vvv0_offset2() {
         use crate::generation::algorithm::generate_rng_ivs_with_offset;
         use crate::types::MtSeed;
@@ -344,6 +349,7 @@ mod tests {
     /// V2UVVV (roamer, offset=1): 5F3DE7EF, 7F1983D4, B8500799, C18AA384, C899E66E, D8BFC637
     #[test]
     #[serial]
+    #[ignore = "long-running GPU full-space search; run with --ignored"]
     fn test_gpu_full_search_v2uvvv_roamer_offset1() {
         use crate::generation::algorithm::generate_rng_ivs_with_offset;
         use crate::types::MtSeed;
