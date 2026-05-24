@@ -564,7 +564,7 @@ pub fn apply_inheritance(
 | テストケース | 検証内容 |
 |--------------|----------|
 | `test_generate_egg_order` | 乱数消費順序が参照実装と一致すること |
-| `test_everstone_inheritance` | かわらずのいし判定の乱数消費が正しいこと |
+| `test_everstone_inheritance` | かわらずのいし判定が `(r * 2) >> 32 == 1` で成功し、乱数消費が正しいこと |
 | `test_ditto_consumption` | メタモン使用時の追加消費が発生すること |
 | `test_nidoran_gender` | ニドランフラグ有効時の性別決定が正しいこと |
 | `test_pid_single_rand` | 1乱数方式でPIDが生成されること |
