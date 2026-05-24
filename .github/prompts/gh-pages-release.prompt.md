@@ -47,14 +47,23 @@ tools:
    - PR が存在しない場合、main への push 後に release-please が PR を作成するまで待つ旨を通知して中断
    - PR の CHANGELOG ドラフト内容を表示
 
-3. **バージョン判定**
+3. **CI 状態の確認**
+   - `mcp_github_pull_request_read` の `get_status` / `get_check_runs` で release-please PR の head commit 状態を確認
+   - `autorelease: pending` ラベルは release-please の正常な「リリース PR マージ待ち」状態として扱い、中断条件にしない
+   - combined status が `pending` でも、`statuses` / `check_runs` が 0 件の場合は「チェック未作成」として扱う
+     - release-please PR は `github-actions[bot]` により作成・更新されるため、PR head に通常の `pull_request` CI が付かない場合がある
+     - この場合は `origin/main` の直近 CI と Release Please workflow が成功し、PR が `MERGEABLE` / `CLEAN` であれば続行可能と判断する
+   - `check_runs` または `statuses` に `queued` / `in_progress` / `pending` が存在する場合は、実行中の CI が残っているため中断し、再実行または待機をユーザに案内する
+   - `failure` / `cancelled` / `timed_out` が存在する場合は CI 失敗として中断する
+
+4. **バージョン判定**
    - release-please が自動判定したバージョンと、ユーザ指定の `releaseType` を照合
    - 不一致の場合:
      - PR 本文に `Release-As: X.Y.Z` ヘッダを `mcp_github_update_pull_request` で追加
      - 追加後、release-please が PR を更新するのを待つ (手動で retrigger が必要な場合はその旨通知)
    - 一致の場合: そのまま続行
 
-4. **変更規模の妥当性チェック**
+5. **変更規模の妥当性チェック**
    - 変更内容と指定バージョンの整合性を確認
    - 具体的な検査:
      - `feat` コミットが含まれるのに `patch` 指定 → コミットの動機が fix 相当でないか確認を促す
@@ -64,11 +73,11 @@ tools:
      - (b) `Release-As` で上書きして再処理を待つ
      - (c) 中断し、コミット prefix の修正を検討
 
-5. **PR マージ**
+6. **PR マージ**
    - `mcp_github_merge_pull_request` でマージを実行
    - マージ方法: merge commit (release-please のデフォルト)
 
-6. **結果確認**
+7. **結果確認**
    - マージ後、release-please がタグと GitHub Release を作成したことを確認
    - CI → CD パイプラインが起動したことを通知
    - デプロイ先 URL を表示: `https://niart120.github.io/5genSearch-web/`
@@ -77,6 +86,7 @@ tools:
 
 - release-please PR が存在しない
 - CI が失敗している
+- 実行中または pending の CI check/status が残っている
 - 変更規模とリリース種別の乖離が大きく、ユーザが続行を拒否した
 
 ### プロンプト本文
