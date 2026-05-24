@@ -735,8 +735,8 @@ pub fn determine_egg_nature(lcg: &mut Lcg64, everstone: EverstonePlan) -> Nature
     match everstone {
         EverstonePlan::None => Nature::from_u8(nature_idx),
         EverstonePlan::Fixed(parent_nature) => {
-            // かわらずのいし判定: 最上位ビットが 0 で成功
-            let inherit = (lcg.next() >> 31) == 0;
+            // かわらずのいし判定: (r * 2) >> 32 == 1 で成功
+            let inherit = ((u64::from(lcg.next()) * 2) >> 32) == 1;
             if inherit {
                 parent_nature
             } else {

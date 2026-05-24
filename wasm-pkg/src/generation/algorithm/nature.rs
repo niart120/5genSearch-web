@@ -16,6 +16,11 @@ pub fn sync_check(r: u32) -> bool {
     ((u64::from(r) * 2) >> 32) == 1
 }
 
+#[inline]
+fn everstone_inheritance_check(r: u32) -> bool {
+    ((u64::from(r) * 2) >> 32) == 1
+}
+
 /// シンクロ対応エンカウントかどうか
 pub fn supports_sync(encounter_type: EncounterType) -> bool {
     matches!(
@@ -70,8 +75,8 @@ pub fn determine_egg_nature(lcg: &mut Lcg64, everstone: EverstonePlan) -> Nature
     match everstone {
         EverstonePlan::None => Nature::from_u8(nature_idx),
         EverstonePlan::Fixed(parent_nature) => {
-            // かわらずのいし判定: 最上位ビットが 0 で成功
-            let inherit = (lcg.next().unwrap_or(0) >> 31) == 0;
+            // かわらずのいし判定: (r * 2) >> 32 == 1 で成功
+            let inherit = everstone_inheritance_check(lcg.next().unwrap_or(0));
             if inherit {
                 parent_nature
             } else {
@@ -119,6 +124,32 @@ mod tests {
         assert!(sync_check(0xFFFF_FFFF));
         assert!(!sync_check(0x7FFF_FFFF));
         assert!(!sync_check(0x0000_0000));
+    }
+
+    #[test]
+    fn test_everstone_inheritance_check() {
+        assert!(everstone_inheritance_check(0x8000_0000));
+        assert!(everstone_inheritance_check(0xFFFF_FFFF));
+        assert!(!everstone_inheritance_check(0x7FFF_FFFF));
+        assert!(!everstone_inheritance_check(0x0000_0000));
+    }
+
+    #[test]
+    fn test_determine_egg_nature_with_everstone_inherits_on_high_bit() {
+        let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0001);
+
+        let nature = determine_egg_nature(&mut lcg, EverstonePlan::Fixed(Nature::Adamant));
+
+        assert_eq!(nature, Nature::Adamant);
+    }
+
+    #[test]
+    fn test_determine_egg_nature_with_everstone_falls_back_on_low_bit() {
+        let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0000);
+
+        let nature = determine_egg_nature(&mut lcg, EverstonePlan::Fixed(Nature::Adamant));
+
+        assert_eq!(nature, Nature::Hardy);
     }
 
     #[test]
