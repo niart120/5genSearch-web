@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { MacAddressInput } from '@/components/forms/mac-address-input';
@@ -106,9 +106,13 @@ describe('MacAddressInput', () => {
     expect(lastCall[0]).toBe(10); // 0x0A
   });
 
-  // TODO: auto-tab によるフォーカス移動の検証
-  // jsdom + userEvent 環境では、コンポーネント内の focus() 呼び出しが
-  // userEvent のフォーカス管理に上書きされるため toHaveFocus() で検証できない。
-  // 実ブラウザ環境 (Playwright 等) での E2E テストで検証する。
-  it.todo('2 文字入力で次フィールドにフォーカスが移動する');
+  it('2 文字入力で次フィールドにフォーカスが移動する', () => {
+    renderMac();
+
+    const inputs = screen.getAllByRole('textbox');
+    inputs[0].focus();
+    fireEvent.change(inputs[0], { target: { value: 'FF' } });
+
+    expect(inputs[1]).toHaveFocus();
+  });
 });
