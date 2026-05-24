@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.5](https://github.com/niart120/5genSearch-web/compare/v1.3.4...v1.3.5) (2026-05-24)
+
+
+### Bug Fixes
+
+* タマゴ遺伝スロットの乱数消費を修正 ([1222639](https://github.com/niart120/5genSearch-web/commit/12226396a412eaeed89b4948e82651dc629a1962))
+
+
+### Tests
+
+* macアドレス入力のフォーカス移動を検証 ([defe4d9](https://github.com/niart120/5genSearch-web/commit/defe4d9f808c3312d4a1e015b5e87b273df0becd))
+
 ## [1.3.4](https://github.com/niart120/5genSearch-web/compare/v1.3.3...v1.3.4) (2026-05-24)
 
 
