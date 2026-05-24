@@ -900,21 +900,22 @@ fn determine_inheritance(lcg: &mut Lcg64) -> [InheritanceSlot; 3] {
     let mut used = [false; 6];
 
     for slot in &mut slots {
-        // 遺伝先ステータス決定 (重複不可)
-        let stat = loop {
+        // 遺伝先ステータスと遺伝元親を1セットで決定 (ステータス重複時はセットごと破棄)
+        let (stat, parent) = loop {
             let r = lcg.next().unwrap_or(0);
             let candidate = ((u64::from(r) * 6) >> 32) as usize;
+
+            // 遺伝元親決定 (50%)
+            let parent = if lcg.next().unwrap_or(0) >> 31 == 0 {
+                ParentRole::Male
+            } else {
+                ParentRole::Female
+            };
+
             if !used[candidate] {
                 used[candidate] = true;
-                break candidate;
+                break (candidate, parent);
             }
-        };
-
-        // 遺伝元親決定 (50%)
-        let parent = if lcg.next().unwrap_or(0) >> 31 == 1 {
-            ParentRole::Male
-        } else {
-            ParentRole::Female
         };
 
         *slot = InheritanceSlot { stat, parent };
