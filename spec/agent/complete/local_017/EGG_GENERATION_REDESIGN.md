@@ -78,7 +78,7 @@
 3. メタモン追加消費 (uses_ditto 時のみ 1 消費)
 
 4. 遺伝スロット決定 (3箇所)
-   └─ 各スロット: ステータス決定 (重複時リトライ) + 親決定
+    └─ 各候補: ステータス決定 + 親決定を1セットで消費し、ステータス重複時はセットごと破棄してリトライ
 
 5. ニドランロール (nidoran_flag 時のみ 1 消費)
 
@@ -564,6 +564,8 @@ pub fn apply_inheritance(
 | テストケース | 検証内容 |
 |--------------|----------|
 | `test_generate_egg_order` | 乱数消費順序が参照実装と一致すること |
+| `test_determine_inheritance_consumes_parent_roll_for_duplicate_stat` | 遺伝ステータス重複時も親決定乱数を消費すること |
+| `test_determine_inheritance_parent_bit_mapping` | 遺伝元親の bit 対応が `0=Male` / `1=Female` であること |
 | `test_everstone_inheritance` | かわらずのいし判定が `(r * 2) >> 32 == 1` で成功し、乱数消費が正しいこと |
 | `test_ditto_consumption` | メタモン使用時の追加消費が発生すること |
 | `test_nidoran_gender` | ニドランフラグ有効時の性別決定が正しいこと |

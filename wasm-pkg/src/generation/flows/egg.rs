@@ -62,19 +62,20 @@ fn determine_inheritance(lcg: &mut Lcg64) -> [InheritanceSlot; 3] {
     let mut used = [false; 6];
 
     for slot in &mut slots {
-        // 遺伝先ステータス決定 (重複不可)
-        let stat = loop {
+        // 遺伝先ステータスと遺伝元親を1セットで決定 (ステータス重複時はセットごと破棄)
+        let (stat, parent) = loop {
             let r = lcg.next().unwrap_or(0);
             #[allow(clippy::cast_possible_truncation)]
             let candidate = roll_fraction(r, 6) as u8;
+
+            // 遺伝元親決定 (50%): 0 = Male, 1 = Female
+            let parent = u8::from((lcg.next().unwrap_or(0) >> 31) == 1);
+
             if !used[usize::from(candidate)] {
                 used[usize::from(candidate)] = true;
-                break candidate;
+                break (candidate, parent);
             }
         };
-
-        // 遺伝元親決定 (50%): 0 = Male, 1 = Female
-        let parent = u8::from(lcg.next().unwrap_or(0) >> 31 == 0);
 
         *slot = InheritanceSlot::new(stat, parent);
     }
@@ -171,6 +172,38 @@ mod tests {
                 assert_ne!(stats[i], stats[j], "stats should not duplicate");
             }
         }
+    }
+
+    #[test]
+    fn test_determine_inheritance_consumes_parent_roll_for_duplicate_stat() {
+        let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
+
+        let slots = determine_inheritance(&mut lcg);
+
+        assert_eq!(
+            slots,
+            [
+                InheritanceSlot::new(5, 1),
+                InheritanceSlot::new(1, 1),
+                InheritanceSlot::new(0, 0),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_determine_inheritance_parent_bit_mapping() {
+        let mut lcg = Lcg64::from_raw(0x0000_0000_0000_0000);
+
+        let slots = determine_inheritance(&mut lcg);
+
+        assert_eq!(
+            slots,
+            [
+                InheritanceSlot::new(0, 0),
+                InheritanceSlot::new(4, 0),
+                InheritanceSlot::new(1, 0),
+            ]
+        );
     }
 
     #[test]
