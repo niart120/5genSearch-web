@@ -1,12 +1,9 @@
 ---
-name: 'pr-merge-cleanup'
-description: '作業ブランチをPR経由でマージし、ローカル同期・ブランチ削除まで実行'
-agent: agent
-tools:
-  ['vscode', 'execute', 'read', 'edit', 'search', 'github/create_pull_request', 'github/get_commit', 'github/get_me', 'github/merge_pull_request', 'github/pull_request_read', 'github/search_repositories', 'github/update_pull_request', 'todo']
+name: pr-merge-cleanup
+description: Create, merge, and clean up a GitHub pull request for the current non-main branch. Use when Codex is asked to push the current branch, create a PR, fill the PR template, squash merge it to main, sync local main, and delete local or remote merged branches.
 ---
 
-## PR作成・マージ・クリーンアップ プロンプト
+# PR作成・マージ・クリーンアップ
 
 作業ブランチの変更をPR経由でリモートにマージし、ローカルへの引き戻しと不要ブランチの削除までを一括実行する。
 
@@ -27,21 +24,21 @@ tools:
 
 3. **リポジトリ情報取得**
    - `git remote get-url origin` からowner/repo を抽出
-   - `mcp_github_get_me` で認証ユーザーを確認
+   - 利用可能な GitHub MCP または `gh auth status` で認証ユーザーを確認
 
 4. **PR作成**
-   - `mcp_github_create_pull_request` でPRを作成
+   - 利用可能な GitHub MCP または `gh pr create` でPRを作成
    - タイトル: ブランチ名から推測、または直近のコミットメッセージを使用
    - 本文: `.github/PULL_REQUEST_TEMPLATE.md` の構成に従って生成する
      - `git log --oneline main..HEAD` の出力を Commit Log セクションに含める
      - 実行した検証コマンドとその結果を Testing セクションに含める
 
 5. **PRマージ**
-   - `mcp_github_merge_pull_request` でsquashマージを実行
+   - 利用可能な GitHub MCP または `gh pr merge --squash` で squash マージを実行
    - マージ方法: `squash`（1コミットに集約）
 
 6. **ローカル同期**
-   - `git checkout main` でmainに切り替え
+   - `git switch main` でmainに切り替え
    - `git pull origin main` で最新を取得
 
 7. **ブランチ削除**
@@ -65,7 +62,7 @@ tools:
 - マージコミットSHA
 - 削除したブランチ名（ローカル・リモート）
 
-### プロンプト本文
+### 依頼例
 
 ```
 現在の作業ブランチの変更をGitHub PR経由でmainにマージしてください。

@@ -178,7 +178,7 @@ feature:{feature-id}
 
 #### 3.3.4 スキーマ管理
 
-公開前のため migration は実装しない ([typescript.instructions.md](../../../.github/instructions/typescript.instructions.md) の永続化運用規約に従う)。
+公開前のため migration は実装しない ([AGENTS.md](../../../../AGENTS.md) の永続化運用規約に従う)。
 
 - 状態追加: Zustand の shallow merge で初期値補完
 - 破壊的変更: localStorage クリアで対応
@@ -325,7 +325,7 @@ const { ivFilter, mtOffset } = useMtseedSearchStore(
 );
 ```
 
-`rerender-derived-state` ルール ([React Best Practices](../../../.github/skills/vercel-react-best-practices/AGENTS.md) Section 5.8) に従い、バリデーション結果などの導出値は selector 内で計算せず、コンポーネント内の `useMemo` で導出する。
+`rerender-derived-state` ルール ([React Best Practices](../../../../.agents/skills/vercel-react-best-practices/AGENTS.md) Section 5.8) に従い、バリデーション結果などの導出値は selector 内で計算せず、コンポーネント内の `useMemo` で導出する。
 
 ### 3.6 アーキテクチャ文書の更新方針
 

@@ -32,8 +32,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -71,8 +69,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -126,8 +122,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -139,7 +133,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+        timeout-minutes: 20
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Download WASM artifact
         uses: actions/download-artifact@v8
