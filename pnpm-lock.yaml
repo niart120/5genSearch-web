@@ -108,10 +108,10 @@ importers:
         version: 5.9.0(typescript@5.9.3)
       '@lingui/vite-plugin':
         specifier: ^5.9.0
-        version: 5.9.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(typescript@5.9.3)
+        version: 5.9.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(typescript@5.9.3)
       '@tailwindcss/vite':
         specifier: ^4.1.18
-        version: 4.1.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
+        version: 4.1.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -132,16 +132,16 @@ importers:
         version: 19.2.3(@types/react@19.2.8)
       '@vitejs/plugin-react':
         specifier: ^5.1.1
-        version: 5.1.2(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
+        version: 5.1.2(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
       '@vitest/browser':
         specifier: ^4.0.18
-        version: 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)
+        version: 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)
       '@vitest/browser-playwright':
         specifier: ^4.0.18
-        version: 4.0.18(playwright@1.58.1)(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)
+        version: 4.0.18(playwright@1.60.0)(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)
       '@vitest/coverage-v8':
         specifier: ^4.0.18
-        version: 4.0.18(@vitest/browser@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18))(vitest@4.0.18)
+        version: 4.0.18(@vitest/browser@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18))(vitest@4.0.18)
       '@webgpu/types':
         specifier: ^0.1.69
         version: 0.1.69
@@ -161,8 +161,8 @@ importers:
         specifier: ^1.59.0
         version: 1.59.0
       playwright:
-        specifier: ^1.58.1
-        version: 1.58.1
+        specifier: ^1.60.0
+        version: 1.60.0
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -177,19 +177,19 @@ importers:
         version: 5.9.3
       vite:
         specifier: npm:rolldown-vite@7.2.5
-        version: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+        version: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
       vite-plugin-mkcert:
         specifier: ^1.17.9
-        version: 1.17.9(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
+        version: 1.17.9(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
       vite-plugin-wasm:
         specifier: ^3.5.0
-        version: 3.5.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
+        version: 3.5.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
       vite-tsconfig-paths:
         specifier: ^5.1.4
-        version: 5.1.4(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(typescript@5.9.3)
+        version: 5.1.4(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(typescript@5.9.3)
       vitest:
         specifier: ^4.0.18
-        version: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)(yaml@2.8.2)
+        version: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)
 
 packages:
 
@@ -2388,6 +2388,7 @@ packages:
   git-raw-commits@4.0.0:
     resolution: {integrity: sha512-ICsMM1Wk8xSGMowkOmPrzo2Fgmfo4bMHLNX6ytHjajRJUqvHOw/TFapQ+QG75c3X/tTDDhOSRPGC52dDbNM8FQ==}
     engines: {node: '>=16'}
+    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
     hasBin: true
 
   glob-parent@5.1.2:
@@ -2863,13 +2864,13 @@ packages:
     resolution: {integrity: sha512-1wrVzJ2STrpmONHKBy228LM1b84msXDUoAzVEl0R8Mz4Ce6EPr+IVtxm8+yvrqLYMHswREkjYFaMxnyGnaY3Ng==}
     hasBin: true
 
-  playwright-core@1.58.1:
-    resolution: {integrity: sha512-bcWzOaTxcW+VOOGBCQgnaKToLJ65d6AqfLVKEWvexyS3AS6rbXl+xdpYRMGSRBClPvyj44njOWoxjNdL/H9UNg==}
+  playwright-core@1.60.0:
+    resolution: {integrity: sha512-9bW6zvX/m0lEbgTKJ6YppOKx8H3VOPBMOCFh2irXFOT4BbHgrx5hPjwJYLT40Lu+4qtD36qKc/Hn56StUW57IA==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.58.1:
-    resolution: {integrity: sha512-+2uTZHxSCcxjvGc5C891LrS1/NlxglGxzrC4seZiVjcYVQfUa87wBL6rTDqzGjuoWNjnBzRqKmF6zRYGMvQUaQ==}
+  playwright@1.60.0:
+    resolution: {integrity: sha512-hheHdokM8cdqCb0lcE3s+zT4t4W+vvjpGxsZlDnikarzx8tSzMebh3UiFtgqwFwnTnjYQcsyMF8ei2mCO/tpeA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2988,6 +2989,7 @@ packages:
   rolldown-vite@7.2.5:
     resolution: {integrity: sha512-u09tdk/huMiN8xwoiBbig197jKdCamQTtOruSalOzbqGje3jdHiV0njQlAW0YvzoahkirFePNQ4RYlfnRQpXZA==}
     engines: {node: ^20.19.0 || >=22.12.0}
+    deprecated: Use 7.3.1 for migration purposes. For the most recent updates, migrate to Vite 8 once you're ready.
     hasBin: true
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
@@ -3339,11 +3341,6 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
-
-  yaml@2.8.2:
-    resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
-    engines: {node: '>= 14.6'}
-    hasBin: true
 
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
@@ -4044,11 +4041,11 @@ snapshots:
     optionalDependencies:
       '@lingui/babel-plugin-lingui-macro': 5.9.0(typescript@5.9.3)
 
-  '@lingui/vite-plugin@5.9.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(typescript@5.9.3)':
+  '@lingui/vite-plugin@5.9.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
       '@lingui/cli': 5.9.0(typescript@5.9.3)
       '@lingui/conf': 5.9.0(typescript@5.9.3)
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
@@ -4771,12 +4768,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.1.18
       '@tailwindcss/oxide-win32-x64-msvc': 4.1.18
 
-  '@tailwindcss/vite@4.1.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))':
+  '@tailwindcss/vite@4.1.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))':
     dependencies:
       '@tailwindcss/node': 4.1.18
       '@tailwindcss/oxide': 4.1.18
       tailwindcss: 4.1.18
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
 
   '@tanstack/react-table@8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
@@ -4893,7 +4890,7 @@ snapshots:
     dependencies:
       '@types/yargs-parser': 21.0.3
 
-  '@vitejs/plugin-react@5.1.2(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))':
+  '@vitejs/plugin-react@5.1.2(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))':
     dependencies:
       '@babel/core': 7.28.6
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.6)
@@ -4901,33 +4898,33 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.53
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser-playwright@4.0.18(playwright@1.58.1)(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)':
+  '@vitest/browser-playwright@4.0.18(playwright@1.60.0)(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)':
     dependencies:
-      '@vitest/browser': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)
-      '@vitest/mocker': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
-      playwright: 1.58.1
+      '@vitest/browser': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)
+      '@vitest/mocker': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
+      playwright: 1.60.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)(yaml@2.8.2)
+      vitest: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)
     transitivePeerDependencies:
       - bufferutil
       - msw
       - utf-8-validate
       - vite
 
-  '@vitest/browser@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)':
+  '@vitest/browser@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)':
     dependencies:
-      '@vitest/mocker': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
+      '@vitest/mocker': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
       '@vitest/utils': 4.0.18
       magic-string: 0.30.21
       pixelmatch: 7.1.0
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.0.3
-      vitest: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)(yaml@2.8.2)
+      vitest: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)
       ws: 8.19.0
     transitivePeerDependencies:
       - bufferutil
@@ -4935,7 +4932,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@4.0.18(@vitest/browser@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18))(vitest@4.0.18)':
+  '@vitest/coverage-v8@4.0.18(@vitest/browser@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18))(vitest@4.0.18)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.18
@@ -4947,9 +4944,9 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)(yaml@2.8.2)
+      vitest: 4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)
     optionalDependencies:
-      '@vitest/browser': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)
+      '@vitest/browser': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)
 
   '@vitest/expect@4.0.18':
     dependencies:
@@ -4960,13 +4957,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))':
+  '@vitest/mocker@4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))':
     dependencies:
       '@vitest/spy': 4.0.18
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
 
   '@vitest/pretty-format@4.0.18':
     dependencies:
@@ -5898,11 +5895,11 @@ snapshots:
     dependencies:
       pngjs: 7.0.0
 
-  playwright-core@1.58.1: {}
+  playwright-core@1.60.0: {}
 
-  playwright@1.58.1:
+  playwright@1.60.0:
     dependencies:
-      playwright-core: 1.58.1
+      playwright-core: 1.60.0
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -6004,7 +6001,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2):
+  rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1):
     dependencies:
       '@oxc-project/runtime': 0.97.0
       fdir: 6.5.0(picomatch@4.0.3)
@@ -6018,7 +6015,6 @@ snapshots:
       esbuild: 0.25.12
       fsevents: 2.3.3
       jiti: 2.6.1
-      yaml: 2.8.2
 
   rolldown@1.0.0-beta.50:
     dependencies:
@@ -6223,34 +6219,34 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vite-plugin-mkcert@1.17.9(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)):
+  vite-plugin-mkcert@1.17.9(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)):
     dependencies:
       axios: 1.13.5(debug@4.4.3)
       debug: 4.4.3
       picocolors: 1.1.1
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
     transitivePeerDependencies:
       - supports-color
 
-  vite-plugin-wasm@3.5.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)):
+  vite-plugin-wasm@3.5.0(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)):
     dependencies:
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
 
-  vite-tsconfig-paths@5.1.4(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(typescript@5.9.3):
+  vite-tsconfig-paths@5.1.4(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(typescript@5.9.3):
     dependencies:
       debug: 4.4.3
       globrex: 0.1.2
       tsconfck: 3.1.6(typescript@5.9.3)
     optionalDependencies:
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vitest@4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0)(yaml@2.8.2):
+  vitest@4.0.18(@types/node@24.10.9)(@vitest/browser-playwright@4.0.18)(esbuild@0.25.12)(jiti@2.6.1)(jsdom@27.4.0):
     dependencies:
       '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))
+      '@vitest/mocker': 4.0.18(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))
       '@vitest/pretty-format': 4.0.18
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18
@@ -6267,11 +6263,11 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2)
+      vite: rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.10.9
-      '@vitest/browser-playwright': 4.0.18(playwright@1.58.1)(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1)(yaml@2.8.2))(vitest@4.0.18)
+      '@vitest/browser-playwright': 4.0.18(playwright@1.60.0)(rolldown-vite@7.2.5(@types/node@24.10.9)(esbuild@0.25.12)(jiti@2.6.1))(vitest@4.0.18)
       jsdom: 27.4.0
     transitivePeerDependencies:
       - esbuild
@@ -6327,9 +6323,6 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
-
-  yaml@2.8.2:
-    optional: true
 
   yargs-parser@21.1.1: {}
 

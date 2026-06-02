@@ -1,33 +1,15 @@
 ---
 name: gh-pages-release
-description: release-please PR の確認・バージョン決定・マージによるリリース実行
-argument-hint: releaseType=patch|minor|major
-agent: agent
-tools:
-  [
-    'vscode',
-    'execute',
-    'read',
-    'edit',
-    'search',
-    'github/list_pull_requests',
-    'github/pull_request_read',
-    'github/update_pull_request',
-    'github/merge_pull_request',
-    'github/list_tags',
-    'github/get_me',
-    'github/search_repositories',
-    'todo',
-  ]
+description: Inspect and merge a release-please GitHub Pages release PR with an explicit patch, minor, or major release decision. Use when Codex is asked to run a release, verify release-please output, check CI, adjust Release-As, merge the release PR, or confirm deployment to GitHub Pages.
 ---
 
-## リリース実行プロンプト
+# リリース実行
 
 目的: release-please が作成したリリース PR を確認し、ユーザ指定のバージョン種別でリリースを実行する。
 
 ### 入力
 
-- ${input:releaseType} — `patch` / `minor` / `major`
+- `releaseType`: `patch` / `minor` / `major`
 
 ### 前提条件
 
@@ -43,12 +25,12 @@ tools:
    - 変更を `Added / Changed / Fixed / Removed` に分類してユーザに提示
 
 2. **release-please PR の確認**
-   - `mcp_github_list_pull_requests` で `release-please` ラベルまたはタイトルに "release" を含む PR を検索
+   - 利用可能な GitHub MCP または `gh pr list` で `release-please` ラベルまたはタイトルに "release" を含む PR を検索
    - PR が存在しない場合、main への push 後に release-please が PR を作成するまで待つ旨を通知して中断
    - PR の CHANGELOG ドラフト内容を表示
 
 3. **CI 状態の確認**
-   - `mcp_github_pull_request_read` の `get_status` / `get_check_runs` で release-please PR の head commit 状態を確認
+   - 利用可能な GitHub MCP または `gh pr checks` で release-please PR の head commit 状態を確認
    - `autorelease: pending` ラベルは release-please の正常な「リリース PR マージ待ち」状態として扱い、中断条件にしない
    - combined status が `pending` でも、`statuses` / `check_runs` が 0 件の場合は「チェック未作成」として扱う
      - release-please PR は `github-actions[bot]` により作成・更新されるため、PR head に通常の `pull_request` CI が付かない場合がある
@@ -59,7 +41,7 @@ tools:
 4. **バージョン判定**
    - release-please が自動判定したバージョンと、ユーザ指定の `releaseType` を照合
    - 不一致の場合:
-     - PR 本文に `Release-As: X.Y.Z` ヘッダを `mcp_github_update_pull_request` で追加
+     - PR 本文に `Release-As: X.Y.Z` ヘッダを利用可能な GitHub MCP または `gh pr edit` で追加
      - 追加後、release-please が PR を更新するのを待つ (手動で retrigger が必要な場合はその旨通知)
    - 一致の場合: そのまま続行
 
@@ -74,7 +56,7 @@ tools:
      - (c) 中断し、コミット prefix の修正を検討
 
 6. **PR マージ**
-   - `mcp_github_merge_pull_request` でマージを実行
+   - 利用可能な GitHub MCP または `gh pr merge` でマージを実行
    - マージ方法: merge commit (release-please のデフォルト)
 
 7. **結果確認**
@@ -89,6 +71,6 @@ tools:
 - 実行中または pending の CI check/status が残っている
 - 変更規模とリリース種別の乖離が大きく、ユーザが続行を拒否した
 
-### プロンプト本文
+### 依頼例
 
-あなたはリリースアシスタントです。上記の手順に従い、release-please が作成したリリース PR を確認し、ユーザ指定のバージョン種別 (${input:releaseType}) でリリースを実行してください。各段階で状態を検査し、問題があれば中止して詳細報告を行ってください。
+あなたはリリースアシスタントです。上記の手順に従い、release-please が作成したリリース PR を確認し、ユーザ指定のバージョン種別 (`patch` / `minor` / `major`) でリリースを実行してください。各段階で状態を検査し、問題があれば中止して詳細報告を行ってください。
