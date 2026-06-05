@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.6](https://github.com/niart120/5genSearch-web/compare/v1.3.5...v1.3.6) (2026-06-05)
+
+
+### Bug Fixes
+
+* **state:** 派生値と転写値の解決タイミングを修正 ([c7d1c1a](https://github.com/niart120/5genSearch-web/commit/c7d1c1a03e1dfc975ca989b3000c422cb1542064))
+
+
+### Miscellaneous Chores
+
+* codex 向けエージェント設定に移行 ([5d48766](https://github.com/niart120/5genSearch-web/commit/5d4876693dcb9ee734138c2f5795dba847027145))
+* pnpmローカルストアをignoreに追加 ([5d0e88f](https://github.com/niart120/5genSearch-web/commit/5d0e88fb88b69b03428b0dbc7b6074e07ff65a23))
+
 ## [1.3.5](https://github.com/niart120/5genSearch-web/compare/v1.3.4...v1.3.5) (2026-05-24)
 
 
