@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.3.5",
   "type": "module",
-  "packageManager": "pnpm@11.5.0",
+  "packageManager": "pnpm@11.5.1",
   "scripts": {
     "dev": "vite",
     "build": "pnpm build:wasm && tsc -b && vite build",

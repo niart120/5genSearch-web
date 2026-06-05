@@ -311,7 +311,7 @@ function SeedInputSection({
         });
         if (resolveIdRef.current === id) {
           setStartupOrigins(resolved);
-          onOriginsChange(resolved);
+          onOriginsChangeRef.current(resolved);
         }
       } catch (error: unknown) {
         if (resolveIdRef.current === id) {
@@ -319,8 +319,13 @@ function SeedInputSection({
         }
       }
     },
-    [dsConfig, ranges, onOriginsChange]
+    [dsConfig, ranges]
   );
+
+  useEffect(() => {
+    if (mode !== 'manual-startup') return;
+    autoResolveStartup(datetimeRef.current, keyInputRef.current);
+  }, [mode, autoResolveStartup]);
 
   // Tab 変更
   const handleTabChange = useCallback(

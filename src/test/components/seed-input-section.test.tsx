@@ -6,20 +6,21 @@
  * タブ別 origins 独立保持をテストする。
  */
 
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { getSearchResultsInitialState, useSearchResultsStore } from '@/stores/search/results';
+import { getDsConfigInitialState, useDsConfigStore } from '@/stores/settings/ds-config';
 import type { SeedOrigin } from '@/wasm/wasm_pkg';
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockResolveSeedOrigins = vi.fn((): SeedOrigin[] => []);
+const mockResolveSeedOrigins = vi.fn((..._args: unknown[]): SeedOrigin[] => []);
 vi.mock('@/services/seed-resolve', () => ({
   resolveSeedOrigins: (...args: unknown[]) =>
     (mockResolveSeedOrigins as (...args: unknown[]) => SeedOrigin[])(...args),
@@ -99,6 +100,7 @@ function StatefulWrapper({
 
 const resetStore = () => {
   useSearchResultsStore.setState(getSearchResultsInitialState());
+  useDsConfigStore.setState(getDsConfigInitialState());
 };
 
 // ---------------------------------------------------------------------------
@@ -195,6 +197,38 @@ describe('SeedInputSection', () => {
       await user.click(screen.getByRole('tab', { name: /Import/i }));
       expect(onOriginsChangeSpy).toHaveBeenCalledWith([]);
     });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Startup 自動再解決
+  // ---------------------------------------------------------------------------
+
+  it('manual-startup が有効な間は DS 設定変更で Startup origins を再解決する', async () => {
+    const updatedOrigins: SeedOrigin[] = [
+      {
+        Startup: {
+          base_seed: 0x33n,
+          mt_seed: 0x33,
+          datetime: { year: 2025, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
+        },
+      },
+    ];
+    mockResolveSeedOrigins.mockImplementation((spec: unknown): SeedOrigin[] => {
+      const ds = (spec as { ds?: { mac?: number[] } }).ds;
+      return ds?.mac?.[5] === 0x99 ? updatedOrigins : STARTUP_ORIGINS;
+    });
+
+    const onOriginsChangeSpy = vi.fn();
+    render(<StatefulWrapper onOriginsChangeSpy={onOriginsChangeSpy} />);
+    await waitFor(() => expect(onOriginsChangeSpy).toHaveBeenCalledWith(STARTUP_ORIGINS));
+
+    onOriginsChangeSpy.mockClear();
+    act(() => {
+      useDsConfigStore.getState().setConfig({ mac: [0, 0, 0, 0, 0, 0x99] });
+    });
+
+    await waitFor(() => expect(onOriginsChangeSpy).toHaveBeenCalledWith(updatedOrigins));
   });
 
   // ---------------------------------------------------------------------------
