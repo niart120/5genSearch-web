@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 # Cache files
+.pnpm-store/
 
 # Rust/WASM
 target/
