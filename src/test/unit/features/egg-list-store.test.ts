@@ -23,6 +23,7 @@ describe('egg-list store', () => {
     expect(state.filter).toBeUndefined();
     expect(state.statsFilter).toBeUndefined();
     expect(state.statMode).toBe('stats');
+    expect(state.formRevision).toBe(0);
     expect(state.results).toEqual([]);
   });
 
@@ -81,6 +82,7 @@ describe('egg-list store', () => {
 
     expect(useEggListStore.getState().results).toEqual(mockResults);
     expect(useEggListStore.getState().speciesId).toBeUndefined();
+    expect(useEggListStore.getState().formRevision).toBe(1);
   });
 
   it('should exclude results from partialize', () => {
@@ -88,5 +90,6 @@ describe('egg-list store', () => {
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('eggParams');
     expect(partialized).toHaveProperty('speciesId');
+    expect(partialized).not.toHaveProperty('formRevision');
   });
 });

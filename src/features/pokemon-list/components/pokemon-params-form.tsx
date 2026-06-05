@@ -59,6 +59,7 @@ interface PokemonParamsFormProps {
   value: EncounterParamsOutput;
   onChange: Dispatch<SetStateAction<EncounterParamsOutput>>;
   version: RomVersion;
+  syncKey?: number;
   disabled?: boolean;
 }
 
@@ -70,6 +71,7 @@ function PokemonParamsForm({
   value,
   onChange,
   version,
+  syncKey,
   disabled,
 }: PokemonParamsFormProps): ReactElement {
   const { t } = useLingui();
@@ -87,6 +89,12 @@ function PokemonParamsForm({
   // ロケーション / 固定ポケモン選択状態
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [selectedStaticEntry, setSelectedStaticEntry] = useState<string>('');
+
+  useEffect(() => {
+    setSelectedCategory(findCategoryForType(encounterType) ?? 'wild');
+    setSelectedLocation('');
+    setSelectedStaticEntry('');
+  }, [encounterType, syncKey]);
 
   // 選択カテゴリのサブタイプ一覧
   const categorySubTypes = useMemo(() => {
@@ -176,6 +184,14 @@ function PokemonParamsForm({
   // offset / max_advance ローカル state
   const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));
   const [localMaxAdv, setLocalMaxAdv] = useState(String(genConfig.max_advance));
+
+  useEffect(() => {
+    setLocalOffset(String(genConfig.user_offset));
+  }, [genConfig.user_offset, syncKey]);
+
+  useEffect(() => {
+    setLocalMaxAdv(String(genConfig.max_advance));
+  }, [genConfig.max_advance, syncKey]);
 
   // カテゴリ変更ハンドラ
   const handleCategoryChange = useCallback(

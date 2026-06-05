@@ -63,6 +63,7 @@ function PokemonListPage(): ReactElement {
   const setFilter = usePokemonListStore((s) => s.setFilter);
   const statsFilter = usePokemonListStore((s) => s.statsFilter);
   const setStatsFilter = usePokemonListStore((s) => s.setStatsFilter);
+  const formRevision = usePokemonListStore((s) => s.formRevision);
 
   // 生成フック
   const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
@@ -226,6 +227,7 @@ function PokemonListPage(): ReactElement {
             value={encounterParams}
             onChange={setEncounterParams}
             version={dsConfig.version}
+            syncKey={formRevision}
             disabled={isLoading}
           />
 
@@ -237,6 +239,7 @@ function PokemonListPage(): ReactElement {
             statMode={statMode}
             availableSpecies={encounterParams.availableSpecies}
             encounterType={encounterParams.encounterType}
+            syncKey={formRevision}
             disabled={isLoading}
           />
 

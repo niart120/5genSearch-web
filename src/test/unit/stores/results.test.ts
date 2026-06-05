@@ -102,17 +102,29 @@ describe('search results store', () => {
   });
 
   describe('pendingSeedOrigins', () => {
-    it('should have empty array as initial value', () => {
-      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+    it('should have empty object as initial value', () => {
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual({});
     });
 
-    it('should set and clear', () => {
+    it('should set and clear per target', () => {
       const origins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
-      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
-      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual(origins);
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'pokemon-list');
+      expect(useSearchResultsStore.getState().pendingSeedOrigins['pokemon-list']).toEqual(origins);
 
-      useSearchResultsStore.getState().clearPendingSeedOrigins();
-      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+      useSearchResultsStore.getState().clearPendingSeedOrigins('pokemon-list');
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual({});
+    });
+
+    it('should not clear other targets', () => {
+      const pokemonOrigins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
+      const eggOrigins: SeedOrigin[] = [{ Seed: { base_seed: 2n, mt_seed: 2 } }];
+      useSearchResultsStore.getState().setPendingSeedOrigins(pokemonOrigins, 'pokemon-list');
+      useSearchResultsStore.getState().setPendingSeedOrigins(eggOrigins, 'egg-list');
+
+      useSearchResultsStore.getState().clearPendingSeedOrigins('pokemon-list');
+
+      expect(useSearchResultsStore.getState().pendingSeedOrigins['pokemon-list']).toBeUndefined();
+      expect(useSearchResultsStore.getState().pendingSeedOrigins['egg-list']).toEqual(eggOrigins);
     });
   });
 
@@ -170,28 +182,48 @@ describe('search results store', () => {
         { Seed: { base_seed: 1n, mt_seed: 1 } },
         { Seed: { base_seed: 2n, mt_seed: 2 } },
       ];
-      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'pokemon-list');
 
-      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins('pokemon-list');
       expect(consumed).toEqual(origins);
-      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual({});
     });
 
     it('should return empty array when no pending seed origins exist', () => {
-      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins('pokemon-list');
       expect(consumed).toEqual([]);
       // Store should not be modified (already empty)
-      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual({});
     });
 
     it('should prevent double consumption', () => {
       const origins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
-      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'pokemon-list');
 
-      const first = useSearchResultsStore.getState().consumePendingSeedOrigins();
-      const second = useSearchResultsStore.getState().consumePendingSeedOrigins();
+      const first = useSearchResultsStore.getState().consumePendingSeedOrigins('pokemon-list');
+      const second = useSearchResultsStore.getState().consumePendingSeedOrigins('pokemon-list');
       expect(first).toEqual(origins);
       expect(second).toEqual([]);
+    });
+
+    it('should not consume another target', () => {
+      const origins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'egg-list');
+
+      const consumed = useSearchResultsStore.getState().consumePendingSeedOrigins('pokemon-list');
+      expect(consumed).toEqual([]);
+      expect(useSearchResultsStore.getState().pendingSeedOrigins['egg-list']).toEqual(origins);
+    });
+  });
+
+  describe('consumePendingTargetSeeds', () => {
+    it('should return and clear pending target seeds', () => {
+      useSearchResultsStore.getState().setPendingTargetSeeds([0x12_34_56_78]);
+
+      const consumed = useSearchResultsStore.getState().consumePendingTargetSeeds();
+
+      expect(consumed).toEqual([0x12_34_56_78]);
+      expect(useSearchResultsStore.getState().pendingTargetSeeds).toEqual([]);
     });
   });
 });

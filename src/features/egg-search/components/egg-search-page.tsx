@@ -61,6 +61,7 @@ function EggSearchPage(): ReactElement {
   const setGenConfigPartial = useEggSearchStore((s) => s.setGenConfig);
   const filter = useEggSearchStore((s) => s.filter);
   const setFilter = useEggSearchStore((s) => s.setFilter);
+  const formRevision = useEggSearchStore((s) => s.formRevision);
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
@@ -220,10 +221,17 @@ function EggSearchPage(): ReactElement {
             genConfig={genConfigPartial}
             onChange={setEggParams}
             onGenConfigChange={setGenConfigPartial}
+            syncKey={formRevision}
             disabled={isLoading}
           />
 
-          <EggFilterForm value={filter} onChange={setFilter} disabled={isLoading} showReset />
+          <EggFilterForm
+            value={filter}
+            onChange={setFilter}
+            syncKey={formRevision}
+            disabled={isLoading}
+            showReset
+          />
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (

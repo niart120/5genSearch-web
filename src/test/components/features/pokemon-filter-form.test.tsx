@@ -163,4 +163,23 @@ describe('PokemonFilterForm', () => {
     const lastFilter = calls.at(-1)![0] as PokemonFilter | undefined;
     expect(lastFilter?.held_item_slots).toBeUndefined();
   });
+
+  it('syncKey 変更時は内部フィルタを外部値に同期する', async () => {
+    const user = userEvent.setup();
+    const initialFilter: PokemonFilter = {
+      ...DEFAULT_FILTER,
+      level_range: [10, 20],
+    };
+    const { rerenderWith } = renderFilterForm({
+      value: initialFilter,
+      syncKey: 0,
+    });
+    await openFilter(user);
+
+    expect((screen.getByLabelText('level-min') as HTMLInputElement).value).toBe('10');
+
+    rerenderWith({ value: undefined, syncKey: 1 });
+
+    expect((screen.getByLabelText('level-min') as HTMLInputElement).value).toBe('');
+  });
 });

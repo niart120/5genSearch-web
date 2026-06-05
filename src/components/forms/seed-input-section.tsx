@@ -98,6 +98,8 @@ function SeedInputSection({
 }: SeedInputSectionProps): ReactElement {
   const { t } = useLingui();
   const { config: dsConfig, ranges } = useDsConfigReadonly();
+  const pendingDetailOrigin = useSearchResultsStore((s) => s.pendingDetailOrigins[featureId]);
+  const pendingSeedOrigins = useSearchResultsStore((s) => s.pendingSeedOrigins[featureId]);
 
   // ---------------------------------------------------------------------------
   // pending データの同期消費 (lazy initializer)
@@ -135,7 +137,7 @@ function SeedInputSection({
       }
       return { type: 'seed', detail, origins };
     }
-    const seeds = store.consumePendingSeedOrigins();
+    const seeds = store.consumePendingSeedOrigins(featureId);
     if (seeds.length > 0) return { type: 'seeds', seeds };
     if (mode === 'manual-startup') {
       let origins: SeedOrigin[] = [];
@@ -153,6 +155,11 @@ function SeedInputSection({
       return { type: 'default-startup', origins };
     }
   });
+  const ignoredPendingSeedOriginsRef = useRef<SeedOrigin[] | undefined>(
+    initialPending?.type === 'startup' || initialPending?.type === 'seed'
+      ? useSearchResultsStore.getState().pendingSeedOrigins[featureId]
+      : undefined
+  );
 
   // ---------------------------------------------------------------------------
   // 内部 state (lazy initializer で initialPending から導出)
@@ -251,6 +258,80 @@ function SeedInputSection({
       }
     }
   }, [initialPending]);
+
+  // ---------------------------------------------------------------------------
+  // Pending effect: mount 後の転写データを反映
+  // ---------------------------------------------------------------------------
+
+  const applyDetailOrigin = useCallback(
+    (detail: SeedOrigin) => {
+      setResolveError(undefined);
+      setImportError(undefined);
+      if ('Startup' in detail) {
+        const nextKeyInput = keyMaskToKeyInput(detail.Startup.condition.key_mask);
+        const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
+        let nextOrigins: SeedOrigin[] = [];
+        try {
+          nextOrigins = resolveSeedOrigins({
+            type: 'Startup',
+            ds: dsConfig,
+            datetime: detail.Startup.datetime,
+            ranges,
+            key_input: nextKeyInput,
+          });
+        } catch {
+          /* resolve failure */
+        }
+        setSeedText(hex);
+        setDatetime(detail.Startup.datetime);
+        setKeyInput(nextKeyInput);
+        setStartupOrigins(nextOrigins);
+        onModeChangeRef.current('manual-startup');
+        onOriginsChangeRef.current(nextOrigins);
+        return;
+      }
+
+      const hex = detail.Seed.base_seed.toString(16).toUpperCase().padStart(16, '0');
+      let nextOrigins: SeedOrigin[] = [];
+      try {
+        nextOrigins = resolveSeedOrigins({
+          type: 'Seeds',
+          seeds: [detail.Seed.base_seed],
+        });
+      } catch {
+        /* resolve failure */
+      }
+      setSeedText(hex);
+      setSeedsOrigins(nextOrigins);
+      onModeChangeRef.current('manual-seeds');
+      onOriginsChangeRef.current(nextOrigins);
+    },
+    [dsConfig, ranges]
+  );
+
+  useEffect(() => {
+    if (!pendingDetailOrigin) return;
+    const seedPendingForFeature = useSearchResultsStore.getState().pendingSeedOrigins[featureId];
+    if (seedPendingForFeature) {
+      ignoredPendingSeedOriginsRef.current = seedPendingForFeature;
+    }
+    const detail = useSearchResultsStore.getState().consumePendingDetailOrigin(featureId);
+    if (detail) {
+      applyDetailOrigin(detail);
+    }
+  }, [featureId, pendingDetailOrigin, applyDetailOrigin]);
+
+  useEffect(() => {
+    if (!pendingSeedOrigins || pendingSeedOrigins.length === 0) return;
+    if (ignoredPendingSeedOriginsRef.current === pendingSeedOrigins) return;
+    const seeds = useSearchResultsStore.getState().consumePendingSeedOrigins(featureId);
+    if (seeds.length === 0) return;
+    setResolveError(undefined);
+    setImportError(undefined);
+    setImportOrigins(seeds);
+    onModeChangeRef.current('import');
+    onOriginsChangeRef.current(seeds);
+  }, [featureId, pendingSeedOrigins]);
 
   // ---------------------------------------------------------------------------
   // Auto-resolve helpers

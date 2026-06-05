@@ -34,6 +34,7 @@ interface EggSearchFormState {
   eggParams: EggGenerationParams;
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
   filter: EggFilter | undefined;
+  formRevision: number;
 }
 
 /** 非永続化: 検索結果 */
@@ -114,6 +115,7 @@ const createDefaultFormState = (): EggSearchFormState => ({
   eggParams: DEFAULT_EGG_PARAMS,
   genConfig: DEFAULT_GEN_CONFIG,
   filter: undefined,
+  formRevision: 0,
 });
 
 const DEFAULT_RESULT_STATE: EggSearchResultState = {
@@ -147,7 +149,8 @@ export const useEggSearchStore = create<EggSearchState & EggSearchActions>()(
       appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
-      resetForm: () => set(createDefaultFormState()),
+      resetForm: () =>
+        set((state) => ({ ...createDefaultFormState(), formRevision: state.formRevision + 1 })),
     }),
     {
       name: 'feature:egg-search',

@@ -22,6 +22,7 @@ interface PokemonListFormState {
   filter: PokemonFilter | undefined;
   statsFilter: StatsFilter | undefined;
   statMode: StatDisplayMode;
+  formRevision: number;
 }
 
 /** 非永続化: 検索結果 (raw データ; UI 変換は Hook 側で行う) */
@@ -61,6 +62,7 @@ const DEFAULT_FORM_STATE: PokemonListFormState = {
   filter: undefined,
   statsFilter: undefined,
   statMode: 'stats',
+  formRevision: 0,
 };
 
 const DEFAULT_RESULT_STATE: PokemonListResultState = {
@@ -90,7 +92,8 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
       appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
       clearResults: () => set({ results: [] }),
 
-      resetForm: () => set(DEFAULT_FORM_STATE),
+      resetForm: () =>
+        set((state) => ({ ...DEFAULT_FORM_STATE, formRevision: state.formRevision + 1 })),
     }),
     {
       name: 'feature:pokemon-list',

@@ -181,4 +181,56 @@ describe('EggParamsForm', () => {
     const result = applyLastUpdate(onGenConfigChange, DEFAULT_GEN_CONFIG);
     expect(result).toEqual(expect.objectContaining({ user_offset: 10 }));
   });
+
+  it('syncKey 変更で未確定の offset 表示が外部値に戻る', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const onGenConfigChange = vi.fn();
+    const { rerender } = renderForm({ onChange, onGenConfigChange, syncKey: 0 });
+
+    const offsetInput = screen.getByLabelText('Start offset') as HTMLInputElement;
+    await user.clear(offsetInput);
+    await user.type(offsetInput, '77');
+    expect(offsetInput.value).toBe('77');
+
+    rerender(
+      <I18nTestWrapper>
+        <EggParamsForm
+          value={DEFAULT_EGG_PARAMS}
+          genConfig={DEFAULT_GEN_CONFIG}
+          onChange={onChange}
+          onGenConfigChange={onGenConfigChange}
+          syncKey={1}
+        />
+      </I18nTestWrapper>
+    );
+
+    expect(offsetInput.value).toBe('0');
+  });
+
+  it('syncKey 変更で未確定の親 IV 表示が外部値に戻る', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const onGenConfigChange = vi.fn();
+    const { rerender } = renderForm({ onChange, onGenConfigChange, syncKey: 0 });
+
+    const hpInput = screen.getByRole('textbox', { name: 'Parent ♂ IVs H' }) as HTMLInputElement;
+    await user.clear(hpInput);
+    await user.type(hpInput, '15');
+    expect(hpInput.value).toBe('15');
+
+    rerender(
+      <I18nTestWrapper>
+        <EggParamsForm
+          value={DEFAULT_EGG_PARAMS}
+          genConfig={DEFAULT_GEN_CONFIG}
+          onChange={onChange}
+          onGenConfigChange={onGenConfigChange}
+          syncKey={1}
+        />
+      </I18nTestWrapper>
+    );
+
+    expect(hpInput.value).toBe('0');
+  });
 });

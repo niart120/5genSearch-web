@@ -168,6 +168,41 @@ describe('EggFilterForm', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ shiny: 'Star' }));
   });
 
+  it('showToggle: syncKey 変更時は OFF 中の内部状態を外部値に同期する', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { rerender } = renderFilterForm({
+      value: { ...DEFAULT_FILTER, shiny: 'Star' },
+      onChange,
+      showToggle: true,
+      showReset: true,
+      syncKey: 0,
+    });
+
+    const toggle = screen.getByRole('switch');
+    await user.click(toggle);
+    expect(onChange.mock.lastCall?.[0]).toBeUndefined();
+
+    rerender(
+      <I18nTestWrapper>
+        <EggFilterForm value={undefined} onChange={onChange} showToggle showReset syncKey={0} />
+      </I18nTestWrapper>
+    );
+
+    rerender(
+      <I18nTestWrapper>
+        <EggFilterForm value={undefined} onChange={onChange} showToggle showReset syncKey={1} />
+      </I18nTestWrapper>
+    );
+
+    expect(screen.getByRole('switch')).toBeChecked();
+    await openFilter(user);
+    const shinyCombobox = screen
+      .getAllByRole('combobox')
+      .find((el) => el.textContent?.includes('☆'));
+    expect(shinyCombobox).toBeUndefined();
+  });
+
   it('showToggle: Switch OFF 時に子要素が opacity-50 になる', async () => {
     const user = userEvent.setup();
     renderFilterForm({ value: undefined, showToggle: true });

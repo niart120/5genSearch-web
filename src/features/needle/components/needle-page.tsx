@@ -50,13 +50,13 @@ function NeedlePage(): ReactElement {
   const setMaxAdvance = useNeedleStore((s) => s.setMaxAdvance);
   const autoSearch = useNeedleStore((s) => s.autoSearch);
   const setAutoSearch = useNeedleStore((s) => s.setAutoSearch);
+  const pendingDetailOrigin = useSearchResultsStore((s) => s.pendingDetailOrigins['needle']);
 
   // pendingDetailOrigins の自動消費 (needle ページ分)
   useEffect(() => {
-    const store = useSearchResultsStore.getState();
-    const detail = store.pendingDetailOrigins['needle'];
+    if (!pendingDetailOrigin) return;
+    const detail = useSearchResultsStore.getState().consumePendingDetailOrigin('needle');
     if (detail) {
-      store.clearPendingDetailOrigin('needle');
       if ('Startup' in detail) {
         const hex = detail.Startup.base_seed.toString(16).toUpperCase().padStart(16, '0');
         setDatetime(detail.Startup.datetime);
@@ -69,7 +69,7 @@ function NeedlePage(): ReactElement {
         setSeedMode('seed');
       }
     }
-  }, [setDatetime, setKeyInput, setSeedHex, setSeedMode]);
+  }, [pendingDetailOrigin, setDatetime, setKeyInput, setSeedHex, setSeedMode]);
 
   // seedOrigins は入力状態から導出 (初回レンダーから計算される)
   const seedOrigins = useMemo(() => {

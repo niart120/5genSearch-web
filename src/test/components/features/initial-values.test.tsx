@@ -4,9 +4,12 @@
  * WASM 依存の hooks・services をモックし、初期表示の default 値を検証する。
  */
 
-import { render } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
+import { getSearchResultsInitialState, useSearchResultsStore } from '@/stores/search/results';
+import { getNeedleInitialState, useNeedleStore } from '@/features/needle/store';
+import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
 
 // ---------------------------------------------------------------------------
 // Global mocks
@@ -77,6 +80,8 @@ vi.mock('@/services/export-columns', () => ({
 
 beforeEach(() => {
   setupTestI18n();
+  useSearchResultsStore.setState(getSearchResultsInitialState());
+  useNeedleStore.setState(getNeedleInitialState());
 });
 
 // ---------------------------------------------------------------------------
@@ -96,6 +101,29 @@ describe('NeedlePage 初期表示', () => {
     const input = document.querySelector<HTMLInputElement>('#max-advance');
     expect(input).not.toBeNull();
     expect(input?.value).toBe('30');
+  });
+
+  it('mount 後に pendingDetailOrigins needle が入ると LCG Seed 入力へ反映される', async () => {
+    const { NeedlePage } = await import('@/features/needle/components/needle-page');
+    render(
+      <I18nTestWrapper>
+        <NeedlePage />
+      </I18nTestWrapper>
+    );
+
+    const origin: SeedOrigin = {
+      Seed: {
+        base_seed: 0xab_cd_ef_01_23_45_67_89n,
+        mt_seed: 0x23_45_67_89,
+      },
+    };
+    act(() => {
+      useSearchResultsStore.getState().setPendingDetailOrigin(origin);
+    });
+
+    const input = await screen.findByLabelText('LCG Seed (Hex)');
+    await waitFor(() => expect((input as HTMLInputElement).value).toBe('ABCDEF0123456789'));
+    expect(useSearchResultsStore.getState().pendingDetailOrigins['needle']).toBeUndefined();
   });
 });
 

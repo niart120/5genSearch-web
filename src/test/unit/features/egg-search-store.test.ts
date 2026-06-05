@@ -22,6 +22,7 @@ describe('egg-search store', () => {
     expect(state.genConfig.user_offset).toBe(0);
     expect(state.genConfig.max_advance).toBe(30);
     expect(state.filter).toBeUndefined();
+    expect(state.formRevision).toBe(0);
     expect(state.results).toEqual([]);
   });
 
@@ -78,6 +79,7 @@ describe('egg-search store', () => {
 
     expect(useEggSearchStore.getState().results).toEqual(mockResults);
     expect(useEggSearchStore.getState().genConfig.user_offset).toBe(0);
+    expect(useEggSearchStore.getState().formRevision).toBe(1);
   });
 
   it('should exclude results from partialize', () => {
@@ -85,5 +87,6 @@ describe('egg-search store', () => {
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('eggParams');
     expect(partialized).toHaveProperty('genConfig');
+    expect(partialized).not.toHaveProperty('formRevision');
   });
 });

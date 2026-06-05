@@ -5,7 +5,7 @@
  * 表示順: 親個体値 → ♀親特性 → かわらずのいし → 性別比 → フラグ群 → offset/max_advance
  */
 
-import { useState, useCallback, memo, type Dispatch, type SetStateAction } from 'react';
+import { useState, useCallback, useEffect, memo, type Dispatch, type SetStateAction } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -54,6 +54,7 @@ interface EggParamsFormProps {
   >;
   speciesId?: number | undefined;
   onSpeciesIdChange?: (speciesId: number | undefined) => void;
+  syncKey?: number;
   disabled?: boolean;
 }
 
@@ -68,6 +69,7 @@ interface ParentIvsInputProps {
   onChange: (ivs: Ivs) => void;
   disabled?: boolean;
   language: SupportedLocale;
+  syncKey?: number;
 }
 
 const ParentIvsInput = memo(function ParentIvsInput({
@@ -76,10 +78,15 @@ const ParentIvsInput = memo(function ParentIvsInput({
   onChange,
   disabled,
   language,
+  syncKey,
 }: ParentIvsInputProps) {
   const [localValues, setLocalValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(IV_STAT_KEYS.map((stat) => [stat, ivToDisplay(ivs[stat])]))
   );
+
+  useEffect(() => {
+    setLocalValues(Object.fromEntries(IV_STAT_KEYS.map((stat) => [stat, ivToDisplay(ivs[stat])])));
+  }, [ivs, syncKey]);
 
   const handleChange = useCallback((stat: (typeof IV_STAT_KEYS)[number], raw: string) => {
     setLocalValues((prev) => ({ ...prev, [stat]: raw }));
@@ -166,6 +173,7 @@ function EggParamsForm({
   onGenConfigChange,
   speciesId,
   onSpeciesIdChange,
+  syncKey,
   disabled,
 }: EggParamsFormProps) {
   const { t } = useLingui();
@@ -175,6 +183,14 @@ function EggParamsForm({
   // ローカル状態 (数値入力)
   const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));
   const [localMaxAdvance, setLocalMaxAdvance] = useState(String(genConfig.max_advance));
+
+  useEffect(() => {
+    setLocalOffset(String(genConfig.user_offset));
+  }, [genConfig.user_offset, syncKey]);
+
+  useEffect(() => {
+    setLocalMaxAdvance(String(genConfig.max_advance));
+  }, [genConfig.max_advance, syncKey]);
 
   const update = useCallback(
     (partial: Partial<EggGenerationParams>) => {
@@ -256,6 +272,7 @@ function EggParamsForm({
             onChange={(ivs) => update({ parent_male: ivs })}
             disabled={disabled}
             language={language}
+            syncKey={syncKey}
           />
           <ParentIvsInput
             label={t`Parent ♀ IVs`}
@@ -263,6 +280,7 @@ function EggParamsForm({
             onChange={(ivs) => update({ parent_female: ivs })}
             disabled={disabled}
             language={language}
+            syncKey={syncKey}
           />
 
           {/* ♀親特性 / かわらずのいし / 性別比 / 種族 (2列レイアウト) */}
