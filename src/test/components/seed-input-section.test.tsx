@@ -6,20 +6,21 @@
  * タブ別 origins 独立保持をテストする。
  */
 
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { getSearchResultsInitialState, useSearchResultsStore } from '@/stores/search/results';
+import { getDsConfigInitialState, useDsConfigStore } from '@/stores/settings/ds-config';
 import type { SeedOrigin } from '@/wasm/wasm_pkg';
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockResolveSeedOrigins = vi.fn((): SeedOrigin[] => []);
+const mockResolveSeedOrigins = vi.fn((..._args: unknown[]): SeedOrigin[] => []);
 vi.mock('@/services/seed-resolve', () => ({
   resolveSeedOrigins: (...args: unknown[]) =>
     (mockResolveSeedOrigins as (...args: unknown[]) => SeedOrigin[])(...args),
@@ -99,6 +100,7 @@ function StatefulWrapper({
 
 const resetStore = () => {
   useSearchResultsStore.setState(getSearchResultsInitialState());
+  useDsConfigStore.setState(getDsConfigInitialState());
 };
 
 // ---------------------------------------------------------------------------
@@ -198,6 +200,38 @@ describe('SeedInputSection', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Startup 自動再解決
+  // ---------------------------------------------------------------------------
+
+  it('manual-startup が有効な間は DS 設定変更で Startup origins を再解決する', async () => {
+    const updatedOrigins: SeedOrigin[] = [
+      {
+        Startup: {
+          base_seed: 0x33n,
+          mt_seed: 0x33,
+          datetime: { year: 2025, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
+          condition: { timer0: 0x06_00, vcount: 0x5e, key_mask: 0 },
+        },
+      },
+    ];
+    mockResolveSeedOrigins.mockImplementation((spec: unknown): SeedOrigin[] => {
+      const ds = (spec as { ds?: { mac?: number[] } }).ds;
+      return ds?.mac?.[5] === 0x99 ? updatedOrigins : STARTUP_ORIGINS;
+    });
+
+    const onOriginsChangeSpy = vi.fn();
+    render(<StatefulWrapper onOriginsChangeSpy={onOriginsChangeSpy} />);
+    await waitFor(() => expect(onOriginsChangeSpy).toHaveBeenCalledWith(STARTUP_ORIGINS));
+
+    onOriginsChangeSpy.mockClear();
+    act(() => {
+      useDsConfigStore.getState().setConfig({ mac: [0, 0, 0, 0, 0, 0x99] });
+    });
+
+    await waitFor(() => expect(onOriginsChangeSpy).toHaveBeenCalledWith(updatedOrigins));
+  });
+
+  // ---------------------------------------------------------------------------
   // pendingDetailOrigin の自動消費
   // ---------------------------------------------------------------------------
 
@@ -294,18 +328,18 @@ describe('SeedInputSection', () => {
         { Seed: { base_seed: 1n, mt_seed: 1 } },
         { Seed: { base_seed: 2n, mt_seed: 2 } },
       ];
-      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'pokemon-list');
 
       const { onModeChange, onOriginsChange } = renderSection();
 
       expect(onModeChange).toHaveBeenCalledWith('import');
       expect(onOriginsChange).toHaveBeenCalledWith(origins);
-      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual([]);
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual({});
     });
 
     it('一括転記後に他タブに切り替えても importOrigins は保持される', async () => {
       const origins: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
-      useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+      useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'pokemon-list');
 
       const onOriginsChangeSpy = vi.fn();
       render(<StatefulWrapper initialMode="import" onOriginsChangeSpy={onOriginsChangeSpy} />);
@@ -326,6 +360,46 @@ describe('SeedInputSection', () => {
       await user.click(screen.getByRole('tab', { name: /Import/i }));
       expect(onOriginsChangeSpy).toHaveBeenCalledWith(origins);
     });
+
+    it('mount 後に対象 feature の pendingSeedOrigins が入ると import タブに反映される', async () => {
+      const origins: SeedOrigin[] = [{ Seed: { base_seed: 3n, mt_seed: 3 } }];
+      const onModeChangeSpy = vi.fn();
+      const onOriginsChangeSpy = vi.fn();
+      render(
+        <StatefulWrapper
+          initialMode="manual-seeds"
+          onModeChangeSpy={onModeChangeSpy}
+          onOriginsChangeSpy={onOriginsChangeSpy}
+        />
+      );
+
+      act(() => {
+        useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'pokemon-list');
+      });
+
+      await waitFor(() => expect(onModeChangeSpy).toHaveBeenCalledWith('import'));
+      expect(onOriginsChangeSpy).toHaveBeenCalledWith(origins);
+      expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual({});
+    });
+
+    it('別 feature の pendingSeedOrigins は消費しない', () => {
+      const origins: SeedOrigin[] = [{ Seed: { base_seed: 4n, mt_seed: 4 } }];
+      const onModeChangeSpy = vi.fn();
+      render(
+        <StatefulWrapper
+          initialMode="manual-seeds"
+          featureId="pokemon-list"
+          onModeChangeSpy={onModeChangeSpy}
+        />
+      );
+
+      act(() => {
+        useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'egg-list');
+      });
+
+      expect(onModeChangeSpy).not.toHaveBeenCalledWith('import');
+      expect(useSearchResultsStore.getState().pendingSeedOrigins['egg-list']).toEqual(origins);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -338,7 +412,7 @@ describe('SeedInputSection', () => {
     };
     const bulk: SeedOrigin[] = [{ Seed: { base_seed: 1n, mt_seed: 1 } }];
     useSearchResultsStore.getState().setPendingDetailOrigin(detail);
-    useSearchResultsStore.getState().setPendingSeedOrigins(bulk);
+    useSearchResultsStore.getState().setPendingSeedOrigins(bulk, 'pokemon-list');
 
     const { onModeChange } = renderSection();
 
@@ -346,7 +420,34 @@ describe('SeedInputSection', () => {
     expect(onModeChange).toHaveBeenCalledWith('manual-seeds');
     expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
     // bulk は消費されない (detail が先に return した)
-    expect(useSearchResultsStore.getState().pendingSeedOrigins).toEqual(bulk);
+    expect(useSearchResultsStore.getState().pendingSeedOrigins['pokemon-list']).toEqual(bulk);
+  });
+
+  it('mount 後に pendingDetailOrigin が入ると対象 feature に反映される', async () => {
+    mockResolveSeedOrigins.mockReturnValue(SEEDS_ORIGINS);
+    const origin: SeedOrigin = {
+      Seed: {
+        base_seed: 0xab_cd_ef_01_23_45_67_89n,
+        mt_seed: 0x23_45_67_89,
+      },
+    };
+    const onModeChangeSpy = vi.fn();
+    const onOriginsChangeSpy = vi.fn();
+    render(
+      <StatefulWrapper
+        initialMode="manual-startup"
+        onModeChangeSpy={onModeChangeSpy}
+        onOriginsChangeSpy={onOriginsChangeSpy}
+      />
+    );
+
+    act(() => {
+      useSearchResultsStore.getState().setPendingDetailOrigin(origin);
+    });
+
+    await waitFor(() => expect(onModeChangeSpy).toHaveBeenCalledWith('manual-seeds'));
+    expect(onOriginsChangeSpy).toHaveBeenCalledWith(SEEDS_ORIGINS);
+    expect(useSearchResultsStore.getState().pendingDetailOrigins['pokemon-list']).toBeUndefined();
   });
 
   // ---------------------------------------------------------------------------

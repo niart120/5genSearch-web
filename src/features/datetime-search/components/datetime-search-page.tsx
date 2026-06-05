@@ -55,15 +55,16 @@ function DatetimeSearchPage(): ReactElement {
   const setTargetSeedsRaw = useDatetimeSearchStore((s) => s.setTargetSeedsRaw);
   const useGpu = useDatetimeSearchStore((s) => s.useGpu);
   const setUseGpu = useDatetimeSearchStore((s) => s.setUseGpu);
+  const pendingTargetSeeds = useSearchResultsStore((s) => s.pendingTargetSeeds);
 
   // MT Seed 検索からの連携: pendingTargetSeeds をフォームに反映
   useEffect(() => {
-    const pending = useSearchResultsStore.getState().pendingTargetSeeds;
+    if (pendingTargetSeeds.length === 0) return;
+    const pending = useSearchResultsStore.getState().consumePendingTargetSeeds();
     if (pending.length > 0) {
       setTargetSeedsRaw(pending.map((s) => toHex(s, 8)).join('\n'));
-      useSearchResultsStore.getState().clearPendingTargetSeeds();
     }
-  }, [setTargetSeedsRaw]);
+  }, [pendingTargetSeeds, setTargetSeedsRaw]);
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =

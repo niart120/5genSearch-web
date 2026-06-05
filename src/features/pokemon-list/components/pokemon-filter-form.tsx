@@ -57,6 +57,7 @@ interface PokemonFilterFormProps {
   statMode: StatDisplayMode;
   availableSpecies: EncounterSpeciesOption[];
   encounterType: EncounterType;
+  syncKey?: number;
   disabled?: boolean;
 }
 
@@ -203,6 +204,7 @@ function PokemonFilterForm({
   statMode,
   availableSpecies,
   encounterType,
+  syncKey,
   disabled,
 }: PokemonFilterFormProps): ReactElement {
   const { t } = useLingui();
@@ -217,6 +219,23 @@ function PokemonFilterForm({
   const [internalStats, setInternalStats] = useState<StatsFilter>(
     statsFilter ?? DEFAULT_STATS_FILTER
   );
+  const skipNextPropSyncRef = useRef(false);
+  const lastSyncKeyRef = useRef(syncKey);
+
+  useEffect(() => {
+    const syncKeyChanged = lastSyncKeyRef.current !== syncKey;
+    lastSyncKeyRef.current = syncKey;
+    if (!syncKeyChanged && skipNextPropSyncRef.current) {
+      skipNextPropSyncRef.current = false;
+      return;
+    }
+    skipNextPropSyncRef.current = false;
+    setInternalFilter(value ?? DEFAULT_FILTER);
+    setInternalStats(statsFilter ?? DEFAULT_STATS_FILTER);
+    if (syncKeyChanged) {
+      setFilterEnabled(true);
+    }
+  }, [value, statsFilter, syncKey]);
 
   // species 名前解決 (WASM 経由)
   const speciesIds = useMemo(() => availableSpecies.map((s) => s.speciesId), [availableSpecies]);
@@ -284,6 +303,7 @@ function PokemonFilterForm({
       encounter_result_filter: nextEncResult,
     };
     // 内部状態は保持し、親への伝播値のみ調整
+    skipNextPropSyncRef.current = true;
     propagate(next, internalStats, filterEnabled);
   }, [encounterType, internalFilter, internalStats, filterEnabled, propagate]);
 
@@ -311,6 +331,9 @@ function PokemonFilterForm({
   const handleToggleEnabled = useCallback(
     (checked: boolean) => {
       setFilterEnabled(checked);
+      if (!checked) {
+        skipNextPropSyncRef.current = true;
+      }
       propagate(internalFilter, internalStats, checked);
     },
     [internalFilter, internalStats, propagate]

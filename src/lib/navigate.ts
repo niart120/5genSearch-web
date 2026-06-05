@@ -6,7 +6,7 @@
  */
 
 import type { MtSeed, SeedOrigin } from '@/wasm/wasm_pkg.js';
-import type { FeatureId } from '@/lib/navigation';
+import type { SeedOriginTransferTarget } from '@/stores/search/results';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { useUiStore } from '@/stores/settings/ui';
 
@@ -21,7 +21,10 @@ export function navigateToDatetimeSearch(seeds: MtSeed[]): void {
 /**
  * SeedOrigin[] を転写先 feature に引き渡してページ遷移する
  */
-export function navigateWithSeedOrigins(origins: SeedOrigin[], target: FeatureId): void {
-  useSearchResultsStore.getState().setPendingSeedOrigins(origins);
+export function navigateWithSeedOrigins(
+  origins: SeedOrigin[],
+  target: SeedOriginTransferTarget
+): void {
+  useSearchResultsStore.getState().setPendingSeedOrigins(origins, target);
   useUiStore.getState().navigateToFeature(target);
 }

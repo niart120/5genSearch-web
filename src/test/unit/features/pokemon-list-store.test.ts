@@ -20,6 +20,7 @@ describe('pokemon-list store', () => {
     expect(state.filter).toBeUndefined();
     expect(state.statsFilter).toBeUndefined();
     expect(state.statMode).toBe('stats');
+    expect(state.formRevision).toBe(0);
     expect(state.results).toEqual([]);
   });
 
@@ -67,6 +68,7 @@ describe('pokemon-list store', () => {
 
     expect(usePokemonListStore.getState().results).toEqual(mockResults);
     expect(usePokemonListStore.getState().statMode).toBe('stats');
+    expect(usePokemonListStore.getState().formRevision).toBe(1);
   });
 
   it('should exclude results from partialize', () => {
@@ -74,5 +76,6 @@ describe('pokemon-list store', () => {
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).toHaveProperty('seedInputMode');
     expect(partialized).toHaveProperty('encounterParams');
+    expect(partialized).not.toHaveProperty('formRevision');
   });
 });

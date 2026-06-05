@@ -1,5 +1,5 @@
 import { useSearchResultsStore } from '../stores/search/results';
-import type { SearchResult } from '../stores/search/results';
+import type { SearchResult, SeedOriginTransferTarget } from '../stores/search/results';
 import type { SeedOrigin } from '@/wasm/wasm_pkg.js';
 
 export function useSearchResults() {
@@ -23,8 +23,8 @@ export function useSearchResultsReadonly(): {
 
 /**
  * pendingSeedOrigins を消費するフック。
- * マウント時に Store から取得し、消費後にクリアする想定。
+ * target ごとの pending 値を購読する。
  */
-export function usePendingSeedOrigins(): SeedOrigin[] {
-  return useSearchResultsStore((s) => s.pendingSeedOrigins);
+export function usePendingSeedOrigins(target: SeedOriginTransferTarget): SeedOrigin[] {
+  return useSearchResultsStore((s) => s.pendingSeedOrigins[target] ?? []);
 }

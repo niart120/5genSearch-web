@@ -60,6 +60,7 @@ function EggListPage(): ReactElement {
   const setFilter = useEggListStore((s) => s.setFilter);
   const statsFilter = useEggListStore((s) => s.statsFilter);
   const setStatsFilter = useEggListStore((s) => s.setStatsFilter);
+  const formRevision = useEggListStore((s) => s.formRevision);
 
   // 表示モード (Feature Store)
   const statMode = useEggListStore((s) => s.statMode);
@@ -229,6 +230,7 @@ function EggListPage(): ReactElement {
             onGenConfigChange={setGenConfig}
             speciesId={speciesId}
             onSpeciesIdChange={setSpeciesId}
+            syncKey={formRevision}
             disabled={isLoading}
           />
 
@@ -238,6 +240,7 @@ function EggListPage(): ReactElement {
             statMode={statMode}
             statsFilter={statsFilter}
             onStatsFilterChange={setStatsFilter}
+            syncKey={formRevision}
             disabled={isLoading}
             showToggle
             showReset

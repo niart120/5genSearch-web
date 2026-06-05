@@ -6,7 +6,7 @@
  * showReset: リセットボタン (全フィルターをデフォルトに戻す)
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,7 @@ interface EggFilterFormProps {
   statMode?: StatDisplayMode;
   statsFilter?: StatsFilter | undefined;
   onStatsFilterChange?: (filter?: StatsFilter) => void;
+  syncKey?: number;
   disabled?: boolean;
   /** フィルター有効/無効 Switch を表示する。内部状態を保持したまま切り替える */
   showToggle?: boolean;
@@ -82,6 +83,7 @@ function EggFilterForm({
   statMode,
   statsFilter,
   onStatsFilterChange,
+  syncKey,
   disabled,
   showToggle = false,
   showReset = false,
@@ -94,10 +96,37 @@ function EggFilterForm({
   const [filterEnabled, setFilterEnabled] = useState(true);
   const [internalFilter, setInternalFilter] = useState<EggFilter>(value ?? DEFAULT_FILTER);
   const [internalStats, setInternalStats] = useState<StatsFilter | undefined>(statsFilter);
+  const skipNextPropSyncRef = useRef(false);
+  const lastSyncKeyRef = useRef(syncKey);
+
+  useEffect(() => {
+    const syncKeyChanged = lastSyncKeyRef.current !== syncKey;
+    lastSyncKeyRef.current = syncKey;
+    if (!showToggle) {
+      skipNextPropSyncRef.current = false;
+      return;
+    }
+    if (!syncKeyChanged && skipNextPropSyncRef.current) {
+      skipNextPropSyncRef.current = false;
+      return;
+    }
+    skipNextPropSyncRef.current = false;
+    setInternalFilter(value ?? DEFAULT_FILTER);
+    setInternalStats(statsFilter);
+    if (syncKeyChanged) {
+      setFilterEnabled(true);
+    }
+  }, [showToggle, value, statsFilter, syncKey]);
 
   // Toggle mode uses internal state; otherwise props directly
   const filter = showToggle ? internalFilter : (value ?? DEFAULT_FILTER);
   const effectiveStats = showToggle ? internalStats : statsFilter;
+
+  useEffect(() => {
+    setLocalMarginFrames(
+      filter.min_margin_frames === undefined ? '' : String(filter.min_margin_frames)
+    );
+  }, [filter.min_margin_frames, syncKey]);
 
   // --- Propagation helpers ---
 
@@ -149,6 +178,9 @@ function EggFilterForm({
   const handleToggleEnabled = useCallback(
     (checked: boolean) => {
       setFilterEnabled(checked);
+      if (!checked) {
+        skipNextPropSyncRef.current = true;
+      }
       propagateToggle(internalFilter, internalStats, checked);
     },
     [internalFilter, internalStats, propagateToggle]
