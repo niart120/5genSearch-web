@@ -57,6 +57,28 @@ describe('DsConfigForm', () => {
     expect(timer0MinInput).not.toBeDisabled();
   });
 
+  it('Auto OFF→ON で Timer0/VCount が現在の DS 設定のデフォルトに戻る', async () => {
+    const user = userEvent.setup();
+    renderDsConfigForm();
+
+    const autoSwitch = screen.getByLabelText('Auto');
+    await user.click(autoSwitch);
+
+    const timer0MinInput = screen.getByLabelText('Timer0 min');
+    await user.clear(timer0MinInput);
+    await user.type(timer0MinInput, '1111');
+    await user.tab();
+    expect(timer0MinInput).toHaveValue('1111');
+
+    await user.click(autoSwitch);
+
+    expect(timer0MinInput).toBeDisabled();
+    expect(timer0MinInput).toHaveValue('0C79');
+    expect(screen.getByLabelText('Timer0 max')).toHaveValue('0C7A');
+    expect(screen.getByLabelText('VCount min')).toHaveValue('60');
+    expect(screen.getByLabelText('VCount max')).toHaveValue('60');
+  });
+
   it('MAC アドレス入力が表示される', () => {
     renderDsConfigForm();
 

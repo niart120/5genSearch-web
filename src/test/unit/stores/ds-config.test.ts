@@ -123,6 +123,40 @@ describe('ds-config store', () => {
     expect(useDsConfigStore.getState().timer0Auto).toBe(true);
   });
 
+  it('should restore default ranges when timer0Auto is enabled again', () => {
+    useDsConfigStore.getState().setTimer0Auto(false);
+    useDsConfigStore.getState().setRanges([
+      {
+        timer0_min: 0x11_11,
+        timer0_max: 0x22_22,
+        vcount_min: 0x33,
+        vcount_max: 0x44,
+      },
+    ]);
+
+    const result = useDsConfigStore.getState().setTimer0Auto(true);
+    const { ranges, timer0Auto } = useDsConfigStore.getState();
+
+    expect(result).toBeUndefined();
+    expect(timer0Auto).toBe(true);
+    expect(ranges[0]).toEqual({
+      timer0_min: 0x0c_79,
+      timer0_max: 0x0c_7a,
+      vcount_min: 0x60,
+      vcount_max: 0x60,
+    });
+  });
+
+  it('should keep manual mode when timer0Auto is enabled for an unsupported combination', () => {
+    useDsConfigStore.getState().setTimer0Auto(false);
+    useDsConfigStore.getState().setConfig({ hardware: 'Dsi', region: 'Usa' });
+
+    const result = useDsConfigStore.getState().setTimer0Auto(true);
+
+    expect(result).toBe('auto-fallback');
+    expect(useDsConfigStore.getState().timer0Auto).toBe(false);
+  });
+
   it('should have DEFAULT_RANGES with VCount 0x60 (DsLite/Black/Jpn)', () => {
     const { ranges } = useDsConfigStore.getState();
     expect(ranges[0].vcount_min).toBe(0x60);

@@ -10,7 +10,7 @@ interface DsConfigState {
   timer0Auto: boolean;
 }
 
-/** setConfig が timer0Auto フォールバックを行った場合に返す値 */
+/** Timer0/VCount 自動 lookup がフォールバックを行った場合に返す値 */
 type SetConfigResult = 'auto-fallback' | undefined;
 
 interface DsConfigActions {
@@ -18,7 +18,7 @@ interface DsConfigActions {
   replaceConfig: (config: DsConfig) => void;
   setRanges: (ranges: Timer0VCountRange[]) => void;
   setGameStart: (partial: Partial<GameStartConfig>) => void;
-  setTimer0Auto: (auto: boolean) => void;
+  setTimer0Auto: (auto: boolean) => SetConfigResult;
   reset: () => void;
 }
 
@@ -78,6 +78,10 @@ function normalizeGameStart(
   return next;
 }
 
+function lookupDefaultRangesForConfig(config: DsConfig): Timer0VCountRange[] | undefined {
+  return lookupDefaultRanges(config.hardware, config.version, config.region);
+}
+
 export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
   persist(
     (set, get) => ({
@@ -95,11 +99,7 @@ export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
           newConfig.region !== state.config.region;
 
         if (state.timer0Auto && dsFieldChanged) {
-          const defaults = lookupDefaultRanges(
-            newConfig.hardware,
-            newConfig.version,
-            newConfig.region
-          );
+          const defaults = lookupDefaultRangesForConfig(newConfig);
           if (defaults) {
             set({ config: newConfig, gameStart, ranges: defaults });
             return;
@@ -118,7 +118,21 @@ export const useDsConfigStore = create<DsConfigState & DsConfigActions>()(
         set((state) => ({
           gameStart: normalizeGameStart({ ...state.gameStart, ...partial }, state.config.version),
         })),
-      setTimer0Auto: (timer0Auto) => set({ timer0Auto }),
+      setTimer0Auto: (timer0Auto) => {
+        if (!timer0Auto) {
+          set({ timer0Auto: false });
+          return;
+        }
+
+        const defaults = lookupDefaultRangesForConfig(get().config);
+        if (defaults) {
+          set({ timer0Auto: true, ranges: defaults });
+          return;
+        }
+
+        set({ timer0Auto: false });
+        return 'auto-fallback';
+      },
       reset: () => set(DEFAULT_STATE),
     }),
     {
