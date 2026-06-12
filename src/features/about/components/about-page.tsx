@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { Trans } from '@lingui/react/macro';
+import { AppStorageResetSection } from './app-storage-reset-section';
 
 const REPO_URL = 'https://github.com/niart120/5genSearch-web';
 
@@ -97,6 +98,8 @@ function AboutPage(): ReactElement {
           </Trans>
         </p>
       </section>
+
+      <AppStorageResetSection />
     </div>
   );
 }

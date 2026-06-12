@@ -377,19 +377,19 @@ git diff --check
 
 ## 6. 実装チェックリスト
 
-- [ ] `src/services/app-storage-reset.ts` を追加する
-- [ ] 通常初期化と完全初期化の mode 型を定義する
-- [ ] 設定・入力系 localStorage キーの明示リストを定義する
-- [ ] 通常初期化時に `profiles.state.profiles` を保持し、`activeProfileId` を解除する
-- [ ] 完全初期化時だけ `profiles` を削除対象に含める
-- [ ] `feature:` prefix キーを将来 feature store として削除対象に含める
-- [ ] `resetAppStorage(mode)` と `resetAppStorageAndReload(mode)` を実装する
-- [ ] localStorage 操作失敗時に reload せず error toast を表示する
-- [ ] `AppStorageResetSection` を実装する
-- [ ] About ページ下部に「保存データの初期化」セクションを追加する
-- [ ] 通常初期化と完全初期化の 2 ボタンを配置する
-- [ ] AlertDialog で破壊的操作の確認を必須にする
-- [ ] Lingui メッセージを抽出・翻訳・compile し、`messages.po` と `messages.ts` を更新する
-- [ ] service unit test を追加する
-- [ ] component test を追加する
-- [ ] TypeScript、lint、format、unit test で検証する
+- [x] `src/services/app-storage-reset.ts` を追加する
+- [x] 通常初期化と完全初期化の mode 型を定義する
+- [x] 設定・入力系 localStorage キーの明示リストを定義する
+- [x] 通常初期化時に `profiles.state.profiles` を保持し、`activeProfileId` を解除する
+- [x] 完全初期化時だけ `profiles` を削除対象に含める
+- [x] `feature:` prefix キーを将来 feature store として削除対象に含める
+- [x] `resetAppStorage(mode)` と `resetAppStorageAndReload(mode)` を実装する
+- [x] localStorage 操作失敗時に reload せず error toast を表示する
+- [x] `AppStorageResetSection` を実装する
+- [x] About ページ下部に「保存データの初期化」セクションを追加する
+- [x] 通常初期化と完全初期化の 2 ボタンを配置する
+- [x] AlertDialog で破壊的操作の確認を必須にする
+- [x] Lingui メッセージを抽出・翻訳・compile し、`messages.po` と `messages.ts` を更新する
+- [x] service unit test を追加する
+- [x] component test を追加する
+- [x] TypeScript、lint、format、unit test で検証する
