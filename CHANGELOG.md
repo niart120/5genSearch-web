@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/niart120/5genSearch-web/compare/v1.3.6...v1.4.0) (2026-06-12)
+
+
+### Features
+
+* **about:** 保存データ初期化を追加 ([1d238db](https://github.com/niart120/5genSearch-web/commit/1d238db3c1b256957149947b4fdbd1d54cf20ef2))
+
+
+### Bug Fixes
+
+* **ds-config:** timer0自動トグルの再同期不具合を修正 ([dcf3b5d](https://github.com/niart120/5genSearch-web/commit/dcf3b5ddeb20bdba7b20712978608b836a872381))
+
 ## [1.3.6](https://github.com/niart120/5genSearch-web/compare/v1.3.5...v1.3.6) (2026-06-05)
 
 
