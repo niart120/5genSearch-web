@@ -168,7 +168,7 @@ msgstr "BW2 固定・野生 (消費2)"
 
 #: src/components/forms/search-confirmation-dialog.tsx:53
 #: src/components/forms/search-controls.tsx:53
-#: src/features/about/components/app-storage-reset-section.tsx:91
+#: src/features/about/components/app-storage-reset-section.tsx:84
 #: src/features/datetime-search/components/template-selection-dialog.tsx:204
 #: src/features/ds-config/components/profile-confirm-dialog.tsx:38
 #: src/features/ds-config/components/profile-delete-dialog.tsx:43
@@ -231,15 +231,15 @@ msgstr "クリップボードにコピー"
 msgid "Copy to seed input"
 msgstr "Seed 入力にコピー"
 
-#: src/features/about/components/app-storage-reset-section.tsx:35
+#: src/features/about/components/app-storage-reset-section.tsx:31
 msgid "Could not access browser storage. Check browser settings."
 msgstr "ブラウザの保存領域にアクセスできませんでした。ブラウザ設定を確認してください。"
 
-#: src/features/about/components/app-storage-reset-section.tsx:36
+#: src/features/about/components/app-storage-reset-section.tsx:32
 msgid "Could not reset saved data"
 msgstr "保存データを初期化できませんでした"
 
-#: src/features/about/components/app-storage-reset-section.tsx:34
+#: src/features/about/components/app-storage-reset-section.tsx:30
 msgid "Could not reset while keeping profiles. Reset all saved data if needed."
 msgstr "プロファイルを保持した初期化に失敗しました。必要な場合は、すべての保存データを初期化してください。"
 
@@ -918,11 +918,11 @@ msgstr "プロファイル名"
 msgid "Profile saved"
 msgstr "プロファイルを保存しました"
 
-#: src/features/about/components/app-storage-reset-section.tsx:124
+#: src/features/about/components/app-storage-reset-section.tsx:117
 msgid "Profiles and all saved data will be deleted. This cannot be undone. The page will reload after deletion."
 msgstr "プロファイルを含む保存データを削除します。この操作は元に戻せません。削除後、ページを再読み込みします。"
 
-#: src/features/about/components/app-storage-reset-section.tsx:117
+#: src/features/about/components/app-storage-reset-section.tsx:110
 msgid "Profiles will be kept and the active profile selection will be cleared. Settings and feature inputs will be deleted, then the page will reload."
 msgstr "プロファイル一覧は保持し、選択中のプロファイルは解除します。設定と各機能の入力内容を削除し、ページを再読み込みします。"
 
@@ -950,15 +950,15 @@ msgstr "名前変更"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/features/about/components/app-storage-reset-section.tsx:135
+#: src/features/about/components/app-storage-reset-section.tsx:128
 msgid "Reset all"
 msgstr "すべて初期化"
 
-#: src/features/about/components/app-storage-reset-section.tsx:73
+#: src/features/about/components/app-storage-reset-section.tsx:66
 msgid "Reset all saved data"
 msgstr "すべての保存データを初期化"
 
-#: src/features/about/components/app-storage-reset-section.tsx:111
+#: src/features/about/components/app-storage-reset-section.tsx:104
 msgid "Reset all saved data?"
 msgstr "すべての保存データを初期化しますか？"
 
@@ -967,20 +967,20 @@ msgstr "すべての保存データを初期化しますか？"
 msgid "Reset filter"
 msgstr "フィルターリセット"
 
-#: src/features/about/components/app-storage-reset-section.tsx:46
+#: src/features/about/components/app-storage-reset-section.tsx:42
 msgid "Reset saved data"
 msgstr "保存データの初期化"
 
-#: src/features/about/components/app-storage-reset-section.tsx:64
-#: src/features/about/components/app-storage-reset-section.tsx:133
+#: src/features/about/components/app-storage-reset-section.tsx:57
+#: src/features/about/components/app-storage-reset-section.tsx:126
 msgid "Reset settings and inputs"
 msgstr "設定と入力を初期化"
 
-#: src/features/about/components/app-storage-reset-section.tsx:49
-msgid "Reset settings and inputs saved in this browser. You can keep profiles or delete all saved data."
-msgstr "このブラウザに保存された設定や入力内容を初期化できます。プロファイルを残す操作と、すべて削除する操作を選べます。"
+#: src/features/about/components/app-storage-reset-section.tsx:45
+msgid "Reset settings and inputs saved in this browser."
+msgstr "このブラウザに保存された設定や入力内容を初期化できます。"
 
-#: src/features/about/components/app-storage-reset-section.tsx:109
+#: src/features/about/components/app-storage-reset-section.tsx:102
 msgid "Reset settings and inputs?"
 msgstr "設定と入力を初期化しますか？"
 

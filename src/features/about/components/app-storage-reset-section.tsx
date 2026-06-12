@@ -42,10 +42,7 @@ function AppStorageResetSection(): ReactElement {
           <Trans>Reset saved data</Trans>
         </h2>
         <p className="text-sm text-muted-foreground">
-          <Trans>
-            Reset settings and inputs saved in this browser. You can keep profiles or delete all
-            saved data.
-          </Trans>
+          <Trans>Reset settings and inputs saved in this browser.</Trans>
         </p>
       </div>
 
