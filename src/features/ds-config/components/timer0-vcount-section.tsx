@@ -3,6 +3,7 @@ import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Timer0VCountRangeInput } from '@/components/forms/timer0-vcount-range-input';
+import { toast } from '@/components/ui/toast-state';
 
 function Timer0VCountSection() {
   const { t } = useLingui();
@@ -10,6 +11,18 @@ function Timer0VCountSection() {
   const setRanges = useDsConfigStore((s) => s.setRanges);
   const timer0Auto = useDsConfigStore((s) => s.timer0Auto);
   const setTimer0Auto = useDsConfigStore((s) => s.setTimer0Auto);
+
+  const notifyFallback = (result: 'auto-fallback' | undefined) => {
+    if (result === 'auto-fallback') {
+      toast.warning(
+        t`No default Timer0/VCount data for this combination. Switched to manual mode.`
+      );
+    }
+  };
+
+  const handleTimer0AutoChange = (checked: boolean) => {
+    notifyFallback(setTimer0Auto(checked));
+  };
 
   return (
     <div className="space-y-3">
@@ -22,7 +35,7 @@ function Timer0VCountSection() {
           <Switch
             id="timer0-auto"
             checked={timer0Auto}
-            onCheckedChange={setTimer0Auto}
+            onCheckedChange={handleTimer0AutoChange}
             aria-label={t`Auto`}
           />
         </div>
