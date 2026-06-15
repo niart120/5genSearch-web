@@ -121,6 +121,10 @@ impl NeedlePattern {
 #[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
 pub struct NeedleSearchResult {
     /// パターン末尾消費位置 (`game_offset` からの相対)
+    ///
+    /// `advance = N` の場合、入力パターンの最後の針は `Advance N` で
+    /// レポートを書いた時に表示される。複数回の針観測後に確定した
+    /// 現在位置として扱う。
     pub advance: u32,
     /// 生成元情報
     pub source: SeedOrigin,

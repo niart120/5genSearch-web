@@ -5,7 +5,7 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    calculate_game_offset, calculate_mt_offset, calculate_needle_direction,
+    calc_report_needle_direction, calculate_game_offset, calculate_mt_offset,
     generate_moving_encounter_info, generate_rng_ivs_with_offset, generate_special_encounter_info,
     is_moving_encounter_type, is_special_encounter_type,
 };
@@ -91,7 +91,7 @@ impl PokemonGenerator {
     /// 次の個体を生成
     pub fn generate_next(&mut self) -> Option<GeneratedPokemonData> {
         let current_seed = self.lcg.current_seed();
-        let needle = calculate_needle_direction(current_seed);
+        let needle = calc_report_needle_direction(current_seed);
         let advance = self.current_advance;
 
         // 生成用の LCG をクローン（生成処理で消費される分を分離）
@@ -288,6 +288,13 @@ mod tests {
             #[allow(clippy::cast_possible_truncation)]
             let expected_advance = i as u32;
             assert_eq!(pokemon.advance, expected_advance);
+
+            let state_seed =
+                Lcg64::compute_advance(base_seed, u64::from(g.game_offset() + expected_advance));
+            assert_eq!(
+                pokemon.needle_direction,
+                calc_report_needle_direction(state_seed)
+            );
         }
     }
 

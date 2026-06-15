@@ -3,13 +3,27 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { search_needle_pattern, resolve_seeds } from '../../wasm/wasm_pkg.js';
+import {
+  get_needle_pattern_at,
+  search_needle_pattern,
+  resolve_seeds,
+} from '../../wasm/wasm_pkg.js';
 import type {
   SeedOrigin,
   NeedleSearchResult,
   GenerationConfig,
   NeedleDirection,
 } from '../../wasm/wasm_pkg.js';
+
+const DIRECTION_NAMES: readonly NeedleDirection[] = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
+function toNeedleDirection(value: number): NeedleDirection {
+  const direction = DIRECTION_NAMES[value];
+  if (direction === undefined) {
+    throw new Error(`Invalid needle direction: ${value}`);
+  }
+  return direction;
+}
 
 describe('Needle Search Integration', () => {
   /**
@@ -72,5 +86,40 @@ describe('Needle Search Integration', () => {
     };
 
     expect(() => search_needle_pattern([origins[0]], [], config)).toThrow();
+  });
+
+  it('returns the advance at the end of the observed pattern', () => {
+    const seed = 0x12_34_56_78_9a_bc_de_f0n;
+    const origins = resolve_seeds({
+      type: 'Seeds',
+      seeds: [seed],
+    });
+    expect(origins.length).toBeGreaterThan(0);
+
+    const targetAdvance = 10;
+    const patternLength = 3;
+    // Black / Continue / WithSave での calculate_game_offset(seed) 期待値。
+    const gameOffset = 42;
+    const pattern = Array.from(
+      get_needle_pattern_at(seed, gameOffset + targetAdvance, patternLength),
+      toNeedleDirection
+    );
+
+    const config: GenerationConfig = {
+      version: 'Black',
+      game_start: {
+        start_mode: 'Continue',
+        save: 'WithSave',
+        memory_link: 'Disabled',
+        shiny_charm: 'NotObtained',
+      },
+      user_offset: targetAdvance,
+      max_advance: targetAdvance + patternLength - 1,
+    };
+
+    const results = search_needle_pattern([origins[0]], pattern, config);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].advance).toBe(targetAdvance + patternLength - 1);
   });
 });

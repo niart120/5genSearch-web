@@ -7,7 +7,7 @@ mod npc;
 mod pid;
 
 // needle は core/needle.rs に移動済み
-pub use crate::core::needle::{calc_report_needle_direction, calculate_needle_direction};
+pub use crate::core::needle::calc_report_needle_direction;
 
 // offset は core/offset.rs に移動済み
 pub(crate) use crate::core::offset::{calculate_game_offset, calculate_mt_offset};

@@ -654,6 +654,10 @@ export type NeedlePattern = NeedleDirection[];
 export interface NeedleSearchResult {
     /**
      * パターン末尾消費位置 (`game_offset` からの相対)
+     *
+     * `advance = N` の場合、入力パターンの最後の針は `Advance N` で
+     * レポートを書いた時に表示される。複数回の針観測後に確定した
+     * 現在位置として扱う。
      */
     advance: number;
     /**
@@ -832,6 +836,9 @@ export interface EggDatetimeSearchParams {
  */
 export interface GeneratedPokemonData {
     advance: number;
+    /**
+     * `advance` 時点でレポートを書いた場合に表示される針方向
+     */
     needle_direction: NeedleDirection;
     /**
      * 生成元情報
@@ -859,6 +866,9 @@ export interface GeneratedPokemonData {
  */
 export interface GeneratedEggData {
     advance: number;
+    /**
+     * `advance` 時点でレポートを書いた場合に表示される針方向
+     */
     needle_direction: NeedleDirection;
     /**
      * 生成元情報
