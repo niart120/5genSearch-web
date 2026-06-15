@@ -42,7 +42,7 @@ pub use types::{
 };
 
 // Re-export core functions
-pub use core::needle::{calc_report_needle_direction, calculate_needle_direction};
+pub use core::needle::calc_report_needle_direction;
 pub use core::seed_resolver::resolve_seeds;
 
 // Re-export misc module (Searcher と関数)

@@ -2,7 +2,7 @@
 //!
 //! Gen5 の性格値・エンカウント判定等に使用される PRNG。
 
-use crate::types::{LcgSeed, MtSeed, NeedleDirection};
+use crate::types::{LcgSeed, MtSeed};
 
 /// 乗数
 pub const LCG_MULTIPLIER: u64 = 0x5D58_8B65_6C07_8965;
@@ -154,17 +154,6 @@ impl Lcg64 {
     fn apply_raw(seed: u64, mul: u64, add: u64) -> u64 {
         seed.wrapping_mul(mul).wrapping_add(add)
     }
-
-    /// LCG Seed から針方向を計算
-    #[inline]
-    pub fn calc_needle_direction(seed: LcgSeed) -> NeedleDirection {
-        let next = seed
-            .value()
-            .wrapping_mul(LCG_MULTIPLIER)
-            .wrapping_add(LCG_INCREMENT);
-        let dir = ((next >> 32).wrapping_mul(8)) >> 32;
-        NeedleDirection::from_value((dir & 7) as u8)
-    }
 }
 
 // ===== LcgSeed に derive_mt_seed を実装 =====
@@ -218,15 +207,6 @@ mod tests {
         lcg2.jump(steps);
 
         assert_eq!(lcg1.current_seed(), lcg2.current_seed());
-    }
-
-    #[test]
-    fn test_needle_direction_range() {
-        for i in 0..100 {
-            let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0u64.wrapping_add(i));
-            let dir = Lcg64::calc_needle_direction(seed);
-            assert!(dir.value() < 8);
-        }
     }
 
     #[test]

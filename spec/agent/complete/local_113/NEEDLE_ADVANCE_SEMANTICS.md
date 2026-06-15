@@ -228,18 +228,18 @@ WASM 生成物に差分が出た場合は、`pnpm test:run -- needle` と `pnpm 
 
 ## 6. 実装チェックリスト
 
-- [ ] `Advance = N` の意味を `GameOffset + N` 回消費された時点として固定する
-- [ ] `core::needle::calc_report_needle_direction` をレポート針の標準関数としてコメント更新する
-- [ ] `core::needle::calculate_needle_direction` を削除、または public re-export から外して用途名を変更する
-- [ ] `Lcg64::calc_needle_direction` を削除し、針方向計算を `core::needle` に集約する
-- [ ] `PokemonGenerator` の `needle_direction` をレポート針で計算する
-- [ ] `EggGenerator` の `needle_direction` をレポート針で計算する
-- [ ] `NeedleSearchResult.advance` はパターン末尾位置として維持する
-- [ ] `NeedleSearchResult.advance` のコメントを観測後の現在位置として補足する
-- [ ] 既存の針読み検索テストがパターン末尾位置を固定していることを確認する
-- [ ] リスト生成の針方向がレポート針であることを Rust unit test で固定する
-- [ ] `cargo test --package wasm-pkg needle` を通す
-- [ ] `cargo test --package wasm-pkg generation::flows::generator` を通す
-- [ ] `pnpm test:run -- needle` を通す
-- [ ] `pnpm exec tsc -b --noEmit` を通す
-- [ ] 必要に応じて `pnpm build:wasm:dev` と生成物更新を行う
+- [x] `Advance = N` の意味を `GameOffset + N` 回消費された時点として固定する
+- [x] `core::needle::calc_report_needle_direction` をレポート針の標準関数としてコメント更新する
+- [x] `core::needle::calculate_needle_direction` を削除、または public re-export から外して用途名を変更する
+- [x] `Lcg64::calc_needle_direction` を削除し、針方向計算を `core::needle` に集約する
+- [x] `PokemonGenerator` の `needle_direction` をレポート針で計算する
+- [x] `EggGenerator` の `needle_direction` をレポート針で計算する
+- [x] `NeedleSearchResult.advance` はパターン末尾位置として維持する
+- [x] `NeedleSearchResult.advance` のコメントを観測後の現在位置として補足する
+- [x] 既存の針読み検索テストがパターン末尾位置を固定していることを確認する
+- [x] リスト生成の針方向がレポート針であることを Rust unit test で固定する
+- [x] `cargo test --package wasm-pkg needle` を通す
+- [x] `cargo test --package wasm-pkg generation::flows::generator` を通す
+- [x] `pnpm test:run -- needle` を通す
+- [x] `pnpm exec tsc -b --noEmit` を通す
+- [x] 必要に応じて `pnpm build:wasm:dev` と生成物更新を行う

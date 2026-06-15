@@ -4,7 +4,7 @@
 
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
-    apply_inheritance, calculate_game_offset, calculate_mt_offset, calculate_needle_direction,
+    apply_inheritance, calc_report_needle_direction, calculate_game_offset, calculate_mt_offset,
     generate_rng_ivs_with_offset, resolve_egg_npc_advance,
 };
 use crate::types::{
@@ -81,7 +81,7 @@ impl EggGenerator {
     /// 次の個体を生成
     pub fn generate_next(&mut self) -> GeneratedEggData {
         let current_seed = self.lcg.current_seed();
-        let needle = calculate_needle_direction(current_seed);
+        let needle = calc_report_needle_direction(current_seed);
         let advance = self.current_advance;
 
         // NPC消費を考慮する場合
@@ -186,6 +186,11 @@ mod tests {
 
         let mut g = generator.unwrap();
         let egg = g.generate_next();
+        let state_seed = Lcg64::compute_advance(base_seed, u64::from(g.game_offset()));
+        assert_eq!(
+            egg.needle_direction,
+            calc_report_needle_direction(state_seed)
+        );
         assert!(egg.core.ivs.hp <= 31);
         assert_eq!(g.current_advance(), 1);
         assert!(egg.margin_frames.is_none());

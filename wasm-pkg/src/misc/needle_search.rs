@@ -68,7 +68,7 @@ pub fn search_needle_pattern(
         // パターン検索
         for advance in start..=search_end {
             if matches_pattern(&lcg, pattern_dirs) {
-                // パターン末尾位置を返す
+                // パターン末尾位置は、複数回の針観測後に確定した現在位置。
                 let end_advance = advance + pattern_len - 1;
                 results.push(NeedleSearchResult {
                     advance: end_advance,

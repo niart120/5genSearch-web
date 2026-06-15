@@ -299,6 +299,7 @@ pub struct CorePokemonData {
 pub struct GeneratedPokemonData {
     // 列挙コンテキスト
     pub advance: u32,
+    /// `advance` 時点でレポートを書いた場合に表示される針方向
     pub needle_direction: NeedleDirection,
     /// 生成元情報
     pub source: SeedOrigin,
@@ -323,6 +324,7 @@ pub struct GeneratedPokemonData {
 pub struct GeneratedEggData {
     // 列挙コンテキスト
     pub advance: u32,
+    /// `advance` 時点でレポートを書いた場合に表示される針方向
     pub needle_direction: NeedleDirection,
     /// 生成元情報
     pub source: SeedOrigin,
