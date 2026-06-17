@@ -44,6 +44,13 @@
 - チェックリストはタスク完了後に `[x]` で更新する。
 - Markdown は H1 をページタイトルに限定し、H2 / H3 を構造的に使う。
 
+## Domain-Specific Specs
+
+- TypeScript / React の仕様書を書く場合は、root `AGENTS.md` の Coding Rules と `src/AGENTS.md` に従う。
+- フロントエンドの配置や責務を扱う仕様書では `spec/agent/architecture/frontend-structure.md` を参照する。
+- Rust/WASM の仕様書を書く場合は、`wasm-pkg/AGENTS.md` に従う。
+- Rust/WASM の配置やモジュール設計を扱う仕様書では `spec/agent/architecture/rust-structure.md` を参照する。
+
 ## Dev Journal
 
 - `spec/agent/notes/dev-journal.md` に時系列で追記する。
