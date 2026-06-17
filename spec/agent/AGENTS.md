@@ -46,6 +46,8 @@
 
 ## Domain-Specific Specs
 
+- 仕様書の作成、更新、完了移動を行う場合は `.agents/skills/spec-format/SKILL.md` を使う。
+- 設計メモを `spec/agent/notes/dev-journal.md` に追記する場合は `.agents/skills/dev-journal/SKILL.md` を使う。
 - TypeScript / React の仕様書を書く場合は、root `AGENTS.md` の Coding Rules と `src/AGENTS.md` に従う。
 - フロントエンドの配置や責務を扱う仕様書では `spec/agent/architecture/frontend-structure.md` を参照する。
 - Rust/WASM の仕様書を書く場合は、`wasm-pkg/AGENTS.md` に従う。
