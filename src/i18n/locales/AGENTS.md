@@ -6,6 +6,7 @@
 
 ## Workflow
 
+- 翻訳カタログを更新する作業では `.agents/skills/i18n-catalog/SKILL.md` を使う。
 1. `pnpm lingui:extract` でソースコードからメッセージを抽出する。
 2. 各ロケールの `messages.po` に翻訳を記入する。
 3. `pnpm lingui:compile` で `messages.ts` にコンパイルする。
