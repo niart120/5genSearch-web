@@ -8,7 +8,7 @@ use crate::types::AbilitySlot;
 
 /// 特性名テーブル: (日本語名, 英語名)
 /// インデックス 0 は「なし」を表す空文字列
-pub static ABILITY_NAMES: [(&str, &str); 171] = [
+pub static ABILITY_NAMES: [(&str, &str); 165] = [
     // 0: (none)
     ("", ""),
     // 1: overgrow
@@ -77,279 +77,267 @@ pub static ABILITY_NAMES: [(&str, &str); 171] = [
     ("もらいび", "Flash Fire"),
     // 33: drought
     ("ひでり", "Drought"),
-    // 34: competitive
-    ("かちき", "Competitive"),
-    // 35: frisk
+    // 34: frisk
     ("おみとおし", "Frisk"),
-    // 36: inner-focus
+    // 35: inner-focus
     ("せいしんりょく", "Inner Focus"),
-    // 37: infiltrator
+    // 36: infiltrator
     ("すりぬけ", "Infiltrator"),
-    // 38: stench
+    // 37: stench
     ("あくしゅう", "Stench"),
-    // 39: effect-spore
+    // 38: effect-spore
     ("ほうし", "Effect Spore"),
-    // 40: dry-skin
+    // 39: dry-skin
     ("かんそうはだ", "Dry Skin"),
-    // 41: damp
+    // 40: damp
     ("しめりけ", "Damp"),
-    // 42: wonder-skin
+    // 41: wonder-skin
     ("ミラクルスキン", "Wonder Skin"),
-    // 43: arena-trap
+    // 42: arena-trap
     ("ありじごく", "Arena Trap"),
-    // 44: sand-force
+    // 43: sand-force
     ("すなのちから", "Sand Force"),
-    // 45: pickup
+    // 44: pickup
     ("ものひろい", "Pickup"),
-    // 46: technician
+    // 45: technician
     ("テクニシャン", "Technician"),
-    // 47: limber
+    // 46: limber
     ("じゅうなん", "Limber"),
-    // 48: cloud-nine
+    // 47: cloud-nine
     ("ノーてんき", "Cloud Nine"),
-    // 49: swift-swim
+    // 48: swift-swim
     ("すいすい", "Swift Swim"),
-    // 50: vital-spirit
+    // 49: vital-spirit
     ("やるき", "Vital Spirit"),
-    // 51: anger-point
+    // 50: anger-point
     ("いかりのつぼ", "Anger Point"),
-    // 52: defiant
+    // 51: defiant
     ("まけんき", "Defiant"),
-    // 53: justified
+    // 52: justified
     ("せいぎのこころ", "Justified"),
-    // 54: water-absorb
+    // 53: water-absorb
     ("ちょすい", "Water Absorb"),
-    // 55: synchronize
+    // 54: synchronize
     ("シンクロ", "Synchronize"),
-    // 56: no-guard
+    // 55: no-guard
     ("ノーガード", "No Guard"),
-    // 57: steadfast
+    // 56: steadfast
     ("ふくつのこころ", "Steadfast"),
-    // 58: gluttony
+    // 57: gluttony
     ("くいしんぼう", "Gluttony"),
-    // 59: clear-body
+    // 58: clear-body
     ("クリアボディ", "Clear Body"),
-    // 60: liquid-ooze
+    // 59: liquid-ooze
     ("ヘドロえき", "Liquid Ooze"),
-    // 61: rock-head
+    // 60: rock-head
     ("いしあたま", "Rock Head"),
-    // 62: sturdy
+    // 61: sturdy
     ("がんじょう", "Sturdy"),
-    // 63: flame-body
+    // 62: flame-body
     ("ほのおのからだ", "Flame Body"),
-    // 64: oblivious
+    // 63: oblivious
     ("どんかん", "Oblivious"),
-    // 65: own-tempo
+    // 64: own-tempo
     ("マイペース", "Own Tempo"),
-    // 66: regenerator
+    // 65: regenerator
     ("さいせいりょく", "Regenerator"),
-    // 67: magnet-pull
+    // 66: magnet-pull
     ("じりょく", "Magnet Pull"),
-    // 68: analytic
+    // 67: analytic
     ("アナライズ", "Analytic"),
-    // 69: early-bird
+    // 68: early-bird
     ("はやおき", "Early Bird"),
-    // 70: thick-fat
+    // 69: thick-fat
     ("あついしぼう", "Thick Fat"),
-    // 71: hydration
+    // 70: hydration
     ("うるおいボディ", "Hydration"),
-    // 72: ice-body
+    // 71: ice-body
     ("アイスボディ", "Ice Body"),
-    // 73: sticky-hold
+    // 72: sticky-hold
     ("ねんちゃく", "Sticky Hold"),
-    // 74: poison-touch
+    // 73: poison-touch
     ("どくしゅ", "Poison Touch"),
-    // 75: shell-armor
+    // 74: shell-armor
     ("シェルアーマー", "Shell Armor"),
-    // 76: skill-link
+    // 75: skill-link
     ("スキルリンク", "Skill Link"),
-    // 77: overcoat
+    // 76: overcoat
     ("ぼうじん", "Overcoat"),
-    // 78: levitate
+    // 77: levitate
     ("ふゆう", "Levitate"),
-    // 79: cursed-body
-    ("のろわれボディ", "Cursed Body"),
-    // 80: weak-armor
+    // 78: weak-armor
     ("くだけるよろい", "Weak Armor"),
-    // 81: insomnia
+    // 79: insomnia
     ("ふみん", "Insomnia"),
-    // 82: forewarn
+    // 80: forewarn
     ("よちむ", "Forewarn"),
-    // 83: hyper-cutter
+    // 81: hyper-cutter
     ("かいりきバサミ", "Hyper Cutter"),
-    // 84: soundproof
+    // 82: soundproof
     ("ぼうおん", "Soundproof"),
-    // 85: aftermath
+    // 83: aftermath
     ("ゆうばく", "Aftermath"),
-    // 86: harvest
+    // 84: harvest
     ("しゅうかく", "Harvest"),
-    // 87: battle-armor
+    // 85: battle-armor
     ("カブトアーマー", "Battle Armor"),
-    // 88: reckless
+    // 86: reckless
     ("すてみ", "Reckless"),
-    // 89: unburden
+    // 87: unburden
     ("かるわざ", "Unburden"),
-    // 90: iron-fist
+    // 88: iron-fist
     ("てつのこぶし", "Iron Fist"),
-    // 91: neutralizing-gas
-    ("かがくへんかガス", "Neutralizing Gas"),
-    // 92: natural-cure
+    // 89: natural-cure
     ("しぜんかいふく", "Natural Cure"),
-    // 93: serene-grace
+    // 90: serene-grace
     ("てんのめぐみ", "Serene Grace"),
-    // 94: healer
+    // 91: healer
     ("いやしのこころ", "Healer"),
-    // 95: leaf-guard
+    // 92: leaf-guard
     ("リーフガード", "Leaf Guard"),
-    // 96: scrappy
+    // 93: scrappy
     ("きもったま", "Scrappy"),
-    // 97: water-veil
+    // 94: water-veil
     ("みずのベール", "Water Veil"),
-    // 98: illuminate
+    // 95: illuminate
     ("はっこう", "Illuminate"),
-    // 99: filter
+    // 96: filter
     ("フィルター", "Filter"),
-    // 100: mold-breaker
+    // 97: mold-breaker
     ("かたやぶり", "Mold Breaker"),
-    // 101: moxie
+    // 98: moxie
     ("じしんかじょう", "Moxie"),
-    // 102: rattled
+    // 99: rattled
     ("びびり", "Rattled"),
-    // 103: imposter
+    // 100: imposter
     ("かわりもの", "Imposter"),
-    // 104: adaptability
+    // 101: adaptability
     ("てきおうりょく", "Adaptability"),
-    // 105: anticipation
+    // 102: anticipation
     ("きけんよち", "Anticipation"),
-    // 106: volt-absorb
+    // 103: volt-absorb
     ("ちくでん", "Volt Absorb"),
-    // 107: quick-feet
+    // 104: quick-feet
     ("はやあし", "Quick Feet"),
-    // 108: trace
+    // 105: trace
     ("トレース", "Trace"),
-    // 109: download
+    // 106: download
     ("ダウンロード", "Download"),
-    // 110: pressure
+    // 107: pressure
     ("プレッシャー", "Pressure"),
-    // 111: immunity
+    // 108: immunity
     ("めんえき", "Immunity"),
-    // 112: snow-cloak
+    // 109: snow-cloak
     ("ゆきがくれ", "Snow Cloak"),
-    // 113: marvel-scale
+    // 110: marvel-scale
     ("ふしぎなうろこ", "Marvel Scale"),
-    // 114: multiscale
+    // 111: multiscale
     ("マルチスケイル", "Multiscale"),
-    // 115: super-luck
+    // 112: super-luck
     ("きょううん", "Super Luck"),
-    // 116: magic-bounce
+    // 113: magic-bounce
     ("マジックミラー", "Magic Bounce"),
-    // 117: plus
+    // 114: plus
     ("プラス", "Plus"),
-    // 118: huge-power
+    // 115: huge-power
     ("ちからもち", "Huge Power"),
-    // 119: sap-sipper
+    // 116: sap-sipper
     ("そうしょく", "Sap Sipper"),
-    // 120: drizzle
+    // 117: drizzle
     ("あめふらし", "Drizzle"),
-    // 121: speed-boost
+    // 118: speed-boost
     ("かそく", "Speed Boost"),
-    // 122: prankster
+    // 119: prankster
     ("いたずらごころ", "Prankster"),
-    // 123: shadow-tag
+    // 120: shadow-tag
     ("かげふみ", "Shadow Tag"),
-    // 124: telepathy
+    // 121: telepathy
     ("テレパシー", "Telepathy"),
-    // 125: light-metal
+    // 122: light-metal
     ("ライトメタル", "Light Metal"),
-    // 126: contrary
+    // 123: contrary
     ("あまのじゃく", "Contrary"),
-    // 127: pickpocket
+    // 124: pickpocket
     ("わるいてぐせ", "Pickpocket"),
-    // 128: honey-gather
+    // 125: honey-gather
     ("みつあつめ", "Honey Gather"),
-    // 129: magma-armor
+    // 126: magma-armor
     ("マグマのよろい", "Magma Armor"),
-    // 130: moody
+    // 127: moody
     ("ムラっけ", "Moody"),
-    // 131: suction-cups
+    // 128: suction-cups
     ("きゅうばん", "Suction Cups"),
-    // 132: sand-stream
+    // 129: sand-stream
     ("すなおこし", "Sand Stream"),
-    // 133: wind-rider
-    ("かぜのり", "Wind Rider"),
-    // 134: poison-heal
+    // 130: poison-heal
     ("ポイズンヒール", "Poison Heal"),
-    // 135: truant
+    // 131: truant
     ("なまけ", "Truant"),
-    // 136: wonder-guard
+    // 132: wonder-guard
     ("ふしぎなまもり", "Wonder Guard"),
-    // 137: normalize
+    // 133: normalize
     ("ノーマルスキン", "Normalize"),
-    // 138: stall
+    // 134: stall
     ("あとだし", "Stall"),
-    // 139: heavy-metal
+    // 135: heavy-metal
     ("ヘヴィメタル", "Heavy Metal"),
-    // 140: pure-power
+    // 136: pure-power
     ("ヨガパワー", "Pure Power"),
-    // 141: minus
+    // 137: minus
     ("マイナス", "Minus"),
-    // 142: rough-skin
+    // 138: rough-skin
     ("さめはだ", "Rough Skin"),
-    // 143: simple
+    // 139: simple
     ("たんじゅん", "Simple"),
-    // 144: solid-rock
+    // 140: solid-rock
     ("ハードロック", "Solid Rock"),
-    // 145: white-smoke
+    // 141: white-smoke
     ("しろいけむり", "White Smoke"),
-    // 146: toxic-boost
+    // 142: toxic-boost
     ("どくぼうそう", "Toxic Boost"),
-    // 147: storm-drain
+    // 143: storm-drain
     ("よびみず", "Storm Drain"),
-    // 148: forecast
+    // 144: forecast
     ("てんきや", "Forecast"),
-    // 149: color-change
+    // 145: color-change
     ("へんしょく", "Color Change"),
-    // 150: protean
-    ("へんげんじざい", "Protean"),
-    // 151: air-lock
+    // 146: cursed-body
+    ("のろわれボディ", "Cursed Body"),
+    // 147: air-lock
     ("エアロック", "Air Lock"),
-    // 152: flower-gift
+    // 148: flower-gift
     ("フラワーギフト", "Flower Gift"),
-    // 153: flare-boost
+    // 149: flare-boost
     ("ねつぼうそう", "Flare Boost"),
-    // 154: klutz
+    // 150: klutz
     ("ぶきよう", "Klutz"),
-    // 155: heatproof
+    // 151: heatproof
     ("たいねつ", "Heatproof"),
-    // 156: snow-warning
+    // 152: snow-warning
     ("ゆきふらし", "Snow Warning"),
-    // 157: motor-drive
+    // 153: motor-drive
     ("でんきエンジン", "Motor Drive"),
-    // 158: sharpness
-    ("きれあじ", "Sharpness"),
-    // 159: slow-start
+    // 154: slow-start
     ("スロースタート", "Slow Start"),
-    // 160: bad-dreams
+    // 155: bad-dreams
     ("ナイトメア", "Bad Dreams"),
-    // 161: multitype
+    // 156: multitype
     ("マルチタイプ", "Multitype"),
-    // 162: victory-star
+    // 157: victory-star
     ("しょうりのほし", "Victory Star"),
-    // 163: zen-mode
+    // 158: zen-mode
     ("ダルマモード", "Zen Mode"),
-    // 164: mummy
+    // 159: mummy
     ("ミイラ", "Mummy"),
-    // 165: defeatist
+    // 160: defeatist
     ("よわき", "Defeatist"),
-    // 166: illusion
+    // 161: illusion
     ("イリュージョン", "Illusion"),
-    // 167: iron-barbs
+    // 162: iron-barbs
     ("てつのトゲ", "Iron Barbs"),
-    // 168: slush-rush
-    ("ゆきかき", "Slush Rush"),
-    // 169: turboblaze
+    // 163: turboblaze
     ("ターボブレイズ", "Turboblaze"),
-    // 170: teravolt
+    // 164: teravolt
     ("テラボルテージ", "Teravolt"),
 ];
 
@@ -428,5 +416,24 @@ mod tests {
         // フシギダネは特性2がない
         let ja = get_ability_name(1, AbilitySlot::Second, "ja");
         assert_eq!(ja, "しんりょく");
+    }
+
+    #[test]
+    fn test_get_ability_name_gen5_corrected_slots() {
+        assert_eq!(
+            get_ability_name(525, AbilitySlot::Second, "ja"),
+            "がんじょう"
+        );
+        assert_eq!(get_ability_name(525, AbilitySlot::Second, "en"), "Sturdy");
+        assert_eq!(get_ability_name(94, AbilitySlot::First, "ja"), "ふゆう");
+        assert_eq!(get_ability_name(94, AbilitySlot::First, "en"), "Levitate");
+        assert_eq!(get_ability_name(393, AbilitySlot::Hidden, "ja"), "まけんき");
+        assert_eq!(get_ability_name(393, AbilitySlot::Hidden, "en"), "Defiant");
+    }
+
+    #[test]
+    fn test_get_ability_name_missing_hidden_ability_returns_unknown() {
+        assert_eq!(get_ability_name(396, AbilitySlot::Hidden, "ja"), "???");
+        assert_eq!(get_ability_name(396, AbilitySlot::Hidden, "en"), "???");
     }
 }
