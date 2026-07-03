@@ -469,7 +469,7 @@
       "hp": 60,
       "attack": 45,
       "defense": 50,
-      "specialAttack": 90,
+      "specialAttack": 80,
       "specialDefense": 80,
       "speed": 70
     },
@@ -623,7 +623,7 @@
     },
     "baseStats": {
       "hp": 65,
-      "attack": 90,
+      "attack": 80,
       "defense": 40,
       "specialAttack": 45,
       "specialDefense": 80,
@@ -801,7 +801,7 @@
       "defense": 75,
       "specialAttack": 70,
       "specialDefense": 70,
-      "speed": 101
+      "speed": 91
     },
     "abilities": {
       "ability1": {
@@ -1145,7 +1145,7 @@
     },
     "baseStats": {
       "hp": 60,
-      "attack": 95,
+      "attack": 85,
       "defense": 69,
       "specialAttack": 65,
       "specialDefense": 79,
@@ -1194,9 +1194,9 @@
     "baseStats": {
       "hp": 35,
       "attack": 55,
-      "defense": 40,
+      "defense": 30,
       "specialAttack": 50,
-      "specialDefense": 50,
+      "specialDefense": 40,
       "speed": 90
     },
     "abilities": {
@@ -1291,7 +1291,7 @@
       "defense": 55,
       "specialAttack": 90,
       "specialDefense": 80,
-      "speed": 110
+      "speed": 100
     },
     "abilities": {
       "ability1": {
@@ -1599,7 +1599,7 @@
     },
     "baseStats": {
       "hp": 90,
-      "attack": 92,
+      "attack": 82,
       "defense": 87,
       "specialAttack": 75,
       "specialDefense": 85,
@@ -1743,7 +1743,7 @@
     },
     "baseStats": {
       "hp": 81,
-      "attack": 102,
+      "attack": 92,
       "defense": 77,
       "specialAttack": 85,
       "specialDefense": 75,
@@ -1941,7 +1941,7 @@
       "hp": 95,
       "attack": 70,
       "defense": 73,
-      "specialAttack": 95,
+      "specialAttack": 85,
       "specialDefense": 90,
       "speed": 60
     },
@@ -2257,13 +2257,7 @@
           "ja": "メロメロボディ"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "friend-guard",
         "names": {
@@ -2293,7 +2287,7 @@
       "hp": 140,
       "attack": 70,
       "defense": 45,
-      "specialAttack": 85,
+      "specialAttack": 75,
       "specialDefense": 50,
       "speed": 45
     },
@@ -2305,13 +2299,7 @@
           "ja": "メロメロボディ"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "frisk",
         "names": {
@@ -2509,7 +2497,7 @@
       "hp": 75,
       "attack": 80,
       "defense": 85,
-      "specialAttack": 110,
+      "specialAttack": 100,
       "specialDefense": 90,
       "speed": 50
     },
@@ -3061,7 +3049,7 @@
     },
     "baseStats": {
       "hp": 35,
-      "attack": 100,
+      "attack": 80,
       "defense": 50,
       "specialAttack": 50,
       "specialDefense": 70,
@@ -3877,7 +3865,7 @@
     },
     "baseStats": {
       "hp": 90,
-      "attack": 95,
+      "attack": 85,
       "defense": 95,
       "specialAttack": 70,
       "specialDefense": 90,
@@ -4132,7 +4120,7 @@
       "attack": 50,
       "defense": 45,
       "specialAttack": 135,
-      "specialDefense": 95,
+      "specialDefense": 85,
       "speed": 120
     },
     "abilities": {
@@ -4444,7 +4432,7 @@
       "attack": 105,
       "defense": 65,
       "specialAttack": 100,
-      "specialDefense": 70,
+      "specialDefense": 60,
       "speed": 70
     },
     "abilities": {
@@ -4819,7 +4807,7 @@
     },
     "baseStats": {
       "hp": 80,
-      "attack": 120,
+      "attack": 110,
       "defense": 130,
       "specialAttack": 55,
       "specialDefense": 65,
@@ -5405,7 +5393,7 @@
     },
     "baseStats": {
       "hp": 52,
-      "attack": 90,
+      "attack": 65,
       "defense": 55,
       "specialAttack": 58,
       "specialDefense": 62,
@@ -5577,7 +5565,7 @@
       "defense": 70,
       "specialAttack": 60,
       "specialDefense": 60,
-      "speed": 110
+      "speed": 100
     },
     "abilities": {
       "ability1": {
@@ -6249,10 +6237,10 @@
     },
     "abilities": {
       "ability1": {
-        "key": "cursed-body",
+        "key": "levitate",
         "names": {
-          "en": "Cursed Body",
-          "ja": "のろわれボディ"
+          "en": "Levitate",
+          "ja": "ふゆう"
         }
       },
       "ability2": null,
@@ -6567,7 +6555,7 @@
       "defense": 70,
       "specialAttack": 80,
       "specialDefense": 80,
-      "speed": 150
+      "speed": 140
     },
     "abilities": {
       "ability1": {
@@ -6656,7 +6644,7 @@
       "attack": 95,
       "defense": 85,
       "specialAttack": 125,
-      "specialDefense": 75,
+      "specialDefense": 65,
       "speed": 55
     },
     "abilities": {
@@ -7057,13 +7045,7 @@
           "ja": "ふゆう"
         }
       },
-      "ability2": {
-        "key": "neutralizing-gas",
-        "names": {
-          "en": "Neutralizing Gas",
-          "ja": "かがくへんかガス"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "stench",
         "names": {
@@ -7141,13 +7123,7 @@
           "ja": "ふゆう"
         }
       },
-      "ability2": {
-        "key": "neutralizing-gas",
-        "names": {
-          "en": "Neutralizing Gas",
-          "ja": "かがくへんかガス"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "stench",
         "names": {
@@ -9233,10 +9209,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "static",
+        "key": "lightning-rod",
         "names": {
-          "en": "Static",
-          "ja": "せいでんき"
+          "en": "Lightning Rod",
+          "ja": "ひらいしん"
         }
       }
     },
@@ -10274,7 +10250,7 @@
       "hp": 100,
       "attack": 50,
       "defense": 50,
-      "specialAttack": 86,
+      "specialAttack": 76,
       "specialDefense": 96,
       "speed": 70
     },
@@ -10467,7 +10443,7 @@
       "attack": 90,
       "defense": 70,
       "specialAttack": 60,
-      "specialDefense": 70,
+      "specialDefense": 60,
       "speed": 40
     },
     "abilities": {
@@ -10944,13 +10920,7 @@
           "ja": "メロメロボディ"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "friend-guard",
         "names": {
@@ -11255,7 +11225,7 @@
     "baseStats": {
       "hp": 90,
       "attack": 75,
-      "defense": 85,
+      "defense": 75,
       "specialAttack": 115,
       "specialDefense": 90,
       "speed": 55
@@ -11297,7 +11267,7 @@
     "baseStats": {
       "hp": 75,
       "attack": 80,
-      "defense": 95,
+      "defense": 85,
       "specialAttack": 90,
       "specialDefense": 100,
       "speed": 50
@@ -11388,7 +11358,7 @@
       "hp": 100,
       "attack": 50,
       "defense": 80,
-      "specialAttack": 60,
+      "specialAttack": 50,
       "specialDefense": 80,
       "speed": 50
     },
@@ -11665,7 +11635,7 @@
       "attack": 55,
       "defense": 70,
       "specialAttack": 55,
-      "specialDefense": 95,
+      "specialDefense": 85,
       "speed": 110
     },
     "abilities": {
@@ -12826,7 +12796,7 @@
     "baseStats": {
       "hp": 65,
       "attack": 95,
-      "defense": 85,
+      "defense": 75,
       "specialAttack": 55,
       "specialDefense": 55,
       "speed": 85
@@ -13348,10 +13318,10 @@
       "femaleThreshold": 128
     },
     "baseStats": {
-      "hp": 60,
+      "hp": 50,
       "attack": 50,
       "defense": 120,
-      "specialAttack": 90,
+      "specialAttack": 80,
       "specialDefense": 80,
       "speed": 30
     },
@@ -13492,11 +13462,11 @@
       "femaleThreshold": 192
     },
     "baseStats": {
-      "hp": 65,
+      "hp": 55,
       "attack": 55,
-      "defense": 95,
+      "defense": 85,
       "specialAttack": 65,
-      "specialDefense": 95,
+      "specialDefense": 85,
       "speed": 35
     },
     "abilities": {
@@ -13720,7 +13690,7 @@
       "femaleThreshold": 128
     },
     "baseStats": {
-      "hp": 85,
+      "hp": 65,
       "attack": 40,
       "defense": 70,
       "specialAttack": 80,
@@ -14743,10 +14713,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "inner-focus",
+        "key": "volt-absorb",
         "names": {
-          "en": "Inner Focus",
-          "ja": "せいしんりょく"
+          "en": "Volt Absorb",
+          "ja": "ちくでん"
         }
       }
     },
@@ -14784,10 +14754,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "inner-focus",
+        "key": "flash-fire",
         "names": {
-          "en": "Inner Focus",
-          "ja": "せいしんりょく"
+          "en": "Flash Fire",
+          "ja": "もらいび"
         }
       }
     },
@@ -14825,10 +14795,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "inner-focus",
+        "key": "water-absorb",
         "names": {
-          "en": "Inner Focus",
-          "ja": "せいしんりょく"
+          "en": "Water Absorb",
+          "ja": "ちょすい"
         }
       }
     },
@@ -15003,7 +14973,7 @@
   "250": {
     "nationalDex": 250,
     "names": {
-      "en": "Ho Oh",
+      "en": "Ho-Oh",
       "ja": "ホウオウ"
     },
     "gender": {
@@ -15986,7 +15956,7 @@
       "hp": 60,
       "attack": 70,
       "defense": 50,
-      "specialAttack": 100,
+      "specialAttack": 90,
       "specialDefense": 50,
       "speed": 65
     },
@@ -16431,10 +16401,10 @@
         }
       },
       "ability2": {
-        "key": "wind-rider",
+        "key": "early-bird",
         "names": {
-          "en": "Wind Rider",
-          "ja": "かぜのり"
+          "en": "Early Bird",
+          "ja": "はやおき"
         }
       },
       "hidden": {
@@ -16544,7 +16514,7 @@
       "hp": 60,
       "attack": 85,
       "defense": 60,
-      "specialAttack": 75,
+      "specialAttack": 50,
       "specialDefense": 50,
       "speed": 125
     },
@@ -16634,13 +16604,7 @@
           "ja": "するどいめ"
         }
       },
-      "ability2": {
-        "key": "hydration",
-        "names": {
-          "en": "Hydration",
-          "ja": "うるおいボディ"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "rain-dish",
         "names": {
@@ -16670,7 +16634,7 @@
       "hp": 60,
       "attack": 50,
       "defense": 100,
-      "specialAttack": 95,
+      "specialAttack": 85,
       "specialDefense": 70,
       "speed": 65
     },
@@ -16682,13 +16646,7 @@
           "ja": "するどいめ"
         }
       },
-      "ability2": {
-        "key": "drizzle",
-        "names": {
-          "en": "Drizzle",
-          "ja": "あめふらし"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "rain-dish",
         "names": {
@@ -16904,9 +16862,9 @@
       "hp": 70,
       "attack": 60,
       "defense": 62,
-      "specialAttack": 100,
+      "specialAttack": 80,
       "specialDefense": 82,
-      "speed": 80
+      "speed": 60
     },
     "abilities": {
       "ability1": {
@@ -17534,7 +17492,7 @@
       "attack": 91,
       "defense": 63,
       "specialAttack": 91,
-      "specialDefense": 73,
+      "specialDefense": 63,
       "speed": 68
     },
     "abilities": {
@@ -17961,7 +17919,7 @@
       "defense": 65,
       "specialAttack": 55,
       "specialDefense": 55,
-      "speed": 90
+      "speed": 70
     },
     "abilities": {
       "ability1": {
@@ -18620,13 +18578,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "lightning-rod",
-        "names": {
-          "en": "Lightning Rod",
-          "ja": "ひらいしん"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [],
@@ -18662,13 +18614,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "volt-absorb",
-        "names": {
-          "en": "Volt Absorb",
-          "ja": "ちくでん"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [],
@@ -18690,9 +18636,9 @@
     "baseStats": {
       "hp": 65,
       "attack": 73,
-      "defense": 75,
+      "defense": 55,
       "specialAttack": 47,
-      "specialDefense": 85,
+      "specialDefense": 75,
       "speed": 85
     },
     "abilities": {
@@ -18738,9 +18684,9 @@
     "baseStats": {
       "hp": 65,
       "attack": 47,
-      "defense": 75,
+      "defense": 55,
       "specialAttack": 73,
-      "specialDefense": 85,
+      "specialDefense": 75,
       "speed": 85
     },
     "abilities": {
@@ -19487,13 +19433,7 @@
           "ja": "しろいけむり"
         }
       },
-      "ability2": {
-        "key": "drought",
-        "names": {
-          "en": "Drought",
-          "ja": "ひでり"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "shell-armor",
         "names": {
@@ -20287,7 +20227,7 @@
       "type": "genderless"
     },
     "baseStats": {
-      "hp": 90,
+      "hp": 70,
       "attack": 55,
       "defense": 65,
       "specialAttack": 95,
@@ -20390,7 +20330,7 @@
       "type": "genderless"
     },
     "baseStats": {
-      "hp": 90,
+      "hp": 70,
       "attack": 95,
       "defense": 85,
       "specialAttack": 55,
@@ -21011,13 +20951,7 @@
           "ja": "すいすい"
         }
       },
-      "ability2": {
-        "key": "oblivious",
-        "names": {
-          "en": "Oblivious",
-          "ja": "どんかん"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "adaptability",
         "names": {
@@ -21059,13 +20993,7 @@
           "ja": "ふしぎなうろこ"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "cute-charm",
         "names": {
@@ -21180,13 +21108,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "protean",
-        "names": {
-          "en": "Protean",
-          "ja": "へんげんじざい"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [
@@ -21426,13 +21348,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "frisk",
-        "names": {
-          "en": "Frisk",
-          "ja": "おみとおし"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [
@@ -21504,13 +21420,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "frisk",
-        "names": {
-          "en": "Frisk",
-          "ja": "おみとおし"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [
@@ -21614,11 +21524,11 @@
       "femaleThreshold": 128
     },
     "baseStats": {
-      "hp": 75,
+      "hp": 65,
       "attack": 50,
-      "defense": 80,
+      "defense": 70,
       "specialAttack": 95,
-      "specialDefense": 90,
+      "specialDefense": 80,
       "speed": 65
     },
     "abilities": {
@@ -23624,10 +23534,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "competitive",
+        "key": "defiant",
         "names": {
-          "en": "Competitive",
-          "ja": "かちき"
+          "en": "Defiant",
+          "ja": "まけんき"
         }
       }
     },
@@ -23666,10 +23576,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "competitive",
+        "key": "defiant",
         "names": {
-          "en": "Competitive",
-          "ja": "かちき"
+          "en": "Defiant",
+          "ja": "まけんき"
         }
       }
     },
@@ -23708,10 +23618,10 @@
       },
       "ability2": null,
       "hidden": {
-        "key": "competitive",
+        "key": "defiant",
         "names": {
-          "en": "Competitive",
-          "ja": "かちき"
+          "en": "Defiant",
+          "ja": "まけんき"
         }
       }
     },
@@ -23749,13 +23659,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "reckless",
-        "names": {
-          "en": "Reckless",
-          "ja": "すてみ"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [
@@ -23893,7 +23797,7 @@
       "attack": 120,
       "defense": 70,
       "specialAttack": 50,
-      "specialDefense": 60,
+      "specialDefense": 50,
       "speed": 100
     },
     "abilities": {
@@ -24516,7 +24420,7 @@
     },
     "baseStats": {
       "hp": 60,
-      "attack": 70,
+      "attack": 55,
       "defense": 65,
       "specialAttack": 125,
       "specialDefense": 105,
@@ -28964,7 +28868,7 @@
   "474": {
     "nationalDex": 474,
     "names": {
-      "en": "Porygon Z",
+      "en": "Porygon-Z",
       "ja": "ポリゴンＺ"
     },
     "gender": {
@@ -29034,13 +28938,7 @@
           "ja": "ふくつのこころ"
         }
       },
-      "ability2": {
-        "key": "sharpness",
-        "names": {
-          "en": "Sharpness",
-          "ja": "きれあじ"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "justified",
         "names": {
@@ -29167,13 +29065,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "frisk",
-        "names": {
-          "en": "Frisk",
-          "ja": "おみとおし"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [
@@ -29649,9 +29541,9 @@
     "baseStats": {
       "hp": 120,
       "attack": 70,
-      "defense": 110,
+      "defense": 120,
       "specialAttack": 75,
-      "specialDefense": 120,
+      "specialDefense": 130,
       "speed": 85
     },
     "abilities": {
@@ -30500,7 +30392,7 @@
     },
     "baseStats": {
       "hp": 85,
-      "attack": 110,
+      "attack": 100,
       "defense": 90,
       "specialAttack": 45,
       "specialDefense": 90,
@@ -31496,7 +31388,7 @@
     },
     "baseStats": {
       "hp": 80,
-      "attack": 115,
+      "attack": 105,
       "defense": 80,
       "specialAttack": 65,
       "specialDefense": 55,
@@ -31726,13 +31618,7 @@
           "ja": "がんじょう"
         }
       },
-      "ability2": {
-        "key": "weak-armor",
-        "names": {
-          "en": "Weak Armor",
-          "ja": "くだけるよろい"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "sand-force",
         "names": {
@@ -31842,13 +31728,7 @@
           "ja": "がんじょう"
         }
       },
-      "ability2": {
-        "key": "weak-armor",
-        "names": {
-          "en": "Weak Armor",
-          "ja": "くだけるよろい"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "sand-force",
         "names": {
@@ -31947,7 +31827,7 @@
       "attack": 135,
       "defense": 130,
       "specialAttack": 60,
-      "specialDefense": 80,
+      "specialDefense": 70,
       "speed": 25
     },
     "abilities": {
@@ -31958,13 +31838,7 @@
           "ja": "がんじょう"
         }
       },
-      "ability2": {
-        "key": "sand-stream",
-        "names": {
-          "en": "Sand Stream",
-          "ja": "すなおこし"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "sand-force",
         "names": {
@@ -32059,7 +31933,7 @@
       "femaleThreshold": 128
     },
     "baseStats": {
-      "hp": 65,
+      "hp": 55,
       "attack": 45,
       "defense": 43,
       "specialAttack": 55,
@@ -32680,7 +32554,7 @@
     },
     "baseStats": {
       "hp": 105,
-      "attack": 95,
+      "attack": 85,
       "defense": 75,
       "specialAttack": 85,
       "specialDefense": 75,
@@ -33167,7 +33041,7 @@
       "attack": 103,
       "defense": 80,
       "specialAttack": 70,
-      "specialDefense": 80,
+      "specialDefense": 70,
       "speed": 92
     },
     "abilities": {
@@ -33270,10 +33144,10 @@
         }
       },
       "hidden": {
-        "key": "speed-boost",
+        "key": "quick-feet",
         "names": {
-          "en": "Speed Boost",
-          "ja": "かそく"
+          "en": "Quick Feet",
+          "ja": "はやあし"
         }
       }
     },
@@ -33370,10 +33244,10 @@
         }
       },
       "hidden": {
-        "key": "speed-boost",
+        "key": "quick-feet",
         "names": {
-          "en": "Speed Boost",
-          "ja": "かそく"
+          "en": "Quick Feet",
+          "ja": "はやあし"
         }
       }
     },
@@ -33448,7 +33322,7 @@
     },
     "baseStats": {
       "hp": 60,
-      "attack": 100,
+      "attack": 90,
       "defense": 89,
       "specialAttack": 55,
       "specialDefense": 69,
@@ -33470,10 +33344,10 @@
         }
       },
       "hidden": {
-        "key": "speed-boost",
+        "key": "quick-feet",
         "names": {
-          "en": "Speed Boost",
-          "ja": "かそく"
+          "en": "Quick Feet",
+          "ja": "はやあし"
         }
       }
     },
@@ -33921,7 +33795,7 @@
     "baseStats": {
       "hp": 95,
       "attack": 117,
-      "defense": 80,
+      "defense": 70,
       "specialAttack": 65,
       "specialDefense": 70,
       "speed": 92
@@ -34324,7 +34198,7 @@
     },
     "baseStats": {
       "hp": 70,
-      "attack": 105,
+      "attack": 95,
       "defense": 125,
       "specialAttack": 65,
       "specialDefense": 75,
@@ -35486,13 +35360,7 @@
           "ja": "おみとおし"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "shadow-tag",
         "names": {
@@ -35552,13 +35420,7 @@
           "ja": "おみとおし"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "shadow-tag",
         "names": {
@@ -35618,13 +35480,7 @@
           "ja": "おみとおし"
         }
       },
-      "ability2": {
-        "key": "competitive",
-        "names": {
-          "en": "Competitive",
-          "ja": "かちき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "shadow-tag",
         "names": {
@@ -35978,13 +35834,7 @@
           "ja": "アイスボディ"
         }
       },
-      "ability2": {
-        "key": "snow-cloak",
-        "names": {
-          "en": "Snow Cloak",
-          "ja": "ゆきがくれ"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "weak-armor",
         "names": {
@@ -36026,13 +35876,7 @@
           "ja": "アイスボディ"
         }
       },
-      "ability2": {
-        "key": "snow-cloak",
-        "names": {
-          "en": "Snow Cloak",
-          "ja": "ゆきがくれ"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "weak-armor",
         "names": {
@@ -36074,13 +35918,7 @@
           "ja": "アイスボディ"
         }
       },
-      "ability2": {
-        "key": "snow-warning",
-        "names": {
-          "en": "Snow Warning",
-          "ja": "ゆきふらし"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "weak-armor",
         "names": {
@@ -36989,13 +36827,7 @@
         }
       },
       "ability2": null,
-      "hidden": {
-        "key": "anticipation",
-        "names": {
-          "en": "Anticipation",
-          "ja": "きけんよち"
-        }
-      }
+      "hidden": null
     },
     "heldItems": {
       "black": [
@@ -37419,10 +37251,10 @@
         }
       },
       "hidden": {
-        "key": "infiltrator",
+        "key": "shadow-tag",
         "names": {
-          "en": "Infiltrator",
-          "ja": "すりぬけ"
+          "en": "Shadow Tag",
+          "ja": "かげふみ"
         }
       }
     },
@@ -37467,10 +37299,10 @@
         }
       },
       "hidden": {
-        "key": "infiltrator",
+        "key": "shadow-tag",
         "names": {
-          "en": "Infiltrator",
-          "ja": "すりぬけ"
+          "en": "Shadow Tag",
+          "ja": "かげふみ"
         }
       }
     },
@@ -37515,10 +37347,10 @@
         }
       },
       "hidden": {
-        "key": "infiltrator",
+        "key": "shadow-tag",
         "names": {
-          "en": "Infiltrator",
-          "ja": "すりぬけ"
+          "en": "Shadow Tag",
+          "ja": "かげふみ"
         }
       }
     },
@@ -37699,13 +37531,7 @@
           "ja": "ゆきがくれ"
         }
       },
-      "ability2": {
-        "key": "slush-rush",
-        "names": {
-          "en": "Slush Rush",
-          "ja": "ゆきかき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "rattled",
         "names": {
@@ -37769,7 +37595,7 @@
     },
     "baseStats": {
       "hp": 95,
-      "attack": 130,
+      "attack": 110,
       "defense": 80,
       "specialAttack": 70,
       "specialDefense": 80,
@@ -37783,13 +37609,7 @@
           "ja": "ゆきがくれ"
         }
       },
-      "ability2": {
-        "key": "slush-rush",
-        "names": {
-          "en": "Slush Rush",
-          "ja": "ゆきかき"
-        }
-      },
+      "ability2": null,
       "hidden": {
         "key": "swift-swim",
         "names": {
@@ -37851,8 +37671,8 @@
       "type": "genderless"
     },
     "baseStats": {
-      "hp": 80,
-      "attack": 50,
+      "hp": 70,
+      "attack": 30,
       "defense": 50,
       "specialAttack": 95,
       "specialDefense": 135,

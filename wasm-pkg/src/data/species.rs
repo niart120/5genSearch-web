@@ -176,7 +176,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 60,
             attack: 45,
             defense: 50,
-            special_attack: 90,
+            special_attack: 80,
             special_defense: 80,
             speed: 70,
         },
@@ -213,7 +213,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 65,
-            attack: 90,
+            attack: 80,
             defense: 40,
             special_attack: 45,
             special_defense: 80,
@@ -256,7 +256,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             defense: 75,
             special_attack: 70,
             special_defense: 70,
-            speed: 101,
+            speed: 91,
         },
         gender_ratio: GenderRatio::F1M1,
         ability_ids: [14, 15, 16],
@@ -330,7 +330,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 60,
-            attack: 95,
+            attack: 85,
             defense: 69,
             special_attack: 65,
             special_defense: 79,
@@ -344,9 +344,9 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
         base_stats: BaseStats {
             hp: 35,
             attack: 55,
-            defense: 40,
+            defense: 30,
             special_attack: 50,
-            special_defense: 50,
+            special_defense: 40,
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
@@ -360,7 +360,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             defense: 55,
             special_attack: 90,
             special_defense: 80,
-            speed: 110,
+            speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
         ability_ids: [21, 0, 22],
@@ -421,7 +421,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 90,
-            attack: 92,
+            attack: 82,
             defense: 87,
             special_attack: 75,
             special_defense: 85,
@@ -460,7 +460,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 81,
-            attack: 102,
+            attack: 92,
             defense: 77,
             special_attack: 85,
             special_defense: 75,
@@ -488,7 +488,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 95,
             attack: 70,
             defense: 73,
-            special_attack: 95,
+            special_attack: 85,
             special_defense: 90,
             speed: 60,
         },
@@ -532,7 +532,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 34, 30],
+        ability_ids: [28, 0, 30],
     },
     // #040 Wigglytuff
     SpeciesEntry {
@@ -540,12 +540,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 140,
             attack: 70,
             defense: 45,
-            special_attack: 85,
+            special_attack: 75,
             special_defense: 50,
             speed: 45,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 34, 35],
+        ability_ids: [28, 0, 34],
     },
     // #041 Zubat
     SpeciesEntry {
@@ -558,7 +558,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 0, 37],
+        ability_ids: [35, 0, 36],
     },
     // #042 Golbat
     SpeciesEntry {
@@ -571,7 +571,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 0, 37],
+        ability_ids: [35, 0, 36],
     },
     // #043 Oddish
     SpeciesEntry {
@@ -597,7 +597,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 38],
+        ability_ids: [2, 0, 37],
     },
     // #045 Vileplume
     SpeciesEntry {
@@ -605,12 +605,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 75,
             attack: 80,
             defense: 85,
-            special_attack: 110,
+            special_attack: 100,
             special_defense: 90,
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 39],
+        ability_ids: [2, 0, 38],
     },
     // #046 Paras
     SpeciesEntry {
@@ -623,7 +623,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [39, 40, 41],
+        ability_ids: [38, 39, 40],
     },
     // #047 Parasect
     SpeciesEntry {
@@ -636,7 +636,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [39, 40, 41],
+        ability_ids: [38, 39, 40],
     },
     // #048 Venonat
     SpeciesEntry {
@@ -662,7 +662,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [7, 11, 42],
+        ability_ids: [7, 11, 41],
     },
     // #050 Diglett
     SpeciesEntry {
@@ -675,20 +675,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 43, 44],
+        ability_ids: [23, 42, 43],
     },
     // #051 Dugtrio
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 35,
-            attack: 100,
+            attack: 80,
             defense: 50,
             special_attack: 50,
             special_defense: 70,
             speed: 120,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 43, 44],
+        ability_ids: [23, 42, 43],
     },
     // #052 Meowth
     SpeciesEntry {
@@ -701,7 +701,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [45, 46, 20],
+        ability_ids: [44, 45, 20],
     },
     // #053 Persian
     SpeciesEntry {
@@ -714,7 +714,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [47, 46, 20],
+        ability_ids: [46, 45, 20],
     },
     // #054 Psyduck
     SpeciesEntry {
@@ -727,7 +727,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [41, 48, 49],
+        ability_ids: [40, 47, 48],
     },
     // #055 Golduck
     SpeciesEntry {
@@ -740,7 +740,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [41, 48, 49],
+        ability_ids: [40, 47, 48],
     },
     // #056 Mankey
     SpeciesEntry {
@@ -753,7 +753,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [50, 51, 52],
+        ability_ids: [49, 50, 51],
     },
     // #057 Primeape
     SpeciesEntry {
@@ -766,7 +766,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [50, 51, 52],
+        ability_ids: [49, 50, 51],
     },
     // #058 Growlithe
     SpeciesEntry {
@@ -779,7 +779,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [19, 32, 53],
+        ability_ids: [19, 32, 52],
     },
     // #059 Arcanine
     SpeciesEntry {
@@ -792,7 +792,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [19, 32, 53],
+        ability_ids: [19, 32, 52],
     },
     // #060 Poliwag
     SpeciesEntry {
@@ -805,7 +805,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 41, 49],
+        ability_ids: [53, 40, 48],
     },
     // #061 Poliwhirl
     SpeciesEntry {
@@ -818,20 +818,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 41, 49],
+        ability_ids: [53, 40, 48],
     },
     // #062 Poliwrath
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 90,
-            attack: 95,
+            attack: 85,
             defense: 95,
             special_attack: 70,
             special_defense: 90,
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 41, 49],
+        ability_ids: [53, 40, 48],
     },
     // #063 Abra
     SpeciesEntry {
@@ -844,7 +844,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [55, 36, 29],
+        ability_ids: [54, 35, 29],
     },
     // #064 Kadabra
     SpeciesEntry {
@@ -857,7 +857,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [55, 36, 29],
+        ability_ids: [54, 35, 29],
     },
     // #065 Alakazam
     SpeciesEntry {
@@ -866,11 +866,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 50,
             defense: 45,
             special_attack: 135,
-            special_defense: 95,
+            special_defense: 85,
             speed: 120,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [55, 36, 29],
+        ability_ids: [54, 35, 29],
     },
     // #066 Machop
     SpeciesEntry {
@@ -883,7 +883,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [17, 56, 57],
+        ability_ids: [17, 55, 56],
     },
     // #067 Machoke
     SpeciesEntry {
@@ -896,7 +896,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [17, 56, 57],
+        ability_ids: [17, 55, 56],
     },
     // #068 Machamp
     SpeciesEntry {
@@ -909,7 +909,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [17, 56, 57],
+        ability_ids: [17, 55, 56],
     },
     // #069 Bellsprout
     SpeciesEntry {
@@ -922,7 +922,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 58],
+        ability_ids: [2, 0, 57],
     },
     // #070 Weepinbell
     SpeciesEntry {
@@ -935,7 +935,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 58],
+        ability_ids: [2, 0, 57],
     },
     // #071 Victreebel
     SpeciesEntry {
@@ -944,11 +944,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 105,
             defense: 65,
             special_attack: 100,
-            special_defense: 70,
+            special_defense: 60,
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 58],
+        ability_ids: [2, 0, 57],
     },
     // #072 Tentacool
     SpeciesEntry {
@@ -961,7 +961,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [59, 60, 6],
+        ability_ids: [58, 59, 6],
     },
     // #073 Tentacruel
     SpeciesEntry {
@@ -974,7 +974,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [59, 60, 6],
+        ability_ids: [58, 59, 6],
     },
     // #074 Geodude
     SpeciesEntry {
@@ -987,7 +987,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 62, 23],
+        ability_ids: [60, 61, 23],
     },
     // #075 Graveler
     SpeciesEntry {
@@ -1000,20 +1000,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 62, 23],
+        ability_ids: [60, 61, 23],
     },
     // #076 Golem
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 80,
-            attack: 120,
+            attack: 110,
             defense: 130,
             special_attack: 55,
             special_defense: 65,
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 62, 23],
+        ability_ids: [60, 61, 23],
     },
     // #077 Ponyta
     SpeciesEntry {
@@ -1026,7 +1026,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 32, 63],
+        ability_ids: [8, 32, 62],
     },
     // #078 Rapidash
     SpeciesEntry {
@@ -1039,7 +1039,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 32, 63],
+        ability_ids: [8, 32, 62],
     },
     // #079 Slowpoke
     SpeciesEntry {
@@ -1052,7 +1052,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 15,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 65, 66],
+        ability_ids: [63, 64, 65],
     },
     // #080 Slowbro
     SpeciesEntry {
@@ -1065,7 +1065,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 65, 66],
+        ability_ids: [63, 64, 65],
     },
     // #081 Magnemite
     SpeciesEntry {
@@ -1078,7 +1078,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [67, 62, 68],
+        ability_ids: [66, 61, 67],
     },
     // #082 Magneton
     SpeciesEntry {
@@ -1091,20 +1091,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [67, 62, 68],
+        ability_ids: [66, 61, 67],
     },
     // #083 Farfetch’d
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 52,
-            attack: 90,
+            attack: 65,
             defense: 55,
             special_attack: 58,
             special_defense: 62,
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 36, 52],
+        ability_ids: [14, 35, 51],
     },
     // #084 Doduo
     SpeciesEntry {
@@ -1117,7 +1117,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 69, 15],
+        ability_ids: [8, 68, 15],
     },
     // #085 Dodrio
     SpeciesEntry {
@@ -1127,10 +1127,10 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             defense: 70,
             special_attack: 60,
             special_defense: 60,
-            speed: 110,
+            speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 69, 15],
+        ability_ids: [8, 68, 15],
     },
     // #086 Seel
     SpeciesEntry {
@@ -1143,7 +1143,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 71, 72],
+        ability_ids: [69, 70, 71],
     },
     // #087 Dewgong
     SpeciesEntry {
@@ -1156,7 +1156,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 71, 72],
+        ability_ids: [69, 70, 71],
     },
     // #088 Grimer
     SpeciesEntry {
@@ -1169,7 +1169,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [38, 73, 74],
+        ability_ids: [37, 72, 73],
     },
     // #089 Muk
     SpeciesEntry {
@@ -1182,7 +1182,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [38, 73, 74],
+        ability_ids: [37, 72, 73],
     },
     // #090 Shellder
     SpeciesEntry {
@@ -1195,7 +1195,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [75, 76, 77],
+        ability_ids: [74, 75, 76],
     },
     // #091 Cloyster
     SpeciesEntry {
@@ -1208,7 +1208,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [75, 76, 77],
+        ability_ids: [74, 75, 76],
     },
     // #092 Gastly
     SpeciesEntry {
@@ -1221,7 +1221,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #093 Haunter
     SpeciesEntry {
@@ -1234,7 +1234,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #094 Gengar
     SpeciesEntry {
@@ -1247,7 +1247,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [79, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #095 Onix
     SpeciesEntry {
@@ -1260,7 +1260,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 62, 80],
+        ability_ids: [60, 61, 78],
     },
     // #096 Drowzee
     SpeciesEntry {
@@ -1273,7 +1273,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 42,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 82, 36],
+        ability_ids: [79, 80, 35],
     },
     // #097 Hypno
     SpeciesEntry {
@@ -1286,7 +1286,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 67,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 82, 36],
+        ability_ids: [79, 80, 35],
     },
     // #098 Krabby
     SpeciesEntry {
@@ -1299,7 +1299,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 75, 27],
+        ability_ids: [81, 74, 27],
     },
     // #099 Kingler
     SpeciesEntry {
@@ -1312,7 +1312,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 75, 27],
+        ability_ids: [81, 74, 27],
     },
     // #100 Voltorb
     SpeciesEntry {
@@ -1325,7 +1325,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [84, 21, 85],
+        ability_ids: [82, 21, 83],
     },
     // #101 Electrode
     SpeciesEntry {
@@ -1335,10 +1335,10 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             defense: 70,
             special_attack: 80,
             special_defense: 80,
-            speed: 150,
+            speed: 140,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [84, 21, 85],
+        ability_ids: [82, 21, 83],
     },
     // #102 Exeggcute
     SpeciesEntry {
@@ -1351,7 +1351,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 86],
+        ability_ids: [2, 0, 84],
     },
     // #103 Exeggutor
     SpeciesEntry {
@@ -1360,11 +1360,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 95,
             defense: 85,
             special_attack: 125,
-            special_defense: 75,
+            special_defense: 65,
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 86],
+        ability_ids: [2, 0, 84],
     },
     // #104 Cubone
     SpeciesEntry {
@@ -1377,7 +1377,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 22, 87],
+        ability_ids: [60, 22, 85],
     },
     // #105 Marowak
     SpeciesEntry {
@@ -1390,7 +1390,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 22, 87],
+        ability_ids: [60, 22, 85],
     },
     // #106 Hitmonlee
     SpeciesEntry {
@@ -1403,7 +1403,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 87,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [47, 88, 89],
+        ability_ids: [46, 86, 87],
     },
     // #107 Hitmonchan
     SpeciesEntry {
@@ -1416,7 +1416,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 76,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [14, 90, 36],
+        ability_ids: [14, 88, 35],
     },
     // #108 Lickitung
     SpeciesEntry {
@@ -1429,7 +1429,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [65, 64, 48],
+        ability_ids: [64, 63, 47],
     },
     // #109 Koffing
     SpeciesEntry {
@@ -1442,7 +1442,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 91, 38],
+        ability_ids: [77, 0, 37],
     },
     // #110 Weezing
     SpeciesEntry {
@@ -1455,7 +1455,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 91, 38],
+        ability_ids: [77, 0, 37],
     },
     // #111 Rhyhorn
     SpeciesEntry {
@@ -1468,7 +1468,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [22, 61, 88],
+        ability_ids: [22, 60, 86],
     },
     // #112 Rhydon
     SpeciesEntry {
@@ -1481,7 +1481,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [22, 61, 88],
+        ability_ids: [22, 60, 86],
     },
     // #113 Chansey
     SpeciesEntry {
@@ -1494,7 +1494,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [92, 93, 94],
+        ability_ids: [89, 90, 91],
     },
     // #114 Tangela
     SpeciesEntry {
@@ -1507,7 +1507,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 95, 66],
+        ability_ids: [2, 92, 65],
     },
     // #115 Kangaskhan
     SpeciesEntry {
@@ -1520,7 +1520,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [69, 96, 36],
+        ability_ids: [68, 93, 35],
     },
     // #116 Horsea
     SpeciesEntry {
@@ -1533,7 +1533,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 13, 41],
+        ability_ids: [48, 13, 40],
     },
     // #117 Seadra
     SpeciesEntry {
@@ -1546,7 +1546,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [25, 13, 41],
+        ability_ids: [25, 13, 40],
     },
     // #118 Goldeen
     SpeciesEntry {
@@ -1559,7 +1559,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 63,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 97, 22],
+        ability_ids: [48, 94, 22],
     },
     // #119 Seaking
     SpeciesEntry {
@@ -1572,7 +1572,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 68,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 97, 22],
+        ability_ids: [48, 94, 22],
     },
     // #120 Staryu
     SpeciesEntry {
@@ -1585,7 +1585,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [98, 92, 68],
+        ability_ids: [95, 89, 67],
     },
     // #121 Starmie
     SpeciesEntry {
@@ -1598,7 +1598,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [98, 92, 68],
+        ability_ids: [95, 89, 67],
     },
     // #122 Mr. Mime
     SpeciesEntry {
@@ -1611,7 +1611,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [84, 99, 46],
+        ability_ids: [82, 96, 45],
     },
     // #123 Scyther
     SpeciesEntry {
@@ -1624,7 +1624,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 46, 57],
+        ability_ids: [12, 45, 56],
     },
     // #124 Jynx
     SpeciesEntry {
@@ -1637,7 +1637,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [64, 82, 40],
+        ability_ids: [63, 80, 39],
     },
     // #125 Electabuzz
     SpeciesEntry {
@@ -1650,7 +1650,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [21, 0, 50],
+        ability_ids: [21, 0, 49],
     },
     // #126 Magmar
     SpeciesEntry {
@@ -1663,7 +1663,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 93,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [63, 0, 50],
+        ability_ids: [62, 0, 49],
     },
     // #127 Pinsir
     SpeciesEntry {
@@ -1676,7 +1676,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 100, 101],
+        ability_ids: [81, 97, 98],
     },
     // #128 Tauros
     SpeciesEntry {
@@ -1689,7 +1689,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [19, 51, 27],
+        ability_ids: [19, 50, 27],
     },
     // #129 Magikarp
     SpeciesEntry {
@@ -1702,7 +1702,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 0, 102],
+        ability_ids: [48, 0, 99],
     },
     // #130 Gyarados
     SpeciesEntry {
@@ -1715,7 +1715,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 81,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 0, 101],
+        ability_ids: [19, 0, 98],
     },
     // #131 Lapras
     SpeciesEntry {
@@ -1728,7 +1728,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 75, 71],
+        ability_ids: [53, 74, 70],
     },
     // #132 Ditto
     SpeciesEntry {
@@ -1741,7 +1741,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 48,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [47, 0, 103],
+        ability_ids: [46, 0, 100],
     },
     // #133 Eevee
     SpeciesEntry {
@@ -1754,7 +1754,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [8, 104, 105],
+        ability_ids: [8, 101, 102],
     },
     // #134 Vaporeon
     SpeciesEntry {
@@ -1767,7 +1767,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [54, 0, 71],
+        ability_ids: [53, 0, 70],
     },
     // #135 Jolteon
     SpeciesEntry {
@@ -1780,7 +1780,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 130,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [106, 0, 107],
+        ability_ids: [103, 0, 104],
     },
     // #136 Flareon
     SpeciesEntry {
@@ -1806,7 +1806,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [108, 109, 68],
+        ability_ids: [105, 106, 67],
     },
     // #138 Omanyte
     SpeciesEntry {
@@ -1819,7 +1819,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [49, 75, 80],
+        ability_ids: [48, 74, 78],
     },
     // #139 Omastar
     SpeciesEntry {
@@ -1832,7 +1832,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [49, 75, 80],
+        ability_ids: [48, 74, 78],
     },
     // #140 Kabuto
     SpeciesEntry {
@@ -1845,7 +1845,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [49, 87, 80],
+        ability_ids: [48, 85, 78],
     },
     // #141 Kabutops
     SpeciesEntry {
@@ -1858,7 +1858,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [49, 87, 80],
+        ability_ids: [48, 85, 78],
     },
     // #142 Aerodactyl
     SpeciesEntry {
@@ -1871,7 +1871,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 130,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [61, 110, 20],
+        ability_ids: [60, 107, 20],
     },
     // #143 Snorlax
     SpeciesEntry {
@@ -1884,7 +1884,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [111, 70, 58],
+        ability_ids: [108, 69, 57],
     },
     // #144 Articuno
     SpeciesEntry {
@@ -1897,7 +1897,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 112],
+        ability_ids: [107, 0, 109],
     },
     // #145 Zapdos
     SpeciesEntry {
@@ -1910,7 +1910,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 21],
+        ability_ids: [107, 0, 22],
     },
     // #146 Moltres
     SpeciesEntry {
@@ -1923,7 +1923,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 63],
+        ability_ids: [107, 0, 62],
     },
     // #147 Dratini
     SpeciesEntry {
@@ -1936,7 +1936,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [9, 0, 113],
+        ability_ids: [9, 0, 110],
     },
     // #148 Dragonair
     SpeciesEntry {
@@ -1949,7 +1949,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [9, 0, 113],
+        ability_ids: [9, 0, 110],
     },
     // #149 Dragonite
     SpeciesEntry {
@@ -1962,7 +1962,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 0, 114],
+        ability_ids: [35, 0, 111],
     },
     // #150 Mewtwo
     SpeciesEntry {
@@ -1975,7 +1975,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 130,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 20],
+        ability_ids: [107, 0, 20],
     },
     // #151 Mew
     SpeciesEntry {
@@ -1988,7 +1988,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [55, 0, 0],
+        ability_ids: [54, 0, 0],
     },
     // #152 Chikorita
     SpeciesEntry {
@@ -2001,7 +2001,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 95],
+        ability_ids: [1, 0, 92],
     },
     // #153 Bayleef
     SpeciesEntry {
@@ -2014,7 +2014,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 95],
+        ability_ids: [1, 0, 92],
     },
     // #154 Meganium
     SpeciesEntry {
@@ -2027,7 +2027,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 95],
+        ability_ids: [1, 0, 92],
     },
     // #155 Cyndaquil
     SpeciesEntry {
@@ -2118,7 +2118,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 14, 35],
+        ability_ids: [8, 14, 34],
     },
     // #162 Furret
     SpeciesEntry {
@@ -2131,7 +2131,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 14, 35],
+        ability_ids: [8, 14, 34],
     },
     // #163 Hoothoot
     SpeciesEntry {
@@ -2144,7 +2144,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 14, 11],
+        ability_ids: [79, 14, 11],
     },
     // #164 Noctowl
     SpeciesEntry {
@@ -2152,12 +2152,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 100,
             attack: 50,
             defense: 50,
-            special_attack: 86,
+            special_attack: 76,
             special_defense: 96,
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 14, 11],
+        ability_ids: [79, 14, 11],
     },
     // #165 Ledyba
     SpeciesEntry {
@@ -2170,7 +2170,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 69, 102],
+        ability_ids: [12, 68, 99],
     },
     // #166 Ledian
     SpeciesEntry {
@@ -2183,7 +2183,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 69, 90],
+        ability_ids: [12, 68, 88],
     },
     // #167 Spinarak
     SpeciesEntry {
@@ -2196,7 +2196,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 81, 13],
+        ability_ids: [12, 79, 13],
     },
     // #168 Ariados
     SpeciesEntry {
@@ -2205,11 +2205,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 90,
             defense: 70,
             special_attack: 60,
-            special_defense: 70,
+            special_defense: 60,
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 81, 13],
+        ability_ids: [12, 79, 13],
     },
     // #169 Crobat
     SpeciesEntry {
@@ -2222,7 +2222,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 130,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 0, 37],
+        ability_ids: [35, 0, 36],
     },
     // #170 Chinchou
     SpeciesEntry {
@@ -2235,7 +2235,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 67,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [106, 98, 54],
+        ability_ids: [103, 95, 53],
     },
     // #171 Lanturn
     SpeciesEntry {
@@ -2248,7 +2248,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 67,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [106, 98, 54],
+        ability_ids: [103, 95, 53],
     },
     // #172 Pichu
     SpeciesEntry {
@@ -2287,7 +2287,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 15,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 34, 30],
+        ability_ids: [28, 0, 30],
     },
     // #175 Togepi
     SpeciesEntry {
@@ -2300,7 +2300,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [18, 93, 115],
+        ability_ids: [18, 90, 112],
     },
     // #176 Togetic
     SpeciesEntry {
@@ -2313,7 +2313,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [18, 93, 115],
+        ability_ids: [18, 90, 112],
     },
     // #177 Natu
     SpeciesEntry {
@@ -2326,7 +2326,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [55, 69, 116],
+        ability_ids: [54, 68, 113],
     },
     // #178 Xatu
     SpeciesEntry {
@@ -2339,7 +2339,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [55, 69, 116],
+        ability_ids: [54, 68, 113],
     },
     // #179 Mareep
     SpeciesEntry {
@@ -2352,7 +2352,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 0, 117],
+        ability_ids: [21, 0, 114],
     },
     // #180 Flaaffy
     SpeciesEntry {
@@ -2365,33 +2365,33 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 0, 117],
+        ability_ids: [21, 0, 114],
     },
     // #181 Ampharos
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 90,
             attack: 75,
-            defense: 85,
+            defense: 75,
             special_attack: 115,
             special_defense: 90,
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 0, 117],
+        ability_ids: [21, 0, 114],
     },
     // #182 Bellossom
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 75,
             attack: 80,
-            defense: 95,
+            defense: 85,
             special_attack: 90,
             special_defense: 100,
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 0, 94],
+        ability_ids: [2, 0, 91],
     },
     // #183 Marill
     SpeciesEntry {
@@ -2404,7 +2404,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 118, 119],
+        ability_ids: [69, 115, 116],
     },
     // #184 Azumarill
     SpeciesEntry {
@@ -2412,12 +2412,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 100,
             attack: 50,
             defense: 80,
-            special_attack: 60,
+            special_attack: 50,
             special_defense: 80,
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 118, 119],
+        ability_ids: [69, 115, 116],
     },
     // #185 Sudowoodo
     SpeciesEntry {
@@ -2430,7 +2430,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 61, 102],
+        ability_ids: [61, 60, 99],
     },
     // #186 Politoed
     SpeciesEntry {
@@ -2443,7 +2443,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 41, 120],
+        ability_ids: [53, 40, 117],
     },
     // #187 Hoppip
     SpeciesEntry {
@@ -2456,7 +2456,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 95, 37],
+        ability_ids: [2, 92, 36],
     },
     // #188 Skiploom
     SpeciesEntry {
@@ -2469,7 +2469,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 95, 37],
+        ability_ids: [2, 92, 36],
     },
     // #189 Jumpluff
     SpeciesEntry {
@@ -2478,11 +2478,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 55,
             defense: 70,
             special_attack: 55,
-            special_defense: 95,
+            special_defense: 85,
             speed: 110,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 95, 37],
+        ability_ids: [2, 92, 36],
     },
     // #190 Aipom
     SpeciesEntry {
@@ -2495,7 +2495,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 45, 76],
+        ability_ids: [8, 44, 75],
     },
     // #191 Sunkern
     SpeciesEntry {
@@ -2508,7 +2508,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 4, 69],
+        ability_ids: [2, 4, 68],
     },
     // #192 Sunflora
     SpeciesEntry {
@@ -2521,7 +2521,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 4, 69],
+        ability_ids: [2, 4, 68],
     },
     // #193 Yanma
     SpeciesEntry {
@@ -2534,7 +2534,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [121, 10, 35],
+        ability_ids: [118, 10, 34],
     },
     // #194 Wooper
     SpeciesEntry {
@@ -2547,7 +2547,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 15,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [41, 54, 31],
+        ability_ids: [40, 53, 31],
     },
     // #195 Quagsire
     SpeciesEntry {
@@ -2560,7 +2560,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [41, 54, 31],
+        ability_ids: [40, 53, 31],
     },
     // #196 Espeon
     SpeciesEntry {
@@ -2573,7 +2573,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [55, 0, 116],
+        ability_ids: [54, 0, 113],
     },
     // #197 Umbreon
     SpeciesEntry {
@@ -2586,7 +2586,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [55, 0, 36],
+        ability_ids: [54, 0, 35],
     },
     // #198 Murkrow
     SpeciesEntry {
@@ -2599,7 +2599,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 91,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 115, 122],
+        ability_ids: [79, 112, 119],
     },
     // #199 Slowking
     SpeciesEntry {
@@ -2612,7 +2612,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 65, 66],
+        ability_ids: [63, 64, 65],
     },
     // #200 Misdreavus
     SpeciesEntry {
@@ -2625,7 +2625,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #201 Unown
     SpeciesEntry {
@@ -2638,7 +2638,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 48,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #202 Wobbuffet
     SpeciesEntry {
@@ -2651,7 +2651,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 33,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [123, 0, 124],
+        ability_ids: [120, 0, 121],
     },
     // #203 Girafarig
     SpeciesEntry {
@@ -2664,7 +2664,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 69, 119],
+        ability_ids: [35, 68, 116],
     },
     // #204 Pineco
     SpeciesEntry {
@@ -2677,7 +2677,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 15,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 0, 77],
+        ability_ids: [61, 0, 76],
     },
     // #205 Forretress
     SpeciesEntry {
@@ -2690,7 +2690,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 0, 77],
+        ability_ids: [61, 0, 76],
     },
     // #206 Dunsparce
     SpeciesEntry {
@@ -2703,7 +2703,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [93, 8, 102],
+        ability_ids: [90, 8, 99],
     },
     // #207 Gligar
     SpeciesEntry {
@@ -2716,7 +2716,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 23, 111],
+        ability_ids: [81, 23, 108],
     },
     // #208 Steelix
     SpeciesEntry {
@@ -2729,7 +2729,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 62, 27],
+        ability_ids: [60, 61, 27],
     },
     // #209 Snubbull
     SpeciesEntry {
@@ -2742,7 +2742,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [19, 8, 102],
+        ability_ids: [19, 8, 99],
     },
     // #210 Granbull
     SpeciesEntry {
@@ -2755,20 +2755,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [19, 107, 102],
+        ability_ids: [19, 104, 99],
     },
     // #211 Qwilfish
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 65,
             attack: 95,
-            defense: 85,
+            defense: 75,
             special_attack: 55,
             special_defense: 55,
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [25, 49, 19],
+        ability_ids: [25, 48, 19],
     },
     // #212 Scizor
     SpeciesEntry {
@@ -2781,7 +2781,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 46, 125],
+        ability_ids: [12, 45, 122],
     },
     // #213 Shuckle
     SpeciesEntry {
@@ -2794,7 +2794,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 5,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 58, 126],
+        ability_ids: [61, 57, 123],
     },
     // #214 Heracross
     SpeciesEntry {
@@ -2807,7 +2807,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 17, 101],
+        ability_ids: [12, 17, 98],
     },
     // #215 Sneasel
     SpeciesEntry {
@@ -2820,7 +2820,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 14, 127],
+        ability_ids: [35, 14, 124],
     },
     // #216 Teddiursa
     SpeciesEntry {
@@ -2833,7 +2833,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [45, 107, 128],
+        ability_ids: [44, 104, 125],
     },
     // #217 Ursaring
     SpeciesEntry {
@@ -2846,7 +2846,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [17, 107, 20],
+        ability_ids: [17, 104, 20],
     },
     // #218 Slugma
     SpeciesEntry {
@@ -2859,20 +2859,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [129, 63, 80],
+        ability_ids: [126, 62, 78],
     },
     // #219 Magcargo
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 60,
+            hp: 50,
             attack: 50,
             defense: 120,
-            special_attack: 90,
+            special_attack: 80,
             special_defense: 80,
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [129, 63, 80],
+        ability_ids: [126, 62, 78],
     },
     // #220 Swinub
     SpeciesEntry {
@@ -2885,7 +2885,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 112, 70],
+        ability_ids: [63, 109, 69],
     },
     // #221 Piloswine
     SpeciesEntry {
@@ -2898,20 +2898,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 112, 70],
+        ability_ids: [63, 109, 69],
     },
     // #222 Corsola
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 65,
+            hp: 55,
             attack: 55,
-            defense: 95,
+            defense: 85,
             special_attack: 65,
-            special_defense: 95,
+            special_defense: 85,
             speed: 35,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [18, 92, 66],
+        ability_ids: [18, 89, 65],
     },
     // #223 Remoraid
     SpeciesEntry {
@@ -2924,7 +2924,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [18, 13, 130],
+        ability_ids: [18, 13, 127],
     },
     // #224 Octillery
     SpeciesEntry {
@@ -2937,7 +2937,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [131, 13, 130],
+        ability_ids: [128, 13, 127],
     },
     // #225 Delibird
     SpeciesEntry {
@@ -2950,12 +2950,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [50, 18, 81],
+        ability_ids: [49, 18, 79],
     },
     // #226 Mantine
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 85,
+            hp: 65,
             attack: 40,
             defense: 70,
             special_attack: 80,
@@ -2963,7 +2963,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 54, 97],
+        ability_ids: [48, 53, 94],
     },
     // #227 Skarmory
     SpeciesEntry {
@@ -2976,7 +2976,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 62, 80],
+        ability_ids: [14, 61, 78],
     },
     // #228 Houndour
     SpeciesEntry {
@@ -2989,7 +2989,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [69, 32, 20],
+        ability_ids: [68, 32, 20],
     },
     // #229 Houndoom
     SpeciesEntry {
@@ -3002,7 +3002,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [69, 32, 20],
+        ability_ids: [68, 32, 20],
     },
     // #230 Kingdra
     SpeciesEntry {
@@ -3015,7 +3015,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 13, 41],
+        ability_ids: [48, 13, 40],
     },
     // #231 Phanpy
     SpeciesEntry {
@@ -3028,7 +3028,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [45, 0, 23],
+        ability_ids: [44, 0, 23],
     },
     // #232 Donphan
     SpeciesEntry {
@@ -3041,7 +3041,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 0, 23],
+        ability_ids: [61, 0, 23],
     },
     // #233 Porygon2
     SpeciesEntry {
@@ -3054,7 +3054,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [108, 109, 68],
+        ability_ids: [105, 106, 67],
     },
     // #234 Stantler
     SpeciesEntry {
@@ -3067,7 +3067,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 35, 119],
+        ability_ids: [19, 34, 116],
     },
     // #235 Smeargle
     SpeciesEntry {
@@ -3080,7 +3080,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [65, 46, 130],
+        ability_ids: [64, 45, 127],
     },
     // #236 Tyrogue
     SpeciesEntry {
@@ -3093,7 +3093,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [17, 57, 50],
+        ability_ids: [17, 56, 49],
     },
     // #237 Hitmontop
     SpeciesEntry {
@@ -3106,7 +3106,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [19, 46, 57],
+        ability_ids: [19, 45, 56],
     },
     // #238 Smoochum
     SpeciesEntry {
@@ -3119,7 +3119,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [64, 82, 71],
+        ability_ids: [63, 80, 70],
     },
     // #239 Elekid
     SpeciesEntry {
@@ -3132,7 +3132,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [21, 0, 50],
+        ability_ids: [21, 0, 49],
     },
     // #240 Magby
     SpeciesEntry {
@@ -3145,7 +3145,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 83,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [63, 0, 50],
+        ability_ids: [62, 0, 49],
     },
     // #241 Miltank
     SpeciesEntry {
@@ -3158,7 +3158,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [70, 96, 119],
+        ability_ids: [69, 93, 116],
     },
     // #242 Blissey
     SpeciesEntry {
@@ -3171,7 +3171,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [92, 93, 94],
+        ability_ids: [89, 90, 91],
     },
     // #243 Raikou
     SpeciesEntry {
@@ -3184,7 +3184,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 36],
+        ability_ids: [107, 0, 103],
     },
     // #244 Entei
     SpeciesEntry {
@@ -3197,7 +3197,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 36],
+        ability_ids: [107, 0, 32],
     },
     // #245 Suicune
     SpeciesEntry {
@@ -3210,7 +3210,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 36],
+        ability_ids: [107, 0, 53],
     },
     // #246 Larvitar
     SpeciesEntry {
@@ -3249,7 +3249,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 61,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [132, 0, 20],
+        ability_ids: [129, 0, 20],
     },
     // #249 Lugia
     SpeciesEntry {
@@ -3262,9 +3262,9 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 114],
+        ability_ids: [107, 0, 111],
     },
-    // #250 Ho Oh
+    // #250 Ho-Oh
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 106,
@@ -3275,7 +3275,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 66],
+        ability_ids: [107, 0, 65],
     },
     // #251 Celebi
     SpeciesEntry {
@@ -3288,7 +3288,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [92, 0, 0],
+        ability_ids: [89, 0, 0],
     },
     // #252 Treecko
     SpeciesEntry {
@@ -3301,7 +3301,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 89],
+        ability_ids: [1, 0, 87],
     },
     // #253 Grovyle
     SpeciesEntry {
@@ -3314,7 +3314,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 89],
+        ability_ids: [1, 0, 87],
     },
     // #254 Sceptile
     SpeciesEntry {
@@ -3327,7 +3327,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 120,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 89],
+        ability_ids: [1, 0, 87],
     },
     // #255 Torchic
     SpeciesEntry {
@@ -3340,7 +3340,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 121],
+        ability_ids: [3, 0, 118],
     },
     // #256 Combusken
     SpeciesEntry {
@@ -3353,7 +3353,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 121],
+        ability_ids: [3, 0, 118],
     },
     // #257 Blaziken
     SpeciesEntry {
@@ -3366,7 +3366,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 121],
+        ability_ids: [3, 0, 118],
     },
     // #258 Mudkip
     SpeciesEntry {
@@ -3379,7 +3379,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 41],
+        ability_ids: [5, 0, 40],
     },
     // #259 Marshtomp
     SpeciesEntry {
@@ -3392,7 +3392,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 41],
+        ability_ids: [5, 0, 40],
     },
     // #260 Swampert
     SpeciesEntry {
@@ -3405,7 +3405,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 41],
+        ability_ids: [5, 0, 40],
     },
     // #261 Poochyena
     SpeciesEntry {
@@ -3418,7 +3418,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 107, 102],
+        ability_ids: [8, 104, 99],
     },
     // #262 Mightyena
     SpeciesEntry {
@@ -3431,7 +3431,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 107, 101],
+        ability_ids: [19, 104, 98],
     },
     // #263 Zigzagoon
     SpeciesEntry {
@@ -3444,7 +3444,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [45, 58, 107],
+        ability_ids: [44, 57, 104],
     },
     // #264 Linoone
     SpeciesEntry {
@@ -3457,7 +3457,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [45, 58, 107],
+        ability_ids: [44, 57, 104],
     },
     // #265 Wurmple
     SpeciesEntry {
@@ -3491,7 +3491,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 60,
             attack: 70,
             defense: 50,
-            special_attack: 100,
+            special_attack: 90,
             special_defense: 50,
             speed: 65,
         },
@@ -3535,7 +3535,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 6, 65],
+        ability_ids: [48, 6, 64],
     },
     // #271 Lombre
     SpeciesEntry {
@@ -3548,7 +3548,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 6, 65],
+        ability_ids: [48, 6, 64],
     },
     // #272 Ludicolo
     SpeciesEntry {
@@ -3561,7 +3561,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 6, 65],
+        ability_ids: [48, 6, 64],
     },
     // #273 Seedot
     SpeciesEntry {
@@ -3574,7 +3574,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 69, 127],
+        ability_ids: [2, 68, 124],
     },
     // #274 Nuzleaf
     SpeciesEntry {
@@ -3587,7 +3587,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 69, 127],
+        ability_ids: [2, 68, 124],
     },
     // #275 Shiftry
     SpeciesEntry {
@@ -3600,7 +3600,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 133, 127],
+        ability_ids: [2, 68, 124],
     },
     // #276 Taillow
     SpeciesEntry {
@@ -3613,7 +3613,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [17, 0, 96],
+        ability_ids: [17, 0, 93],
     },
     // #277 Swellow
     SpeciesEntry {
@@ -3621,12 +3621,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 60,
             attack: 85,
             defense: 60,
-            special_attack: 75,
+            special_attack: 50,
             special_defense: 50,
             speed: 125,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [17, 0, 96],
+        ability_ids: [17, 0, 93],
     },
     // #278 Wingull
     SpeciesEntry {
@@ -3639,7 +3639,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 71, 6],
+        ability_ids: [14, 0, 6],
     },
     // #279 Pelipper
     SpeciesEntry {
@@ -3647,12 +3647,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 60,
             attack: 50,
             defense: 100,
-            special_attack: 95,
+            special_attack: 85,
             special_defense: 70,
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 120, 6],
+        ability_ids: [14, 0, 6],
     },
     // #280 Ralts
     SpeciesEntry {
@@ -3665,7 +3665,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [55, 108, 124],
+        ability_ids: [54, 105, 121],
     },
     // #281 Kirlia
     SpeciesEntry {
@@ -3678,7 +3678,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [55, 108, 124],
+        ability_ids: [54, 105, 121],
     },
     // #282 Gardevoir
     SpeciesEntry {
@@ -3691,7 +3691,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [55, 108, 124],
+        ability_ids: [54, 105, 121],
     },
     // #283 Surskit
     SpeciesEntry {
@@ -3704,7 +3704,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 0, 6],
+        ability_ids: [48, 0, 6],
     },
     // #284 Masquerain
     SpeciesEntry {
@@ -3712,9 +3712,9 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             hp: 70,
             attack: 60,
             defense: 62,
-            special_attack: 100,
+            special_attack: 80,
             special_defense: 82,
-            speed: 80,
+            speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
         ability_ids: [19, 0, 20],
@@ -3730,7 +3730,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [39, 134, 107],
+        ability_ids: [38, 130, 104],
     },
     // #286 Breloom
     SpeciesEntry {
@@ -3743,7 +3743,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [39, 134, 46],
+        ability_ids: [38, 130, 45],
     },
     // #287 Slakoth
     SpeciesEntry {
@@ -3756,7 +3756,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [135, 0, 0],
+        ability_ids: [131, 0, 0],
     },
     // #288 Vigoroth
     SpeciesEntry {
@@ -3769,7 +3769,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [50, 0, 0],
+        ability_ids: [49, 0, 0],
     },
     // #289 Slaking
     SpeciesEntry {
@@ -3782,7 +3782,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [135, 0, 0],
+        ability_ids: [131, 0, 0],
     },
     // #290 Nincada
     SpeciesEntry {
@@ -3808,7 +3808,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 160,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [121, 0, 37],
+        ability_ids: [118, 0, 36],
     },
     // #292 Shedinja
     SpeciesEntry {
@@ -3821,7 +3821,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [136, 0, 0],
+        ability_ids: [132, 0, 0],
     },
     // #293 Whismur
     SpeciesEntry {
@@ -3834,7 +3834,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 28,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [84, 0, 102],
+        ability_ids: [82, 0, 99],
     },
     // #294 Loudred
     SpeciesEntry {
@@ -3847,7 +3847,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 48,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [84, 0, 96],
+        ability_ids: [82, 0, 93],
     },
     // #295 Exploud
     SpeciesEntry {
@@ -3856,11 +3856,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 91,
             defense: 63,
             special_attack: 91,
-            special_defense: 73,
+            special_defense: 63,
             speed: 68,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [84, 0, 96],
+        ability_ids: [82, 0, 93],
     },
     // #296 Makuhita
     SpeciesEntry {
@@ -3873,7 +3873,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [70, 17, 27],
+        ability_ids: [69, 17, 27],
     },
     // #297 Hariyama
     SpeciesEntry {
@@ -3886,7 +3886,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [70, 17, 27],
+        ability_ids: [69, 17, 27],
     },
     // #298 Azurill
     SpeciesEntry {
@@ -3899,7 +3899,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [70, 118, 119],
+        ability_ids: [69, 115, 116],
     },
     // #299 Nosepass
     SpeciesEntry {
@@ -3912,7 +3912,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 67, 44],
+        ability_ids: [61, 66, 43],
     },
     // #300 Skitty
     SpeciesEntry {
@@ -3925,7 +3925,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 137, 42],
+        ability_ids: [28, 133, 41],
     },
     // #301 Delcatty
     SpeciesEntry {
@@ -3935,10 +3935,10 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             defense: 65,
             special_attack: 55,
             special_defense: 55,
-            speed: 90,
+            speed: 70,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 137, 42],
+        ability_ids: [28, 133, 41],
     },
     // #302 Sableye
     SpeciesEntry {
@@ -3951,7 +3951,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 138, 122],
+        ability_ids: [14, 134, 119],
     },
     // #303 Mawile
     SpeciesEntry {
@@ -3964,7 +3964,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 19, 27],
+        ability_ids: [81, 19, 27],
     },
     // #304 Aron
     SpeciesEntry {
@@ -3977,7 +3977,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 61, 139],
+        ability_ids: [61, 60, 135],
     },
     // #305 Lairon
     SpeciesEntry {
@@ -3990,7 +3990,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 61, 139],
+        ability_ids: [61, 60, 135],
     },
     // #306 Aggron
     SpeciesEntry {
@@ -4003,7 +4003,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 61, 139],
+        ability_ids: [61, 60, 135],
     },
     // #307 Meditite
     SpeciesEntry {
@@ -4016,7 +4016,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [140, 0, 124],
+        ability_ids: [136, 0, 121],
     },
     // #308 Medicham
     SpeciesEntry {
@@ -4029,7 +4029,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [140, 0, 124],
+        ability_ids: [136, 0, 121],
     },
     // #309 Electrike
     SpeciesEntry {
@@ -4042,7 +4042,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 22, 141],
+        ability_ids: [21, 22, 137],
     },
     // #310 Manectric
     SpeciesEntry {
@@ -4055,7 +4055,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 22, 141],
+        ability_ids: [21, 22, 137],
     },
     // #311 Plusle
     SpeciesEntry {
@@ -4068,7 +4068,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [117, 0, 22],
+        ability_ids: [114, 0, 0],
     },
     // #312 Minun
     SpeciesEntry {
@@ -4081,33 +4081,33 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [141, 0, 106],
+        ability_ids: [137, 0, 0],
     },
     // #313 Volbeat
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 65,
             attack: 73,
-            defense: 75,
+            defense: 55,
             special_attack: 47,
-            special_defense: 85,
+            special_defense: 75,
             speed: 85,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [98, 12, 122],
+        ability_ids: [95, 12, 119],
     },
     // #314 Illumise
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 65,
             attack: 47,
-            defense: 75,
+            defense: 55,
             special_attack: 73,
-            special_defense: 85,
+            special_defense: 75,
             speed: 85,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [64, 11, 122],
+        ability_ids: [63, 11, 119],
     },
     // #315 Roselia
     SpeciesEntry {
@@ -4120,7 +4120,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [92, 25, 95],
+        ability_ids: [89, 25, 92],
     },
     // #316 Gulpin
     SpeciesEntry {
@@ -4133,7 +4133,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [60, 73, 58],
+        ability_ids: [59, 72, 57],
     },
     // #317 Swalot
     SpeciesEntry {
@@ -4146,7 +4146,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [60, 73, 58],
+        ability_ids: [59, 72, 57],
     },
     // #318 Carvanha
     SpeciesEntry {
@@ -4159,7 +4159,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [142, 0, 121],
+        ability_ids: [138, 0, 118],
     },
     // #319 Sharpedo
     SpeciesEntry {
@@ -4172,7 +4172,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [142, 0, 121],
+        ability_ids: [138, 0, 118],
     },
     // #320 Wailmer
     SpeciesEntry {
@@ -4185,7 +4185,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [97, 64, 110],
+        ability_ids: [94, 63, 107],
     },
     // #321 Wailord
     SpeciesEntry {
@@ -4198,7 +4198,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [97, 64, 110],
+        ability_ids: [94, 63, 107],
     },
     // #322 Numel
     SpeciesEntry {
@@ -4211,7 +4211,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 143, 65],
+        ability_ids: [63, 139, 64],
     },
     // #323 Camerupt
     SpeciesEntry {
@@ -4224,7 +4224,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [129, 144, 51],
+        ability_ids: [126, 140, 50],
     },
     // #324 Torkoal
     SpeciesEntry {
@@ -4237,7 +4237,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [145, 33, 75],
+        ability_ids: [141, 0, 74],
     },
     // #325 Spoink
     SpeciesEntry {
@@ -4250,7 +4250,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 65, 58],
+        ability_ids: [69, 64, 57],
     },
     // #326 Grumpig
     SpeciesEntry {
@@ -4263,7 +4263,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 65, 58],
+        ability_ids: [69, 64, 57],
     },
     // #327 Spinda
     SpeciesEntry {
@@ -4276,7 +4276,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [65, 15, 126],
+        ability_ids: [64, 15, 123],
     },
     // #328 Trapinch
     SpeciesEntry {
@@ -4289,7 +4289,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 10,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 43, 27],
+        ability_ids: [81, 42, 27],
     },
     // #329 Vibrava
     SpeciesEntry {
@@ -4302,7 +4302,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #330 Flygon
     SpeciesEntry {
@@ -4315,7 +4315,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #331 Cacnea
     SpeciesEntry {
@@ -4328,7 +4328,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 0, 54],
+        ability_ids: [23, 0, 53],
     },
     // #332 Cacturne
     SpeciesEntry {
@@ -4341,7 +4341,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 0, 54],
+        ability_ids: [23, 0, 53],
     },
     // #333 Swablu
     SpeciesEntry {
@@ -4354,7 +4354,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [92, 0, 48],
+        ability_ids: [89, 0, 47],
     },
     // #334 Altaria
     SpeciesEntry {
@@ -4367,7 +4367,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [92, 0, 48],
+        ability_ids: [89, 0, 47],
     },
     // #335 Zangoose
     SpeciesEntry {
@@ -4380,7 +4380,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [111, 0, 146],
+        ability_ids: [108, 0, 142],
     },
     // #336 Seviper
     SpeciesEntry {
@@ -4393,12 +4393,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [9, 0, 37],
+        ability_ids: [9, 0, 36],
     },
     // #337 Lunatone
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 90,
+            hp: 70,
             attack: 55,
             defense: 65,
             special_attack: 95,
@@ -4406,12 +4406,12 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #338 Solrock
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 90,
+            hp: 70,
             attack: 95,
             defense: 85,
             special_attack: 55,
@@ -4419,7 +4419,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #339 Barboach
     SpeciesEntry {
@@ -4432,7 +4432,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 105, 71],
+        ability_ids: [63, 102, 70],
     },
     // #340 Whiscash
     SpeciesEntry {
@@ -4445,7 +4445,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 105, 71],
+        ability_ids: [63, 102, 70],
     },
     // #341 Corphish
     SpeciesEntry {
@@ -4458,7 +4458,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 75, 104],
+        ability_ids: [81, 74, 101],
     },
     // #342 Crawdaunt
     SpeciesEntry {
@@ -4471,7 +4471,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 75, 104],
+        ability_ids: [81, 74, 101],
     },
     // #343 Baltoy
     SpeciesEntry {
@@ -4484,7 +4484,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #344 Claydol
     SpeciesEntry {
@@ -4497,7 +4497,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #345 Lileep
     SpeciesEntry {
@@ -4510,7 +4510,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 23,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [131, 0, 147],
+        ability_ids: [128, 0, 143],
     },
     // #346 Cradily
     SpeciesEntry {
@@ -4523,7 +4523,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 43,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [131, 0, 147],
+        ability_ids: [128, 0, 143],
     },
     // #347 Anorith
     SpeciesEntry {
@@ -4536,7 +4536,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [87, 0, 49],
+        ability_ids: [85, 0, 48],
     },
     // #348 Armaldo
     SpeciesEntry {
@@ -4549,7 +4549,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [87, 0, 49],
+        ability_ids: [85, 0, 48],
     },
     // #349 Feebas
     SpeciesEntry {
@@ -4562,7 +4562,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 64, 104],
+        ability_ids: [48, 0, 101],
     },
     // #350 Milotic
     SpeciesEntry {
@@ -4575,7 +4575,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 81,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [113, 34, 28],
+        ability_ids: [110, 0, 28],
     },
     // #351 Castform
     SpeciesEntry {
@@ -4588,7 +4588,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [148, 0, 0],
+        ability_ids: [144, 0, 0],
     },
     // #352 Kecleon
     SpeciesEntry {
@@ -4601,7 +4601,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [149, 0, 150],
+        ability_ids: [145, 0, 0],
     },
     // #353 Shuppet
     SpeciesEntry {
@@ -4614,7 +4614,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 35, 79],
+        ability_ids: [79, 34, 146],
     },
     // #354 Banette
     SpeciesEntry {
@@ -4627,7 +4627,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 35, 79],
+        ability_ids: [79, 34, 146],
     },
     // #355 Duskull
     SpeciesEntry {
@@ -4640,7 +4640,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 35],
+        ability_ids: [77, 0, 0],
     },
     // #356 Dusclops
     SpeciesEntry {
@@ -4653,7 +4653,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [110, 0, 35],
+        ability_ids: [107, 0, 0],
     },
     // #357 Tropius
     SpeciesEntry {
@@ -4666,20 +4666,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 51,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 4, 86],
+        ability_ids: [2, 4, 84],
     },
     // #358 Chimecho
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 75,
+            hp: 65,
             attack: 50,
-            defense: 80,
+            defense: 70,
             special_attack: 95,
-            special_defense: 90,
+            special_defense: 80,
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #359 Absol
     SpeciesEntry {
@@ -4692,7 +4692,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [110, 115, 53],
+        ability_ids: [107, 112, 52],
     },
     // #360 Wynaut
     SpeciesEntry {
@@ -4705,7 +4705,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 23,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [123, 0, 124],
+        ability_ids: [120, 0, 121],
     },
     // #361 Snorunt
     SpeciesEntry {
@@ -4718,7 +4718,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 72, 130],
+        ability_ids: [35, 71, 127],
     },
     // #362 Glalie
     SpeciesEntry {
@@ -4731,7 +4731,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 72, 130],
+        ability_ids: [35, 71, 127],
     },
     // #363 Spheal
     SpeciesEntry {
@@ -4744,7 +4744,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 72, 64],
+        ability_ids: [69, 71, 63],
     },
     // #364 Sealeo
     SpeciesEntry {
@@ -4757,7 +4757,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 72, 64],
+        ability_ids: [69, 71, 63],
     },
     // #365 Walrein
     SpeciesEntry {
@@ -4770,7 +4770,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [70, 72, 64],
+        ability_ids: [69, 71, 63],
     },
     // #366 Clamperl
     SpeciesEntry {
@@ -4783,7 +4783,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 32,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [75, 0, 102],
+        ability_ids: [74, 0, 99],
     },
     // #367 Huntail
     SpeciesEntry {
@@ -4796,7 +4796,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 52,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 0, 97],
+        ability_ids: [48, 0, 94],
     },
     // #368 Gorebyss
     SpeciesEntry {
@@ -4809,7 +4809,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 52,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 0, 71],
+        ability_ids: [48, 0, 70],
     },
     // #369 Relicanth
     SpeciesEntry {
@@ -4822,7 +4822,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [49, 61, 62],
+        ability_ids: [48, 60, 61],
     },
     // #370 Luvdisc
     SpeciesEntry {
@@ -4835,7 +4835,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 97,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [49, 0, 71],
+        ability_ids: [48, 0, 70],
     },
     // #371 Bagon
     SpeciesEntry {
@@ -4848,7 +4848,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 0, 27],
+        ability_ids: [60, 0, 27],
     },
     // #372 Shelgon
     SpeciesEntry {
@@ -4861,7 +4861,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [61, 0, 77],
+        ability_ids: [60, 0, 76],
     },
     // #373 Salamence
     SpeciesEntry {
@@ -4874,7 +4874,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 0, 101],
+        ability_ids: [19, 0, 98],
     },
     // #374 Beldum
     SpeciesEntry {
@@ -4887,7 +4887,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [59, 0, 125],
+        ability_ids: [58, 0, 122],
     },
     // #375 Metang
     SpeciesEntry {
@@ -4900,7 +4900,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [59, 0, 125],
+        ability_ids: [58, 0, 122],
     },
     // #376 Metagross
     SpeciesEntry {
@@ -4913,7 +4913,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [59, 0, 125],
+        ability_ids: [58, 0, 122],
     },
     // #377 Regirock
     SpeciesEntry {
@@ -4926,7 +4926,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [59, 0, 62],
+        ability_ids: [58, 0, 61],
     },
     // #378 Regice
     SpeciesEntry {
@@ -4939,7 +4939,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [59, 0, 72],
+        ability_ids: [58, 0, 71],
     },
     // #379 Registeel
     SpeciesEntry {
@@ -4952,7 +4952,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [59, 0, 125],
+        ability_ids: [58, 0, 122],
     },
     // #380 Latias
     SpeciesEntry {
@@ -4965,7 +4965,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #381 Latios
     SpeciesEntry {
@@ -4978,7 +4978,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #382 Kyogre
     SpeciesEntry {
@@ -4991,7 +4991,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [120, 0, 0],
+        ability_ids: [117, 0, 0],
     },
     // #383 Groudon
     SpeciesEntry {
@@ -5017,7 +5017,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [151, 0, 0],
+        ability_ids: [147, 0, 0],
     },
     // #385 Jirachi
     SpeciesEntry {
@@ -5030,7 +5030,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [93, 0, 0],
+        ability_ids: [90, 0, 0],
     },
     // #386 Deoxys
     SpeciesEntry {
@@ -5043,7 +5043,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 150,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 0],
+        ability_ids: [107, 0, 0],
     },
     // #387 Turtwig
     SpeciesEntry {
@@ -5056,7 +5056,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 31,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 75],
+        ability_ids: [1, 0, 74],
     },
     // #388 Grotle
     SpeciesEntry {
@@ -5069,7 +5069,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 36,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 75],
+        ability_ids: [1, 0, 74],
     },
     // #389 Torterra
     SpeciesEntry {
@@ -5082,7 +5082,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 56,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 75],
+        ability_ids: [1, 0, 74],
     },
     // #390 Chimchar
     SpeciesEntry {
@@ -5095,7 +5095,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 61,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 90],
+        ability_ids: [3, 0, 88],
     },
     // #391 Monferno
     SpeciesEntry {
@@ -5108,7 +5108,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 81,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 90],
+        ability_ids: [3, 0, 88],
     },
     // #392 Infernape
     SpeciesEntry {
@@ -5121,7 +5121,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 108,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 90],
+        ability_ids: [3, 0, 88],
     },
     // #393 Piplup
     SpeciesEntry {
@@ -5134,7 +5134,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 34],
+        ability_ids: [5, 0, 51],
     },
     // #394 Prinplup
     SpeciesEntry {
@@ -5147,7 +5147,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 34],
+        ability_ids: [5, 0, 51],
     },
     // #395 Empoleon
     SpeciesEntry {
@@ -5160,7 +5160,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 34],
+        ability_ids: [5, 0, 51],
     },
     // #396 Starly
     SpeciesEntry {
@@ -5173,7 +5173,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 0, 88],
+        ability_ids: [14, 0, 0],
     },
     // #397 Staravia
     SpeciesEntry {
@@ -5186,7 +5186,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 0, 88],
+        ability_ids: [19, 0, 86],
     },
     // #398 Staraptor
     SpeciesEntry {
@@ -5195,11 +5195,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 120,
             defense: 70,
             special_attack: 50,
-            special_defense: 60,
+            special_defense: 50,
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 0, 88],
+        ability_ids: [19, 0, 86],
     },
     // #399 Bidoof
     SpeciesEntry {
@@ -5212,7 +5212,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 31,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [143, 31, 130],
+        ability_ids: [139, 31, 127],
     },
     // #400 Bibarel
     SpeciesEntry {
@@ -5225,7 +5225,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 71,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [143, 31, 130],
+        ability_ids: [139, 31, 127],
     },
     // #401 Kricketot
     SpeciesEntry {
@@ -5251,7 +5251,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 0, 46],
+        ability_ids: [12, 0, 45],
     },
     // #403 Shinx
     SpeciesEntry {
@@ -5303,20 +5303,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [92, 25, 95],
+        ability_ids: [89, 25, 92],
     },
     // #407 Roserade
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 60,
-            attack: 70,
+            attack: 55,
             defense: 65,
             special_attack: 125,
             special_defense: 105,
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [92, 25, 46],
+        ability_ids: [89, 25, 45],
     },
     // #408 Cranidos
     SpeciesEntry {
@@ -5329,7 +5329,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 58,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [100, 0, 27],
+        ability_ids: [97, 0, 27],
     },
     // #409 Rampardos
     SpeciesEntry {
@@ -5342,7 +5342,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 58,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [100, 0, 27],
+        ability_ids: [97, 0, 27],
     },
     // #410 Shieldon
     SpeciesEntry {
@@ -5355,7 +5355,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [62, 0, 84],
+        ability_ids: [61, 0, 82],
     },
     // #411 Bastiodon
     SpeciesEntry {
@@ -5368,7 +5368,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [62, 0, 84],
+        ability_ids: [61, 0, 82],
     },
     // #412 Burmy
     SpeciesEntry {
@@ -5381,7 +5381,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 36,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [9, 0, 77],
+        ability_ids: [9, 0, 76],
     },
     // #413 Wormadam
     SpeciesEntry {
@@ -5394,7 +5394,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 36,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [105, 0, 77],
+        ability_ids: [102, 0, 76],
     },
     // #414 Mothim
     SpeciesEntry {
@@ -5420,7 +5420,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [128, 0, 18],
+        ability_ids: [125, 0, 18],
     },
     // #416 Vespiquen
     SpeciesEntry {
@@ -5433,7 +5433,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [110, 0, 20],
+        ability_ids: [107, 0, 20],
     },
     // #417 Pachirisu
     SpeciesEntry {
@@ -5446,7 +5446,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 45, 106],
+        ability_ids: [8, 44, 103],
     },
     // #418 Buizel
     SpeciesEntry {
@@ -5459,7 +5459,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 0, 97],
+        ability_ids: [48, 0, 94],
     },
     // #419 Floatzel
     SpeciesEntry {
@@ -5472,7 +5472,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 0, 97],
+        ability_ids: [48, 0, 94],
     },
     // #420 Cherubi
     SpeciesEntry {
@@ -5498,7 +5498,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [152, 0, 0],
+        ability_ids: [148, 0, 0],
     },
     // #422 Shellos
     SpeciesEntry {
@@ -5511,7 +5511,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 34,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [73, 147, 44],
+        ability_ids: [72, 143, 43],
     },
     // #423 Gastrodon
     SpeciesEntry {
@@ -5524,7 +5524,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 39,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [73, 147, 44],
+        ability_ids: [72, 143, 43],
     },
     // #424 Ambipom
     SpeciesEntry {
@@ -5537,7 +5537,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [46, 45, 76],
+        ability_ids: [45, 44, 75],
     },
     // #425 Drifloon
     SpeciesEntry {
@@ -5550,7 +5550,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [85, 89, 153],
+        ability_ids: [83, 87, 149],
     },
     // #426 Drifblim
     SpeciesEntry {
@@ -5563,7 +5563,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [85, 89, 153],
+        ability_ids: [83, 87, 149],
     },
     // #427 Buneary
     SpeciesEntry {
@@ -5576,7 +5576,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 154, 47],
+        ability_ids: [8, 150, 46],
     },
     // #428 Lopunny
     SpeciesEntry {
@@ -5589,7 +5589,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [28, 154, 47],
+        ability_ids: [28, 150, 46],
     },
     // #429 Mismagius
     SpeciesEntry {
@@ -5602,7 +5602,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #430 Honchkrow
     SpeciesEntry {
@@ -5615,7 +5615,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 71,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [81, 115, 101],
+        ability_ids: [79, 112, 98],
     },
     // #431 Glameow
     SpeciesEntry {
@@ -5628,7 +5628,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [47, 65, 14],
+        ability_ids: [46, 64, 14],
     },
     // #432 Purugly
     SpeciesEntry {
@@ -5641,7 +5641,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 112,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [70, 65, 52],
+        ability_ids: [69, 64, 51],
     },
     // #433 Chingling
     SpeciesEntry {
@@ -5654,7 +5654,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #434 Stunky
     SpeciesEntry {
@@ -5667,7 +5667,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 74,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [38, 85, 14],
+        ability_ids: [37, 83, 14],
     },
     // #435 Skuntank
     SpeciesEntry {
@@ -5680,7 +5680,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 84,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [38, 85, 14],
+        ability_ids: [37, 83, 14],
     },
     // #436 Bronzor
     SpeciesEntry {
@@ -5693,7 +5693,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 23,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 155, 139],
+        ability_ids: [77, 151, 135],
     },
     // #437 Bronzong
     SpeciesEntry {
@@ -5706,7 +5706,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 33,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 155, 139],
+        ability_ids: [77, 151, 135],
     },
     // #438 Bonsly
     SpeciesEntry {
@@ -5719,7 +5719,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 10,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 61, 102],
+        ability_ids: [61, 60, 99],
     },
     // #439 Mime Jr.
     SpeciesEntry {
@@ -5732,7 +5732,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [84, 99, 46],
+        ability_ids: [82, 96, 45],
     },
     // #440 Happiny
     SpeciesEntry {
@@ -5745,7 +5745,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [92, 93, 30],
+        ability_ids: [89, 90, 30],
     },
     // #441 Chatot
     SpeciesEntry {
@@ -5771,7 +5771,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [110, 0, 37],
+        ability_ids: [107, 0, 36],
     },
     // #443 Gible
     SpeciesEntry {
@@ -5784,7 +5784,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 42,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 0, 142],
+        ability_ids: [23, 0, 138],
     },
     // #444 Gabite
     SpeciesEntry {
@@ -5797,7 +5797,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 82,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 0, 142],
+        ability_ids: [23, 0, 138],
     },
     // #445 Garchomp
     SpeciesEntry {
@@ -5810,7 +5810,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 102,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [23, 0, 142],
+        ability_ids: [23, 0, 138],
     },
     // #446 Munchlax
     SpeciesEntry {
@@ -5823,7 +5823,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 5,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [45, 70, 58],
+        ability_ids: [44, 69, 57],
     },
     // #447 Riolu
     SpeciesEntry {
@@ -5836,7 +5836,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [57, 36, 122],
+        ability_ids: [56, 35, 119],
     },
     // #448 Lucario
     SpeciesEntry {
@@ -5849,7 +5849,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [57, 36, 53],
+        ability_ids: [56, 35, 52],
     },
     // #449 Hippopotas
     SpeciesEntry {
@@ -5862,7 +5862,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 32,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [132, 0, 44],
+        ability_ids: [129, 0, 43],
     },
     // #450 Hippowdon
     SpeciesEntry {
@@ -5875,7 +5875,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 47,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [132, 0, 44],
+        ability_ids: [129, 0, 43],
     },
     // #451 Skorupi
     SpeciesEntry {
@@ -5888,7 +5888,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [87, 13, 14],
+        ability_ids: [85, 13, 14],
     },
     // #452 Drapion
     SpeciesEntry {
@@ -5901,7 +5901,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [87, 13, 14],
+        ability_ids: [85, 13, 14],
     },
     // #453 Croagunk
     SpeciesEntry {
@@ -5914,7 +5914,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [105, 40, 74],
+        ability_ids: [102, 39, 73],
     },
     // #454 Toxicroak
     SpeciesEntry {
@@ -5927,7 +5927,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [105, 40, 74],
+        ability_ids: [102, 39, 73],
     },
     // #455 Carnivine
     SpeciesEntry {
@@ -5940,7 +5940,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 46,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #456 Finneon
     SpeciesEntry {
@@ -5953,7 +5953,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 66,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 147, 97],
+        ability_ids: [48, 143, 94],
     },
     // #457 Lumineon
     SpeciesEntry {
@@ -5966,7 +5966,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 91,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 147, 97],
+        ability_ids: [48, 143, 94],
     },
     // #458 Mantyke
     SpeciesEntry {
@@ -5979,7 +5979,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 54, 97],
+        ability_ids: [48, 53, 94],
     },
     // #459 Snover
     SpeciesEntry {
@@ -5992,7 +5992,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [156, 0, 84],
+        ability_ids: [152, 0, 82],
     },
     // #460 Abomasnow
     SpeciesEntry {
@@ -6005,7 +6005,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [156, 0, 84],
+        ability_ids: [152, 0, 82],
     },
     // #461 Weavile
     SpeciesEntry {
@@ -6018,7 +6018,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 125,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [110, 0, 127],
+        ability_ids: [107, 0, 124],
     },
     // #462 Magnezone
     SpeciesEntry {
@@ -6031,7 +6031,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [67, 62, 68],
+        ability_ids: [66, 61, 67],
     },
     // #463 Lickilicky
     SpeciesEntry {
@@ -6044,7 +6044,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [65, 64, 48],
+        ability_ids: [64, 63, 47],
     },
     // #464 Rhyperior
     SpeciesEntry {
@@ -6057,7 +6057,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [22, 144, 88],
+        ability_ids: [22, 140, 86],
     },
     // #465 Tangrowth
     SpeciesEntry {
@@ -6070,7 +6070,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 95, 66],
+        ability_ids: [2, 92, 65],
     },
     // #466 Electivire
     SpeciesEntry {
@@ -6083,7 +6083,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [157, 0, 50],
+        ability_ids: [153, 0, 49],
     },
     // #467 Magmortar
     SpeciesEntry {
@@ -6096,7 +6096,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 83,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [63, 0, 50],
+        ability_ids: [62, 0, 49],
     },
     // #468 Togekiss
     SpeciesEntry {
@@ -6109,7 +6109,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [18, 93, 115],
+        ability_ids: [18, 90, 112],
     },
     // #469 Yanmega
     SpeciesEntry {
@@ -6122,7 +6122,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [121, 11, 35],
+        ability_ids: [118, 11, 34],
     },
     // #470 Leafeon
     SpeciesEntry {
@@ -6135,7 +6135,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [95, 0, 2],
+        ability_ids: [92, 0, 2],
     },
     // #471 Glaceon
     SpeciesEntry {
@@ -6148,7 +6148,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [112, 0, 72],
+        ability_ids: [109, 0, 71],
     },
     // #472 Gliscor
     SpeciesEntry {
@@ -6161,7 +6161,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [83, 23, 134],
+        ability_ids: [81, 23, 130],
     },
     // #473 Mamoswine
     SpeciesEntry {
@@ -6174,9 +6174,9 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [64, 112, 70],
+        ability_ids: [63, 109, 69],
     },
-    // #474 Porygon Z
+    // #474 Porygon-Z
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 85,
@@ -6187,7 +6187,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [104, 109, 68],
+        ability_ids: [101, 106, 67],
     },
     // #475 Gallade
     SpeciesEntry {
@@ -6200,7 +6200,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [57, 158, 53],
+        ability_ids: [56, 0, 52],
     },
     // #476 Probopass
     SpeciesEntry {
@@ -6213,7 +6213,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 67, 44],
+        ability_ids: [61, 66, 43],
     },
     // #477 Dusknoir
     SpeciesEntry {
@@ -6226,7 +6226,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [110, 0, 35],
+        ability_ids: [107, 0, 0],
     },
     // #478 Froslass
     SpeciesEntry {
@@ -6239,7 +6239,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [112, 0, 79],
+        ability_ids: [109, 0, 146],
     },
     // #479 Rotom
     SpeciesEntry {
@@ -6252,7 +6252,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 91,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #480 Uxie
     SpeciesEntry {
@@ -6265,7 +6265,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #481 Mesprit
     SpeciesEntry {
@@ -6278,7 +6278,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #482 Azelf
     SpeciesEntry {
@@ -6291,7 +6291,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #483 Dialga
     SpeciesEntry {
@@ -6304,7 +6304,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 124],
+        ability_ids: [107, 0, 121],
     },
     // #484 Palkia
     SpeciesEntry {
@@ -6317,7 +6317,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 124],
+        ability_ids: [107, 0, 121],
     },
     // #485 Heatran
     SpeciesEntry {
@@ -6330,7 +6330,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 77,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [32, 0, 63],
+        ability_ids: [32, 0, 62],
     },
     // #486 Regigigas
     SpeciesEntry {
@@ -6343,7 +6343,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [159, 0, 0],
+        ability_ids: [154, 0, 0],
     },
     // #487 Giratina
     SpeciesEntry {
@@ -6356,20 +6356,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 124],
+        ability_ids: [107, 0, 121],
     },
     // #488 Cresselia
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 120,
             attack: 70,
-            defense: 110,
+            defense: 120,
             special_attack: 75,
-            special_defense: 120,
+            special_defense: 130,
             speed: 85,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #489 Phione
     SpeciesEntry {
@@ -6382,7 +6382,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [71, 0, 0],
+        ability_ids: [70, 0, 0],
     },
     // #490 Manaphy
     SpeciesEntry {
@@ -6395,7 +6395,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [71, 0, 0],
+        ability_ids: [70, 0, 0],
     },
     // #491 Darkrai
     SpeciesEntry {
@@ -6408,7 +6408,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 125,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [160, 0, 0],
+        ability_ids: [155, 0, 0],
     },
     // #492 Shaymin
     SpeciesEntry {
@@ -6421,7 +6421,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [92, 0, 0],
+        ability_ids: [89, 0, 0],
     },
     // #493 Arceus
     SpeciesEntry {
@@ -6434,7 +6434,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 120,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [161, 0, 0],
+        ability_ids: [156, 0, 0],
     },
     // #494 Victini
     SpeciesEntry {
@@ -6447,7 +6447,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [162, 0, 0],
+        ability_ids: [157, 0, 0],
     },
     // #495 Snivy
     SpeciesEntry {
@@ -6460,7 +6460,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 63,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 126],
+        ability_ids: [1, 0, 123],
     },
     // #496 Servine
     SpeciesEntry {
@@ -6473,7 +6473,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 83,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 126],
+        ability_ids: [1, 0, 123],
     },
     // #497 Serperior
     SpeciesEntry {
@@ -6486,7 +6486,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 113,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [1, 0, 126],
+        ability_ids: [1, 0, 123],
     },
     // #498 Tepig
     SpeciesEntry {
@@ -6499,7 +6499,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 70],
+        ability_ids: [3, 0, 69],
     },
     // #499 Pignite
     SpeciesEntry {
@@ -6512,7 +6512,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 70],
+        ability_ids: [3, 0, 69],
     },
     // #500 Emboar
     SpeciesEntry {
@@ -6525,7 +6525,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [3, 0, 88],
+        ability_ids: [3, 0, 86],
     },
     // #501 Oshawott
     SpeciesEntry {
@@ -6538,7 +6538,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 75],
+        ability_ids: [5, 0, 74],
     },
     // #502 Dewott
     SpeciesEntry {
@@ -6551,7 +6551,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 75],
+        ability_ids: [5, 0, 74],
     },
     // #503 Samurott
     SpeciesEntry {
@@ -6564,7 +6564,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [5, 0, 75],
+        ability_ids: [5, 0, 74],
     },
     // #504 Patrat
     SpeciesEntry {
@@ -6577,7 +6577,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 42,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [8, 14, 68],
+        ability_ids: [8, 14, 67],
     },
     // #505 Watchog
     SpeciesEntry {
@@ -6590,7 +6590,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 77,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [98, 14, 68],
+        ability_ids: [95, 14, 67],
     },
     // #506 Lillipup
     SpeciesEntry {
@@ -6603,7 +6603,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [50, 45, 8],
+        ability_ids: [49, 44, 8],
     },
     // #507 Herdier
     SpeciesEntry {
@@ -6616,20 +6616,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 24, 96],
+        ability_ids: [19, 24, 93],
     },
     // #508 Stoutland
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 85,
-            attack: 110,
+            attack: 100,
             defense: 90,
             special_attack: 45,
             special_defense: 90,
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 24, 96],
+        ability_ids: [19, 24, 93],
     },
     // #509 Purrloin
     SpeciesEntry {
@@ -6642,7 +6642,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 66,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [47, 89, 122],
+        ability_ids: [46, 87, 119],
     },
     // #510 Liepard
     SpeciesEntry {
@@ -6655,7 +6655,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 106,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [47, 89, 122],
+        ability_ids: [46, 87, 119],
     },
     // #511 Pansage
     SpeciesEntry {
@@ -6668,7 +6668,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 64,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [58, 0, 1],
+        ability_ids: [57, 0, 1],
     },
     // #512 Simisage
     SpeciesEntry {
@@ -6681,7 +6681,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 101,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [58, 0, 1],
+        ability_ids: [57, 0, 1],
     },
     // #513 Pansear
     SpeciesEntry {
@@ -6694,7 +6694,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 64,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [58, 0, 3],
+        ability_ids: [57, 0, 3],
     },
     // #514 Simisear
     SpeciesEntry {
@@ -6707,7 +6707,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 101,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [58, 0, 3],
+        ability_ids: [57, 0, 3],
     },
     // #515 Panpour
     SpeciesEntry {
@@ -6720,7 +6720,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 64,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [58, 0, 5],
+        ability_ids: [57, 0, 5],
     },
     // #516 Simipour
     SpeciesEntry {
@@ -6733,7 +6733,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 101,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [58, 0, 5],
+        ability_ids: [57, 0, 5],
     },
     // #517 Munna
     SpeciesEntry {
@@ -6746,7 +6746,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 24,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [82, 55, 124],
+        ability_ids: [80, 54, 121],
     },
     // #518 Musharna
     SpeciesEntry {
@@ -6759,7 +6759,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 29,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [82, 55, 124],
+        ability_ids: [80, 54, 121],
     },
     // #519 Pidove
     SpeciesEntry {
@@ -6772,7 +6772,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 43,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [16, 115, 26],
+        ability_ids: [16, 112, 26],
     },
     // #520 Tranquill
     SpeciesEntry {
@@ -6785,20 +6785,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [16, 115, 26],
+        ability_ids: [16, 112, 26],
     },
     // #521 Unfezant
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 80,
-            attack: 115,
+            attack: 105,
             defense: 80,
             special_attack: 65,
             special_defense: 55,
             speed: 93,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [16, 115, 26],
+        ability_ids: [16, 112, 26],
     },
     // #522 Blitzle
     SpeciesEntry {
@@ -6811,7 +6811,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 76,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [22, 157, 119],
+        ability_ids: [22, 153, 116],
     },
     // #523 Zebstrika
     SpeciesEntry {
@@ -6824,7 +6824,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 116,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [22, 157, 119],
+        ability_ids: [22, 153, 116],
     },
     // #524 Roggenrola
     SpeciesEntry {
@@ -6837,7 +6837,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 15,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 80, 44],
+        ability_ids: [61, 0, 43],
     },
     // #525 Boldore
     SpeciesEntry {
@@ -6850,7 +6850,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 80, 44],
+        ability_ids: [61, 0, 43],
     },
     // #526 Gigalith
     SpeciesEntry {
@@ -6859,16 +6859,16 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 135,
             defense: 130,
             special_attack: 60,
-            special_defense: 80,
+            special_defense: 70,
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 132, 44],
+        ability_ids: [61, 0, 43],
     },
     // #527 Woobat
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 65,
+            hp: 55,
             attack: 45,
             defense: 43,
             special_attack: 55,
@@ -6876,7 +6876,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 72,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [31, 154, 143],
+        ability_ids: [31, 150, 139],
     },
     // #528 Swoobat
     SpeciesEntry {
@@ -6889,7 +6889,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 114,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [31, 154, 143],
+        ability_ids: [31, 150, 139],
     },
     // #529 Drilbur
     SpeciesEntry {
@@ -6902,7 +6902,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 68,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [24, 44, 100],
+        ability_ids: [24, 43, 97],
     },
     // #530 Excadrill
     SpeciesEntry {
@@ -6915,7 +6915,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 88,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [24, 44, 100],
+        ability_ids: [24, 43, 97],
     },
     // #531 Audino
     SpeciesEntry {
@@ -6928,7 +6928,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [94, 66, 154],
+        ability_ids: [91, 65, 150],
     },
     // #532 Timburr
     SpeciesEntry {
@@ -6941,7 +6941,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [17, 27, 90],
+        ability_ids: [17, 27, 88],
     },
     // #533 Gurdurr
     SpeciesEntry {
@@ -6954,7 +6954,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [17, 27, 90],
+        ability_ids: [17, 27, 88],
     },
     // #534 Conkeldurr
     SpeciesEntry {
@@ -6967,7 +6967,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M3,
-        ability_ids: [17, 27, 90],
+        ability_ids: [17, 27, 88],
     },
     // #535 Tympole
     SpeciesEntry {
@@ -6980,7 +6980,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 64,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 71, 54],
+        ability_ids: [48, 70, 53],
     },
     // #536 Palpitoad
     SpeciesEntry {
@@ -6993,20 +6993,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 69,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 71, 54],
+        ability_ids: [48, 70, 53],
     },
     // #537 Seismitoad
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 105,
-            attack: 95,
+            attack: 85,
             defense: 75,
             special_attack: 85,
             special_defense: 75,
             speed: 74,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [49, 74, 54],
+        ability_ids: [48, 73, 53],
     },
     // #538 Throh
     SpeciesEntry {
@@ -7019,7 +7019,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [17, 36, 100],
+        ability_ids: [17, 35, 97],
     },
     // #539 Sawk
     SpeciesEntry {
@@ -7032,7 +7032,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 85,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [62, 36, 100],
+        ability_ids: [61, 35, 97],
     },
     // #540 Sewaddle
     SpeciesEntry {
@@ -7045,7 +7045,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 42,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 2, 77],
+        ability_ids: [12, 2, 76],
     },
     // #541 Swadloon
     SpeciesEntry {
@@ -7058,7 +7058,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 42,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [95, 2, 77],
+        ability_ids: [92, 2, 76],
     },
     // #542 Leavanny
     SpeciesEntry {
@@ -7067,11 +7067,11 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             attack: 103,
             defense: 80,
             special_attack: 70,
-            special_defense: 80,
+            special_defense: 70,
             speed: 92,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 2, 77],
+        ability_ids: [12, 2, 76],
     },
     // #543 Venipede
     SpeciesEntry {
@@ -7084,7 +7084,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 57,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [25, 12, 121],
+        ability_ids: [25, 12, 104],
     },
     // #544 Whirlipede
     SpeciesEntry {
@@ -7097,20 +7097,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 47,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [25, 12, 121],
+        ability_ids: [25, 12, 104],
     },
     // #545 Scolipede
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 60,
-            attack: 100,
+            attack: 90,
             defense: 89,
             special_attack: 55,
             special_defense: 69,
             speed: 112,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [25, 12, 121],
+        ability_ids: [25, 12, 104],
     },
     // #546 Cottonee
     SpeciesEntry {
@@ -7123,7 +7123,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 66,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [122, 37, 2],
+        ability_ids: [119, 36, 2],
     },
     // #547 Whimsicott
     SpeciesEntry {
@@ -7136,7 +7136,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 116,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [122, 37, 2],
+        ability_ids: [119, 36, 2],
     },
     // #548 Petilil
     SpeciesEntry {
@@ -7149,7 +7149,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [2, 65, 95],
+        ability_ids: [2, 64, 92],
     },
     // #549 Lilligant
     SpeciesEntry {
@@ -7162,7 +7162,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [2, 65, 95],
+        ability_ids: [2, 64, 92],
     },
     // #550 Basculin
     SpeciesEntry {
@@ -7175,7 +7175,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 98,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [88, 104, 100],
+        ability_ids: [86, 101, 97],
     },
     // #551 Sandile
     SpeciesEntry {
@@ -7188,7 +7188,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 101, 51],
+        ability_ids: [19, 98, 50],
     },
     // #552 Krokorok
     SpeciesEntry {
@@ -7201,20 +7201,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 74,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 101, 51],
+        ability_ids: [19, 98, 50],
     },
     // #553 Krookodile
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 95,
             attack: 117,
-            defense: 80,
+            defense: 70,
             special_attack: 65,
             special_defense: 70,
             speed: 92,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [19, 101, 51],
+        ability_ids: [19, 98, 50],
     },
     // #554 Darumaka
     SpeciesEntry {
@@ -7227,7 +7227,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [18, 0, 36],
+        ability_ids: [18, 0, 35],
     },
     // #555 Darmanitan
     SpeciesEntry {
@@ -7240,7 +7240,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [27, 0, 163],
+        ability_ids: [27, 0, 158],
     },
     // #556 Maractus
     SpeciesEntry {
@@ -7253,7 +7253,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 2, 147],
+        ability_ids: [53, 2, 143],
     },
     // #557 Dwebble
     SpeciesEntry {
@@ -7266,20 +7266,20 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 75, 80],
+        ability_ids: [61, 74, 78],
     },
     // #558 Crustle
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 70,
-            attack: 105,
+            attack: 95,
             defense: 125,
             special_attack: 65,
             special_defense: 75,
             speed: 45,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [62, 75, 80],
+        ability_ids: [61, 74, 78],
     },
     // #559 Scraggy
     SpeciesEntry {
@@ -7292,7 +7292,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 48,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [9, 101, 19],
+        ability_ids: [9, 98, 19],
     },
     // #560 Scrafty
     SpeciesEntry {
@@ -7305,7 +7305,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 58,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [9, 101, 19],
+        ability_ids: [9, 98, 19],
     },
     // #561 Sigilyph
     SpeciesEntry {
@@ -7318,7 +7318,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 97,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [42, 29, 11],
+        ability_ids: [41, 29, 11],
     },
     // #562 Yamask
     SpeciesEntry {
@@ -7331,7 +7331,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [164, 0, 0],
+        ability_ids: [159, 0, 0],
     },
     // #563 Cofagrigus
     SpeciesEntry {
@@ -7344,7 +7344,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [164, 0, 0],
+        ability_ids: [159, 0, 0],
     },
     // #564 Tirtouga
     SpeciesEntry {
@@ -7357,7 +7357,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 22,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [144, 62, 49],
+        ability_ids: [140, 61, 48],
     },
     // #565 Carracosta
     SpeciesEntry {
@@ -7370,7 +7370,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 32,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [144, 62, 49],
+        ability_ids: [140, 61, 48],
     },
     // #566 Archen
     SpeciesEntry {
@@ -7383,7 +7383,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [165, 0, 0],
+        ability_ids: [160, 0, 0],
     },
     // #567 Archeops
     SpeciesEntry {
@@ -7396,7 +7396,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 110,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [165, 0, 0],
+        ability_ids: [160, 0, 0],
     },
     // #568 Trubbish
     SpeciesEntry {
@@ -7409,7 +7409,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [38, 73, 85],
+        ability_ids: [37, 72, 83],
     },
     // #569 Garbodor
     SpeciesEntry {
@@ -7422,7 +7422,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [38, 80, 85],
+        ability_ids: [37, 78, 83],
     },
     // #570 Zorua
     SpeciesEntry {
@@ -7435,7 +7435,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [166, 0, 0],
+        ability_ids: [161, 0, 0],
     },
     // #571 Zoroark
     SpeciesEntry {
@@ -7448,7 +7448,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M7,
-        ability_ids: [166, 0, 0],
+        ability_ids: [161, 0, 0],
     },
     // #572 Minccino
     SpeciesEntry {
@@ -7461,7 +7461,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 46, 76],
+        ability_ids: [28, 45, 75],
     },
     // #573 Cinccino
     SpeciesEntry {
@@ -7474,7 +7474,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 115,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [28, 46, 76],
+        ability_ids: [28, 45, 75],
     },
     // #574 Gothita
     SpeciesEntry {
@@ -7487,7 +7487,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 45,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [35, 34, 123],
+        ability_ids: [34, 0, 120],
     },
     // #575 Gothorita
     SpeciesEntry {
@@ -7500,7 +7500,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [35, 34, 123],
+        ability_ids: [34, 0, 120],
     },
     // #576 Gothitelle
     SpeciesEntry {
@@ -7513,7 +7513,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F3M1,
-        ability_ids: [35, 34, 123],
+        ability_ids: [34, 0, 120],
     },
     // #577 Solosis
     SpeciesEntry {
@@ -7526,7 +7526,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [77, 29, 66],
+        ability_ids: [76, 29, 65],
     },
     // #578 Duosion
     SpeciesEntry {
@@ -7539,7 +7539,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [77, 29, 66],
+        ability_ids: [76, 29, 65],
     },
     // #579 Reuniclus
     SpeciesEntry {
@@ -7552,7 +7552,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [77, 29, 66],
+        ability_ids: [76, 29, 65],
     },
     // #580 Ducklett
     SpeciesEntry {
@@ -7565,7 +7565,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 16, 71],
+        ability_ids: [14, 16, 70],
     },
     // #581 Swanna
     SpeciesEntry {
@@ -7578,7 +7578,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 98,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [14, 16, 71],
+        ability_ids: [14, 16, 70],
     },
     // #582 Vanillite
     SpeciesEntry {
@@ -7591,7 +7591,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 44,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [72, 112, 80],
+        ability_ids: [71, 0, 78],
     },
     // #583 Vanillish
     SpeciesEntry {
@@ -7604,7 +7604,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 59,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [72, 112, 80],
+        ability_ids: [71, 0, 78],
     },
     // #584 Vanilluxe
     SpeciesEntry {
@@ -7617,7 +7617,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 79,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [72, 156, 80],
+        ability_ids: [71, 0, 78],
     },
     // #585 Deerling
     SpeciesEntry {
@@ -7630,7 +7630,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 75,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 119, 93],
+        ability_ids: [2, 116, 90],
     },
     // #586 Sawsbuck
     SpeciesEntry {
@@ -7643,7 +7643,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [2, 119, 93],
+        ability_ids: [2, 116, 90],
     },
     // #587 Emolga
     SpeciesEntry {
@@ -7656,7 +7656,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 103,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 0, 157],
+        ability_ids: [21, 0, 153],
     },
     // #588 Karrablast
     SpeciesEntry {
@@ -7669,7 +7669,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 9, 56],
+        ability_ids: [12, 9, 55],
     },
     // #589 Escavalier
     SpeciesEntry {
@@ -7682,7 +7682,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 75, 77],
+        ability_ids: [12, 74, 76],
     },
     // #590 Foongus
     SpeciesEntry {
@@ -7695,7 +7695,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 15,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [39, 0, 66],
+        ability_ids: [38, 0, 65],
     },
     // #591 Amoonguss
     SpeciesEntry {
@@ -7708,7 +7708,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [39, 0, 66],
+        ability_ids: [38, 0, 65],
     },
     // #592 Frillish
     SpeciesEntry {
@@ -7721,7 +7721,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 79, 41],
+        ability_ids: [53, 146, 40],
     },
     // #593 Jellicent
     SpeciesEntry {
@@ -7734,7 +7734,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [54, 79, 41],
+        ability_ids: [53, 146, 40],
     },
     // #594 Alomomola
     SpeciesEntry {
@@ -7747,7 +7747,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [94, 71, 66],
+        ability_ids: [91, 70, 65],
     },
     // #595 Joltik
     SpeciesEntry {
@@ -7786,7 +7786,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 10,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [167, 0, 0],
+        ability_ids: [162, 0, 0],
     },
     // #598 Ferrothorn
     SpeciesEntry {
@@ -7799,7 +7799,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [167, 0, 105],
+        ability_ids: [162, 0, 0],
     },
     // #599 Klink
     SpeciesEntry {
@@ -7812,7 +7812,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [117, 141, 59],
+        ability_ids: [114, 137, 58],
     },
     // #600 Klang
     SpeciesEntry {
@@ -7825,7 +7825,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [117, 141, 59],
+        ability_ids: [114, 137, 58],
     },
     // #601 Klinklang
     SpeciesEntry {
@@ -7838,7 +7838,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [117, 141, 59],
+        ability_ids: [114, 137, 58],
     },
     // #602 Tynamo
     SpeciesEntry {
@@ -7851,7 +7851,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #603 Eelektrik
     SpeciesEntry {
@@ -7864,7 +7864,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #604 Eelektross
     SpeciesEntry {
@@ -7877,7 +7877,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #605 Elgyem
     SpeciesEntry {
@@ -7890,7 +7890,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 30,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [124, 55, 68],
+        ability_ids: [121, 54, 67],
     },
     // #606 Beheeyem
     SpeciesEntry {
@@ -7903,7 +7903,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [124, 55, 68],
+        ability_ids: [121, 54, 67],
     },
     // #607 Litwick
     SpeciesEntry {
@@ -7916,7 +7916,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 20,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [32, 63, 37],
+        ability_ids: [32, 62, 120],
     },
     // #608 Lampent
     SpeciesEntry {
@@ -7929,7 +7929,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [32, 63, 37],
+        ability_ids: [32, 62, 120],
     },
     // #609 Chandelure
     SpeciesEntry {
@@ -7942,7 +7942,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [32, 63, 37],
+        ability_ids: [32, 62, 120],
     },
     // #610 Axew
     SpeciesEntry {
@@ -7955,7 +7955,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 57,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [26, 100, 20],
+        ability_ids: [26, 97, 20],
     },
     // #611 Fraxure
     SpeciesEntry {
@@ -7968,7 +7968,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 67,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [26, 100, 20],
+        ability_ids: [26, 97, 20],
     },
     // #612 Haxorus
     SpeciesEntry {
@@ -7981,7 +7981,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 97,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [26, 100, 20],
+        ability_ids: [26, 97, 20],
     },
     // #613 Cubchoo
     SpeciesEntry {
@@ -7994,33 +7994,33 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 40,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [112, 168, 102],
+        ability_ids: [109, 0, 99],
     },
     // #614 Beartic
     SpeciesEntry {
         base_stats: BaseStats {
             hp: 95,
-            attack: 130,
+            attack: 110,
             defense: 80,
             special_attack: 70,
             special_defense: 80,
             speed: 50,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [112, 168, 49],
+        ability_ids: [109, 0, 48],
     },
     // #615 Cryogonal
     SpeciesEntry {
         base_stats: BaseStats {
-            hp: 80,
-            attack: 50,
+            hp: 70,
+            attack: 30,
             defense: 50,
             special_attack: 95,
             special_defense: 135,
             speed: 105,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #616 Shelmet
     SpeciesEntry {
@@ -8033,7 +8033,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 25,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [71, 75, 77],
+        ability_ids: [70, 74, 76],
     },
     // #617 Accelgor
     SpeciesEntry {
@@ -8046,7 +8046,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 145,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [71, 73, 89],
+        ability_ids: [70, 72, 87],
     },
     // #618 Stunfisk
     SpeciesEntry {
@@ -8059,7 +8059,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 32,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [21, 47, 23],
+        ability_ids: [21, 46, 23],
     },
     // #619 Mienfoo
     SpeciesEntry {
@@ -8072,7 +8072,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 66, 88],
+        ability_ids: [35, 65, 86],
     },
     // #620 Mienshao
     SpeciesEntry {
@@ -8085,7 +8085,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 105,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [36, 66, 88],
+        ability_ids: [35, 65, 86],
     },
     // #621 Druddigon
     SpeciesEntry {
@@ -8098,7 +8098,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 48,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [142, 27, 100],
+        ability_ids: [138, 27, 97],
     },
     // #622 Golett
     SpeciesEntry {
@@ -8111,7 +8111,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 35,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [90, 154, 56],
+        ability_ids: [88, 150, 55],
     },
     // #623 Golurk
     SpeciesEntry {
@@ -8124,7 +8124,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [90, 154, 56],
+        ability_ids: [88, 150, 55],
     },
     // #624 Pawniard
     SpeciesEntry {
@@ -8137,7 +8137,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [52, 36, 110],
+        ability_ids: [51, 35, 107],
     },
     // #625 Bisharp
     SpeciesEntry {
@@ -8150,7 +8150,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 70,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [52, 36, 110],
+        ability_ids: [51, 35, 107],
     },
     // #626 Bouffalant
     SpeciesEntry {
@@ -8163,7 +8163,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 55,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [88, 119, 84],
+        ability_ids: [86, 116, 82],
     },
     // #627 Rufflet
     SpeciesEntry {
@@ -8189,7 +8189,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [14, 27, 52],
+        ability_ids: [14, 27, 51],
     },
     // #629 Vullaby
     SpeciesEntry {
@@ -8202,7 +8202,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [16, 77, 80],
+        ability_ids: [16, 76, 78],
     },
     // #630 Mandibuzz
     SpeciesEntry {
@@ -8215,7 +8215,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 80,
         },
         gender_ratio: GenderRatio::FemaleOnly,
-        ability_ids: [16, 77, 80],
+        ability_ids: [16, 76, 78],
     },
     // #631 Heatmor
     SpeciesEntry {
@@ -8228,7 +8228,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 65,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [58, 32, 145],
+        ability_ids: [57, 32, 141],
     },
     // #632 Durant
     SpeciesEntry {
@@ -8241,7 +8241,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 109,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [12, 18, 135],
+        ability_ids: [12, 18, 131],
     },
     // #633 Deino
     SpeciesEntry {
@@ -8280,7 +8280,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 98,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [78, 0, 0],
+        ability_ids: [77, 0, 0],
     },
     // #636 Larvesta
     SpeciesEntry {
@@ -8293,7 +8293,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 60,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [63, 0, 12],
+        ability_ids: [62, 0, 12],
     },
     // #637 Volcarona
     SpeciesEntry {
@@ -8306,7 +8306,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 100,
         },
         gender_ratio: GenderRatio::F1M1,
-        ability_ids: [63, 0, 12],
+        ability_ids: [62, 0, 12],
     },
     // #638 Cobalion
     SpeciesEntry {
@@ -8319,7 +8319,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 108,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [53, 0, 0],
+        ability_ids: [52, 0, 0],
     },
     // #639 Terrakion
     SpeciesEntry {
@@ -8332,7 +8332,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 108,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [53, 0, 0],
+        ability_ids: [52, 0, 0],
     },
     // #640 Virizion
     SpeciesEntry {
@@ -8345,7 +8345,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 108,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [53, 0, 0],
+        ability_ids: [52, 0, 0],
     },
     // #641 Tornadus
     SpeciesEntry {
@@ -8358,7 +8358,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 111,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [122, 0, 52],
+        ability_ids: [119, 0, 51],
     },
     // #642 Thundurus
     SpeciesEntry {
@@ -8371,7 +8371,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 111,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [122, 0, 52],
+        ability_ids: [119, 0, 51],
     },
     // #643 Reshiram
     SpeciesEntry {
@@ -8384,7 +8384,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [169, 0, 0],
+        ability_ids: [163, 0, 0],
     },
     // #644 Zekrom
     SpeciesEntry {
@@ -8397,7 +8397,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [170, 0, 0],
+        ability_ids: [164, 0, 0],
     },
     // #645 Landorus
     SpeciesEntry {
@@ -8410,7 +8410,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 101,
         },
         gender_ratio: GenderRatio::MaleOnly,
-        ability_ids: [44, 0, 27],
+        ability_ids: [43, 0, 27],
     },
     // #646 Kyurem
     SpeciesEntry {
@@ -8423,7 +8423,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 95,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [110, 0, 0],
+        ability_ids: [107, 0, 0],
     },
     // #647 Keldeo
     SpeciesEntry {
@@ -8436,7 +8436,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 108,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [53, 0, 0],
+        ability_ids: [52, 0, 0],
     },
     // #648 Meloetta
     SpeciesEntry {
@@ -8449,7 +8449,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 90,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [93, 0, 0],
+        ability_ids: [90, 0, 0],
     },
     // #649 Genesect
     SpeciesEntry {
@@ -8462,7 +8462,7 @@ pub static SPECIES_TABLE: [SpeciesEntry; 649] = [
             speed: 99,
         },
         gender_ratio: GenderRatio::Genderless,
-        ability_ids: [109, 0, 0],
+        ability_ids: [106, 0, 0],
     },
 ];
 
@@ -8501,6 +8501,14 @@ mod tests {
         assert_eq!(entry.base_stats.hp, 35);
         assert_eq!(entry.base_stats.attack, 55);
         assert_eq!(entry.base_stats.speed, 90);
+    }
+
+    #[test]
+    fn test_get_species_entry_gen5_corrected_base_stats() {
+        assert_eq!(get_species_entry(526).base_stats.special_defense, 70);
+        assert_eq!(get_species_entry(25).base_stats.defense, 30);
+        assert_eq!(get_species_entry(488).base_stats.defense, 120);
+        assert_eq!(get_species_entry(488).base_stats.special_defense, 130);
     }
 
     #[test]

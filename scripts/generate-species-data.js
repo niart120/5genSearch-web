@@ -8,6 +8,7 @@
  * 出力先:
  *   wasm-pkg/src/data/species.rs
  *   wasm-pkg/src/data/abilities.rs
+ *   wasm-pkg/src/data/items.rs
  *   wasm-pkg/src/data/names.rs
  */
 
@@ -20,10 +21,17 @@ const __dirname = dirname(__filename);
 const ROOT_DIR = join(__dirname, '..');
 
 // 入力ファイル
-const SPECIES_JSON_PATH = join(ROOT_DIR, 'spec/agent/local_029/gen5-species.json');
+const SPECIES_JSON_PATH = join(ROOT_DIR, 'spec/agent/complete/local_029/gen5-species.json');
 
 // 出力ディレクトリ
 const DATA_DIR = join(ROOT_DIR, 'wasm-pkg/src/data');
+const VERSION_KEYS = ['black', 'white', 'black-2', 'white-2'];
+const VERSION_LABELS = {
+  black: 'Black',
+  white: 'White',
+  'black-2': 'Black2',
+  'white-2': 'White2',
+};
 
 // 性別比を GenderRatio 列挙型にマッピング
 function mapGenderRatio(gender) {
@@ -66,6 +74,9 @@ function mapGenderRatio(gender) {
 // メイン処理
 function main() {
   console.log('Reading species data...');
+  if (!existsSync(SPECIES_JSON_PATH)) {
+    throw new Error(`Species data not found: ${SPECIES_JSON_PATH}`);
+  }
   const speciesData = JSON.parse(readFileSync(SPECIES_JSON_PATH, 'utf-8'));
 
   // 出力ディレクトリ作成
@@ -95,10 +106,32 @@ function main() {
 
   console.log(`Found ${abilityMap.size - 1} unique abilities`);
 
+  // 持ち物を収集 (重複排除)
+  const itemMap = new Map(); // key -> { id, names: { en, ja } }
+  itemMap.set('', { id: 0, names: { en: '', ja: '' } }); // 0番は空
+
+  let nextItemId = 1;
+  for (const id of Object.keys(speciesData).sort((a, b) => Number(a) - Number(b))) {
+    const species = speciesData[id];
+    for (const version of VERSION_KEYS) {
+      for (const item of species.heldItems?.[version] ?? []) {
+        if (item.key && !itemMap.has(item.key)) {
+          itemMap.set(item.key, {
+            id: nextItemId++,
+            names: item.names,
+          });
+        }
+      }
+    }
+  }
+
+  console.log(`Found ${itemMap.size - 1} unique held items`);
+
   // 種族データを生成
   const speciesEntries = [];
   const speciesNamesJa = [];
   const speciesNamesEn = [];
+  const heldItemEntries = [];
 
   for (let i = 1; i <= 649; i++) {
     const species = speciesData[String(i)];
@@ -141,6 +174,15 @@ function main() {
 
     speciesNamesJa.push(`"${species.names.ja}"`);
     speciesNamesEn.push(`"${species.names.en}"`);
+
+    for (const version of VERSION_KEYS) {
+      const entry = mapHeldItemEntry(species.heldItems?.[version] ?? [], itemMap);
+      heldItemEntries.push(`    HeldItemEntry {
+        common: ${entry.common},
+        rare: ${entry.rare},
+        very_rare: ${entry.veryRare},
+    }, // ${i} ${VERSION_LABELS[version]}`);
+    }
   }
 
   // species.rs を生成
@@ -211,6 +253,14 @@ mod tests {
         assert_eq!(entry.base_stats.hp, 35);
         assert_eq!(entry.base_stats.attack, 55);
         assert_eq!(entry.base_stats.speed, 90);
+    }
+
+    #[test]
+    fn test_get_species_entry_gen5_corrected_base_stats() {
+        assert_eq!(get_species_entry(526).base_stats.special_defense, 70);
+        assert_eq!(get_species_entry(25).base_stats.defense, 30);
+        assert_eq!(get_species_entry(488).base_stats.defense, 120);
+        assert_eq!(get_species_entry(488).base_stats.special_defense, 130);
     }
 
     #[test]
@@ -324,6 +374,163 @@ mod tests {
         // フシギダネは特性2がない
         let ja = get_ability_name(1, AbilitySlot::Second, "ja");
         assert_eq!(ja, "しんりょく");
+    }
+
+    #[test]
+    fn test_get_ability_name_gen5_corrected_slots() {
+        assert_eq!(get_ability_name(525, AbilitySlot::Second, "ja"), "がんじょう");
+        assert_eq!(get_ability_name(525, AbilitySlot::Second, "en"), "Sturdy");
+        assert_eq!(get_ability_name(94, AbilitySlot::First, "ja"), "ふゆう");
+        assert_eq!(get_ability_name(94, AbilitySlot::First, "en"), "Levitate");
+        assert_eq!(get_ability_name(393, AbilitySlot::Hidden, "ja"), "まけんき");
+        assert_eq!(get_ability_name(393, AbilitySlot::Hidden, "en"), "Defiant");
+    }
+
+    #[test]
+    fn test_get_ability_name_missing_hidden_ability_returns_unknown() {
+        assert_eq!(get_ability_name(396, AbilitySlot::Hidden, "ja"), "???");
+        assert_eq!(get_ability_name(396, AbilitySlot::Hidden, "en"), "???");
+    }
+}
+`;
+
+  // items.rs を生成
+  const itemEntries = Array.from(itemMap.entries())
+    .sort((a, b) => a[1].id - b[1].id)
+    .map(([key, val]) => {
+      const jaName = val.names.ja || '';
+      const enName = val.names.en || '';
+      return `    // ${val.id}: ${key || '(none)'}
+    ("${jaName}", "${enName}")`;
+    });
+
+  const itemsRs = `//! 持ち物データテーブル
+//
+//! このファイルは自動生成されています。直接編集しないでください。
+//! 生成コマンド: node scripts/generate-species-data.js
+
+use crate::types::HeldItemSlot;
+
+/// 持ち物名テーブル: (日本語名, 英語名)
+/// インデックス 0 は「なし」を表す空文字列
+pub static ITEM_NAMES: [(&str, &str); ${itemMap.size}] = [
+${itemEntries.join(',\n')},
+];
+
+/// 持ち物エントリ
+#[derive(Clone, Copy, Debug, Default)]
+pub struct HeldItemEntry {
+    /// 50% スロット (アイテムID, 0 = なし)
+    pub common: u8,
+    /// 5% スロット (アイテムID, 0 = なし)
+    pub rare: u8,
+    /// 1% スロット (アイテムID, 0 = なし, BW2 のみ)
+    pub very_rare: u8,
+}
+
+/// 持ち物テーブル (種族 × バージョン)
+///
+/// インデックス: \`(species_id - 1) * 4 + version_index\`
+///
+/// \`version_index\`: \`0=Black\`, \`1=White\`, \`2=Black2\`, \`3=White2\`
+pub static HELD_ITEMS_TABLE: [HeldItemEntry; 2596] = [
+${heldItemEntries.join('\n')}
+];
+
+/// 持ち物名を取得
+///
+/// # Arguments
+/// * \`item_id\` - アイテムID
+/// * \`locale\` - ロケール ("ja" または "en")
+///
+/// # Returns
+/// アイテム名。0 の場合は空文字列を返す。
+pub fn get_item_name(item_id: u8, locale: &str) -> &'static str {
+    if item_id as usize >= ITEM_NAMES.len() {
+        return "";
+    }
+    let (ja, en) = ITEM_NAMES[item_id as usize];
+    match locale {
+        "ja" => ja,
+        _ => en,
+    }
+}
+
+/// 種族の持ち物情報を取得
+///
+/// # Arguments
+/// * \`species_id\` - 全国図鑑番号 (1-649)
+/// * \`version\` - ROMバージョン (0=Black, 1=White, 2=Black2, 3=White2)
+///
+/// # Returns
+/// 持ち物エントリ。範囲外の場合はデフォルト値を返す。
+pub fn get_held_item_entry(species_id: u16, version: u8) -> HeldItemEntry {
+    if species_id == 0 || species_id > 649 || version > 3 {
+        return HeldItemEntry::default();
+    }
+    let index = ((species_id - 1) as usize) * 4 + (version as usize);
+    HELD_ITEMS_TABLE[index]
+}
+
+/// 持ち物スロットからアイテム名を取得
+///
+/// # Arguments
+/// * \`species_id\` - 全国図鑑番号 (1-649)
+/// * \`version\` - ROMバージョン (0=Black, 1=White, 2=Black2, 3=White2)
+/// * \`slot\` - 持ち物スロット
+/// * \`locale\` - ロケール ("ja" または "en")
+///
+/// # Returns
+/// アイテム名。持ち物がない場合は None を返す。
+pub fn get_held_item_name(
+    species_id: u16,
+    version: u8,
+    slot: HeldItemSlot,
+    locale: &str,
+) -> Option<&'static str> {
+    let entry = get_held_item_entry(species_id, version);
+    let item_id = match slot {
+        HeldItemSlot::None => return None,
+        HeldItemSlot::Common => entry.common,
+        HeldItemSlot::Rare => entry.rare,
+        HeldItemSlot::VeryRare => entry.very_rare,
+    };
+    if item_id == 0 {
+        None
+    } else {
+        Some(get_item_name(item_id, locale))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_item_name() {
+        // light-ball (id=6) は「でんきだま」
+        assert_eq!(get_item_name(6, "ja"), "でんきだま");
+        assert_eq!(get_item_name(6, "en"), "Light Ball");
+    }
+
+    #[test]
+    fn test_pikachu_held_items() {
+        // ピカチュウ (25): オレンのみ(50%), でんきだま(1%)
+        let entry = get_held_item_entry(25, 0); // Black
+        assert_eq!(entry.common, 5); // oran-berry
+        assert_eq!(entry.very_rare, 6); // light-ball
+    }
+
+    #[test]
+    fn test_get_held_item_name_pikachu() {
+        assert_eq!(
+            get_held_item_name(25, 0, HeldItemSlot::Common, "ja"),
+            Some("オレンのみ")
+        );
+        assert_eq!(
+            get_held_item_name(25, 0, HeldItemSlot::VeryRare, "en"),
+            Some("Light Ball")
+        );
     }
 }
 `;
@@ -447,12 +654,16 @@ mod tests {
 //! 生成コマンド: node scripts/generate-species-data.js
 
 pub mod abilities;
+pub mod items;
 pub mod names;
 pub mod species;
+pub mod stats;
 
 pub use abilities::get_ability_name;
+pub use items::{get_held_item_entry, get_held_item_name, get_item_name, HeldItemEntry};
 pub use names::{get_nature_name, get_species_name};
 pub use species::{get_species_entry, BaseStats, SpeciesEntry};
+pub use stats::{calculate_stats, Stats};
 `;
 
   // ファイル書き出し
@@ -462,13 +673,50 @@ pub use species::{get_species_entry, BaseStats, SpeciesEntry};
   writeFileSync(join(DATA_DIR, 'abilities.rs'), abilitiesRs, 'utf-8');
   console.log('Generated: wasm-pkg/src/data/abilities.rs');
 
+  writeFileSync(join(DATA_DIR, 'items.rs'), itemsRs, 'utf-8');
+  console.log('Generated: wasm-pkg/src/data/items.rs');
+
   writeFileSync(join(DATA_DIR, 'names.rs'), namesRs, 'utf-8');
   console.log('Generated: wasm-pkg/src/data/names.rs');
 
   writeFileSync(join(DATA_DIR, 'mod.rs'), modRs, 'utf-8');
   console.log('Generated: wasm-pkg/src/data/mod.rs');
 
-  console.log('\nDone! Generated 4 files in wasm-pkg/src/data/');
+  console.log('\nDone! Generated 5 files in wasm-pkg/src/data/');
 }
 
 main();
+
+function mapHeldItemEntry(items, itemMap) {
+  const entry = {
+    common: 0,
+    rare: 0,
+    veryRare: 0,
+  };
+
+  for (const item of items) {
+    const itemId = itemMap.get(item.key)?.id;
+    if (!itemId) {
+      throw new Error(`Unknown held item: ${item.key}`);
+    }
+
+    if (item.rarity === 50 || item.rarity === 100) {
+      assignHeldItemSlot(entry, 'common', itemId, item);
+    } else if (item.rarity === 5) {
+      assignHeldItemSlot(entry, 'rare', itemId, item);
+    } else if (item.rarity === 1) {
+      assignHeldItemSlot(entry, 'veryRare', itemId, item);
+    } else {
+      throw new Error(`Unsupported held item rarity: ${item.key} ${item.rarity}`);
+    }
+  }
+
+  return entry;
+}
+
+function assignHeldItemSlot(entry, slot, itemId, item) {
+  if (entry[slot] !== 0) {
+    throw new Error(`Duplicate held item slot: ${slot} ${item.key}`);
+  }
+  entry[slot] = itemId;
+}
