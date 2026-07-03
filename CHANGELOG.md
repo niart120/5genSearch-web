@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/niart120/5genSearch-web/compare/v1.4.0...v1.4.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* **data:** 第5世代種族マスタをPokeAPI差分で再生成 ([097a336](https://github.com/niart120/5genSearch-web/commit/097a336f532ad4f8954b8c908d65b3028a954316))
+* **needle:** レポート針の消費位置を統一 ([378443d](https://github.com/niart120/5genSearch-web/commit/378443d17491e2f5d7210d2b6b7ea059970251dd))
+
 ## [1.4.0](https://github.com/niart120/5genSearch-web/compare/v1.3.6...v1.4.0) (2026-06-12)
 
 
