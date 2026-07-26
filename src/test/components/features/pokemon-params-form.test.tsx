@@ -1,10 +1,12 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PokemonParamsForm } from '@/features/pokemon-list/components/pokemon-params-form';
 import { DEFAULT_ENCOUNTER_PARAMS } from '@/features/pokemon-list/types';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { useUiStore } from '@/stores/settings/ui';
+import { isLocationBasedEncounter, listLocations, listSpecies } from '@/data/encounters/helpers';
+import { getEncounterSlots } from '@/data/encounters/loader';
 
 vi.mock('@/wasm/wasm_pkg.js', () => ({
   get_species_name: vi.fn(() => 'Bulbasaur'),
@@ -44,6 +46,10 @@ describe('PokemonParamsForm', () => {
       setupTestI18n('ja');
       useUiStore.setState({ language: 'ja' });
     });
+    vi.mocked(isLocationBasedEncounter).mockReturnValue(false);
+    vi.mocked(listLocations).mockResolvedValue([]);
+    vi.mocked(listSpecies).mockResolvedValue([]);
+    vi.mocked(getEncounterSlots).mockResolvedValue([]);
   });
 
   it('syncKey 変更で未確定の offset 表示が外部値に戻る', async () => {
@@ -68,5 +74,19 @@ describe('PokemonParamsForm', () => {
     );
 
     expect(offsetInput.value).toBe('0');
+  });
+
+  it('保存済みロケーションからスロットを再取得する', async () => {
+    vi.mocked(isLocationBasedEncounter).mockReturnValue(true);
+    vi.mocked(listLocations).mockResolvedValue([{ key: 'route-1', displayNameKey: 'Route 1' }]);
+
+    renderForm({
+      value: {
+        ...DEFAULT_ENCOUNTER_PARAMS,
+        locationKey: 'route-1',
+      },
+    });
+
+    await waitFor(() => expect(getEncounterSlots).toHaveBeenCalledWith('B', 'route-1', 'Normal'));
   });
 });

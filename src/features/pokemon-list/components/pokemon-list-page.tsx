@@ -5,7 +5,7 @@
  * FeaturePageLayout による Controls / Results 2 ペイン構成。
  */
 
-import { useState, useMemo, useCallback, useRef, type ReactElement } from 'react';
+import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -79,12 +79,10 @@ function PokemonListPage(): ReactElement {
   // Seed 入力 (SeedOrigin は非永続化)
   const seedInputMode = usePokemonListStore((s) => s.seedInputMode);
   const setSeedInputMode = usePokemonListStore((s) => s.setSeedInputMode);
-  const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
-  const seedOriginsRef = useRef(seedOrigins);
-  const handleSeedOriginsChange = useCallback((origins: SeedOrigin[]) => {
-    seedOriginsRef.current = origins;
-    setSeedOrigins(origins);
-  }, []);
+  const seedInput = usePokemonListStore((s) => s.seedInput);
+  const setSeedInput = usePokemonListStore((s) => s.setSeedInput);
+  const seedOrigins = usePokemonListStore((s) => s.seedOrigins);
+  const setSeedOrigins = usePokemonListStore((s) => s.setSeedOrigins);
 
   // エンカウント設定 (Feature Store)
   const encounterParams = usePokemonListStore((s) => s.encounterParams);
@@ -182,11 +180,12 @@ function PokemonListPage(): ReactElement {
     const state = usePokemonListStore.getState();
     const form = structuredClone({
       seedInputMode: state.seedInputMode,
+      seedOrigins: state.seedOrigins,
       encounterParams: state.encounterParams,
       filter: state.filter,
       statsFilter: state.statsFilter,
     });
-    const origins = structuredClone(seedOriginsRef.current);
+    const origins = structuredClone(form.seedOrigins);
     const currentValidation = validatePokemonListForm(
       {
         seedInputMode: form.seedInputMode,
@@ -266,11 +265,14 @@ function PokemonListPage(): ReactElement {
           </div>
 
           <SeedInputSection
+            key={formRevision}
             featureId="pokemon-list"
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}
-            onOriginsChange={handleSeedOriginsChange}
+            onOriginsChange={setSeedOrigins}
+            input={seedInput}
+            onInputChange={setSeedInput}
             disabled={isLoading}
           />
 

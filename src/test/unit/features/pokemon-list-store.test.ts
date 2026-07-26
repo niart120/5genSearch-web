@@ -16,6 +16,8 @@ describe('pokemon-list store', () => {
   it('should initialize with default values', () => {
     const state = usePokemonListStore.getState();
     expect(state.seedInputMode).toBe('manual-startup');
+    expect(state.encounterParams.locationKey).toBe('');
+    expect(state.encounterParams.staticEntryId).toBe('');
     expect(state.encounterParams).toEqual(DEFAULT_ENCOUNTER_PARAMS);
     expect(state.filter).toBeUndefined();
     expect(state.statsFilter).toBeUndefined();
@@ -28,6 +30,15 @@ describe('pokemon-list store', () => {
   it('should update seedInputMode', () => {
     usePokemonListStore.getState().setSeedInputMode('import');
     expect(usePokemonListStore.getState().seedInputMode).toBe('import');
+  });
+
+  it('should update persisted seed input sources', () => {
+    usePokemonListStore.getState().setSeedInput((current) => ({
+      ...current,
+      seedText: '0123456789ABCDEF',
+    }));
+
+    expect(usePokemonListStore.getState().seedInput.seedText).toBe('0123456789ABCDEF');
   });
 
   it('should update encounterParams', () => {
@@ -95,7 +106,9 @@ describe('pokemon-list store', () => {
     const partialized = getPartializedState(usePokemonListStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).not.toHaveProperty('resultEncounterType');
+    expect(partialized).not.toHaveProperty('seedOrigins');
     expect(partialized).toHaveProperty('seedInputMode');
+    expect(partialized).toHaveProperty('seedInput');
     expect(partialized).toHaveProperty('encounterParams');
     expect(partialized).not.toHaveProperty('formRevision');
   });
