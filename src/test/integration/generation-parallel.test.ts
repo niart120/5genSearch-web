@@ -169,9 +169,68 @@ describe('pokemon-list: キャンセル', () => {
       const collected: GeneratedPokemonData[] = [];
       const timeout = setTimeout(() => reject(new Error('Test timeout')), 30_000);
       const currentPool = pool!;
+      let cancelIssued = false;
 
-      currentPool.onResult((r) => collected.push(...(r as unknown as GeneratedPokemonData[])));
+      currentPool.onResult((r) => {
+        collected.push(...(r as unknown as GeneratedPokemonData[]));
+        if (cancelIssued) return;
+
+        cancelIssued = true;
+        currentPool.cancel();
+        setTimeout(() => {
+          clearTimeout(timeout);
+          resolve(collected);
+        }, 100);
+      });
+      currentPool.onError((e) => {
+        clearTimeout(timeout);
+        reject(e);
+      });
+
+      currentPool.start(tasks);
+    });
+
+    // 全件 (500 × 10 = 5000) より少ない結果で停止していること
+    const fullCount = origins.length * (GEN_CONFIG.max_advance - GEN_CONFIG.user_offset);
+    expect(results.length).toBeLessThan(fullCount);
+  }, 60_000);
+
+  it('キャンセル直後の再検索に旧検索の結果を混入させない', async () => {
+    pool = new WorkerPool({ useGpu: false, workerCount: 1 });
+    await pool.initialize();
+
+    const firstTasks = createPokemonListTasks(
+      createOrigins(500),
+      POKEMON_PARAMS,
+      GEN_CONFIG,
+      undefined,
+      1
+    );
+    const secondTasks = createPokemonListTasks(
+      createOrigins(1),
+      POKEMON_PARAMS,
+      GEN_CONFIG,
+      undefined,
+      1
+    );
+
+    const results = await new Promise<GeneratedPokemonData[]>((resolve, reject) => {
+      const collected: GeneratedPokemonData[] = [];
+      const timeout = setTimeout(() => reject(new Error('Test timeout')), 30_000);
+      const currentPool = pool!;
+      let restarted = false;
+
+      currentPool.onResult((r) => {
+        if (!restarted) {
+          restarted = true;
+          currentPool.cancel();
+          currentPool.start(secondTasks);
+          return;
+        }
+        collected.push(...(r as unknown as GeneratedPokemonData[]));
+      });
       currentPool.onComplete(() => {
+        if (!restarted) return;
         clearTimeout(timeout);
         resolve(collected);
       });
@@ -180,15 +239,10 @@ describe('pokemon-list: キャンセル', () => {
         reject(e);
       });
 
-      currentPool.start(tasks);
-
-      // 即座にキャンセル
-      setTimeout(() => currentPool.cancel(), 50);
+      currentPool.start(firstTasks);
     });
 
-    // 全件 (500 × 11 = 5500) より少ない結果で停止していること
-    const fullCount = origins.length * (GEN_CONFIG.max_advance + 1);
-    expect(results.length).toBeLessThan(fullCount);
+    expect(results).toHaveLength(GEN_CONFIG.max_advance - GEN_CONFIG.user_offset);
   }, 60_000);
 });
 

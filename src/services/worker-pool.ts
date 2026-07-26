@@ -60,6 +60,8 @@ export class WorkerPool {
 
   private taskQueue: Array<{ taskId: string; task: SearchTask }> = [];
   private activeWorkers = new Map<Worker, string>();
+  private currentTaskIds = new Set<string>();
+  private searchSessionId = 0;
   private progressAggregator = new ProgressAggregator();
 
   private progressCallbacks: ProgressCallback[] = [];
@@ -175,21 +177,33 @@ export class WorkerPool {
       }
 
       case 'progress': {
+        if (!this.currentTaskIds.has(response.taskId)) break;
         this.progressAggregator.updateProgress(response.taskId, response.progress);
         this.emitAggregatedProgress();
         break;
       }
 
       case 'result': {
+        if (!this.currentTaskIds.has(response.taskId)) break;
         // 結果タイプに応じて適切なコールバックを呼び出す
         for (const cb of this.resultCallbacks) cb(response.results as SearchResult);
         break;
       }
 
       case 'done': {
+        if (this.activeWorkers.get(worker) !== response.taskId) break;
+
+        const isCurrentTask = this.currentTaskIds.has(response.taskId);
+        this.activeWorkers.delete(worker);
+
+        if (!isCurrentTask) {
+          this.dispatchNextTask(worker);
+          break;
+        }
+
+        this.currentTaskIds.delete(response.taskId);
         this.progressAggregator.markCompleted(response.taskId);
         this.emitAggregatedProgress(); // 完了時に進捗を通知
-        this.activeWorkers.delete(worker);
         this.dispatchNextTask(worker);
 
         if (this.progressAggregator.isComplete() && this.taskQueue.length === 0) {
@@ -199,6 +213,18 @@ export class WorkerPool {
       }
 
       case 'error': {
+        if (response.taskId !== '' && this.activeWorkers.get(worker) !== response.taskId) break;
+
+        const isCurrentTask = response.taskId === '' || this.currentTaskIds.has(response.taskId);
+        if (response.taskId !== '') {
+          this.activeWorkers.delete(worker);
+        }
+
+        if (!isCurrentTask) {
+          this.dispatchNextTask(worker);
+          break;
+        }
+
         this.cancel();
         for (const cb of this.errorCallbacks) cb(new Error(response.message));
         break;
@@ -212,17 +238,25 @@ export class WorkerPool {
    * @param tasks 検索タスクの配列
    */
   start(tasks: SearchTask[]): void {
+    if (this.currentTaskIds.size > 0) {
+      this.cancel();
+    }
+
+    this.searchSessionId++;
     this.progressAggregator.start(tasks.length);
 
     // タスクをキューに追加
     this.taskQueue = tasks.map((task, i) => ({
-      taskId: `task-${i}`,
+      taskId: `search-${this.searchSessionId}-task-${i}`,
       task,
     }));
+    this.currentTaskIds = new Set(this.taskQueue.map(({ taskId }) => taskId));
 
-    // 各 Worker にタスクを配布
+    // 実行中 Worker には重ねてタスクを送らず、旧タスクの終了通知後に配布する
     for (const worker of this.workers) {
-      this.dispatchNextTask(worker);
+      if (!this.activeWorkers.has(worker)) {
+        this.dispatchNextTask(worker);
+      }
     }
   }
 
@@ -243,11 +277,13 @@ export class WorkerPool {
    * 検索をキャンセル
    */
   cancel(): void {
-    for (const worker of this.workers) {
+    this.currentTaskIds.clear();
+    this.taskQueue = [];
+
+    for (const worker of this.activeWorkers.keys()) {
       const request: WorkerRequest = { type: 'cancel' };
       worker.postMessage(request);
     }
-    this.taskQueue = [];
   }
 
   private emitAggregatedProgress(): void {
@@ -319,6 +355,9 @@ export class WorkerPool {
     this.workers = [];
     this.readyCount = 0;
     this.initPromise = undefined;
+    this.taskQueue = [];
+    this.activeWorkers.clear();
+    this.currentTaskIds.clear();
     this.progressAggregator.reset();
     this.progressCallbacks = [];
     this.resultCallbacks = [];
