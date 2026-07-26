@@ -22,16 +22,22 @@ interface StatsFixedInputProps {
 function StatsFixedInput({ value, onChange, disabled }: StatsFixedInputProps) {
   const language = useUiStore((s) => s.language);
 
-  const [localValues, setLocalValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      IV_STAT_KEYS.map((stat) => [stat, value[stat] === undefined ? '' : String(value[stat])])
-    )
+  const toLocalValues = useCallback(
+    () =>
+      Object.fromEntries(
+        IV_STAT_KEYS.map((stat) => [stat, value[stat] === undefined ? '' : String(value[stat])])
+      ),
+    [value]
   );
+  const [localValues, setLocalValues] = useState<Record<string, string>>(toLocalValues);
 
   const localValuesRef = useRef(localValues);
   useEffect(() => {
     localValuesRef.current = localValues;
   });
+  useEffect(() => {
+    setLocalValues(toLocalValues());
+  }, [toLocalValues]);
 
   const handleChange = useCallback((stat: (typeof IV_STAT_KEYS)[number], raw: string) => {
     setLocalValues((prev) => ({ ...prev, [stat]: raw }));

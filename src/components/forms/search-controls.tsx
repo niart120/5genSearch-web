@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { commitActiveInput } from '@/components/forms/input-helpers';
 
 export interface SearchControlsProps {
   layout: 'desktop' | 'mobile';
@@ -55,6 +56,7 @@ function SearchControls({
       ) : (
         <Button
           onClick={onSearch}
+          onPointerDown={commitActiveInput}
           disabled={!isValid || !isInitialized}
           className="flex-1"
           size={buttonSize}

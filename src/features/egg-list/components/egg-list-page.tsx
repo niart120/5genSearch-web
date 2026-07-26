@@ -4,7 +4,7 @@
  * Seed + 孵化パラメータからタマゴ個体を一括生成し、一覧表示する。
  */
 
-import { useState, useMemo, useCallback, type ReactElement } from 'react';
+import { useState, useMemo, useCallback, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -13,8 +13,8 @@ import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useUiStore } from '@/stores/settings/ui';
-import { useTrainer } from '@/hooks/use-trainer';
-import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { useTrainerStore } from '@/stores/settings/trainer';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useEggList } from '../hooks/use-egg-list';
 import { useEggListStore } from '../store';
 import { validateEggListForm } from '../types';
@@ -36,16 +36,42 @@ import type {
 } from '@/wasm/wasm_pkg.js';
 import { estimateEggListResults } from '@/services/search-estimation';
 
+interface EggListRequest {
+  origins: SeedOrigin[];
+  params: EggGenerationParams;
+  genConfig: GenerationConfig;
+  filter: EggFilter | undefined;
+}
+
+function mergeEggFilter(
+  filter: EggFilter | undefined,
+  statsFilter: EggFilter['stats']
+): EggFilter | undefined {
+  if (!filter && !statsFilter) return;
+  return {
+    iv: filter?.iv,
+    natures: filter?.natures,
+    gender: filter?.gender,
+    ability_slot: filter?.ability_slot,
+    shiny: filter?.shiny,
+    min_margin_frames: filter?.min_margin_frames,
+    stats: statsFilter,
+  };
+}
+
 function EggListPage(): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
-  const { tid, sid } = useTrainer();
-  const { config: dsConfig, gameStart } = useDsConfigReadonly();
 
   // Seed 入力 (SeedOrigin は非永続化)
   const seedInputMode = useEggListStore((s) => s.seedInputMode);
   const setSeedInputMode = useEggListStore((s) => s.setSeedInputMode);
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
+  const seedOriginsRef = useRef(seedOrigins);
+  const handleSeedOriginsChange = useCallback((origins: SeedOrigin[]) => {
+    seedOriginsRef.current = origins;
+    setSeedOrigins(origins);
+  }, []);
 
   // パラメータ (Feature Store)
   const eggParams = useEggListStore((s) => s.eggParams);
@@ -95,77 +121,80 @@ function EggListPage(): ReactElement {
     setDetailOpen(true);
   }, []);
 
-  // statsFilter を EggFilter.stats に統合
-  const mergedFilter = useMemo((): EggFilter | undefined => {
-    if (!filter && !statsFilter) return;
-    return {
-      iv: filter?.iv,
-      natures: filter?.natures,
-      gender: filter?.gender,
-      ability_slot: filter?.ability_slot,
-      shiny: filter?.shiny,
-      min_margin_frames: filter?.min_margin_frames,
-      stats: statsFilter,
-    };
-  }, [filter, statsFilter]);
-
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     estimatedCount: number;
-  }>({ open: false, estimatedCount: 0 });
+    request: EggListRequest | undefined;
+  }>({ open: false, estimatedCount: 0, request: undefined });
 
-  // 生成実行
-  const handleGenerateExecution = useCallback(() => {
+  const createGenerateRequest = useCallback((): EggListRequest | undefined => {
+    const state = useEggListStore.getState();
+    const form = structuredClone({
+      seedInputMode: state.seedInputMode,
+      eggParams: state.eggParams,
+      genConfig: state.genConfig,
+      speciesId: state.speciesId,
+      filter: state.filter,
+      statsFilter: state.statsFilter,
+    });
+    const origins = structuredClone(seedOriginsRef.current);
+    const currentValidation = validateEggListForm({
+      seedInputMode: form.seedInputMode,
+      seedOrigins: origins,
+      eggParams: form.eggParams,
+      genConfig: form.genConfig,
+      filter: form.filter,
+      statsFilter: form.statsFilter,
+      speciesId: form.speciesId,
+    });
+    if (!currentValidation.isValid) return;
+
+    const currentDsState = useDsConfigStore.getState();
+    const dsState = structuredClone({
+      config: currentDsState.config,
+      gameStart: currentDsState.gameStart,
+    });
+    const trainer = useTrainerStore.getState();
     const paramsWithTrainer: EggGenerationParams = {
-      ...eggParams,
-      trainer: { tid: tid ?? 0, sid: sid ?? 0 },
-      species_id: speciesId,
+      ...form.eggParams,
+      trainer: { tid: trainer.tid ?? 0, sid: trainer.sid ?? 0 },
+      species_id: form.speciesId,
     };
 
     const fullGenConfig: GenerationConfig = {
-      version: dsConfig.version,
-      game_start: gameStart,
-      user_offset: genConfig.user_offset,
-      max_advance: genConfig.max_advance,
+      version: dsState.config.version,
+      game_start: dsState.gameStart,
+      user_offset: form.genConfig.user_offset,
+      max_advance: form.genConfig.max_advance,
     };
 
-    generate(seedOrigins, paramsWithTrainer, fullGenConfig, mergedFilter);
-  }, [
-    generate,
-    seedOrigins,
-    eggParams,
-    genConfig,
-    mergedFilter,
-    tid,
-    sid,
-    speciesId,
-    dsConfig.version,
-    gameStart,
-  ]);
+    return {
+      origins,
+      params: paramsWithTrainer,
+      genConfig: fullGenConfig,
+      filter: mergeEggFilter(form.filter, form.statsFilter),
+    };
+  }, []);
 
   // 見積もり → 確認 → 実行
   const handleGenerate = useCallback(() => {
+    const request = createGenerateRequest();
+    if (!request) return;
+
     const estimation = estimateEggListResults(
-      seedOrigins.length,
-      genConfig.max_advance,
-      genConfig.user_offset,
-      mergedFilter,
-      eggParams.masuda_method
+      request.origins.length,
+      request.genConfig.max_advance,
+      request.genConfig.user_offset,
+      request.filter,
+      request.params.masuda_method
     );
     if (estimation.exceedsThreshold) {
-      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount, request });
     } else {
-      handleGenerateExecution();
+      generate(request.origins, request.params, request.genConfig, request.filter);
     }
-  }, [
-    seedOrigins.length,
-    genConfig.max_advance,
-    genConfig.user_offset,
-    mergedFilter,
-    eggParams.masuda_method,
-    handleGenerateExecution,
-  ]);
+  }, [createGenerateRequest, generate]);
 
   const validationMessages = useMemo(
     (): Record<EggListValidationErrorCode, string> => ({
@@ -219,7 +248,7 @@ function EggListPage(): ReactElement {
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}
-            onOriginsChange={setSeedOrigins}
+            onOriginsChange={handleSeedOriginsChange}
             disabled={isLoading}
           />
 
@@ -308,11 +337,18 @@ function EggListPage(): ReactElement {
 
       <SearchConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) =>
+            open ? { ...prev, open } : { open, estimatedCount: 0, request: undefined }
+          )
+        }
         estimatedCount={confirmDialog.estimatedCount}
         onConfirm={() => {
-          setConfirmDialog({ open: false, estimatedCount: 0 });
-          handleGenerateExecution();
+          const request = confirmDialog.request;
+          setConfirmDialog({ open: false, estimatedCount: 0, request: undefined });
+          if (request) {
+            generate(request.origins, request.params, request.genConfig, request.filter);
+          }
         }}
       />
     </>

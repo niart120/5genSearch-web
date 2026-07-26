@@ -35,6 +35,12 @@ import {
 } from '../types';
 import type { DatetimeSearchContext, GameStartConfig } from '@/wasm/wasm_pkg.js';
 
+interface TidAdjustSearchRequest {
+  context: DatetimeSearchContext;
+  filter: ReturnType<typeof toTrainerInfoFilter>;
+  gameStart: GameStartConfig;
+}
+
 function toGameStartConfig(mode: SaveMode): GameStartConfig {
   return {
     start_mode: 'NewGame',
@@ -47,7 +53,6 @@ function toGameStartConfig(mode: SaveMode): GameStartConfig {
 function TidAdjustPage(): ReactElement {
   const { t } = useLingui();
   const dsConfig = useDsConfigStore((s) => s.config);
-  const ranges = useDsConfigStore((s) => s.ranges);
   const isBw2 = useDsConfigStore(
     (s) => s.config.version === 'Black2' || s.config.version === 'White2'
   );
@@ -112,67 +117,79 @@ function TidAdjustPage(): ReactElement {
     gameStartOverride: tidGameStart,
   });
 
-  // KeySpec 組み合わせ数
-  const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
-
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     estimatedCount: number;
-  }>({ open: false, estimatedCount: 0 });
+    request: TidAdjustSearchRequest | undefined;
+  }>({ open: false, estimatedCount: 0, request: undefined });
 
-  // 検索実行
-  const handleSearchExecution = useCallback(() => {
+  const createSearchRequest = useCallback((): TidAdjustSearchRequest | undefined => {
+    const state = useTidAdjustStore.getState();
+    const form = structuredClone({
+      dateRange: state.dateRange,
+      timeRange: state.timeRange,
+      keySpec: state.keySpec,
+      tid: state.tid,
+      sid: state.sid,
+      shinyPidRaw: state.shinyPidRaw,
+      saveMode: state.saveMode,
+    });
+    const currentValidation = validateTidAdjustForm({
+      dateRange: form.dateRange,
+      timeRange: form.timeRange,
+      keySpec: form.keySpec,
+      tid: form.tid,
+      sid: form.sid,
+      shinyPidRaw: form.shinyPidRaw,
+    });
+    if (!currentValidation.isValid) return;
+
+    const currentDsState = useDsConfigStore.getState();
+    const dsState = structuredClone({
+      config: currentDsState.config,
+      ranges: currentDsState.ranges,
+    });
+    const currentIsBw2 = dsState.config.version === 'Black2' || dsState.config.version === 'White2';
+    const currentSaveMode =
+      !currentIsBw2 && form.saveMode === 'WithSaveMemoryLink' ? 'WithSave' : form.saveMode;
+    const gameStart = toGameStartConfig(currentSaveMode);
     const context: DatetimeSearchContext = {
-      ds: dsConfig,
-      date_range: dateRange,
-      time_range: timeRange,
-      ranges,
-      key_spec: keySpec,
+      ds: dsState.config,
+      date_range: form.dateRange,
+      time_range: form.timeRange,
+      ranges: dsState.ranges,
+      key_spec: form.keySpec,
     };
-    const filter = toTrainerInfoFilter({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw });
-    startSearch(context, filter, tidGameStart);
-  }, [
-    dsConfig,
-    dateRange,
-    timeRange,
-    ranges,
-    keySpec,
-    tid,
-    sid,
-    shinyPidRaw,
-    tidGameStart,
-    startSearch,
-  ]);
+    const filter = toTrainerInfoFilter({
+      dateRange: form.dateRange,
+      timeRange: form.timeRange,
+      keySpec: form.keySpec,
+      tid: form.tid,
+      sid: form.sid,
+      shinyPidRaw: form.shinyPidRaw,
+    });
+    return { context, filter, gameStart };
+  }, []);
 
   // 見積もり → 確認 → 実行
   const handleSearch = useCallback(() => {
-    // keySpec は toTrainerInfoFilter に必要 (keyCombinationCount とは別用途)
-    const filter = toTrainerInfoFilter({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw });
+    const request = createSearchRequest();
+    if (!request) return;
+
     const estimation = estimateTidAdjustResults(
-      dateRange,
-      timeRange,
-      ranges,
-      keyCombinationCount,
-      filter
+      request.context.date_range,
+      request.context.time_range,
+      request.context.ranges,
+      countKeyCombinations(request.context.key_spec),
+      request.filter
     );
     if (estimation.exceedsThreshold) {
-      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount, request });
     } else {
-      handleSearchExecution();
+      startSearch(request.context, request.filter, request.gameStart);
     }
-  }, [
-    dateRange,
-    timeRange,
-    ranges,
-    keyCombinationCount,
-    // keySpec は toTrainerInfoFilter の引数として必要
-    keySpec,
-    tid,
-    sid,
-    shinyPidRaw,
-    handleSearchExecution,
-  ]);
+  }, [createSearchRequest, startSearch]);
 
   return (
     <>
@@ -276,11 +293,18 @@ function TidAdjustPage(): ReactElement {
 
       <SearchConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) =>
+            open ? { ...prev, open } : { open, estimatedCount: 0, request: undefined }
+          )
+        }
         estimatedCount={confirmDialog.estimatedCount}
         onConfirm={() => {
-          setConfirmDialog({ open: false, estimatedCount: 0 });
-          handleSearchExecution();
+          const request = confirmDialog.request;
+          setConfirmDialog({ open: false, estimatedCount: 0, request: undefined });
+          if (request) {
+            startSearch(request.context, request.filter, request.gameStart);
+          }
         }}
       />
     </>

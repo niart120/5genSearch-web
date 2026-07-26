@@ -15,6 +15,7 @@ import { TargetSeedsInput } from '@/components/forms/target-seeds-input';
 import { Button } from '@/components/ui/button';
 import { DataTable, DATETIME_ASC_SORTING } from '@/components/data-display';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { toHex } from '@/lib/format';
 import { useDatetimeSearch } from '../hooks/use-datetime-search';
@@ -34,6 +35,11 @@ import { estimateDatetimeSearchResults, countKeyCombinations } from '@/services/
 import { getStandardContexts } from '@/lib/iv-tooltip';
 import type { DatetimeSearchContext, SeedOrigin } from '@/wasm/wasm_pkg.js';
 
+interface DatetimeSearchRequest {
+  context: DatetimeSearchContext;
+  seeds: number[];
+}
+
 /* ------------------------------------------------------------------ */
 /*  DatetimeSearchPage                                                 */
 /* ------------------------------------------------------------------ */
@@ -42,7 +48,7 @@ function DatetimeSearchPage(): ReactElement {
   const { t } = useLingui();
 
   // DS 設定 (サイドバーで管理済み)
-  const { config: dsConfig, ranges } = useDsConfigReadonly();
+  const { config: dsConfig } = useDsConfigReadonly();
 
   // フォーム状態 (Feature Store)
   const dateRange = useDatetimeSearchStore((s) => s.dateRange);
@@ -148,49 +154,56 @@ function DatetimeSearchPage(): ReactElement {
     toast.success(t`Transferred ${results.length} seeds`);
   }, [results, t]);
 
-  // KeySpec 組み合わせ数
-  const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
-
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     estimatedCount: number;
-  }>({ open: false, estimatedCount: 0 });
+    request: DatetimeSearchRequest | undefined;
+  }>({ open: false, estimatedCount: 0, request: undefined });
 
-  // 検索実行
-  const handleSearchExecution = useCallback(() => {
+  const createSearchRequest = useCallback((): DatetimeSearchRequest | undefined => {
+    const form = useDatetimeSearchStore.getState();
+    const parsed = parseTargetSeeds(form.targetSeedsRaw);
+    const currentValidation = validateMtseedSearchForm(
+      {
+        dateRange: form.dateRange,
+        timeRange: form.timeRange,
+        keySpec: form.keySpec,
+        targetSeedsRaw: form.targetSeedsRaw,
+      },
+      parsed
+    );
+    if (!currentValidation.isValid) return;
+
+    const dsState = useDsConfigStore.getState();
     const context: DatetimeSearchContext = {
-      ds: dsConfig,
-      date_range: dateRange,
-      time_range: timeRange,
-      ranges,
-      key_spec: keySpec,
+      ds: { ...dsState.config, mac: [...dsState.config.mac] },
+      date_range: { ...form.dateRange },
+      time_range: { ...form.timeRange },
+      ranges: dsState.ranges.map((range) => ({ ...range })),
+      key_spec: { available_buttons: [...form.keySpec.available_buttons] },
     };
-    startSearch(context, parsedSeeds.seeds);
-  }, [dsConfig, dateRange, timeRange, ranges, keySpec, parsedSeeds.seeds, startSearch]);
+    return { context, seeds: [...parsed.seeds] };
+  }, []);
 
   // 見積もり → 確認 → 実行
   const handleSearch = useCallback(() => {
+    const request = createSearchRequest();
+    if (!request) return;
+
     const estimation = estimateDatetimeSearchResults(
-      dateRange,
-      timeRange,
-      ranges,
-      keyCombinationCount,
-      parsedSeeds.seeds.length
+      request.context.date_range,
+      request.context.time_range,
+      request.context.ranges,
+      countKeyCombinations(request.context.key_spec),
+      request.seeds.length
     );
     if (estimation.exceedsThreshold) {
-      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount, request });
     } else {
-      handleSearchExecution();
+      startSearch(request.context, request.seeds);
     }
-  }, [
-    dateRange,
-    timeRange,
-    ranges,
-    keyCombinationCount,
-    parsedSeeds.seeds.length,
-    handleSearchExecution,
-  ]);
+  }, [createSearchRequest, startSearch]);
 
   return (
     <>
@@ -305,11 +318,18 @@ function DatetimeSearchPage(): ReactElement {
 
       <SearchConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) =>
+            open ? { ...prev, open } : { open, estimatedCount: 0, request: undefined }
+          )
+        }
         estimatedCount={confirmDialog.estimatedCount}
         onConfirm={() => {
-          setConfirmDialog({ open: false, estimatedCount: 0 });
-          handleSearchExecution();
+          const request = confirmDialog.request;
+          setConfirmDialog({ open: false, estimatedCount: 0, request: undefined });
+          if (request) {
+            startSearch(request.context, request.seeds);
+          }
         }}
       />
 

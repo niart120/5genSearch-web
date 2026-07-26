@@ -21,4 +21,12 @@ function handleFocusSelectAll(e: React.FocusEvent<HTMLInputElement>): void {
   e.target.select();
 }
 
-export { clampOrDefault, handleFocusSelectAll };
+/** 検索開始前に編集中の入力を blur し、ローカル下書きを親状態へ同期する */
+function commitActiveInput(): void {
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLElement) {
+    activeElement.blur();
+  }
+}
+
+export { clampOrDefault, handleFocusSelectAll, commitActiveInput };

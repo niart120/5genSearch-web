@@ -30,6 +30,8 @@ import { ExportToolbar } from '@/components/data-display/export-toolbar';
 import { useExport } from '@/hooks/use-export';
 import { createMtseedSearchExportColumns } from '@/services/export-columns';
 
+type MtseedSearchRequest = ReturnType<typeof toMtseedSearchContext>;
+
 /** DS Config の ROM バージョンから MT オフセットのデフォルト値を導出 */
 function getDefaultMtOffset(version: RomVersion): number {
   return version === 'Black2' || version === 'White2' ? 2 : 0;
@@ -100,22 +102,36 @@ function MtseedSearchPage(): ReactElement {
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     estimatedCount: number;
-  }>({ open: false, estimatedCount: 0 });
-
-  // 検索実行
-  const handleSearchExecution = useCallback(() => {
-    startSearch(toMtseedSearchContext({ ivFilter, mtOffset, isRoamer }));
-  }, [ivFilter, mtOffset, isRoamer, startSearch]);
+    request: MtseedSearchRequest | undefined;
+  }>({ open: false, estimatedCount: 0, request: undefined });
 
   // 見積もり → 確認 → 実行
   const handleSearch = useCallback(() => {
-    const estimation = estimateMtseedSearchResults(ivFilter);
+    const state = useMtseedSearchStore.getState();
+    const form = structuredClone({
+      ivFilter: state.ivFilter,
+      mtOffset: state.mtOffset,
+      isRoamer: state.isRoamer,
+    });
+    const currentValidation = validateMtseedIvSearchForm({
+      ivFilter: form.ivFilter,
+      mtOffset: form.mtOffset,
+      isRoamer: form.isRoamer,
+    });
+    if (!currentValidation.isValid) return;
+
+    const request = toMtseedSearchContext({
+      ivFilter: form.ivFilter,
+      mtOffset: form.mtOffset,
+      isRoamer: form.isRoamer,
+    });
+    const estimation = estimateMtseedSearchResults(form.ivFilter);
     if (estimation.exceedsThreshold) {
-      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount, request });
     } else {
-      handleSearchExecution();
+      startSearch(request);
     }
-  }, [ivFilter, handleSearchExecution]);
+  }, [startSearch]);
 
   // 起動時刻検索への連携
   const handleNavigateToDatetimeSearch = useCallback(() => {
@@ -205,11 +221,18 @@ function MtseedSearchPage(): ReactElement {
 
       <SearchConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) =>
+            open ? { ...prev, open } : { open, estimatedCount: 0, request: undefined }
+          )
+        }
         estimatedCount={confirmDialog.estimatedCount}
         onConfirm={() => {
-          setConfirmDialog({ open: false, estimatedCount: 0 });
-          handleSearchExecution();
+          const request = confirmDialog.request;
+          setConfirmDialog({ open: false, estimatedCount: 0, request: undefined });
+          if (request) {
+            startSearch(request);
+          }
         }}
       />
     </>
