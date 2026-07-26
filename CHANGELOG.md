@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/niart120/5genSearch-web/compare/v1.5.0...v1.5.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* 機能タブ切替後も入力状態を保持する ([ada5416](https://github.com/niart120/5genSearch-web/commit/ada54168b1320f4d2bd74cc099b54d3b98c96170))
+
 ## [1.5.0](https://github.com/niart120/5genSearch-web/compare/v1.4.1...v1.5.0) (2026-07-26)
 
 
