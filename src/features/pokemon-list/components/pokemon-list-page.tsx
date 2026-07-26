@@ -5,7 +5,7 @@
  * FeaturePageLayout による Controls / Results 2 ペイン構成。
  */
 
-import { useState, useMemo, useCallback, type ReactElement } from 'react';
+import { useState, useMemo, useCallback, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -14,7 +14,8 @@ import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { useTrainer } from '@/hooks/use-trainer';
+import { useTrainerStore } from '@/stores/settings/trainer';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useUiStore } from '@/stores/settings/ui';
 import { usePokemonList } from '../hooks/use-pokemon-list';
 import { usePokemonListStore } from '../store';
@@ -37,6 +38,33 @@ import type {
 } from '@/wasm/wasm_pkg.js';
 import { estimatePokemonListResults } from '@/services/search-estimation';
 
+interface PokemonListRequest {
+  origins: SeedOrigin[];
+  params: PokemonGenerationParams;
+  genConfig: GenerationConfig;
+  filter: PokemonFilter | undefined;
+}
+
+function mergePokemonFilter(
+  filter: PokemonFilter | undefined,
+  statsFilter: PokemonFilter['stats']
+): PokemonFilter | undefined {
+  if (!filter && !statsFilter) return;
+  return {
+    iv: filter?.iv,
+    natures: filter?.natures,
+    gender: filter?.gender,
+    ability_slot: filter?.ability_slot,
+    shiny: filter?.shiny,
+    species_ids: filter?.species_ids,
+    level_range: filter?.level_range,
+    held_item_slots: filter?.held_item_slots,
+    encounter_result_filter: filter?.encounter_result_filter,
+    special_encounter_triggered: filter?.special_encounter_triggered,
+    stats: statsFilter,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Page Component
 // ---------------------------------------------------------------------------
@@ -46,13 +74,17 @@ function PokemonListPage(): ReactElement {
   const language = useUiStore((s) => s.language);
 
   // DS 設定 / トレーナー情報
-  const { config: dsConfig, gameStart } = useDsConfigReadonly();
-  const { tid, sid } = useTrainer();
+  const { config: dsConfig } = useDsConfigReadonly();
 
   // Seed 入力 (SeedOrigin は非永続化)
   const seedInputMode = usePokemonListStore((s) => s.seedInputMode);
   const setSeedInputMode = usePokemonListStore((s) => s.setSeedInputMode);
   const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
+  const seedOriginsRef = useRef(seedOrigins);
+  const handleSeedOriginsChange = useCallback((origins: SeedOrigin[]) => {
+    seedOriginsRef.current = origins;
+    setSeedOrigins(origins);
+  }, []);
 
   // エンカウント設定 (Feature Store)
   const encounterParams = usePokemonListStore((s) => s.encounterParams);
@@ -139,70 +171,81 @@ function PokemonListPage(): ReactElement {
     statMode,
   });
 
-  // statsFilter を PokemonFilter.stats に統合
-  const mergedFilter = useMemo((): PokemonFilter | undefined => {
-    if (!filter && !statsFilter) return;
-    return {
-      iv: filter?.iv,
-      natures: filter?.natures,
-      gender: filter?.gender,
-      ability_slot: filter?.ability_slot,
-      shiny: filter?.shiny,
-      species_ids: filter?.species_ids,
-      level_range: filter?.level_range,
-      held_item_slots: filter?.held_item_slots,
-      encounter_result_filter: filter?.encounter_result_filter,
-      special_encounter_triggered: filter?.special_encounter_triggered,
-      stats: statsFilter,
-    };
-  }, [filter, statsFilter]);
-
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     estimatedCount: number;
-  }>({ open: false, estimatedCount: 0 });
+    request: PokemonListRequest | undefined;
+  }>({ open: false, estimatedCount: 0, request: undefined });
 
-  // 生成実行
-  const handleGenerateExecution = useCallback(() => {
+  const createGenerateRequest = useCallback((): PokemonListRequest | undefined => {
+    const state = usePokemonListStore.getState();
+    const form = structuredClone({
+      seedInputMode: state.seedInputMode,
+      encounterParams: state.encounterParams,
+      filter: state.filter,
+      statsFilter: state.statsFilter,
+    });
+    const origins = structuredClone(seedOriginsRef.current);
+    const currentValidation = validatePokemonListForm(
+      {
+        seedInputMode: form.seedInputMode,
+        seedOrigins: origins,
+        encounterType: form.encounterParams.encounterType,
+        encounterMethod: form.encounterParams.encounterMethod,
+        genConfig: form.encounterParams.genConfig,
+        filter: form.filter,
+      },
+      form.encounterParams.slots.length > 0
+    );
+    if (!currentValidation.isValid) return;
+
+    const currentDsState = useDsConfigStore.getState();
+    const dsState = structuredClone({
+      config: currentDsState.config,
+      gameStart: currentDsState.gameStart,
+    });
+    const trainer = useTrainerStore.getState();
     const fullGenConfig: GenerationConfig = {
-      version: dsConfig.version,
-      game_start: gameStart,
-      user_offset: encounterParams.genConfig.user_offset,
-      max_advance: encounterParams.genConfig.max_advance,
+      version: dsState.config.version,
+      game_start: dsState.gameStart,
+      user_offset: form.encounterParams.genConfig.user_offset,
+      max_advance: form.encounterParams.genConfig.max_advance,
     };
 
     const params: PokemonGenerationParams = {
-      trainer: { tid: tid ?? 0, sid: sid ?? 0 },
-      encounter_type: encounterParams.encounterType,
-      encounter_method: encounterParams.encounterMethod,
-      lead_ability: encounterParams.leadAbility,
-      slots: encounterParams.slots,
+      trainer: { tid: trainer.tid ?? 0, sid: trainer.sid ?? 0 },
+      encounter_type: form.encounterParams.encounterType,
+      encounter_method: form.encounterParams.encounterMethod,
+      lead_ability: form.encounterParams.leadAbility,
+      slots: form.encounterParams.slots,
     };
 
-    generate(seedOrigins, params, fullGenConfig, mergedFilter);
-  }, [dsConfig.version, gameStart, encounterParams, tid, sid, seedOrigins, mergedFilter, generate]);
+    return {
+      origins,
+      params,
+      genConfig: fullGenConfig,
+      filter: mergePokemonFilter(form.filter, form.statsFilter),
+    };
+  }, []);
 
   // 見積もり → 確認 → 実行
   const handleGenerate = useCallback(() => {
+    const request = createGenerateRequest();
+    if (!request) return;
+
     const estimation = estimatePokemonListResults(
-      seedOrigins.length,
-      encounterParams.genConfig.max_advance,
-      encounterParams.genConfig.user_offset,
-      mergedFilter
+      request.origins.length,
+      request.genConfig.max_advance,
+      request.genConfig.user_offset,
+      request.filter
     );
     if (estimation.exceedsThreshold) {
-      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount, request });
     } else {
-      handleGenerateExecution();
+      generate(request.origins, request.params, request.genConfig, request.filter);
     }
-  }, [
-    seedOrigins.length,
-    encounterParams.genConfig.max_advance,
-    encounterParams.genConfig.user_offset,
-    mergedFilter,
-    handleGenerateExecution,
-  ]);
+  }, [createGenerateRequest, generate]);
 
   return (
     <>
@@ -227,7 +270,7 @@ function PokemonListPage(): ReactElement {
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}
-            onOriginsChange={setSeedOrigins}
+            onOriginsChange={handleSeedOriginsChange}
             disabled={isLoading}
           />
 
@@ -313,11 +356,18 @@ function PokemonListPage(): ReactElement {
 
       <SearchConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) =>
+            open ? { ...prev, open } : { open, estimatedCount: 0, request: undefined }
+          )
+        }
         estimatedCount={confirmDialog.estimatedCount}
         onConfirm={() => {
-          setConfirmDialog({ open: false, estimatedCount: 0 });
-          handleGenerateExecution();
+          const request = confirmDialog.request;
+          setConfirmDialog({ open: false, estimatedCount: 0, request: undefined });
+          if (request) {
+            generate(request.origins, request.params, request.genConfig, request.filter);
+          }
         }}
       />
     </>

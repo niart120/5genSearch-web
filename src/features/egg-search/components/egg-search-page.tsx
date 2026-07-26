@@ -12,8 +12,8 @@ import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable, DATETIME_ASC_SORTING } from '@/components/data-display';
-import { useDsConfigReadonly } from '@/hooks/use-ds-config';
-import { useTrainer } from '@/hooks/use-trainer';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
+import { useTrainerStore } from '@/stores/settings/trainer';
 import { useUiStore } from '@/stores/settings/ui';
 import { useEggSearch } from '../hooks/use-egg-search';
 import { useEggSearchStore } from '../store';
@@ -32,7 +32,15 @@ import type {
   EggGenerationParams,
   GenerationConfig,
   EggDatetimeSearchResult,
+  EggFilter,
 } from '@/wasm/wasm_pkg.js';
+
+interface EggSearchRequest {
+  context: DatetimeSearchContext;
+  params: EggGenerationParams;
+  genConfig: GenerationConfig;
+  filter: EggFilter | undefined;
+}
 
 /* ------------------------------------------------------------------ */
 /*  EggSearchPage                                                       */
@@ -41,12 +49,6 @@ import type {
 function EggSearchPage(): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
-
-  // DS 設定 (サイドバーで管理済み)
-  const { config: dsConfig, ranges, gameStart } = useDsConfigReadonly();
-
-  // トレーナー情報
-  const { tid, sid } = useTrainer();
 
   // フォーム状態 (Feature Store)
   const dateRange = useEggSearchStore((s) => s.dateRange);
@@ -115,78 +117,82 @@ function EggSearchPage(): ReactElement {
     featureId: 'egg-search',
   });
 
-  // KeySpec 組み合わせ数
-  const keyCombinationCount = useMemo(() => countKeyCombinations(keySpec), [keySpec]);
-
   // 確認ダイアログ
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     estimatedCount: number;
-  }>({ open: false, estimatedCount: 0 });
+    request: EggSearchRequest | undefined;
+  }>({ open: false, estimatedCount: 0, request: undefined });
 
-  // 検索実行
-  const handleSearchExecution = useCallback(() => {
+  const createSearchRequest = useCallback((): EggSearchRequest | undefined => {
+    const state = useEggSearchStore.getState();
+    const form = structuredClone({
+      dateRange: state.dateRange,
+      timeRange: state.timeRange,
+      keySpec: state.keySpec,
+      eggParams: state.eggParams,
+      genConfig: state.genConfig,
+      filter: state.filter,
+    });
+    const currentValidation = validateEggSearchForm({
+      dateRange: form.dateRange,
+      timeRange: form.timeRange,
+      keySpec: form.keySpec,
+      eggParams: form.eggParams,
+      genConfig: form.genConfig,
+      filter: form.filter,
+    });
+    if (!currentValidation.isValid) return;
+
+    const currentDsState = useDsConfigStore.getState();
+    const dsState = structuredClone({
+      config: currentDsState.config,
+      ranges: currentDsState.ranges,
+      gameStart: currentDsState.gameStart,
+    });
+    const trainer = useTrainerStore.getState();
     const context: DatetimeSearchContext = {
-      ds: dsConfig,
-      date_range: dateRange,
-      time_range: timeRange,
-      ranges,
-      key_spec: keySpec,
+      ds: dsState.config,
+      date_range: form.dateRange,
+      time_range: form.timeRange,
+      ranges: dsState.ranges,
+      key_spec: form.keySpec,
     };
 
-    // トレーナー情報を反映
     const paramsWithTrainer: EggGenerationParams = {
-      ...eggParams,
-      trainer: { tid: tid ?? 0, sid: sid ?? 0 },
+      ...form.eggParams,
+      trainer: { tid: trainer.tid ?? 0, sid: trainer.sid ?? 0 },
     };
 
     const fullGenConfig: GenerationConfig = {
-      version: dsConfig.version,
-      game_start: gameStart,
-      user_offset: genConfigPartial.user_offset,
-      max_advance: genConfigPartial.max_advance,
+      version: dsState.config.version,
+      game_start: dsState.gameStart,
+      user_offset: form.genConfig.user_offset,
+      max_advance: form.genConfig.max_advance,
     };
 
-    startSearch(context, paramsWithTrainer, fullGenConfig, filter);
-  }, [
-    dsConfig,
-    dateRange,
-    timeRange,
-    ranges,
-    keySpec,
-    eggParams,
-    tid,
-    sid,
-    gameStart,
-    genConfigPartial,
-    filter,
-    startSearch,
-  ]);
+    return { context, params: paramsWithTrainer, genConfig: fullGenConfig, filter: form.filter };
+  }, []);
 
   // 見積もり → 確認 → 実行
   const handleSearch = useCallback(() => {
+    const request = createSearchRequest();
+    if (!request) return;
+
     const estimation = estimateEggSearchResults(
-      dateRange,
-      timeRange,
-      ranges,
-      keyCombinationCount,
-      filter,
-      eggParams.masuda_method
+      request.context.date_range,
+      request.context.time_range,
+      request.context.ranges,
+      countKeyCombinations(request.context.key_spec),
+      request.filter,
+      request.params.masuda_method
     );
     if (estimation.exceedsThreshold) {
-      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount });
+      setConfirmDialog({ open: true, estimatedCount: estimation.estimatedCount, request });
     } else {
-      handleSearchExecution();
+      startSearch(request.context, request.params, request.genConfig, request.filter);
     }
-  }, [
-    dateRange,
-    timeRange,
-    ranges,
-    keyCombinationCount,
-    filter,
-    eggParams.masuda_method,
-    handleSearchExecution,
-  ]);
+  }, [createSearchRequest, startSearch]);
 
   return (
     <>
@@ -282,11 +288,18 @@ function EggSearchPage(): ReactElement {
 
       <SearchConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) =>
+            open ? { ...prev, open } : { open, estimatedCount: 0, request: undefined }
+          )
+        }
         estimatedCount={confirmDialog.estimatedCount}
         onConfirm={() => {
-          setConfirmDialog({ open: false, estimatedCount: 0 });
-          handleSearchExecution();
+          const request = confirmDialog.request;
+          setConfirmDialog({ open: false, estimatedCount: 0, request: undefined });
+          if (request) {
+            startSearch(request.context, request.params, request.genConfig, request.filter);
+          }
         }}
       />
     </>
