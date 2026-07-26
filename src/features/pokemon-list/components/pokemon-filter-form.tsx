@@ -26,6 +26,7 @@ import { HeldItemSlotSelect } from '@/components/forms/held-item-slot-select';
 import { EncounterResultSelect } from '@/components/forms/encounter-result-select';
 import { cn } from '@/lib/utils';
 import { IV_STAT_KEYS } from '@/lib/game-data-names';
+import { isSpecialEncounterType } from './encounter-constants';
 
 import { get_species_name } from '@/wasm/wasm_pkg.js';
 import { useUiStore } from '@/stores/settings/ui';
@@ -93,6 +94,7 @@ const DEFAULT_FILTER: PokemonFilter = {
   level_range: undefined,
   held_item_slots: undefined,
   encounter_result_filter: undefined,
+  special_encounter_triggered: undefined,
   stats: undefined,
 };
 
@@ -260,7 +262,8 @@ function PokemonFilterForm({
       (f.species_ids !== undefined && f.species_ids.length > 0) ||
       f.level_range !== undefined ||
       (f.held_item_slots !== undefined && f.held_item_slots.length > 0) ||
-      f.encounter_result_filter !== undefined
+      f.encounter_result_filter !== undefined ||
+      f.special_encounter_triggered !== undefined
     );
   }, []);
 
@@ -285,6 +288,7 @@ function PokemonFilterForm({
 
   const showHeldItem = HELD_ITEM_ENCOUNTER_TYPES.has(encounterType);
   const showEncounterResult = ENCOUNTER_RESULT_ENCOUNTER_TYPES.has(encounterType);
+  const showSpecialEncounter = isSpecialEncounterType(encounterType);
 
   // encounterType 変更時に非表示フィルタを undefined で伝播
   const prevEncounterType = useRef(encounterType);
@@ -297,10 +301,14 @@ function PokemonFilterForm({
     const nextEncResult = ENCOUNTER_RESULT_ENCOUNTER_TYPES.has(encounterType)
       ? internalFilter.encounter_result_filter
       : undefined;
+    const nextSpecialEncounter = isSpecialEncounterType(encounterType)
+      ? internalFilter.special_encounter_triggered
+      : undefined;
     const next = {
       ...internalFilter,
       held_item_slots: nextHeldItem,
       encounter_result_filter: nextEncResult,
+      special_encounter_triggered: nextSpecialEncounter,
     };
     // 内部状態は保持し、親への伝播値のみ調整
     skipNextPropSyncRef.current = true;
@@ -463,6 +471,13 @@ function PokemonFilterForm({
     [updateFilter]
   );
 
+  const handleSpecialEncounterChange = useCallback(
+    (checked: boolean) => {
+      updateFilter({ special_encounter_triggered: checked ? true : undefined });
+    },
+    [updateFilter]
+  );
+
   const ivValue = internalFilter.iv ?? DEFAULT_IV_FILTER;
 
   // 種族選択用 (重複排除)
@@ -601,6 +616,18 @@ function PokemonFilterForm({
               disabled={filterDisabled}
             />
           )}
+
+          {showSpecialEncounter ? (
+            <label className="flex cursor-pointer items-center gap-2 text-xs">
+              <Checkbox
+                id="special-encounter-triggered"
+                checked={internalFilter.special_encounter_triggered === true}
+                onCheckedChange={(checked) => handleSpecialEncounterChange(checked === true)}
+                disabled={filterDisabled}
+              />
+              <Trans>Special encounter only</Trans>
+            </label>
+          ) : undefined}
         </div>
       )}
     </section>

@@ -23,7 +23,7 @@
 事実:
 
 - `wasm-pkg/src/generation/algorithm/encounter.rs` は `special_encounter_trigger()` を実装済みである。
-- `GeneratedPokemonData.special_encounter` は特殊エンカウント時の発生判定を保持し、`resolve_pokemon_data_batch()` は UI 用の `special_encounter_triggered` を `○` / `×` として解決済みである。
+- `GeneratedPokemonData.special_encounter` は特殊エンカウント時の発生判定を保持し、`resolve_pokemon_data_batch()` は UI 用の `special_encounter_triggered` を `〇` / `×` として解決済みである。
 - 現在の発生判定は結果詳細ダイアログでのみ確認でき、結果テーブルの列と検索条件には存在しない。
 - `PokemonFilter` は種族、レベル、持ち物、エンカウント結果を条件にできるが、特殊エンカウントの発生判定を条件にできない。
 - `PokemonListPage` の列構成はフォームの `encounterType` を使っていない。一方、非永続化の検索結果ストアには生成時のエンカウント種別が残らないため、特殊結果を検出できても列見出しを種別ごとに確定できない。
@@ -66,8 +66,8 @@
 | `src/features/pokemon-list/components/pokemon-result-columns.tsx` | 更新 | 結果コンテキストが特殊エンカウントの場合に、針の直後へ発生列を挿入する |
 | `src/i18n/locales/*/messages.po` / `messages.ts` | 更新・生成 | 「発生のみ」チェックボックスの表示文言を追加し、Lingui カタログを更新する |
 | `src/test/components/features/pokemon-filter-form.test.tsx` | 更新 | 条件付きチェックボックスの表示、値の伝播、種別変更時の条件除外を検証する |
-| `src/test/components/features/pokemon-result-columns.test.tsx` | 新規 | 発生列の有無、位置、見出し、`○` / `×` 表示を検証する |
-| `src/test/unit/features/pokemon-list-store.test.ts` | 更新 | 結果コンテキストが非永続化で、フォームの更新・リセットで結果と同じ扱いになることを検証する |
+| `src/test/components/features/pokemon-result-columns.test.tsx` | 新規 | 発生列の有無、位置、見出し、`〇` / `×` 表示を検証する |
+| `src/test/unit/features/pokemon-list-store.test.ts` | 更新 | 結果コンテキストが非永続化で、フォーム種別の更新・リセット後も保持されることを検証する |
 | `src/wasm/wasm_pkg.d.ts` ほか WASM 生成物 | 再生成 | Rust の `PokemonFilter` 型変更を TypeScript 型へ反映する |
 
 ## 3. 設計方針
@@ -181,7 +181,7 @@ pub special_encounter_triggered: Option<bool>,
 | 9 | コンポーネント | `createPokemonResultColumns()` | 他の4種でも既存のローカライズ名を列見出しにする |
 | 10 | コンポーネント | `createPokemonResultColumns()` | 通常・固定種別では発生列を生成しない |
 | 11 | ユニット | ポケモンリストストア | 結果コンテキストは検索結果とともに管理され、`partialize` の出力に含まれない |
-| 12 | コンポーネントまたはフック | `PokemonListPage` / `usePokemonList` | 検索後にフォーム種別を変更しても、列生成には記録済み結果コンテキストを使う |
+| 12 | ユニット | ポケモンリストストア | 検索後にフォーム種別を変更・リセットしても、記録済み結果コンテキストを保持する |
 | 13 | 国際化 | Lingui カタログ | 「発生のみ」表示文言を抽出・コンパイルし、日本語・英語カタログに残す |
 
 ### 5.2 実行コマンド
@@ -191,29 +191,46 @@ pub special_encounter_triggered: Option<bool>,
 ```powershell
 cargo test --package wasm-pkg
 pnpm build:wasm:dev
-pnpm test -- --project unit
-pnpm format:check:ts
+pnpm test:run --project unit
+pnpm exec tsc -b --noEmit
+pnpm lingui:extract
+pnpm lingui:compile
+pnpm format:check
+pnpm lint
 cargo fmt --check
 git diff --check
-```
-
-WASM 型生成後は、TypeScript の型検査も実行する。
-
-```powershell
-pnpm exec tsc -b --noEmit
 ```
 
 ## 6. 実装チェックリスト
 
 - [x] Issue #154、既存の発生判定、表示用データ、フォーム・結果ストアの現状を確認する
 - [x] `DustCloud` の日本語表示を「土煙」として固定し、名称変更を対象外にする
-- [x] 仕様書を `spec/agent/wip/local_115/` に作成する
+- [x] 仕様書を作成し、検証後に `spec/agent/complete/local_115/` へ移動する
 - [x] 現行の生成、表示、ストア、エクスポート実装と突合し、`〇` 表記、国際化、結果コンテキスト更新の要件を反映する
-- [ ] 特殊エンカウント種別の共有ヘルパーを追加する
-- [ ] `PokemonFilter.special_encounter_triggered` と Rust の一致判定を実装する
-- [ ] 結果コンテキストを非永続化ストアへ追加する
-- [ ] 「発生のみ」チェックボックスと種別変更時の条件除外を実装する
-- [ ] 結果コンテキストに基づく発生列を実装する
-- [ ] Rust、ストア、フォーム、結果列のテストを追加する
-- [ ] WASM 生成物と型を更新する
-- [ ] 検証結果をこの仕様書へ反映する
+- [x] 特殊エンカウント種別の共有ヘルパーを追加する
+- [x] `PokemonFilter.special_encounter_triggered` と Rust の一致判定を実装する
+- [x] 結果コンテキストを非永続化ストアへ追加する
+- [x] 「発生のみ」チェックボックスと種別変更時の条件除外を実装する
+- [x] 結果コンテキストに基づく発生列を実装する
+- [x] Rust、ストア、フォーム、結果列のテストを追加する
+- [x] WASM 生成物と型を更新する
+- [x] 検証結果をこの仕様書へ反映する
+
+## 7. 検証結果
+
+2026-07-26 に次を実行した。
+
+| コマンド | 結果 |
+|----------|------|
+| `cargo test --package wasm-pkg` | 成功。331 件のユニットテストと 7 件の統合テストが通過した |
+| `pnpm build:wasm:dev` | 成功。`src/wasm/` の型定義を再生成した |
+| `wasm-pack build wasm-pkg --target bundler --out-dir ../src/wasm --release -- --features gpu`、`node scripts/optimize-wasm.js`、`tsc -b`、`vite build` | 成功。リリース相当の WASM と Web アプリケーションをビルドした |
+| `pnpm exec tsc -b --noEmit` | 成功 |
+| `pnpm test:run --project unit src/test/components/features/pokemon-filter-form.test.tsx src/test/components/features/pokemon-result-columns.test.tsx src/test/unit/features/pokemon-list-store.test.ts` | 成功。30 件が通過した |
+| `node_modules\\@lingui\\cli\\dist\\lingui.js extract` / `compile --typescript` | 成功。日本語訳「発生のみ」を抽出・コンパイルした |
+| `node_modules\\.bin\\oxfmt.cmd --check` / `cargo fmt --check` | 成功 |
+| `node_modules\\.bin\\oxlint.cmd` / `cargo clippy -p wasm-pkg --all-targets -- -D warnings` | 成功 |
+
+`pnpm test:run` 全体では 1,436 件が通過し、4 件が既定でスキップされた。一方、今回の変更対象外である `src/test/integration/services/worker-pool.test.ts` の `should cancel ongoing search` は、365 日分の CPU ワーカー検索が 5 秒以内に進捗通知を 3 回出さず、`progressCount = 0` となって失敗した。対象テスト単独でも再現したため、この仕様の変更とは切り分けて扱う。
+
+`pnpm lingui:extract` と `pnpm lingui:compile` は pnpm 11.9.0 のレジストリ署名検証に失敗した。依存関係やロックファイルは変更せず、同じローカル Lingui 実行ファイルを直接起動してカタログを更新した。

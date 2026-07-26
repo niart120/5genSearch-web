@@ -383,6 +383,9 @@ pub struct PokemonFilter {
     pub held_item_slots: Option<Vec<HeldItemSlot>>,
     /// エンカウント結果フィルタ
     pub encounter_result_filter: Option<EncounterResultFilter>,
+    /// 特殊エンカウント発生判定
+    #[serde(default)]
+    pub special_encounter_triggered: Option<bool>,
 }
 
 impl PokemonFilter {
@@ -394,6 +397,7 @@ impl PokemonFilter {
             level_range: None,
             held_item_slots: None,
             encounter_result_filter: None,
+            special_encounter_triggered: None,
         }
     }
 
@@ -441,6 +445,14 @@ impl PokemonFilter {
                     }
                 }
             }
+        }
+
+        // 特殊エンカウント発生判定
+        if let Some(required_triggered) = self.special_encounter_triggered
+            && data.special_encounter.as_ref().map(|info| info.triggered)
+                != Some(required_triggered)
+        {
+            return false;
         }
 
         true
@@ -496,7 +508,9 @@ impl EggFilter {
 mod tests {
     use super::*;
     use crate::data::Stats;
-    use crate::types::{EncounterResult, ItemContent};
+    use crate::types::{
+        EncounterResult, ItemContent, SpecialEncounterDirection, SpecialEncounterInfo,
+    };
     use crate::types::{HiddenPowerType, InheritanceSlot, Ivs, NeedleDirection, Pid, SeedOrigin};
 
     // テスト用ヘルパー: GeneratedPokemonData を生成
@@ -556,6 +570,25 @@ mod tests {
             special_encounter: None,
             encounter_result,
         }
+    }
+
+    fn make_special_pokemon(triggered: bool) -> GeneratedPokemonData {
+        let mut pokemon = make_pokemon(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+        );
+        pokemon.special_encounter = Some(SpecialEncounterInfo {
+            triggered,
+            direction: SpecialEncounterDirection::Right,
+            trigger_rand: 0,
+            direction_rand: 0,
+        });
+        pokemon
     }
 
     // テスト用ヘルパー: GeneratedEggData を生成
@@ -846,6 +879,53 @@ mod tests {
     }
 
     // === PokemonFilter Tests ===
+
+    #[test]
+    fn test_special_encounter_trigger_filter_none_passes_all() {
+        let filter = PokemonFilter::any();
+        assert!(filter.matches(&make_special_pokemon(true)));
+        assert!(filter.matches(&make_special_pokemon(false)));
+        assert!(filter.matches(&make_pokemon(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+        )));
+    }
+
+    #[test]
+    fn test_special_encounter_trigger_filter_true_matches_only_triggered() {
+        let filter = PokemonFilter {
+            special_encounter_triggered: Some(true),
+            ..Default::default()
+        };
+
+        assert!(filter.matches(&make_special_pokemon(true)));
+        assert!(!filter.matches(&make_special_pokemon(false)));
+        assert!(!filter.matches(&make_pokemon(
+            Ivs::uniform(15),
+            Nature::Adamant,
+            Gender::Male,
+            AbilitySlot::First,
+            ShinyType::None,
+            1,
+            50,
+        )));
+    }
+
+    #[test]
+    fn test_special_encounter_trigger_filter_false_matches_only_not_triggered() {
+        let filter = PokemonFilter {
+            special_encounter_triggered: Some(false),
+            ..Default::default()
+        };
+
+        assert!(!filter.matches(&make_special_pokemon(true)));
+        assert!(filter.matches(&make_special_pokemon(false)));
+    }
 
     #[test]
     fn test_pokemon_filter_species() {

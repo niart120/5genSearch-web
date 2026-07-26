@@ -611,6 +611,10 @@ export interface PokemonFilter extends CoreDataFilter {
      * エンカウント結果フィルタ
      */
     encounter_result_filter: EncounterResultFilter | undefined;
+    /**
+     * 特殊エンカウント発生判定
+     */
+    special_encounter_triggered?: boolean | undefined;
 }
 
 /**
