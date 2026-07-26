@@ -13,8 +13,14 @@ import type {
   StatsFilter,
   GeneratedEggData,
   Ivs,
+  SeedOrigin,
 } from '@/wasm/wasm_pkg.js';
-import type { SeedInputMode } from '@/components/forms/seed-input-section';
+import {
+  createDefaultSeedInputState,
+  type SeedInputMode,
+  type SeedInputState,
+  type SeedInputStateAction,
+} from '@/components/forms/seed-input-state';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
 /* ------------------------------------------------------------------ */
@@ -24,6 +30,7 @@ import type { StatDisplayMode } from '@/lib/game-data-names';
 /** 永続化対象: フォーム入力 */
 interface EggListFormState {
   seedInputMode: SeedInputMode;
+  seedInput: SeedInputState;
   eggParams: EggGenerationParams;
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
   speciesId: number | undefined;
@@ -35,6 +42,7 @@ interface EggListFormState {
 
 /** 非永続化: 検索結果 (raw データ; UI 変換は Hook 側で行う) */
 interface EggListResultState {
+  seedOrigins: SeedOrigin[];
   results: GeneratedEggData[];
 }
 
@@ -46,6 +54,8 @@ type EggListState = EggListFormState & EggListResultState;
 
 interface EggListActions {
   setSeedInputMode: (mode: SeedInputMode) => void;
+  setSeedInput: (action: SeedInputStateAction) => void;
+  setSeedOrigins: (seedOrigins: SeedOrigin[]) => void;
   setEggParams: (
     action: EggGenerationParams | ((prev: EggGenerationParams) => EggGenerationParams)
   ) => void;
@@ -96,6 +106,7 @@ const DEFAULT_GEN_CONFIG: Pick<GenerationConfig, 'user_offset' | 'max_advance'> 
 
 const DEFAULT_FORM_STATE: EggListFormState = {
   seedInputMode: 'manual-startup',
+  seedInput: createDefaultSeedInputState(),
   eggParams: DEFAULT_EGG_PARAMS,
   genConfig: DEFAULT_GEN_CONFIG,
   speciesId: undefined,
@@ -106,6 +117,7 @@ const DEFAULT_FORM_STATE: EggListFormState = {
 };
 
 const DEFAULT_RESULT_STATE: EggListResultState = {
+  seedOrigins: [],
   results: [],
 };
 
@@ -120,6 +132,11 @@ export const useEggListStore = create<EggListState & EggListActions>()(
       ...DEFAULT_RESULT_STATE,
 
       setSeedInputMode: (seedInputMode) => set({ seedInputMode }),
+      setSeedInput: (action) =>
+        set((state) => ({
+          seedInput: typeof action === 'function' ? action(state.seedInput) : action,
+        })),
+      setSeedOrigins: (seedOrigins) => set({ seedOrigins }),
       setEggParams: (action) =>
         set((state) => ({
           eggParams: typeof action === 'function' ? action(state.eggParams) : action,
@@ -138,13 +155,19 @@ export const useEggListStore = create<EggListState & EggListActions>()(
       clearResults: () => set({ results: [] }),
 
       resetForm: () =>
-        set((state) => ({ ...DEFAULT_FORM_STATE, formRevision: state.formRevision + 1 })),
+        set((state) => ({
+          ...DEFAULT_FORM_STATE,
+          seedInput: createDefaultSeedInputState(),
+          seedOrigins: [],
+          formRevision: state.formRevision + 1,
+        })),
     }),
     {
       name: 'feature:egg-list',
       version: 1,
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,
+        seedInput: state.seedInput,
         eggParams: state.eggParams,
         genConfig: state.genConfig,
         speciesId: state.speciesId,

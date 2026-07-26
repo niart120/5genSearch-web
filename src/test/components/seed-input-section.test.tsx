@@ -11,6 +11,10 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { SeedInputSection, type SeedInputMode } from '@/components/forms/seed-input-section';
+import {
+  createDefaultSeedInputState,
+  type SeedInputState,
+} from '@/components/forms/seed-input-state';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { getSearchResultsInitialState, useSearchResultsStore } from '@/stores/search/results';
 import { getDsConfigInitialState, useDsConfigStore } from '@/stores/settings/ds-config';
@@ -26,11 +30,6 @@ vi.mock('@/services/seed-resolve', () => ({
     (mockResolveSeedOrigins as (...args: unknown[]) => SeedOrigin[])(...args),
 }));
 
-// parseSerializedSeedOrigins
-vi.mock('@/services/seed-origin-serde', () => ({
-  parseSerializedSeedOrigins: vi.fn(() => []),
-}));
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -41,15 +40,19 @@ function renderSection(
     onModeChange: Mock;
     origins: SeedOrigin[];
     onOriginsChange: Mock;
+    input: SeedInputState;
+    onInputChange: Mock;
     disabled: boolean;
     featureId: 'pokemon-list' | 'egg-list' | 'needle';
   }> = {}
 ) {
   const onModeChange = overrides.onModeChange ?? vi.fn();
   const onOriginsChange = overrides.onOriginsChange ?? vi.fn();
+  const onInputChange = overrides.onInputChange ?? vi.fn();
   return {
     onModeChange,
     onOriginsChange,
+    onInputChange,
     ...render(
       <I18nTestWrapper>
         <SeedInputSection
@@ -58,6 +61,8 @@ function renderSection(
           onModeChange={onModeChange}
           origins={overrides.origins ?? []}
           onOriginsChange={onOriginsChange}
+          input={overrides.input ?? createDefaultSeedInputState()}
+          onInputChange={onInputChange}
           disabled={overrides.disabled}
         />
       </I18nTestWrapper>
@@ -71,14 +76,17 @@ function StatefulWrapper({
   featureId = 'pokemon-list' as const,
   onModeChangeSpy,
   onOriginsChangeSpy,
+  initialInput = createDefaultSeedInputState(),
 }: {
   initialMode?: SeedInputMode;
   featureId?: 'pokemon-list' | 'egg-list' | 'needle';
   onModeChangeSpy?: Mock;
   onOriginsChangeSpy?: Mock;
+  initialInput?: SeedInputState;
 }) {
   const [mode, setMode] = useState<SeedInputMode>(initialMode);
   const [origins, setOrigins] = useState<SeedOrigin[]>([]);
+  const [input, setInput] = useState<SeedInputState>(initialInput);
   return (
     <I18nTestWrapper>
       <SeedInputSection
@@ -93,6 +101,10 @@ function StatefulWrapper({
           setOrigins(o);
           onOriginsChangeSpy?.(o);
         }}
+        input={input}
+        onInputChange={(action) =>
+          setInput((current) => (typeof action === 'function' ? action(current) : action))
+        }
       />
     </I18nTestWrapper>
   );
@@ -140,6 +152,24 @@ describe('SeedInputSection', () => {
     expect(screen.getByRole('tab', { name: /Startup/i })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Seeds/i })).toBeDefined();
     expect(screen.getByRole('tab', { name: /Import/i })).toBeDefined();
+  });
+
+  it('保存済み LCG Seed を初期表示して origins を再導出する', async () => {
+    mockResolveSeedOrigins.mockReturnValue(SEEDS_ORIGINS);
+    const onOriginsChange = vi.fn();
+    render(
+      <StatefulWrapper
+        initialMode="manual-seeds"
+        initialInput={{
+          ...createDefaultSeedInputState(),
+          seedText: '0000000000000022',
+        }}
+        onOriginsChangeSpy={onOriginsChange}
+      />
+    );
+
+    expect(screen.getByPlaceholderText('0123456789ABCDEF')).toHaveValue('0000000000000022');
+    await waitFor(() => expect(onOriginsChange).toHaveBeenCalledWith(SEEDS_ORIGINS));
   });
 
   // ---------------------------------------------------------------------------

@@ -32,6 +32,23 @@ describe('egg-list store', () => {
     expect(useEggListStore.getState().seedInputMode).toBe('import');
   });
 
+  it('should reset seed input sources and active origins', () => {
+    useEggListStore.getState().setSeedInput((current) => ({
+      ...current,
+      seedText: '0123456789ABCDEF',
+    }));
+    useEggListStore
+      .getState()
+      .setSeedOrigins([
+        { Seed: { base_seed: 0x01_23_45_67_89_ab_cd_efn, mt_seed: 0x89_ab_cd_ef } },
+      ]);
+
+    useEggListStore.getState().resetForm();
+
+    expect(useEggListStore.getState().seedInput.seedText).toBe('');
+    expect(useEggListStore.getState().seedOrigins).toEqual([]);
+  });
+
   it('should update eggParams', () => {
     const current = useEggListStore.getState().eggParams;
     useEggListStore.getState().setEggParams({ ...current, masuda_method: true });
@@ -88,6 +105,8 @@ describe('egg-list store', () => {
   it('should exclude results from partialize', () => {
     const partialized = getPartializedState(useEggListStore);
     expect(partialized).not.toHaveProperty('results');
+    expect(partialized).not.toHaveProperty('seedOrigins');
+    expect(partialized).toHaveProperty('seedInput');
     expect(partialized).toHaveProperty('eggParams');
     expect(partialized).toHaveProperty('speciesId');
     expect(partialized).not.toHaveProperty('formRevision');

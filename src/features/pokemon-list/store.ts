@@ -12,8 +12,14 @@ import type {
   StatsFilter,
   GeneratedPokemonData,
   EncounterType,
+  SeedOrigin,
 } from '@/wasm/wasm_pkg.js';
-import type { SeedInputMode } from '@/components/forms/seed-input-section';
+import {
+  createDefaultSeedInputState,
+  type SeedInputMode,
+  type SeedInputState,
+  type SeedInputStateAction,
+} from '@/components/forms/seed-input-state';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
 /* ------------------------------------------------------------------ */
@@ -23,6 +29,7 @@ import type { StatDisplayMode } from '@/lib/game-data-names';
 /** 永続化対象: フォーム入力 */
 interface PokemonListFormState {
   seedInputMode: SeedInputMode;
+  seedInput: SeedInputState;
   encounterParams: EncounterParamsOutput;
   filter: PokemonFilter | undefined;
   statsFilter: StatsFilter | undefined;
@@ -32,6 +39,7 @@ interface PokemonListFormState {
 
 /** 非永続化: 検索結果 (raw データ; UI 変換は Hook 側で行う) */
 interface PokemonListResultState {
+  seedOrigins: SeedOrigin[];
   results: GeneratedPokemonData[];
   resultEncounterType: EncounterType | undefined;
 }
@@ -44,6 +52,8 @@ type PokemonListState = PokemonListFormState & PokemonListResultState;
 
 interface PokemonListActions {
   setSeedInputMode: (mode: SeedInputMode) => void;
+  setSeedInput: (action: SeedInputStateAction) => void;
+  setSeedOrigins: (seedOrigins: SeedOrigin[]) => void;
   setEncounterParams: (
     action: EncounterParamsOutput | ((prev: EncounterParamsOutput) => EncounterParamsOutput)
   ) => void;
@@ -65,6 +75,7 @@ interface PokemonListActions {
 
 const DEFAULT_FORM_STATE: PokemonListFormState = {
   seedInputMode: 'manual-startup',
+  seedInput: createDefaultSeedInputState(),
   encounterParams: DEFAULT_ENCOUNTER_PARAMS,
   filter: undefined,
   statsFilter: undefined,
@@ -73,6 +84,7 @@ const DEFAULT_FORM_STATE: PokemonListFormState = {
 };
 
 const DEFAULT_RESULT_STATE: PokemonListResultState = {
+  seedOrigins: [],
   results: [],
   resultEncounterType: undefined,
 };
@@ -88,6 +100,11 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
       ...DEFAULT_RESULT_STATE,
 
       setSeedInputMode: (seedInputMode) => set({ seedInputMode }),
+      setSeedInput: (action) =>
+        set((state) => ({
+          seedInput: typeof action === 'function' ? action(state.seedInput) : action,
+        })),
+      setSeedOrigins: (seedOrigins) => set({ seedOrigins }),
       setEncounterParams: (action) =>
         set((state) => ({
           encounterParams: typeof action === 'function' ? action(state.encounterParams) : action,
@@ -102,13 +119,19 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
       clearResults: () => set(DEFAULT_RESULT_STATE),
 
       resetForm: () =>
-        set((state) => ({ ...DEFAULT_FORM_STATE, formRevision: state.formRevision + 1 })),
+        set((state) => ({
+          ...DEFAULT_FORM_STATE,
+          seedInput: createDefaultSeedInputState(),
+          seedOrigins: [],
+          formRevision: state.formRevision + 1,
+        })),
     }),
     {
       name: 'feature:pokemon-list',
       version: 1,
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,
+        seedInput: state.seedInput,
         encounterParams: state.encounterParams,
         filter: state.filter,
         statsFilter: state.statsFilter,

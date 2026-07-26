@@ -4,7 +4,7 @@
  * Seed + 孵化パラメータからタマゴ個体を一括生成し、一覧表示する。
  */
 
-import { useState, useMemo, useCallback, useRef, type ReactElement } from 'react';
+import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
 import { SearchControls } from '@/components/forms/search-controls';
@@ -66,12 +66,10 @@ function EggListPage(): ReactElement {
   // Seed 入力 (SeedOrigin は非永続化)
   const seedInputMode = useEggListStore((s) => s.seedInputMode);
   const setSeedInputMode = useEggListStore((s) => s.setSeedInputMode);
-  const [seedOrigins, setSeedOrigins] = useState<SeedOrigin[]>([]);
-  const seedOriginsRef = useRef(seedOrigins);
-  const handleSeedOriginsChange = useCallback((origins: SeedOrigin[]) => {
-    seedOriginsRef.current = origins;
-    setSeedOrigins(origins);
-  }, []);
+  const seedInput = useEggListStore((s) => s.seedInput);
+  const setSeedInput = useEggListStore((s) => s.setSeedInput);
+  const seedOrigins = useEggListStore((s) => s.seedOrigins);
+  const setSeedOrigins = useEggListStore((s) => s.setSeedOrigins);
 
   // パラメータ (Feature Store)
   const eggParams = useEggListStore((s) => s.eggParams);
@@ -132,13 +130,14 @@ function EggListPage(): ReactElement {
     const state = useEggListStore.getState();
     const form = structuredClone({
       seedInputMode: state.seedInputMode,
+      seedOrigins: state.seedOrigins,
       eggParams: state.eggParams,
       genConfig: state.genConfig,
       speciesId: state.speciesId,
       filter: state.filter,
       statsFilter: state.statsFilter,
     });
-    const origins = structuredClone(seedOriginsRef.current);
+    const origins = structuredClone(form.seedOrigins);
     const currentValidation = validateEggListForm({
       seedInputMode: form.seedInputMode,
       seedOrigins: origins,
@@ -244,11 +243,14 @@ function EggListPage(): ReactElement {
           </div>
 
           <SeedInputSection
+            key={formRevision}
             featureId="egg-list"
             mode={seedInputMode}
             onModeChange={setSeedInputMode}
             origins={seedOrigins}
-            onOriginsChange={handleSeedOriginsChange}
+            onOriginsChange={setSeedOrigins}
+            input={seedInput}
+            onInputChange={setSeedInput}
             disabled={isLoading}
           />
 

@@ -15,6 +15,8 @@ import type { SeedInputMode } from '@/components/forms/seed-input-section';
 export interface EncounterParamsOutput {
   encounterType: EncounterType;
   encounterMethod: EncounterMethod;
+  locationKey: string;
+  staticEntryId: string;
   slots: EncounterSlotConfig[];
   leadAbility: LeadAbilityEffect;
   availableSpecies: EncounterSpeciesOption[];
@@ -25,6 +27,8 @@ export interface EncounterParamsOutput {
 export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   encounterType: 'Normal',
   encounterMethod: 'Stationary',
+  locationKey: '',
+  staticEntryId: '',
   slots: [],
   leadAbility: 'None',
   availableSpecies: [],
