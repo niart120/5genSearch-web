@@ -24,6 +24,7 @@ const DEFAULT_FILTER: PokemonFilter = {
   level_range: undefined,
   held_item_slots: undefined,
   encounter_result_filter: undefined,
+  special_encounter_triggered: undefined,
   stats: undefined,
 };
 
@@ -135,6 +136,42 @@ describe('PokemonFilterForm', () => {
     expect(screen.queryByText('Encounter result')).not.toBeInTheDocument();
   });
 
+  it('特殊エンカウント種別で発生のみフィルタが表示される', async () => {
+    const user = userEvent.setup();
+    renderFilterForm({ encounterType: 'DustCloud' });
+    await openFilter(user);
+
+    expect(screen.getByRole('checkbox', { name: 'Special encounter only' })).toBeInTheDocument();
+  });
+
+  it('通常エンカウント種別では発生のみフィルタが表示されない', async () => {
+    const user = userEvent.setup();
+    renderFilterForm({ encounterType: 'Normal' });
+    await openFilter(user);
+
+    expect(
+      screen.queryByRole('checkbox', { name: 'Special encounter only' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('発生のみの選択と解除を親のフィルタへ伝播する', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderFilterForm({ encounterType: 'DustCloud', onChange });
+    await openFilter(user);
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Special encounter only' });
+    await user.click(checkbox);
+
+    const enabledFilter = onChange.mock.calls.at(-1)?.[0] as PokemonFilter | undefined;
+    expect(enabledFilter?.special_encounter_triggered).toBe(true);
+
+    await user.click(checkbox);
+
+    const disabledFilter = onChange.mock.calls.at(-1)?.[0] as PokemonFilter | undefined;
+    expect(disabledFilter?.special_encounter_triggered).toBeUndefined();
+  });
+
   it('encounterType 変更で非表示になったフィルタが undefined で伝播される', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -162,6 +199,30 @@ describe('PokemonFilterForm', () => {
     expect(calls.length).toBeGreaterThan(0);
     const lastFilter = calls.at(-1)![0] as PokemonFilter | undefined;
     expect(lastFilter?.held_item_slots).toBeUndefined();
+  });
+
+  it('特殊エンカウント以外への変更で発生のみ条件を除外する', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const initialFilter: PokemonFilter = {
+      ...DEFAULT_FILTER,
+      special_encounter_triggered: true,
+    };
+    const { rerenderWith } = renderFilterForm({
+      value: initialFilter,
+      encounterType: 'DustCloud',
+      onChange,
+    });
+    await openFilter(user);
+    expect(screen.getByRole('checkbox', { name: 'Special encounter only' })).toBeChecked();
+
+    onChange.mockClear();
+    await act(async () => {
+      rerenderWith({ encounterType: 'Normal', value: initialFilter });
+    });
+
+    const lastFilter = onChange.mock.calls.at(-1)?.[0] as PokemonFilter | undefined;
+    expect(lastFilter?.special_encounter_triggered).toBeUndefined();
   });
 
   it('syncKey 変更時は内部フィルタを外部値に同期する', async () => {

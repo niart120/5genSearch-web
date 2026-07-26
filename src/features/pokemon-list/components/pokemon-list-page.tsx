@@ -66,10 +66,16 @@ function PokemonListPage(): ReactElement {
   const formRevision = usePokemonListStore((s) => s.formRevision);
 
   // 生成フック
-  const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = usePokemonList(
-    dsConfig.version,
-    language
-  );
+  const {
+    isLoading,
+    isInitialized,
+    progress,
+    uiResults,
+    resultEncounterType,
+    error,
+    generate,
+    cancel,
+  } = usePokemonList(dsConfig.version, language);
 
   // バリデーション
   const validation = useMemo(
@@ -119,8 +125,9 @@ function PokemonListPage(): ReactElement {
         onSelect: handleSelectResult,
         statMode,
         locale: language,
+        resultEncounterType,
       }),
-    [handleSelectResult, statMode, language]
+    [handleSelectResult, statMode, language, resultEncounterType]
   );
 
   // エクスポート
@@ -145,6 +152,7 @@ function PokemonListPage(): ReactElement {
       level_range: filter?.level_range,
       held_item_slots: filter?.held_item_slots,
       encounter_result_filter: filter?.encounter_result_filter,
+      special_encounter_triggered: filter?.special_encounter_triggered,
       stats: statsFilter,
     };
   }, [filter, statsFilter]);

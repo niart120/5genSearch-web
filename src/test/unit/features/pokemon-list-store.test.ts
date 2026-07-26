@@ -22,6 +22,7 @@ describe('pokemon-list store', () => {
     expect(state.statMode).toBe('stats');
     expect(state.formRevision).toBe(0);
     expect(state.results).toEqual([]);
+    expect(state.resultEncounterType).toBeUndefined();
   });
 
   it('should update seedInputMode', () => {
@@ -47,6 +48,18 @@ describe('pokemon-list store', () => {
 
     usePokemonListStore.getState().clearResults();
     expect(usePokemonListStore.getState().results).toEqual([]);
+    expect(usePokemonListStore.getState().resultEncounterType).toBeUndefined();
+  });
+
+  it('should replace results and record encounter type when starting a search', () => {
+    const mockResults = [{ advance: 0 }] as never[];
+    usePokemonListStore.getState().setResults(mockResults);
+
+    usePokemonListStore.getState().startResults('DustCloud');
+
+    const state = usePokemonListStore.getState();
+    expect(state.results).toEqual([]);
+    expect(state.resultEncounterType).toBe('DustCloud');
   });
 
   it('should append results incrementally', () => {
@@ -62,11 +75,18 @@ describe('pokemon-list store', () => {
   it('should preserve results on resetForm', () => {
     const mockResults = [{ advance: 0 }] as never[];
     usePokemonListStore.getState().setResults(mockResults);
+    usePokemonListStore.getState().startResults('DustCloud');
+    usePokemonListStore.getState().setResults(mockResults);
+    usePokemonListStore.getState().setEncounterParams({
+      ...DEFAULT_ENCOUNTER_PARAMS,
+      encounterType: 'Normal',
+    });
     usePokemonListStore.getState().setStatMode('ivs');
 
     usePokemonListStore.getState().resetForm();
 
     expect(usePokemonListStore.getState().results).toEqual(mockResults);
+    expect(usePokemonListStore.getState().resultEncounterType).toBe('DustCloud');
     expect(usePokemonListStore.getState().statMode).toBe('stats');
     expect(usePokemonListStore.getState().formRevision).toBe(1);
   });
@@ -74,6 +94,7 @@ describe('pokemon-list store', () => {
   it('should exclude results from partialize', () => {
     const partialized = getPartializedState(usePokemonListStore);
     expect(partialized).not.toHaveProperty('results');
+    expect(partialized).not.toHaveProperty('resultEncounterType');
     expect(partialized).toHaveProperty('seedInputMode');
     expect(partialized).toHaveProperty('encounterParams');
     expect(partialized).not.toHaveProperty('formRevision');

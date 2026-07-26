@@ -22,6 +22,7 @@ interface UsePokemonListReturn {
   progress: AggregatedProgress | undefined;
   rawResults: GeneratedPokemonData[];
   uiResults: UiPokemonData[];
+  resultEncounterType: PokemonGenerationParams['encounter_type'] | undefined;
   error: Error | undefined;
   generate: (
     origins: SeedOrigin[],
@@ -39,8 +40,9 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
 
   // Store actions
   const appendResults = usePokemonListStore((s) => s.appendResults);
-  const clearStoreResults = usePokemonListStore((s) => s.clearResults);
+  const startStoreResults = usePokemonListStore((s) => s.startResults);
   const storedRawResults = usePokemonListStore((s) => s.results);
+  const resultEncounterType = usePokemonListStore((s) => s.resultEncounterType);
 
   // mount 直後の空配列で Store 上書きを防止
   const searchActiveRef = useRef(false);
@@ -83,11 +85,11 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     ) => {
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
-      clearStoreResults();
+      startStoreResults(params.encounter_type);
       const tasks = createPokemonListTasks(origins, params, genConfig, filter, workerCount);
       start(tasks);
     },
-    [start, clearStoreResults, workerCount]
+    [start, startStoreResults, workerCount]
   );
 
   return {
@@ -96,6 +98,7 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     progress,
     rawResults: storedRawResults,
     uiResults,
+    resultEncounterType,
     error,
     generate,
     cancel,

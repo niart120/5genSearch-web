@@ -7,6 +7,7 @@
 
 import type { SupportedLocale } from '@/i18n';
 import type { EncounterMethodKey, StaticEncounterTypeKey } from '@/data/encounters/schema';
+import type { EncounterType } from '@/wasm/wasm_pkg.js';
 
 // ---------------------------------------------------------------------------
 // Category definitions
@@ -61,6 +62,15 @@ export const ENCOUNTER_CATEGORIES: EncounterCategory[] = [
   },
 ];
 
+/** 特殊エンカウント情報が生成されるエンカウント種別 */
+const SPECIAL_ENCOUNTER_TYPES: ReadonlySet<EncounterType> = new Set([
+  'ShakingGrass',
+  'DustCloud',
+  'SurfingBubble',
+  'FishingBubble',
+  'PokemonShadow',
+]);
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -73,4 +83,9 @@ export function findCategoryForType(type: string): string | undefined {
     }
   }
   return undefined;
+}
+
+/** 指定された種別が特殊エンカウントか判定する */
+export function isSpecialEncounterType(type: EncounterType | undefined): boolean {
+  return type !== undefined && SPECIAL_ENCOUNTER_TYPES.has(type);
 }

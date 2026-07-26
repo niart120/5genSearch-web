@@ -8,8 +8,15 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getNeedleArrow, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
-import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
+import {
+  getEncounterMethodName,
+  getNeedleArrow,
+  STAT_HEADERS_JA,
+  STAT_HEADERS_EN,
+} from '@/lib/game-data-names';
+import { isSpecialEncounterType } from './encounter-constants';
+import type { SupportedLocale } from '@/i18n';
+import type { EncounterType, UiPokemonData } from '@/wasm/wasm_pkg.js';
 
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
@@ -18,13 +25,24 @@ const columnHelper = createColumnHelper<UiPokemonData>();
 interface PokemonResultColumnsOptions {
   onSelect?: (result: UiPokemonData) => void;
   statMode?: StatDisplayMode;
-  locale?: string;
+  locale?: SupportedLocale;
+  resultEncounterType?: EncounterType;
 }
 
 function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
-  const { onSelect, statMode = 'stats', locale = 'ja' } = options;
+  const { onSelect, statMode = 'stats', locale = 'ja', resultEncounterType } = options;
   const headers = locale === 'ja' ? STAT_HEADERS_JA : STAT_HEADERS_EN;
   const dataKey = statMode === 'stats' ? 'stats' : 'ivs';
+  const specialEncounterColumns =
+    resultEncounterType !== undefined && isSpecialEncounterType(resultEncounterType)
+      ? [
+          columnHelper.accessor((row) => row.special_encounter_triggered ?? '', {
+            id: 'special_encounter_triggered',
+            header: () => getEncounterMethodName(resultEncounterType, locale),
+            size: 72,
+          }),
+        ]
+      : [];
 
   return [
     columnHelper.display({
@@ -52,6 +70,7 @@ function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
       header: () => t`Needle`,
       size: 36,
     }),
+    ...specialEncounterColumns,
     columnHelper.accessor((row) => row.species_name, {
       id: 'species',
       header: () => t`Species`,
