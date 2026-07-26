@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/niart120/5genSearch-web/compare/v1.4.1...v1.5.0) (2026-07-26)
+
+
+### Features
+
+* **pokemon-list:** 特殊エンカウント発生を表示・絞り込む ([dedbe97](https://github.com/niart120/5genSearch-web/commit/dedbe976f1375a90565f45cb4229098ef4e2fbb9))
+
+
+### Bug Fixes
+
+* **form:** 最新条件から検索要求を確定する ([46b423c](https://github.com/niart120/5genSearch-web/commit/46b423c2f31cfefc3e2a1109d831c560cc1ac1ca))
+* **worker:** 検索セッション間の応答を分離する ([c64f033](https://github.com/niart120/5genSearch-web/commit/c64f03364e2b06057af5dc102b7be81d2476cbc9))
+
 ## [1.4.1](https://github.com/niart120/5genSearch-web/compare/v1.4.0...v1.4.1) (2026-07-03)
 
 
