@@ -220,7 +220,7 @@ mod tests {
 
         assert_eq!(ui.species_name, Some("ピカチュウ".to_string()));
         // 特性名が解決される
-        assert!(!ui.ability_name.is_empty());
+        assert_ne!(ui.ability_name, "");
         // species_id=0 で生成されたデータのため stats は "?"
         assert!(ui.stats.iter().all(|s| s == "?"));
     }
