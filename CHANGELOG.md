@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/niart120/5genSearch-web/compare/v1.5.1...v1.5.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* **generation:** 徘徊ポケモンの性格値生成を修正 ([1897b7f](https://github.com/niart120/5genSearch-web/commit/1897b7f8ac2e0290d7b69ab14ba7c7475882178a))
+
 ## [1.5.1](https://github.com/niart120/5genSearch-web/compare/v1.5.0...v1.5.1) (2026-07-26)
 
 
