@@ -24,10 +24,18 @@ fn apply_id_correction(pid: Pid, trainer: TrainerInfo) -> Pid {
     }
 }
 
-/// 野生/固定/徘徊 PID 生成 (ID補正あり)
+/// 野生/固定シンボル PID 生成 (ID補正あり)
 #[inline]
 fn generate_wild_pid(r: u32, trainer: TrainerInfo) -> Pid {
     apply_id_correction(generate_base_pid(r), trainer)
+}
+
+/// BW 徘徊ポケモン PID 生成
+///
+/// LCG の上位 32 bit を変換せず、そのまま PID として使用する。
+#[inline]
+pub fn generate_roamer_pid(r: u32) -> Pid {
+    Pid(r)
 }
 
 /// イベント/御三家 PID 生成 (ID補正なし)
@@ -54,7 +62,7 @@ pub fn apply_shiny_lock(pid: Pid, trainer: TrainerInfo) -> Pid {
     }
 }
 
-/// ひかるおまもり付き野生 PID 生成
+/// ひかるおまもり付き野生/固定シンボル PID 生成
 /// 最大 `reroll_count` 回リロール
 pub fn generate_wild_pid_with_reroll(
     lcg: &mut Lcg64,
@@ -180,6 +188,13 @@ mod tests {
         } else {
             assert_eq!(pid, Pid(expected_base & 0x7FFF_FFFF));
         }
+    }
+
+    #[test]
+    fn test_generate_roamer_pid_preserves_rng_output() {
+        assert_eq!(generate_roamer_pid(0x1234_5678), Pid(0x1234_5678));
+        assert_eq!(generate_roamer_pid(0x8001_0000), Pid(0x8001_0000));
+        assert_eq!(generate_roamer_pid(0xFFFF_FFFF), Pid(0xFFFF_FFFF));
     }
 
     #[test]

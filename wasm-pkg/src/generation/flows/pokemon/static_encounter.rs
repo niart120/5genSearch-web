@@ -3,7 +3,7 @@
 use crate::core::lcg::Lcg64;
 use crate::generation::algorithm::{
     apply_shiny_lock, calculate_level, determine_held_item_slot, generate_event_pid,
-    generate_wild_pid_with_reroll, nature_roll, perform_sync_check,
+    generate_roamer_pid, generate_wild_pid_with_reroll, nature_roll, perform_sync_check,
 };
 use crate::generation::flows::types::{EncounterSlotConfig, RawPokemonData};
 use crate::types::{
@@ -30,7 +30,7 @@ pub fn generate_static_pokemon(
 
     // PID 生成
     let (pid, shiny_type) = match enc_type {
-        EncounterType::StaticSymbol | EncounterType::Roamer => {
+        EncounterType::StaticSymbol => {
             let reroll_count = match config.game_start.shiny_charm {
                 ShinyCharmState::Obtained => 2,
                 ShinyCharmState::NotObtained => 0,
@@ -40,6 +40,14 @@ pub fn generate_static_pokemon(
                 (apply_shiny_lock(pid, params.trainer), ShinyType::None)
             } else {
                 (pid, shiny)
+            }
+        }
+        EncounterType::Roamer => {
+            let pid = generate_roamer_pid(lcg.next().unwrap_or(0));
+            if slot.shiny_locked {
+                (apply_shiny_lock(pid, params.trainer), ShinyType::None)
+            } else {
+                (pid, pid.shiny_type(params.trainer))
             }
         }
         EncounterType::StaticStarter | EncounterType::StaticFossil | EncounterType::StaticEvent => {
@@ -239,6 +247,27 @@ mod tests {
         assert_eq!(pokemon.species_id, 150);
         assert_eq!(pokemon.level, 70);
         assert_eq!(pokemon.gender, crate::types::Gender::Genderless);
+    }
+
+    #[test]
+    fn test_generate_roamer_uses_raw_lcg_output_as_pid() {
+        let mut lcg = Lcg64::from_raw(0x1234_5678_9ABC_DEF0);
+        let mut expected_lcg = lcg.clone();
+        let expected_pid = Pid(expected_lcg.next().unwrap_or(0));
+        let expected_nature = Nature::from_u8(nature_roll(expected_lcg.next().unwrap_or(0)));
+        let mut params = make_params(EncounterType::Roamer);
+        // 野生用 ID 補正を誤適用すると、期待値の bit31 が消える条件にする。
+        params.trainer.tid = 12344;
+        let slot = make_slot(641, 40, GenderRatio::MaleOnly, false, false);
+
+        let pokemon =
+            generate_static_pokemon(&mut lcg, &params, &slot, &make_config(RomVersion::Black));
+
+        assert_ne!(expected_pid.raw() & 0x8000_0000, 0);
+        assert_eq!(pokemon.pid, expected_pid);
+        assert_eq!(pokemon.nature, expected_nature);
+        assert_eq!(pokemon.ability_slot, expected_pid.ability_slot());
+        assert_eq!(lcg.current_seed(), expected_lcg.current_seed());
     }
 
     #[test]

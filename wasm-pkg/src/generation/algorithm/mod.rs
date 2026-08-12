@@ -25,6 +25,6 @@ pub use iv::{generate_rng_ivs_with_offset, generate_rng_ivs_with_offset_x4};
 pub(crate) use nature::{determine_egg_nature, determine_nature, nature_roll, perform_sync_check};
 pub(crate) use npc::resolve_egg_npc_advance;
 pub(crate) use pid::{
-    apply_shiny_lock, generate_egg_pid_with_reroll, generate_event_pid,
+    apply_shiny_lock, generate_egg_pid_with_reroll, generate_event_pid, generate_roamer_pid,
     generate_wild_pid_with_reroll,
 };
