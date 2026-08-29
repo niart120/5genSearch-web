@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.3](https://github.com/niart120/5genSearch-web/compare/v1.5.2...v1.5.3) (2026-08-29)
+
+
+### Bug Fixes
+
+* **results:** 生成個体の表示境界を統一 ([aa3070a](https://github.com/niart120/5genSearch-web/commit/aa3070a68a738261dfd89ee248aef7aabececbe7))
+
 ## [1.5.2](https://github.com/niart120/5genSearch-web/compare/v1.5.1...v1.5.2) (2026-08-12)
 
 
