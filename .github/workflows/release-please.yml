@@ -41,6 +41,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@nightly
         with:
+          toolchain: nightly-2026-08-12
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo
