@@ -29,6 +29,7 @@
 - `GeneratedEggData::from_raw()` は、ニドラン♀から生まれた♂をニドラン♂、イルミーゼから生まれた♂をバルビートへ変換し、行ごとの確定種族を `core.species_id` へ保存する。実ステータスも同じ確定種族で計算する。
 - 現行 Egg resolver は別引数の `species_id` で種族名と特性名を解決するため、`core.species_id`、実ステータス、名称の正本が分かれている。タマゴリストは現在のフォーム値をこの引数へ渡すため、生成後のフォーム変更でも既存結果の名称だけが変わる。
 - Pokemon resolver の `version` 引数はバージョン別の持ち物解決に必要だが、現在は結果生成時ではなく現在の DS 設定を渡している。
+- Pokemon の表示だけを生成時 ROM バージョンへ固定しても、エクスポートのファイル名と JSON メタデータが現在の DS 設定を参照すると、同じ出力内で ROM バージョンが矛盾する。
 - `local_029` は Egg resolver が `core.species_id` を基準に解決する構造を定めているが、`local_067` の外部 `species_id` 引数方式と現行実装はこの方針と矛盾する。本仕様は Egg resolver の正本について `local_067` を上書きする。
 
 推察:
@@ -46,6 +47,7 @@
 | 表示データ利用 | 孵化検索だけ未使用 | 個体の表示、詳細、表示形式の出力に使用 |
 | Egg 種族解決 | フォームの単一 ID を全行へ適用 | 各行の確定済み `core.species_id` を使用 |
 | Pokemon 持ち物解決 | 現在の DS バージョンに追従 | 結果生成時の ROM バージョンを使用 |
+| Pokemon 出力コンテキスト | 現在の DS バージョンをファイル名・JSON meta に使用 | 結果生成時の ROM バージョンを使用 |
 | 追加バッチの表示解決 | raw 配列全体を毎回再解決 | 同じ解決コンテキストでは未解決の raw オブジェクトだけを解決 |
 | 言語切替 | UI 配列を全件再生成 | ResultView の raw を維持し、ui を全件再生成 |
 
@@ -64,21 +66,26 @@
 | `src/lib/result-view.ts` | 新規 | `ResultView` と feature 別の型別名を定義 |
 | `src/hooks/use-result-views.ts` | 新規 | 解決コンテキスト単位で表示データを差分解決する共通フック |
 | `src/features/pokemon-list/store.ts` | 修正 | 生成時 ROM バージョンを非永続化の結果コンテキストへ追加 |
+| `src/hooks/use-export.ts` | 修正 | 生成時 ROM バージョンを出力ファイル名と JSON meta へ適用可能にする |
 | `src/features/*/hooks/use-*.ts` | 修正 | 3 feature の戻り値を `ResultView[]` に統一し、WASM resolver を接続 |
 | `src/features/*/components/*-page.tsx` | 修正 | 表、選択、詳細、出力の入力を `ResultView[]` へ変更 |
 | `src/features/*/components/*-result-columns.tsx` | 修正 | 数値 accessor は raw、表示 cell は ui を参照 |
 | `src/features/*/components/result-detail-dialog.tsx` | 修正 | `ResultView` を受け取り、個体表示は ui、Seed 転記は raw を使用 |
 | `src/services/export-columns.ts` | 修正 | ポケモン、タマゴ、孵化検索の出力列を `ResultView` 対応へ変更 |
 | `wasm-pkg/src/resolve/egg.rs` | 修正・テスト追加 | 外部種族 ID を廃止し、行ごとの `core.species_id` と不明 IV 表示を検証 |
+| `wasm-pkg/src/generation/flows/types.rs` | テスト追加 | ニドラン／イルミーゼの性別による確定種族 ID を検証 |
 | `wasm-pkg/src/lib.rs` | 修正 | `resolve_egg_data_batch(data, locale)` の2引数 API へ変更 |
 | `wasm-pkg/src/types/generation.rs` | 修正 | Egg の `core.species_id` に関する古いコメントを現行生成仕様へ修正 |
 | `wasm-pkg/tests/resolve_integration.rs` | 修正 | 行ごとの異種族、未指定種族、バッチ順序を新 API で検証 |
 | `src/wasm/*` | 再生成 | Rust/WASM API の TypeScript バインディングを更新 |
-| `src/test/unit/hooks/use-result-views.test.tsx` | 新規 | 一対一対応、差分解決、コンテキスト失効、順序、長さ不一致を検証 |
+| `src/test/unit/hooks/use-result-views.test.ts` | 新規 | 一対一対応、差分解決、コンテキスト失効、順序、長さ不一致を検証 |
+| `src/test/unit/features/use-result-view-hooks.test.ts` | 新規 | 生成時 ROM バージョンとロケール変更による feature hook の再解決を検証 |
+| `src/test/unit/hooks/use-export.test.ts` | 新規 | 生成時 ROM バージョンをファイル名と JSON meta へ使用することを検証 |
 | `src/test/unit/features/pokemon-list-store.test.ts` | 修正 | 生成時 ROM バージョンの保存・非永続化・フォーム変更からの独立を検証 |
 | `src/test/components/features/*result*.test.tsx` | 新規・修正 | raw `32` / ui `"?"`、数値 accessor、詳細表示、Seed 転記を検証 |
 | `src/test/unit/export.test.ts` | 修正 | 3 feature の ResultView 出力と孵化検索の `"?"` を検証 |
 | `src/test/integration/egg-list-worker.test.ts` | 修正 | 生成結果自身の種族 ID を resolver が使用することを検証 |
+| `src/test/integration/egg-datetime-search.test.ts` | 修正 | 親 IV 不明の実検索結果が raw `32`、表示解決後が `"?"` となることを検証 |
 
 ## 3. 設計方針
 
@@ -151,9 +158,11 @@ resolver 内でステータスを再計算しない。ニドラン、イルミ�
 
 ### 3.6 Pokemon の結果コンテキスト
 
-`PokemonListResultState` に `resultVersion: RomVersion | undefined` を追加する。検索開始 action は `resultEncounterType` と `GenerationConfig.version` を同時に記録し、結果を空にする。
+`PokemonListResultState` に `resultVersion: RomVersion | undefined` を追加する。検索開始 action は `resultEncounterType` と `GenerationConfig.version` を同時に記録し、結果を空にする。非空結果はこの action の後にだけ追加でき、結果コンテキストがない状態での追加は例外にする。コンテキストを持たない任意の `setResults()` は公開しない。
 
 フォームの変更と `resetForm()` は既存結果、`resultEncounterType`、`resultVersion` を保持する。`clearResults()` は3つを消去する。persist の `partialize` には結果コンテキストを含めない。
+
+Pokemon List のエクスポートは、現在の DS 設定の ROM バージョンを `resultVersion` で上書きしてファイル名と JSON meta を生成する。これにより、表示行の持ち物名と出力コンテキストが同じ生成時バージョンを参照する。
 
 ### 3.7 表・詳細・選択
 
@@ -174,7 +183,7 @@ columnHelper.accessor((result) => result.raw.egg.core.ivs.hp, {
 
 ### 3.8 エクスポート
 
-既存の CSV / TSV / JSON は列定義に基づく表示形式の出力であり、生データの構造保存ではない。個体値、性格、特性、性別、色違い、PID などは ui を使用し、不明個体値を `"?"` として出力する。
+既存の CSV / TSV / JSON は列定義に基づく表示形式の出力であり、生データの構造保存ではない。個体値、性格、特性、性別、色違い、PID などは ui を使用し、不明個体値を `"?"` として出力する。Pokemon List のファイル名と JSON meta の ROM バージョンも生成時の結果コンテキストを使用する。
 
 孵化検索の日時表記など、検索結果固有で既存形式の維持が必要な項目は raw の `SeedOrigin` を参照できる。Seed の構造をそのまま保存する新しい raw JSON 形式は本仕様の対象外とする。
 
@@ -246,9 +255,11 @@ interface UseResultViewsOptions<TRaw extends object, TUi extends object> {
 | Rust 統合 | resolver batch | 行ごとに異なる種族を同順・同件数で解決し、ニドラン／イルミーゼ例外後の ID を尊重する |
 | TypeScript hook | `useResultViews` | raw/ui の組、追加分だけの resolver 呼び出し、ロケール/バージョン変更時の全件再解決、並べ替え、重複、長さ不一致 |
 | Store ユニット | Pokemon List | 検索開始時の ROM バージョン保存、clear、reset、非永続化 |
+| feature hook | Pokemon / Egg List | 生成時バージョンの保存と使用、ロケール変更時の raw 維持・ui 再解決 |
 | コンポーネント | 3種の結果列 | raw 数値 accessor と ui 表示 cell、`32` を `"?"` と表示 |
 | コンポーネント | 孵化検索詳細 | IV が `"?"`、Seed 転記は raw の `SeedOrigin` |
-| エクスポート | 3種の列定義 | ResultView を受け取り、孵化検索の IV を CSV / TSV / JSON で `"?"` と出力 |
+| エクスポート | 3種の列定義 | ResultView を受け取り、raw `32` を `"?"` と出力。孵化検索は CSV / TSV / JSON を検証 |
+| エクスポート hook | Pokemon List | 生成時 ROM バージョンをファイル名と JSON meta へ使用 |
 | 統合 | Egg List Worker + resolver | 生成パラメータの種族が raw に保存され、その raw だけから名称・特性・stats を解決 |
 | 回帰 | 全テスト | 生成、検索、言語切替、詳細、エクスポート、特殊エンカウント列を壊さない |
 
@@ -270,16 +281,42 @@ git diff --check
 
 - [x] 現行の Store、hook、resolver、表、詳細、エクスポートのデータ経路を確認する
 - [x] Egg の行ごとの確定種族と Pokemon の生成時 ROM バージョンを解決コンテキストへ含める方針を確定する
-- [ ] TDD Red のテストを追加し、意図した理由で失敗することを確認する
-- [ ] Egg resolver を raw の `core.species_id` 正本へ変更する
-- [ ] `ResultView` 型と差分解決 hook を実装する
-- [ ] Pokemon List、Egg List、Egg Search の hook を `ResultView[]` へ統一する
-- [ ] 3 feature の表、詳細、選択、エクスポートを移行する
-- [ ] WASM 生成物を更新する
-- [ ] 対象テストと全体検証を実行する
-- [ ] 実装差分と検証結果を仕様書へ反映する
-- [ ] 仕様書を `spec/agent/complete/local_117/` へ移動する
+- [x] TDD Red のテストを追加し、意図した理由で失敗することを確認する
+- [x] Egg resolver を raw の `core.species_id` 正本へ変更する
+- [x] `ResultView` 型と差分解決 hook を実装する
+- [x] Pokemon List、Egg List、Egg Search の hook を `ResultView[]` へ統一する
+- [x] 3 feature の表、詳細、選択、エクスポートを移行する
+- [x] WASM 生成物を更新する
+- [x] 対象テストと全体検証を実行する
+- [x] 実装差分と検証結果を仕様書へ反映する
+- [x] 仕様書を `spec/agent/complete/local_117/` へ移動する
 
 ## 7. 検証結果
 
-未実行（仕様書作成後、実装前）。
+### 7.1 TDD Red
+
+- Egg resolver の旧3引数 API を2引数へ変更する前に、新契約の呼び出しが Rust `E0061` で失敗することを確認した。
+- Egg List／Egg Search の列と詳細へ raw `32` / ui `"?"` の試験を追加し、旧コンポーネントが `ResultView` を解釈できず4件失敗することを確認した。
+- 実装後、同じ試験が成功することを確認した。
+
+### 7.2 回帰試験
+
+| コマンド | 結果 |
+|----------|------|
+| `cargo test --package wasm-pkg --quiet` | Rust unit 336件、`frame_3ds_bw2` 1件、resolver integration 6件成功 |
+| `pnpm test:run` | Test Files 122件成功・1件skip、Tests 1472件成功・4件skip |
+| `pnpm exec tsc -b --noEmit` | 成功 |
+| `pnpm lint` | oxlint 0件、`cargo clippy -p wasm-pkg --all-targets -- -D warnings` 成功 |
+| `pnpm format:check` | oxfmt、`cargo fmt --check` 成功 |
+| `pnpm build` | release WASM生成、TypeScript build、Vite production build 成功 |
+| `git diff --check` | 成功 |
+
+`pnpm build:wasm:dev` 後の開発用WASMでは、既存の WorkerPool キャンセル試験が5秒以内に進捗を返さず失敗した。配布と同じ `pnpm build:wasm` の release／`wasm-opt` 済みWASMへ戻して単独再実行したところ7件すべて成功し、続く全体試験も上表の件数で成功した。製品コードの回帰ではなく、未追跡の開発用WASMによる実行時間差と判定した。
+
+### 7.3 受け入れ条件の確認
+
+- 親 IV を不明にした実際の孵化検索で raw に `32` が生成され、Egg resolver 後の同じ個体は `"?"` となる。
+- Pokemon List、Egg List、Egg Search の表・詳細・出力は `ResultView` を受け取り、個体表示は ui、数値ソート・既存の起動条件表記・Seed 転記は raw を参照する。
+- Egg resolver は各行の `core.species_id` を使い、ニドラン♂／バルビートを含む行別の種族名・特性名を同順・同件数で返す。
+- Pokemon の表示と出力コンテキストは生成時 ROM バージョンを使い、現在のフォーム／DS設定変更から独立する。
+- ロケール変更では同じ raw 参照を維持し、ui だけを再解決する。追加バッチでは未解決の raw オブジェクトだけを resolver へ渡す。
