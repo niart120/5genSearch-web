@@ -18,9 +18,13 @@ import {
 import { serializeSeedOrigin } from '@/services/seed-origin-serde';
 import type { ExportColumn, ExportMeta } from '@/services/export';
 import {
+  createEggSearchExportColumns,
+  createEggListExportColumns,
   createPokemonListExportColumns,
   createTidAdjustExportColumns,
 } from '@/services/export-columns';
+import { createEggListResultView, createEggSearchResultView } from '@/test/helpers/egg-result-view';
+import { createPokemonListResultView } from '@/test/helpers/pokemon-result-view';
 import type {
   DsConfig,
   GameStartConfig,
@@ -387,6 +391,65 @@ describe('createPokemonListExportColumns', () => {
     expect(hpAlt).toBeDefined();
     expect(hpAlt!.detailOnly).toBe(true);
     expect(hpAlt!.header).toContain('IV');
+  });
+
+  it('ResultViewのuiを参照しrawの不明個体値32を露出しない', () => {
+    const result = createPokemonListResultView();
+    const columns = createPokemonListExportColumns('ivs');
+    const [header, row] = toCsv([result], columns).replace('\uFEFF', '').split('\r\n');
+    const hpIndex = header.split(',').indexOf('H');
+
+    expect(result.raw.core.ivs.hp).toBe(32);
+    expect(row.split(',')[hpIndex]).toBe('?');
+  });
+});
+
+describe('createEggListExportColumns', () => {
+  it('ResultViewのuiを参照しrawの不明個体値32を露出しない', () => {
+    const result = createEggListResultView();
+    const columns = createEggListExportColumns('ivs');
+    const [header, row] = toCsv([result], columns).replace('\uFEFF', '').split('\r\n');
+    const hpIndex = header.split(',').indexOf('H');
+
+    expect(result.raw.core.ivs.hp).toBe(32);
+    expect(row.split(',')[hpIndex]).toBe('?');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// egg-search columns — unknown IV presentation
+// ---------------------------------------------------------------------------
+
+describe('createEggSearchExportColumns', () => {
+  const result = createEggSearchResultView();
+  const columns = createEggSearchExportColumns();
+  const meta = buildExportMeta({
+    feature: 'egg-search',
+    totalResults: 1,
+    includeDetails: false,
+    config: createTestDsConfig(),
+    gameStart: createTestGameStart(),
+    ranges: createTestRanges(),
+  });
+
+  it('CSVでは不明個体値を?として出力する', () => {
+    const [header, row] = toCsv([result], columns).replace('\uFEFF', '').split('\r\n');
+    const hpIndex = header.split(',').indexOf('H');
+
+    expect(row.split(',')[hpIndex]).toBe('?');
+  });
+
+  it('TSVでは不明個体値を?として出力する', () => {
+    const [header, row] = toTsv([result], columns).split('\n');
+    const hpIndex = header.split('\t').indexOf('H');
+
+    expect(row.split('\t')[hpIndex]).toBe('?');
+  });
+
+  it('JSONでは不明個体値を?として出力する', () => {
+    const parsed = JSON.parse(toJson([result], columns, meta));
+
+    expect(parsed.results[0].hp).toBe('?');
   });
 });
 

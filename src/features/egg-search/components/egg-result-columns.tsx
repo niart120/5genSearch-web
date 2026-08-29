@@ -1,5 +1,5 @@
 /**
- * EggDatetimeSearchResult テーブル列定義
+ * EggSearchResultView テーブル列定義
  *
  * 孵化検索結果を DataTable で表示するための ColumnDef。
  */
@@ -8,23 +8,23 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toHex, formatDatetime, formatGender, formatShiny, formatAbilitySlot } from '@/lib/format';
-import { getNatureName, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
+import { toHex, formatDatetime } from '@/lib/format';
+import { STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { SupportedLocale } from '@/i18n';
-import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
+import type { EggSearchResultView } from '@/lib/result-view';
 
-const columnHelper = createColumnHelper<EggDatetimeSearchResult>();
+const columnHelper = createColumnHelper<EggSearchResultView>();
 
 /** Startup バリアントからの抽出ヘルパー */
-function getStartup(result: EggDatetimeSearchResult) {
-  const source = result.egg.source;
+function getStartup(result: EggSearchResultView) {
+  const source = result.raw.egg.source;
   if ('Startup' in source) return source.Startup;
   return;
 }
 
 function createEggResultColumns(
   locale: SupportedLocale,
-  onSelect?: (result: EggDatetimeSearchResult) => void
+  onSelect?: (result: EggSearchResultView) => void
 ) {
   const headers = locale === 'ja' ? STAT_HEADERS_JA : STAT_HEADERS_EN;
   const ivKeys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
@@ -78,46 +78,46 @@ function createEggResultColumns(
         size: 60,
       }
     ),
-    columnHelper.accessor((row) => getNatureName(row.egg.core.nature, locale), {
+    columnHelper.accessor((row) => row.ui.nature_name, {
       id: 'nature',
       header: () => t`Nature`,
       size: 80,
     }),
     // 個別 IV 列 (H/A/B/C/D/S)
     ...headers.map((header, i) =>
-      columnHelper.accessor((row) => row.egg.core.ivs[ivKeys[i]], {
+      columnHelper.accessor((row) => row.raw.egg.core.ivs[ivKeys[i]], {
         id: `iv_${i}`,
         header: () => header,
         size: 40,
-        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+        cell: (info) => <span className="font-mono text-xs">{info.row.original.ui.ivs[i]}</span>,
       })
     ),
-    columnHelper.accessor((row) => formatAbilitySlot(row.egg.core.ability_slot), {
+    columnHelper.accessor((row) => row.ui.ability_name, {
       id: 'ability',
       header: () => t`Ability`,
       size: 50,
     }),
-    columnHelper.accessor((row) => formatGender(row.egg.core.gender), {
+    columnHelper.accessor((row) => row.ui.gender_symbol, {
       id: 'gender',
       header: () => t`Gender`,
       size: 50,
     }),
-    columnHelper.accessor((row) => formatShiny(row.egg.core.shiny_type), {
+    columnHelper.accessor((row) => row.ui.shiny_symbol, {
       id: 'shiny',
       header: () => t`Shiny`,
       size: 40,
     }),
-    columnHelper.accessor((row) => row.egg.advance, {
+    columnHelper.accessor((row) => row.raw.egg.advance, {
       id: 'advance',
       header: () => t`Advance`,
       size: 60,
     }),
-    columnHelper.accessor((row) => row.egg.margin_frames, {
+    columnHelper.accessor((row) => row.raw.egg.margin_frames, {
       id: 'margin',
       header: () => t`Margin`,
       size: 60,
       cell: (info) => {
-        const val = info.getValue();
+        const val = info.row.original.ui.margin_frames;
         return val === undefined ? '-' : val;
       },
     }),

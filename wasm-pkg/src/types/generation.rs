@@ -285,7 +285,7 @@ pub struct CorePokemonData {
     pub stats: Stats,
     /// 種族 ID
     /// - ポケモン: 常に設定
-    /// - 卵: 常に 0 (外部指定が必要)
+    /// - 卵: 指定時は性別による例外変換後の確定種族、未指定時は 0
     pub species_id: u16,
     /// レベル
     /// - ポケモン: 生成時に決定

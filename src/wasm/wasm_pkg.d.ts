@@ -571,7 +571,7 @@ export interface CorePokemonData {
     /**
      * 種族 ID
      * - ポケモン: 常に設定
-     * - 卵: 常に 0 (外部指定が必要)
+     * - 卵: 指定時は性別による例外変換後の確定種族、未指定時は 0
      */
     species_id: number;
     /**
@@ -1682,12 +1682,11 @@ export function lcg_seed_to_mt_seed(seed: LcgSeed): MtSeed;
  * # Arguments
  * * `data` - 生成された卵データの配列
  * * `locale` - ロケール (`"ja"` または `"en"`)
- * * `species_id` - 種族ID (任意。指定時は種族名や特性名を解決)
  *
  * # Returns
  * 解決済み表示用卵データの配列
  */
-export function resolve_egg_data_batch(data: GeneratedEggData[], locale: string, species_id?: number | null): UiEggData[];
+export function resolve_egg_data_batch(data: GeneratedEggData[], locale: string): UiEggData[];
 
 /**
  * ポケモンデータをバッチ解決

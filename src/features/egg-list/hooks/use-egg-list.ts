@@ -5,8 +5,9 @@
  * 結果は Feature Store に同期し、Feature 切替後も保持される。
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useResultViews } from '@/hooks/use-result-views';
 import { createEggListTasks } from '@/services/search-tasks';
 import { flattenBatchResults, isGeneratedEggData } from '@/services/batch-utils';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
@@ -17,17 +18,16 @@ import type {
   GenerationConfig,
   EggFilter,
   GeneratedEggData,
-  UiEggData,
 } from '@/wasm/wasm_pkg.js';
 import type { AggregatedProgress } from '@/services/progress';
 import type { SupportedLocale } from '@/i18n';
+import type { EggListResultView } from '@/lib/result-view';
 
 interface UseEggListReturn {
   isLoading: boolean;
   isInitialized: boolean;
   progress: AggregatedProgress | undefined;
-  rawResults: GeneratedEggData[];
-  uiResults: UiEggData[];
+  results: EggListResultView[];
   error: Error | undefined;
   generate: (
     origins: SeedOrigin[],
@@ -38,10 +38,7 @@ interface UseEggListReturn {
   cancel: () => void;
 }
 
-export function useEggList(
-  locale: SupportedLocale,
-  speciesId: number | undefined
-): UseEggListReturn {
+export function useEggList(locale: SupportedLocale): UseEggListReturn {
   const config = useSearchConfig(false);
   const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
     useSearch(config);
@@ -70,11 +67,15 @@ export function useEggList(
     }
   }, [results, appendResults]);
 
-  // UI 変換は Store の raw データ + locale/speciesId から導出
-  const uiResults = useMemo(() => {
-    if (storedRawResults.length === 0) return [];
-    return resolve_egg_data_batch(storedRawResults, locale, speciesId);
-  }, [storedRawResults, locale, speciesId]);
+  const resolveBatch = useCallback(
+    (rawResults: GeneratedEggData[]) => resolve_egg_data_batch(rawResults, locale),
+    [locale]
+  );
+  const resultViews = useResultViews({
+    rawResults: storedRawResults,
+    resolutionKey: locale,
+    resolveBatch,
+  });
 
   // 検索完了時にフラグリセット
   useEffect(() => {
@@ -103,8 +104,7 @@ export function useEggList(
     isLoading,
     isInitialized,
     progress,
-    rawResults: storedRawResults,
-    uiResults,
+    results: resultViews,
     error,
     generate,
     cancel,

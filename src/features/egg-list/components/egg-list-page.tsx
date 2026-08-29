@@ -31,9 +31,10 @@ import type {
   EggFilter,
   GenerationConfig,
   EggGenerationParams,
+  GeneratedEggData,
   SeedOrigin,
-  UiEggData,
 } from '@/wasm/wasm_pkg.js';
+import type { EggListResultView } from '@/lib/result-view';
 import { estimateEggListResults } from '@/services/search-estimation';
 
 interface EggListRequest {
@@ -91,10 +92,8 @@ function EggListPage(): ReactElement {
   const setStatMode = useEggListStore((s) => s.setStatMode);
 
   // 生成フック
-  const { isLoading, isInitialized, progress, uiResults, error, generate, cancel } = useEggList(
-    language,
-    speciesId
-  );
+  const { isLoading, isInitialized, progress, results, error, generate, cancel } =
+    useEggList(language);
 
   // バリデーション
   const validation = useMemo(
@@ -111,11 +110,15 @@ function EggListPage(): ReactElement {
     [seedInputMode, seedOrigins, eggParams, genConfig, filter, statsFilter, speciesId]
   );
 
-  const [selectedResult, setSelectedResult] = useState<UiEggData | undefined>();
+  const [selectedRawResult, setSelectedRawResult] = useState<GeneratedEggData | undefined>();
   const [detailOpen, setDetailOpen] = useState(false);
+  const selectedResult = useMemo(
+    () => results.find((result) => result.raw === selectedRawResult),
+    [results, selectedRawResult]
+  );
 
-  const handleSelectResult = useCallback((result: UiEggData) => {
-    setSelectedResult(result);
+  const handleSelectResult = useCallback((result: EggListResultView) => {
+    setSelectedRawResult(result.raw);
     setDetailOpen(true);
   }, []);
 
@@ -218,7 +221,7 @@ function EggListPage(): ReactElement {
   // エクスポート
   const exportColumns = useMemo(() => createEggListExportColumns(statMode), [statMode]);
   const exportActions = useExport({
-    data: uiResults,
+    data: results,
     columns: exportColumns,
     featureId: 'egg-list',
     statMode,
@@ -290,7 +293,7 @@ function EggListPage(): ReactElement {
         <FeaturePageLayout.Results>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
@@ -304,12 +307,12 @@ function EggListPage(): ReactElement {
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
                 <Trans>Stats</Trans>
               </Label>
-              <ExportToolbar resultCount={uiResults.length} exportActions={exportActions} />
+              <ExportToolbar resultCount={results.length} exportActions={exportActions} />
             </div>
           </div>
           <DataTable
             columns={columns}
-            data={uiResults}
+            data={results}
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}

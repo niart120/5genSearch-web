@@ -31,11 +31,12 @@ import { useExport } from '@/hooks/use-export';
 import { createPokemonListExportColumns } from '@/services/export-columns';
 import type {
   GenerationConfig,
+  GeneratedPokemonData,
   PokemonFilter,
   PokemonGenerationParams,
   SeedOrigin,
-  UiPokemonData,
 } from '@/wasm/wasm_pkg.js';
+import type { PokemonListResultView } from '@/lib/result-view';
 import { estimatePokemonListResults } from '@/services/search-estimation';
 
 interface PokemonListRequest {
@@ -100,12 +101,13 @@ function PokemonListPage(): ReactElement {
     isLoading,
     isInitialized,
     progress,
-    uiResults,
+    results,
     resultEncounterType,
+    resultVersion,
     error,
     generate,
     cancel,
-  } = usePokemonList(dsConfig.version, language);
+  } = usePokemonList(language);
 
   // バリデーション
   const validation = useMemo(
@@ -138,14 +140,18 @@ function PokemonListPage(): ReactElement {
 
   // 詳細ダイアログ
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedResult, setSelectedResult] = useState<UiPokemonData | undefined>();
+  const [selectedRawResult, setSelectedRawResult] = useState<GeneratedPokemonData | undefined>();
+  const selectedResult = useMemo(
+    () => results.find((result) => result.raw === selectedRawResult),
+    [results, selectedRawResult]
+  );
 
   // ステータス/IV 表示切替 (Feature Store)
   const statMode = usePokemonListStore((s) => s.statMode);
   const setStatMode = usePokemonListStore((s) => s.setStatMode);
 
-  const handleSelectResult = useCallback((result: UiPokemonData) => {
-    setSelectedResult(result);
+  const handleSelectResult = useCallback((result: PokemonListResultView) => {
+    setSelectedRawResult(result.raw);
     setDetailOpen(true);
   }, []);
 
@@ -163,10 +169,11 @@ function PokemonListPage(): ReactElement {
   // エクスポート
   const exportColumns = useMemo(() => createPokemonListExportColumns(statMode), [statMode]);
   const exportActions = useExport({
-    data: uiResults,
+    data: results,
     columns: exportColumns,
     featureId: 'pokemon-list',
     statMode,
+    versionOverride: resultVersion,
   });
 
   // 確認ダイアログ
@@ -309,7 +316,7 @@ function PokemonListPage(): ReactElement {
         <FeaturePageLayout.Results>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              <Trans>Results</Trans>: {uiResults.length.toLocaleString()}
+              <Trans>Results</Trans>: {results.length.toLocaleString()}
             </p>
             <div className="flex items-center gap-2">
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
@@ -323,12 +330,12 @@ function PokemonListPage(): ReactElement {
               <Label htmlFor="stat-mode-toggle" className="text-xs text-muted-foreground">
                 <Trans>Stats</Trans>
               </Label>
-              <ExportToolbar resultCount={uiResults.length} exportActions={exportActions} />
+              <ExportToolbar resultCount={results.length} exportActions={exportActions} />
             </div>
           </div>
           <DataTable
             columns={columns}
-            data={uiResults}
+            data={results}
             className="flex-1"
             emptyMessage={t`No results found. Configure parameters and start generating.`}
             getRowId={(_row, index) => String(index)}

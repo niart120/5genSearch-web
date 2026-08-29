@@ -13,13 +13,8 @@ use crate::types::{AbilitySlot, GeneratedEggData, IV_VALUE_UNKNOWN, SeedOrigin, 
 /// # Arguments
 /// * `data` - 生成された卵データ
 /// * `locale` - ロケール (`"ja"` または `"en"`)
-/// * `species_id` - 種族 ID (任意。指定時は種族名や特性名を解決)
 #[allow(clippy::needless_pass_by_value)]
-pub fn resolve_egg_data(
-    data: GeneratedEggData,
-    locale: &str,
-    species_id: Option<u16>,
-) -> UiEggData {
+pub fn resolve_egg_data(data: GeneratedEggData, locale: &str) -> UiEggData {
     // Seed情報展開
     let base_seed = format!("{:016X}", data.source.base_seed().value());
     let mt_seed = format!("{:08X}", data.source.mt_seed().value());
@@ -50,17 +45,18 @@ pub fn resolve_egg_data(
     };
 
     // 種族名解決
-    let species_name = species_id.map(|id| get_species_name(id, locale).to_string());
+    let species_id = data.core.species_id;
+    let species_name = (species_id != 0).then(|| get_species_name(species_id, locale).to_string());
 
     // 性格名解決
     let nature_name = get_nature_name(data.core.nature as u8, locale).to_string();
 
     // 特性名解決
-    let ability_name = if let Some(id) = species_id {
-        get_ability_name(id, data.core.ability_slot, locale).to_string()
-    } else {
+    let ability_name = if species_id == 0 {
         // 種族未指定時はスロット名を返す
         format_ability_slot_name(data.core.ability_slot, locale)
+    } else {
+        get_ability_name(species_id, data.core.ability_slot, locale).to_string()
     };
 
     let gender_symbol = match data.core.gender {
@@ -200,7 +196,7 @@ mod tests {
     #[test]
     fn test_resolve_egg_data_without_species() {
         let data = make_test_egg_data();
-        let ui = resolve_egg_data(data, "ja", None);
+        let ui = resolve_egg_data(data, "ja");
 
         assert_eq!(ui.advance, 50);
         assert_eq!(ui.species_name, None);
@@ -215,12 +211,12 @@ mod tests {
     #[test]
     fn test_resolve_egg_data_with_species() {
         // stats は CorePokemonData に事前計算済み (species_id=0 の場合は UNKNOWN)
-        let data = make_test_egg_data();
-        let ui = resolve_egg_data(data, "ja", Some(25)); // ピカチュウ
+        let mut data = make_test_egg_data();
+        data.core.species_id = 25; // ピカチュウ
+        let ui = resolve_egg_data(data, "ja");
 
         assert_eq!(ui.species_name, Some("ピカチュウ".to_string()));
-        // 特性名が解決される
-        assert_ne!(ui.ability_name, "");
+        assert_eq!(ui.ability_name, "ひらいしん");
         // species_id=0 で生成されたデータのため stats は "?"
         assert!(ui.stats.iter().all(|s| s == "?"));
     }
@@ -239,7 +235,7 @@ mod tests {
         data.core.stats = stats;
         data.core.species_id = species_id;
 
-        let ui = resolve_egg_data(data, "ja", Some(species_id));
+        let ui = resolve_egg_data(data, "ja");
         assert_eq!(ui.species_name, Some("ピカチュウ".to_string()));
         // stats が事前計算済みのため "?" でない
         assert!(ui.stats[0] != "?"); // HP
@@ -247,10 +243,23 @@ mod tests {
 
     #[test]
     fn test_resolve_egg_data_en() {
-        let data = make_test_egg_data();
-        let ui = resolve_egg_data(data, "en", Some(25));
+        let mut data = make_test_egg_data();
+        data.core.species_id = 25;
+        let ui = resolve_egg_data(data, "en");
 
         assert_eq!(ui.species_name, Some("Pikachu".to_string()));
         assert_eq!(ui.nature_name, "Jolly");
+    }
+
+    #[test]
+    fn test_resolve_egg_data_formats_unknown_iv() {
+        let mut data = make_test_egg_data();
+        data.core.ivs = Ivs::new(IV_VALUE_UNKNOWN, 31, 30, 29, 28, 27);
+
+        let ui = resolve_egg_data(data, "ja");
+
+        assert_eq!(ui.ivs, ["?", "31", "30", "29", "28", "27"]);
+        assert_eq!(ui.hidden_power_type, "?");
+        assert_eq!(ui.hidden_power_power, "?");
     }
 }

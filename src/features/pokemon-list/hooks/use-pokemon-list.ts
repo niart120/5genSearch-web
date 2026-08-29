@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useResultViews } from '@/hooks/use-result-views';
+import type { PokemonListResultView } from '@/lib/result-view';
 import { createPokemonListTasks } from '@/services/search-tasks';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
@@ -10,8 +12,6 @@ import type {
   GenerationConfig,
   PokemonFilter,
   GeneratedPokemonData,
-  UiPokemonData,
-  RomVersion,
 } from '@/wasm/wasm_pkg.js';
 import type { AggregatedProgress } from '@/services/progress';
 import type { SupportedLocale } from '@/i18n';
@@ -20,20 +20,20 @@ interface UsePokemonListReturn {
   isLoading: boolean;
   isInitialized: boolean;
   progress: AggregatedProgress | undefined;
-  rawResults: GeneratedPokemonData[];
-  uiResults: UiPokemonData[];
+  results: PokemonListResultView[];
   resultEncounterType: PokemonGenerationParams['encounter_type'] | undefined;
+  resultVersion: GenerationConfig['version'] | undefined;
   error: Error | undefined;
   generate: (
     origins: SeedOrigin[],
     params: PokemonGenerationParams,
     config: GenerationConfig,
-    filter: PokemonFilter | undefined
+    filter?: PokemonFilter
   ) => void;
   cancel: () => void;
 }
 
-export function usePokemonList(version: RomVersion, locale: SupportedLocale): UsePokemonListReturn {
+export function usePokemonList(locale: SupportedLocale): UsePokemonListReturn {
   const config = useSearchConfig(false);
   const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
     useSearch(config);
@@ -43,6 +43,7 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
   const startStoreResults = usePokemonListStore((s) => s.startResults);
   const storedRawResults = usePokemonListStore((s) => s.results);
   const resultEncounterType = usePokemonListStore((s) => s.resultEncounterType);
+  const resultVersion = usePokemonListStore((s) => s.resultVersion);
 
   // mount 直後の空配列で Store 上書きを防止
   const searchActiveRef = useRef(false);
@@ -63,11 +64,22 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     }
   }, [results, appendResults]);
 
-  // UI 変換は Store の raw データ + locale/version から導出
-  const uiResults = useMemo(() => {
-    if (storedRawResults.length === 0) return [];
-    return resolve_pokemon_data_batch(storedRawResults, version, locale);
-  }, [storedRawResults, version, locale]);
+  const resolveBatch = useCallback(
+    (rawResults: GeneratedPokemonData[]) => {
+      if (resultVersion === undefined) {
+        throw new Error('Pokemon results are missing their ROM version context');
+      }
+      return resolve_pokemon_data_batch(rawResults, resultVersion, locale);
+    },
+    [resultVersion, locale]
+  );
+
+  // UI 変換は Store の raw データ + 生成時バージョン + locale から導出
+  const resolvedResults = useResultViews({
+    rawResults: storedRawResults,
+    resolutionKey: `${resultVersion ?? 'undefined'}:${locale}`,
+    resolveBatch,
+  });
 
   // 検索完了時にフラグリセット
   useEffect(() => {
@@ -81,11 +93,11 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
       origins: SeedOrigin[],
       params: PokemonGenerationParams,
       genConfig: GenerationConfig,
-      filter: PokemonFilter | undefined
+      filter?: PokemonFilter
     ) => {
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
-      startStoreResults(params.encounter_type);
+      startStoreResults(params.encounter_type, genConfig.version);
       const tasks = createPokemonListTasks(origins, params, genConfig, filter, workerCount);
       start(tasks);
     },
@@ -96,9 +108,9 @@ export function usePokemonList(version: RomVersion, locale: SupportedLocale): Us
     isLoading,
     isInitialized,
     progress,
-    rawResults: storedRawResults,
-    uiResults,
+    results: resolvedResults,
     resultEncounterType,
+    resultVersion,
     error,
     generate,
     cancel,

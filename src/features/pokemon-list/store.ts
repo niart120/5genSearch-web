@@ -12,6 +12,7 @@ import type {
   StatsFilter,
   GeneratedPokemonData,
   EncounterType,
+  RomVersion,
   SeedOrigin,
 } from '@/wasm/wasm_pkg.js';
 import {
@@ -42,6 +43,7 @@ interface PokemonListResultState {
   seedOrigins: SeedOrigin[];
   results: GeneratedPokemonData[];
   resultEncounterType: EncounterType | undefined;
+  resultVersion: RomVersion | undefined;
 }
 
 type PokemonListState = PokemonListFormState & PokemonListResultState;
@@ -61,9 +63,8 @@ interface PokemonListActions {
   setStatsFilter: (statsFilter: StatsFilter | undefined) => void;
   setStatMode: (statMode: StatDisplayMode) => void;
 
-  setResults: (results: GeneratedPokemonData[]) => void;
   appendResults: (newItems: GeneratedPokemonData[]) => void;
-  startResults: (encounterType: EncounterType) => void;
+  startResults: (encounterType: EncounterType, version: RomVersion) => void;
   clearResults: () => void;
 
   resetForm: () => void;
@@ -87,6 +88,7 @@ const DEFAULT_RESULT_STATE: PokemonListResultState = {
   seedOrigins: [],
   results: [],
   resultEncounterType: undefined,
+  resultVersion: undefined,
 };
 
 /* ------------------------------------------------------------------ */
@@ -113,9 +115,18 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
       setStatsFilter: (statsFilter) => set({ statsFilter }),
       setStatMode: (statMode) => set({ statMode }),
 
-      setResults: (results) => set({ results }),
-      appendResults: (newItems) => set((state) => ({ results: [...state.results, ...newItems] })),
-      startResults: (resultEncounterType) => set({ results: [], resultEncounterType }),
+      appendResults: (newItems) =>
+        set((state) => {
+          if (
+            newItems.length > 0 &&
+            (state.resultEncounterType === undefined || state.resultVersion === undefined)
+          ) {
+            throw new Error('Pokemon results require encounter type and ROM version context');
+          }
+          return { results: [...state.results, ...newItems] };
+        }),
+      startResults: (resultEncounterType, resultVersion) =>
+        set({ results: [], resultEncounterType, resultVersion }),
       clearResults: () => set(DEFAULT_RESULT_STATE),
 
       resetForm: () =>

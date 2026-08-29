@@ -8,8 +8,10 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useResultViews } from '@/hooks/use-result-views';
 import { createEggSearchTasks } from '@/services/search-tasks';
 import { useEggSearchStore } from '../store';
+import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
 import type {
   DatetimeSearchContext,
   EggGenerationParams,
@@ -18,12 +20,14 @@ import type {
   EggDatetimeSearchResult,
 } from '@/wasm/wasm_pkg.js';
 import type { AggregatedProgress } from '@/services/progress';
+import type { SupportedLocale } from '@/i18n';
+import type { EggSearchResultView } from '@/lib/result-view';
 
 interface UseEggSearchReturn {
   isLoading: boolean;
   isInitialized: boolean;
   progress: AggregatedProgress | undefined;
-  results: EggDatetimeSearchResult[];
+  results: EggSearchResultView[];
   error: Error | undefined;
   startSearch: (
     context: DatetimeSearchContext,
@@ -51,7 +55,7 @@ function flattenEggResults(batches: unknown[][]): EggDatetimeSearchResult[] {
 /**
  * 孵化起動時刻検索を実行するカスタムフック
  */
-export function useEggSearch(): UseEggSearchReturn {
+export function useEggSearch(locale: SupportedLocale): UseEggSearchReturn {
   const config = useSearchConfig(false);
   const search = useSearch(config);
 
@@ -103,11 +107,25 @@ export function useEggSearch(): UseEggSearchReturn {
     }
   }, [search.isLoading]);
 
+  const resolveBatch = useCallback(
+    (rawResults: EggDatetimeSearchResult[]) =>
+      resolve_egg_data_batch(
+        rawResults.map((result) => result.egg),
+        locale
+      ),
+    [locale]
+  );
+  const resultViews = useResultViews({
+    rawResults: storedResults,
+    resolutionKey: locale,
+    resolveBatch,
+  });
+
   return {
     isLoading: search.isLoading,
     isInitialized: search.isInitialized,
     progress: search.progress,
-    results: storedResults,
+    results: resultViews,
     error: search.error,
     startSearch,
     cancel: search.cancel,

@@ -1,7 +1,7 @@
 /**
  * 孵化検索結果詳細ダイアログ
  *
- * EggDatetimeSearchResult の詳細を表示する Radix Dialog。
+ * EggSearchResultView の詳細を表示する Radix Dialog。
  * 起動条件 + 個体データ + 検索情報を表示し、各値にコピーボタンを付ける。
  */
 
@@ -17,24 +17,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { DetailRow } from '@/components/data-display/detail-row';
-import {
-  toBigintHex,
-  toHex,
-  formatDatetime,
-  formatKeyMask,
-  formatGender,
-  formatShinyDetailed,
-  formatAbilitySlot,
-} from '@/lib/format';
-import { getNatureName, getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
+import { toBigintHex, toHex, formatDatetime, formatKeyMask } from '@/lib/format';
+import { getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { useUiStore } from '@/stores/settings/ui';
-import type { EggDatetimeSearchResult } from '@/wasm/wasm_pkg.js';
+import type { EggSearchResultView } from '@/lib/result-view';
 
 interface ResultDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  result: EggDatetimeSearchResult | undefined;
+  result: EggSearchResultView | undefined;
 }
 
 function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogProps) {
@@ -43,13 +35,15 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
 
   if (!result) return;
 
-  const { egg } = result;
+  const { egg } = result.raw;
+  const { ui } = result;
   const startup = 'Startup' in egg.source ? egg.source.Startup : undefined;
   const seed = 'Seed' in egg.source ? egg.source.Seed : undefined;
 
   const baseSeed = startup?.base_seed ?? seed?.base_seed;
-  const ivs = egg.core.ivs;
-  const ivsStr = IV_STAT_KEYS.map((key) => `${getStatLabel(key, language)}:${ivs[key]}`).join(' ');
+  const ivsStr = ui.ivs
+    .map((value, index) => `${getStatLabel(IV_STAT_KEYS[index], language)}:${value}`)
+    .join(' ');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -78,16 +72,16 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
 
           {/* 個体データ */}
           <DetailRow label="IV" value={ivsStr} />
-          <DetailRow label={t`Nature`} value={getNatureName(egg.core.nature, language)} />
-          <DetailRow label={t`Ability`} value={formatAbilitySlot(egg.core.ability_slot)} />
-          <DetailRow label={t`Gender`} value={formatGender(egg.core.gender)} />
-          <DetailRow label={t`Shiny`} value={formatShinyDetailed(egg.core.shiny_type)} />
+          <DetailRow label={t`Nature`} value={ui.nature_name} />
+          <DetailRow label={t`Ability`} value={ui.ability_name} />
+          <DetailRow label={t`Gender`} value={ui.gender_symbol} />
+          <DetailRow label={t`Shiny`} value={ui.shiny_symbol || '-'} />
 
           {/* 検索情報 */}
-          <DetailRow label={t`Advance`} value={String(egg.advance)} />
+          <DetailRow label={t`Advance`} value={String(ui.advance)} />
           <DetailRow
             label={t`Margin frames`}
-            value={egg.margin_frames === undefined ? '-' : String(egg.margin_frames)}
+            value={ui.margin_frames === undefined ? '-' : String(ui.margin_frames)}
           />
         </div>
 
