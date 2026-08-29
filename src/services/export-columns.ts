@@ -5,27 +5,16 @@
  * CSV ヘッダーは英語固定 (機械可読性を優先)。
  */
 
-import {
-  formatDatetime,
-  formatGender,
-  formatKeyMask,
-  formatShiny,
-  formatAbilitySlot,
-  toHex,
-  toBigintHex,
-} from '@/lib/format';
-import { getNeedleArrow, getNatureName } from '@/lib/game-data-names';
+import { formatDatetime, formatKeyMask, formatShiny, toHex, toBigintHex } from '@/lib/format';
+import { getNeedleArrow } from '@/lib/game-data-names';
 import type { StatDisplayMode } from '@/lib/game-data-names';
-import type { SupportedLocale } from '@/i18n';
-import type { ExportColumn } from './export';
 import type {
-  EggDatetimeSearchResult,
-  MtseedResult,
-  SeedOrigin,
-  TrainerInfoSearchResult,
-  UiEggData,
-  UiPokemonData,
-} from '@/wasm/wasm_pkg';
+  EggListResultView,
+  EggSearchResultView,
+  PokemonListResultView,
+} from '@/lib/result-view';
+import type { ExportColumn } from './export';
+import type { MtseedResult, SeedOrigin, TrainerInfoSearchResult } from '@/wasm/wasm_pkg';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,88 +42,99 @@ function getMtSeed(origin: SeedOrigin): number {
 // pokemon-list columns
 // ---------------------------------------------------------------------------
 
-function createPokemonListExportColumns(statMode: StatDisplayMode): ExportColumn<UiPokemonData>[] {
+function createPokemonListExportColumns(
+  statMode: StatDisplayMode
+): ExportColumn<PokemonListResultView>[] {
   const isStatsMode = statMode === 'stats';
   const statLabels = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
   const ivKeys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 
-  const baseColumns: ExportColumn<UiPokemonData>[] = [
-    { key: 'advance', header: 'Advance', accessor: (r) => String(r.advance) },
-    { key: 'needle', header: 'Needle', accessor: (r) => getNeedleArrow(r.needle_direction) },
-    { key: 'species', header: 'Species', accessor: (r) => r.species_name },
-    { key: 'nature', header: 'Nature', accessor: (r) => r.nature_name },
-    { key: 'ability', header: 'Ability', accessor: (r) => r.ability_name },
-    { key: 'gender', header: 'Gender', accessor: (r) => r.gender_symbol },
-    { key: 'shiny', header: 'Shiny', accessor: (r) => r.shiny_symbol },
+  const baseColumns: ExportColumn<PokemonListResultView>[] = [
+    { key: 'advance', header: 'Advance', accessor: (r) => String(r.ui.advance) },
+    {
+      key: 'needle',
+      header: 'Needle',
+      accessor: (r) => getNeedleArrow(r.ui.needle_direction),
+    },
+    { key: 'species', header: 'Species', accessor: (r) => r.ui.species_name },
+    { key: 'nature', header: 'Nature', accessor: (r) => r.ui.nature_name },
+    { key: 'ability', header: 'Ability', accessor: (r) => r.ui.ability_name },
+    { key: 'gender', header: 'Gender', accessor: (r) => r.ui.gender_symbol },
+    { key: 'shiny', header: 'Shiny', accessor: (r) => r.ui.shiny_symbol },
   ];
 
   // Primary stat columns (based on current statMode)
-  const primaryStatColumns: ExportColumn<UiPokemonData>[] = statLabels.map((label, i) => ({
+  const primaryStatColumns: ExportColumn<PokemonListResultView>[] = statLabels.map((label, i) => ({
     key: ivKeys[i],
     header: label,
-    accessor: (r: UiPokemonData) => (isStatsMode ? r.stats[i] : r.ivs[i]),
+    accessor: (r: PokemonListResultView) => (isStatsMode ? r.ui.stats[i] : r.ui.ivs[i]),
   }));
 
-  const trailingColumns: ExportColumn<UiPokemonData>[] = [
-    { key: 'hidden_power', header: 'Hidden Power', accessor: (r) => r.hidden_power_type },
-    { key: 'level', header: 'Lv', accessor: (r) => String(r.level) },
-    { key: 'pid', header: 'PID', accessor: (r) => r.pid },
-    { key: 'sync', header: 'Sync', accessor: (r) => (r.sync_applied ? '〇' : '×') },
-    { key: 'held_item', header: 'Held item', accessor: (r) => r.held_item_name ?? '' },
+  const trailingColumns: ExportColumn<PokemonListResultView>[] = [
+    { key: 'hidden_power', header: 'Hidden Power', accessor: (r) => r.ui.hidden_power_type },
+    { key: 'level', header: 'Lv', accessor: (r) => String(r.ui.level) },
+    { key: 'pid', header: 'PID', accessor: (r) => r.ui.pid },
+    { key: 'sync', header: 'Sync', accessor: (r) => (r.ui.sync_applied ? '〇' : '×') },
+    { key: 'held_item', header: 'Held item', accessor: (r) => r.ui.held_item_name ?? '' },
   ];
 
   // Detail-only columns
-  const detailColumns: ExportColumn<UiPokemonData>[] = [
-    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.base_seed, detailOnly: true },
-    { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.mt_seed, detailOnly: true },
+  const detailColumns: ExportColumn<PokemonListResultView>[] = [
+    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.ui.base_seed, detailOnly: true },
+    { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.ui.mt_seed, detailOnly: true },
     {
       key: 'datetime',
       header: 'Date/Time',
-      accessor: (r) => r.datetime_iso ?? '',
+      accessor: (r) => r.ui.datetime_iso ?? '',
       detailOnly: true,
     },
-    { key: 'timer0', header: 'Timer0', accessor: (r) => r.timer0 ?? '', detailOnly: true },
-    { key: 'vcount', header: 'VCount', accessor: (r) => r.vcount ?? '', detailOnly: true },
-    { key: 'key_input', header: 'Key input', accessor: (r) => r.key_input ?? '', detailOnly: true },
+    { key: 'timer0', header: 'Timer0', accessor: (r) => r.ui.timer0 ?? '', detailOnly: true },
+    { key: 'vcount', header: 'VCount', accessor: (r) => r.ui.vcount ?? '', detailOnly: true },
+    {
+      key: 'key_input',
+      header: 'Key input',
+      accessor: (r) => r.ui.key_input ?? '',
+      detailOnly: true,
+    },
   ];
 
   // Alternate stat columns (opposite of current statMode)
-  const altStatColumns: ExportColumn<UiPokemonData>[] = statLabels.map((label, i) => ({
+  const altStatColumns: ExportColumn<PokemonListResultView>[] = statLabels.map((label, i) => ({
     key: `${ivKeys[i]}_alt`,
     header: `${label}(${isStatsMode ? 'IV' : 'Stats'})`,
-    accessor: (r: UiPokemonData) => (isStatsMode ? r.ivs[i] : r.stats[i]),
+    accessor: (r: PokemonListResultView) => (isStatsMode ? r.ui.ivs[i] : r.ui.stats[i]),
     detailOnly: true,
   }));
 
-  const moreDetailColumns: ExportColumn<UiPokemonData>[] = [
+  const moreDetailColumns: ExportColumn<PokemonListResultView>[] = [
     {
       key: 'hidden_power_power',
       header: 'Hidden Power (Power)',
-      accessor: (r) => r.hidden_power_power,
+      accessor: (r) => r.ui.hidden_power_power,
       detailOnly: true,
     },
     {
       key: 'moving_encounter',
       header: 'Moving encounter',
-      accessor: (r) => r.moving_encounter_guaranteed ?? '',
+      accessor: (r) => r.ui.moving_encounter_guaranteed ?? '',
       detailOnly: true,
     },
     {
       key: 'special_encounter',
       header: 'Special encounter',
-      accessor: (r) => r.special_encounter_triggered ?? '',
+      accessor: (r) => r.ui.special_encounter_triggered ?? '',
       detailOnly: true,
     },
     {
       key: 'special_direction',
       header: 'Special direction',
-      accessor: (r) => r.special_encounter_direction ?? '',
+      accessor: (r) => r.ui.special_encounter_direction ?? '',
       detailOnly: true,
     },
     {
       key: 'encounter_result',
       header: 'Encounter result',
-      accessor: (r) => r.encounter_result,
+      accessor: (r) => r.ui.encounter_result,
       detailOnly: true,
     },
   ];
@@ -153,63 +153,77 @@ function createPokemonListExportColumns(statMode: StatDisplayMode): ExportColumn
 // egg-list columns
 // ---------------------------------------------------------------------------
 
-function createEggListExportColumns(statMode: StatDisplayMode): ExportColumn<UiEggData>[] {
+function createEggListExportColumns(statMode: StatDisplayMode): ExportColumn<EggListResultView>[] {
   const isStatsMode = statMode === 'stats';
   const statLabels = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
   const ivKeys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
 
-  const baseColumns: ExportColumn<UiEggData>[] = [
-    { key: 'advance', header: 'Advance', accessor: (r) => String(r.advance) },
-    { key: 'needle', header: 'Needle', accessor: (r) => getNeedleArrow(r.needle_direction) },
-    { key: 'nature', header: 'Nature', accessor: (r) => r.nature_name },
-    { key: 'ability', header: 'Ability', accessor: (r) => r.ability_name },
-    { key: 'gender', header: 'Gender', accessor: (r) => r.gender_symbol },
-    { key: 'shiny', header: 'Shiny', accessor: (r) => r.shiny_symbol },
+  const baseColumns: ExportColumn<EggListResultView>[] = [
+    { key: 'advance', header: 'Advance', accessor: (r) => String(r.ui.advance) },
+    {
+      key: 'needle',
+      header: 'Needle',
+      accessor: (r) => getNeedleArrow(r.ui.needle_direction),
+    },
+    { key: 'nature', header: 'Nature', accessor: (r) => r.ui.nature_name },
+    { key: 'ability', header: 'Ability', accessor: (r) => r.ui.ability_name },
+    { key: 'gender', header: 'Gender', accessor: (r) => r.ui.gender_symbol },
+    { key: 'shiny', header: 'Shiny', accessor: (r) => r.ui.shiny_symbol },
   ];
 
-  const primaryStatColumns: ExportColumn<UiEggData>[] = statLabels.map((label, i) => ({
+  const primaryStatColumns: ExportColumn<EggListResultView>[] = statLabels.map((label, i) => ({
     key: ivKeys[i],
     header: label,
-    accessor: (r: UiEggData) => (isStatsMode ? r.stats[i] : r.ivs[i]),
+    accessor: (r: EggListResultView) => (isStatsMode ? r.ui.stats[i] : r.ui.ivs[i]),
   }));
 
-  const trailingColumns: ExportColumn<UiEggData>[] = [
-    { key: 'hidden_power', header: 'Hidden Power', accessor: (r) => r.hidden_power_type },
-    { key: 'pid', header: 'PID', accessor: (r) => r.pid },
+  const trailingColumns: ExportColumn<EggListResultView>[] = [
+    { key: 'hidden_power', header: 'Hidden Power', accessor: (r) => r.ui.hidden_power_type },
+    { key: 'pid', header: 'PID', accessor: (r) => r.ui.pid },
     {
       key: 'margin_frames',
       header: 'Margin',
-      accessor: (r) => (r.margin_frames === undefined ? '-' : String(r.margin_frames)),
+      accessor: (r) => (r.ui.margin_frames === undefined ? '-' : String(r.ui.margin_frames)),
     },
   ];
 
-  const detailColumns: ExportColumn<UiEggData>[] = [
-    { key: 'species', header: 'Species', accessor: (r) => r.species_name ?? '', detailOnly: true },
-    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.base_seed, detailOnly: true },
-    { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.mt_seed, detailOnly: true },
+  const detailColumns: ExportColumn<EggListResultView>[] = [
+    {
+      key: 'species',
+      header: 'Species',
+      accessor: (r) => r.ui.species_name ?? '',
+      detailOnly: true,
+    },
+    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.ui.base_seed, detailOnly: true },
+    { key: 'mt_seed', header: 'MT Seed', accessor: (r) => r.ui.mt_seed, detailOnly: true },
     {
       key: 'datetime',
       header: 'Date/Time',
-      accessor: (r) => r.datetime_iso ?? '',
+      accessor: (r) => r.ui.datetime_iso ?? '',
       detailOnly: true,
     },
-    { key: 'timer0', header: 'Timer0', accessor: (r) => r.timer0 ?? '', detailOnly: true },
-    { key: 'vcount', header: 'VCount', accessor: (r) => r.vcount ?? '', detailOnly: true },
-    { key: 'key_input', header: 'Key input', accessor: (r) => r.key_input ?? '', detailOnly: true },
+    { key: 'timer0', header: 'Timer0', accessor: (r) => r.ui.timer0 ?? '', detailOnly: true },
+    { key: 'vcount', header: 'VCount', accessor: (r) => r.ui.vcount ?? '', detailOnly: true },
+    {
+      key: 'key_input',
+      header: 'Key input',
+      accessor: (r) => r.ui.key_input ?? '',
+      detailOnly: true,
+    },
   ];
 
-  const altStatColumns: ExportColumn<UiEggData>[] = statLabels.map((label, i) => ({
+  const altStatColumns: ExportColumn<EggListResultView>[] = statLabels.map((label, i) => ({
     key: `${ivKeys[i]}_alt`,
     header: `${label}(${isStatsMode ? 'IV' : 'Stats'})`,
-    accessor: (r: UiEggData) => (isStatsMode ? r.ivs[i] : r.stats[i]),
+    accessor: (r: EggListResultView) => (isStatsMode ? r.ui.ivs[i] : r.ui.stats[i]),
     detailOnly: true,
   }));
 
-  const moreDetailColumns: ExportColumn<UiEggData>[] = [
+  const moreDetailColumns: ExportColumn<EggListResultView>[] = [
     {
       key: 'hidden_power_power',
       header: 'Hidden Power (Power)',
-      accessor: (r) => r.hidden_power_power,
+      accessor: (r) => r.ui.hidden_power_power,
       detailOnly: true,
     },
   ];
@@ -279,15 +293,13 @@ function createDatetimeSearchExportColumns(): ExportColumn<SeedOrigin>[] {
 // egg-search columns
 // ---------------------------------------------------------------------------
 
-function createEggSearchExportColumns(
-  locale: SupportedLocale
-): ExportColumn<EggDatetimeSearchResult>[] {
+function createEggSearchExportColumns(): ExportColumn<EggSearchResultView>[] {
   const ivKeys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
   const statLabels = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
 
-  const getEggStartup = (r: EggDatetimeSearchResult) => getStartup(r.egg.source);
+  const getEggStartup = (r: EggSearchResultView) => getStartup(r.raw.egg.source);
 
-  const baseColumns: ExportColumn<EggDatetimeSearchResult>[] = [
+  const baseColumns: ExportColumn<EggSearchResultView>[] = [
     {
       key: 'datetime',
       header: 'Date/Time',
@@ -315,38 +327,33 @@ function createEggSearchExportColumns(
     {
       key: 'nature',
       header: 'Nature',
-      accessor: (r) => getNatureName(r.egg.core.nature, locale),
+      accessor: (r) => r.ui.nature_name,
     },
   ];
 
-  const ivColumns: ExportColumn<EggDatetimeSearchResult>[] = statLabels.map((label, i) => ({
+  const ivColumns: ExportColumn<EggSearchResultView>[] = statLabels.map((label, i) => ({
     key: ivKeys[i],
     header: label,
-    accessor: (r: EggDatetimeSearchResult) =>
-      String(r.egg.core.ivs[ivKeys[i] as keyof typeof r.egg.core.ivs]),
+    accessor: (r: EggSearchResultView) => r.ui.ivs[i],
   }));
 
-  const trailingColumns: ExportColumn<EggDatetimeSearchResult>[] = [
-    {
-      key: 'ability',
-      header: 'Ability',
-      accessor: (r) => formatAbilitySlot(r.egg.core.ability_slot),
-    },
-    { key: 'gender', header: 'Gender', accessor: (r) => formatGender(r.egg.core.gender) },
-    { key: 'shiny', header: 'Shiny', accessor: (r) => formatShiny(r.egg.core.shiny_type) },
-    { key: 'advance', header: 'Advance', accessor: (r) => String(r.egg.advance) },
+  const trailingColumns: ExportColumn<EggSearchResultView>[] = [
+    { key: 'ability', header: 'Ability', accessor: (r) => r.ui.ability_name },
+    { key: 'gender', header: 'Gender', accessor: (r) => r.ui.gender_symbol },
+    { key: 'shiny', header: 'Shiny', accessor: (r) => r.ui.shiny_symbol },
+    { key: 'advance', header: 'Advance', accessor: (r) => String(r.ui.advance) },
     {
       key: 'margin',
       header: 'Margin',
-      accessor: (r) => (r.egg.margin_frames === undefined ? '-' : String(r.egg.margin_frames)),
+      accessor: (r) => (r.ui.margin_frames === undefined ? '-' : String(r.ui.margin_frames)),
     },
   ];
 
-  const detailColumns: ExportColumn<EggDatetimeSearchResult>[] = [
+  const detailColumns: ExportColumn<EggSearchResultView>[] = [
     {
       key: 'base_seed',
       header: 'LCG Seed',
-      accessor: (r) => toBigintHex(getBaseSeed(r.egg.source), 16),
+      accessor: (r) => toBigintHex(getBaseSeed(r.raw.egg.source), 16),
       detailOnly: true,
     },
     {

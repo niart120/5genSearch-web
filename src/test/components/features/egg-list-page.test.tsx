@@ -17,7 +17,7 @@ vi.mock('@/features/egg-list/hooks/use-egg-list', () => ({
     isLoading: false,
     isInitialized: true,
     progress: undefined,
-    uiResults: [],
+    results: [],
     error: undefined,
     generate: generateMock,
     cancel: vi.fn(),

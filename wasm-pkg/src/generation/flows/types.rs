@@ -164,3 +164,52 @@ impl GeneratedEggData {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{LcgSeed, ShinyType};
+
+    fn make_male_raw_egg() -> RawEggData {
+        RawEggData {
+            pid: Pid::ZERO,
+            nature: Nature::Hardy,
+            gender: Gender::Male,
+            ability_slot: AbilitySlot::First,
+            shiny_type: ShinyType::None,
+            inheritance: [
+                InheritanceSlot::new(0, 0),
+                InheritanceSlot::new(1, 0),
+                InheritanceSlot::new(2, 0),
+            ],
+        }
+    }
+
+    fn generate_male_egg(species_id: u16) -> GeneratedEggData {
+        GeneratedEggData::from_raw(
+            &make_male_raw_egg(),
+            Ivs::uniform(31),
+            0,
+            NeedleDirection::N,
+            SeedOrigin::seed(LcgSeed(0)),
+            None,
+            Some(species_id),
+        )
+    }
+
+    #[test]
+    fn male_nidoran_uses_nidoran_male_as_resolved_species() {
+        let egg = generate_male_egg(29);
+
+        assert_eq!(egg.core.species_id, 32);
+        assert_eq!(egg.core.stats.hp, Some(12));
+    }
+
+    #[test]
+    fn male_illumise_uses_volbeat_as_resolved_species() {
+        let egg = generate_male_egg(314);
+
+        assert_eq!(egg.core.species_id, 313);
+        assert_eq!(egg.core.stats.hp, Some(12));
+    }
+}

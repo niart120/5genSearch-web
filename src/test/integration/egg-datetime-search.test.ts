@@ -6,7 +6,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generate_egg_search_tasks, EggDatetimeSearcher } from '../../wasm/wasm_pkg.js';
+import {
+  generate_egg_search_tasks,
+  resolve_egg_data_batch,
+  EggDatetimeSearcher,
+} from '../../wasm/wasm_pkg.js';
 import type {
   DatetimeSearchContext,
   EggGenerationParams,
@@ -132,5 +136,41 @@ describe('EggDatetimeSearch Integration', () => {
     }
 
     expect(totalProcessed).toBeGreaterThan(0n);
+  }, 30_000);
+
+  it('不明な親個体値を生値32で生成し表示値?へ解決する', () => {
+    const unknownIvs = { hp: 32, atk: 32, def: 32, spa: 32, spd: 32, spe: 32 };
+    const tasks = generate_egg_search_tasks(
+      testContext,
+      {
+        ...eggParams,
+        parent_male: unknownIvs,
+        parent_female: unknownIvs,
+      },
+      genConfig,
+      undefined,
+      1
+    );
+
+    const allResults: EggDatetimeSearchResult[] = [];
+    for (const params of tasks) {
+      const searcher = new EggDatetimeSearcher(params);
+      while (!searcher.is_done) {
+        const batch = searcher.next_batch(1000);
+        allResults.push(...(batch.results as EggDatetimeSearchResult[]));
+      }
+      searcher.free();
+    }
+
+    expect(allResults.length).toBeGreaterThan(0);
+    const rawEggs = allResults.map((result) => result.egg);
+    const resolvedEggs = resolve_egg_data_batch(rawEggs, 'ja');
+    const inheritedUnknownIndex = rawEggs.findIndex((egg) =>
+      Object.values(egg.core.ivs).includes(32)
+    );
+
+    expect(inheritedUnknownIndex).toBeGreaterThanOrEqual(0);
+    expect(resolvedEggs[inheritedUnknownIndex]?.ivs).toContain('?');
+    expect(resolvedEggs[inheritedUnknownIndex]?.ivs).not.toContain('32');
   }, 30_000);
 });

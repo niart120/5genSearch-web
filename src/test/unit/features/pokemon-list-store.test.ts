@@ -25,6 +25,7 @@ describe('pokemon-list store', () => {
     expect(state.formRevision).toBe(0);
     expect(state.results).toEqual([]);
     expect(state.resultEncounterType).toBeUndefined();
+    expect(state.resultVersion).toBeUndefined();
   });
 
   it('should update seedInputMode', () => {
@@ -54,28 +55,33 @@ describe('pokemon-list store', () => {
 
   it('should set and clear results', () => {
     const mockResults = [{ advance: 0, species_name: 'Bulbasaur' }] as never[];
-    usePokemonListStore.getState().setResults(mockResults);
+    usePokemonListStore.getState().startResults('StaticSymbol', 'Black');
+    usePokemonListStore.getState().appendResults(mockResults);
     expect(usePokemonListStore.getState().results).toEqual(mockResults);
 
     usePokemonListStore.getState().clearResults();
     expect(usePokemonListStore.getState().results).toEqual([]);
     expect(usePokemonListStore.getState().resultEncounterType).toBeUndefined();
+    expect(usePokemonListStore.getState().resultVersion).toBeUndefined();
   });
 
-  it('should replace results and record encounter type when starting a search', () => {
+  it('should replace results and record result context when starting a search', () => {
     const mockResults = [{ advance: 0 }] as never[];
-    usePokemonListStore.getState().setResults(mockResults);
+    usePokemonListStore.getState().startResults('StaticSymbol', 'Black');
+    usePokemonListStore.getState().appendResults(mockResults);
 
-    usePokemonListStore.getState().startResults('DustCloud');
+    usePokemonListStore.getState().startResults('DustCloud', 'Black2');
 
     const state = usePokemonListStore.getState();
     expect(state.results).toEqual([]);
     expect(state.resultEncounterType).toBe('DustCloud');
+    expect(state.resultVersion).toBe('Black2');
   });
 
   it('should append results incrementally', () => {
     const batch1 = [{ advance: 0 }] as never[];
     const batch2 = [{ advance: 1 }] as never[];
+    usePokemonListStore.getState().startResults('StaticSymbol', 'Black');
     usePokemonListStore.getState().appendResults(batch1);
     expect(usePokemonListStore.getState().results).toEqual(batch1);
 
@@ -85,9 +91,8 @@ describe('pokemon-list store', () => {
 
   it('should preserve results on resetForm', () => {
     const mockResults = [{ advance: 0 }] as never[];
-    usePokemonListStore.getState().setResults(mockResults);
-    usePokemonListStore.getState().startResults('DustCloud');
-    usePokemonListStore.getState().setResults(mockResults);
+    usePokemonListStore.getState().startResults('DustCloud', 'White2');
+    usePokemonListStore.getState().appendResults(mockResults);
     usePokemonListStore.getState().setEncounterParams({
       ...DEFAULT_ENCOUNTER_PARAMS,
       encounterType: 'Normal',
@@ -98,14 +103,25 @@ describe('pokemon-list store', () => {
 
     expect(usePokemonListStore.getState().results).toEqual(mockResults);
     expect(usePokemonListStore.getState().resultEncounterType).toBe('DustCloud');
+    expect(usePokemonListStore.getState().resultVersion).toBe('White2');
     expect(usePokemonListStore.getState().statMode).toBe('stats');
     expect(usePokemonListStore.getState().formRevision).toBe(1);
+  });
+
+  it('should reject non-empty results without result context', () => {
+    const mockResults = [{ advance: 0 }] as never[];
+
+    expect(() => usePokemonListStore.getState().appendResults(mockResults)).toThrow(
+      'Pokemon results require encounter type and ROM version context'
+    );
+    expect(usePokemonListStore.getState().results).toEqual([]);
   });
 
   it('should exclude results from partialize', () => {
     const partialized = getPartializedState(usePokemonListStore);
     expect(partialized).not.toHaveProperty('results');
     expect(partialized).not.toHaveProperty('resultEncounterType');
+    expect(partialized).not.toHaveProperty('resultVersion');
     expect(partialized).not.toHaveProperty('seedOrigins');
     expect(partialized).toHaveProperty('seedInputMode');
     expect(partialized).toHaveProperty('seedInput');

@@ -1,7 +1,7 @@
 /**
  * ポケモンリスト結果詳細ダイアログ
  *
- * UiPokemonData の全フィールドを表示する Radix Dialog。
+ * PokemonListResultView の表示用フィールドを表示する Radix Dialog。
  */
 
 import { type ReactElement } from 'react';
@@ -16,12 +16,12 @@ import {
 import { DetailRow } from '@/components/data-display/detail-row';
 import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
-import type { UiPokemonData } from '@/wasm/wasm_pkg.js';
+import type { PokemonListResultView } from '@/lib/result-view';
 
 interface ResultDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  result: UiPokemonData | undefined;
+  result: PokemonListResultView | undefined;
 }
 
 function ResultDetailDialog({
@@ -33,6 +33,7 @@ function ResultDetailDialog({
   const language = useUiStore((s) => s.language);
 
   if (!result) return;
+  const ui = result.ui;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,59 +48,57 @@ function ResultDetailDialog({
         </DialogHeader>
         <div className="max-h-[60vh] divide-y divide-border overflow-y-auto">
           {/* Seed 情報 */}
-          <DetailRow label={t`LCG Seed`} value={result.base_seed} />
-          <DetailRow label="MT Seed" value={result.mt_seed} />
-          {result.datetime_iso !== undefined && (
-            <DetailRow label={t`Date/Time`} value={result.datetime_iso} />
+          <DetailRow label={t`LCG Seed`} value={ui.base_seed} />
+          <DetailRow label="MT Seed" value={ui.mt_seed} />
+          {ui.datetime_iso !== undefined && (
+            <DetailRow label={t`Date/Time`} value={ui.datetime_iso} />
           )}
-          {result.timer0 !== undefined && <DetailRow label="Timer0" value={result.timer0} />}
-          {result.vcount !== undefined && <DetailRow label="VCount" value={result.vcount} />}
-          {result.key_input !== undefined && (
-            <DetailRow label={t`Key input`} value={result.key_input} />
-          )}
+          {ui.timer0 !== undefined && <DetailRow label="Timer0" value={ui.timer0} />}
+          {ui.vcount !== undefined && <DetailRow label="VCount" value={ui.vcount} />}
+          {ui.key_input !== undefined && <DetailRow label={t`Key input`} value={ui.key_input} />}
 
           {/* 個体データ */}
-          <DetailRow label={t`Needle`} value={getNeedleArrow(result.needle_direction)} />
-          <DetailRow label={t`Species`} value={result.species_name} />
-          <DetailRow label={t`Nature`} value={result.nature_name} />
-          <DetailRow label={t`Ability`} value={result.ability_name} />
-          <DetailRow label={t`Gender`} value={result.gender_symbol} />
-          <DetailRow label={t`Shiny`} value={result.shiny_symbol || '-'} />
+          <DetailRow label={t`Needle`} value={getNeedleArrow(ui.needle_direction)} />
+          <DetailRow label={t`Species`} value={ui.species_name} />
+          <DetailRow label={t`Nature`} value={ui.nature_name} />
+          <DetailRow label={t`Ability`} value={ui.ability_name} />
+          <DetailRow label={t`Gender`} value={ui.gender_symbol} />
+          <DetailRow label={t`Shiny`} value={ui.shiny_symbol || '-'} />
           <DetailRow
             label="IV"
-            value={result.ivs
+            value={ui.ivs
               .map((v, i) => `${getStatLabel(IV_STAT_KEYS[i], language)}:${v}`)
               .join(' ')}
           />
           <DetailRow
             label={t`Stats`}
-            value={result.stats
+            value={ui.stats
               .map((v, i) => `${getStatLabel(IV_STAT_KEYS[i], language)}:${v}`)
               .join(' ')}
           />
           <DetailRow
             label={t`Hidden Power`}
-            value={`${result.hidden_power_type} (${result.hidden_power_power})`}
+            value={`${ui.hidden_power_type} (${ui.hidden_power_power})`}
           />
-          <DetailRow label="PID" value={result.pid} />
-          <DetailRow label="Lv" value={String(result.level)} />
-          <DetailRow label={t`Sync`} value={result.sync_applied ? '〇' : '×'} />
-          {result.held_item_name !== undefined && (
-            <DetailRow label={t`Held item`} value={result.held_item_name} />
+          <DetailRow label="PID" value={ui.pid} />
+          <DetailRow label="Lv" value={String(ui.level)} />
+          <DetailRow label={t`Sync`} value={ui.sync_applied ? '〇' : '×'} />
+          {ui.held_item_name !== undefined && (
+            <DetailRow label={t`Held item`} value={ui.held_item_name} />
           )}
 
           {/* エンカウント情報 */}
-          <DetailRow label={t`Advance`} value={String(result.advance)} />
-          {result.moving_encounter_guaranteed !== undefined && (
-            <DetailRow label={t`Moving encounter`} value={result.moving_encounter_guaranteed} />
+          <DetailRow label={t`Advance`} value={String(ui.advance)} />
+          {ui.moving_encounter_guaranteed !== undefined && (
+            <DetailRow label={t`Moving encounter`} value={ui.moving_encounter_guaranteed} />
           )}
-          {result.special_encounter_triggered !== undefined && (
-            <DetailRow label={t`Special encounter`} value={result.special_encounter_triggered} />
+          {ui.special_encounter_triggered !== undefined && (
+            <DetailRow label={t`Special encounter`} value={ui.special_encounter_triggered} />
           )}
-          {result.special_encounter_direction !== undefined && (
-            <DetailRow label={t`Special direction`} value={result.special_encounter_direction} />
+          {ui.special_encounter_direction !== undefined && (
+            <DetailRow label={t`Special direction`} value={ui.special_encounter_direction} />
           )}
-          <DetailRow label={t`Encounter result`} value={result.encounter_result} />
+          <DetailRow label={t`Encounter result`} value={ui.encounter_result} />
         </div>
       </DialogContent>
     </Dialog>

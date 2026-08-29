@@ -19,7 +19,10 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
-tsify = { version = "0.5.6", default-features = false, features = ["js"] }
+# `tsify` 0.5.8 deprecates the current ABI attributes. Keep the crate and its
+# re-exported proc macro aligned until the public bindings migrate to `tsify::Ts`.
+tsify = { version = "=0.5.6", default-features = false, features = ["js"] }
+tsify-macros = "=0.5.6"
 
 # Error handling in WASM
 console_error_panic_hook = { version = "0.1", optional = true }

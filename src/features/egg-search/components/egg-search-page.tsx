@@ -34,6 +34,7 @@ import type {
   EggDatetimeSearchResult,
   EggFilter,
 } from '@/wasm/wasm_pkg.js';
+import type { EggSearchResultView } from '@/lib/result-view';
 
 interface EggSearchRequest {
   context: DatetimeSearchContext;
@@ -67,7 +68,7 @@ function EggSearchPage(): ReactElement {
 
   // 検索フック
   const { isLoading, isInitialized, progress, results, error, startSearch, cancel } =
-    useEggSearch();
+    useEggSearch(language);
 
   // バリデーション
   const validation = useMemo(
@@ -97,10 +98,14 @@ function EggSearchPage(): ReactElement {
 
   // 詳細ダイアログ
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedResult, setSelectedResult] = useState<EggDatetimeSearchResult | undefined>();
+  const [selectedRawResult, setSelectedRawResult] = useState<EggDatetimeSearchResult | undefined>();
+  const selectedResult = useMemo(
+    () => results.find((result) => result.raw === selectedRawResult),
+    [results, selectedRawResult]
+  );
 
-  const handleSelectResult = useCallback((result: EggDatetimeSearchResult) => {
-    setSelectedResult(result);
+  const handleSelectResult = useCallback((result: EggSearchResultView) => {
+    setSelectedRawResult(result.raw);
     setDetailOpen(true);
   }, []);
 
@@ -110,7 +115,7 @@ function EggSearchPage(): ReactElement {
   );
 
   // エクスポート
-  const exportColumns = useMemo(() => createEggSearchExportColumns(language), [language]);
+  const exportColumns = useMemo(() => createEggSearchExportColumns(), []);
   const exportActions = useExport({
     data: results,
     columns: exportColumns,

@@ -82,7 +82,7 @@ describe('Egg List Worker Integration', () => {
     const task: EggListTask = {
       kind: 'egg-list',
       origins: TEST_ORIGINS,
-      params: TEST_PARAMS,
+      params: { ...TEST_PARAMS, species_id: 25 },
       config: TEST_CONFIG,
       filter: undefined,
     };
@@ -105,7 +105,7 @@ describe('Egg List Worker Integration', () => {
     const task: EggListTask = {
       kind: 'egg-list',
       origins: TEST_ORIGINS,
-      params: TEST_PARAMS,
+      params: { ...TEST_PARAMS, species_id: 25 },
       config: { ...TEST_CONFIG, max_advance: 2 },
       filter: undefined,
     };
@@ -113,8 +113,9 @@ describe('Egg List Worker Integration', () => {
     const results = await executeTask(pool, task);
     expect(results.length).toBeGreaterThan(0);
 
-    // species_id=25 (ピカチュウ) を指定して解決
-    const resolved = resolve_egg_data_batch(results, 'ja', 25);
+    expect(results[0].core.species_id).toBe(25);
+
+    const resolved = resolve_egg_data_batch(results, 'ja');
     expect(resolved.length).toBe(results.length);
     expect(resolved[0].species_name).toBe('ピカチュウ');
   }, 15_000);
@@ -132,7 +133,7 @@ describe('Egg List Worker Integration', () => {
     };
 
     const results = await executeTask(pool, task);
-    const resolved = resolve_egg_data_batch(results, 'ja', 25);
+    const resolved = resolve_egg_data_batch(results, 'ja');
     const stats = resolved[0].stats;
     // species_id 指定時は全て数値文字列 (stats は from_raw で事前計算済み)
     for (const s of stats) {

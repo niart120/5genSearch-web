@@ -20,7 +20,7 @@ import {
   copyToClipboard,
 } from '@/services/export';
 import type { ExportColumn, ExportMeta } from '@/services/export';
-import type { GameStartConfig } from '@/wasm/wasm_pkg';
+import type { GameStartConfig, RomVersion } from '@/wasm/wasm_pkg';
 
 interface UseExportOptions<T> {
   data: readonly T[];
@@ -34,6 +34,8 @@ interface UseExportOptions<T> {
    * feature-local な GameStartConfig をサイドバーの値の代わりに使用したい場合 (例: tid-adjust) に指定する。
    */
   gameStartOverride?: GameStartConfig;
+  /** 結果生成時の ROM バージョン。現在のサイドバー設定より優先する。 */
+  versionOverride?: RomVersion;
 }
 
 interface UseExportReturn {
@@ -46,10 +48,15 @@ interface UseExportReturn {
 }
 
 function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
-  const { data, columns, featureId, statMode, jsonExporter, gameStartOverride } = options;
+  const { data, columns, featureId, statMode, jsonExporter, gameStartOverride, versionOverride } =
+    options;
   const { t } = useLingui();
   const { config, ranges, gameStart: storeGameStart } = useDsConfigReadonly();
   const gameStart = gameStartOverride ?? storeGameStart;
+  const exportConfig = useMemo(
+    () => (versionOverride === undefined ? config : { ...config, version: versionOverride }),
+    [config, versionOverride]
+  );
   const [includeDetails, setIncludeDetails] = useState(false);
 
   const hasDetailColumns = useMemo(() => columns.some((c) => c.detailOnly), [columns]);
@@ -62,13 +69,13 @@ function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
   const downloadCsv = useCallback(() => {
     try {
       const content = toCsv(data, activeColumns);
-      const filename = generateExportFilename(config, 'csv');
+      const filename = generateExportFilename(exportConfig, 'csv');
       downloadFile(content, filename, 'text/csv;charset=utf-8');
       toast.success(t`Downloaded ${filename}`);
     } catch {
       toast.error(t`Export failed`);
     }
-  }, [data, activeColumns, config, t]);
+  }, [data, activeColumns, exportConfig, t]);
 
   const downloadJson = useCallback(() => {
     try {
@@ -77,12 +84,12 @@ function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
         totalResults: data.length,
         includeDetails,
         statMode,
-        config,
+        config: exportConfig,
         gameStart,
         ranges,
       });
       const content = jsonExporter ? jsonExporter(data, meta) : toJson(data, activeColumns, meta);
-      const filename = generateExportFilename(config, 'json');
+      const filename = generateExportFilename(exportConfig, 'json');
       downloadFile(content, filename, 'application/json;charset=utf-8');
       toast.success(t`Downloaded ${filename}`);
     } catch {
@@ -91,7 +98,7 @@ function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
   }, [
     data,
     activeColumns,
-    config,
+    exportConfig,
     gameStart,
     ranges,
     featureId,

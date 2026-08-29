@@ -148,8 +148,9 @@ fn test_resolve_pokemon_full_flow_en() {
 
 #[test]
 fn test_resolve_egg_full_flow_with_species() {
-    let data = create_test_egg_data();
-    let ui = resolve_egg_data(data, "ja", Some(113)); // ラッキー
+    let mut data = create_test_egg_data();
+    data.core.species_id = 113; // ラッキー
+    let ui = resolve_egg_data(data, "ja");
 
     assert_eq!(ui.advance, 50);
     assert_eq!(ui.species_name, Some("ラッキー".to_string()));
@@ -163,7 +164,7 @@ fn test_resolve_egg_full_flow_with_species() {
 #[test]
 fn test_resolve_egg_without_species() {
     let data = create_test_egg_data();
-    let ui = resolve_egg_data(data, "ja", None);
+    let ui = resolve_egg_data(data, "ja");
 
     assert_eq!(ui.species_name, None);
     // 種族ID未指定時は特性スロット名が返る
@@ -188,16 +189,28 @@ fn test_batch_resolve_pokemon() {
 
 #[test]
 fn test_batch_resolve_egg() {
-    let data1 = create_test_egg_data();
-    let data2 = create_test_egg_data();
+    // `GeneratedEggData::from_raw()` による例外種変換後の ID を模擬する。
+    let mut nidoran_male = create_test_egg_data();
+    nidoran_male.advance = 10;
+    nidoran_male.core.species_id = 32;
 
-    let results = wasm_pkg::resolve_egg_data_batch(
-        vec![data1, data2],
-        "en",
-        Some(25), // ピカチュウ
-    );
+    let mut volbeat = create_test_egg_data();
+    volbeat.advance = 20;
+    volbeat.core.species_id = 313;
 
-    assert_eq!(results.len(), 2);
-    assert_eq!(results[0].species_name, Some("Pikachu".to_string()));
-    assert_eq!(results[1].species_name, Some("Pikachu".to_string()));
+    let mut unspecified = create_test_egg_data();
+    unspecified.advance = 30;
+
+    let results = wasm_pkg::resolve_egg_data_batch(vec![nidoran_male, volbeat, unspecified], "ja");
+
+    assert_eq!(results.len(), 3);
+    assert_eq!(results[0].advance, 10);
+    assert_eq!(results[0].species_name, Some("ニドラン♂".to_string()));
+    assert_eq!(results[0].ability_name, "はりきり");
+    assert_eq!(results[1].advance, 20);
+    assert_eq!(results[1].species_name, Some("バルビート".to_string()));
+    assert_eq!(results[1].ability_name, "いたずらごころ");
+    assert_eq!(results[2].advance, 30);
+    assert_eq!(results[2].species_name, None);
+    assert_eq!(results[2].ability_name, "夢特性");
 }

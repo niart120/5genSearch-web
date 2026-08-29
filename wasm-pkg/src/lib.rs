@@ -125,18 +125,13 @@ pub fn resolve_pokemon_data_batch(
 /// # Arguments
 /// * `data` - 生成された卵データの配列
 /// * `locale` - ロケール (`"ja"` または `"en"`)
-/// * `species_id` - 種族ID (任意。指定時は種族名や特性名を解決)
 ///
 /// # Returns
 /// 解決済み表示用卵データの配列
 #[wasm_bindgen]
-pub fn resolve_egg_data_batch(
-    data: Vec<GeneratedEggData>,
-    locale: &str,
-    species_id: Option<u16>,
-) -> Vec<UiEggData> {
+pub fn resolve_egg_data_batch(data: Vec<GeneratedEggData>, locale: &str) -> Vec<UiEggData> {
     data.into_iter()
-        .map(|d| resolve_egg_data(d, locale, species_id))
+        .map(|d| resolve_egg_data(d, locale))
         .collect()
 }
 
