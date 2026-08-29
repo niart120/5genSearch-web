@@ -20,6 +20,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@nightly
         with:
+          toolchain: nightly-2026-08-12
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo
@@ -102,6 +103,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@nightly
         with:
+          toolchain: nightly-2026-08-12
           components: rustfmt, clippy
 
       - name: Cache Cargo
@@ -152,6 +154,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2026-08-12
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
