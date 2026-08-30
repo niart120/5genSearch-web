@@ -31,6 +31,30 @@ describe('Encounter Service Integration', () => {
       }
     });
 
+    it('loads shiny-locked Victini only for B and W', async () => {
+      for (const version of ['B', 'W'] as const) {
+        const entries = await listStaticEncounterEntries(version, 'StaticSymbol');
+        const victini = entries.find((entry) => entry.id === 'victini-liberty-garden');
+
+        expect(victini).toEqual({
+          id: 'victini-liberty-garden',
+          displayNameKey: 'victini_liberty_garden',
+          speciesId: 494,
+          level: 15,
+          genderRatio: 'Genderless',
+          isShinyLocked: true,
+        });
+        if (!victini) return;
+
+        expect(toEncounterSlotConfigFromEntry(victini).shiny_locked).toBe(true);
+      }
+
+      for (const version of ['B2', 'W2'] as const) {
+        const entries = await listStaticEncounterEntries(version, 'StaticSymbol');
+        expect(entries.some((entry) => entry.speciesId === 494)).toBe(false);
+      }
+    });
+
     it('loads static encounter JSON for StaticStarter', async () => {
       for (const version of ['B', 'W', 'B2', 'W2'] as const) {
         const entries = await listStaticEncounterEntries(version, 'StaticStarter');
