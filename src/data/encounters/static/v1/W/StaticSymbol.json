@@ -8,6 +8,14 @@
   },
   "entries": [
     {
+      "id": "victini-liberty-garden",
+      "displayNameKey": "victini_liberty_garden",
+      "speciesId": 494,
+      "level": 15,
+      "genderRatio": "Genderless",
+      "isShinyLocked": true
+    },
+    {
       "id": "zekrom-n-castle",
       "displayNameKey": "zekrom_n_castle",
       "speciesId": 644,
