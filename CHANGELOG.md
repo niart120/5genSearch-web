@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.4](https://github.com/niart120/5genSearch-web/compare/v1.5.3...v1.5.4) (2026-08-30)
+
+
+### Bug Fixes
+
+* **data:** ブラック・ホワイトの固定シンボルにビクティニを追加 ([835f71a](https://github.com/niart120/5genSearch-web/commit/835f71a1929ecbdd7567e489e7ae5a3e5c0df870))
+
 ## [1.5.3](https://github.com/niart120/5genSearch-web/compare/v1.5.2...v1.5.3) (2026-08-29)
 
 
