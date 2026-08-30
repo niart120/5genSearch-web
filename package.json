@@ -1,7 +1,7 @@
 {
   "name": "5gensearch-web",
   "private": true,
-  "version": "1.5.3",
+  "version": "1.5.4",
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
