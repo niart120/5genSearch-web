@@ -18,6 +18,7 @@ export interface EncounterParamsOutput {
   locationKey: string;
   staticEntryId: string;
   slots: EncounterSlotConfig[];
+  slotsContextKey?: string;
   leadAbility: LeadAbilityEffect;
   availableSpecies: EncounterSpeciesOption[];
   genConfig: Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
