@@ -79,10 +79,10 @@ fn create_egg_params() -> EggGenerationParams {
 
 fn create_pokemon_generator() -> PokemonGenerator {
     PokemonGenerator::new(
-        create_base_seed(),
         create_source(),
         &create_pokemon_params(),
         &create_generation_config(),
+        None,
     )
     .expect("Failed to create PokemonGenerator")
 }
@@ -143,5 +143,81 @@ fn bench_egg_generator(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_pokemon_generator, bench_egg_generator);
+// 旧経路と同じ生成後判定と、生成器内判定を同じ Seed・試行数で比較する。
+fn bench_filter_pipeline(c: &mut Criterion) {
+    use wasm_pkg::types::{CoreDataFilter, IvFilter, PokemonFilter, ShinyFilter};
+    let mut group = c.benchmark_group("pokemon_filter_pipeline");
+    group.warm_up_time(Duration::from_millis(300));
+    group.measurement_time(Duration::from_secs(1));
+    group.sample_size(10);
+    for (seeds, advances) in [(100_u32, 24_u32), (10, 1000)] {
+        for (name, filter) in [
+            ("all", PokemonFilter::any()),
+            (
+                "none",
+                PokemonFilter {
+                    species_ids: Some(vec![999]),
+                    ..PokemonFilter::any()
+                },
+            ),
+            (
+                "shiny",
+                PokemonFilter {
+                    base: CoreDataFilter {
+                        shiny: Some(ShinyFilter::Shiny),
+                        ..CoreDataFilter::any()
+                    },
+                    ..PokemonFilter::any()
+                },
+            ),
+            (
+                "iv",
+                PokemonFilter {
+                    base: CoreDataFilter {
+                        iv: Some(IvFilter::six_v()),
+                        ..CoreDataFilter::any()
+                    },
+                    ..PokemonFilter::any()
+                },
+            ),
+        ] {
+            for staged in [false, true] {
+                let mode = if staged { "staged" } else { "post_filter" };
+                group.bench_function(format!("{seeds}x{advances}/{name}/{mode}"), |b| {
+                    b.iter(|| {
+                        for index in 0..seeds {
+                            let seed =
+                                LcgSeed::new(create_base_seed().0.wrapping_add(u64::from(index)));
+                            let mut generator = PokemonGenerator::new(
+                                SeedOrigin::seed(seed),
+                                &create_pokemon_params(),
+                                &create_generation_config(),
+                                staged.then_some(&filter),
+                            )
+                            .unwrap();
+                            let results = generator.take(advances);
+                            let results: Vec<_> = if staged {
+                                results
+                            } else {
+                                results
+                                    .into_iter()
+                                    .filter(|data| filter.matches(data))
+                                    .collect()
+                            };
+                            std::hint::black_box(results);
+                        }
+                    })
+                });
+            }
+        }
+    }
+    group.finish();
+}
+
+criterion_group!(
+    benches,
+    bench_pokemon_generator,
+    bench_egg_generator,
+    bench_filter_pipeline
+);
 criterion_main!(benches);

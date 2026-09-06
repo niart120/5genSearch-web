@@ -5,6 +5,7 @@
 
 mod config;
 mod filter;
+pub(crate) use filter::{CoreFilterInput, PokemonFilterInput};
 mod generation;
 pub(crate) mod keyinput;
 mod needle;
