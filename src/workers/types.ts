@@ -8,6 +8,7 @@
 import type {
   DatetimeSearchContext,
   EggDatetimeSearchParams,
+  PokemonDatetimeSearchParams,
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
   MtseedSearchContext,
@@ -202,6 +203,11 @@ export interface ProgressInfo {
 /**
  * Egg 起動時刻検索タスク
  */
+export interface PokemonDatetimeSearchTask {
+  kind: 'pokemon-datetime';
+  params: PokemonDatetimeSearchParams;
+}
+
 export interface EggDatetimeSearchTask {
   kind: 'egg-datetime';
   params: EggDatetimeSearchParams;
@@ -279,6 +285,7 @@ export interface EggListTask {
  * 検索タスク (Union)
  */
 export type SearchTask =
+  | PokemonDatetimeSearchTask
   | EggDatetimeSearchTask
   | MtseedDatetimeSearchTask
   | GpuMtseedSearchTask

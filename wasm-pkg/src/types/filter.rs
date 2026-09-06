@@ -509,6 +509,56 @@ impl PokemonFilter {
     }
 }
 
+/// 個体値に依存しない日時検索条件。空の配列は条件なしとして扱う。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug, Default)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct PokemonDatetimeSearchFilter {
+    pub shiny: Option<ShinyFilter>,
+    pub natures: Option<Vec<Nature>>,
+    pub species_ids: Option<Vec<u16>>,
+    pub gender: Option<Gender>,
+    pub ability_slot: Option<AbilitySlot>,
+    pub level_range: Option<(u8, u8)>,
+}
+
+impl PokemonDatetimeSearchFilter {
+    /// # Errors
+    /// 種族またはレベルが不正な場合。
+    pub fn validate(&self) -> Result<(), String> {
+        if self
+            .species_ids
+            .as_ref()
+            .is_some_and(|ids| ids.iter().any(|id| !(1..=649).contains(id)))
+        {
+            return Err("Species ID must be 1-649".into());
+        }
+        if let Some((min, max)) = self.level_range
+            && (min == 0 || max > 100 || min > max)
+        {
+            return Err("Level range must be within 1-100 and ordered".into());
+        }
+        Ok(())
+    }
+}
+
+impl From<&PokemonDatetimeSearchFilter> for PokemonFilter {
+    fn from(filter: &PokemonDatetimeSearchFilter) -> Self {
+        Self {
+            base: CoreDataFilter {
+                shiny: filter.shiny,
+                natures: filter.natures.clone(),
+                gender: filter.gender,
+                ability_slot: filter.ability_slot,
+                ..CoreDataFilter::any()
+            },
+            species_ids: filter.species_ids.clone(),
+            level_range: filter.level_range,
+            encounter_result_filter: Some(EncounterResultFilter::PokemonOnly),
+            ..Self::any()
+        }
+    }
+}
+
 // ===== EggFilter =====
 
 /// 孵化フィルター

@@ -30,7 +30,7 @@ export type SearchResults<T extends SearchTask['kind']> = T extends 'egg-datetim
       ? MtseedResult[]
       : T extends 'trainer-info'
         ? TrainerInfoSearchResult[]
-        : T extends 'pokemon-list'
+        : T extends 'pokemon-list' | 'pokemon-datetime'
           ? GeneratedPokemonData[]
           : never;
 

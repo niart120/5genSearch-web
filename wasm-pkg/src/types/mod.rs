@@ -28,14 +28,15 @@ pub use keyinput::{DsButton, KeyInput, KeyMask, KeySpec};
 pub use search::{
     DateRangeParams, DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
     EggDatetimeSearchResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult,
-    MtseedSearchBatch, MtseedSearchContext, MtseedSearchParams, SearchRangeParams, TimeRangeParams,
+    MtseedSearchBatch, MtseedSearchContext, MtseedSearchParams, PokemonDatetimeSearchBatch,
+    PokemonDatetimeSearchParams, PokemonSearchBatchLimits, SearchRangeParams, TimeRangeParams,
     TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
 };
 
 // filter
 pub use filter::{
-    CoreDataFilter, EggFilter, EncounterResultFilter, IvFilter, PokemonFilter, ShinyFilter,
-    StatsFilter, TrainerInfoFilter,
+    CoreDataFilter, EggFilter, EncounterResultFilter, IvFilter, PokemonDatetimeSearchFilter,
+    PokemonFilter, ShinyFilter, StatsFilter, TrainerInfoFilter,
 };
 
 // generation

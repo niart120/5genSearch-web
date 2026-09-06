@@ -7,6 +7,7 @@
 
 import {
   EggDatetimeSearcher,
+  PokemonDatetimeSearcher,
   MtseedDatetimeSearcher,
   MtseedSearcher,
   TrainerInfoSearcher,
@@ -16,6 +17,7 @@ import {
 } from '../wasm/wasm_pkg.js';
 import type {
   EggDatetimeSearchParams,
+  PokemonDatetimeSearchParams,
   MtseedDatetimeSearchParams,
   MtseedSearchParams,
   TrainerInfoSearchParams,
@@ -148,6 +150,10 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
 
   try {
     switch (task.kind) {
+      case 'pokemon-datetime': {
+        await runPokemonDatetimeSearch(taskId, task.params, startTime);
+        break;
+      }
       case 'egg-datetime': {
         await runEggDatetimeSearch(taskId, task.params, startTime);
         break;
@@ -248,6 +254,25 @@ async function runSearchLoop<T extends { readonly is_done: boolean; free(): void
 // =============================================================================
 // Egg Datetime Search
 // =============================================================================
+
+async function runPokemonDatetimeSearch(
+  taskId: string,
+  params: PokemonDatetimeSearchParams,
+  startTime: number
+): Promise<void> {
+  const searcher = new PokemonDatetimeSearcher(params);
+  // 総数0のタスクも既存の進捗集計へ渡す。
+  if (searcher.is_done) {
+    postResponse({ type: 'progress', taskId, progress: calculateProgress(0n, 0n, startTime) });
+  }
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch({ max_candidates: 1024, max_results: 256 });
+    if (batch.results.length > 0) {
+      postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results: batch.results });
+    }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
+}
 
 async function runEggDatetimeSearch(
   taskId: string,
