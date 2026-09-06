@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.6.0](https://github.com/niart120/5genSearch-web/compare/v1.5.4...v1.6.0) (2026-09-06)
+
+
+### Features
+
+* **filters:** 対象別フィルター表示と範囲条件の切り替えを追加 ([#175](https://github.com/niart120/5genSearch-web/issues/175)) ([664c918](https://github.com/niart120/5genSearch-web/commit/664c918dac6b8844f089929a4fbfffe74284161c))
+* **generator:** 非依存条件を先に判定して個体値計算を遅延する ([#169](https://github.com/niart120/5genSearch-web/issues/169)) ([768ced1](https://github.com/niart120/5genSearch-web/commit/768ced130b4c097ad29b4e429b13daaad0613afd))
+* **search:** 個体値非依存条件から起動日時と消費位置を検索する ([#171](https://github.com/niart120/5genSearch-web/issues/171)) ([c6cc85c](https://github.com/niart120/5genSearch-web/commit/c6cc85c7a4270e65b094adce1ab511ab86ccfa5b))
+* **ui:** 検索画面の文言と消費数範囲を統一して説明を追加 ([f58da4d](https://github.com/niart120/5genSearch-web/commit/f58da4d592e24b388d58369c4f34f266ccf3f271))
+
+
+### Bug Fixes
+
+* **pokemon-search:** 検索UIの文言と起動条件の表示を統一 ([#174](https://github.com/niart120/5genSearch-web/issues/174)) ([0434199](https://github.com/niart120/5genSearch-web/commit/0434199922e8dcb20b0bc564ab795f6909b8ab08))
+
+
+### Code Refactoring
+
+* **search:** 日時探索空間を共通化 ([#173](https://github.com/niart120/5genSearch-web/issues/173)) ([800f575](https://github.com/niart120/5genSearch-web/commit/800f5755c27275a6f111aea32f78026a40d17e58))
+
 ## [1.5.4](https://github.com/niart120/5genSearch-web/compare/v1.5.3...v1.5.4) (2026-08-30)
 
 
