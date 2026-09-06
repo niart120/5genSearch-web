@@ -31,10 +31,12 @@ describe('NatureSelect', () => {
     expect(screen.getByText(/Not specified/)).toBeInTheDocument();
   });
 
-  it('選択数が表示される', () => {
+  it('選択した性格名が表示される', () => {
     const selected: Nature[] = ['Hardy', 'Bold', 'Timid'];
     renderNatureSelect({ value: selected });
-    expect(screen.getByText(/3/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'nature-select-trigger' })).toHaveTextContent(
+      'がんばりや / ずぶとい / おくびょう'
+    );
   });
 
   it('チェックボックスのトグルで onChange が呼ばれる', async () => {

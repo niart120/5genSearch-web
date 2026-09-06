@@ -13,7 +13,6 @@ function renderTargetSeedsInput(props: Partial<Parameters<typeof TargetSeedsInpu
   const defaults = {
     value: '',
     onChange,
-    parsedSeeds: [],
     errors: [],
     ...props,
   };
@@ -51,11 +50,6 @@ describe('TargetSeedsInput', () => {
     await user.type(textarea, 'AB');
 
     expect(onChange).toHaveBeenCalled();
-  });
-
-  it('パース済み件数が表示される', () => {
-    renderTargetSeedsInput({ parsedSeeds: [0x12_34_56_78, 0xab_cd_ef_01] });
-    expect(screen.getByText(/2/)).toBeInTheDocument();
   });
 
   it('エラーが表示される', () => {

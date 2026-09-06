@@ -17,14 +17,12 @@ msgstr ""
 #~ msgid "{0} seeds found"
 #~ msgstr "{0} seeds found"
 
-#. placeholder {0}: selectedIds.length
-#. placeholder {0}: value.length
 #: src/components/forms/held-item-slot-select.tsx:50
 #: src/components/forms/hidden-power-select.tsx:54
 #: src/components/forms/nature-select.tsx:38
 #: src/components/forms/species-select.tsx:30
-msgid "{0} selected"
-msgstr "{0} selected"
+#~ msgid "{0} selected"
+#~ msgstr "{0} selected"
 
 #: src/components/forms/egg-params-form.tsx:291
 msgid "♀ parent ability"
@@ -90,7 +88,7 @@ msgstr "Advance"
 msgid "Advance Range"
 msgstr "Advance Range"
 
-#: src/features/egg-list/components/egg-list-page.tsx:190
+#: src/features/egg-list/components/egg-list-page.tsx:200
 msgid "Advance range invalid"
 msgstr "Advance range invalid"
 
@@ -307,10 +305,10 @@ msgstr "Delete profile"
 msgid "Delete row {0}"
 msgstr "Delete row {0}"
 
-#: src/components/forms/hidden-power-select.tsx:94
+#: src/components/forms/hidden-power-select.tsx:98
 #: src/components/forms/key-input-selector.tsx:98
 #: src/components/forms/key-spec-selector.tsx:98
-#: src/components/forms/nature-select.tsx:72
+#: src/components/forms/nature-select.tsx:76
 msgid "Deselect all"
 msgstr "Deselect all"
 
@@ -351,6 +349,7 @@ msgstr "Downloaded {filename}"
 msgid "Edit"
 msgstr "Edit"
 
+#: src/components/layout/navigation-labels.tsx:14
 #: src/components/layout/navigation-labels.tsx:16
 msgid "Egg"
 msgstr "Egg"
@@ -377,8 +376,8 @@ msgid "Egg parameters"
 msgstr "Egg parameters"
 
 #: src/components/layout/navigation-labels.tsx:14
-msgid "Egg Search"
-msgstr "Egg Search"
+#~ msgid "Egg Search"
+#~ msgstr "Egg Search"
 
 #: src/features/egg-search/components/result-detail-dialog.tsx:56
 msgid "Egg search result details"
@@ -397,7 +396,7 @@ msgstr "Enable filter"
 msgid "Enable level range"
 msgstr "Enable level range"
 
-#: src/components/forms/hidden-power-select.tsx:129
+#: src/components/forms/hidden-power-select.tsx:133
 msgid "Enable minimum Hidden Power power"
 msgstr "Enable minimum Hidden Power power"
 
@@ -528,7 +527,7 @@ msgstr "Held item"
 msgid "Hidden Ability"
 msgstr "Hidden Ability"
 
-#: src/components/forms/hidden-power-select.tsx:73
+#: src/components/forms/hidden-power-select.tsx:77
 #: src/features/egg-list/components/egg-result-columns.tsx:101
 #: src/features/egg-list/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:132
@@ -661,7 +660,7 @@ msgstr "License"
 #. placeholder {0}: err.line
 #. placeholder {1}: err.value
 #. placeholder {2}: err.message
-#: src/components/forms/target-seeds-input.tsx:48
+#: src/components/forms/target-seeds-input.tsx:36
 msgid "Line {0}: \"{1}\" — {2}"
 msgstr "Line {0}: \"{1}\" — {2}"
 
@@ -708,7 +707,7 @@ msgid "Max advance must be ≥ offset"
 msgstr "Max advance must be ≥ offset"
 
 #: src/features/egg-search/components/egg-search-page.tsx:93
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:117
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:119
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:64
 msgid "Max advance must be ≥ start offset"
 msgstr "Max advance must be ≥ start offset"
@@ -733,8 +732,8 @@ msgstr "Min IV must be less than or equal to max IV"
 msgid "Min margin frames"
 msgstr "Min margin frames"
 
-#: src/components/forms/hidden-power-select.tsx:132
-#: src/components/forms/hidden-power-select.tsx:150
+#: src/components/forms/hidden-power-select.tsx:136
+#: src/components/forms/hidden-power-select.tsx:154
 msgid "Min power"
 msgstr "Min power"
 
@@ -759,7 +758,6 @@ msgstr "MT Advances"
 msgid "MT Advances must be 0 or greater"
 msgstr "MT Advances must be 0 or greater"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:244
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:17
 msgid "MT Seed"
 msgstr "MT Seed"
@@ -772,7 +770,7 @@ msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 msgid "MT Seed Search"
 msgstr "MT Seed Search"
 
-#: src/components/forms/nature-select.tsx:43
+#: src/components/forms/nature-select.tsx:47
 #: src/features/egg-list/components/egg-result-columns.tsx:66
 #: src/features/egg-list/components/result-detail-dialog.tsx:63
 #: src/features/egg-search/components/egg-result-columns.tsx:83
@@ -830,22 +828,24 @@ msgstr "No profile"
 msgid "No results"
 msgstr "No results"
 
-#: src/features/egg-list/components/egg-list-page.tsx:304
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:333
+#: src/features/egg-list/components/egg-list-page.tsx:314
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:332
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
-#: src/features/egg-search/components/egg-search-page.tsx:275
+#: src/features/datetime-search/components/datetime-search-page.tsx:297
+#: src/features/egg-search/components/egg-search-page.tsx:276
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:222
 msgid "No results found. Configure parameters and start searching."
 msgstr "No results found. Configure parameters and start searching."
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:296
-msgid "No results found. Please enter MT Seeds and start searching."
-msgstr "No results found. Please enter MT Seeds and start searching."
+#~ msgid "No results found. Please enter MT Seeds and start searching."
+#~ msgstr "No results found. Please enter MT Seeds and start searching."
 
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:222
-msgid "No results found. Set Pokémon conditions and start searching."
-msgstr "No results found. Set Pokémon conditions and start searching."
+#~ msgid "No results found. Set Pokémon conditions and start searching."
+#~ msgstr "No results found. Set Pokémon conditions and start searching."
 
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:229
 msgid "No save"
@@ -855,7 +855,7 @@ msgstr "No save"
 msgid "No seeds loaded"
 msgstr "No seeds loaded"
 
-#: src/features/egg-list/components/egg-list-page.tsx:189
+#: src/features/egg-list/components/egg-list-page.tsx:199
 msgid "No seeds specified"
 msgstr "No seeds specified"
 
@@ -879,8 +879,8 @@ msgstr "None"
 #: src/components/forms/encounter-result-select.tsx:55
 #: src/components/forms/gender-select.tsx:47
 #: src/components/forms/held-item-slot-select.tsx:50
-#: src/components/forms/hidden-power-select.tsx:54
-#: src/components/forms/nature-select.tsx:38
+#: src/components/forms/hidden-power-select.tsx:55
+#: src/components/forms/nature-select.tsx:39
 #: src/components/forms/shiny-select.tsx:44
 #: src/components/forms/species-combobox.tsx:74
 #: src/components/forms/species-combobox.tsx:95
@@ -896,11 +896,11 @@ msgstr "Not used"
 msgid "Offset must be 0 or positive"
 msgstr "Offset must be 0 or positive"
 
-#: src/features/egg-list/components/egg-list-page.tsx:191
+#: src/features/egg-list/components/egg-list-page.tsx:201
 msgid "Offset must be non-negative"
 msgstr "Offset must be non-negative"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:115
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:117
 msgid "One or more seeds are invalid"
 msgstr "One or more seeds are invalid"
 
@@ -912,10 +912,11 @@ msgstr "Parent ♀ IVs"
 msgid "Parent ♂ IVs"
 msgstr "Parent ♂ IVs"
 
-#: src/features/egg-list/components/egg-list-page.tsx:192
+#: src/features/egg-list/components/egg-list-page.tsx:202
 msgid "Parent IV out of range"
 msgstr "Parent IV out of range"
 
+#: src/components/layout/navigation-labels.tsx:13
 #: src/components/layout/navigation-labels.tsx:15
 msgid "Pokemon"
 msgstr "Pokemon"
@@ -937,8 +938,8 @@ msgid "Pokémon only"
 msgstr "Pokémon only"
 
 #: src/components/layout/navigation-labels.tsx:13
-msgid "Pokémon search"
-msgstr "Pokémon search"
+#~ msgid "Pokémon search"
+#~ msgstr "Pokémon search"
 
 #: src/features/ds-config/components/profile-selector.tsx:205
 msgid "Profile"
@@ -1043,12 +1044,12 @@ msgstr "Reset settings and inputs?"
 msgid "Result details"
 msgstr "Result details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:278
-#: src/features/egg-list/components/egg-list-page.tsx:283
-#: src/features/egg-search/components/egg-search-page.tsx:267
+#: src/features/datetime-search/components/datetime-search-page.tsx:279
+#: src/features/egg-list/components/egg-list-page.tsx:293
+#: src/features/egg-search/components/egg-search-page.tsx:268
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:191
 #: src/features/needle/components/needle-page.tsx:245
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:312
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:311
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:201
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
@@ -1090,8 +1091,12 @@ msgid "Search Boot Timing"
 msgstr "Search Boot Timing"
 
 #: src/features/pokemon-search/components/search-mode-tabs.tsx:38
-msgid "Search by MT Seed (IVs)"
-msgstr "Search by MT Seed (IVs)"
+msgid "Search by IVs (MT Seed)"
+msgstr "Search by IVs (MT Seed)"
+
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:38
+#~ msgid "Search by MT Seed (IVs)"
+#~ msgstr "Search by MT Seed (IVs)"
 
 #: src/features/pokemon-search/components/search-mode-tabs.tsx:45
 msgid "Search by shininess / nature"
@@ -1142,15 +1147,15 @@ msgstr "Seeds"
 #~ msgid "Seeds from search results"
 #~ msgstr "Seeds from search results"
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:116
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:118
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:65
 msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
-#: src/components/forms/hidden-power-select.tsx:91
+#: src/components/forms/hidden-power-select.tsx:95
 #: src/components/forms/key-input-selector.tsx:95
 #: src/components/forms/key-spec-selector.tsx:95
-#: src/components/forms/nature-select.tsx:69
+#: src/components/forms/nature-select.tsx:73
 msgid "Select all"
 msgstr "Select all"
 
@@ -1162,7 +1167,7 @@ msgstr "Select location"
 msgid "Select MT Seed templates to apply."
 msgstr "Select MT Seed templates to apply."
 
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:114
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:116
 msgid "Select or enter at least one seed"
 msgstr "Select or enter at least one seed"
 
@@ -1294,7 +1299,7 @@ msgid "Start offset"
 msgstr "Start offset"
 
 #: src/features/egg-search/components/egg-search-page.tsx:94
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:118
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:120
 msgid "Start offset must be ≥ 0"
 msgstr "Start offset must be ≥ 0"
 
@@ -1310,9 +1315,9 @@ msgstr "Startup condition details"
 #~ msgid "Stationary"
 #~ msgstr "Stationary"
 
-#: src/features/egg-list/components/egg-list-page.tsx:295
+#: src/features/egg-list/components/egg-list-page.tsx:305
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
-#: src/features/pokemon-list/components/pokemon-list-page.tsx:324
+#: src/features/pokemon-list/components/pokemon-list-page.tsx:323
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:213
 msgid "Stats"
@@ -1348,7 +1353,11 @@ msgstr "Synchronize nature"
 #~ msgid "Tap the menu icon at the top left to configure search settings."
 #~ msgstr "Tap the menu icon at the top left to configure search settings."
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:252
+#: src/features/datetime-search/components/datetime-search-page.tsx:245
+msgid "Target MT Seeds"
+msgstr "Target MT Seeds"
+
+#: src/features/datetime-search/components/datetime-search-page.tsx:253
 msgid "Template"
 msgstr "Template"
 
@@ -1433,7 +1442,7 @@ msgstr "Trainer ID"
 #~ msgid "Transfer to Needle search"
 #~ msgstr "Transfer to Needle search"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:287
+#: src/features/datetime-search/components/datetime-search-page.tsx:288
 msgid "Transfer to Pokemon list"
 msgstr "Transfer to Pokemon list"
 
@@ -1455,8 +1464,8 @@ msgid "Uses Ditto"
 msgstr "Uses Ditto"
 
 #: src/components/forms/target-seeds-input.tsx:42
-msgid "Valid seeds"
-msgstr "Valid seeds"
+#~ msgid "Valid seeds"
+#~ msgstr "Valid seeds"
 
 #: src/components/forms/timer0-vcount-range-input.tsx:140
 msgid "VCount max"

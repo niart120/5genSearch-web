@@ -89,7 +89,7 @@ describe('DatetimeSearchPage', () => {
       useSearchResultsStore.getState().setPendingTargetSeeds([0x12_34_ab_cd, 0x90_ab_cd_ef]);
     });
 
-    const textarea = screen.getByLabelText('MT Seed') as HTMLTextAreaElement;
+    const textarea = screen.getByLabelText('Target MT Seeds') as HTMLTextAreaElement;
     await waitFor(() => expect(textarea.value).toBe('1234ABCD\n90ABCDEF'));
     expect(useSearchResultsStore.getState().pendingTargetSeeds).toEqual([]);
   });

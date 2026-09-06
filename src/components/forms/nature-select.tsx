@@ -35,7 +35,11 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
   const clearAll = () => onChange([]);
 
   const triggerLabel =
-    value.length === 0 ? <Trans>Not specified</Trans> : <Trans>{value.length} selected</Trans>;
+    value.length === 0 ? (
+      <Trans>Not specified</Trans>
+    ) : (
+      value.map((nature) => getNatureName(nature, language)).join(' / ')
+    );
 
   return (
     <div className="flex flex-col gap-1">
@@ -46,7 +50,7 @@ function NatureSelect({ value, onChange, disabled }: NatureSelectProps) {
         <Popover.Trigger asChild disabled={disabled}>
           <Button
             variant="outline"
-            className="h-8 w-full justify-between text-xs"
+            className="h-8 min-w-0 w-full justify-between text-xs"
             aria-label="nature-select-trigger"
           >
             <span className="truncate">{triggerLabel}</span>

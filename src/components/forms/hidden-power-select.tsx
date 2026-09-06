@@ -51,7 +51,11 @@ function HiddenPowerSelect({
   const clearAll = () => onChange([]);
 
   const triggerLabel =
-    value.length === 0 ? <Trans>Not specified</Trans> : <Trans>{value.length} selected</Trans>;
+    value.length === 0 ? (
+      <Trans>Not specified</Trans>
+    ) : (
+      value.map((type) => getHiddenPowerName(type, language)).join(' / ')
+    );
 
   // めざパ威力ローカル state
   const [localMinPower, setLocalMinPower] = React.useState(String(minPower ?? 30));

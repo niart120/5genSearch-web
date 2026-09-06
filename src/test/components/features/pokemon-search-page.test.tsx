@@ -77,7 +77,7 @@ describe('PokemonSearchPage', () => {
 
   it('searches without MT Seed or trainer IDs and commits edited dates before snapshotting', () => {
     renderPage();
-    expect(screen.queryByLabelText('MT Seed')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Target MT Seeds')).not.toBeInTheDocument();
     expect(screen.queryByText(/GPU/)).not.toBeInTheDocument();
     const year = screen.getByLabelText('date-start year');
     year.focus();
@@ -188,10 +188,10 @@ describe('PokemonSearchPage', () => {
   it('shows full mode names and disables switching and resetting during search', () => {
     state.loading = true;
     renderPage();
-    expect(screen.getByRole('tab', { name: 'Search by MT Seed (IVs)' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Search by IVs (MT Seed)' })).toBeDisabled();
     expect(screen.getByRole('tab', { name: 'Search by shininess / nature' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reset filter' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('tab', { name: 'Search by MT Seed (IVs)' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Search by IVs (MT Seed)' }));
     expect(usePokemonSearchStore.getState().mode).toBe('pokemon');
   });
 });

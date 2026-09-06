@@ -27,7 +27,7 @@ function SpeciesSelect({
     selectedIds.length === 0 ? (
       <Trans>Not specified</Trans>
     ) : (
-      <Trans>{selectedIds.length} selected</Trans>
+      selectedIds.map((id) => speciesNames.get(id) ?? `#${id}`).join(' / ')
     );
 
   return (
@@ -39,7 +39,7 @@ function SpeciesSelect({
         <Popover.Trigger asChild disabled={disabled}>
           <Button
             variant="outline"
-            className="h-8 w-full justify-between text-xs"
+            className="h-8 min-w-0 w-full justify-between text-xs"
             aria-label="species-select-trigger"
           >
             <span className="truncate">{label}</span>

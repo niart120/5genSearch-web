@@ -47,7 +47,11 @@ function HeldItemSlotSelect({ value, onChange, disabled }: HeldItemSlotSelectPro
   );
 
   const label =
-    value.length === 0 ? <Trans>Not specified</Trans> : <Trans>{value.length} selected</Trans>;
+    value.length === 0 ? (
+      <Trans>Not specified</Trans>
+    ) : (
+      value.map((slot) => slotLabels[slot]).join(' / ')
+    );
 
   return (
     <div className="flex flex-col gap-1">
@@ -58,7 +62,7 @@ function HeldItemSlotSelect({ value, onChange, disabled }: HeldItemSlotSelectPro
         <Popover.Trigger asChild disabled={disabled}>
           <Button
             variant="outline"
-            className="h-8 w-full justify-between text-xs"
+            className="h-8 min-w-0 w-full justify-between text-xs"
             aria-label="held-item-slot-select-trigger"
           >
             <span className="truncate">{label}</span>

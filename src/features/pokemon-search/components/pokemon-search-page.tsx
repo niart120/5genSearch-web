@@ -219,7 +219,7 @@ export function PokemonSearchPage() {
             columns={columns}
             data={results}
             className="flex-1"
-            emptyMessage={t`No results found. Set Pokémon conditions and start searching.`}
+            emptyMessage={t`No results found. Configure parameters and start searching.`}
             getRowId={(_row, index) => String(index)}
             initialSorting={POKEMON_SEARCH_SORTING}
           />
