@@ -1,3 +1,4 @@
+import { AdvanceTooltip, NeedleTooltip } from '@/components/data-display/rng-tooltips';
 /**
  * PokemonListResultView テーブル列定義
  *
@@ -82,13 +83,23 @@ function createPokemonResultColumns(options: PokemonResultColumnsOptions = {}) {
     }),
     columnHelper.accessor((row) => row.raw.advance, {
       id: 'advance',
-      header: () => t`Advance`,
-      size: 70,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Advance`}
+          <AdvanceTooltip />
+        </span>
+      ),
+      size: 94,
     }),
     columnHelper.accessor((row) => getNeedleArrow(row.ui.needle_direction), {
       id: 'needle',
-      header: () => t`Needle`,
-      size: 36,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Needle`}
+          <NeedleTooltip />
+        </span>
+      ),
+      size: 60,
     }),
     ...specialEncounterColumns,
     columnHelper.accessor((row) => row.ui.species_name, {

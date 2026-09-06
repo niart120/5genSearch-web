@@ -121,5 +121,33 @@ describe('Needle Search Integration', () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].advance).toBe(targetAdvance + patternLength - 1);
+    expect(
+      search_needle_pattern(origins, pattern, { ...config, max_advance: config.max_advance - 1 })
+    ).toEqual([]);
+    expect(
+      search_needle_pattern(origins, pattern, { ...config, user_offset: config.user_offset + 1 })
+    ).toEqual([]);
+    for (const advance of [0, 100]) {
+      const single = Array.from(
+        get_needle_pattern_at(seed, gameOffset + advance, 1),
+        toNeedleDirection
+      );
+      expect(
+        search_needle_pattern(origins, single, {
+          ...config,
+          user_offset: advance,
+          max_advance: advance,
+        }).map((row) => row.advance)
+      ).toEqual([advance]);
+    }
+    for (const [min, max] of [
+      [2, 1],
+      [0, 0xff_ff_ff_ff],
+      [0xff_ff_ff_fe, 0xff_ff_ff_fe],
+    ]) {
+      expect(() =>
+        search_needle_pattern(origins, pattern, { ...config, user_offset: min, max_advance: max })
+      ).toThrow();
+    }
   });
 });

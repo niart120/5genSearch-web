@@ -56,12 +56,6 @@ impl PokemonGenerator {
     ) -> Result<Self, String> {
         let base_seed = source.base_seed();
         let game_offset = calculate_game_offset(base_seed, config.version, config.game_start)?;
-        if config.max_advance < config.user_offset {
-            return Err("max_advance must be >= user_offset".into());
-        }
-        game_offset
-            .checked_add(config.max_advance)
-            .ok_or("Advance offset overflow")?;
         if params.slots.is_empty()
             || (is_static_encounter(params.encounter_type) && params.slots.len() != 1)
         {
@@ -70,7 +64,7 @@ impl PokemonGenerator {
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
-        let total_offset = game_offset + config.user_offset;
+        let total_offset = config.initial_advance(game_offset)?;
         lcg.jump(u64::from(total_offset));
 
         Ok(Self {

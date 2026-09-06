@@ -91,6 +91,20 @@ describe('EggFilterForm', () => {
     expect(screen.getByRole('spinbutton', { name: 'Min margin frames' })).toBeInTheDocument();
   });
 
+  it('猶予の説明を開いても下限条件を有効化しない', async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderFilterForm();
+    await openFilter(user);
+
+    await user.click(screen.getByRole('button', { name: 'About margin frames' }));
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('still receive the same Egg');
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('checkbox', { name: 'Enable minimum margin frames' })
+    ).not.toBeChecked();
+  });
+
   it('min_margin_frames 変更で onChange が呼ばれる', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

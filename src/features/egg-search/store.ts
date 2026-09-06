@@ -154,7 +154,7 @@ export const useEggSearchStore = create<EggSearchState & EggSearchActions>()(
     }),
     {
       name: 'feature:egg-search',
-      version: 2,
+      version: 3,
       migrate: (state) => state as ReturnType<typeof getEggSearchInitialState>,
       partialize: (state) => ({
         dateRange: state.dateRange,

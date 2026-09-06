@@ -49,7 +49,7 @@ impl EggGenerator {
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
-        let total_offset = game_offset + config.user_offset;
+        let total_offset = config.initial_advance(game_offset)?;
         lcg.jump(u64::from(total_offset));
 
         Ok(Self {

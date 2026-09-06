@@ -49,6 +49,35 @@ const TEST_CONFIG: GenerationConfig = {
 };
 
 describe('PokemonList Direct WASM', () => {
+  it.each([
+    [2, 1],
+    [0, 0xff_ff_ff_ff],
+    [0xff_ff_ff_fe, 0xff_ff_ff_fe],
+  ])('WASM rejects invalid range or offset overflow %i..%i', (min, max) => {
+    expect(() =>
+      generate_pokemon_list([TEST_ORIGIN], TEST_PARAMS, {
+        ...TEST_CONFIG,
+        user_offset: min,
+        max_advance: max,
+      })
+    ).toThrow();
+  });
+  it.each([
+    [100, 102],
+    [100, 100],
+    [0, 0],
+  ])('Worker generates the inclusive range %i..%i', async (min, max) => {
+    const results = await runSearchInWorker({
+      kind: 'pokemon-list',
+      origins: [TEST_ORIGIN],
+      params: TEST_PARAMS,
+      config: { ...TEST_CONFIG, user_offset: min, max_advance: max },
+      filter: undefined,
+    });
+    expect(results.map((row) => row.advance)).toEqual(
+      Array.from({ length: max - min + 1 }, (_, index) => min + index)
+    );
+  });
   it('generate_pokemon_list で結果が返る', () => {
     const results = generate_pokemon_list([TEST_ORIGIN], TEST_PARAMS, TEST_CONFIG);
 

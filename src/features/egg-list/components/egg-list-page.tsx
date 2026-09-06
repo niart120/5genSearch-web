@@ -197,7 +197,7 @@ function EggListPage(): ReactElement {
   const validationMessages = useMemo(
     (): Record<EggListValidationErrorCode, string> => ({
       SEEDS_EMPTY: t`No seeds specified`,
-      ADVANCE_RANGE_INVALID: t`Advance range invalid`,
+      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
       OFFSET_NEGATIVE: t`Offset must be non-negative`,
       IV_OUT_OF_RANGE: t`Parent IV out of range`,
     }),

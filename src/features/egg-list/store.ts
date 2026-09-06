@@ -164,7 +164,7 @@ export const useEggListStore = create<EggListState & EggListActions>()(
     }),
     {
       name: 'feature:egg-list',
-      version: 2,
+      version: 3,
       migrate: (state) => state as ReturnType<typeof getEggListInitialState>,
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,

@@ -1,3 +1,4 @@
+import { AdvanceTooltip, NeedleTooltip } from '@/components/data-display/rng-tooltips';
 /**
  * EggListResultView テーブル列定義
  *
@@ -8,6 +9,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EggMarginTooltip } from '@/components/data-display/egg-margin-tooltip';
 import { getNeedleArrow, STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { EggListResultView } from '@/lib/result-view';
 
@@ -53,13 +55,23 @@ function createEggResultColumns(options: EggResultColumnsOptions = {}) {
     }),
     columnHelper.accessor((row) => row.raw.advance, {
       id: 'advance',
-      header: () => t`Advance`,
-      size: 70,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Advance`}
+          <AdvanceTooltip />
+        </span>
+      ),
+      size: 94,
     }),
     columnHelper.accessor((row) => getNeedleArrow(row.ui.needle_direction), {
       id: 'needle',
-      header: () => t`Needle`,
-      size: 36,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Needle`}
+          <NeedleTooltip />
+        </span>
+      ),
+      size: 60,
     }),
     columnHelper.accessor((row) => row.ui.nature_name, {
       id: 'nature',
@@ -109,8 +121,13 @@ function createEggResultColumns(options: EggResultColumnsOptions = {}) {
     }),
     columnHelper.accessor((row) => row.raw.margin_frames, {
       id: 'margin_frames',
-      header: () => t`Margin`,
-      size: 60,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Margin`}
+          <EggMarginTooltip />
+        </span>
+      ),
+      size: 84,
       cell: (info) => info.row.original.ui.margin_frames ?? '-',
     }),
   ];

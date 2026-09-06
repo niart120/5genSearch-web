@@ -34,7 +34,9 @@ pub fn search_needle_pattern(
     pattern: NeedlePattern,
     config: &GenerationConfig,
 ) -> Result<Vec<NeedleSearchResult>, String> {
+    let advance_count = config.advance_count()?;
     let pattern_dirs = pattern.directions();
+    let pattern_len = u32::try_from(pattern_dirs.len()).map_err(|_| "Pattern too long")?;
 
     if pattern_dirs.is_empty() {
         return Err("Pattern is empty".into());
@@ -48,22 +50,22 @@ pub fn search_needle_pattern(
         // game_offset 計算
         let game_offset = calculate_game_offset(seed, config.version, config.game_start)?;
 
+        let initial_advance = config.initial_advance(game_offset)?;
+
         // 検索範囲: user_offset ～ max_advance
         let start = config.user_offset;
         let end = config.max_advance;
 
         // パターン長を考慮した終了位置の調整
         // パターン末尾が end を超えないようにする
-        #[allow(clippy::cast_possible_truncation)]
-        let pattern_len = pattern_dirs.len() as u32;
-        if pattern_len == 0 || start + pattern_len - 1 > end {
+        if pattern_len > advance_count {
             continue;
         }
-        let search_end = end - pattern_len + 1;
+        let search_end = end - (pattern_len - 1);
 
         // LCG を初期化してジャンプ
         let mut lcg = Lcg64::new(seed);
-        lcg.jump(u64::from(game_offset + start));
+        lcg.jump(u64::from(initial_advance));
 
         // パターン検索
         for advance in start..=search_end {
@@ -135,6 +137,36 @@ mod tests {
             },
             user_offset: 0,
             max_advance: 100,
+        }
+    }
+
+    #[test]
+    fn singleton_ranges_and_full_pattern_containment() {
+        let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
+        let mut config = make_config();
+        let offset = calculate_game_offset(seed, config.version, config.game_start).unwrap();
+        for advance in [0, 100] {
+            config.user_offset = advance;
+            config.max_advance = advance;
+            let values = get_needle_pattern_at(seed.value(), offset + advance, 1);
+            let result = search_needle_pattern(
+                vec![SeedOrigin::seed(seed)],
+                NeedlePattern::from_values(&values),
+                &config,
+            )
+            .unwrap();
+            assert_eq!(result.len(), 1);
+            assert_eq!(result[0].advance, advance);
+            let values = get_needle_pattern_at(seed.value(), offset + advance, 2);
+            assert!(
+                search_needle_pattern(
+                    vec![SeedOrigin::seed(seed)],
+                    NeedlePattern::from_values(&values),
+                    &config
+                )
+                .unwrap()
+                .is_empty()
+            );
         }
     }
 

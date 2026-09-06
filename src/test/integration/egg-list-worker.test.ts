@@ -102,6 +102,24 @@ describe('Egg List Worker Integration', () => {
     expect(await executeTask(pool, task)).toEqual(expected);
   });
 
+  it.each([
+    [100, 102],
+    [100, 100],
+    [0, 0],
+  ])('Worker generates the inclusive range %i..%i', async (min, max) => {
+    pool = new WorkerPool({ useGpu: false, workerCount: 1 });
+    await pool.initialize();
+    const results = await executeTask(pool, {
+      kind: 'egg-list',
+      origins: TEST_ORIGINS,
+      params: TEST_PARAMS,
+      config: { ...TEST_CONFIG, user_offset: min, max_advance: max },
+      filter: undefined,
+    });
+    expect(results.map((row) => row.advance)).toEqual(
+      Array.from({ length: max - min + 1 }, (_, index) => min + index)
+    );
+  });
   it('should generate eggs via worker with correct structure', async () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 1 });
     await pool.initialize();

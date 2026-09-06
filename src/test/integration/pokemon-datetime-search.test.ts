@@ -61,6 +61,21 @@ export function pokemonSearchParams(): PokemonDatetimeSearchParams {
 }
 
 describe('Pokemon datetime search', () => {
+  it.each([
+    [100, 102],
+    [100, 100],
+    [0, 0],
+  ])('Worker searches the inclusive range %i..%i', async (min, max) => {
+    const params = pokemonSearchParams();
+    params.gen_config.user_offset = min;
+    params.gen_config.max_advance = max;
+    params.search_space.end_seconds = params.search_space.start_seconds + 1;
+    const results = await runSearchInWorker({ kind: 'pokemon-datetime', params });
+    expect(results.map((row) => row.advance)).toEqual(
+      Array.from({ length: max - min + 1 }, (_, index) => min + index)
+    );
+  });
+
   it('ブロック対象の非表示条件を除外した日時検索が未指定の検索と一致する', async () => {
     const params = pokemonSearchParams();
     params.pokemon_params.slots[0].shiny_locked = true;
@@ -91,13 +106,13 @@ describe('Pokemon datetime search', () => {
     try {
       while (!searcher.is_done) {
         const batch = searcher.next_batch({ max_candidates: 4, max_results: 1 });
-        expect(batch.total_count).toBe(168n);
+        expect(batch.total_count).toBe(175n);
         results.push(...batch.results);
       }
     } finally {
       searcher.free();
     }
-    expect(results).toHaveLength(168);
+    expect(results).toHaveLength(175);
     const first = results[0];
     expect(first.source).toHaveProperty('Startup');
     expect(
@@ -110,7 +125,7 @@ describe('Pokemon datetime search', () => {
       kind: 'pokemon-datetime',
       params: pokemonSearchParams(),
     });
-    expect(results).toHaveLength(168);
+    expect(results).toHaveLength(175);
   });
 
   it('rejects invalid input through Worker', async () => {
@@ -158,7 +173,7 @@ describe('Pokemon datetime search', () => {
         searcher.free();
       }
     }
-    expect(total).toBe(672n);
+    expect(total).toBe(700n);
   });
 
   it('cancel and restart exclude responses from the previous search', async () => {
@@ -186,8 +201,8 @@ describe('Pokemon datetime search', () => {
       activePool.onError(reject);
       activePool.start([{ kind: 'pokemon-datetime', params: long }]);
     });
-    expect(results).toHaveLength(7);
-    expect(results.every((data) => data.advance === 6)).toBe(true);
+    expect(results).toHaveLength(14);
+    expect(results.every((data) => data.advance === 6 || data.advance === 7)).toBe(true);
   });
 
   it('rejects invalid startup ranges while preserving overlapping range expansion', () => {
@@ -213,7 +228,7 @@ describe('Pokemon datetime search', () => {
     expect(build).toThrow();
   });
 
-  it('completes zero-position tasks and reports zero progress counts', async () => {
+  it('completes singleton ranges and reports every position', async () => {
     pool = new WorkerPool({ useGpu: false, workerCount: 1 });
     await pool.initialize();
     const params = pokemonSearchParams();
@@ -228,6 +243,6 @@ describe('Pokemon datetime search', () => {
       activePool.onError(reject);
       activePool.start([{ kind: 'pokemon-datetime', params }]);
     });
-    expect(processed).toBe(0);
+    expect(processed).toBe(7);
   });
 });

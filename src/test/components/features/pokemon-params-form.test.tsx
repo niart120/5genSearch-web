@@ -60,7 +60,7 @@ describe('PokemonParamsForm', () => {
     const onChange = vi.fn();
     const { rerender } = renderForm({ onChange, syncKey: 0 });
 
-    const offsetInput = screen.getByLabelText('Start offset') as HTMLInputElement;
+    const offsetInput = screen.getByLabelText('Min advance') as HTMLInputElement;
     await user.clear(offsetInput);
     await user.type(offsetInput, '77');
     expect(offsetInput.value).toBe('77');

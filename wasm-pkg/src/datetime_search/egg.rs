@@ -41,6 +41,7 @@ impl EggDatetimeSearcher {
     #[wasm_bindgen(constructor)]
     #[allow(clippy::needless_pass_by_value)]
     pub fn new(params: EggDatetimeSearchParams) -> Result<EggDatetimeSearcher, String> {
+        params.gen_config.advance_count()?;
         let space = DatetimeSearchSpace::try_from(params.search_space)?;
         let generator = DatetimeHashGenerator::new(&params.ds, &space, params.condition);
 
@@ -73,7 +74,9 @@ impl EggDatetimeSearcher {
     }
 
     /// 次のバッチを検索
-    pub fn next_batch(&mut self, chunk_count: u32) -> EggDatetimeSearchBatch {
+    /// # Errors
+    /// 起動設定が無効、またはオフセットとの加算がオーバーフローする場合。
+    pub fn next_batch(&mut self, chunk_count: u32) -> Result<EggDatetimeSearchBatch, String> {
         let mut results = Vec::new();
         let mut remaining = u64::from(chunk_count);
 
@@ -92,15 +95,15 @@ impl EggDatetimeSearcher {
                 let source = SeedOrigin::startup(lcg_seed, *datetime, self.condition);
 
                 // EggGenerator で個体生成
-                self.generate_and_filter(lcg_seed, source, &mut results);
+                self.generate_and_filter(lcg_seed, source, &mut results)?;
             }
         }
 
-        EggDatetimeSearchBatch {
+        Ok(EggDatetimeSearchBatch {
             results,
             processed_count: self.processed_count,
             total_count: self.total_count,
-        }
+        })
     }
 }
 
@@ -111,15 +114,12 @@ impl EggDatetimeSearcher {
         base_seed: crate::types::LcgSeed,
         source: SeedOrigin,
         results: &mut Vec<EggDatetimeSearchResult>,
-    ) {
-        let Ok(mut generator) =
-            EggGenerator::new(base_seed, source, &self.egg_params, &self.gen_config)
-        else {
-            return;
-        };
+    ) -> Result<(), String> {
+        let mut generator =
+            EggGenerator::new(base_seed, source, &self.egg_params, &self.gen_config)?;
 
         // advance 範囲内の個体を生成・フィルタリング
-        let advance_count = self.gen_config.max_advance - self.gen_config.user_offset;
+        let advance_count = self.gen_config.advance_count()?;
         for _ in 0..advance_count {
             let egg = generator.generate_next();
 
@@ -133,6 +133,7 @@ impl EggDatetimeSearcher {
                 results.push(EggDatetimeSearchResult { egg });
             }
         }
+        Ok(())
     }
 }
 
@@ -163,6 +164,7 @@ pub fn generate_egg_search_tasks(
     filter: Option<EggFilter>,
     worker_count: u32,
 ) -> Result<Vec<EggDatetimeSearchParams>, String> {
+    gen_config.advance_count()?;
     let space = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)?;
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
@@ -252,6 +254,51 @@ mod tests {
             },
             filter: None,
         }
+    }
+
+    #[test]
+    fn inclusive_ranges_match_unfiltered_egg_lists() {
+        use crate::generation::flows::generator::generate_egg_list;
+        for (min, max) in [(100, 102), (100, 100), (0, 0)] {
+            let mut p = create_test_params();
+            p.search_space.end_seconds = p.search_space.start_seconds + 1;
+            p.gen_config.user_offset = min;
+            p.gen_config.max_advance = max;
+            let mut searcher = EggDatetimeSearcher::new(p.clone()).unwrap();
+            let batch = searcher.next_batch(1).unwrap();
+            assert!(searcher.is_done());
+            assert_eq!(batch.processed_count, batch.total_count);
+            let expected: Vec<u32> = (min..=max).collect();
+            assert_eq!(
+                batch
+                    .results
+                    .iter()
+                    .map(|row| row.egg.advance)
+                    .collect::<Vec<_>>(),
+                expected
+            );
+            let origin = batch.results[0].egg.source.clone();
+            let list = generate_egg_list(vec![origin], p.egg_params, p.gen_config, None).unwrap();
+            assert_eq!(
+                list.iter().map(|row| row.advance).collect::<Vec<_>>(),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn invalid_ranges_and_offset_overflow_are_errors() {
+        for (min, max) in [(2, 1), (0, u32::MAX)] {
+            let mut p = create_test_params();
+            p.gen_config.user_offset = min;
+            p.gen_config.max_advance = max;
+            assert!(EggDatetimeSearcher::new(p).is_err());
+        }
+        let mut p = create_test_params();
+        p.gen_config.user_offset = u32::MAX - 1;
+        p.gen_config.max_advance = u32::MAX - 1;
+        let mut searcher = EggDatetimeSearcher::new(p).unwrap();
+        assert!(searcher.next_batch(1).is_err());
     }
 
     #[test]
@@ -345,7 +392,7 @@ mod tests {
         let params = create_test_params();
         let mut searcher = EggDatetimeSearcher::new(params).unwrap();
 
-        let batch = searcher.next_batch(10);
+        let batch = searcher.next_batch(10).unwrap();
         assert!(batch.processed_count > 0);
         assert!(batch.total_count > 0);
     }

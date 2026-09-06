@@ -37,9 +37,7 @@ impl PokemonDatetimeSearcher {
         let space = DatetimeSearchSpace::try_from(params.search_space.clone())?;
         let count = space.count();
         let total_count = count
-            .checked_mul(u64::from(
-                params.gen_config.max_advance - params.gen_config.user_offset,
-            ))
+            .checked_mul(u64::from(params.gen_config.advance_count()?))
             .ok_or("Search count overflow")?;
         let datetime = DatetimeHashGenerator::new(&params.ds, &space, params.condition);
         let mut searcher = Self {
@@ -61,8 +59,7 @@ impl PokemonDatetimeSearcher {
 
     #[wasm_bindgen(getter)]
     pub fn is_done(&self) -> bool {
-        self.gen_config.user_offset == self.gen_config.max_advance
-            || (self.datetime.is_exhausted() && self.pending.is_empty() && self.current.is_none())
+        self.datetime.is_exhausted() && self.pending.is_empty() && self.current.is_none()
     }
 
     /// # Errors
@@ -89,7 +86,7 @@ impl PokemonDatetimeSearcher {
             }
             attempts += 1;
             self.processed_count += 1;
-            if generator.current_advance() == self.gen_config.max_advance {
+            if generator.current_advance() > self.gen_config.max_advance {
                 self.current = None;
             }
         }
@@ -132,11 +129,7 @@ fn validate_params(params: &PokemonDatetimeSearchParams) -> Result<(), String> {
         return Err("ROM version mismatch".into());
     }
     params.gen_config.game_start.validate(params.ds.version)?;
-    if params.gen_config.user_offset > params.gen_config.max_advance
-        || params.gen_config.max_advance == u32::MAX
-    {
-        return Err("Invalid advance range".into());
-    }
+    params.gen_config.advance_count()?;
     // HiddenGrotto は既存共通生成器のディスパッチ対象外。Egg は孵化検索を使う。
     if matches!(
         params.pokemon_params.encounter_type,
@@ -452,13 +445,50 @@ mod tests {
     }
 
     #[test]
+    fn inclusive_ranges_survive_batch_boundaries() {
+        for (min, max) in [(100, 102), (100, 100), (0, 0)] {
+            let mut p = params();
+            p.gen_config.user_offset = min;
+            p.gen_config.max_advance = max;
+            let expected: Vec<u32> = (0..7).flat_map(|_| min..=max).collect();
+            for batch_size in [1, 2, 3, 4, 7, 100] {
+                let actual = collect(p.clone(), batch_size, 2);
+                assert_eq!(
+                    actual.iter().map(|row| row.advance).collect::<Vec<_>>(),
+                    expected
+                );
+            }
+            let list = reference(&p);
+            assert_eq!(
+                list.iter().map(|row| row.advance).collect::<Vec<_>>(),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn generation_range_validation_handles_integer_boundaries() {
+        let mut config = params().gen_config;
+        for (min, max) in [(2, 1), (0, u32::MAX), (u32::MAX, u32::MAX)] {
+            config.user_offset = min;
+            config.max_advance = max;
+            assert!(config.advance_count().is_err());
+        }
+        config.user_offset = u32::MAX - 1;
+        config.max_advance = u32::MAX - 1;
+        assert_eq!(config.advance_count().unwrap(), 1);
+        assert_eq!(config.initial_advance(1).unwrap(), u32::MAX);
+        assert!(config.initial_advance(2).is_err());
+    }
+
+    #[test]
     fn partial_days_and_zero_spaces_have_exact_totals() {
         let mut p = params();
         p.search_space.time_range.second_start = 1;
         p.search_space.time_range.second_end = 2;
         assert_eq!(
             PokemonDatetimeSearcher::new(p.clone()).unwrap().total_count,
-            48
+            50
         );
         p.search_space.time_range.hour_start = 12;
         p.search_space.time_range.hour_end = 12;
@@ -467,7 +497,7 @@ mod tests {
         assert_eq!(searcher.total_count, 0);
         let mut p = params();
         p.gen_config.max_advance = p.gen_config.user_offset;
-        assert!(PokemonDatetimeSearcher::new(p).unwrap().is_done());
+        assert_eq!(collect(p, 1, 1).len(), 7);
         let mut p = params();
         p.search_space.end_seconds = p.search_space.start_seconds;
         assert!(PokemonDatetimeSearcher::new(p).unwrap().is_done());

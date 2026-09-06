@@ -90,8 +90,8 @@ function EggSearchPage(): ReactElement {
     (): Record<EggValidationErrorCode, string> => ({
       DATE_RANGE_INVALID: t`Start date must be on or before end date`,
       TIME_RANGE_INVALID: t`Time range is invalid`,
-      ADVANCE_RANGE_INVALID: t`Max advance must be ≥ start offset`,
-      OFFSET_NEGATIVE: t`Start offset must be ≥ 0`,
+      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
+      OFFSET_NEGATIVE: t`Min advance must be ≥ 0`,
       IV_OUT_OF_RANGE: t`IVs must be in the range 0 to 31`,
     }),
     [t]
@@ -196,6 +196,7 @@ function EggSearchPage(): ReactElement {
       request.context.time_range,
       request.context.ranges,
       countKeyCombinations(request.context.key_spec),
+      request.genConfig,
       request.filter,
       request.params.masuda_method
     );

@@ -1,4 +1,3 @@
-import { encounterSlotKey } from '@/lib/encounter-slot-context';
 /**
  * エンカウント / 生成パラメータ入力フォーム
  *
@@ -6,6 +5,8 @@ import { encounterSlotKey } from '@/lib/encounter-slot-context';
  * フォーム内でエンカウント関連の状態をすべて管理し、onChange で集約結果を親に報告する。
  */
 
+import { AdvanceRangeInput } from '@/components/forms/advance-range-input';
+import { encounterSlotKey } from '@/lib/encounter-slot-context';
 import {
   useState,
   useCallback,
@@ -16,7 +17,6 @@ import {
   type SetStateAction,
 } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import {
   getEncounterLocationName,
   getEncounterMethodName,
@@ -210,18 +209,6 @@ function PokemonParamsForm({
     return map;
   }, [staticSpeciesIds, language]);
 
-  // offset / max_advance ローカル state
-  const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));
-  const [localMaxAdv, setLocalMaxAdv] = useState(String(genConfig.max_advance));
-
-  useEffect(() => {
-    setLocalOffset(String(genConfig.user_offset));
-  }, [genConfig.user_offset, syncKey]);
-
-  useEffect(() => {
-    setLocalMaxAdv(String(genConfig.max_advance));
-  }, [genConfig.max_advance, syncKey]);
-
   // カテゴリ変更ハンドラ
   const handleCategoryChange = useCallback(
     (categoryKey: string) => {
@@ -298,27 +285,6 @@ function PokemonParamsForm({
     },
     [onChange]
   );
-
-  // offset / max_advance blur handlers
-  const handleOffsetBlur = useCallback(() => {
-    const clamped = clampOrDefault(localOffset, {
-      defaultValue: 0,
-      min: 0,
-      max: 999_999,
-    });
-    setLocalOffset(String(clamped));
-    onChange((prev) => ({ ...prev, genConfig: { ...prev.genConfig, user_offset: clamped } }));
-  }, [localOffset, onChange]);
-
-  const handleMaxAdvBlur = useCallback(() => {
-    const clamped = clampOrDefault(localMaxAdv, {
-      defaultValue: 30,
-      min: 0,
-      max: 999_999,
-    });
-    setLocalMaxAdv(String(clamped));
-    onChange((prev) => ({ ...prev, genConfig: { ...prev.genConfig, max_advance: clamped } }));
-  }, [localMaxAdv, onChange]);
 
   return (
     <section className="flex flex-col gap-3">
@@ -450,43 +416,14 @@ function PokemonParamsForm({
         disabled={disabled}
       />
 
-      {/* offset / max_advance */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="pokemon-offset" className="text-xs">
-            <Trans>Start offset</Trans>
-          </Label>
-          <Input
-            id="pokemon-offset"
-            type="number"
-            inputMode="numeric"
-            className="h-7 text-xs tabular-nums"
-            value={localOffset}
-            onChange={(e) => setLocalOffset(e.target.value)}
-            onBlur={handleOffsetBlur}
-            onFocus={handleFocusSelectAll}
-            min={0}
-            disabled={disabled}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="pokemon-max-advance" className="text-xs">
-            <Trans>Max advance</Trans>
-          </Label>
-          <Input
-            id="pokemon-max-advance"
-            type="number"
-            inputMode="numeric"
-            className="h-7 text-xs tabular-nums"
-            value={localMaxAdv}
-            onChange={(e) => setLocalMaxAdv(e.target.value)}
-            onBlur={handleMaxAdvBlur}
-            onFocus={handleFocusSelectAll}
-            min={0}
-            disabled={disabled}
-          />
-        </div>
-      </div>
+      <AdvanceRangeInput
+        value={genConfig}
+        onChange={(partial) =>
+          onChange((prev) => ({ ...prev, genConfig: { ...prev.genConfig, ...partial } }))
+        }
+        disabled={disabled}
+        syncKey={syncKey}
+      />
     </section>
   );
 }
