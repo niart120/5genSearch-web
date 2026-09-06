@@ -180,7 +180,7 @@ msgstr "キャンセル"
 msgid "Category"
 msgstr "種別"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:244
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:241
 msgid "Check in Pokémon list"
 msgstr "個体生成リストで確認"
 
@@ -825,7 +825,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:229
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:226
 msgid "No results found. Set Pokémon conditions and start searching."
 msgstr "結果がありません。対象と条件を設定して検索してください。"
 
@@ -1034,7 +1034,7 @@ msgstr "結果の詳細"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:319
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:208
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:205
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
 msgstr "検索結果"
@@ -1299,7 +1299,7 @@ msgstr "起動条件の詳細"
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:331
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:220
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:217
 msgid "Stats"
 msgstr "ステータス"
 
@@ -1340,10 +1340,6 @@ msgstr "テンプレート"
 #: src/features/ds-config/components/profile-confirm-dialog.tsx:33
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "現在のプロファイルに未保存の変更があります。どうしますか？"
-
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:183
-msgid "The start offset is included; the max advance is excluded."
-msgstr "開始オフセットを含み、最大消費数を含まない範囲を検索します。"
 
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:64
 msgid "This encounter type is not supported by Pokémon search"
@@ -1470,6 +1466,6 @@ msgstr "ごくまれに (1%)"
 msgid "With save"
 msgstr "セーブあり"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:193
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:190
 msgid "Without filters, all Pokémon in the specified range are returned."
 msgstr "絞り込みを指定しない場合、指定範囲のすべてのポケモンを返します。"

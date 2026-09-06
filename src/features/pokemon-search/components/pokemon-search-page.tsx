@@ -179,9 +179,6 @@ export function PokemonSearchPage() {
               version={dsConfig.version}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
-              <Trans>The start offset is included; the max advance is excluded.</Trans>
-            </p>
             <PokemonSearchFilterForm
               value={filter}
               onChange={setFilter}

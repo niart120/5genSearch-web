@@ -180,7 +180,7 @@ msgstr "Cancel"
 msgid "Category"
 msgstr "Category"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:244
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:241
 msgid "Check in Pokémon list"
 msgstr "Check in Pokémon list"
 
@@ -829,7 +829,7 @@ msgstr "No results found. Configure parameters and start searching."
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:229
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:226
 msgid "No results found. Set Pokémon conditions and start searching."
 msgstr "No results found. Set Pokémon conditions and start searching."
 
@@ -1038,7 +1038,7 @@ msgstr "Result details"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:319
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:208
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:205
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
 msgstr "Results"
@@ -1303,7 +1303,7 @@ msgstr "Startup condition details"
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:331
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:220
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:217
 msgid "Stats"
 msgstr "Stats"
 
@@ -1344,10 +1344,6 @@ msgstr "Template"
 #: src/features/ds-config/components/profile-confirm-dialog.tsx:33
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "The current profile has unsaved changes. What would you like to do?"
-
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:183
-msgid "The start offset is included; the max advance is excluded."
-msgstr "The start offset is included; the max advance is excluded."
 
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:64
 msgid "This encounter type is not supported by Pokémon search"
@@ -1474,6 +1470,6 @@ msgstr "Very rare (1%)"
 msgid "With save"
 msgstr "With save"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:193
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:190
 msgid "Without filters, all Pokémon in the specified range are returned."
 msgstr "Without filters, all Pokémon in the specified range are returned."
