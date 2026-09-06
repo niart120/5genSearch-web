@@ -21,26 +21,26 @@ pub mod gpu;
 pub use datetime_search::{
     EggDatetimeSearcher, MtseedDatetimeSearcher, PokemonDatetimeSearcher, TrainerInfoSearcher,
     generate_egg_search_tasks, generate_mtseed_search_tasks, generate_pokemon_search_tasks,
-    generate_trainer_info_search_tasks, split_search_range,
+    generate_trainer_info_search_tasks,
 };
 
 // Re-export common types
 pub use types::{
     AbilitySlot, CoreDataFilter, CorePokemonData, DateRangeParams, Datetime, DatetimeSearchContext,
-    DsButton, DsConfig, EggDatetimeSearchBatch, EggDatetimeSearchParams, EggDatetimeSearchResult,
-    EggFilter, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
-    EncounterType, EverstonePlan, GameStartConfig, GenderRatio, GeneratedEggData,
-    GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType, IV_VALUE_UNKNOWN,
-    ItemContent, IvFilter, Ivs, KeyInput, KeyMask, KeySpec, LcgSeed, LeadAbilityEffect,
-    MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed,
+    DatetimeSearchSpaceParams, DsButton, DsConfig, EggDatetimeSearchBatch, EggDatetimeSearchParams,
+    EggDatetimeSearchResult, EggFilter, EggGenerationParams, EncounterMethod, EncounterResult,
+    EncounterSlotConfig, EncounterType, EverstonePlan, GameStartConfig, GenderRatio,
+    GeneratedEggData, GeneratedPokemonData, GenerationConfig, HeldItemSlot, HiddenPowerType,
+    IV_VALUE_UNKNOWN, ItemContent, IvFilter, Ivs, KeyInput, KeyMask, KeySpec, LcgSeed,
+    LeadAbilityEffect, MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed,
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch,
     MtseedSearchContext, MtseedSearchParams, NeedleDirection, NeedlePattern, Pid,
     PokemonDatetimeSearchBatch, PokemonDatetimeSearchFilter, PokemonDatetimeSearchParams,
     PokemonFilter, PokemonGenerationParams, PokemonSearchBatchLimits, RomVersion, SavePresence,
-    SearchRangeParams, SeedOrigin, SeedSpec, ShinyCharmState, ShinyFilter,
-    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, Stats, StatsFilter,
-    TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
-    TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData, UiPokemonData,
+    SeedOrigin, SeedSpec, ShinyCharmState, ShinyFilter, SpecialEncounterDirection,
+    SpecialEncounterInfo, StartMode, Stats, StatsFilter, TimeRangeParams, Timer0VCountRange,
+    TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch, TrainerInfoSearchParams,
+    TrainerInfoSearchResult, UiEggData, UiPokemonData,
 };
 
 // Re-export core functions

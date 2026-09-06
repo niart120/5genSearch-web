@@ -80,7 +80,8 @@ fn test_3ds_bw2_initial_seed_yields_real_tid() {
     };
 
     // 全 (timer0, vcount, key) の組み合わせ × 時間チャンクをタスク化
-    let tasks = wasm_pkg::generate_trainer_info_search_tasks(context, filter, game_start, 1);
+    let tasks =
+        wasm_pkg::generate_trainer_info_search_tasks(context, filter, game_start, 1).unwrap();
     assert!(!tasks.is_empty(), "タスクが生成されること");
 
     // 全タスクを順次走査し、TID=44844 を含む結果が得られることを確認

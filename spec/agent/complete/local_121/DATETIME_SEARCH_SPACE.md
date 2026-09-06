@@ -6,7 +6,7 @@
 
 日時検索における入力の解釈、分割、列挙、件数計算、GPU の候補番号と日時の対応を `DatetimeSearchSpace` に集約する。
 
-状態: 設計初稿・実装未着手（2026-09-06）。現行実装の確認基点は `c6cc85c7a4270e65b094adce1ab511ab86ccfa5b`。本書の実装仕様は提案であり、実装済みの挙動とは区別する。
+状態: 実装・検証完了（2026-09-06）。導入前の確認基点は `c6cc85c7a4270e65b094adce1ab511ab86ccfa5b`。着手時の `9da2c0fba0ae694a75a38837b2d95e114a6e2a05` との間に `wasm-pkg/`・`src/` の差分はなく、未コミット変更もなかった。1.3 節は導入前の記録、3 節以降は完成した実装の契約を記載する。
 
 関連仕様:
 
@@ -29,7 +29,7 @@
 
 ### 1.3 背景・問題
 
-| 現行実装 | 確認した挙動・問題 |
+| 導入前の実装 | 確認した挙動・問題 |
 |----------|--------------------|
 | `types/search.rs` の `DateRangeParams` | `validate()` は年範囲と大小関係を確認するが、月日が実在することを保証しない。`to_search_range()` は検証済みでなくても呼べる |
 | `types/search.rs` と `datetime_search/base.rs` | 日付から秒数への変換、閏年判定が重複している |
@@ -76,11 +76,13 @@ GPU の件数式を部分日に対応させるだけでは、正しい日時を�
 | `wasm-pkg/src/gpu/datetime_search/pipeline.rs` | 更新 | 探索空間から定数を設定し、同じ番号体系で結果日時を復元 |
 | `wasm-pkg/src/gpu/datetime_search/shader.wgsl` | 更新 | 番号の名称・契約を統一。日内直積から日時を算出する処理は利用 |
 | `wasm-pkg/src/types/mod.rs`、`lib.rs` | 更新 | 廃止型・関数の公開削除、新しい転送型の公開 |
-| `src/services/search-tasks.ts`、`src/workers/types.ts`、`search.worker.ts`、`gpu.worker.ts` | 更新 | 新しいタスク形式、境界エラーの伝播、空探索の完了処理 |
+| `src/services/search-tasks.ts`、`src/workers/types.ts` | 確認 | 生成型を直接参照するため手編集不要。新契約のタスクと例外をそのまま伝播することを確認 |
+| `src/workers/search.worker.ts`、`gpu.worker.ts` | 更新 | 全検索器の空探索で 0/0・100% の進捗通知。GPU の例外は既存のエラー通知・解放処理へ伝播 |
 | `src/wasm/` | 再生成 | WASM と TypeScript バインディングを同時に更新。生成物を手編集しない |
 | `wasm-pkg/src/` の関連テスト・`wasm-pkg/tests/`・`wasm-pkg/benches/` | 更新 | 旧入力型・公開関数の参照移行、境界・CPU/GPU 比較・性能検証 |
 | `src/test/integration/`、`src/test/unit/workers/`、日時入力のテスト補助 | 更新 | Worker タスクの形式と例外、結果の回帰検証 |
-| `spec/agent/architecture/rust-structure.md` | 更新 | 実装時に共通日時処理の配置・責務を反映 |
+| `spec/agent/architecture/rust-structure.md`、`worker-design.md` | 更新 | 共通日時処理の配置・責務、転送境界と空探索の契約を反映 |
+| `wasm-pkg/examples/datetime_space_bench.rs`、`.json`、`scripts/bench-datetime-space.cjs` | 新規 | native/WASM の条件固定・5回計測用の再現手順 |
 
 ## 3. 設計方針
 
@@ -108,7 +110,7 @@ GPU の件数式を部分日に対応させるだけでは、正しい日時を�
 
 共通化するのは候補番号と日時の対応である。CPU は候補を順に取り出し、GPU は各スレッドが番号から日時を求める。CPU イテレータを GPU に移植したり、GPU 向けに全候補を列挙して転送したりしない。
 
-初期実装では CPU も候補番号から日時を求める共通処理を利用する。日付変換は日が変わった場合だけ行う。時・分・秒の順次繰り上げ等は性能測定で必要性を判断し、採用時も候補番号との一致を検証する。
+CPU の最初の候補は `datetime_at()` で求める。後続は `DatetimeSearchIter` 内で秒・分・時を許容軸の範囲内で繰り上げ、日が変わる場合だけ暦変換する。候補番号区間は列挙位置と終端の管理に使う。毎候補の除算方式は密な WASM 検索で 5% 超の遅延が再現したため変更した（5.5 節）。繰り上げ列挙と候補番号からの直接変換の一致を参照テストで検証している。
 
 CPU の列挙方式は、5 節の疎な条件・密な条件の双方で性能を評価する。性能対策も共通の探索空間内で行う。
 
@@ -215,7 +217,7 @@ second = second_start + (j % S)
 
 分割長は `ceil((end - start) / n)`、子区間は重複しない半開区間とする。空区間の分割結果は空区間一つ。要求分割数が秒数より多い場合、1 秒未満に分割せず、要求数分の不要な容量も確保しない。各子探索空間は自分の開始日を基準に候補番号を求める。子ごとの候補番号をそのまま連結せず、日時の列で分割前との一致を評価する。
 
-`DatetimeSearchIter` は構築時に候補番号区間を求め、その現在位置と日付キャッシュを持ち、候補だけを取り出す。件数 0 のときは直ちに終了する。候補ごとの区間再構築、暦検証、日内条件の再検証、対象外秒の探索はしない。
+`DatetimeSearchIter` は構築時に候補番号区間と最初の日時を求め、その現在位置・通算日・次の日時を保持し、候補だけを取り出す。件数 0 のときは直ちに終了する。候補ごとの区間再構築、暦検証、日内条件の再検証、対象外秒の探索はしない。
 
 `DatetimeHashGenerator` はこのイテレータから最大 4 日時を取り出し、既存の `get_date_code()` と `get_time_code_for_hardware()` でハッシュ入力を作る。`DateTimeCodeEnumerator`、`RangedTimeCodeTable`、`build_ranged_time_code_table()`、未使用の `current_seconds()` は削除する。
 
@@ -313,23 +315,74 @@ pnpm test:run
 pnpm format:check
 ```
 
-### 5.4 現時点の検証結果
+### 5.4 検証結果（2026-09-06）
 
-- 現行の入力、タスク生成、CPU 列挙、GPU dispatch・結果復元、UI 永続化のコードを確認した。
-- 設計式の独立検算: JavaScript で 6 種の時刻条件を単純に列挙し、各日内秒の `C(r)`、候補番号から時刻への変換、空・部分日・日跨ぎ・上限付近の件数と分割加法性を比較した。608,086 比較が一致した。アプリケーション実装のテストではなく、提案した数式の検算である。
-- 実装テスト・GPU 実行・性能計測: 未実行（仕様書のみの変更）。
+| 検証 | 結果 |
+|------|------|
+| `cargo test --package wasm-pkg` | 単体 317 件、統合 8 件成功。既存の手動実行用 2 件は除外 |
+| `cargo test --package wasm-pkg --features gpu` | 単体 352 件、統合 8 件成功。手動実行用 8 件は除外 |
+| `cargo test --release --package wasm-pkg --features gpu gpu::datetime_search -- --ignored --nocapture --test-threads=1` | RTX 5090 上で追加した 3 件を明示実行し成功。スキップで代替していない |
+| CPU/GPU 対応 | DS Lite / 3DS、基準日・午後・閏日・日跨ぎ・年跨ぎ・2099 年末・開始番号が非 0 の部分日について全候補の日時と LCG Seed を比較。GPU はバッチ上限 3、端数、2 起動条件を含む |
+| 読み取り・空区間 | バッチ外、候補区間外、加算オーバーフローをエラーとして拒否。上限空区間では Pipeline を生成せず終了 |
+| 共通探索空間 | 6 種の時刻条件について全日内秒の累積件数を独立の秒走査と比較。部分日・多分割・番号変換・上限・入力拒否・直列化往復が一致 |
+| `pnpm test:run` | 128 ファイル・1,500 件成功。既存の条件付きテスト 5 件は除外。追加 4 件で CPU 4 種の不正入力拒否、空区間 0/0・100% 通知、画面見積もりとの一致を検証 |
+| `pnpm build` / `pnpm exec tsc -b --noEmit` | 本番 WASM、バインディング再生成、型検査、Vite ビルド成功 |
+| clippy / oxlint | GPU 有無それぞれの `cargo clippy --package wasm-pkg --all-targets ... -- -D warnings` と `pnpm exec oxlint` 成功 |
+| `pnpm format:check` | 成功 |
+| 廃止処理の残存確認 | `wasm-pkg/`・`src/`・`scripts/` の旧型・旧分割・旧列挙器・旧件数関数・GPU 旧復元関数の参照 0 件 |
+
+WASM の初回ビルドは一時ディレクトリのアクセス拒否で停止した。コードを変更せず実行権限を調整した再実行で成功した。依存 wgpu 系の将来互換性通知と Vite の既存サイズ警告は残る。
+
+### 5.5 性能測定と判断
+
+Windows、Ryzen 9 9950X3D、RTX 5090、Rust `1.99.0-nightly (3d6c19bb9 2026-08-11)`、Node `v24.13.0`。基点コードと完成版を同じ release 設定でビルドし、他のテスト・ビルドが終了してから各条件 5 回の中央値を採用した。WASM は `wasm-pack --target nodejs --release -- --features gpu` と同一の wasm-opt 設定で比較した。ブラウザ固有の Worker 転送時間はこの表に含めず、Chromium 統合テストで結果・通知・キャンセルを回帰検証した。
+
+条件は 2024-02-29 から 7 日間、起動条件 1 組。ポケモン検索は固定シンボル・30 消費位置・対象外種族のフィルタとし、結果配列の大きさを固定した。
+
+| 条件 | 日時候補数 | ポケモン消費位置数 |
+|------|------------|------------------|
+| 全時刻 | 604,800 | 18,144,000 |
+| 毎分 0 秒 | 10,080 | 302,400 |
+| 毎日 00:00:00 | 7 | 210 |
+
+以下は完了時間の中央値 (ms)、左が基点、右が完成版。
+
+| 環境・対象 | 全時刻 | 毎分 0 秒 | 毎日 00:00:00 |
+|------------|--------|-----------|----------------|
+| native 列挙 | 2.1204 → 0.7952 | 0.4414 → 0.0147 | 0.4066 → 0.0002 |
+| native MT Seed | 37.4918 → 37.3020 | 1.0600 → 0.6378 | 0.4240 → 0.0008 |
+| native ポケモン | 243.1839 → 232.0419 | 4.4400 → 3.8266 | 0.4269 → 0.0028 |
+| WASM MT Seed | 40.2781 → 39.2496 | 1.0235 → 0.6825 | 0.3294 → 0.0050 |
+| WASM ポケモン | 382.9450 → 385.3463 | 6.6570 → 6.2833 | 0.3390 → 0.0145 |
+
+native 列挙の基点は旧列挙器の日時・BCD 出力、完成版は日時イテレータの出力を計測している。BCD を含む全体の比較は MT Seed 行を使う。毎日 1 候補の完成版は計測分解能・呼び出しオーバーヘッドの影響が大きいため、倍率を一般化しない。
+
+毎候補の候補番号分解方式では、密な WASM MT Seed 検索が初回約 5.7%、除算を整理した再測定でも約 6.1% 遅くなった。native 列挙も 2.13 ms に対し 3.43 ms、除算整理後 2.58 ms だった。日時探索空間のイテレータ内で時刻軸を繰り上げる方式へ変更し、CPU/GPU の対応検証を再実行した。最終の密な条件では native MT Seed -0.51%、native ポケモン -4.58%、WASM MT Seed -2.55%、WASM ポケモン +0.63%。5% 超の低下は残らず、この方式を採用した。
+
+GPU は同じデバイス・1 dispatch 最大 1,024 候補で、Pipeline 作成と検索を分離して各 5 回計測した。丸日 86,400 候補は作成 82.1903 ms / 検索 37.7125 ms、部分日 `[11:00,12:00)` の 3,600 候補は作成 81.8843 ms / 検索 1.9771 ms。同期・readback を含む測定で、GPU 単体のハッシュ処理能力を示す値ではない。
+
+再現用の条件は `wasm-pkg/examples/datetime_space_bench.json`。実行例:
+
+```powershell
+cargo run --release --example datetime_space_bench -- wasm-pkg/examples/datetime_space_bench.json
+wasm-pack build wasm-pkg --target nodejs --out-dir ../target/datetime-bench-wasm --release -- --features gpu
+node scripts/bench-datetime-space.cjs target/datetime-bench-wasm/wasm_pkg.js wasm-pkg/examples/datetime_space_bench.json
+cargo test --release --package wasm-pkg --features gpu gpu::datetime_search -- --ignored --nocapture --test-threads=1
+```
+
+基点側の条件は同じ年月日・期間・時刻軸を当時の入力形式にして比較した。旧入力を受け付ける互換処理は完成版に残していない。
 
 ## 6. 実装チェックリスト
 
 - [x] 現行 CPU/GPU と Worker の経路を確認する
 - [x] 用語、対象範囲、保証する境界、廃止する API を定義する
 - [x] 新しい責務ごとに削除対象を対応させ、自己レビューする
-- [ ] 参照列挙・境界・GPU 部分日の回帰テストを用意する
-- [ ] 共通探索空間・転送型を実装し、旧日時型と変換関数を削除する
-- [ ] CPU 4 検索器・タスク生成・Worker を新契約へ移行する
-- [ ] GPU の開始番号・件数・結果復元を一体で移行する
-- [ ] 旧ラッパー・独自件数式・暦計算・選別テーブルの残存を確認する
-- [ ] WASM バインディングを再生成して全経路を検証する
-- [ ] 実 GPU 比較・native/WASM 性能計測と判断を記録する
-- [ ] 実装差分に対して再度自己レビューし、仕様と配置資料を更新する
-- [ ] 検証完了後に `spec/agent/complete/local_121/` へ移動する
+- [x] 参照列挙・境界・GPU 部分日の回帰テストを用意する
+- [x] 共通探索空間・転送型を実装し、旧日時型と変換関数を削除する
+- [x] CPU 4 検索器・タスク生成・Worker を新契約へ移行する
+- [x] GPU の開始番号・件数・結果復元を一体で移行する
+- [x] 旧ラッパー・独自件数式・暦計算・選別テーブルの残存を確認する
+- [x] WASM バインディングを再生成して全経路を検証する
+- [x] 実 GPU 比較・native/WASM 性能計測と判断を記録する
+- [x] 実装差分に対して再度自己レビューし、仕様と配置資料を更新する
+- [x] 検証完了後に `spec/agent/complete/local_121/` へ移動する

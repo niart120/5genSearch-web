@@ -16,7 +16,7 @@ use wasm_bindgen_test::*;
 use wasm_pkg::MtseedDatetimeSearchParams;
 use wasm_pkg::datetime_search::MtseedDatetimeSearcher;
 use wasm_pkg::types::{
-    DsConfig, Hardware, KeyMask, MtSeed, RomRegion, RomVersion, SearchRangeParams,
+    DatetimeSearchSpaceParams, DsConfig, Hardware, KeyMask, MtSeed, RomRegion, RomVersion,
     StartupCondition, TimeRangeParams,
 };
 
@@ -33,20 +33,17 @@ fn create_mtseed_searcher() -> MtseedDatetimeSearcher {
             version: RomVersion::Black,
             region: RomRegion::Jpn,
         },
-        time_range: TimeRangeParams {
-            hour_start: 0,
-            hour_end: 23,
-            minute_start: 0,
-            minute_end: 59,
-            second_start: 0,
-            second_end: 59,
-        },
-        search_range: SearchRangeParams {
-            start_year: 2011,
-            start_month: 1,
-            start_day: 1,
-            start_second_offset: 0,
-            range_seconds: 86400 * 7, // 1 週間
+        search_space: DatetimeSearchSpaceParams {
+            start_seconds: 347_155_200,
+            end_seconds: 347_760_000,
+            time_range: TimeRangeParams {
+                hour_start: 0,
+                hour_end: 23,
+                minute_start: 0,
+                minute_end: 59,
+                second_start: 0,
+                second_end: 59,
+            },
         },
         condition: StartupCondition::new(0x0C79, 0x5F, KeyMask::NONE),
     };

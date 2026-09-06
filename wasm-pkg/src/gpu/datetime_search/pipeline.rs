@@ -4,9 +4,9 @@
 
 use wgpu::util::DeviceExt;
 
-use crate::core::datetime_codes::{days_in_month, get_day_of_week, is_leap_year};
+use crate::core::datetime::{DatetimeSearchSpace, date_to_days, days_to_date};
 use crate::core::sha1::{get_frame, get_nazo_values};
-use crate::types::{Datetime, Hardware, LcgSeed, MtSeed, MtseedDatetimeSearchParams};
+use crate::types::{Datetime, DsConfig, Hardware, LcgSeed, MtSeed, StartupCondition};
 
 use super::super::context::GpuDeviceContext;
 use super::super::limits::SearchJobLimits;
@@ -30,8 +30,8 @@ pub struct SearchPipeline {
     workgroup_size: u32,
     /// 検索制限
     limits: SearchJobLimits,
-    /// 検索定数 (シェーダー用)
-    search_constants: SearchConstants,
+    /// 候補番号と結果日時の対応を保証する探索空間
+    search_space: DatetimeSearchSpace,
 }
 
 /// シェーダー定数 (GPU バッファにコピー)
@@ -65,7 +65,7 @@ struct SearchConstants {
 #[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct DispatchState {
     message_count: u32,
-    base_second_offset: u32,
+    base_candidate_index: u32,
     candidate_capacity: u32,
     padding: u32,
 }
@@ -82,7 +82,13 @@ struct MatchRecord {
 
 impl SearchPipeline {
     /// パイプラインを作成
-    pub fn new(ctx: &GpuDeviceContext, params: &MtseedDatetimeSearchParams) -> Self {
+    pub fn new(
+        ctx: &GpuDeviceContext,
+        ds: &DsConfig,
+        target_seeds: &[MtSeed],
+        condition: StartupCondition,
+        space: &DatetimeSearchSpace,
+    ) -> Self {
         let device = ctx.device().clone();
         let queue = ctx.queue().clone();
         let limits = SearchJobLimits::from_device_limits(ctx.limits(), ctx.gpu_profile());
@@ -98,10 +104,10 @@ impl SearchPipeline {
         let (pipeline, bind_group_layout) = Self::create_pipeline(&device, &module, &limits);
 
         // 検索定数を構築
-        let search_constants = Self::build_constants(params);
+        let search_constants = Self::build_constants(ds, condition, space);
 
         // バッファ作成
-        let target_buffer = Self::create_target_buffer(&device, &params.target_seeds);
+        let target_buffer = Self::create_target_buffer(&device, target_seeds);
         let constants_buffer = Self::create_constants_buffer(&device, &search_constants);
         let dispatch_state_buffer = Self::create_dispatch_state_buffer(&device);
         let output_buffer = Self::create_output_buffer(&device, limits.candidate_capacity);
@@ -127,7 +133,7 @@ impl SearchPipeline {
             staging_buffer,
             workgroup_size: limits.workgroup_size,
             limits,
-            search_constants,
+            search_space: space.clone(),
         }
     }
 
@@ -248,12 +254,11 @@ impl SearchPipeline {
     }
 
     /// 検索定数を構築
-    fn build_constants(params: &MtseedDatetimeSearchParams) -> SearchConstants {
-        let ds = &params.ds;
-        let condition = params.condition;
-        let time_range = &params.time_range;
-        let search_range = &params.search_range;
-
+    fn build_constants(
+        ds: &DsConfig,
+        condition: StartupCondition,
+        space: &DatetimeSearchSpace,
+    ) -> SearchConstants {
         // Timer0/VCount をバイトスワップ
         let timer0_vcount_swapped =
             (u32::from(condition.timer0) | (u32::from(condition.vcount) << 16)).swap_bytes();
@@ -280,29 +285,18 @@ impl SearchPipeline {
             Hardware::N3ds => 3,
         };
 
-        // 開始年・通算日・曜日を計算
-        let start_year = u32::from(search_range.start_year);
-        let start_day_of_year = day_of_year(
-            search_range.start_year,
-            search_range.start_month,
-            search_range.start_day,
-        );
-        let start_day_of_week = get_day_of_week(
-            u32::from(search_range.start_year),
-            u32::from(search_range.start_month),
-            u32::from(search_range.start_day),
-        );
+        let (anchor, _) = space.candidate_bounds();
+        let (year, _, _) = days_to_date(anchor);
+        let start_year = u32::from(year);
+        let start_day_of_year = anchor - date_to_days(year, 1, 1) + 1;
+        let start_day_of_week = (anchor + 6) % 7;
 
         // NAZO 値 (ROM バージョン・リージョン・ハードウェア依存)
         let nazo = get_nazo_values(ds);
 
-        // 時刻範囲
-        let hour_range_start = u32::from(time_range.hour_start);
-        let hour_range_count = u32::from(time_range.hour_end) - hour_range_start + 1;
-        let minute_range_start = u32::from(time_range.minute_start);
-        let minute_range_count = u32::from(time_range.minute_end) - minute_range_start + 1;
-        let second_range_start = u32::from(time_range.second_start);
-        let second_range_count = u32::from(time_range.second_end) - second_range_start + 1;
+        let (starts, counts) = space.axes();
+        let [hour_range_start, minute_range_start, second_range_start] = starts.map(u32::from);
+        let [hour_range_count, minute_range_count, second_range_count] = counts.map(u32::from);
 
         SearchConstants {
             timer0_vcount_swapped,
@@ -394,16 +388,24 @@ impl SearchPipeline {
     ///
     /// # Returns
     /// `(matches, processed_count)`
-    pub async fn dispatch(&self, max_count: u32, offset: u32) -> (Vec<MatchResult>, u32) {
+    pub async fn dispatch(
+        &self,
+        max_count: u32,
+        offset: u32,
+    ) -> Result<(Vec<MatchResult>, u32), String> {
         let count = max_count.min(self.limits.max_messages_per_dispatch);
         if count == 0 {
-            return (vec![], 0);
+            return Ok((vec![], 0));
         }
 
+        let (_, bounds) = self.search_space.candidate_bounds();
+        if offset < bounds.start || offset.checked_add(count).is_none_or(|end| end > bounds.end) {
+            return Err("Dispatch outside candidate interval".into());
+        }
         // ディスパッチ状態を更新
         let dispatch_state = DispatchState {
             message_count: count,
-            base_second_offset: offset,
+            base_candidate_index: offset,
             candidate_capacity: self.limits.candidate_capacity,
             padding: 0,
         };
@@ -445,14 +447,18 @@ impl SearchPipeline {
         self.queue.submit(std::iter::once(encoder.finish()));
 
         // 結果を読み出し
-        let matches = self.read_results(offset).await;
+        let matches = self.read_results(offset, count).await?;
 
-        (matches, count)
+        Ok((matches, count))
     }
 
     /// 結果を読み出し（非同期ポーリング）
     #[allow(clippy::cast_possible_truncation)] // match_count は capacity 以下
-    async fn read_results(&self, base_offset: u32) -> Vec<MatchResult> {
+    async fn read_results(
+        &self,
+        base_offset: u32,
+        dispatch_count: u32,
+    ) -> Result<Vec<MatchResult>, String> {
         let buffer_slice = self.staging_buffer.slice(..);
 
         let (tx, rx) = futures_channel::oneshot::channel();
@@ -464,74 +470,58 @@ impl SearchPipeline {
         // WASM: Poll で定期的にチェック + await で制御をイベントループに戻す
         // Native: Wait でブロッキング待機
         #[cfg(target_arch = "wasm32")]
-        let _ = self.device.poll(wgpu::PollType::Poll);
+        self.device
+            .poll(wgpu::PollType::Poll)
+            .map_err(|error| format!("GPU polling failed: {error}"))?;
 
         #[cfg(not(target_arch = "wasm32"))]
-        let _ = self.device.poll(wgpu::PollType::wait_indefinitely());
+        self.device
+            .poll(wgpu::PollType::wait_indefinitely())
+            .map_err(|error| format!("GPU polling failed: {error}"))?;
 
         // rx.await: WASM では wasm_bindgen_futures が適切にポーリングする
         if rx.await.ok().and_then(Result::ok).is_none() {
-            return vec![];
+            return Err("GPU result buffer mapping failed".into());
         }
 
         let data = buffer_slice.get_mapped_range();
         let match_count = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
         let record_count = match_count.min(self.limits.candidate_capacity) as usize;
 
-        let mut matches = Vec::with_capacity(record_count);
-        for i in 0..record_count {
-            let offset = 4 + i * std::mem::size_of::<MatchRecord>();
-            let record: MatchRecord = bytemuck::pod_read_unaligned(&data[offset..offset + 16]);
+        let result = (|| {
+            let mut matches = Vec::with_capacity(record_count);
+            for i in 0..record_count {
+                let offset = 4 + i * std::mem::size_of::<MatchRecord>();
+                let record: MatchRecord = bytemuck::pod_read_unaligned(&data[offset..offset + 16]);
 
-            // メッセージインデックスから日時を復元
-            let total_offset = base_offset + record.message_index;
-            let datetime = self.offset_to_datetime(total_offset);
+                // メッセージインデックスから日時を復元
+                let datetime =
+                    self.result_datetime(base_offset, dispatch_count, record.message_index)?;
 
-            // h0, h1 から LcgSeed を構築 (HashValues::to_lcg_seed と同じ計算)
-            let h0_swapped = record.h0.swap_bytes();
-            let h1_swapped = record.h1.swap_bytes();
-            let lcg_seed = LcgSeed::new((u64::from(h1_swapped) << 32) | u64::from(h0_swapped));
+                // h0, h1 から LcgSeed を構築 (HashValues::to_lcg_seed と同じ計算)
+                let h0_swapped = record.h0.swap_bytes();
+                let h1_swapped = record.h1.swap_bytes();
+                let lcg_seed = LcgSeed::new((u64::from(h1_swapped) << 32) | u64::from(h0_swapped));
 
-            matches.push(MatchResult { datetime, lcg_seed });
-        }
+                matches.push(MatchResult { datetime, lcg_seed });
+            }
+
+            Ok(matches)
+        })();
 
         drop(data);
         self.staging_buffer.unmap();
 
-        matches
+        result
     }
 
-    /// オフセットから日時を復元
-    #[allow(clippy::cast_possible_truncation)] // hour/minute/second は範囲内の値
-    fn offset_to_datetime(&self, offset: u32) -> Datetime {
-        let c = &self.search_constants;
-        let combos_per_day =
-            c.hour_range_count.max(1) * c.minute_range_count.max(1) * c.second_range_count.max(1);
-
-        let day_offset = offset / combos_per_day;
-        let remainder = offset % combos_per_day;
-
-        let entries_per_hour = c.minute_range_count.max(1) * c.second_range_count.max(1);
-        let hour_index = remainder / entries_per_hour;
-        let remainder2 = remainder % entries_per_hour;
-        let minute_index = remainder2 / c.second_range_count.max(1);
-        let second_index = remainder2 % c.second_range_count.max(1);
-
-        let hour = (c.hour_range_start + hour_index) as u8;
-        let minute = (c.minute_range_start + minute_index) as u8;
-        let second = (c.second_range_start + second_index) as u8;
-
-        // 年・月・日を計算
-        let (year, month, day) = offset_to_date(c.start_year, c.start_day_of_year, day_offset);
-
-        Datetime {
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second,
+    fn result_datetime(&self, base: u32, count: u32, index: u32) -> Result<Datetime, String> {
+        if index >= count {
+            return Err("GPU record outside dispatch".into());
         }
+        base.checked_add(index)
+            .and_then(|i| self.search_space.datetime_at(i))
+            .ok_or_else(|| "GPU record outside candidate interval".into())
     }
 }
 
@@ -541,42 +531,176 @@ pub struct MatchResult {
     pub lcg_seed: LcgSeed,
 }
 
-// ===== ヘルパー関数 =====
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::datetime::END_SECONDS;
+    use crate::core::sha1::{
+        BaseMessageBuilder, build_date_code, build_time_code, calculate_pokemon_sha1,
+    };
+    use crate::types::{
+        DatetimeSearchSpaceParams, KeyMask, RomRegion, RomVersion, TimeRangeParams,
+    };
 
-/// 年内通算日を計算 (1-indexed)
-fn day_of_year(year: u16, month: u8, day: u8) -> u32 {
-    let year_u32 = u32::from(year);
-    let mut doy = u32::from(day);
-    for m in 1..month {
-        doy += days_in_month(year_u32, u32::from(m));
-    }
-    doy
-}
-
-/// オフセットから年月日を復元
-#[allow(clippy::cast_possible_truncation)] // year/doy は有効範囲内
-fn offset_to_date(start_year: u32, start_day_of_year: u32, day_offset: u32) -> (u16, u8, u8) {
-    let mut year = start_year;
-    let mut doy = start_day_of_year + day_offset;
-
-    loop {
-        let year_length = if is_leap_year(year) { 366 } else { 365 };
-        if doy <= year_length {
-            break;
+    #[test]
+    #[ignore = "requires a real GPU; run explicitly with --ignored --nocapture"]
+    fn gpu_measure_datetime_space() {
+        use std::time::Instant;
+        let ctx = pollster::block_on(GpuDeviceContext::new()).expect("GPU required");
+        let ds = DsConfig {
+            mac: [0, 9, 191, 18, 52, 86],
+            hardware: Hardware::DsLite,
+            version: RomVersion::Black,
+            region: RomRegion::Jpn,
+        };
+        let condition = StartupCondition::new(3193, 90, KeyMask::NONE);
+        for (label, start, end) in [("full", 0, 86400), ("partial", 39600, 43200)] {
+            let space = DatetimeSearchSpace::try_from(DatetimeSearchSpaceParams {
+                start_seconds: start,
+                end_seconds: end,
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 23,
+                    minute_start: 0,
+                    minute_end: 59,
+                    second_start: 0,
+                    second_end: 59,
+                },
+            })
+            .unwrap();
+            for run in 0..5 {
+                let start = Instant::now();
+                let pipeline = SearchPipeline::new(&ctx, &ds, &[MtSeed::new(1)], condition, &space);
+                let setup_ms = start.elapsed().as_secs_f64() * 1000.0;
+                let (_, bounds) = space.candidate_bounds();
+                let start = Instant::now();
+                let mut current = bounds.start;
+                while current < bounds.end {
+                    let (_, count) = pollster::block_on(
+                        pipeline.dispatch((bounds.end - current).min(1024), current),
+                    )
+                    .unwrap();
+                    current += count;
+                }
+                println!(
+                    "{label},{run},{setup_ms:.6},{:.6},{}",
+                    start.elapsed().as_secs_f64() * 1000.0,
+                    space.count()
+                );
+            }
         }
-        doy -= year_length;
-        year += 1;
     }
 
-    let mut month = 1u32;
-    loop {
-        let days = days_in_month(year, month);
-        if doy <= days {
-            break;
+    /// 実 GPU 必須。CI の非 GPU 環境では明示的に除外する。
+    #[test]
+    #[ignore = "requires a real GPU; run explicitly with --ignored --nocapture"]
+    #[allow(clippy::too_many_lines)] // 境界ケースを同じ GPU と検証手順で比較する。
+    fn gpu_matches_every_cpu_candidate_across_boundaries() {
+        let ctx = pollster::block_on(GpuDeviceContext::new()).expect("GPU required");
+        eprintln!("GPU profile: {:?}", ctx.gpu_profile());
+        let dense = TimeRangeParams {
+            hour_start: 0,
+            hour_end: 23,
+            minute_start: 0,
+            minute_end: 59,
+            second_start: 0,
+            second_end: 59,
+        };
+        let sparse = TimeRangeParams {
+            hour_start: 10,
+            hour_end: 11,
+            minute_start: 30,
+            minute_end: 30,
+            second_start: 0,
+            second_end: 0,
+        };
+        let leap = date_to_days(2024, 2, 29) * 86400;
+        let year = date_to_days(2023, 12, 31) * 86400;
+        for hardware in [Hardware::DsLite, Hardware::N3ds] {
+            let ds = DsConfig {
+                mac: [0, 9, 191, 18, 52, 86],
+                hardware,
+                version: RomVersion::Black,
+                region: RomRegion::Jpn,
+            };
+            for (start, end, time) in [
+                (0, 7, dense.clone()),
+                (11 * 3600, 12 * 3600, sparse.clone()),
+                (leap - 3, leap + 4, dense.clone()),
+                (leap + 86397, leap + 86404, dense.clone()),
+                (year + 86397, year + 86404, dense.clone()),
+                (END_SECONDS - 7, END_SECONDS, dense.clone()),
+                (43200, 43207, dense.clone()),
+            ] {
+                let space = DatetimeSearchSpace::try_from(DatetimeSearchSpaceParams {
+                    start_seconds: start,
+                    end_seconds: end,
+                    time_range: time,
+                })
+                .unwrap();
+                for timer0 in [0xC79, 0xC7A] {
+                    let condition = StartupCondition::new(timer0, 0x5A, KeyMask::NONE);
+                    // スカラー SHA-1 と通常生成用 BCD 変換を独立の参照にする。
+                    let expected: Vec<_> = space
+                        .iter()
+                        .map(|date| {
+                            let mut builder = BaseMessageBuilder::new(
+                                &get_nazo_values(&ds),
+                                ds.mac,
+                                condition.vcount,
+                                condition.timer0,
+                                condition.key_code(),
+                                get_frame(ds.hardware, ds.version),
+                            );
+                            builder.set_datetime(
+                                build_date_code(date.year, date.month, date.day),
+                                build_time_code(
+                                    date.hour,
+                                    date.minute,
+                                    date.second,
+                                    matches!(hardware, Hardware::DsLite),
+                                ),
+                            );
+                            (
+                                date,
+                                calculate_pokemon_sha1(builder.message()).to_lcg_seed(),
+                            )
+                        })
+                        .collect();
+                    let seeds: Vec<_> = expected
+                        .iter()
+                        .map(|(_, seed)| seed.derive_mt_seed())
+                        .collect();
+                    let pipeline = SearchPipeline::new(&ctx, &ds, &seeds, condition, &space);
+                    let (_, bounds) = space.candidate_bounds();
+                    let mut actual = Vec::new();
+                    let mut current = bounds.start;
+                    while current < bounds.end {
+                        let count = (bounds.end - current).min(3);
+                        let (matches, processed) =
+                            pollster::block_on(pipeline.dispatch(count, current)).unwrap();
+                        assert_eq!(processed, count);
+                        actual.extend(matches.into_iter().map(|m| (m.datetime, m.lcg_seed)));
+                        current += processed;
+                    }
+                    actual
+                        .sort_by_key(|(d, _)| (d.year, d.month, d.day, d.hour, d.minute, d.second));
+                    assert_eq!(
+                        actual, expected,
+                        "start={start}, end={end}, hardware={hardware:?}"
+                    );
+                    assert!(pipeline.result_datetime(bounds.start, 1, 1).is_err());
+                    assert!(pipeline.result_datetime(bounds.end, 1, 0).is_err());
+                    assert!(pipeline.result_datetime(u32::MAX, 2, 1).is_err());
+                    assert!(pollster::block_on(pipeline.dispatch(1, bounds.end)).is_err());
+                    assert_eq!(
+                        pollster::block_on(pipeline.dispatch(0, bounds.end))
+                            .unwrap()
+                            .1,
+                        0
+                    );
+                }
+            }
         }
-        doy -= days;
-        month += 1;
     }
-
-    (year as u16, month as u8, doy as u8)
 }

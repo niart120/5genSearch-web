@@ -208,19 +208,15 @@ export function createTestTimeRange(hourStart = 0, hourEnd = 23, minuteStart = 0
 /**
  * テスト用の検索範囲を作成
  */
-export function createTestSearchRange(
+export function createTestSearchSpace(
   year: number,
   month: number,
   day: number,
-  rangeSeconds = 86_400
+  rangeSeconds = 86_400,
+  timeRange = createTestTimeRange()
 ) {
-  return {
-    start_year: year,
-    start_month: month,
-    start_day: day,
-    start_second_offset: 0,
-    range_seconds: rangeSeconds,
-  };
+  const start = (Date.UTC(year, month - 1, day) - Date.UTC(2000, 0, 1)) / 1000;
+  return { start_seconds: start, end_seconds: start + rangeSeconds, time_range: timeRange };
 }
 
 /**

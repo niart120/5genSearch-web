@@ -10,7 +10,8 @@ use crate::types::{
 };
 
 use super::base::DatetimeHashGenerator;
-use super::{calculate_time_chunks, expand_combinations, split_search_range};
+use super::{calculate_time_chunks, expand_combinations};
+use crate::core::datetime::DatetimeSearchSpace;
 
 /// 孵化起動時刻検索器
 #[wasm_bindgen]
@@ -40,17 +41,11 @@ impl EggDatetimeSearcher {
     #[wasm_bindgen(constructor)]
     #[allow(clippy::needless_pass_by_value)]
     pub fn new(params: EggDatetimeSearchParams) -> Result<EggDatetimeSearcher, String> {
-        let generator = DatetimeHashGenerator::new(
-            &params.ds,
-            &params.time_range,
-            &params.search_range,
-            params.condition,
-        )?;
+        let space = DatetimeSearchSpace::try_from(params.search_space)?;
+        let generator = DatetimeHashGenerator::new(&params.ds, &space, params.condition);
 
         // 進捗計算
-        let valid_seconds_per_day = params.time_range.count_valid_seconds();
-        let days = params.search_range.range_seconds.div_ceil(86400);
-        let total_count = u64::from(valid_seconds_per_day) * u64::from(days);
+        let total_count = space.count();
 
         Ok(Self {
             generator,
@@ -159,49 +154,49 @@ impl EggDatetimeSearcher {
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::cast_possible_truncation)]
+/// # Errors
+/// 日時入力または Worker 数が不正な場合。
 pub fn generate_egg_search_tasks(
     context: DatetimeSearchContext,
     egg_params: EggGenerationParams,
     gen_config: GenerationConfig,
     filter: Option<EggFilter>,
     worker_count: u32,
-) -> Vec<EggDatetimeSearchParams> {
-    let search_range = context.date_range.to_search_range();
+) -> Result<Vec<EggDatetimeSearchParams>, String> {
+    let space = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)?;
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
 
     // 時間分割数を計算
-    let time_chunks = calculate_time_chunks(combo_count, worker_count);
-    let ranges = split_search_range(search_range, time_chunks);
+    let time_chunks = calculate_time_chunks(combo_count, worker_count)?;
+    let spaces = space.split(time_chunks);
 
     // 組み合わせ × 時間チャンク のクロス積でタスク生成
-    combinations
+    Ok(combinations
         .into_iter()
         .flat_map(|condition| {
             let ds = context.ds.clone();
-            let time_range = context.time_range.clone();
             let egg_params = egg_params.clone();
             let gen_config = gen_config.clone();
             let filter = filter.clone();
-            ranges.iter().map(move |range| EggDatetimeSearchParams {
+            spaces.iter().map(move |space| EggDatetimeSearchParams {
                 ds: ds.clone(),
-                time_range: time_range.clone(),
-                search_range: range.clone(),
+                search_space: space.clone().into_params(),
                 condition,
                 egg_params: egg_params.clone(),
                 gen_config: gen_config.clone(),
                 filter: filter.clone(),
             })
         })
-        .collect()
+        .collect())
 }
 
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        AbilitySlot, DateRangeParams, DsConfig, EggDatetimeSearchParams, EverstonePlan,
-        GameStartConfig, GenderRatio, Hardware, KeyMask, KeySpec, MemoryLinkState, RomRegion,
-        RomVersion, SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition,
+        AbilitySlot, DateRangeParams, DatetimeSearchSpaceParams, DsConfig, EggDatetimeSearchParams,
+        EverstonePlan, GameStartConfig, GenderRatio, Hardware, KeyMask, KeySpec, MemoryLinkState,
+        RomRegion, RomVersion, SavePresence, ShinyCharmState, StartMode, StartupCondition,
         TimeRangeParams, Timer0VCountRange, TrainerInfo,
     };
 
@@ -215,20 +210,17 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
-            time_range: TimeRangeParams {
-                hour_start: 0,
-                hour_end: 23,
-                minute_start: 0,
-                minute_end: 59,
-                second_start: 0,
-                second_end: 59,
-            },
-            search_range: SearchRangeParams {
-                start_year: 2023,
-                start_month: 1,
-                start_day: 1,
-                start_second_offset: 0,
-                range_seconds: 60, // Search only 60 seconds for test
+            search_space: DatetimeSearchSpaceParams {
+                start_seconds: 725_846_400,
+                end_seconds: 725_846_460,
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 23,
+                    minute_start: 0,
+                    minute_end: 59,
+                    second_start: 0,
+                    second_end: 59,
+                },
             },
             condition: StartupCondition::new(0x0C79, 0x5A, KeyMask::NONE),
             egg_params: EggGenerationParams {
@@ -342,7 +334,7 @@ mod tests {
         };
 
         // worker_count = 1, combo_count = 1 → 1 task
-        let tasks = generate_egg_search_tasks(context, egg_params, gen_config, None, 1);
+        let tasks = generate_egg_search_tasks(context, egg_params, gen_config, None, 1).unwrap();
 
         // 1 timer0 × 1 vcount × 1 key × 1 time chunk = 1 task
         assert_eq!(tasks.len(), 1);

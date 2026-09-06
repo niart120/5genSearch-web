@@ -80,7 +80,7 @@ fn run_full_search() -> (u64, Duration) {
     let start = Instant::now();
     let mut processed = 0u64;
 
-    while let Some(batch) = pollster::block_on(iterator.next()) {
+    while let Some(batch) = pollster::block_on(iterator.next()).unwrap() {
         processed = batch.processed_count;
     }
 

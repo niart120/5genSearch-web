@@ -10,7 +10,8 @@ use crate::types::{
 };
 
 use super::base::DatetimeHashGenerator;
-use super::{calculate_time_chunks, expand_combinations, split_search_range};
+use super::{calculate_time_chunks, expand_combinations};
+use crate::core::datetime::DatetimeSearchSpace;
 
 /// MT Seed 起動時刻検索器
 #[wasm_bindgen]
@@ -41,17 +42,11 @@ impl MtseedDatetimeSearcher {
             return Err("target_seeds is empty".into());
         }
 
-        let generator = DatetimeHashGenerator::new(
-            &params.ds,
-            &params.time_range,
-            &params.search_range,
-            params.condition,
-        )?;
+        let space = DatetimeSearchSpace::try_from(params.search_space)?;
+        let generator = DatetimeHashGenerator::new(&params.ds, &space, params.condition);
 
         // 進捗計算: 有効秒数 (time_range 内の秒数 × 日数相当)
-        let valid_seconds_per_day = params.time_range.count_valid_seconds();
-        let days = params.search_range.range_seconds.div_ceil(86400);
-        let total_count = u64::from(valid_seconds_per_day) * u64::from(days);
+        let total_count = space.count();
 
         Ok(Self {
             target_seeds: params.target_seeds.into_iter().collect(),
@@ -124,43 +119,43 @@ impl MtseedDatetimeSearcher {
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::cast_possible_truncation)]
+/// # Errors
+/// 日時入力または Worker 数が不正な場合。
 pub fn generate_mtseed_search_tasks(
     context: DatetimeSearchContext,
     target_seeds: Vec<MtSeed>,
     worker_count: u32,
-) -> Vec<MtseedDatetimeSearchParams> {
-    let search_range = context.date_range.to_search_range();
+) -> Result<Vec<MtseedDatetimeSearchParams>, String> {
+    let space = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)?;
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
 
     // 時間分割数を計算
-    let time_chunks = calculate_time_chunks(combo_count, worker_count);
-    let ranges = split_search_range(search_range, time_chunks);
+    let time_chunks = calculate_time_chunks(combo_count, worker_count)?;
+    let spaces = space.split(time_chunks);
 
     // 組み合わせ × 時間チャンク のクロス積でタスク生成
-    combinations
+    Ok(combinations
         .into_iter()
         .flat_map(|condition| {
             let target_seeds = target_seeds.clone();
             let ds = context.ds.clone();
-            let time_range = context.time_range.clone();
-            ranges.iter().map(move |range| MtseedDatetimeSearchParams {
+            spaces.iter().map(move |space| MtseedDatetimeSearchParams {
                 target_seeds: target_seeds.clone(),
                 ds: ds.clone(),
-                time_range: time_range.clone(),
-                search_range: range.clone(),
+                search_space: space.clone().into_params(),
                 condition,
             })
         })
-        .collect()
+        .collect())
 }
 
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, Datetime, DsButton, DsConfig, Hardware, KeyMask, KeySpec, LcgSeed,
-        MtseedDatetimeSearchParams, RomRegion, RomVersion, SearchRangeParams, StartupCondition,
-        TimeRangeParams, Timer0VCountRange,
+        DateRangeParams, Datetime, DatetimeSearchSpaceParams, DsButton, DsConfig, Hardware,
+        KeyMask, KeySpec, LcgSeed, MtseedDatetimeSearchParams, RomRegion, RomVersion,
+        StartupCondition, TimeRangeParams, Timer0VCountRange,
     };
 
     use super::*;
@@ -174,20 +169,17 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
-            time_range: TimeRangeParams {
-                hour_start: 0,
-                hour_end: 23,
-                minute_start: 0,
-                minute_end: 59,
-                second_start: 0,
-                second_end: 59,
-            },
-            search_range: SearchRangeParams {
-                start_year: 2023,
-                start_month: 1,
-                start_day: 1,
-                start_second_offset: 0,
-                range_seconds: 60, // Search only 60 seconds for test
+            search_space: DatetimeSearchSpaceParams {
+                start_seconds: 725_846_400,
+                end_seconds: 725_846_460,
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 23,
+                    minute_start: 0,
+                    minute_end: 59,
+                    second_start: 0,
+                    second_end: 59,
+                },
             },
             condition: StartupCondition::new(0x0C79, 0x5A, KeyMask::NONE),
         }
@@ -251,20 +243,17 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
-            time_range: TimeRangeParams {
-                hour_start: 0,
-                hour_end: 23,
-                minute_start: 0,
-                minute_end: 59,
-                second_start: 0,
-                second_end: 59,
-            },
-            search_range: SearchRangeParams {
-                start_year: 2010,
-                start_month: 9,
-                start_day: 18,
-                start_second_offset: 0, // 00:00:00
-                range_seconds: 86400,   // 1日分
+            search_space: DatetimeSearchSpaceParams {
+                start_seconds: 338_083_200,
+                end_seconds: 338_169_600,
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 23,
+                    minute_start: 0,
+                    minute_end: 59,
+                    second_start: 0,
+                    second_end: 59,
+                },
             },
             condition: StartupCondition::new(0x0C79, 0x60, KeyMask::NONE),
         };
@@ -355,7 +344,8 @@ mod tests {
             key_spec: KeySpec::from_buttons(vec![DsButton::A, DsButton::B]), // 4 combinations
         };
 
-        let tasks = generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], 4);
+        let tasks =
+            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], 4).unwrap();
 
         // 4 combinations * 1 time chunk = 4 tasks
         // (worker_count = 4, combo_count = 4 → time_chunks = 1)
@@ -391,76 +381,19 @@ mod tests {
             key_spec: KeySpec::from_buttons(vec![]), // 1 combination (no buttons)
         };
 
-        let tasks = generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], 4);
+        let tasks =
+            generate_mtseed_search_tasks(context, vec![MtSeed::new(0x1234_5678)], 4).unwrap();
 
         // 1 combination * 4 time chunks = 4 tasks
         // (worker_count = 4, combo_count = 1 → time_chunks = 4)
         assert_eq!(tasks.len(), 4);
 
         // 各タスクの合計秒数が元の範囲と一致
-        let total_seconds: u32 = tasks.iter().map(|t| t.search_range.range_seconds).sum();
+        let total_seconds: u32 = tasks
+            .iter()
+            .map(|t| t.search_space.end_seconds - t.search_space.start_seconds)
+            .sum();
         assert_eq!(total_seconds, 86400);
-    }
-
-    #[test]
-    fn test_time_range_count_valid_seconds() {
-        let range = TimeRangeParams {
-            hour_start: 10,
-            hour_end: 10,
-            minute_start: 0,
-            minute_end: 0,
-            second_start: 0,
-            second_end: 59,
-        };
-        // 10:00:00 - 10:00:59 = 1 * 1 * 60 = 60 seconds
-        assert_eq!(range.count_valid_seconds(), 60);
-
-        let full_day = TimeRangeParams {
-            hour_start: 0,
-            hour_end: 23,
-            minute_start: 0,
-            minute_end: 59,
-            second_start: 0,
-            second_end: 59,
-        };
-        // Full day = 24 * 60 * 60 = 86400 seconds
-        assert_eq!(full_day.count_valid_seconds(), 86400);
-
-        // 独立軸直積の検証: hour: 10~12, min: 20~40, sec: 0~59
-        let cartesian = TimeRangeParams {
-            hour_start: 10,
-            hour_end: 12,
-            minute_start: 20,
-            minute_end: 40,
-            second_start: 0,
-            second_end: 59,
-        };
-        // 3 * 21 * 60 = 3,780 (連続区間なら 8,460 になるため差を検出)
-        assert_eq!(cartesian.count_valid_seconds(), 3 * 21 * 60);
-
-        // 各軸 1 値
-        let single = TimeRangeParams {
-            hour_start: 5,
-            hour_end: 5,
-            minute_start: 30,
-            minute_end: 30,
-            second_start: 15,
-            second_end: 15,
-        };
-        // 1 * 1 * 1 = 1
-        assert_eq!(single.count_valid_seconds(), 1);
-
-        // 秒だけ範囲あり
-        let seconds_only = TimeRangeParams {
-            hour_start: 0,
-            hour_end: 0,
-            minute_start: 0,
-            minute_end: 0,
-            second_start: 10,
-            second_end: 20,
-        };
-        // 1 * 1 * 11 = 11
-        assert_eq!(seconds_only.count_valid_seconds(), 11);
     }
 
     #[test]
@@ -530,12 +463,15 @@ mod tests {
         };
 
         // 4 Worker で時間分割 (組み合わせ数 = 1 なので 4 チャンク)
-        let tasks = generate_mtseed_search_tasks(context, vec![expected_mt_seed], 4);
+        let tasks = generate_mtseed_search_tasks(context, vec![expected_mt_seed], 4).unwrap();
 
         assert_eq!(tasks.len(), 4);
 
         // 各タスクの合計秒数が元の範囲と一致
-        let total_seconds: u32 = tasks.iter().map(|t| t.search_range.range_seconds).sum();
+        let total_seconds: u32 = tasks
+            .iter()
+            .map(|t| t.search_space.end_seconds - t.search_space.start_seconds)
+            .sum();
         assert_eq!(total_seconds, 86400);
 
         // いずれかのタスクで Seed が見つかることを確認

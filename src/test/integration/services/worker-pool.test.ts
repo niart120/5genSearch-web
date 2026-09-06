@@ -12,7 +12,7 @@ import type { SearchTask } from '../../../workers/types';
 import {
   createTestDsConfig,
   createTestTimeRange,
-  createTestSearchRange,
+  createTestSearchSpace,
   createTestStartupCondition,
 } from '../helpers/worker-test-utils';
 
@@ -50,15 +50,14 @@ describe('WorkerPool', () => {
         params: {
           target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
-          time_range: {
+          search_space: createTestSearchSpace(2010, 9, 18, 86_400, {
             hour_start: 18,
             hour_end: 18,
             minute_start: 10,
             minute_end: 20,
             second_start: 0,
             second_end: 59,
-          },
-          search_range: createTestSearchRange(2010, 9, 18, 86_400),
+          }),
           condition: createTestStartupCondition(),
         },
       },
@@ -100,8 +99,7 @@ describe('WorkerPool', () => {
         params: {
           target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
-          time_range: createTestTimeRange(0, 1),
-          search_range: createTestSearchRange(2010, 9, 18, 3600),
+          search_space: createTestSearchSpace(2010, 9, 18, 3600, createTestTimeRange(0, 1)),
           condition: createTestStartupCondition(),
         },
       },
@@ -110,8 +108,7 @@ describe('WorkerPool', () => {
         params: {
           target_seeds: [0x32_bf_68_58],
           ds: createTestDsConfig(),
-          time_range: createTestTimeRange(2, 3),
-          search_range: createTestSearchRange(2010, 9, 18, 3600),
+          search_space: createTestSearchSpace(2010, 9, 18, 3600, createTestTimeRange(2, 3)),
           condition: createTestStartupCondition(),
         },
       },
@@ -159,8 +156,7 @@ describe('WorkerPool', () => {
         params: {
           target_seeds: [0x12_34_56_78],
           ds: createTestDsConfig(),
-          time_range: createTestTimeRange(),
-          search_range: createTestSearchRange(2010, 1, 1, 86_400 * 365),
+          search_space: createTestSearchSpace(2010, 1, 1, 86_400 * 365, createTestTimeRange()),
           condition: createTestStartupCondition(),
         },
       },
@@ -200,8 +196,7 @@ describe('WorkerPool', () => {
         params: {
           target_seeds: [], // エラーになるはず
           ds: createTestDsConfig(),
-          time_range: createTestTimeRange(),
-          search_range: createTestSearchRange(2010, 9, 18, 86_400),
+          search_space: createTestSearchSpace(2010, 9, 18, 86_400, createTestTimeRange()),
           condition: createTestStartupCondition(),
         },
       },

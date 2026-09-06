@@ -9,11 +9,9 @@ use tsify::Tsify;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
+use crate::core::datetime::DatetimeSearchSpace;
 use crate::datetime_search::expand_combinations;
-use crate::types::{
-    DatetimeSearchContext, DsConfig, MtSeed, MtseedDatetimeSearchParams, SearchRangeParams,
-    SeedOrigin, StartupCondition, TimeRangeParams,
-};
+use crate::types::{DatetimeSearchContext, DsConfig, MtSeed, SeedOrigin, StartupCondition};
 
 use super::pipeline::SearchPipeline;
 use crate::gpu::context::GpuDeviceContext;
@@ -54,10 +52,8 @@ pub struct GpuDatetimeSearchIterator {
     target_seeds: Vec<MtSeed>,
     /// 共通パラメータ: DS 設定
     ds: DsConfig,
-    /// 共通パラメータ: 1日内の時刻範囲
-    time_range: TimeRangeParams,
-    /// 共通パラメータ: 検索範囲
-    search_range: SearchRangeParams,
+    /// 検証済みの共通探索空間
+    search_space: DatetimeSearchSpace,
 
     /// 組み合わせ管理: 全組み合わせリスト
     combinations: Vec<StartupCondition>,
@@ -66,8 +62,8 @@ pub struct GpuDatetimeSearchIterator {
 
     /// 現在の Pipeline (組み合わせごとに再作成)
     pipeline: Option<SearchPipeline>,
-    /// 現在の Pipeline 内オフセット
-    pipeline_offset: u32,
+    /// 現在の候補番号 (探索空間の開始日が基準)
+    current_candidate: u32,
 
     /// 進捗管理: 総処理数 (全組み合わせ通算)
     total_count: u64,
@@ -101,56 +97,10 @@ impl GpuDatetimeSearchIterator {
             return Err("no valid combinations".into());
         }
 
-        // GPU 初期化
-        let gpu_ctx = GpuDeviceContext::new().await?;
-        let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
+        let search_space =
+            DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)?;
 
-        // 検索範囲計算
-        let search_range = context.date_range.to_search_range();
-        let seconds_per_combo = calculate_seconds_in_range(&search_range, &context.time_range);
-        #[allow(clippy::cast_possible_truncation)]
-        let total_count = seconds_per_combo * combinations.len() as u64;
-
-        // 最初の組み合わせで Pipeline 作成
-        let first_params = build_params(
-            &context.ds,
-            &target_seeds,
-            &context.time_range,
-            &search_range,
-            combinations[0],
-        );
-        let pipeline = SearchPipeline::new(&gpu_ctx, &first_params);
-
-        Ok(Self {
-            gpu_ctx,
-            limits,
-            target_seeds,
-            ds: context.ds,
-            time_range: context.time_range,
-            search_range,
-            combinations,
-            current_combo_idx: 0,
-            pipeline: Some(pipeline),
-            pipeline_offset: 0,
-            total_count,
-            processed_count: 0,
-        })
-    }
-
-    /// 組み合わせあたりの処理数を計算
-    fn seconds_per_combo(&self) -> u64 {
-        calculate_seconds_in_range(&self.search_range, &self.time_range)
-    }
-
-    /// 現在の組み合わせで Pipeline パラメータを構築
-    fn build_current_params(&self) -> MtseedDatetimeSearchParams {
-        build_params(
-            &self.ds,
-            &self.target_seeds,
-            &self.time_range,
-            &self.search_range,
-            self.combinations[self.current_combo_idx],
-        )
+        Self::from_space(context.ds, target_seeds, combinations, search_space).await
     }
 
     /// 次のバッチを取得
@@ -158,30 +108,38 @@ impl GpuDatetimeSearchIterator {
     /// 検索完了時は `None` を返す。
     /// 組み合わせ切り替えは内部で自動的に行われる。
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub async fn next(&mut self) -> Option<GpuSearchBatch> {
-        // 組み合わせあたりの処理数を事前計算 (borrow 回避)
-        let seconds_per_combo = self.seconds_per_combo();
+    /// # Errors
+    /// dispatch 範囲外、結果番号不正、GPU 読み取り失敗の場合。
+    pub async fn next(&mut self) -> Result<Option<GpuSearchBatch>, String> {
+        // 全起動条件に共通の候補番号区間
+        let (_, bounds) = self.search_space.candidate_bounds();
 
         loop {
             // Pipeline がない場合は完了
-            let pipeline = self.pipeline.as_mut()?;
+            let Some(pipeline) = self.pipeline.as_mut() else {
+                return Ok(None);
+            };
 
             // 現在の組み合わせで残り処理があるか
-            let remaining_in_combo =
-                seconds_per_combo.saturating_sub(u64::from(self.pipeline_offset));
+            let remaining_in_combo = bounds.end - self.current_candidate;
 
             if remaining_in_combo == 0 {
                 // 次の組み合わせへ
                 self.current_combo_idx += 1;
                 if self.current_combo_idx >= self.combinations.len() {
                     self.pipeline = None;
-                    return None;
+                    return Ok(None);
                 }
 
                 // 新しい Pipeline 作成
-                let params = self.build_current_params();
-                self.pipeline = Some(SearchPipeline::new(&self.gpu_ctx, &params));
-                self.pipeline_offset = 0;
+                self.pipeline = Some(SearchPipeline::new(
+                    &self.gpu_ctx,
+                    &self.ds,
+                    &self.target_seeds,
+                    self.combinations[self.current_combo_idx],
+                    &self.search_space,
+                ));
+                self.current_candidate = bounds.start;
                 continue;
             }
 
@@ -190,13 +148,15 @@ impl GpuDatetimeSearchIterator {
             let to_process = self
                 .limits
                 .max_messages_per_dispatch
-                .min(remaining_in_combo as u32);
-            let (matches, processed) = pipeline.dispatch(to_process, self.pipeline_offset).await;
+                .min(remaining_in_combo);
+            let (matches, processed) = pipeline
+                .dispatch(to_process, self.current_candidate)
+                .await?;
 
-            self.pipeline_offset += processed;
+            self.current_candidate += processed;
             self.processed_count += u64::from(processed);
 
-            return Some(self.build_batch_result(matches));
+            return Ok(Some(self.build_batch_result(matches)));
         }
     }
 
@@ -235,34 +195,47 @@ impl GpuDatetimeSearchIterator {
     }
 }
 
-/// 検索範囲内の有効秒数を計算
-fn calculate_seconds_in_range(
-    search_range: &SearchRangeParams,
-    time_range: &TimeRangeParams,
-) -> u64 {
-    // 1日あたりの有効秒数
-    let valid_seconds_per_day = u64::from(time_range.count_valid_seconds());
+impl GpuDatetimeSearchIterator {
+    async fn from_space(
+        ds: DsConfig,
+        target_seeds: Vec<MtSeed>,
+        combinations: Vec<StartupCondition>,
+        search_space: DatetimeSearchSpace,
+    ) -> Result<Self, String> {
+        // GPU 初期化
+        let gpu_ctx = GpuDeviceContext::new().await?;
+        let limits = SearchJobLimits::from_device_limits(gpu_ctx.limits(), gpu_ctx.gpu_profile());
 
-    // 日数 (範囲秒数を86400で割り上げ)
-    let days = u64::from(search_range.range_seconds.div_ceil(86400));
+        let total_count = search_space
+            .count()
+            .checked_mul(combinations.len() as u64)
+            .ok_or("Search count overflow")?;
+        let (_, bounds) = search_space.candidate_bounds();
+        let pipeline = if bounds.is_empty() {
+            None
+        } else {
+            Some(SearchPipeline::new(
+                &gpu_ctx,
+                &ds,
+                &target_seeds,
+                combinations[0],
+                &search_space,
+            ))
+        };
 
-    valid_seconds_per_day * days
-}
-
-/// `MtseedDatetimeSearchParams` を構築
-fn build_params(
-    ds: &DsConfig,
-    target_seeds: &[MtSeed],
-    time_range: &TimeRangeParams,
-    search_range: &SearchRangeParams,
-    condition: StartupCondition,
-) -> MtseedDatetimeSearchParams {
-    MtseedDatetimeSearchParams {
-        target_seeds: target_seeds.to_vec(),
-        ds: ds.clone(),
-        time_range: time_range.clone(),
-        search_range: search_range.clone(),
-        condition,
+        Ok(Self {
+            gpu_ctx,
+            limits,
+            target_seeds,
+            ds,
+            search_space,
+            combinations,
+            current_combo_idx: 0,
+            pipeline,
+            current_candidate: bounds.start,
+            total_count,
+            processed_count: 0,
+        })
     }
 }
 
@@ -274,6 +247,94 @@ mod tests {
     };
 
     use super::*;
+
+    #[test]
+    #[ignore = "requires a real GPU; run explicitly with --ignored --nocapture"]
+    fn gpu_partial_batches_reset_candidate_and_empty_space_skips_pipeline() {
+        use crate::core::datetime::END_SECONDS;
+        use crate::datetime_search::base::DatetimeHashGenerator;
+        use crate::types::DatetimeSearchSpaceParams;
+        let context = create_test_context();
+        let combinations = vec![
+            StartupCondition::new(3193, 90, crate::types::KeyMask::NONE),
+            StartupCondition::new(3194, 90, crate::types::KeyMask::NONE),
+        ];
+        let time_range = TimeRangeParams {
+            hour_start: 10,
+            hour_end: 11,
+            minute_start: 30,
+            minute_end: 30,
+            second_start: 0,
+            second_end: 6,
+        };
+        let space = DatetimeSearchSpace::try_from(DatetimeSearchSpaceParams {
+            start_seconds: 39600,
+            end_seconds: 43200,
+            time_range: time_range.clone(),
+        })
+        .unwrap();
+        let mut expected = Vec::new();
+        let mut seeds = Vec::new();
+        for condition in &combinations {
+            let mut generator = DatetimeHashGenerator::new(&context.ds, &space, *condition);
+            while !generator.is_exhausted() {
+                let (entries, count) = generator.next_quad();
+                for (date, hash) in entries.iter().take(usize::from(count)) {
+                    seeds.push(hash.to_mt_seed());
+                    expected.push(
+                        serde_json::to_string(&SeedOrigin::startup(
+                            hash.to_lcg_seed(),
+                            *date,
+                            *condition,
+                        ))
+                        .unwrap(),
+                    );
+                }
+            }
+        }
+        let mut iter = pollster::block_on(GpuDatetimeSearchIterator::from_space(
+            context.ds.clone(),
+            seeds.clone(),
+            combinations.clone(),
+            space,
+        ))
+        .unwrap();
+        iter.limits.max_messages_per_dispatch = 3;
+        let mut actual = Vec::new();
+        let mut counts = Vec::new();
+        while let Some(batch) = pollster::block_on(iter.next()).unwrap() {
+            counts.push(batch.processed_count);
+            assert_eq!(batch.total_count, 14);
+            actual.extend(
+                batch
+                    .results
+                    .iter()
+                    .map(|r| serde_json::to_string(r).unwrap()),
+            );
+        }
+        expected.sort();
+        actual.sort();
+        assert_eq!(actual, expected);
+        assert_eq!(counts, vec![3, 6, 7, 10, 13, 14]);
+        assert!(iter.is_done());
+        assert!(pollster::block_on(iter.next()).unwrap().is_none());
+        let empty = DatetimeSearchSpace::try_from(DatetimeSearchSpaceParams {
+            start_seconds: END_SECONDS,
+            end_seconds: END_SECONDS,
+            time_range,
+        })
+        .unwrap();
+        let mut iter = pollster::block_on(GpuDatetimeSearchIterator::from_space(
+            context.ds,
+            seeds,
+            combinations,
+            empty,
+        ))
+        .unwrap();
+        assert!(iter.pipeline.is_none());
+        assert!(iter.is_done());
+        assert!(pollster::block_on(iter.next()).unwrap().is_none());
+    }
 
     fn create_test_context() -> DatetimeSearchContext {
         DatetimeSearchContext {
@@ -310,17 +371,18 @@ mod tests {
     }
 
     #[test]
-    fn test_calculate_seconds_in_range() {
+    fn test_space_count() {
         let context = create_test_context();
-        let search_range = context.date_range.to_search_range();
-        let total = calculate_seconds_in_range(&search_range, &context.time_range);
+        let total = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)
+            .unwrap()
+            .count();
 
         // 1日、1日あたり 86400秒
         assert_eq!(total, 86400);
     }
 
     #[test]
-    fn test_calculate_seconds_in_range_with_time_range() {
+    fn test_space_count_with_time_range() {
         let mut context = create_test_context();
         context.time_range = TimeRangeParams {
             hour_start: 10,
@@ -330,8 +392,9 @@ mod tests {
             second_start: 0,
             second_end: 59,
         };
-        let search_range = context.date_range.to_search_range();
-        let total = calculate_seconds_in_range(&search_range, &context.time_range);
+        let total = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)
+            .unwrap()
+            .count();
 
         // 1日、1日あたり 3時間 * 60分 * 60秒 = 10800秒
         assert_eq!(total, 10800);
@@ -424,7 +487,7 @@ mod tests {
 
         // 全バッチを実行して結果を収集
         let mut all_results: Vec<SeedOrigin> = Vec::new();
-        while let Some(batch) = pollster::block_on(iterator.next()) {
+        while let Some(batch) = pollster::block_on(iterator.next()).unwrap() {
             all_results.extend(batch.results);
         }
 

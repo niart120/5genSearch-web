@@ -26,51 +26,18 @@ pub struct TimeRangeParams {
     pub second_end: u8,
 }
 
-impl TimeRangeParams {
-    /// バリデーション
-    ///
-    /// # Errors
-    ///
-    /// 時間・分・秒の範囲が不正な場合
-    pub fn validate(&self) -> Result<(), String> {
-        if self.hour_end > 23 || self.hour_start > self.hour_end {
-            return Err("Invalid hour range".into());
-        }
-        if self.minute_end > 59 || self.minute_start > self.minute_end {
-            return Err("Invalid minute range".into());
-        }
-        if self.second_end > 59 || self.second_start > self.second_end {
-            return Err("Invalid second range".into());
-        }
-        Ok(())
-    }
-
-    /// 有効な秒数をカウント (独立軸の直積)
-    pub fn count_valid_seconds(&self) -> u32 {
-        let hours = u32::from(self.hour_end) - u32::from(self.hour_start) + 1;
-        let minutes = u32::from(self.minute_end) - u32::from(self.minute_start) + 1;
-        let seconds = u32::from(self.second_end) - u32::from(self.second_start) + 1;
-        hours * minutes * seconds
-    }
-}
-
-/// 検索範囲
+/// WASM 間で転送する未検証の日時探索入力。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct SearchRangeParams {
-    pub start_year: u16,
-    pub start_month: u8,
-    pub start_day: u8,
-    /// 開始日内のオフセット秒 (0-86399)
-    pub start_second_offset: u32,
-    /// 検索範囲秒数
-    pub range_seconds: u32,
+pub struct DatetimeSearchSpaceParams {
+    pub start_seconds: u32,
+    pub end_seconds: u32,
+    pub time_range: TimeRangeParams,
 }
 
 /// 日付範囲パラメータ (UI 入力用)
 ///
-/// 開始日〜終了日を表す。`SearchRangeParams` と異なり、
-/// UI からの入力に適した形式。`to_search_range()` で変換可能。
+/// 開始日と終了日の両端を含む UI 入力。検証と変換は共通探索空間が担う。
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct DateRangeParams {
@@ -86,54 +53,6 @@ pub struct DateRangeParams {
     pub end_month: u8,
     /// 終了日 (1-31)
     pub end_day: u8,
-}
-
-impl DateRangeParams {
-    /// バリデーション
-    ///
-    /// # Errors
-    ///
-    /// - 年が 2000-2099 の範囲外の場合
-    /// - 開始日が終了日より後の場合
-    pub fn validate(&self) -> Result<(), String> {
-        // 年範囲チェック
-        if self.start_year < 2000 || self.start_year > 2099 {
-            return Err("start_year must be 2000-2099".into());
-        }
-        if self.end_year < 2000 || self.end_year > 2099 {
-            return Err("end_year must be 2000-2099".into());
-        }
-        // 開始 <= 終了 チェック
-        let start = (self.start_year, self.start_month, self.start_day);
-        let end = (self.end_year, self.end_month, self.end_day);
-        if start > end {
-            return Err("start date must be <= end date".into());
-        }
-        Ok(())
-    }
-
-    /// `SearchRangeParams` に変換
-    ///
-    /// 開始日 00:00:00 から終了日 23:59:59 までの範囲を表す
-    /// `SearchRangeParams` を生成する。
-    #[allow(clippy::cast_possible_truncation)]
-    pub fn to_search_range(&self) -> SearchRangeParams {
-        let start_seconds =
-            datetime_to_seconds(self.start_year, self.start_month, self.start_day, 0, 0, 0);
-        let end_seconds =
-            datetime_to_seconds(self.end_year, self.end_month, self.end_day, 23, 59, 59);
-        // 範囲秒数 = 終了 - 開始 + 1
-        // DS 探索範囲 (2000-2099) では u32 に収まる
-        let range_seconds = (end_seconds - start_seconds + 1) as u32;
-
-        SearchRangeParams {
-            start_year: self.start_year,
-            start_month: self.start_month,
-            start_day: self.start_day,
-            start_second_offset: 0,
-            range_seconds,
-        }
-    }
 }
 
 /// 起動時刻検索の共通コンテキスト
@@ -152,35 +71,6 @@ pub struct DatetimeSearchContext {
     pub key_spec: KeySpec,
 }
 
-// ===== 内部ヘルパー関数 =====
-
-/// 年月日を 2000年1月1日 00:00:00 からの経過秒数に変換
-fn datetime_to_seconds(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> u64 {
-    let mut days = 0u32;
-
-    for y in 2000..year {
-        days += if is_leap_year(y) { 366 } else { 365 };
-    }
-
-    let leap = is_leap_year(year);
-    let month_days: [u32; 12] = if leap {
-        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    } else {
-        [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    };
-
-    for &md in month_days.iter().take(usize::from(month - 1)) {
-        days += md;
-    }
-    days += u32::from(day - 1);
-
-    u64::from(days) * 86400 + u64::from(hour) * 3600 + u64::from(minute) * 60 + u64::from(second)
-}
-
-fn is_leap_year(year: u16) -> bool {
-    year.is_multiple_of(4) && !year.is_multiple_of(100) || year.is_multiple_of(400)
-}
-
 // ===== MT Seed 起動時刻検索 =====
 
 /// MT Seed 検索パラメータ (単一組み合わせ)
@@ -191,10 +81,8 @@ pub struct MtseedDatetimeSearchParams {
     pub target_seeds: Vec<MtSeed>,
     /// DS 設定
     pub ds: DsConfig,
-    /// 1日内の時刻範囲
-    pub time_range: TimeRangeParams,
-    /// 検索範囲 (秒単位)
-    pub search_range: SearchRangeParams,
+    /// 日時探索空間 (転送用入力)
+    pub search_space: DatetimeSearchSpaceParams,
     /// 起動条件 (単一)
     pub condition: StartupCondition,
 }
@@ -223,10 +111,8 @@ pub struct TrainerInfoSearchParams {
     pub filter: TrainerInfoFilter,
     /// DS 設定 (`RomVersion` を含む)
     pub ds: DsConfig,
-    /// 1日内の時刻範囲
-    pub time_range: TimeRangeParams,
-    /// 検索範囲 (秒単位)
-    pub search_range: SearchRangeParams,
+    /// 日時探索空間 (転送用入力)
+    pub search_space: DatetimeSearchSpaceParams,
     /// 起動条件 (単一: Timer0/VCount/KeyCode)
     pub condition: StartupCondition,
     /// 起動設定
@@ -266,10 +152,8 @@ pub struct EggDatetimeSearchParams {
     // === 起動時刻検索 ===
     /// DS 設定
     pub ds: DsConfig,
-    /// 1日内の時刻範囲
-    pub time_range: TimeRangeParams,
-    /// 検索範囲 (秒単位)
-    pub search_range: SearchRangeParams,
+    /// 日時探索空間 (転送用入力)
+    pub search_space: DatetimeSearchSpaceParams,
     /// 起動条件 (単一)
     pub condition: StartupCondition,
 
@@ -315,8 +199,7 @@ pub struct EggDatetimeSearchBatch {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct PokemonDatetimeSearchParams {
     pub ds: DsConfig,
-    pub time_range: TimeRangeParams,
-    pub search_range: SearchRangeParams,
+    pub search_space: DatetimeSearchSpaceParams,
     pub condition: StartupCondition,
     pub pokemon_params: super::generation::PokemonGenerationParams,
     pub gen_config: GenerationConfig,
@@ -396,153 +279,4 @@ pub struct MtseedSearchBatch {
     pub processed: u64,
     /// 総 Seed 数 (0x100000000)
     pub total: u64,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // ===== DateRangeParams のテスト =====
-
-    #[test]
-    fn test_date_range_params_validate_success() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 12,
-            end_day: 31,
-        };
-        assert!(params.validate().is_ok());
-    }
-
-    #[test]
-    fn test_date_range_params_validate_same_day() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 6,
-            start_day: 15,
-            end_year: 2023,
-            end_month: 6,
-            end_day: 15,
-        };
-        assert!(params.validate().is_ok());
-    }
-
-    #[test]
-    fn test_date_range_params_validate_start_year_out_of_range() {
-        let params = DateRangeParams {
-            start_year: 1999,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 12,
-            end_day: 31,
-        };
-        assert!(params.validate().is_err());
-    }
-
-    #[test]
-    fn test_date_range_params_validate_end_year_out_of_range() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2100,
-            end_month: 1,
-            end_day: 1,
-        };
-        assert!(params.validate().is_err());
-    }
-
-    #[test]
-    fn test_date_range_params_validate_start_after_end() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 6,
-            start_day: 15,
-            end_year: 2023,
-            end_month: 6,
-            end_day: 14,
-        };
-        assert!(params.validate().is_err());
-    }
-
-    #[test]
-    fn test_date_range_to_search_range_single_day() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 1,
-            end_day: 1,
-        };
-        let search_range = params.to_search_range();
-
-        assert_eq!(search_range.start_year, 2023);
-        assert_eq!(search_range.start_month, 1);
-        assert_eq!(search_range.start_day, 1);
-        assert_eq!(search_range.start_second_offset, 0);
-        // 1日 = 86400 秒
-        assert_eq!(search_range.range_seconds, 86400);
-    }
-
-    #[test]
-    fn test_date_range_to_search_range_multiple_days() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 1,
-            start_day: 1,
-            end_year: 2023,
-            end_month: 1,
-            end_day: 3,
-        };
-        let search_range = params.to_search_range();
-
-        // 3日 = 86400 * 3 = 259200 秒
-        assert_eq!(search_range.range_seconds, 86400 * 3);
-    }
-
-    #[test]
-    fn test_date_range_to_search_range_cross_year() {
-        let params = DateRangeParams {
-            start_year: 2023,
-            start_month: 12,
-            start_day: 31,
-            end_year: 2024,
-            end_month: 1,
-            end_day: 1,
-        };
-        let search_range = params.to_search_range();
-
-        // 2日 = 172800 秒
-        assert_eq!(search_range.range_seconds, 86400 * 2);
-    }
-
-    #[test]
-    fn test_datetime_to_seconds_basic() {
-        // 2000/1/1 00:00:00 = 0 秒
-        assert_eq!(datetime_to_seconds(2000, 1, 1, 0, 0, 0), 0);
-        // 2000/1/1 00:00:01 = 1 秒
-        assert_eq!(datetime_to_seconds(2000, 1, 1, 0, 0, 1), 1);
-        // 2000/1/2 00:00:00 = 86400 秒
-        assert_eq!(datetime_to_seconds(2000, 1, 2, 0, 0, 0), 86400);
-    }
-
-    #[test]
-    fn test_datetime_to_seconds_end_of_day() {
-        // 2000/1/1 23:59:59
-        let secs = datetime_to_seconds(2000, 1, 1, 23, 59, 59);
-        assert_eq!(secs, 86399);
-    }
-
-    #[test]
-    fn test_is_leap_year() {
-        assert!(is_leap_year(2000)); // 400で割り切れる
-        assert!(!is_leap_year(2001));
-        assert!(is_leap_year(2004)); // 4で割り切れる
-        assert!(!is_leap_year(2100)); // 100で割り切れるが400では割り切れない
-    }
 }

@@ -219,6 +219,13 @@ async function runSearchLoop<T extends { readonly is_done: boolean; free(): void
   let lastProgress: BatchProgress | undefined;
 
   try {
+    if (searcher.is_done) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: { ...calculateProgress(0n, 0n, startTime), percentage: 100 },
+      });
+    }
     while (!searcher.is_done && !cancelled) {
       lastProgress = processBatch(searcher);
 
@@ -261,10 +268,6 @@ async function runPokemonDatetimeSearch(
   startTime: number
 ): Promise<void> {
   const searcher = new PokemonDatetimeSearcher(params);
-  // 総数0のタスクも既存の進捗集計へ渡す。
-  if (searcher.is_done) {
-    postResponse({ type: 'progress', taskId, progress: calculateProgress(0n, 0n, startTime) });
-  }
   await runSearchLoop(taskId, searcher, startTime, (s) => {
     const batch = s.next_batch({ max_candidates: 1024, max_results: 256 });
     if (batch.results.length > 0) {
