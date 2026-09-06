@@ -1,3 +1,4 @@
+import { AdvanceTooltip } from '@/components/data-display/rng-tooltips';
 /**
  * EggSearchResultView テーブル列定義
  *
@@ -8,6 +9,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EggMarginTooltip } from '@/components/data-display/egg-margin-tooltip';
 import { toHex, formatDatetime } from '@/lib/format';
 import { STAT_HEADERS_JA, STAT_HEADERS_EN } from '@/lib/game-data-names';
 import type { SupportedLocale } from '@/i18n';
@@ -109,13 +111,23 @@ function createEggResultColumns(
     }),
     columnHelper.accessor((row) => row.raw.egg.advance, {
       id: 'advance',
-      header: () => t`Advance`,
-      size: 60,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Advance`}
+          <AdvanceTooltip />
+        </span>
+      ),
+      size: 84,
     }),
     columnHelper.accessor((row) => row.raw.egg.margin_frames, {
       id: 'margin',
-      header: () => t`Margin`,
-      size: 60,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          {t`Margin`}
+          <EggMarginTooltip />
+        </span>
+      ),
+      size: 84,
       cell: (info) => {
         const val = info.row.original.ui.margin_frames;
         return val === undefined ? '-' : val;

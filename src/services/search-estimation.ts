@@ -384,6 +384,7 @@ export function estimateEggSearchResults(
   timeRange: TimeRangeParams,
   ranges: Timer0VCountRange[],
   keyCombinationCount: number,
+  config: Pick<GenerationConfig, 'user_offset' | 'max_advance'>,
   filter: EggFilter | undefined,
   masudaMethod: boolean,
   threshold: number = DEFAULT_RESULT_WARNING_THRESHOLD
@@ -395,7 +396,11 @@ export function estimateEggSearchResults(
     keyCombinationCount
   );
   const hitRate = estimateEggFilterHitRate(masudaMethod, filter);
-  return buildEstimation(searchSpaceSize, hitRate, threshold);
+  return buildEstimation(
+    searchSpaceSize * Math.max(0, config.max_advance - config.user_offset + 1),
+    hitRate,
+    threshold
+  );
 }
 
 /**
@@ -429,7 +434,7 @@ export function estimatePokemonListResults(
   filter?: PokemonFilter,
   threshold: number = DEFAULT_RESULT_WARNING_THRESHOLD
 ): EstimationResult {
-  const generated = seedCount * Math.max(maxAdvance - userOffset, 0);
+  const generated = seedCount * Math.max(maxAdvance - userOffset + 1, 0);
   const hitRate = estimatePokemonFilterHitRate(filter);
   return buildEstimation(generated, hitRate, threshold);
 }
@@ -445,7 +450,7 @@ export function estimateEggListResults(
   masudaMethod: boolean,
   threshold: number = DEFAULT_RESULT_WARNING_THRESHOLD
 ): EstimationResult {
-  const generated = seedCount * Math.max(maxAdvance - userOffset, 0);
+  const generated = seedCount * Math.max(maxAdvance - userOffset + 1, 0);
   const hitRate = estimateEggFilterHitRate(masudaMethod, filter);
   return buildEstimation(generated, hitRate, threshold);
 }
@@ -465,7 +470,7 @@ export function estimatePokemonDatetimeSearchResults(
   );
   const rate = estimateCoreDataFilterHitRate({ ...filter, iv: undefined, stats: undefined });
   return buildEstimation(
-    origins * Math.max(0, config.max_advance - config.user_offset),
+    origins * Math.max(0, config.max_advance - config.user_offset + 1),
     rate,
     threshold
   );

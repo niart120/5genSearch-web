@@ -1,5 +1,6 @@
 import { IvFilterFields } from './iv-filter-fields';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EggMarginTooltip } from '@/components/data-display/egg-margin-tooltip';
 import {
   getEggFilterVisibility,
   type EggFilterInput as EggFilter,
@@ -206,20 +207,23 @@ function EggFilterForm({
 
           {visible.margin && (
             <div className="flex flex-col gap-1">
-              <label className="flex items-center gap-2 text-xs">
-                <Checkbox
-                  checked={filter.marginEnabled ?? filter.min_margin_frames !== undefined}
-                  onCheckedChange={(checked) =>
-                    update({
-                      marginEnabled: checked === true,
-                      min_margin_frames: filter.min_margin_frames ?? 0,
-                    })
-                  }
-                  disabled={filterDisabled}
-                  aria-label={t`Enable minimum margin frames`}
-                />
-                <Trans>Min margin frames</Trans>
-              </label>
+              <div className="flex items-center gap-1">
+                <label className="flex items-center gap-2 text-xs">
+                  <Checkbox
+                    checked={filter.marginEnabled ?? filter.min_margin_frames !== undefined}
+                    onCheckedChange={(checked) =>
+                      update({
+                        marginEnabled: checked === true,
+                        min_margin_frames: filter.min_margin_frames ?? 0,
+                      })
+                    }
+                    disabled={filterDisabled}
+                    aria-label={t`Enable minimum margin frames`}
+                  />
+                  <Trans>Min margin frames</Trans>
+                </label>
+                <EggMarginTooltip />
+              </div>
               <Input
                 id="egg-min-margin"
                 aria-label={t`Min margin frames`}

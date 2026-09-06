@@ -1,3 +1,4 @@
+import { AdvanceTooltip, NeedleTooltip } from '@/components/data-display/rng-tooltips';
 /**
  * ポケモンリスト結果詳細ダイアログ
  *
@@ -64,7 +65,11 @@ function ResultDetailDialog({
           {ui.key_input !== undefined && <DetailRow label={t`Key input`} value={ui.key_input} />}
 
           {/* 個体データ */}
-          <DetailRow label={t`Needle`} value={getNeedleArrow(ui.needle_direction)} />
+          <DetailRow
+            help={<NeedleTooltip />}
+            label={t`Needle`}
+            value={getNeedleArrow(ui.needle_direction)}
+          />
           <DetailRow label={t`Species`} value={ui.species_name} />
           <DetailRow label={t`Nature`} value={ui.nature_name} />
           <DetailRow label={t`Ability`} value={ui.ability_name} />
@@ -94,7 +99,7 @@ function ResultDetailDialog({
           )}
 
           {/* エンカウント情報 */}
-          <DetailRow label={t`Advance`} value={String(ui.advance)} />
+          <DetailRow help={<AdvanceTooltip />} label={t`Advance`} value={String(ui.advance)} />
           {ui.moving_encounter_guaranteed !== undefined && (
             <DetailRow label={t`Moving encounter`} value={ui.moving_encounter_guaranteed} />
           )}

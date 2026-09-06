@@ -31,10 +31,12 @@ describe('HiddenPowerSelect', () => {
     expect(screen.getByText(/Not specified/)).toBeInTheDocument();
   });
 
-  it('選択数が表示される', () => {
+  it('選択したタイプ名が表示される', () => {
     const selected: HiddenPowerType[] = ['Fire', 'Ice'];
     renderHiddenPowerSelect({ value: selected });
-    expect(screen.getByText(/2/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'hidden-power-select-trigger' })).toHaveTextContent(
+      'ほのお / こおり'
+    );
   });
 
   it('チェックボックスのトグルで onChange が呼ばれる', async () => {

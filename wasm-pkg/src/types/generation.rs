@@ -257,10 +257,33 @@ pub struct GenerationConfig {
     pub version: RomVersion,
     /// 起動設定 (`game_offset` 計算用)
     pub game_start: GameStartConfig,
-    /// 検索開始位置 (advance の初期値)
+    /// 消費数の下限 (オフセットを除く、advance の初期値)
     pub user_offset: u32,
-    /// 検索終了位置
+    /// 消費数の上限 (この値を含む)
     pub max_advance: u32,
+}
+
+impl GenerationConfig {
+    /// 閉区間の消費位置数。次の位置への加算ができない上限は受け付けない。
+    /// # Errors
+    /// 範囲が逆転しているか、上限が `u32::MAX` の場合。
+    pub fn advance_count(&self) -> Result<u32, String> {
+        if self.user_offset > self.max_advance || self.max_advance == u32::MAX {
+            return Err("Invalid advance range".into());
+        }
+        Ok(self.max_advance - self.user_offset + 1)
+    }
+
+    /// オフセットを加えた範囲を検証し、初期位置を返す。
+    /// # Errors
+    /// 範囲が不正、またはオフセットとの加算がオーバーフローする場合。
+    pub fn initial_advance(&self, game_offset: u32) -> Result<u32, String> {
+        self.advance_count()?;
+        game_offset
+            .checked_add(self.max_advance)
+            .ok_or("Advance offset overflow")?;
+        Ok(game_offset + self.user_offset)
+    }
 }
 
 // ===== 生成結果 =====

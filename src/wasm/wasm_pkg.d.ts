@@ -1053,11 +1053,11 @@ export interface GenerationConfig {
      */
     game_start: GameStartConfig;
     /**
-     * 検索開始位置 (advance の初期値)
+     * 消費数の下限 (オフセットを除く、advance の初期値)
      */
     user_offset: number;
     /**
-     * 検索終了位置
+     * 消費数の上限 (この値を含む)
      */
     max_advance: number;
 }
@@ -1385,6 +1385,8 @@ export class EggDatetimeSearcher {
     constructor(params: EggDatetimeSearchParams);
     /**
      * 次のバッチを検索
+     * # Errors
+     * 起動設定が無効、またはオフセットとの加算がオーバーフローする場合。
      */
     next_batch(chunk_count: number): EggDatetimeSearchBatch;
     readonly is_done: boolean;

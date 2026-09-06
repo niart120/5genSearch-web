@@ -9,6 +9,8 @@ import { describe, it, expect } from 'vitest';
 import { normalizeEggFilter } from '@/lib/search-filter-context';
 import {
   generate_egg_search_tasks,
+  generate_egg_list,
+  resolve_seeds,
   resolve_egg_data_batch,
   EggDatetimeSearcher,
 } from '../../wasm/wasm_pkg.js';
@@ -80,6 +82,53 @@ const genConfig: GenerationConfig = {
 };
 
 describe('EggDatetimeSearch Integration', () => {
+  it.each([
+    [100, 102],
+    [100, 100],
+    [0, 0],
+  ])('searches the inclusive range %i..%i', (min, max) => {
+    const context = structuredClone(testContext);
+    context.time_range.second_end = 0;
+    context.ranges[0].timer0_max = context.ranges[0].timer0_min;
+    const config = { ...genConfig, user_offset: min, max_advance: max };
+    const tasks = generate_egg_search_tasks(context, eggParams, config, undefined, 1);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].gen_config).toEqual(config);
+    const searcher = new EggDatetimeSearcher(tasks[0]);
+    try {
+      const batch = searcher.next_batch(1);
+      expect(batch.results.map((row) => row.egg.advance)).toEqual(
+        Array.from({ length: max - min + 1 }, (_, index) => min + index)
+      );
+      expect(searcher.is_done).toBe(true);
+    } finally {
+      searcher.free();
+    }
+  });
+  it.each([
+    [2, 1],
+    [0, 0xff_ff_ff_ff],
+  ])('rejects invalid range %i..%i at the WASM boundary', (min, max) => {
+    expect(() =>
+      generate_egg_search_tasks(
+        testContext,
+        eggParams,
+        { ...genConfig, user_offset: min, max_advance: max },
+        undefined,
+        1
+      )
+    ).toThrow();
+  });
+  it.each([
+    [2, 1],
+    [0, 0xff_ff_ff_ff],
+    [0xff_ff_ff_fe, 0xff_ff_ff_fe],
+  ])('egg list rejects invalid ranges and offset overflow %i..%i', (min, max) => {
+    const origins = resolve_seeds({ type: 'Seeds', seeds: [0x12_34_56_78_9a_bc_de_f0n] });
+    expect(() =>
+      generate_egg_list(origins, eggParams, { ...genConfig, user_offset: min, max_advance: max })
+    ).toThrow();
+  });
   it('不適用の孵化条件を除外してから日時検索タスクを生成する', () => {
     const applied = normalizeEggFilter(
       { ability_slot: 'Hidden', min_margin_frames: 0 },

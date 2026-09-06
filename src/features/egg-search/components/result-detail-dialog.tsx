@@ -1,3 +1,4 @@
+import { AdvanceTooltip } from '@/components/data-display/rng-tooltips';
 /**
  * 孵化検索結果詳細ダイアログ
  *
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { DetailRow } from '@/components/data-display/detail-row';
+import { EggMarginTooltip } from '@/components/data-display/egg-margin-tooltip';
 import { toBigintHex, toHex, formatDatetime, formatKeyMask } from '@/lib/format';
 import { getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
 import { useSearchResultsStore } from '@/stores/search/results';
@@ -78,10 +80,11 @@ function ResultDetailDialog({ open, onOpenChange, result }: ResultDetailDialogPr
           <DetailRow label={t`Shiny`} value={ui.shiny_symbol || '-'} />
 
           {/* 検索情報 */}
-          <DetailRow label={t`Advance`} value={String(ui.advance)} />
+          <DetailRow help={<AdvanceTooltip />} label={t`Advance`} value={String(ui.advance)} />
           <DetailRow
             label={t`Margin frames`}
             value={ui.margin_frames === undefined ? '-' : String(ui.margin_frames)}
+            help={<EggMarginTooltip />}
           />
         </div>
 

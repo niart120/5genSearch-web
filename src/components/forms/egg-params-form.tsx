@@ -5,6 +5,8 @@
  * 表示順: 親個体値 → ♀親特性 → かわらずのいし → 性別比 → フラグ群 → offset/max_advance
  */
 
+import { AdvanceRangeInput } from './advance-range-input';
+import { NpcTooltip } from '@/components/data-display/rng-tooltips';
 import { useState, useCallback, useEffect, memo, type Dispatch, type SetStateAction } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown } from 'lucide-react';
@@ -180,18 +182,6 @@ function EggParamsForm({
   const language = useUiStore((s) => s.language);
   const [isOpen, setIsOpen] = useState(true);
 
-  // ローカル状態 (数値入力)
-  const [localOffset, setLocalOffset] = useState(String(genConfig.user_offset));
-  const [localMaxAdvance, setLocalMaxAdvance] = useState(String(genConfig.max_advance));
-
-  useEffect(() => {
-    setLocalOffset(String(genConfig.user_offset));
-  }, [genConfig.user_offset, syncKey]);
-
-  useEffect(() => {
-    setLocalMaxAdvance(String(genConfig.max_advance));
-  }, [genConfig.max_advance, syncKey]);
-
   const update = useCallback(
     (partial: Partial<EggGenerationParams>) => {
       onChange((prev) => ({ ...prev, ...partial }));
@@ -239,18 +229,6 @@ function EggParamsForm({
     },
     [onSpeciesIdChange, update]
   );
-
-  const handleOffsetBlur = useCallback(() => {
-    const clamped = clampOrDefault(localOffset, { defaultValue: 0, min: 0, max: 999_999 });
-    setLocalOffset(String(clamped));
-    onGenConfigChange((prev) => ({ ...prev, user_offset: clamped }));
-  }, [localOffset, onGenConfigChange]);
-
-  const handleMaxAdvanceBlur = useCallback(() => {
-    const clamped = clampOrDefault(localMaxAdvance, { defaultValue: 100, min: 0, max: 999_999 });
-    setLocalMaxAdvance(String(clamped));
-    onGenConfigChange((prev) => ({ ...prev, max_advance: clamped }));
-  }, [localMaxAdvance, onGenConfigChange]);
 
   return (
     <section className="flex flex-col gap-2">
@@ -399,53 +377,26 @@ function EggParamsForm({
               <Trans>Masuda Method</Trans>
             </label>
 
-            <label className="flex items-center gap-2 text-xs">
-              <Checkbox
-                checked={value.consider_npc}
-                onCheckedChange={(checked) => update({ consider_npc: checked === true })}
-                disabled={disabled}
-              />
-              <Trans>Consider NPC</Trans>
-            </label>
+            <div className="flex items-center gap-1">
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox
+                  checked={value.consider_npc}
+                  onCheckedChange={(checked) => update({ consider_npc: checked === true })}
+                  disabled={disabled}
+                />
+                <Trans>Consider NPC</Trans>
+              </label>
+              <NpcTooltip />
+            </div>
           </div>
 
-          {/* user_offset / max_advance */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="egg-user-offset" className="text-xs">
-                <Trans>Start offset</Trans>
-              </Label>
-              <Input
-                id="egg-user-offset"
-                type="number"
-                inputMode="numeric"
-                className="h-7 text-xs tabular-nums"
-                value={localOffset}
-                onChange={(e) => setLocalOffset(e.target.value)}
-                onBlur={handleOffsetBlur}
-                onFocus={handleFocusSelectAll}
-                min={0}
-                disabled={disabled}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="egg-max-advance" className="text-xs">
-                <Trans>Max advance</Trans>
-              </Label>
-              <Input
-                id="egg-max-advance"
-                type="number"
-                inputMode="numeric"
-                className="h-7 text-xs tabular-nums"
-                value={localMaxAdvance}
-                onChange={(e) => setLocalMaxAdvance(e.target.value)}
-                onBlur={handleMaxAdvanceBlur}
-                onFocus={handleFocusSelectAll}
-                min={0}
-                disabled={disabled}
-              />
-            </div>
-          </div>
+          <AdvanceRangeInput
+            value={genConfig}
+            onChange={(partial) => onGenConfigChange((prev) => ({ ...prev, ...partial }))}
+            disabled={disabled}
+            syncKey={syncKey}
+            defaultMax={100}
+          />
         </div>
       )}
     </section>

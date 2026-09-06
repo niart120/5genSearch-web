@@ -2,6 +2,7 @@
  * 針検索結果テーブル列定義
  */
 
+import { NeedleResultAdvanceTooltip } from '@/components/data-display/rng-tooltips';
 import type { ColumnDef } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
 import { Trans } from '@lingui/react/macro';
@@ -19,8 +20,13 @@ export function createNeedleResultColumns(): ColumnDef<NeedleSearchResult>[] {
     {
       accessorFn: (row) => row.advance,
       id: 'advance',
-      header: () => <Trans>Advance</Trans>,
-      size: 80,
+      header: () => (
+        <span className="inline-flex items-center gap-1">
+          <Trans>Advance</Trans>
+          <NeedleResultAdvanceTooltip />
+        </span>
+      ),
+      size: 104,
       cell: ({ getValue }) => <span className="font-mono">{getValue<number>()}</span>,
     },
     {

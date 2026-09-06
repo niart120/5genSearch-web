@@ -139,7 +139,7 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
     }),
     {
       name: 'feature:pokemon-list',
-      version: 2,
+      version: 3,
       migrate: (state) => state as ReturnType<typeof getPokemonListInitialState>,
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,

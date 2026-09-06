@@ -61,7 +61,7 @@ export function PokemonSearchPage() {
     DATE_RANGE_INVALID: t`Enter a valid date range within 2000–2099`,
     TIME_RANGE_INVALID: t`Time range is invalid`,
     STARTUP_RANGE_INVALID: t`Set a valid Timer0 / VCount range`,
-    ADVANCE_RANGE_INVALID: t`Max advance must be ≥ start offset`,
+    ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
     ENCOUNTER_SLOTS_EMPTY: t`Select a location or Pokémon`,
     ENCOUNTER_UNSUPPORTED: t`This encounter type is not supported by Pokémon search`,
     LEVEL_RANGE_INVALID: t`Level range must be within 1–100`,
@@ -219,7 +219,7 @@ export function PokemonSearchPage() {
             columns={columns}
             data={results}
             className="flex-1"
-            emptyMessage={t`No results found. Set Pokémon conditions and start searching.`}
+            emptyMessage={t`No results found. Configure parameters and start searching.`}
             getRowId={(_row, index) => String(index)}
             initialSorting={POKEMON_SEARCH_SORTING}
           />

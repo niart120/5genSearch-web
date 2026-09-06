@@ -13,7 +13,9 @@ import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { NumField } from '@/components/ui/spinner-num-field';
+import { AdvanceRangeInput } from '@/components/forms/advance-range-input';
+import { commitActiveInput } from '@/components/forms/input-helpers';
+import { NeedleInputTooltip } from '@/components/data-display/rng-tooltips';
 import { useDsConfigReadonly } from '@/hooks/use-ds-config';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { resolveSeedOrigins } from '@/services/seed-resolve';
@@ -106,8 +108,8 @@ function NeedlePage(): ReactElement {
       SEED_EMPTY: t`Seed is not set`,
       PATTERN_EMPTY: t`Needle pattern is empty`,
       PATTERN_INVALID: t`Needle pattern must be digits 0-7`,
-      OFFSET_NEGATIVE: t`Offset must be 0 or positive`,
-      ADVANCE_RANGE_INVALID: t`Max advance must be ≥ offset`,
+      OFFSET_NEGATIVE: t`Min advance must be ≥ 0`,
+      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
     }),
     [t]
   );
@@ -117,27 +119,27 @@ function NeedlePage(): ReactElement {
 
   // 検索実行
   const executeSearch = useCallback(() => {
-    if (!validation.isValid || seedOrigins.length === 0) return;
+    const current = useNeedleStore.getState();
+    if (
+      !validateNeedleForm({
+        seedOrigins,
+        patternRaw: current.patternRaw,
+        userOffset: current.userOffset,
+        maxAdvance: current.maxAdvance,
+      }).isValid
+    )
+      return;
     const pattern = parseNeedlePattern(patternRaw);
     if (!pattern) return;
 
     const config: GenerationConfig = {
       version: dsConfig.version,
       game_start: gameStart,
-      user_offset: userOffset,
-      max_advance: maxAdvance,
+      user_offset: current.userOffset,
+      max_advance: current.maxAdvance,
     };
     search(seedOrigins, pattern, config);
-  }, [
-    validation.isValid,
-    seedOrigins,
-    patternRaw,
-    dsConfig.version,
-    gameStart,
-    userOffset,
-    maxAdvance,
-    search,
-  ]);
+  }, [seedOrigins, patternRaw, dsConfig.version, gameStart, search]);
 
   // 自動検索
   useEffect(() => {
@@ -147,7 +149,7 @@ function NeedlePage(): ReactElement {
       return;
     }
     executeSearch();
-  }, [autoSearch, validation.isValid, executeSearch, clear]);
+  }, [autoSearch, validation.isValid, userOffset, maxAdvance, executeSearch, clear]);
 
   return (
     <>
@@ -155,7 +157,12 @@ function NeedlePage(): ReactElement {
         <FeaturePageLayout.Controls>
           {/* PC: 検索ボタン + 自動検索トグル */}
           <div className="hidden lg:flex lg:min-h-9 lg:items-center lg:gap-3">
-            <Button onClick={executeSearch} disabled={!validation.isValid} className="flex-1">
+            <Button
+              onPointerDown={commitActiveInput}
+              onClick={executeSearch}
+              disabled={!validation.isValid}
+              className="flex-1"
+            >
               <Trans>Search</Trans>
             </Button>
             <div className="flex items-center gap-1">
@@ -184,50 +191,22 @@ function NeedlePage(): ReactElement {
 
           {/* 針パターン入力 */}
           <section className="flex flex-col gap-2">
-            <h3 className="text-sm font-medium">
+            <h3 className="flex items-center gap-1 text-sm font-medium">
               <Trans>Needle Pattern</Trans>
+              <NeedleInputTooltip />
             </h3>
             <NeedleInput value={patternRaw} onChange={setPatternRaw} />
           </section>
 
-          {/* 消費数範囲 */}
-          <section className="flex flex-col gap-2">
-            <h3 className="text-sm font-medium">
-              <Trans>Advance Range</Trans>
-            </h3>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="user-offset" className="text-xs text-muted-foreground">
-                  <Trans>Start offset</Trans>
-                </Label>
-                <NumField
-                  id="user-offset"
-                  value={userOffset}
-                  onChange={setUserOffset}
-                  defaultValue={0}
-                  min={0}
-                  max={99_999}
-                  label={t`Start offset`}
-                  className="w-20"
-                />
-              </div>
-              <span className="mt-5 text-muted-foreground">–</span>
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="max-advance" className="text-xs text-muted-foreground">
-                  <Trans>Max advance</Trans>
-                </Label>
-                <NumField
-                  id="max-advance"
-                  value={maxAdvance}
-                  onChange={setMaxAdvance}
-                  defaultValue={30}
-                  min={0}
-                  max={99_999}
-                  label={t`Max advance`}
-                  className="w-20"
-                />
-              </div>
-            </div>
+          <section>
+            <AdvanceRangeInput
+              value={{ user_offset: userOffset, max_advance: maxAdvance }}
+              limit={99_999}
+              onChange={(partial) => {
+                if (partial.user_offset !== undefined) setUserOffset(partial.user_offset);
+                if (partial.max_advance !== undefined) setMaxAdvance(partial.max_advance);
+              }}
+            />
           </section>
 
           {/* バリデーションエラー */}
@@ -260,6 +239,7 @@ function NeedlePage(): ReactElement {
       <div className="fixed bottom-14 left-0 right-0 z-40 border-t border-border bg-background p-3 lg:hidden">
         <div className="flex min-h-9 items-center gap-2">
           <Button
+            onPointerDown={commitActiveInput}
             onClick={executeSearch}
             disabled={!validation.isValid}
             size="sm"

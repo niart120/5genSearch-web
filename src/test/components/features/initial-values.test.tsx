@@ -4,6 +4,7 @@
  * WASM 依存の hooks・services をモックし、初期表示の default 値を検証する。
  */
 
+import userEvent from '@testing-library/user-event';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
@@ -22,12 +23,14 @@ vi.mock('@/wasm/wasm_pkg.js', () => ({
   init: vi.fn(),
 }));
 
+const needleSearch = vi.hoisted(() => vi.fn());
+
 // Workers / search hooks を一括モック
 vi.mock('@/features/needle/hooks/use-needle-search', () => ({
   useNeedleSearch: () => ({
     results: [],
     error: undefined,
-    search: vi.fn(),
+    search: needleSearch,
     clear: vi.fn(),
   }),
 }));
@@ -89,6 +92,38 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('NeedlePage 初期表示', () => {
+  it('範囲の見出しを統一し、確定した値をそのまま検索へ渡す', async () => {
+    const user = userEvent.setup();
+    const { NeedlePage } = await import('@/features/needle/components/needle-page');
+    useNeedleStore.setState({
+      seedMode: 'seed',
+      seedHex: '123456789ABCDEF0',
+      patternRaw: '0',
+      userOffset: 100,
+      maxAdvance: 200,
+      autoSearch: false,
+    });
+    needleSearch.mockClear();
+    render(
+      <I18nTestWrapper>
+        <NeedlePage />
+      </I18nTestWrapper>
+    );
+    expect(screen.queryByText('Advance Range')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('group', { name: 'Advance' })).toHaveLength(1);
+    const upper = screen.getByRole('spinbutton', { name: 'Max advance' });
+    await user.clear(upper);
+    await user.type(upper, '102');
+    await user.click(screen.getAllByRole('button', { name: 'Search' })[0]);
+    expect(needleSearch.mock.lastCall?.[2]).toMatchObject({ user_offset: 100, max_advance: 102 });
+    const lower = screen.getByRole('spinbutton', { name: 'Min advance' });
+    await user.clear(lower);
+    await user.type(lower, '103');
+    await user.tab();
+    expect(screen.getByText('Min advance must be ≤ max advance')).toBeInTheDocument();
+    for (const button of screen.getAllByRole('button', { name: 'Search' }))
+      expect(button).toBeDisabled();
+  });
   it('maxAdvance の初期値が 30 である', async () => {
     const { NeedlePage } = await import('@/features/needle/components/needle-page');
     render(
@@ -97,8 +132,8 @@ describe('NeedlePage 初期表示', () => {
       </I18nTestWrapper>
     );
 
-    // NumField id="max-advance" の input 要素を探す
-    const input = document.querySelector<HTMLInputElement>('#max-advance');
+    // 共通範囲入力の上限を確認する
+    const input = document.querySelector<HTMLInputElement>('[aria-label="Max advance"]');
     expect(input).not.toBeNull();
     expect(input?.value).toBe('30');
   });

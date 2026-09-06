@@ -240,22 +240,23 @@ function IvDatetimeSearchPage(): ReactElement {
 
           <SearchModeTabs disabled={isLoading}>
             <section className="flex flex-col gap-2">
-              <h3 id="mt-seed-heading" className="text-sm font-medium">
-                <Trans>MT Seed</Trans>
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setTemplateDialogOpen(true)}
-                disabled={isLoading}
-              >
-                <Trans>Template</Trans>
-              </Button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 id="mt-seed-heading" className="text-sm font-medium">
+                  <Trans>MT Seed</Trans>
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTemplateDialogOpen(true)}
+                  disabled={isLoading}
+                >
+                  <Trans>Template</Trans>
+                </Button>
+              </div>
 
               <TargetSeedsInput
                 value={targetSeedsRaw}
                 onChange={setTargetSeedsRaw}
-                parsedSeeds={parsedSeeds.seeds}
                 errors={translatedParseErrors}
                 disabled={isLoading}
               />
@@ -293,7 +294,7 @@ function IvDatetimeSearchPage(): ReactElement {
             columns={columns}
             data={results}
             className="flex-1"
-            emptyMessage={t`No results found. Please enter MT Seeds and start searching.`}
+            emptyMessage={t`No results found. Configure parameters and start searching.`}
             getRowId={(_row, index) => String(index)}
             initialSorting={DATETIME_ASC_SORTING}
           />

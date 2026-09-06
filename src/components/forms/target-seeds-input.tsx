@@ -5,28 +5,19 @@
  */
 
 import { Trans } from '@lingui/react/macro';
-import type { MtSeed } from '@/wasm/wasm_pkg';
 
 interface TargetSeedsInputProps {
   /** 生テキスト */
   value: string;
   /** テキスト変更コールバック */
   onChange: (raw: string) => void;
-  /** パース済み Seed 配列 */
-  parsedSeeds: MtSeed[];
   /** パースエラー一覧 */
   errors: { line: number; value: string; message: string }[];
   /** 無効化 */
   disabled?: boolean;
 }
 
-function TargetSeedsInput({
-  value,
-  onChange,
-  parsedSeeds,
-  errors,
-  disabled,
-}: TargetSeedsInputProps) {
+function TargetSeedsInput({ value, onChange, errors, disabled }: TargetSeedsInputProps) {
   return (
     <div className="flex flex-col gap-2">
       <textarea
@@ -38,9 +29,6 @@ function TargetSeedsInput({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
       />
-      <p className="text-xs text-muted-foreground">
-        <Trans>Valid seeds</Trans>: {parsedSeeds.length}
-      </p>
       {errors.length > 0 && (
         <ul className="text-xs text-destructive space-y-0.5">
           {errors.map((err) => (

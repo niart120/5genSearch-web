@@ -191,7 +191,7 @@ describe('pokemon-list: キャンセル', () => {
     });
 
     // 全件 (500 × 10 = 5000) より少ない結果で停止していること
-    const fullCount = origins.length * (GEN_CONFIG.max_advance - GEN_CONFIG.user_offset);
+    const fullCount = origins.length * (GEN_CONFIG.max_advance - GEN_CONFIG.user_offset + 1);
     expect(results.length).toBeLessThan(fullCount);
   }, 60_000);
 
@@ -242,7 +242,7 @@ describe('pokemon-list: キャンセル', () => {
       currentPool.start(firstTasks);
     });
 
-    expect(results).toHaveLength(GEN_CONFIG.max_advance - GEN_CONFIG.user_offset);
+    expect(results).toHaveLength(GEN_CONFIG.max_advance - GEN_CONFIG.user_offset + 1);
   }, 60_000);
 });
 

@@ -1,3 +1,4 @@
+import { AdvanceTooltip, NeedleTooltip } from '@/components/data-display/rng-tooltips';
 /**
  * タマゴ個体生成結果詳細ダイアログ
  *
@@ -14,6 +15,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { DetailRow } from '@/components/data-display/detail-row';
+import { EggMarginTooltip } from '@/components/data-display/egg-margin-tooltip';
 import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-names';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EggListResultView } from '@/lib/result-view';
@@ -58,7 +60,11 @@ function ResultDetailDialog({
           {ui.key_input !== undefined && <DetailRow label={t`Key input`} value={ui.key_input} />}
 
           {/* 個体データ */}
-          <DetailRow label={t`Needle`} value={getNeedleArrow(ui.needle_direction)} />
+          <DetailRow
+            help={<NeedleTooltip />}
+            label={t`Needle`}
+            value={getNeedleArrow(ui.needle_direction)}
+          />
           <DetailRow label={t`Species`} value={ui.species_name ?? '-'} />
           <DetailRow label={t`Nature`} value={ui.nature_name} />
           <DetailRow label={t`Ability`} value={ui.ability_name} />
@@ -83,9 +89,13 @@ function ResultDetailDialog({
           <DetailRow label="PID" value={ui.pid} />
 
           {/* 孵化情報 */}
-          <DetailRow label={t`Advance`} value={String(ui.advance)} />
+          <DetailRow help={<AdvanceTooltip />} label={t`Advance`} value={String(ui.advance)} />
           {ui.margin_frames !== undefined && (
-            <DetailRow label={t`Margin frames`} value={String(ui.margin_frames)} />
+            <DetailRow
+              label={t`Margin frames`}
+              value={String(ui.margin_frames)}
+              help={<EggMarginTooltip />}
+            />
           )}
         </div>
       </DialogContent>

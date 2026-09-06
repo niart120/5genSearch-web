@@ -63,6 +63,8 @@ pub fn generate_pokemon_list(
         ));
     }
 
+    config.advance_count().map_err(|e| JsValue::from_str(&e))?;
+
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = origins
         .into_iter()
@@ -97,6 +99,8 @@ pub fn generate_egg_list(
     config: GenerationConfig,
     filter: Option<EggFilter>,
 ) -> Result<Vec<GeneratedEggData>, JsValue> {
+    config.advance_count().map_err(|e| JsValue::from_str(&e))?;
+
     // 各 Seed に対して生成
     let results: Result<Vec<_>, String> = origins
         .into_iter()
@@ -129,7 +133,7 @@ fn generate_pokemon_for_seed(
 ) -> Result<Vec<GeneratedPokemonData>, String> {
     let mut generator = PokemonGenerator::new(origin, params, config, filter)?;
 
-    let count = config.max_advance - config.user_offset;
+    let count = config.advance_count()?;
     Ok(generator.take(count))
 }
 
@@ -143,7 +147,7 @@ fn generate_egg_for_seed(
     let base_seed = origin.base_seed();
     let mut generator = EggGenerator::new(base_seed, origin, params, config)?;
 
-    let count = config.max_advance - config.user_offset;
+    let count = config.advance_count()?;
     let eggs = generator.take(count);
     Ok(apply_egg_filter(eggs, filter))
 }

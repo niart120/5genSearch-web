@@ -71,7 +71,7 @@ export const usePokemonSearchStore = create<PokemonSearchState>()(
     }),
     {
       name: 'feature:pokemon-search',
-      version: 2,
+      version: 3,
       migrate: (state) => state as ReturnType<typeof getPokemonSearchInitialState>,
       partialize: ({ mode, statMode, dateRange, timeRange, keySpec, encounterParams, filter }) => ({
         mode,

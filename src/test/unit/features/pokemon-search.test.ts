@@ -114,20 +114,20 @@ describe('Pokemon search state and contracts', () => {
     ]);
   });
 
-  it('warns only above 50000 estimated matches and estimates zero-length ranges as zero', () => {
+  it('warns only above 50000 estimated matches and counts singleton ranges', () => {
     const request = createPokemonSearchRequest();
     request.context.time_range.second_end = 0;
     expect(
       estimatePokemonDatetimeSearchResults(
         request.context,
-        { ...request.genConfig, user_offset: 0, max_advance: 50_000 },
+        { ...request.genConfig, user_offset: 0, max_advance: 49_999 },
         request.filter
       ).exceedsThreshold
     ).toBe(false);
     expect(
       estimatePokemonDatetimeSearchResults(
         request.context,
-        { ...request.genConfig, user_offset: 0, max_advance: 50_001 },
+        { ...request.genConfig, user_offset: 0, max_advance: 50_000 },
         request.filter
       ).exceedsThreshold
     ).toBe(true);
@@ -137,7 +137,7 @@ describe('Pokemon search state and contracts', () => {
         { ...request.genConfig, max_advance: 6 },
         request.filter
       ).estimatedCount
-    ).toBe(0);
+    ).toBe(1);
   });
 
   it.each(['ivs', 'stats'] as const)(

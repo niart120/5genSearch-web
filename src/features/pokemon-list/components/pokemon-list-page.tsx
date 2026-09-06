@@ -116,8 +116,8 @@ function PokemonListPage(): ReactElement {
       SEEDS_EMPTY: t`Select or enter at least one seed`,
       SEEDS_INVALID: t`One or more seeds are invalid`,
       ENCOUNTER_SLOTS_EMPTY: t`Select a location or Pokémon`,
-      ADVANCE_RANGE_INVALID: t`Max advance must be ≥ start offset`,
-      OFFSET_NEGATIVE: t`Start offset must be ≥ 0`,
+      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
+      OFFSET_NEGATIVE: t`Min advance must be ≥ 0`,
     }),
     [t]
   );

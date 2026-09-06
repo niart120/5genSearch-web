@@ -63,6 +63,18 @@ describe('EggParamsForm', () => {
     });
   });
 
+  it('NPCの説明を操作してもチェック状態を変更しない', async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderForm();
+    await user.click(screen.getByRole('button', { name: 'About NPC advances' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Generates results accounting for RNG advances'
+    );
+    expect(screen.getByRole('checkbox', { name: 'Consider NPC' })).not.toBeChecked();
+    expect(onChange).not.toHaveBeenCalled();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
   it('折りたたみヘッダーが表示される', () => {
     renderForm();
     expect(screen.getByText('Egg parameters')).toBeInTheDocument();
@@ -163,7 +175,7 @@ describe('EggParamsForm', () => {
 
   it('offset / max_advance の入力フィールドが表示される', () => {
     renderForm();
-    expect(screen.getByLabelText('Start offset')).toBeInTheDocument();
+    expect(screen.getByLabelText('Min advance')).toBeInTheDocument();
     expect(screen.getByLabelText('Max advance')).toBeInTheDocument();
   });
 
@@ -172,7 +184,7 @@ describe('EggParamsForm', () => {
     const onGenConfigChange = vi.fn();
     renderForm({ onGenConfigChange });
 
-    const offsetInput = screen.getByLabelText('Start offset');
+    const offsetInput = screen.getByLabelText('Min advance');
     await user.clear(offsetInput);
     await user.type(offsetInput, '10');
     await user.tab();
@@ -188,7 +200,7 @@ describe('EggParamsForm', () => {
     const onGenConfigChange = vi.fn();
     const { rerender } = renderForm({ onChange, onGenConfigChange, syncKey: 0 });
 
-    const offsetInput = screen.getByLabelText('Start offset') as HTMLInputElement;
+    const offsetInput = screen.getByLabelText('Min advance') as HTMLInputElement;
     await user.clear(offsetInput);
     await user.type(offsetInput, '77');
     expect(offsetInput.value).toBe('77');

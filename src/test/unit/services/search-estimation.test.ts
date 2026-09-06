@@ -2,8 +2,10 @@
  * 検索結果件数の事前見積もりモジュールのユニットテスト
  */
 
+import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import { describe, it, expect } from 'vitest';
 import {
+  estimatePokemonDatetimeSearchResults,
   countDays,
   countValidSeconds,
   countKeyCombinations,
@@ -570,11 +572,11 @@ describe('estimateTidAdjustResults', () => {
 // ---------------------------------------------------------------------------
 
 describe('estimatePokemonListResults', () => {
-  it('seeds=100, advance=1000, offset=0, filter=none → 100,000 件、閾値超過', () => {
+  it('seeds=100, advance=1000, offset=0, filter=none → 100,100 件、閾値超過', () => {
     const result = estimatePokemonListResults(100, 1000, 0);
-    expect(result.searchSpaceSize).toBe(100_000);
+    expect(result.searchSpaceSize).toBe(100_100);
     expect(result.hitRate).toBe(1);
-    expect(result.estimatedCount).toBe(100_000);
+    expect(result.estimatedCount).toBe(100_100);
     expect(result.exceedsThreshold).toBe(true);
   });
 
@@ -593,7 +595,7 @@ describe('estimatePokemonListResults', () => {
     };
     const result = estimatePokemonListResults(100, 1000, 0, filter);
     expect(result.hitRate).toBeCloseTo(1 / 25);
-    expect(result.estimatedCount).toBeCloseTo(100_000 / 25);
+    expect(result.estimatedCount).toBeCloseTo(100_100 / 25);
   });
 });
 
@@ -614,13 +616,13 @@ describe('estimateEggListResults', () => {
     };
     const result = estimateEggListResults(10, 1000, 0, filter, true);
     expect(result.hitRate).toBeCloseTo(48 / 65_536);
-    expect(result.searchSpaceSize).toBe(10_000);
+    expect(result.searchSpaceSize).toBe(10_010);
   });
 
   it('フィルタ未指定 → hitRate=1.0', () => {
     const result = estimateEggListResults(10, 100, 0, undefined, false);
     expect(result.hitRate).toBe(1);
-    expect(result.estimatedCount).toBe(1000);
+    expect(result.estimatedCount).toBe(1010);
   });
 });
 
@@ -683,7 +685,15 @@ describe('estimateEggSearchResults', () => {
     const ranges: Timer0VCountRange[] = [
       { timer0_min: 0x6_00, timer0_max: 0x6_00, vcount_min: 0x50, vcount_max: 0x50 },
     ];
-    const result = estimateEggSearchResults(dateRange, timeRange, ranges, 1, undefined, false);
+    const result = estimateEggSearchResults(
+      dateRange,
+      timeRange,
+      ranges,
+      1,
+      { user_offset: 0, max_advance: 0 },
+      undefined,
+      false
+    );
     expect(result.hitRate).toBe(1);
     expect(result.searchSpaceSize).toBe(1); // 1*1*1*1
   });
@@ -696,5 +706,44 @@ describe('estimateEggSearchResults', () => {
 describe('DEFAULT_RESULT_WARNING_THRESHOLD', () => {
   it('50,000', () => {
     expect(DEFAULT_RESULT_WARNING_THRESHOLD).toBe(50_000);
+  });
+});
+
+describe('inclusive range estimates', () => {
+  it.each([
+    [100, 102, 3],
+    [100, 100, 1],
+    [0, 0, 1],
+    [2, 1, 0],
+  ])('counts %i..%i as %i positions before filtering', (min, max, count) => {
+    const request = createPokemonSearchRequest();
+    request.context.time_range.second_end = 0;
+    const { date_range, time_range, ranges } = request.context;
+    const config = { ...request.genConfig, user_offset: min, max_advance: max };
+    expect(estimatePokemonListResults(2, max, min).searchSpaceSize).toBe(2 * count);
+    expect(estimateEggListResults(2, max, min, undefined, false).searchSpaceSize).toBe(2 * count);
+    expect(
+      estimatePokemonDatetimeSearchResults(request.context, config, request.filter).searchSpaceSize
+    ).toBe(count);
+    const egg = estimateEggSearchResults(
+      date_range,
+      time_range,
+      ranges,
+      25,
+      config,
+      {
+        natures: ['Adamant'],
+        iv: undefined,
+        gender: undefined,
+        ability_slot: undefined,
+        shiny: undefined,
+        stats: undefined,
+        min_margin_frames: undefined,
+      },
+      false
+    );
+    expect(egg.searchSpaceSize).toBe(25 * count);
+    expect(egg.hitRate).toBe(1 / 25);
+    expect(egg.estimatedCount).toBe(count);
   });
 });
