@@ -20,7 +20,7 @@ import {
   copyToClipboard,
 } from '@/services/export';
 import type { ExportColumn, ExportMeta } from '@/services/export';
-import type { GameStartConfig, RomVersion } from '@/wasm/wasm_pkg';
+import type { DatetimeSearchContext, GameStartConfig, RomVersion } from '@/wasm/wasm_pkg';
 
 interface UseExportOptions<T> {
   data: readonly T[];
@@ -36,6 +36,8 @@ interface UseExportOptions<T> {
   gameStartOverride?: GameStartConfig;
   /** 結果生成時の ROM バージョン。現在のサイドバー設定より優先する。 */
   versionOverride?: RomVersion;
+  /** 日時検索結果の本体設定・起動範囲を検索開始時の値に固定する。 */
+  contextOverride?: Pick<DatetimeSearchContext, 'ds' | 'ranges'>;
 }
 
 interface UseExportReturn {
@@ -48,10 +50,24 @@ interface UseExportReturn {
 }
 
 function useExport<T>(options: UseExportOptions<T>): UseExportReturn {
-  const { data, columns, featureId, statMode, jsonExporter, gameStartOverride, versionOverride } =
-    options;
+  const {
+    data,
+    columns,
+    featureId,
+    statMode,
+    jsonExporter,
+    gameStartOverride,
+    versionOverride,
+    contextOverride,
+  } = options;
   const { t } = useLingui();
-  const { config, ranges, gameStart: storeGameStart } = useDsConfigReadonly();
+  const {
+    config: storeConfig,
+    ranges: storeRanges,
+    gameStart: storeGameStart,
+  } = useDsConfigReadonly();
+  const config = contextOverride?.ds ?? storeConfig;
+  const ranges = contextOverride?.ranges ?? storeRanges;
   const gameStart = gameStartOverride ?? storeGameStart;
   const exportConfig = useMemo(
     () => (versionOverride === undefined ? config : { ...config, version: versionOverride }),

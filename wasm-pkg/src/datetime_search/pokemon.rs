@@ -544,6 +544,33 @@ mod tests {
     }
 
     #[test]
+    fn shiny_types_and_locks_match_existing_generation() {
+        let mut p = params();
+        p.pokemon_params.encounter_type = EncounterType::Roamer;
+        let pid = reference(&p)[0].core.pid.0;
+        for (xor, filter, expected_type) in [
+            (0, ShinyFilter::Square, ShinyType::Square),
+            (1, ShinyFilter::Star, ShinyType::Star),
+        ] {
+            p.pokemon_params.trainer.tid =
+                ((pid >> 16) as u16) ^ u16::try_from(pid & 0xFFFF).unwrap() ^ xor;
+            p.pokemon_params.trainer.sid = 0;
+            p.filter.shiny = Some(filter);
+            let expected = reference(&p);
+            assert!(!expected.is_empty());
+            assert_eq!(expected[0].core.shiny_type, expected_type);
+            assert_eq!(
+                serde_json::to_string(&collect(p.clone(), 4, 1)).unwrap(),
+                serde_json::to_string(&expected).unwrap()
+            );
+        }
+        p.pokemon_params.slots[0].shiny_locked = true;
+        p.filter.shiny = Some(ShinyFilter::Shiny);
+        assert!(reference(&p).is_empty());
+        assert!(collect(p, 1, 1).is_empty());
+    }
+
+    #[test]
     fn rejects_invalid_input_instead_of_reporting_no_matches() {
         let modifications: Vec<fn(&mut PokemonDatetimeSearchParams)> = vec![
             |p| p.ds.version = RomVersion::White,
@@ -590,5 +617,87 @@ mod tests {
                 .is_err()
         );
         assert_eq!(searcher.processed_count, 0);
+    }
+
+    #[test]
+    #[ignore = "release ビルドで手動実行する性能測定"]
+    fn measure_datetime_pipeline() {
+        use std::time::{Duration, Instant};
+        fn measure(p: PokemonDatetimeSearchParams, condition: &str) {
+            let encounter = p.pokemon_params.encounter_type;
+            let n = p.search_range.range_seconds;
+            let a = p.gen_config.max_advance;
+            let start = Instant::now();
+            let mut searcher = PokemonDatetimeSearcher::new(p).unwrap();
+            let mut max_batch = Duration::ZERO;
+            let mut matches = 0;
+            while !searcher.is_done() {
+                let batch_start = Instant::now();
+                let batch = searcher
+                    .next_batch(PokemonSearchBatchLimits {
+                        max_candidates: 1024,
+                        max_results: 256,
+                    })
+                    .unwrap();
+                max_batch = max_batch.max(batch_start.elapsed());
+                matches += batch.results.len();
+            }
+            println!(
+                "{encounter:?},{n},{a},{condition},{:.3},{:.3},{matches}",
+                start.elapsed().as_secs_f64() * 1000.0,
+                max_batch.as_secs_f64() * 1000.0
+            );
+        }
+        if let Ok(condition) = std::env::var("POKEMON_PERF_CONDITION") {
+            let mut p = params();
+            p.search_range.start_second_offset = 0;
+            p.search_range.range_seconds = 10000;
+            p.gen_config.user_offset = 0;
+            p.gen_config.max_advance = 1000;
+            if condition == "none" {
+                p.filter.species_ids = Some(vec![1]);
+            }
+            measure(p, &condition);
+            return;
+        }
+        println!("encounter,N,A,condition,elapsed_ms,max_batch_ms,matches");
+        for encounter in [
+            EncounterType::Roamer,
+            EncounterType::StaticSymbol,
+            EncounterType::Normal,
+        ] {
+            for n in [1000, 10000] {
+                for a in [30, 1000, 10000] {
+                    let mut p = params();
+                    p.search_range.start_second_offset = 0;
+                    p.search_range.range_seconds = n;
+                    p.gen_config.user_offset = 0;
+                    p.gen_config.max_advance = a;
+                    p.pokemon_params.encounter_type = encounter;
+                    p.filter.shiny = Some(ShinyFilter::Shiny);
+                    measure(p, "shiny");
+                }
+            }
+            for condition in [
+                "all", "none", "nature", "species", "gender", "ability", "level",
+            ] {
+                let mut p = params();
+                p.search_range.start_second_offset = 0;
+                p.search_range.range_seconds = 1000;
+                p.gen_config.user_offset = 0;
+                p.gen_config.max_advance = 30;
+                p.pokemon_params.encounter_type = encounter;
+                match condition {
+                    "none" => p.filter.species_ids = Some(vec![1]),
+                    "nature" => p.filter.natures = Some(vec![Nature::Jolly]),
+                    "species" => p.filter.species_ids = Some(vec![25]),
+                    "gender" => p.filter.gender = Some(Gender::Female),
+                    "ability" => p.filter.ability_slot = Some(AbilitySlot::First),
+                    "level" => p.filter.level_range = Some((5, 5)),
+                    _ => {}
+                }
+                measure(p, condition);
+            }
+        }
     }
 }

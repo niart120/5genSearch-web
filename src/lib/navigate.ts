@@ -1,3 +1,6 @@
+import { usePokemonSearchStore } from '@/features/pokemon-search/store';
+import { usePokemonListStore } from '@/features/pokemon-list/store';
+import type { EncounterParamsOutput } from '@/features/pokemon-list/types';
 /**
  * ナビゲーションアクション
  *
@@ -14,6 +17,7 @@ import { useUiStore } from '@/stores/settings/ui';
  * MT Seed 検索結果を起動時刻検索へ引き渡してページ遷移する
  */
 export function navigateToDatetimeSearch(seeds: MtSeed[]): void {
+  usePokemonSearchStore.getState().setMode('iv');
   useSearchResultsStore.getState().setPendingTargetSeeds(seeds);
   useUiStore.getState().navigateToFeature('datetime-search');
 }
@@ -27,4 +31,19 @@ export function navigateWithSeedOrigins(
 ): void {
   useSearchResultsStore.getState().setPendingSeedOrigins(origins, target);
   useUiStore.getState().navigateToFeature(target);
+}
+
+/** 選択個体の検索時設定を転記する。消費範囲・フィルター・共通設定は転記先が保持する。 */
+export function navigateToPokemonListFromSearch(
+  origin: SeedOrigin,
+  encounter: EncounterParamsOutput
+): void {
+  usePokemonListStore.getState().setEncounterParams((current) => ({
+    ...structuredClone(encounter),
+    genConfig: current.genConfig,
+  }));
+  useSearchResultsStore.setState((state) => ({
+    pendingDetailOrigins: { ...state.pendingDetailOrigins, 'pokemon-list': origin },
+  }));
+  useUiStore.getState().navigateToFeature('pokemon-list');
 }

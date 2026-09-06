@@ -6,6 +6,7 @@ import {
 } from '@/wasm/wasm_pkg.js';
 import type { GeneratedPokemonData, PokemonDatetimeSearchParams } from '@/wasm/wasm_pkg.js';
 import { WorkerPool } from '@/services/worker-pool';
+import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import {
   runSearchInWorker,
@@ -162,6 +163,29 @@ describe('Pokemon datetime search', () => {
     });
     expect(results).toHaveLength(7);
     expect(results.every((data) => data.advance === 6)).toBe(true);
+  });
+
+  it('rejects invalid startup ranges while preserving overlapping range expansion', () => {
+    const request = createPokemonSearchRequest();
+    const build = () =>
+      generate_pokemon_search_tasks(
+        request.context,
+        request.pokemonParams,
+        request.genConfig,
+        request.filter,
+        1
+      );
+    const range = request.context.ranges[0];
+    request.context.ranges = [];
+    expect(build).toThrow('Invalid startup ranges');
+    request.context.ranges = [{ ...range, timer0_max: range.timer0_min - 1 }];
+    expect(build).toThrow('Invalid startup ranges');
+    request.context.ranges = [range, range];
+    const tasks = build();
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0]).toEqual(tasks[1]);
+    request.context.date_range.start_day = 32;
+    expect(build).toThrow();
   });
 
   it('completes zero-position tasks and reports zero progress counts', async () => {

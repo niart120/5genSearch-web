@@ -10,7 +10,7 @@ export const CATEGORY_LABELS: Record<Category, () => ReactElement> = {
 };
 
 export const FEATURE_LABELS: Record<FeatureId, () => ReactElement> = {
-  'datetime-search': () => <Trans>Datetime Search</Trans>,
+  'datetime-search': () => <Trans>Pokémon search</Trans>,
   'egg-search': () => <Trans>Egg Search</Trans>,
   'pokemon-list': () => <Trans>Pokemon</Trans>,
   'egg-list': () => <Trans>Egg</Trans>,

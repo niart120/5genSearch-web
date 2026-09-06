@@ -4,7 +4,7 @@
  * PokemonListResultView の表示用フィールドを表示する Radix Dialog。
  */
 
-import { type ReactElement } from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import {
   Dialog,
@@ -22,12 +22,14 @@ interface ResultDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   result: PokemonListResultView | undefined;
+  children?: ReactNode;
 }
 
 function ResultDetailDialog({
   open,
   onOpenChange,
   result,
+  children,
 }: ResultDetailDialogProps): ReactElement | undefined {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
@@ -100,6 +102,7 @@ function ResultDetailDialog({
           )}
           <DetailRow label={t`Encounter result`} value={ui.encounter_result} />
         </div>
+        {children}
       </DialogContent>
     </Dialog>
   );

@@ -1,3 +1,6 @@
+import { PokemonSearchPage } from '@/features/pokemon-search/components/pokemon-search-page';
+import { SearchModeTabs } from '@/features/pokemon-search/components/search-mode-tabs';
+import { usePokemonSearchStore } from '@/features/pokemon-search/store';
 /**
  * 起動時刻検索ページコンポーネント
  *
@@ -44,7 +47,7 @@ interface DatetimeSearchRequest {
 /*  DatetimeSearchPage                                                 */
 /* ------------------------------------------------------------------ */
 
-function DatetimeSearchPage(): ReactElement {
+function IvDatetimeSearchPage(): ReactElement {
   const { t } = useLingui();
 
   // DS 設定 (サイドバーで管理済み)
@@ -235,27 +238,29 @@ function DatetimeSearchPage(): ReactElement {
             disabled={isLoading}
           />
 
-          <section className="flex flex-col gap-2">
-            <h3 id="mt-seed-heading" className="text-sm font-medium">
-              <Trans>MT Seed</Trans>
-            </h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTemplateDialogOpen(true)}
-              disabled={isLoading}
-            >
-              <Trans>Template</Trans>
-            </Button>
+          <SearchModeTabs disabled={isLoading}>
+            <section className="flex flex-col gap-2">
+              <h3 id="mt-seed-heading" className="text-sm font-medium">
+                <Trans>MT Seed</Trans>
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTemplateDialogOpen(true)}
+                disabled={isLoading}
+              >
+                <Trans>Template</Trans>
+              </Button>
 
-            <TargetSeedsInput
-              value={targetSeedsRaw}
-              onChange={setTargetSeedsRaw}
-              parsedSeeds={parsedSeeds.seeds}
-              errors={translatedParseErrors}
-              disabled={isLoading}
-            />
-          </section>
+              <TargetSeedsInput
+                value={targetSeedsRaw}
+                onChange={setTargetSeedsRaw}
+                parsedSeeds={parsedSeeds.seeds}
+                errors={translatedParseErrors}
+                disabled={isLoading}
+              />
+            </section>
+          </SearchModeTabs>
 
           {/* バリデーションエラー */}
           {validation.errors.length > 0 ? (
@@ -341,6 +346,11 @@ function DatetimeSearchPage(): ReactElement {
       />
     </>
   );
+}
+
+function DatetimeSearchPage(): ReactElement {
+  const mode = usePokemonSearchStore((state) => state.mode);
+  return mode === 'pokemon' ? <PokemonSearchPage /> : <IvDatetimeSearchPage />;
 }
 
 export { DatetimeSearchPage };

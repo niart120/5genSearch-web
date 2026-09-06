@@ -25,7 +25,7 @@ describe('FeatureTabs', () => {
 
   it('search カテゴリで 2 つのタブが表示される', () => {
     renderFeatureTabs();
-    expect(screen.getByRole('tab', { name: 'Datetime Search' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Pokémon search' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Egg Search' })).toBeInTheDocument();
   });
 

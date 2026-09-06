@@ -16,6 +16,9 @@ import type {
   TrainerInfoFilter,
   EggFilter,
   PokemonFilter,
+  DatetimeSearchContext,
+  GenerationConfig,
+  PokemonDatetimeSearchFilter,
 } from '../wasm/wasm_pkg.js';
 
 // ---------------------------------------------------------------------------
@@ -445,4 +448,25 @@ export function estimateEggListResults(
   const generated = seedCount * Math.max(maxAdvance - userOffset, 0);
   const hitRate = estimateEggFilterHitRate(masudaMethod, filter);
   return buildEstimation(generated, hitRate, threshold);
+}
+
+/** 種族・レベルは概算に反映しない。性格等は既存の独立確率モデルを使う。 */
+export function estimatePokemonDatetimeSearchResults(
+  context: DatetimeSearchContext,
+  config: GenerationConfig,
+  filter: PokemonDatetimeSearchFilter,
+  threshold = DEFAULT_RESULT_WARNING_THRESHOLD
+): EstimationResult {
+  const origins = calculateDatetimeSearchSpace(
+    context.date_range,
+    context.time_range,
+    context.ranges,
+    countKeyCombinations(context.key_spec)
+  );
+  const rate = estimateCoreDataFilterHitRate({ ...filter, iv: undefined, stats: undefined });
+  return buildEstimation(
+    origins * Math.max(0, config.max_advance - config.user_offset),
+    rate,
+    threshold
+  );
 }

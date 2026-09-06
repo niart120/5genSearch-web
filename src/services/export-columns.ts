@@ -458,3 +458,14 @@ export {
   createMtseedSearchExportColumns,
   createTidAdjustExportColumns,
 };
+
+/** 検索結果では起動条件を通常の出力にも含める。 */
+export function createPokemonSearchExportColumns(
+  statMode: StatDisplayMode
+): ExportColumn<PokemonListResultView>[] {
+  const columns = createPokemonListExportColumns(statMode);
+  const startupKeys = new Set(['datetime', 'timer0', 'vcount', 'key_input']);
+  return columns.map((column) =>
+    startupKeys.has(column.key) ? { ...column, detailOnly: false } : column
+  );
+}
