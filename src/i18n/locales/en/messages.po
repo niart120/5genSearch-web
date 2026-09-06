@@ -180,7 +180,7 @@ msgstr "Cancel"
 msgid "Category"
 msgstr "Category"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:241
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:228
 msgid "Check in Pokémon list"
 msgstr "Check in Pokémon list"
 
@@ -473,7 +473,7 @@ msgstr "Filter"
 #~ msgid "Filter (optional)"
 #~ msgstr "Filter (optional)"
 
-#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:43
+#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:45
 msgid "Filters"
 msgstr "Filters"
 
@@ -829,7 +829,7 @@ msgstr "No results found. Configure parameters and start searching."
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:226
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:213
 msgid "No results found. Set Pokémon conditions and start searching."
 msgstr "No results found. Set Pokémon conditions and start searching."
 
@@ -995,12 +995,9 @@ msgstr "Reset all saved data?"
 
 #: src/components/forms/egg-filter-form.tsx:351
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:446
+#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:53
 msgid "Reset filter"
 msgstr "Reset filter"
-
-#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:51
-msgid "Reset filters"
-msgstr "Reset filters"
 
 #: src/features/about/components/app-storage-reset-section.tsx:42
 msgid "Reset saved data"
@@ -1038,7 +1035,7 @@ msgstr "Result details"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:319
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:205
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:192
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
 msgstr "Results"
@@ -1303,7 +1300,7 @@ msgstr "Startup condition details"
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:331
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:217
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:204
 msgid "Stats"
 msgstr "Stats"
 
@@ -1469,7 +1466,3 @@ msgstr "Very rare (1%)"
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:232
 msgid "With save"
 msgstr "With save"
-
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:190
-msgid "Without filters, all Pokémon in the specified range are returned."
-msgstr "Without filters, all Pokémon in the specified range are returned."

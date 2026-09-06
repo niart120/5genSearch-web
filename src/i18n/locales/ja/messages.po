@@ -180,7 +180,7 @@ msgstr "キャンセル"
 msgid "Category"
 msgstr "種別"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:241
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:228
 msgid "Check in Pokémon list"
 msgstr "個体生成リストで確認"
 
@@ -469,7 +469,7 @@ msgstr "フィルター"
 #~ msgid "Filter (optional)"
 #~ msgstr "フィルター (任意)"
 
-#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:43
+#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:45
 msgid "Filters"
 msgstr "絞り込み条件"
 
@@ -825,7 +825,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:226
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:213
 msgid "No results found. Set Pokémon conditions and start searching."
 msgstr "結果がありません。対象と条件を設定して検索してください。"
 
@@ -991,12 +991,9 @@ msgstr "すべての保存データを初期化しますか？"
 
 #: src/components/forms/egg-filter-form.tsx:351
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:446
+#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:53
 msgid "Reset filter"
 msgstr "フィルターリセット"
-
-#: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:51
-msgid "Reset filters"
-msgstr "絞り込みをリセット"
 
 #: src/features/about/components/app-storage-reset-section.tsx:42
 msgid "Reset saved data"
@@ -1034,7 +1031,7 @@ msgstr "結果の詳細"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:319
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:205
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:192
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
 msgstr "検索結果"
@@ -1299,7 +1296,7 @@ msgstr "起動条件の詳細"
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:331
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:217
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:204
 msgid "Stats"
 msgstr "ステータス"
 
@@ -1465,7 +1462,3 @@ msgstr "ごくまれに (1%)"
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:232
 msgid "With save"
 msgstr "セーブあり"
-
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:190
-msgid "Without filters, all Pokémon in the specified range are returned."
-msgstr "絞り込みを指定しない場合、指定範囲のすべてのポケモンを返します。"

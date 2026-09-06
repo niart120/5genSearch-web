@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Trans } from '@lingui/react/macro';
+import { Trans, useLingui } from '@lingui/react/macro';
+import { RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NatureSelect } from '@/components/forms/nature-select';
 import { GenderSelect } from '@/components/forms/gender-select';
@@ -24,6 +25,7 @@ export function PokemonSearchFilterForm({
   availableSpecies: EncounterSpeciesOption[];
   disabled?: boolean;
 }) {
+  const { t } = useLingui();
   const language = useUiStore((state) => state.language);
   const species = useMemo(
     () => [...new Map(availableSpecies.map((item) => [item.speciesId, item])).values()],
@@ -44,11 +46,13 @@ export function PokemonSearchFilterForm({
         </h3>
         <Button
           variant="ghost"
-          size="sm"
+          size="icon"
+          className="size-6"
           onClick={() => onChange({ ...EMPTY_POKEMON_SEARCH_FILTER })}
           disabled={disabled}
+          aria-label={t`Reset filter`}
         >
-          <Trans>Reset filters</Trans>
+          <RotateCcw className="size-3.5" aria-hidden="true" />
         </Button>
       </div>
       <div className="grid grid-cols-2 gap-2">

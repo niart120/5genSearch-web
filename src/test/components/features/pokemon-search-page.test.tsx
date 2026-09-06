@@ -142,7 +142,7 @@ describe('PokemonSearchPage', () => {
     const before = usePokemonSearchStore.getState();
     act(() => before.setEncounterParams((previous) => ({ ...previous, availableSpecies: [] })));
     expect(usePokemonSearchStore.getState().filter.species_ids).toEqual([25]);
-    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filter' }));
     const after = usePokemonSearchStore.getState();
     expect(after.filter).toEqual(EMPTY_POKEMON_SEARCH_FILTER);
     expect(after.dateRange).toEqual(before.dateRange);
@@ -155,7 +155,7 @@ describe('PokemonSearchPage', () => {
     renderPage();
     expect(screen.getByRole('tab', { name: 'Search by IVs' })).toBeDisabled();
     expect(screen.getByRole('tab', { name: 'Search by shininess / nature' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Reset filters' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset filter' })).toBeDisabled();
     fireEvent.click(screen.getByRole('tab', { name: 'Search by IVs' }));
     expect(usePokemonSearchStore.getState().mode).toBe('pokemon');
   });
