@@ -9,7 +9,11 @@ import { ShinySelect } from '@/components/forms/shiny-select';
 import { LevelRangeInput } from '@/components/forms/level-range-input';
 import { SpeciesSelect } from '@/components/forms/species-select';
 import { get_species_name } from '@/wasm/wasm_pkg.js';
-import type { PokemonDatetimeSearchFilter } from '@/wasm/wasm_pkg.js';
+import {
+  getPokemonFilterVisibility,
+  type PokemonFilterContext,
+  type PokemonSearchFilterInput as PokemonDatetimeSearchFilter,
+} from '@/lib/search-filter-context';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
 import { useUiStore } from '@/stores/settings/ui';
 import { EMPTY_POKEMON_SEARCH_FILTER } from '../types';
@@ -18,14 +22,17 @@ export function PokemonSearchFilterForm({
   value,
   onChange,
   availableSpecies,
+  context,
   disabled,
 }: {
   value: PokemonDatetimeSearchFilter;
   onChange: (value: PokemonDatetimeSearchFilter) => void;
   availableSpecies: EncounterSpeciesOption[];
+  context: PokemonFilterContext;
   disabled?: boolean;
 }) {
   const { t } = useLingui();
+  const visible = getPokemonFilterVisibility(context);
   const language = useUiStore((state) => state.language);
   const species = useMemo(
     () => [...new Map(availableSpecies.map((item) => [item.speciesId, item])).values()],
@@ -56,43 +63,58 @@ export function PokemonSearchFilterForm({
         </Button>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <ShinySelect
-          value={value.shiny}
-          onChange={(shiny) => update({ shiny })}
-          disabled={disabled}
-        />
+        {visible.shiny && (
+          <ShinySelect
+            value={value.shiny}
+            onChange={(shiny) => update({ shiny })}
+            disabled={disabled}
+          />
+        )}
         <NatureSelect
           value={value.natures ?? []}
           onChange={(natures) => update({ natures: natures.length > 0 ? natures : undefined })}
           disabled={disabled}
         />
-        <GenderSelect
-          value={value.gender}
-          onChange={(gender) => update({ gender })}
-          disabled={disabled}
-        />
-        <AbilitySlotSelect
-          value={value.ability_slot}
-          onChange={(ability_slot) => update({ ability_slot })}
-          disabled={disabled}
-        />
-        <LevelRangeInput
-          value={value.level_range}
-          onChange={(level_range) => update({ level_range })}
-          disabled={disabled}
-        />
+        {visible.gender && (
+          <GenderSelect
+            value={value.gender}
+            onChange={(gender) => update({ gender })}
+            disabled={disabled}
+          />
+        )}
+        {visible.ability && (
+          <AbilitySlotSelect
+            showHidden={false}
+            value={value.ability_slot}
+            onChange={(ability_slot) => update({ ability_slot })}
+            disabled={disabled}
+          />
+        )}
+        {visible.level && (
+          <LevelRangeInput
+            enabled={value.levelEnabled ?? value.level_range !== undefined}
+            onEnabledChange={(levelEnabled) =>
+              update({ levelEnabled, level_range: value.level_range ?? [1, 100] })
+            }
+            value={value.level_range}
+            onChange={(level_range) => update({ level_range })}
+            disabled={disabled}
+          />
+        )}
       </div>
-      <SpeciesSelect
-        uniqueSpecies={species}
-        speciesNames={names}
-        selectedIds={value.species_ids ?? []}
-        onToggle={(id, checked) => {
-          const ids = value.species_ids ?? [];
-          const next = checked ? [...ids, id] : ids.filter((item) => item !== id);
-          update({ species_ids: next.length > 0 ? next : undefined });
-        }}
-        disabled={disabled}
-      />
+      {visible.species && (
+        <SpeciesSelect
+          uniqueSpecies={species}
+          speciesNames={names}
+          selectedIds={value.species_ids ?? []}
+          onToggle={(id, checked) => {
+            const ids = value.species_ids ?? [];
+            const next = checked ? [...ids, id] : ids.filter((item) => item !== id);
+            update({ species_ids: next.length > 0 ? next : undefined });
+          }}
+          disabled={disabled}
+        />
+      )}
     </section>
   );
 }

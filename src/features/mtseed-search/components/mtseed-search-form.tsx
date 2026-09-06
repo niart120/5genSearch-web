@@ -9,10 +9,9 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { IvRangeInput } from '@/components/forms/iv-range-input';
-import { HiddenPowerSelect } from '@/components/forms/hidden-power-select';
+import { IvFilterFields } from '@/components/forms/iv-filter-fields';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
-import type { IvFilter, HiddenPowerType } from '@/wasm/wasm_pkg.js';
+import type { IvFilterInput as IvFilter } from '@/lib/search-filter-context';
 
 interface MtseedSearchFormProps {
   ivFilter: IvFilter;
@@ -34,29 +33,6 @@ function MtseedSearchForm({
   disabled,
 }: MtseedSearchFormProps): ReactElement {
   const { t } = useLingui();
-
-  const handleIvRangeChange = (
-    value: Pick<IvFilter, 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'>
-  ) => {
-    onIvFilterChange({
-      ...ivFilter,
-      ...value,
-    });
-  };
-
-  const handleHiddenPowerTypesChange = (types: HiddenPowerType[]) => {
-    onIvFilterChange({
-      ...ivFilter,
-      hidden_power_types: types.length > 0 ? types : undefined,
-    });
-  };
-
-  const handleMinPowerChange = (minPower: number | undefined) => {
-    onIvFilterChange({
-      ...ivFilter,
-      hidden_power_min_power: minPower,
-    });
-  };
 
   return (
     <div className="space-y-4">
@@ -96,27 +72,7 @@ function MtseedSearchForm({
         </div>
       </div>
 
-      {/* IV 範囲入力 */}
-      <div className="space-y-1.5">
-        <Label>
-          <Trans>IV Range</Trans>
-        </Label>
-        <IvRangeInput value={ivFilter} onChange={handleIvRangeChange} disabled={disabled} />
-      </div>
-
-      {/* めざパ条件 */}
-      <div className="space-y-1.5">
-        <Label>
-          <Trans>Hidden Power</Trans>
-        </Label>
-        <HiddenPowerSelect
-          value={ivFilter.hidden_power_types ?? []}
-          onChange={handleHiddenPowerTypesChange}
-          minPower={ivFilter.hidden_power_min_power}
-          onMinPowerChange={handleMinPowerChange}
-          disabled={disabled}
-        />
-      </div>
+      <IvFilterFields value={ivFilter} onChange={onIvFilterChange} disabled={disabled} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { useTrainerStore } from '@/stores/settings/trainer';
 import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
+import { encounterSlotKey } from '@/lib/encounter-slot-context';
 
 const state = vi.hoisted(() => ({
   loading: false,
@@ -61,7 +62,10 @@ describe('PokemonSearchPage', () => {
       dateRange: request.context.date_range,
       timeRange: request.context.time_range,
       keySpec: request.context.key_spec,
-      encounterParams: request.encounterParams,
+      encounterParams: {
+        ...request.encounterParams,
+        slotsContextKey: encounterSlotKey(request.encounterParams, request.genConfig.version),
+      },
     });
     useDsConfigStore.setState({
       config: request.context.ds,
@@ -88,6 +92,37 @@ describe('PokemonSearchPage', () => {
         pokemonParams: expect.objectContaining({ trainer: { tid: 0, sid: 0 } }),
       })
     );
+  });
+
+  it('色違いブロック対象では保存した条件を除外し、未設定IDでも検索できる', () => {
+    const store = usePokemonSearchStore.getState();
+    store.setEncounterParams((previous) => ({
+      ...previous,
+      slots: previous.slots.map((slot) => ({ ...slot, shiny_locked: true })),
+    }));
+    store.setFilter({
+      ...EMPTY_POKEMON_SEARCH_FILTER,
+      shiny: 'Shiny',
+      gender: 'Male',
+      species_ids: [25],
+      level_range: [90, 1],
+      ability_slot: 'Hidden',
+    });
+    renderPage();
+    expect(searchButton()).toBeEnabled();
+    fireEvent.click(searchButton());
+    expect(state.start.mock.lastCall?.[0].filter).toEqual(EMPTY_POKEMON_SEARCH_FILTER);
+    expect(usePokemonSearchStore.getState().filter.shiny).toBe('Shiny');
+  });
+
+  it('変更した対象のスロットが未取得なら検索を開始しない', () => {
+    usePokemonSearchStore
+      .getState()
+      .setEncounterParams((previous) => ({ ...previous, staticEntryId: 'victini' }));
+    renderPage();
+    expect(searchButton()).toBeDisabled();
+    fireEvent.click(searchButton());
+    expect(state.start).not.toHaveBeenCalled();
   });
 
   it('blocks a shiny search before confirmation for each missing ID but permits zero IDs', () => {

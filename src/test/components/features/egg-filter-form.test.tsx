@@ -1,3 +1,7 @@
+import { useState } from 'react';
+import { getEggListInitialState } from '@/features/egg-list/store';
+import type { EggFilterInput } from '@/lib/search-filter-context';
+const eggParams = { ...getEggListInitialState().eggParams, consider_npc: true };
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -18,11 +22,25 @@ const DEFAULT_FILTER: EggFilter = {
 
 function renderFilterForm(props: Partial<Parameters<typeof EggFilterForm>[0]> = {}) {
   const onChange = props.onChange ?? vi.fn();
+  function Harness() {
+    const [value, setValue] = useState<EggFilterInput | undefined>(props.value ?? DEFAULT_FILTER);
+    return (
+      <EggFilterForm
+        eggParams={eggParams}
+        {...props}
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          onChange(next);
+        }}
+      />
+    );
+  }
   return {
     onChange,
     ...render(
       <I18nTestWrapper>
-        <EggFilterForm value={DEFAULT_FILTER} onChange={onChange} {...props} />
+        <Harness />
       </I18nTestWrapper>
     ),
   };
@@ -70,7 +88,7 @@ describe('EggFilterForm', () => {
     const user = userEvent.setup();
     renderFilterForm();
     await openFilter(user);
-    expect(screen.getByLabelText('Min margin frames')).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Min margin frames' })).toBeInTheDocument();
   });
 
   it('min_margin_frames 変更で onChange が呼ばれる', async () => {
@@ -79,7 +97,8 @@ describe('EggFilterForm', () => {
     renderFilterForm({ onChange });
     await openFilter(user);
 
-    const marginInput = screen.getByLabelText('Min margin frames');
+    await user.click(screen.getByRole('checkbox', { name: 'Enable minimum margin frames' }));
+    const marginInput = screen.getByRole('spinbutton', { name: 'Min margin frames' });
     await user.clear(marginInput);
     await user.type(marginInput, '5');
     await user.tab();
@@ -160,7 +179,7 @@ describe('EggFilterForm', () => {
 
     // ON → OFF: onChange(undefined)
     await user.click(toggle);
-    expect(onChange.mock.lastCall?.[0]).toBeUndefined();
+    expect(onChange.mock.lastCall?.[0]).toMatchObject({ enabled: false, shiny: 'Star' });
 
     // OFF → ON: onChange で内部保持値が復元 (shiny: 'Star')
     onChange.mockClear();
@@ -181,17 +200,31 @@ describe('EggFilterForm', () => {
 
     const toggle = screen.getByRole('switch');
     await user.click(toggle);
-    expect(onChange.mock.lastCall?.[0]).toBeUndefined();
+    expect(onChange.mock.lastCall?.[0]).toMatchObject({ enabled: false });
 
     rerender(
       <I18nTestWrapper>
-        <EggFilterForm value={undefined} onChange={onChange} showToggle showReset syncKey={0} />
+        <EggFilterForm
+          eggParams={eggParams}
+          value={undefined}
+          onChange={onChange}
+          showToggle
+          showReset
+          syncKey={0}
+        />
       </I18nTestWrapper>
     );
 
     rerender(
       <I18nTestWrapper>
-        <EggFilterForm value={undefined} onChange={onChange} showToggle showReset syncKey={1} />
+        <EggFilterForm
+          eggParams={eggParams}
+          value={undefined}
+          onChange={onChange}
+          showToggle
+          showReset
+          syncKey={1}
+        />
       </I18nTestWrapper>
     );
 

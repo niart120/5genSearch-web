@@ -6,6 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { normalizeEggFilter } from '@/lib/search-filter-context';
 import {
   generate_egg_search_tasks,
   resolve_egg_data_batch,
@@ -79,6 +80,22 @@ const genConfig: GenerationConfig = {
 };
 
 describe('EggDatetimeSearch Integration', () => {
+  it('不適用の孵化条件を除外してから日時検索タスクを生成する', () => {
+    const applied = normalizeEggFilter(
+      { ability_slot: 'Hidden', min_margin_frames: 0 },
+      undefined,
+      eggParams
+    );
+    const filtered = generate_egg_search_tasks(testContext, eggParams, genConfig, applied, 1);
+    const baseline = generate_egg_search_tasks(testContext, eggParams, genConfig, undefined, 1);
+    expect(filtered).toEqual(baseline);
+    const searcher = new EggDatetimeSearcher(filtered[0]);
+    try {
+      expect(searcher.next_batch(1000).results.length).toBeGreaterThan(0);
+    } finally {
+      searcher.free();
+    }
+  });
   it('タスク生成で複数タスクに分割される', () => {
     const tasks = generate_egg_search_tasks(testContext, eggParams, genConfig, undefined, 4);
     expect(tasks.length).toBeGreaterThanOrEqual(1);

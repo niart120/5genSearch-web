@@ -1,3 +1,4 @@
+import type { EggFilterInput as EggFilter } from '@/lib/search-filter-context';
 /**
  * 孵化起動時刻検索 Feature Store
  *
@@ -17,7 +18,6 @@ import type {
   KeySpec,
   EggGenerationParams,
   GenerationConfig,
-  EggFilter,
   EggDatetimeSearchResult,
   Ivs,
 } from '@/wasm/wasm_pkg.js';
@@ -154,7 +154,8 @@ export const useEggSearchStore = create<EggSearchState & EggSearchActions>()(
     }),
     {
       name: 'feature:egg-search',
-      version: 1,
+      version: 2,
+      migrate: (state) => state as ReturnType<typeof getEggSearchInitialState>,
       partialize: (state) => ({
         dateRange: state.dateRange,
         timeRange: state.timeRange,

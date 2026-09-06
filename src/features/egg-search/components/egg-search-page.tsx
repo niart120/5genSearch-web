@@ -1,3 +1,4 @@
+import { normalizeEggFilter } from '@/lib/search-filter-context';
 /**
  * 孵化起動時刻検索ページコンポーネント
  *
@@ -79,7 +80,7 @@ function EggSearchPage(): ReactElement {
         keySpec,
         eggParams,
         genConfig: genConfigPartial,
-        filter,
+        filter: normalizeEggFilter(filter, undefined, eggParams),
       }),
     [dateRange, timeRange, keySpec, eggParams, genConfigPartial, filter]
   );
@@ -139,13 +140,14 @@ function EggSearchPage(): ReactElement {
       genConfig: state.genConfig,
       filter: state.filter,
     });
+    const appliedFilter = normalizeEggFilter(form.filter, undefined, form.eggParams);
     const currentValidation = validateEggSearchForm({
       dateRange: form.dateRange,
       timeRange: form.timeRange,
       keySpec: form.keySpec,
       eggParams: form.eggParams,
       genConfig: form.genConfig,
-      filter: form.filter,
+      filter: appliedFilter,
     });
     if (!currentValidation.isValid) return;
 
@@ -176,7 +178,12 @@ function EggSearchPage(): ReactElement {
       max_advance: form.genConfig.max_advance,
     };
 
-    return { context, params: paramsWithTrainer, genConfig: fullGenConfig, filter: form.filter };
+    return {
+      context,
+      params: paramsWithTrainer,
+      genConfig: fullGenConfig,
+      filter: appliedFilter,
+    };
   }, []);
 
   // 見積もり → 確認 → 実行
@@ -237,6 +244,7 @@ function EggSearchPage(): ReactElement {
           />
 
           <EggFilterForm
+            eggParams={eggParams}
             value={filter}
             onChange={setFilter}
             syncKey={formRevision}

@@ -7,43 +7,31 @@ import { SpeciesSelect } from '@/components/forms/species-select';
  * statMode に応じて IV / 実ステータスフィルターを切り替える。
  */
 
-import { useState, useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
+import { useState, useCallback, useMemo, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { IvRangeInput } from '@/components/forms/iv-range-input';
 import { NatureSelect } from '@/components/forms/nature-select';
-import { HiddenPowerSelect } from '@/components/forms/hidden-power-select';
 import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
 import { GenderSelect } from '@/components/forms/gender-select';
 import { ShinySelect } from '@/components/forms/shiny-select';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
 import { LevelRangeInput } from '@/components/forms/level-range-input';
-import { HeldItemSlotSelect } from '@/components/forms/held-item-slot-select';
 import { EncounterResultSelect } from '@/components/forms/encounter-result-select';
 import { cn } from '@/lib/utils';
-import { IV_STAT_KEYS } from '@/lib/game-data-names';
-import { isSpecialEncounterType } from './encounter-constants';
+import { IvFilterFields } from '@/components/forms/iv-filter-fields';
+import {
+  getPokemonFilterVisibility,
+  type PokemonFilterInput as PokemonFilter,
+} from '@/lib/search-filter-context';
 
 import { get_species_name } from '@/wasm/wasm_pkg.js';
 import { useUiStore } from '@/stores/settings/ui';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
-import type {
-  PokemonFilter,
-  IvFilter,
-  Nature,
-  Gender,
-  AbilitySlot,
-  ShinyFilter,
-  HiddenPowerType,
-  StatsFilter,
-  EncounterType,
-  EncounterResultFilter,
-  HeldItemSlot,
-} from '@/wasm/wasm_pkg.js';
+import type { IvFilter, StatsFilter, EncounterType, EncounterSlotConfig } from '@/wasm/wasm_pkg.js';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 
 // ---------------------------------------------------------------------------
@@ -58,6 +46,7 @@ interface PokemonFilterFormProps {
   statMode: StatDisplayMode;
   availableSpecies: EncounterSpeciesOption[];
   encounterType: EncounterType;
+  slots?: EncounterSlotConfig[];
   syncKey?: number;
   disabled?: boolean;
 }
@@ -99,31 +88,6 @@ const DEFAULT_FILTER: PokemonFilter = {
 };
 
 // ---------------------------------------------------------------------------
-// Conditional display sets
-// ---------------------------------------------------------------------------
-
-const HELD_ITEM_ENCOUNTER_TYPES: Set<EncounterType> = new Set([
-  'Surfing',
-  'SurfingBubble',
-  'Fishing',
-  'FishingBubble',
-  'ShakingGrass',
-]);
-
-const ENCOUNTER_RESULT_ENCOUNTER_TYPES: Set<EncounterType> = new Set([
-  'DustCloud',
-  'PokemonShadow',
-  'Fishing',
-]);
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
-
 function PokemonFilterForm({
   value,
   onChange,
@@ -132,39 +96,20 @@ function PokemonFilterForm({
   statMode,
   availableSpecies,
   encounterType,
-  syncKey,
+  slots = [],
   disabled,
 }: PokemonFilterFormProps): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
   const [isOpen, setIsOpen] = useState(false);
 
-  // フィルター有効/無効トグル (内部状態を保持したまま切り替え)
-  const [filterEnabled, setFilterEnabled] = useState(true);
-
-  // 内部フィルタ状態 (トグル OFF 時も保持)
-  const [internalFilter, setInternalFilter] = useState<PokemonFilter>(value ?? DEFAULT_FILTER);
-  const [internalStats, setInternalStats] = useState<StatsFilter>(
-    statsFilter ?? DEFAULT_STATS_FILTER
+  const internalFilter = value ?? DEFAULT_FILTER;
+  const internalStats = statsFilter ?? DEFAULT_STATS_FILTER;
+  const filterEnabled = internalFilter.enabled !== false;
+  const visible = getPokemonFilterVisibility(
+    { encounterType, slots },
+    internalFilter.encounter_result_filter
   );
-  const skipNextPropSyncRef = useRef(false);
-  const lastSyncKeyRef = useRef(syncKey);
-
-  useEffect(() => {
-    const syncKeyChanged = lastSyncKeyRef.current !== syncKey;
-    lastSyncKeyRef.current = syncKey;
-    if (!syncKeyChanged && skipNextPropSyncRef.current) {
-      skipNextPropSyncRef.current = false;
-      return;
-    }
-    skipNextPropSyncRef.current = false;
-    setInternalFilter(value ?? DEFAULT_FILTER);
-    setInternalStats(statsFilter ?? DEFAULT_STATS_FILTER);
-    if (syncKeyChanged) {
-      setFilterEnabled(true);
-    }
-  }, [value, statsFilter, syncKey]);
-
   // species 名前解決 (WASM 経由)
   const speciesIds = useMemo(() => availableSpecies.map((s) => s.speciesId), [availableSpecies]);
   const effectiveSpeciesNames = useMemo(() => {
@@ -176,234 +121,23 @@ function PokemonFilterForm({
     return map;
   }, [speciesIds, language]);
 
-  // --- propagation helpers ---
-
-  const hasAnyFilter = useCallback((f: PokemonFilter): boolean => {
-    return (
-      f.iv !== undefined ||
-      (f.natures !== undefined && f.natures.length > 0) ||
-      f.gender !== undefined ||
-      f.ability_slot !== undefined ||
-      f.shiny !== undefined ||
-      (f.species_ids !== undefined && f.species_ids.length > 0) ||
-      f.level_range !== undefined ||
-      (f.held_item_slots !== undefined && f.held_item_slots.length > 0) ||
-      f.encounter_result_filter !== undefined ||
-      f.special_encounter_triggered !== undefined
-    );
-  }, []);
-
-  const isStatsDefault = useCallback((s: StatsFilter): boolean => {
-    return IV_STAT_KEYS.every((k) => s[k] === undefined);
-  }, []);
-
-  const propagate = useCallback(
-    (f: PokemonFilter, s: StatsFilter, enabled: boolean) => {
-      if (!enabled) {
-        onChange();
-        onStatsFilterChange();
-        return;
-      }
-      onChange(hasAnyFilter(f) ? f : undefined);
-      onStatsFilterChange(isStatsDefault(s) ? undefined : s);
-    },
-    [onChange, onStatsFilterChange, hasAnyFilter, isStatsDefault]
-  );
-
-  // --- 条件付き表示判定 ---
-
-  const showHeldItem = HELD_ITEM_ENCOUNTER_TYPES.has(encounterType);
-  const showEncounterResult = ENCOUNTER_RESULT_ENCOUNTER_TYPES.has(encounterType);
-  const showSpecialEncounter = isSpecialEncounterType(encounterType);
-
-  // encounterType 変更時に非表示フィルタを undefined で伝播
-  const prevEncounterType = useRef(encounterType);
-  useEffect(() => {
-    if (prevEncounterType.current === encounterType) return;
-    prevEncounterType.current = encounterType;
-    const nextHeldItem = HELD_ITEM_ENCOUNTER_TYPES.has(encounterType)
-      ? internalFilter.held_item_slots
-      : undefined;
-    const nextEncResult = ENCOUNTER_RESULT_ENCOUNTER_TYPES.has(encounterType)
-      ? internalFilter.encounter_result_filter
-      : undefined;
-    const nextSpecialEncounter = isSpecialEncounterType(encounterType)
-      ? internalFilter.special_encounter_triggered
-      : undefined;
-    const next = {
-      ...internalFilter,
-      held_item_slots: nextHeldItem,
-      encounter_result_filter: nextEncResult,
-      special_encounter_triggered: nextSpecialEncounter,
-    };
-    // 内部状態は保持し、親への伝播値のみ調整
-    skipNextPropSyncRef.current = true;
-    propagate(next, internalStats, filterEnabled);
-  }, [encounterType, internalFilter, internalStats, filterEnabled, propagate]);
-
-  // --- update helpers ---
-
   const updateFilter = useCallback(
     (partial: Partial<PokemonFilter>) => {
-      const next = { ...internalFilter, ...partial };
-      setInternalFilter(next);
-      propagate(next, internalStats, filterEnabled);
+      onChange({ ...internalFilter, ...partial });
     },
-    [internalFilter, internalStats, filterEnabled, propagate]
+    [internalFilter, onChange]
   );
-
-  const updateStats = useCallback(
-    (next: StatsFilter) => {
-      setInternalStats(next);
-      propagate(internalFilter, next, filterEnabled);
-    },
-    [internalFilter, filterEnabled, propagate]
-  );
-
-  // --- handlers ---
-
-  const handleToggleEnabled = useCallback(
-    (checked: boolean) => {
-      setFilterEnabled(checked);
-      if (!checked) {
-        skipNextPropSyncRef.current = true;
-      }
-      propagate(internalFilter, internalStats, checked);
-    },
-    [internalFilter, internalStats, propagate]
-  );
-
-  const handleReset = useCallback(() => {
-    setInternalFilter(DEFAULT_FILTER);
-    setInternalStats(DEFAULT_STATS_FILTER);
+  const updateStats = onStatsFilterChange;
+  const handleToggleEnabled = (enabled: boolean) => updateFilter({ enabled });
+  const handleReset = () => {
     onChange();
     onStatsFilterChange();
-  }, [onChange, onStatsFilterChange]);
-
-  const handleIvChange = useCallback(
-    (ivs: Pick<IvFilter, 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'>) => {
-      const allDefault =
-        ivs.hp[0] === 0 &&
-        ivs.hp[1] === 31 &&
-        ivs.atk[0] === 0 &&
-        ivs.atk[1] === 31 &&
-        ivs.def[0] === 0 &&
-        ivs.def[1] === 31 &&
-        ivs.spa[0] === 0 &&
-        ivs.spa[1] === 31 &&
-        ivs.spd[0] === 0 &&
-        ivs.spd[1] === 31 &&
-        ivs.spe[0] === 0 &&
-        ivs.spe[1] === 31;
-      // 既存の hidden_power 設定を保持
-      const existingIv = internalFilter.iv;
-      const nextIv =
-        allDefault &&
-        !existingIv?.hidden_power_types &&
-        existingIv?.hidden_power_min_power === undefined
-          ? undefined
-          : {
-              ...DEFAULT_IV_FILTER,
-              ...ivs,
-              hidden_power_types: existingIv?.hidden_power_types,
-              hidden_power_min_power: existingIv?.hidden_power_min_power,
-            };
-      updateFilter({ iv: nextIv });
-    },
-    [internalFilter.iv, updateFilter]
-  );
-
-  const handleHiddenPowerTypesChange = useCallback(
-    (types: HiddenPowerType[]) => {
-      const existing = internalFilter.iv ?? DEFAULT_IV_FILTER;
-      updateFilter({
-        iv: {
-          ...existing,
-          hidden_power_types: types.length > 0 ? types : undefined,
-        },
-      });
-    },
-    [internalFilter.iv, updateFilter]
-  );
-
-  const handleHiddenPowerMinPowerChange = useCallback(
-    (minPower?: number) => {
-      const existing = internalFilter.iv ?? DEFAULT_IV_FILTER;
-      updateFilter({
-        iv: {
-          ...existing,
-          hidden_power_min_power: minPower,
-        },
-      });
-    },
-    [internalFilter.iv, updateFilter]
-  );
-
-  const handleAbilitySlotChange = useCallback(
-    (slot: AbilitySlot | undefined) => {
-      updateFilter({ ability_slot: slot });
-    },
-    [updateFilter]
-  );
-
-  const handleGenderChange = useCallback(
-    (gender: Gender | undefined) => {
-      updateFilter({ gender });
-    },
-    [updateFilter]
-  );
-
-  const handleNaturesChange = useCallback(
-    (natures: Nature[]) => {
-      updateFilter({ natures: natures.length > 0 ? natures : undefined });
-    },
-    [updateFilter]
-  );
-
-  const handleShinyChange = useCallback(
-    (shiny: ShinyFilter | undefined) => {
-      updateFilter({ shiny });
-    },
-    [updateFilter]
-  );
-
-  const handleSpeciesToggle = useCallback(
-    (speciesId: number, checked: boolean) => {
-      const current = internalFilter.species_ids ?? [];
-      const next = checked ? [...current, speciesId] : current.filter((id) => id !== speciesId);
-      updateFilter({ species_ids: next.length > 0 ? next : undefined });
-    },
-    [internalFilter.species_ids, updateFilter]
-  );
-
-  const handleLevelRangeChange = useCallback(
-    (range: [number, number] | undefined) => {
-      updateFilter({ level_range: range });
-    },
-    [updateFilter]
-  );
-
-  const handleHeldItemSlotsChange = useCallback(
-    (slots: HeldItemSlot[]) => {
-      updateFilter({ held_item_slots: slots.length > 0 ? slots : undefined });
-    },
-    [updateFilter]
-  );
-
-  const handleEncounterResultChange = useCallback(
-    (filter: EncounterResultFilter | undefined) => {
-      updateFilter({ encounter_result_filter: filter });
-    },
-    [updateFilter]
-  );
-
-  const handleSpecialEncounterChange = useCallback(
-    (checked: boolean) => {
-      updateFilter({ special_encounter_triggered: checked ? true : undefined });
-    },
-    [updateFilter]
-  );
-
+  };
+  const handleSpeciesToggle = (speciesId: number, checked: boolean) => {
+    const ids = internalFilter.species_ids ?? [];
+    const next = checked ? [...ids, speciesId] : ids.filter((id) => id !== speciesId);
+    updateFilter({ species_ids: next.length > 0 ? next : undefined });
+  };
   const ivValue = internalFilter.iv ?? DEFAULT_IV_FILTER;
 
   // 種族選択用 (重複排除)
@@ -452,7 +186,7 @@ function PokemonFilterForm({
       {isOpen && (
         <div className={cn('flex flex-col gap-3 pl-1', filterDisabled && 'opacity-50')}>
           {/* 1a. 実ステータスフィルター (Stats モード時) */}
-          {statMode === 'stats' && (
+          {visible.pokemon && statMode === 'stats' && (
             <div className="flex flex-col gap-1">
               <Label className="text-xs">
                 <Trans>Stats filter</Trans>
@@ -466,57 +200,68 @@ function PokemonFilterForm({
           )}
 
           {/* 1b. IV フィルター (IV モード時) */}
-          {statMode === 'ivs' && (
-            <>
-              <IvRangeInput value={ivValue} onChange={handleIvChange} disabled={filterDisabled} />
-
-              {/* めざパタイプ + 威力下限 (IV モード時のみ) */}
-              <HiddenPowerSelect
-                value={internalFilter.iv?.hidden_power_types ?? []}
-                onChange={handleHiddenPowerTypesChange}
-                minPower={internalFilter.iv?.hidden_power_min_power}
-                onMinPowerChange={handleHiddenPowerMinPowerChange}
-                disabled={filterDisabled}
-              />
-            </>
+          {visible.pokemon && statMode === 'ivs' && (
+            <IvFilterFields
+              value={ivValue}
+              onChange={(iv) => updateFilter({ iv })}
+              disabled={filterDisabled}
+            />
           )}
 
           {/* 2-5. 個体属性系 (2列グリッド) */}
           <div className="grid grid-cols-2 gap-2">
-            <AbilitySlotSelect
-              value={internalFilter.ability_slot}
-              onChange={handleAbilitySlotChange}
-              disabled={filterDisabled}
-            />
+            {visible.ability && (
+              <AbilitySlotSelect
+                showHidden={false}
+                value={internalFilter.ability_slot}
+                onChange={(ability_slot) => updateFilter({ ability_slot })}
+                disabled={filterDisabled}
+              />
+            )}
 
-            <GenderSelect
-              value={internalFilter.gender}
-              onChange={handleGenderChange}
-              disabled={filterDisabled}
-            />
+            {visible.gender && (
+              <GenderSelect
+                value={internalFilter.gender}
+                onChange={(gender) => updateFilter({ gender })}
+                disabled={filterDisabled}
+              />
+            )}
 
-            <NatureSelect
-              value={internalFilter.natures ?? []}
-              onChange={handleNaturesChange}
-              disabled={filterDisabled}
-            />
+            {visible.pokemon && (
+              <NatureSelect
+                value={internalFilter.natures ?? []}
+                onChange={(natures) => updateFilter({ natures })}
+                disabled={filterDisabled}
+              />
+            )}
 
-            <ShinySelect
-              value={internalFilter.shiny}
-              onChange={handleShinyChange}
-              disabled={filterDisabled}
-            />
+            {visible.shiny && (
+              <ShinySelect
+                value={internalFilter.shiny}
+                onChange={(shiny) => updateFilter({ shiny })}
+                disabled={filterDisabled}
+              />
+            )}
 
             {/* レベル範囲 (min / max を2列に配置) */}
-            <LevelRangeInput
-              value={internalFilter.level_range}
-              onChange={handleLevelRangeChange}
-              disabled={filterDisabled}
-            />
+            {visible.level && (
+              <LevelRangeInput
+                enabled={internalFilter.levelEnabled ?? internalFilter.level_range !== undefined}
+                onEnabledChange={(levelEnabled) =>
+                  updateFilter({
+                    levelEnabled,
+                    level_range: internalFilter.level_range ?? [1, 100],
+                  })
+                }
+                value={internalFilter.level_range}
+                onChange={(level_range) => updateFilter({ level_range })}
+                disabled={filterDisabled}
+              />
+            )}
           </div>
 
           {/* エンカウント系 (条件付き表示) */}
-          {uniqueSpecies.length > 0 && (
+          {visible.species && uniqueSpecies.length > 0 && (
             <SpeciesSelect
               uniqueSpecies={uniqueSpecies}
               speciesNames={effectiveSpeciesNames}
@@ -526,29 +271,23 @@ function PokemonFilterForm({
             />
           )}
 
-          {showHeldItem && (
-            <HeldItemSlotSelect
-              value={internalFilter.held_item_slots ?? []}
-              onChange={handleHeldItemSlotsChange}
-              disabled={filterDisabled}
-            />
-          )}
-
-          {showEncounterResult && (
+          {visible.encounterResult && (
             <EncounterResultSelect
-              value={internalFilter.encounter_result_filter}
-              onChange={handleEncounterResultChange}
+              value={visible.appliedResult}
+              onChange={(encounter_result_filter) => updateFilter({ encounter_result_filter })}
               encounterType={encounterType}
               disabled={filterDisabled}
             />
           )}
 
-          {showSpecialEncounter ? (
+          {visible.special ? (
             <label className="flex cursor-pointer items-center gap-2 text-xs">
               <Checkbox
                 id="special-encounter-triggered"
                 checked={internalFilter.special_encounter_triggered === true}
-                onCheckedChange={(checked) => handleSpecialEncounterChange(checked === true)}
+                onCheckedChange={(checked) =>
+                  updateFilter({ special_encounter_triggered: checked === true ? true : undefined })
+                }
                 disabled={filterDisabled}
               />
               <Trans>Special encounter only</Trans>

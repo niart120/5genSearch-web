@@ -8,6 +8,7 @@ import type { GeneratedPokemonData, PokemonDatetimeSearchParams } from '@/wasm/w
 import { WorkerPool } from '@/services/worker-pool';
 import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
+import { normalizePokemonSearchFilter } from '@/lib/search-filter-context';
 import {
   runSearchInWorker,
   createTestDsConfig,
@@ -60,6 +61,26 @@ export function pokemonSearchParams(): PokemonDatetimeSearchParams {
 }
 
 describe('Pokemon datetime search', () => {
+  it('ブロック対象の非表示条件を除外した日時検索が未指定の検索と一致する', async () => {
+    const params = pokemonSearchParams();
+    params.pokemon_params.slots[0].shiny_locked = true;
+    const expected = await runSearchInWorker({ kind: 'pokemon-datetime', params });
+    params.filter = normalizePokemonSearchFilter(
+      {
+        shiny: 'Shiny',
+        gender: 'Male',
+        level_range: [90, 100],
+        species_ids: [1],
+        ability_slot: 'Hidden',
+      },
+      {
+        encounterType: params.pokemon_params.encounter_type,
+        slots: params.pokemon_params.slots,
+      }
+    );
+    expect(expected.length).toBeGreaterThan(0);
+    expect(await runSearchInWorker({ kind: 'pokemon-datetime', params })).toEqual(expected);
+  });
   let pool: WorkerPool | undefined;
   afterEach(() => pool?.dispose());
 

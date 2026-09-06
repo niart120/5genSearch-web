@@ -1,3 +1,4 @@
+import type { PokemonSearchFilterInput as PokemonDatetimeSearchFilter } from '@/lib/search-filter-context';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
@@ -5,7 +6,7 @@ import {
   type EncounterParamsOutput,
 } from '@/features/pokemon-list/types';
 import { getDatetimeSearchInitialState } from '@/features/datetime-search/store';
-import type { GeneratedPokemonData, PokemonDatetimeSearchFilter } from '@/wasm/wasm_pkg.js';
+import type { GeneratedPokemonData } from '@/wasm/wasm_pkg.js';
 import type { StatDisplayMode } from '@/lib/game-data-names';
 import {
   EMPTY_POKEMON_SEARCH_FILTER,
@@ -70,7 +71,8 @@ export const usePokemonSearchStore = create<PokemonSearchState>()(
     }),
     {
       name: 'feature:pokemon-search',
-      version: 1,
+      version: 2,
+      migrate: (state) => state as ReturnType<typeof getPokemonSearchInitialState>,
       partialize: ({ mode, statMode, dateRange, timeRange, keySpec, encounterParams, filter }) => ({
         mode,
         statMode,

@@ -8,25 +8,18 @@ import { getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
 import type { IvStatKey } from '@/lib/game-data-names';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { useUiStore } from '@/stores/settings/ui';
-import type { IvFilter } from '@/wasm/wasm_pkg';
+import { isIvRangeEnabled, type IvFilterInput } from '@/lib/search-filter-context';
 
 const IV_MIN = 0;
 const IV_MAX = 31;
-const IV_MAX_WITH_UNKNOWN = 32;
 
-type IvRangeValue = Pick<IvFilter, 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'>;
+type IvRangeValue = IvFilterInput;
 
 interface IvRangeInputProps {
   /** 現在の IV フィルタ値 (6 ステータスの min/max) */
   value: IvRangeValue;
   /** 値変更コールバック */
   onChange: (value: IvRangeValue) => void;
-  /**
-   * 「不明(任意)」トグルを表示するかどうか。
-   * true の場合、各ステータス行に Checkbox を表示し、
-   * ON にすると max=32 (IV_VALUE_UNKNOWN を含む任意) として扱う。
-   */
-  allowUnknown?: boolean;
   /** 無効化 */
   disabled?: boolean;
 }
@@ -60,11 +53,11 @@ function IvStatRow({
   const [localMax, setLocalMax] = React.useState(String(max));
 
   React.useEffect(() => {
-    setLocalMin(isUnknown ? '' : String(min));
+    setLocalMin(String(min));
   }, [min, isUnknown]);
 
   React.useEffect(() => {
-    setLocalMax(isUnknown ? '' : String(max > IV_MAX ? '' : max));
+    setLocalMax(String(Math.min(31, max)));
   }, [max, isUnknown]);
 
   const handleMinBlur = () => {
@@ -135,10 +128,10 @@ function IvStatRow({
   );
 }
 
-function IvRangeInput({ value, onChange, allowUnknown, disabled }: IvRangeInputProps) {
+function IvRangeInput({ value, onChange, disabled }: IvRangeInputProps) {
   const language = useUiStore((s) => s.language);
 
-  const gridCols = allowUnknown ? 'grid-cols-[auto_1fr_1fr_auto]' : 'grid-cols-[auto_1fr_1fr]';
+  const gridCols = 'grid-cols-[auto_1fr_1fr_auto]';
 
   return (
     <div>
@@ -146,22 +139,20 @@ function IvRangeInput({ value, onChange, allowUnknown, disabled }: IvRangeInputP
         <span className="text-xs text-muted-foreground" />
         <span className="text-xs text-muted-foreground text-center">min</span>
         <span className="text-xs text-muted-foreground text-center">max</span>
-        {allowUnknown && (
-          <span className="text-xs text-muted-foreground text-center">
-            <Trans>Any</Trans>
-          </span>
-        )}
+        <span className="text-xs text-muted-foreground text-center">
+          <Trans>Any</Trans>
+        </span>
       </div>
       <div className={cn('grid items-center gap-x-2 gap-y-1', gridCols)}>
         {IV_STAT_KEYS.map((key) => {
-          const isUnknown = value[key][1] === IV_MAX_WITH_UNKNOWN;
+          const isUnknown = !isIvRangeEnabled(value, key);
           return (
             <IvStatRow
               key={key}
               label={getStatLabel(key, language)}
               statKey={key}
               min={value[key][0]}
-              max={value[key][1]}
+              max={Math.min(31, value[key][1])}
               disabled={disabled}
               onMinChange={(min) => {
                 const clampedMin = Math.min(min, value[key][1]);
@@ -171,12 +162,13 @@ function IvRangeInput({ value, onChange, allowUnknown, disabled }: IvRangeInputP
                 const clampedMax = Math.max(max, value[key][0]);
                 onChange({ ...value, [key]: [value[key][0], clampedMax] });
               }}
-              showUnknown={allowUnknown}
+              showUnknown
               isUnknown={isUnknown}
               onUnknownChange={(checked) => {
                 onChange({
                   ...value,
-                  [key]: checked ? [IV_MIN, IV_MAX_WITH_UNKNOWN] : [IV_MIN, IV_MAX],
+                  [key]: [value[key][0], Math.min(31, value[key][1])],
+                  enabledStats: { ...value.enabledStats, [key]: !checked },
                 });
               }}
             />

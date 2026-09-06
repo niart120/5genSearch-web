@@ -1,3 +1,5 @@
+import { normalizePokemonFilter } from '@/lib/search-filter-context';
+import { hasCurrentEncounterSlots } from '@/lib/encounter-slot-context';
 /**
  * ポケモンリスト生成ページコンポーネント
  *
@@ -46,26 +48,6 @@ interface PokemonListRequest {
   filter: PokemonFilter | undefined;
 }
 
-function mergePokemonFilter(
-  filter: PokemonFilter | undefined,
-  statsFilter: PokemonFilter['stats']
-): PokemonFilter | undefined {
-  if (!filter && !statsFilter) return;
-  return {
-    iv: filter?.iv,
-    natures: filter?.natures,
-    gender: filter?.gender,
-    ability_slot: filter?.ability_slot,
-    shiny: filter?.shiny,
-    species_ids: filter?.species_ids,
-    level_range: filter?.level_range,
-    held_item_slots: filter?.held_item_slots,
-    encounter_result_filter: filter?.encounter_result_filter,
-    special_encounter_triggered: filter?.special_encounter_triggered,
-    stats: statsFilter,
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Page Component
 // ---------------------------------------------------------------------------
@@ -95,6 +77,8 @@ function PokemonListPage(): ReactElement {
   const statsFilter = usePokemonListStore((s) => s.statsFilter);
   const setStatsFilter = usePokemonListStore((s) => s.setStatsFilter);
   const formRevision = usePokemonListStore((s) => s.formRevision);
+  const statMode = usePokemonListStore((s) => s.statMode);
+  const setStatMode = usePokemonListStore((s) => s.setStatMode);
 
   // 生成フック
   const {
@@ -119,11 +103,11 @@ function PokemonListPage(): ReactElement {
           encounterType: encounterParams.encounterType,
           encounterMethod: encounterParams.encounterMethod,
           genConfig: encounterParams.genConfig,
-          filter,
+          filter: normalizePokemonFilter(filter, statsFilter, encounterParams, statMode),
         },
-        encounterParams.slots.length > 0
+        hasCurrentEncounterSlots(encounterParams, dsConfig.version)
       ),
-    [seedInputMode, seedOrigins, encounterParams, filter]
+    [seedInputMode, seedOrigins, encounterParams, filter, statsFilter, statMode, dsConfig.version]
   );
 
   // バリデーションメッセージ
@@ -145,10 +129,6 @@ function PokemonListPage(): ReactElement {
     () => results.find((result) => result.raw === selectedRawResult),
     [results, selectedRawResult]
   );
-
-  // ステータス/IV 表示切替 (Feature Store)
-  const statMode = usePokemonListStore((s) => s.statMode);
-  const setStatMode = usePokemonListStore((s) => s.setStatMode);
 
   const handleSelectResult = useCallback((result: PokemonListResultView) => {
     setSelectedRawResult(result.raw);
@@ -191,8 +171,15 @@ function PokemonListPage(): ReactElement {
       encounterParams: state.encounterParams,
       filter: state.filter,
       statsFilter: state.statsFilter,
+      statMode: state.statMode,
     });
     const origins = structuredClone(form.seedOrigins);
+    const appliedFilter = normalizePokemonFilter(
+      form.filter,
+      form.statsFilter,
+      form.encounterParams,
+      form.statMode
+    );
     const currentValidation = validatePokemonListForm(
       {
         seedInputMode: form.seedInputMode,
@@ -200,9 +187,9 @@ function PokemonListPage(): ReactElement {
         encounterType: form.encounterParams.encounterType,
         encounterMethod: form.encounterParams.encounterMethod,
         genConfig: form.encounterParams.genConfig,
-        filter: form.filter,
+        filter: appliedFilter,
       },
-      form.encounterParams.slots.length > 0
+      hasCurrentEncounterSlots(form.encounterParams, useDsConfigStore.getState().config.version)
     );
     if (!currentValidation.isValid) return;
 
@@ -231,7 +218,7 @@ function PokemonListPage(): ReactElement {
       origins,
       params,
       genConfig: fullGenConfig,
-      filter: mergePokemonFilter(form.filter, form.statsFilter),
+      filter: appliedFilter,
     };
   }, []);
 
@@ -298,6 +285,11 @@ function PokemonListPage(): ReactElement {
             onStatsFilterChange={setStatsFilter}
             statMode={statMode}
             availableSpecies={encounterParams.availableSpecies}
+            slots={
+              hasCurrentEncounterSlots(encounterParams, dsConfig.version)
+                ? encounterParams.slots
+                : []
+            }
             encounterType={encounterParams.encounterType}
             syncKey={formRevision}
             disabled={isLoading}

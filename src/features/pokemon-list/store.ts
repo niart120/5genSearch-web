@@ -1,3 +1,4 @@
+import type { PokemonFilterInput as PokemonFilter } from '@/lib/search-filter-context';
 /**
  * ポケモンリスト Feature Store
  *
@@ -8,7 +9,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_ENCOUNTER_PARAMS, type EncounterParamsOutput } from './types';
 import type {
-  PokemonFilter,
   StatsFilter,
   GeneratedPokemonData,
   EncounterType,
@@ -139,7 +139,8 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
     }),
     {
       name: 'feature:pokemon-list',
-      version: 1,
+      version: 2,
+      migrate: (state) => state as ReturnType<typeof getPokemonListInitialState>,
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,
         seedInput: state.seedInput,
