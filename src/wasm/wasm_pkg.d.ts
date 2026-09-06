@@ -618,6 +618,19 @@ export interface PokemonFilter extends CoreDataFilter {
 }
 
 /**
+ * ポケモン条件による日時検索の単一タスク。
+ */
+export interface PokemonDatetimeSearchParams {
+    ds: DsConfig;
+    time_range: TimeRangeParams;
+    search_range: SearchRangeParams;
+    condition: StartupCondition;
+    pokemon_params: PokemonGenerationParams;
+    gen_config: GenerationConfig;
+    filter: PokemonDatetimeSearchFilter;
+}
+
+/**
  * ポケモン生成パラメータ
  *
  * `GenerationConfig` を含まない。生成条件のみを定義。
@@ -678,6 +691,26 @@ export interface NeedleSearchResult {
 export type NeedleDirection = "N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW";
 
 /**
+ * 一回の同期呼び出しで処理・返却する上限。検索全体の打ち切りには使わない。
+ */
+export interface PokemonSearchBatchLimits {
+    max_candidates: number;
+    max_results: number;
+}
+
+/**
+ * 個体値に依存しない日時検索条件。空の配列は条件なしとして扱う。
+ */
+export interface PokemonDatetimeSearchFilter {
+    shiny: ShinyFilter | undefined;
+    natures: Nature[] | undefined;
+    species_ids: number[] | undefined;
+    gender: Gender | undefined;
+    ability_slot: AbilitySlot | undefined;
+    level_range: [number, number] | undefined;
+}
+
+/**
  * 個体値セット (構造体版)
  *
  * 各フィールドは 0-31 の通常値、または 32 (Unknown) を取る。
@@ -696,6 +729,15 @@ export interface Ivs {
  * 先頭ポケモンの特性効果
  */
 export type LeadAbilityEffect = "None" | { Synchronize: Nature } | "CompoundEyes";
+
+/**
+ * 処理済み件数は不一致を含む消費位置数。
+ */
+export interface PokemonDatetimeSearchBatch {
+    results: GeneratedPokemonData[];
+    processed_count: bigint;
+    total_count: bigint;
+}
 
 /**
  * 卵生成パラメータ
@@ -1488,6 +1530,25 @@ export class MtseedSearcher {
 }
 
 /**
+ * 日時の4件取得と消費位置の双方をバッチ間で保持する。
+ */
+export class PokemonDatetimeSearcher {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * # Errors
+     * 不正な日時・生成条件・検索条件を拒否する。
+     */
+    constructor(params: PokemonDatetimeSearchParams);
+    /**
+     * # Errors
+     * バッチ上限が0、または起動時の生成器初期化に失敗した場合。
+     */
+    next_batch(limits: PokemonSearchBatchLimits): PokemonDatetimeSearchBatch;
+    readonly is_done: boolean;
+}
+
+/**
  * `TrainerInfo` 起動時刻検索器
  */
 export class TrainerInfoSearcher {
@@ -1616,6 +1677,13 @@ export function generate_mtseed_search_tasks(context: DatetimeSearchContext, tar
  * - エンカウントスロットが空の場合
  */
 export function generate_pokemon_list(origins: SeedOrigin[], params: PokemonGenerationParams, config: GenerationConfig, filter?: PokemonFilter | null): GeneratedPokemonData[];
+
+/**
+ * 検証済み条件を既存の起動条件展開・日時分割でタスク化する。
+ * # Errors
+ * 日付・起動範囲・生成条件・Worker数が不正な場合。
+ */
+export function generate_pokemon_search_tasks(context: DatetimeSearchContext, pokemon_params: PokemonGenerationParams, gen_config: GenerationConfig, filter: PokemonDatetimeSearchFilter, worker_count: number): PokemonDatetimeSearchParams[];
 
 /**
  * 検索タスクを生成

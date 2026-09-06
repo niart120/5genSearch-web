@@ -3,6 +3,8 @@
 pub mod base;
 pub mod egg;
 pub mod mtseed;
+pub mod pokemon;
+pub use pokemon::{PokemonDatetimeSearcher, generate_pokemon_search_tasks};
 pub mod trainer_info;
 
 use wasm_bindgen::prelude::*;

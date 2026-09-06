@@ -19,8 +19,9 @@ pub mod gpu;
 
 // Re-export datetime_search (Searcher と関数のみ)
 pub use datetime_search::{
-    EggDatetimeSearcher, MtseedDatetimeSearcher, TrainerInfoSearcher, generate_egg_search_tasks,
-    generate_mtseed_search_tasks, generate_trainer_info_search_tasks, split_search_range,
+    EggDatetimeSearcher, MtseedDatetimeSearcher, PokemonDatetimeSearcher, TrainerInfoSearcher,
+    generate_egg_search_tasks, generate_mtseed_search_tasks, generate_pokemon_search_tasks,
+    generate_trainer_info_search_tasks, split_search_range,
 };
 
 // Re-export common types
@@ -33,12 +34,13 @@ pub use types::{
     ItemContent, IvFilter, Ivs, KeyInput, KeyMask, KeySpec, LcgSeed, LeadAbilityEffect,
     MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood, MtSeed,
     MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch,
-    MtseedSearchContext, MtseedSearchParams, NeedleDirection, NeedlePattern, Pid, PokemonFilter,
-    PokemonGenerationParams, RomVersion, SavePresence, SearchRangeParams, SeedOrigin, SeedSpec,
-    ShinyCharmState, ShinyFilter, SpecialEncounterDirection, SpecialEncounterInfo, StartMode,
-    Stats, StatsFilter, TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter,
-    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData,
-    UiPokemonData,
+    MtseedSearchContext, MtseedSearchParams, NeedleDirection, NeedlePattern, Pid,
+    PokemonDatetimeSearchBatch, PokemonDatetimeSearchFilter, PokemonDatetimeSearchParams,
+    PokemonFilter, PokemonGenerationParams, PokemonSearchBatchLimits, RomVersion, SavePresence,
+    SearchRangeParams, SeedOrigin, SeedSpec, ShinyCharmState, ShinyFilter,
+    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, Stats, StatsFilter,
+    TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoFilter, TrainerInfoSearchBatch,
+    TrainerInfoSearchParams, TrainerInfoSearchResult, UiEggData, UiPokemonData,
 };
 
 // Re-export core functions

@@ -167,19 +167,22 @@ describe('WorkerPool', () => {
     ];
 
     let progressCount = 0;
-    pool.onProgress(() => {
-      progressCount++;
-      if (progressCount >= 3) {
-        pool!.cancel();
-      }
-    });
-
-    await new Promise<void>((resolve) => {
-      pool!.onComplete(() => resolve());
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Cancellation was not reached')), 60_000);
+      pool!.onError((error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+      pool!.onProgress((progress) => {
+        progressCount++;
+        if (progressCount >= 3) {
+          pool!.cancel();
+          clearTimeout(timeout);
+          expect(progress.totalProcessed).toBeLessThan(progress.totalCount);
+          resolve();
+        }
+      });
       pool!.start(tasks);
-
-      // キャンセル後、タイムアウトで解決
-      setTimeout(resolve, 5000);
     });
 
     // キャンセルにより早期終了

@@ -145,3 +145,7 @@ describe('DatetimeSearchPage', () => {
     );
   });
 });
+
+vi.mock('@/features/pokemon-search/components/pokemon-search-page', () => ({
+  PokemonSearchPage: () => <></>,
+}));

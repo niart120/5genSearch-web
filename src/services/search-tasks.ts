@@ -9,6 +9,7 @@ import {
   generate_mtseed_iv_search_tasks,
   generate_mtseed_search_tasks,
   generate_egg_search_tasks,
+  generate_pokemon_search_tasks,
   generate_trainer_info_search_tasks,
 } from '../wasm/wasm_pkg.js';
 import type {
@@ -23,6 +24,7 @@ import type {
   SeedOrigin,
   PokemonGenerationParams,
   PokemonFilter,
+  PokemonDatetimeSearchFilter,
 } from '../wasm/wasm_pkg.js';
 import type {
   MtseedSearchTask,
@@ -30,6 +32,7 @@ import type {
   EggDatetimeSearchTask,
   TrainerInfoSearchTask,
   PokemonListTask,
+  PokemonDatetimeSearchTask,
   EggListTask,
 } from '../workers/types';
 
@@ -194,4 +197,17 @@ export function splitOrigins(origins: SeedOrigin[], count: number): SeedOrigin[]
     chunks.push(origins.slice(i, i + chunkSize));
   }
   return chunks;
+}
+
+/** 個体値非依存条件の日時検索を CPU タスクへ分割する。 */
+export function createPokemonDatetimeSearchTasks(
+  context: DatetimeSearchContext,
+  pokemonParams: PokemonGenerationParams,
+  genConfig: GenerationConfig,
+  filter: PokemonDatetimeSearchFilter,
+  workerCount: number
+): PokemonDatetimeSearchTask[] {
+  return generate_pokemon_search_tasks(context, pokemonParams, genConfig, filter, workerCount).map(
+    (params) => ({ kind: 'pokemon-datetime', params })
+  );
 }

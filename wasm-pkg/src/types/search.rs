@@ -310,6 +310,36 @@ pub struct EggDatetimeSearchBatch {
     pub total_count: u64,
 }
 
+/// ポケモン条件による日時検索の単一タスク。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct PokemonDatetimeSearchParams {
+    pub ds: DsConfig,
+    pub time_range: TimeRangeParams,
+    pub search_range: SearchRangeParams,
+    pub condition: StartupCondition,
+    pub pokemon_params: super::generation::PokemonGenerationParams,
+    pub gen_config: GenerationConfig,
+    pub filter: super::filter::PokemonDatetimeSearchFilter,
+}
+
+/// 一回の同期呼び出しで処理・返却する上限。検索全体の打ち切りには使わない。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct PokemonSearchBatchLimits {
+    pub max_candidates: u32,
+    pub max_results: u32,
+}
+
+/// 処理済み件数は不一致を含む消費位置数。
+#[derive(Tsify, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
+pub struct PokemonDatetimeSearchBatch {
+    pub results: Vec<super::generation::GeneratedPokemonData>,
+    pub processed_count: u64,
+    pub total_count: u64,
+}
+
 // ===== MT Seed 検索 (misc) =====
 
 /// MT Seed 検索コンテキスト (ユーザー入力用)

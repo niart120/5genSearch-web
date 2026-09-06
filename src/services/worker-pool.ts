@@ -8,6 +8,7 @@ import { ProgressAggregator, type AggregatedProgress } from './progress';
 import type { WorkerRequest, WorkerResponse, SearchTask } from '../workers/types';
 import type {
   SeedOrigin,
+  GeneratedPokemonData,
   MtseedResult,
   EggDatetimeSearchResult,
   TrainerInfoSearchResult,
@@ -31,6 +32,7 @@ export interface WorkerPoolConfig {
  * 検索結果の型 (すべての結果型の Union)
  */
 export type SearchResult =
+  | GeneratedPokemonData[]
   | SeedOrigin[]
   | MtseedResult[]
   | EggDatetimeSearchResult[]

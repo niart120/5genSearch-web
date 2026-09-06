@@ -4,7 +4,7 @@
 
 ### 1.1 目的
 
-`PokemonGenerator` にフィルター判定を統合し、個体値に依存しない条件で候補を絞ってから、必要な個体値・実数値を計算する。既存の個体生成リストと [local_119 の日時検索](../../wip/local_119/POKEMON_SEARCH_ENGINE.md) は同じ生成器を使用する。
+`PokemonGenerator` にフィルター判定を統合し、個体値に依存しない条件で候補を絞ってから、必要な個体値・実数値を計算する。既存の個体生成リストと [local_119 の日時検索](../local_119/POKEMON_SEARCH_ENGINE.md) は同じ生成器を使用する。
 
 型名は `PokemonGenerator`、一位置を処理するメソッドは `generate_next()`、戻り値は `Option<GeneratedPokemonData>` とする。生成・判定・個体値計算は Rust 内部で完結する。本書の生成器改修・回帰検証は 2026-09-06 に完了した。
 
