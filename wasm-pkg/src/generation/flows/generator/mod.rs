@@ -127,12 +127,10 @@ fn generate_pokemon_for_seed(
     config: &GenerationConfig,
     filter: Option<&PokemonFilter>,
 ) -> Result<Vec<GeneratedPokemonData>, String> {
-    let base_seed = origin.base_seed();
-    let mut generator = PokemonGenerator::new(base_seed, origin, params, config)?;
+    let mut generator = PokemonGenerator::new(origin, params, config, filter)?;
 
     let count = config.max_advance - config.user_offset;
-    let pokemons = generator.take(count);
-    Ok(apply_pokemon_filter(pokemons, filter))
+    Ok(generator.take(count))
 }
 
 /// 単一 Seed に対してタマゴを生成 (内部関数)
@@ -148,17 +146,6 @@ fn generate_egg_for_seed(
     let count = config.max_advance - config.user_offset;
     let eggs = generator.take(count);
     Ok(apply_egg_filter(eggs, filter))
-}
-
-/// ポケモンフィルタを適用
-fn apply_pokemon_filter(
-    pokemons: Vec<GeneratedPokemonData>,
-    filter: Option<&PokemonFilter>,
-) -> Vec<GeneratedPokemonData> {
-    match filter {
-        Some(f) => pokemons.into_iter().filter(|p| f.matches(p)).collect(),
-        None => pokemons,
-    }
 }
 
 /// 孵化フィルタを適用
@@ -267,8 +254,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
-            .expect("Generator作成失敗");
+        let mut generator =
+            PokemonGenerator::new(source, &params, &config, None).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -329,8 +316,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
-            .expect("Generator作成失敗");
+        let mut generator =
+            PokemonGenerator::new(source, &params, &config, None).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -387,8 +374,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
-            .expect("Generator作成失敗");
+        let mut generator =
+            PokemonGenerator::new(source, &params, &config, None).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -445,8 +432,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
-            .expect("Generator作成失敗");
+        let mut generator =
+            PokemonGenerator::new(source, &params, &config, None).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(
@@ -503,8 +490,8 @@ mod tests {
         };
 
         let source = make_source(initial_seed);
-        let mut generator = PokemonGenerator::new(initial_seed, source, &params, &config)
-            .expect("Generator作成失敗");
+        let mut generator =
+            PokemonGenerator::new(source, &params, &config, None).expect("Generator作成失敗");
         let pokemon = generator.generate_next().expect("生成に失敗しました");
 
         assert_eq!(

@@ -47,15 +47,29 @@ fn generation_pipeline_baseline() {
                             has_held_item: true,
                             shiny_locked: false
                         };
-                        12
+                        if matches!(
+                            encounter_type,
+                            EncounterType::StaticSymbol | EncounterType::Roamer
+                        ) {
+                            1
+                        } else {
+                            12
+                        }
                     ],
                 };
                 let seed = LcgSeed::new(0x1234_5678_9ABC_DEF0);
-                let data = PokemonGenerator::new(seed, SeedOrigin::seed(seed), &params, &config)
+                let data = PokemonGenerator::new(SeedOrigin::seed(seed), &params, &config, None)
                     .unwrap()
                     .take(24);
                 for filter in filters() {
-                    let filtered: Vec<_> = data.iter().filter(|p| filter.matches(p)).collect();
+                    let filtered = PokemonGenerator::new(
+                        SeedOrigin::seed(seed),
+                        &params,
+                        &config,
+                        Some(&filter),
+                    )
+                    .unwrap()
+                    .take(24);
                     filtered_output.push_str(&serde_json::to_string(&filtered).unwrap());
                     filtered_output.push('\n');
                 }

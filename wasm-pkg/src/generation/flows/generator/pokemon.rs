@@ -1,6 +1,6 @@
 //! `PokemonGenerator` - ポケモン個体生成
 //!
-//! Iterator パターンで連続的に個体を生成。
+//! 一回につき一つの消費位置を処理し、一致個体だけを返す。
 //! `encounter_type` により Wild / Static を判別し、内部で適切な生成処理を実行。
 
 use crate::core::lcg::Lcg64;
@@ -12,20 +12,25 @@ use crate::generation::algorithm::{
 use crate::generation::flows::pokemon::{generate_static_pokemon, generate_wild_pokemon};
 use crate::types::{
     EncounterMethod, GeneratedPokemonData, GenerationConfig, Ivs, LcgSeed, MovingEncounterInfo,
-    PokemonGenerationParams, SeedOrigin, SpecialEncounterInfo,
+    PokemonFilter, PokemonGenerationParams, SeedOrigin, SpecialEncounterInfo,
 };
 
 use super::is_static_encounter;
 
 /// ポケモン Generator (Wild / Static 統合)
-/// Iterator パターンで連続的に個体を生成。
+/// 一回につき一つの消費位置を処理し、一致個体だけを返す。
 /// `encounter_type` により Wild / Static を判別し、内部で適切な生成処理を実行。
 pub struct PokemonGenerator {
     lcg: Lcg64,
     game_offset: u32,
     user_offset: u32,
     current_advance: u32,
-    rng_ivs: Ivs,
+    rng_ivs: Option<Ivs>,
+    filter: Option<PokemonFilter>,
+    #[cfg(test)]
+    mt_calculations: u32,
+    #[cfg(test)]
+    stats_calculations: u32,
     source: SeedOrigin,
     params: PokemonGenerationParams,
     config: GenerationConfig,
@@ -36,7 +41,6 @@ impl PokemonGenerator {
     ///
     /// # Arguments
     ///
-    /// * `base_seed` - LCG 初期シード
     /// * `source` - 生成元情報
     /// * `params` - 生成パラメータ
     /// * `config` - 共通設定
@@ -45,16 +49,24 @@ impl PokemonGenerator {
     ///
     /// 無効な起動設定の場合にエラーを返す。
     pub fn new(
-        base_seed: LcgSeed,
         source: SeedOrigin,
         params: &PokemonGenerationParams,
         config: &GenerationConfig,
+        filter: Option<&PokemonFilter>,
     ) -> Result<Self, String> {
+        let base_seed = source.base_seed();
         let game_offset = calculate_game_offset(base_seed, config.version, config.game_start)?;
-        let mt_offset = calculate_mt_offset(config.version, params.encounter_type);
-        let mt_seed = base_seed.derive_mt_seed();
-        let is_roamer = params.encounter_type == crate::types::EncounterType::Roamer;
-        let rng_ivs = generate_rng_ivs_with_offset(mt_seed, mt_offset, is_roamer);
+        if config.max_advance < config.user_offset {
+            return Err("max_advance must be >= user_offset".into());
+        }
+        game_offset
+            .checked_add(config.max_advance)
+            .ok_or("Advance offset overflow")?;
+        if params.slots.is_empty()
+            || (is_static_encounter(params.encounter_type) && params.slots.len() != 1)
+        {
+            return Err("Invalid encounter slot count".into());
+        }
 
         // 初期位置へジャンプ
         let mut lcg = Lcg64::new(base_seed);
@@ -66,7 +78,12 @@ impl PokemonGenerator {
             game_offset,
             user_offset: config.user_offset,
             current_advance: config.user_offset,
-            rng_ivs,
+            rng_ivs: None,
+            filter: filter.cloned(),
+            #[cfg(test)]
+            mt_calculations: 0,
+            #[cfg(test)]
+            stats_calculations: 0,
             source,
             params: params.clone(),
             config: config.clone(),
@@ -97,48 +114,81 @@ impl PokemonGenerator {
         // 生成用の LCG をクローン（生成処理で消費される分を分離）
         let mut gen_lcg = self.lcg.clone();
 
-        // Static か Wild かで分岐
-        if is_static_encounter(self.params.encounter_type) {
-            // Static: スロットは1件、常に成功
-            let slot = &self.params.slots[0];
-            let raw = generate_static_pokemon(&mut gen_lcg, &self.params, slot, &self.config);
-
-            self.lcg.next();
-            self.current_advance += 1;
-
-            Some(GeneratedPokemonData::from_raw(
-                &raw,
-                self.rng_ivs,
-                advance,
-                needle,
-                self.source.clone(),
-                None,
-                None,
-            ))
-        } else {
-            // Wild: エンカウント付加情報あり
-            let (moving_encounter, special_encounter) =
-                self.calculate_encounter_info(current_seed, &mut gen_lcg);
-
-            if let Ok(raw) = generate_wild_pokemon(&mut gen_lcg, &self.params, &self.config) {
-                self.lcg.next();
-                self.current_advance += 1;
-
-                Some(GeneratedPokemonData::from_raw(
-                    &raw,
-                    self.rng_ivs,
-                    advance,
-                    needle,
-                    self.source.clone(),
-                    moving_encounter,
-                    special_encounter,
-                ))
+        let (raw, moving_encounter, special_encounter) =
+            if is_static_encounter(self.params.encounter_type) {
+                (
+                    Some(generate_static_pokemon(
+                        &mut gen_lcg,
+                        &self.params,
+                        &self.params.slots[0],
+                        &self.config,
+                    )),
+                    None,
+                    None,
+                )
             } else {
-                self.lcg.next();
-                self.current_advance += 1;
-                None
-            }
+                let (moving, special) = self.calculate_encounter_info(current_seed, &mut gen_lcg);
+                (
+                    generate_wild_pokemon(&mut gen_lcg, &self.params, &self.config).ok(),
+                    moving,
+                    special,
+                )
+            };
+
+        // 不一致の位置も処理済みにしてから短絡する。
+        self.lcg.next();
+        self.current_advance += 1;
+        let raw = raw?;
+        if self.filter.as_ref().is_some_and(|filter| {
+            !filter.matches_non_iv(&raw.filter_input(special_encounter.as_ref()))
+        }) {
+            return None;
         }
+        let ivs = self.ensure_rng_ivs();
+        if self
+            .filter
+            .as_ref()
+            .is_some_and(|filter| !filter.base.matches_ivs(ivs))
+        {
+            return None;
+        }
+        #[cfg(test)]
+        {
+            self.stats_calculations += u32::from(raw.species_id > 0);
+        }
+        let data = GeneratedPokemonData::from_raw(
+            &raw,
+            ivs,
+            advance,
+            needle,
+            self.source.clone(),
+            moving_encounter,
+            special_encounter,
+        );
+        if self
+            .filter
+            .as_ref()
+            .is_some_and(|filter| !filter.base.matches_stats(&data.core.stats))
+        {
+            return None;
+        }
+        Some(data)
+    }
+
+    fn ensure_rng_ivs(&mut self) -> Ivs {
+        if let Some(ivs) = self.rng_ivs {
+            return ivs;
+        }
+        let mt_seed = self.source.base_seed().derive_mt_seed();
+        let offset = calculate_mt_offset(self.config.version, self.params.encounter_type);
+        let is_roamer = self.params.encounter_type == crate::types::EncounterType::Roamer;
+        let ivs = generate_rng_ivs_with_offset(mt_seed, offset, is_roamer);
+        self.rng_ivs = Some(ivs);
+        #[cfg(test)]
+        {
+            self.mt_calculations += 1;
+        }
+        ivs
     }
 
     /// エンカウント付加情報を計算
@@ -174,7 +224,7 @@ impl PokemonGenerator {
         (None, None)
     }
 
-    /// 指定数の個体を生成
+    /// 指定回数の生成試行から一致個体を収集
     pub fn take(&mut self, count: u32) -> Vec<GeneratedPokemonData> {
         (0..count).filter_map(|_| self.generate_next()).collect()
     }
@@ -251,7 +301,7 @@ mod tests {
         };
         let config = make_config();
 
-        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
+        let generator = PokemonGenerator::new(source, &params, &config, None);
 
         assert!(generator.is_ok());
 
@@ -278,7 +328,7 @@ mod tests {
         };
         let config = make_config();
 
-        let mut g = PokemonGenerator::new(base_seed, source, &params, &config).unwrap();
+        let mut g = PokemonGenerator::new(source, &params, &config, None).unwrap();
 
         let results = g.take(5);
         assert_eq!(results.len(), 5);
@@ -317,7 +367,7 @@ mod tests {
         };
         let config = make_config();
 
-        let generator = PokemonGenerator::new(base_seed, source, &params, &config);
+        let generator = PokemonGenerator::new(source, &params, &config, None);
 
         assert!(generator.is_ok());
 
@@ -326,5 +376,165 @@ mod tests {
         assert!(pokemon.is_some());
         assert_eq!(pokemon.unwrap().core.species_id, 150);
         assert_eq!(g.current_advance(), 1);
+    }
+    fn filtered_generator(filter: Option<&PokemonFilter>) -> PokemonGenerator {
+        let params = PokemonGenerationParams {
+            slots: make_slots(),
+            ..make_pokemon_params()
+        };
+        PokemonGenerator::new(
+            make_source(LcgSeed::new(0x1234_5678_9ABC_DEF0)),
+            &params,
+            &make_config(),
+            filter,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn rejects_before_mt_and_counts_attempts_instead_of_matches() {
+        let filter = PokemonFilter {
+            species_ids: Some(vec![999]),
+            ..PokemonFilter::any()
+        };
+        let mut generator = filtered_generator(Some(&filter));
+        assert!(generator.rng_ivs.is_none());
+        assert!(generator.take(30).is_empty());
+        assert_eq!(
+            (
+                generator.current_advance(),
+                generator.mt_calculations,
+                generator.stats_calculations
+            ),
+            (30, 0, 0)
+        );
+    }
+
+    #[test]
+    fn later_match_uses_initial_seed_and_preserves_cache_across_batches() {
+        let expected = filtered_generator(None).take(100);
+        let nature = expected
+            .iter()
+            .find(|p| p.core.nature != expected[0].core.nature)
+            .unwrap()
+            .core
+            .nature;
+        let filter = PokemonFilter {
+            base: crate::types::CoreDataFilter {
+                natures: Some(vec![nature]),
+                ..crate::types::CoreDataFilter::any()
+            },
+            ..PokemonFilter::any()
+        };
+        let mut generator = filtered_generator(Some(&filter));
+        assert!(generator.generate_next().is_none());
+        assert_eq!(generator.mt_calculations, 0);
+        let mut actual = generator.take(19);
+        actual.extend(generator.take(80));
+        let expected: Vec<_> = expected
+            .into_iter()
+            .filter(|p| p.core.nature == nature)
+            .collect();
+        assert_eq!(
+            serde_json::to_string(&actual).unwrap(),
+            serde_json::to_string(&expected).unwrap()
+        );
+        assert_eq!(generator.mt_calculations, 1);
+        assert_eq!(generator.stats_calculations as usize, actual.len());
+    }
+
+    #[test]
+    fn iv_rejection_caches_once_and_skips_stats() {
+        let filter = PokemonFilter {
+            base: crate::types::CoreDataFilter {
+                iv: Some(crate::types::IvFilter::six_v()),
+                ..crate::types::CoreDataFilter::any()
+            },
+            ..PokemonFilter::any()
+        };
+        let mut generator = filtered_generator(Some(&filter));
+        assert!(generator.take(10).is_empty());
+        assert!(generator.take(20).is_empty());
+        assert_eq!(
+            (generator.mt_calculations, generator.stats_calculations),
+            (1, 0)
+        );
+    }
+
+    #[test]
+    fn empty_range_does_not_initialize_mt() {
+        let mut generator = filtered_generator(None);
+        assert!(generator.take(0).is_empty());
+        assert_eq!(generator.mt_calculations, 0);
+    }
+
+    #[test]
+    fn invalid_ranges_and_overflows_are_errors() {
+        let params = PokemonGenerationParams {
+            slots: make_slots(),
+            ..make_pokemon_params()
+        };
+        for (user_offset, max_advance) in [(10, 9), (0, u32::MAX)] {
+            let config = GenerationConfig {
+                user_offset,
+                max_advance,
+                ..make_config()
+            };
+            assert!(
+                PokemonGenerator::new(make_source(LcgSeed::new(1)), &params, &config, None)
+                    .is_err()
+            );
+        }
+    }
+    #[test]
+    #[ignore = "release profile measurement"]
+    fn measure_pipeline_costs() {
+        use crate::types::{CoreDataFilter, ShinyFilter};
+        for (seeds, advances) in [(100_u32, 24_u32), (10, 1000)] {
+            for (name, filter) in [
+                ("all", PokemonFilter::any()),
+                (
+                    "none",
+                    PokemonFilter {
+                        species_ids: Some(vec![999]),
+                        ..PokemonFilter::any()
+                    },
+                ),
+                (
+                    "shiny",
+                    PokemonFilter {
+                        base: CoreDataFilter {
+                            shiny: Some(ShinyFilter::Shiny),
+                            ..CoreDataFilter::any()
+                        },
+                        ..PokemonFilter::any()
+                    },
+                ),
+            ] {
+                let started = std::time::Instant::now();
+                let (mut mt, mut stats, mut matches) = (0, 0, 0);
+                for index in 0..seeds {
+                    let params = PokemonGenerationParams {
+                        slots: make_slots(),
+                        ..make_pokemon_params()
+                    };
+                    let mut generator = PokemonGenerator::new(
+                        make_source(LcgSeed::new(0x1234_5678_9ABC_DEF0 + u64::from(index))),
+                        &params,
+                        &make_config(),
+                        Some(&filter),
+                    )
+                    .unwrap();
+                    matches += generator.take(advances).len();
+                    mt += generator.mt_calculations;
+                    stats += generator.stats_calculations;
+                }
+                println!(
+                    "{name} seeds={seeds} advances={advances} attempts={} mt={mt} stats={stats} matches={matches} elapsed={:?}",
+                    seeds * advances,
+                    started.elapsed()
+                );
+            }
+        }
     }
 }

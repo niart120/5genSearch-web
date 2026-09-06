@@ -40,6 +40,28 @@ pub struct RawPokemonData {
 }
 
 impl RawPokemonData {
+    pub(crate) fn filter_input(
+        &self,
+        special: Option<&SpecialEncounterInfo>,
+    ) -> crate::types::PokemonFilterInput<'_> {
+        use crate::types::{CoreFilterInput, PokemonFilterInput};
+        PokemonFilterInput {
+            core: CoreFilterInput {
+                nature: self.nature,
+                gender: self.gender,
+                ability_slot: self.ability_slot,
+                shiny_type: self.shiny_type,
+            },
+            species_id: self.species_id,
+            level: self.level,
+            held_item_slot: self.held_item_slot,
+            encounter_result: &self.encounter_result,
+            special_encounter_triggered: special.map(|info| info.triggered),
+        }
+    }
+}
+
+impl RawPokemonData {
     /// ポケモン以外のエンカウント結果を生成
     ///
     /// Item 取得、釣り失敗など、ポケモンが生成されない場合に使用。

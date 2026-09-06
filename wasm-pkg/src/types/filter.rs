@@ -11,6 +11,49 @@ use super::pokemon::{
 };
 use crate::data::Stats;
 
+/// 個体値を必要としない共通条件の内部入力。
+#[derive(Clone, Copy)]
+pub(crate) struct CoreFilterInput {
+    pub nature: Nature,
+    pub gender: Gender,
+    pub ability_slot: AbilitySlot,
+    pub shiny_type: ShinyType,
+}
+
+impl From<&CorePokemonData> for CoreFilterInput {
+    fn from(core: &CorePokemonData) -> Self {
+        Self {
+            nature: core.nature,
+            gender: core.gender,
+            ability_slot: core.ability_slot,
+            shiny_type: core.shiny_type,
+        }
+    }
+}
+
+/// 候補と完成済み個体で共有する、個体値非依存条件の入力。
+pub(crate) struct PokemonFilterInput<'a> {
+    pub core: CoreFilterInput,
+    pub species_id: u16,
+    pub level: u8,
+    pub held_item_slot: HeldItemSlot,
+    pub encounter_result: &'a EncounterResult,
+    pub special_encounter_triggered: Option<bool>,
+}
+
+impl<'a> From<&'a GeneratedPokemonData> for PokemonFilterInput<'a> {
+    fn from(data: &'a GeneratedPokemonData) -> Self {
+        Self {
+            core: (&data.core).into(),
+            species_id: data.core.species_id,
+            level: data.core.level,
+            held_item_slot: data.held_item_slot,
+            encounter_result: &data.encounter_result,
+            special_encounter_triggered: data.special_encounter.as_ref().map(|info| info.triggered),
+        }
+    }
+}
+
 // ===== IvFilter =====
 
 /// IV フィルタ条件
@@ -295,13 +338,22 @@ impl CoreDataFilter {
 
     /// `CorePokemonData` が条件に一致するか判定
     pub fn matches(&self, core: &CorePokemonData) -> bool {
-        // IV フィルター
-        if let Some(ref iv_filter) = self.iv
-            && !iv_filter.matches(&core.ivs)
-        {
-            return false;
-        }
+        self.matches_non_iv(core.into())
+            && self.matches_ivs(core.ivs)
+            && self.matches_stats(&core.stats)
+    }
 
+    pub(crate) fn matches_ivs(&self, ivs: Ivs) -> bool {
+        self.iv.as_ref().is_none_or(|filter| filter.matches(&ivs))
+    }
+
+    pub(crate) fn matches_stats(&self, stats: &Stats) -> bool {
+        self.stats
+            .as_ref()
+            .is_none_or(|filter| filter.matches(stats))
+    }
+
+    pub(crate) fn matches_non_iv(&self, core: CoreFilterInput) -> bool {
         // 性格 (複数指定のいずれかに一致)
         if let Some(ref required_natures) = self.natures
             && !required_natures.is_empty()
@@ -327,13 +379,6 @@ impl CoreDataFilter {
         // 色違い
         if let Some(ref shiny_filter) = self.shiny
             && !shiny_filter.matches(core.shiny_type)
-        {
-            return false;
-        }
-
-        // 実ステータスフィルター
-        if let Some(ref stats_filter) = self.stats
-            && !stats_filter.matches(&core.stats)
         {
             return false;
         }
@@ -403,22 +448,28 @@ impl PokemonFilter {
 
     /// `GeneratedPokemonData` が条件に一致するか判定
     pub fn matches(&self, data: &GeneratedPokemonData) -> bool {
+        self.matches_non_iv(&data.into())
+            && self.base.matches_ivs(data.core.ivs)
+            && self.base.matches_stats(&data.core.stats)
+    }
+
+    pub(crate) fn matches_non_iv(&self, data: &PokemonFilterInput<'_>) -> bool {
         // 共通条件
-        if !self.base.matches_pokemon(data) {
+        if !self.base.matches_non_iv(data.core) {
             return false;
         }
 
         // 種族 ID
         if let Some(ref ids) = self.species_ids
             && !ids.is_empty()
-            && !ids.contains(&data.core.species_id)
+            && !ids.contains(&data.species_id)
         {
             return false;
         }
 
         // レベル範囲
         if let Some((min, max)) = self.level_range
-            && (data.core.level < min || data.core.level > max)
+            && (data.level < min || data.level > max)
         {
             return false;
         }
@@ -449,8 +500,7 @@ impl PokemonFilter {
 
         // 特殊エンカウント発生判定
         if let Some(required_triggered) = self.special_encounter_triggered
-            && data.special_encounter.as_ref().map(|info| info.triggered)
-                != Some(required_triggered)
+            && data.special_encounter_triggered != Some(required_triggered)
         {
             return false;
         }
