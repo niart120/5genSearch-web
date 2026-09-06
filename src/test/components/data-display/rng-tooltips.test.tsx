@@ -34,8 +34,8 @@ const cases = [
   ],
   [
     NeedleInputTooltip,
-    'Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up.',
-    'レポートを書き始めたときの針の向きを、確認した順に入力します。上を0として時計回りに0〜7で表します。',
+    'Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up.',
+    'レポートを書き始めたときの針の向きを入力します。上を0として時計回りに0〜7で表します。',
   ],
   [
     NeedleTooltip,

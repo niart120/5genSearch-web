@@ -38,8 +38,8 @@ export function NeedleInputTooltip() {
   return (
     <HelpTooltip label={t`About needle input`}>
       <Trans>
-        Enter the initial needle direction for each save in the order observed. Directions are
-        numbered clockwise from 0 to 7, with 0 pointing up.
+        Enter the initial needle direction for each save. Directions are numbered clockwise from 0
+        to 7, with 0 pointing up.
       </Trans>
     </HelpTooltip>
   );

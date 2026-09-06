@@ -475,8 +475,12 @@ msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
 #: src/components/data-display/rng-tooltips.tsx:40
-msgid "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
-msgstr "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+#~ msgid "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+#~ msgstr "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+
+#: src/components/data-display/rng-tooltips.tsx:40
+msgid "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+msgstr "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
 
 #. placeholder {0}: estimatedCount.toLocaleString()
 #: src/components/forms/search-confirmation-dialog.tsx:45

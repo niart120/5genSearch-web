@@ -475,8 +475,12 @@ msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
 #: src/components/data-display/rng-tooltips.tsx:40
-msgid "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
-msgstr "レポートを書き始めたときの針の向きを、確認した順に入力します。上を0として時計回りに0〜7で表します。"
+#~ msgid "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+#~ msgstr "レポートを書き始めたときの針の向きを、確認した順に入力します。上を0として時計回りに0〜7で表します。"
+
+#: src/components/data-display/rng-tooltips.tsx:40
+msgid "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+msgstr "レポートを書き始めたときの針の向きを入力します。上を0として時計回りに0〜7で表します。"
 
 #. placeholder {0}: estimatedCount.toLocaleString()
 #: src/components/forms/search-confirmation-dialog.tsx:45
