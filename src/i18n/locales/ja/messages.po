@@ -180,7 +180,7 @@ msgstr "キャンセル"
 msgid "Category"
 msgstr "種別"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:243
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:244
 msgid "Check in Pokémon list"
 msgstr "個体生成リストで確認"
 
@@ -212,7 +212,7 @@ msgstr "NPC消費考慮"
 msgid "Continue search"
 msgstr "検索を続行"
 
-#: src/hooks/use-export.ts:115
+#: src/hooks/use-export.ts:131
 msgid "Copied to clipboard"
 msgstr "クリップボードにコピーしました"
 
@@ -337,8 +337,8 @@ msgstr "CSV でダウンロード"
 msgid "Download as JSON"
 msgstr "JSON でダウンロード"
 
-#: src/hooks/use-export.ts:74
-#: src/hooks/use-export.ts:94
+#: src/hooks/use-export.ts:90
+#: src/hooks/use-export.ts:110
 msgid "Downloaded {filename}"
 msgstr "{filename} をダウンロードしました"
 
@@ -449,9 +449,9 @@ msgstr "かわらずのいし"
 msgid "Export"
 msgstr "エクスポート"
 
-#: src/hooks/use-export.ts:76
-#: src/hooks/use-export.ts:96
-#: src/hooks/use-export.ts:117
+#: src/hooks/use-export.ts:92
+#: src/hooks/use-export.ts:112
+#: src/hooks/use-export.ts:133
 msgid "Export failed"
 msgstr "エクスポートに失敗しました"
 
@@ -825,7 +825,7 @@ msgstr "結果が見つかりませんでした。パラメータを設定して
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "結果が見つかりませんでした。MT Seedを入力して検索を開始してください。"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:228
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:229
 msgid "No results found. Set Pokémon conditions and start searching."
 msgstr "結果がありません。対象と条件を設定して検索してください。"
 
@@ -1034,7 +1034,7 @@ msgstr "結果の詳細"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:319
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:207
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:208
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
 msgstr "検索結果"
@@ -1074,15 +1074,15 @@ msgstr "検索"
 msgid "Search Boot Timing"
 msgstr "起動時刻検索へ"
 
-#: src/features/pokemon-search/components/search-mode-tabs.tsx:25
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:38
 msgid "Search by IVs"
 msgstr "個体値から探す"
 
-#: src/features/pokemon-search/components/search-mode-tabs.tsx:32
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:45
 msgid "Search by shininess / nature"
 msgstr "色違い・性格から探す"
 
-#: src/features/pokemon-search/components/search-mode-tabs.tsx:23
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:35
 msgid "Search method"
 msgstr "検索方式"
 
@@ -1299,7 +1299,7 @@ msgstr "起動条件の詳細"
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:331
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:219
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:220
 msgid "Stats"
 msgstr "ステータス"
 
@@ -1341,7 +1341,7 @@ msgstr "テンプレート"
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "現在のプロファイルに未保存の変更があります。どうしますか？"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:182
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:183
 msgid "The start offset is included; the max advance is excluded."
 msgstr "開始オフセットを含み、最大消費数を含まない範囲を検索します。"
 
@@ -1470,6 +1470,6 @@ msgstr "ごくまれに (1%)"
 msgid "With save"
 msgstr "セーブあり"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:192
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:193
 msgid "Without filters, all Pokémon in the specified range are returned."
 msgstr "絞り込みを指定しない場合、指定範囲のすべてのポケモンを返します。"

@@ -181,9 +181,9 @@ mod tests {
     fn test_gpu_profile_unknown() {
         let profile = GpuProfile::unknown();
         assert_eq!(profile.kind, GpuKind::Unknown);
-        assert!(profile.vendor.is_empty());
-        assert!(profile.architecture.is_empty());
-        assert!(profile.description.is_empty());
+        assert_eq!(profile.vendor, "");
+        assert_eq!(profile.architecture, "");
+        assert_eq!(profile.description, "");
     }
 
     // -----------------------------------------------------------------------

@@ -180,7 +180,7 @@ msgstr "Cancel"
 msgid "Category"
 msgstr "Category"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:243
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:244
 msgid "Check in Pokémon list"
 msgstr "Check in Pokémon list"
 
@@ -212,7 +212,7 @@ msgstr "Consider NPC"
 msgid "Continue search"
 msgstr "Continue search"
 
-#: src/hooks/use-export.ts:115
+#: src/hooks/use-export.ts:131
 msgid "Copied to clipboard"
 msgstr "Copied to clipboard"
 
@@ -337,8 +337,8 @@ msgstr "Download as CSV"
 msgid "Download as JSON"
 msgstr "Download as JSON"
 
-#: src/hooks/use-export.ts:74
-#: src/hooks/use-export.ts:94
+#: src/hooks/use-export.ts:90
+#: src/hooks/use-export.ts:110
 msgid "Downloaded {filename}"
 msgstr "Downloaded {filename}"
 
@@ -449,9 +449,9 @@ msgstr "Everstone"
 msgid "Export"
 msgstr "Export"
 
-#: src/hooks/use-export.ts:76
-#: src/hooks/use-export.ts:96
-#: src/hooks/use-export.ts:117
+#: src/hooks/use-export.ts:92
+#: src/hooks/use-export.ts:112
+#: src/hooks/use-export.ts:133
 msgid "Export failed"
 msgstr "Export failed"
 
@@ -829,7 +829,7 @@ msgstr "No results found. Configure parameters and start searching."
 msgid "No results found. Please enter MT Seeds and start searching."
 msgstr "No results found. Please enter MT Seeds and start searching."
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:228
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:229
 msgid "No results found. Set Pokémon conditions and start searching."
 msgstr "No results found. Set Pokémon conditions and start searching."
 
@@ -1038,7 +1038,7 @@ msgstr "Result details"
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:185
 #: src/features/needle/components/needle-page.tsx:245
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:319
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:207
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:208
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
 msgid "Results"
 msgstr "Results"
@@ -1078,15 +1078,15 @@ msgstr "Search"
 msgid "Search Boot Timing"
 msgstr "Search Boot Timing"
 
-#: src/features/pokemon-search/components/search-mode-tabs.tsx:25
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:38
 msgid "Search by IVs"
 msgstr "Search by IVs"
 
-#: src/features/pokemon-search/components/search-mode-tabs.tsx:32
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:45
 msgid "Search by shininess / nature"
 msgstr "Search by shininess / nature"
 
-#: src/features/pokemon-search/components/search-mode-tabs.tsx:23
+#: src/features/pokemon-search/components/search-mode-tabs.tsx:35
 msgid "Search method"
 msgstr "Search method"
 
@@ -1303,7 +1303,7 @@ msgstr "Startup condition details"
 #: src/features/egg-list/components/result-detail-dialog.tsx:74
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:331
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:219
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:220
 msgid "Stats"
 msgstr "Stats"
 
@@ -1345,7 +1345,7 @@ msgstr "Template"
 msgid "The current profile has unsaved changes. What would you like to do?"
 msgstr "The current profile has unsaved changes. What would you like to do?"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:182
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:183
 msgid "The start offset is included; the max advance is excluded."
 msgstr "The start offset is included; the max advance is excluded."
 
@@ -1474,6 +1474,6 @@ msgstr "Very rare (1%)"
 msgid "With save"
 msgstr "With save"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:192
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:193
 msgid "Without filters, all Pokémon in the specified range are returned."
 msgstr "Without filters, all Pokémon in the specified range are returned."
