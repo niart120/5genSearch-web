@@ -6,8 +6,8 @@ export function NpcTooltip() {
   return (
     <HelpTooltip label={t`About NPC advances`}>
       <Trans>
-        Generates results accounting for RNG advances that occur when you speak to the Day-Care Man
-        as quickly as possible after leaving the Day Care.
+        Generates results accounting for RNG advances between leaving the Day Care and speaking to
+        the Day-Care Man.
       </Trans>
     </HelpTooltip>
   );

@@ -29,8 +29,8 @@ const cases = [
   ],
   [
     NpcTooltip,
-    'Generates results accounting for RNG advances that occur when you speak to the Day-Care Man as quickly as possible after leaving the Day Care.',
-    '育て屋小屋を出てから最短で育て屋翁に話しかけるまでに発生する消費を考慮した生成結果を出力します。',
+    'Generates results accounting for RNG advances between leaving the Day Care and speaking to the Day-Care Man.',
+    '小屋を出て育て屋翁に話しかけるまでの消費を考慮した生成を行います。',
   ],
   [
     NeedleInputTooltip,

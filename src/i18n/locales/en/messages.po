@@ -537,8 +537,12 @@ msgstr "Gender ratio"
 #~ msgstr "Generate egg individuals from seed origins"
 
 #: src/components/data-display/rng-tooltips.tsx:8
-msgid "Generates results accounting for RNG advances that occur when you speak to the Day-Care Man as quickly as possible after leaving the Day Care."
-msgstr "Generates results accounting for RNG advances that occur when you speak to the Day-Care Man as quickly as possible after leaving the Day Care."
+msgid "Generates results accounting for RNG advances between leaving the Day Care and speaking to the Day-Care Man."
+msgstr "Generates results accounting for RNG advances between leaving the Day Care and speaking to the Day-Care Man."
+
+#: src/components/data-display/rng-tooltips.tsx:8
+#~ msgid "Generates results accounting for RNG advances that occur when you speak to the Day-Care Man as quickly as possible after leaving the Day Care."
+#~ msgstr "Generates results accounting for RNG advances that occur when you speak to the Day-Care Man as quickly as possible after leaving the Day Care."
 
 #: src/components/layout/navigation-labels.tsx:7
 msgid "Generation"
@@ -1430,8 +1434,12 @@ msgid "The needle direction shown when saving at this advance."
 msgstr "The needle direction shown when saving at this advance."
 
 #: src/components/data-display/egg-margin-tooltip.tsx:8
-msgid "The number of frames you can delay and still receive the same Egg, measured from the earliest possible moment you can speak to the Day-Care Man after leaving the Day Care."
-msgstr "The number of frames you can delay and still receive the same Egg, measured from the earliest possible moment you can speak to the Day-Care Man after leaving the Day Care."
+#~ msgid "The number of frames you can delay and still receive the same Egg, measured from the earliest possible moment you can speak to the Day-Care Man after leaving the Day Care."
+#~ msgstr "The number of frames you can delay and still receive the same Egg, measured from the earliest possible moment you can speak to the Day-Care Man after leaving the Day Care."
+
+#: src/components/data-display/egg-margin-tooltip.tsx:8
+msgid "The number of frames you can delay and still receive the same Egg. This is measured from the earliest time you can speak to the Day-Care Man after leaving the Day Care."
+msgstr "The number of frames you can delay and still receive the same Egg. This is measured from the earliest time you can speak to the Day-Care Man after leaving the Day Care."
 
 #: src/components/data-display/rng-tooltips.tsx:31
 msgid "The number of RNG advances excluding the startup offset."
