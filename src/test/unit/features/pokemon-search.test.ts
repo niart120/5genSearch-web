@@ -107,6 +107,7 @@ describe('Pokemon search state and contracts', () => {
     expect(validatePokemonSearchForm(form, { tid: 0, sid: 0 }, request.context.ranges)).toEqual([]);
     form.filter.level_range = [42, 42];
     expect(validatePokemonSearchForm(form, { tid: 0, sid: 0 }, request.context.ranges)).toEqual([]);
+    form.encounterParams.encounterType = 'Normal';
     form.filter.level_range = [43, 42];
     expect(validatePokemonSearchForm(form, { tid: 0, sid: 0 }, request.context.ranges)).toEqual([
       'LEVEL_RANGE_INVALID',

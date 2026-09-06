@@ -2,42 +2,49 @@
  * レベル範囲入力コンポーネント
  *
  * min / max の 2 つの数値入力でレベル範囲を指定する。
- * 両方空の場合 undefined を返し、blur 時に 1--100 でクランプする。
+ * 有効状態と範囲値を分けて保持し、blur 時に 1--100 でクランプする。
  */
 
-import { useState, useCallback, type ReactElement } from 'react';
-import { Trans } from '@lingui/react/macro';
+import { useState, useCallback, useId, type ReactElement } from 'react';
+import { Trans, useLingui } from '@lingui/react/macro';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { clampOrDefault, handleFocusSelectAll } from './input-helpers';
 
 interface LevelRangeInputProps {
   value: [number, number] | undefined;
   onChange: (range?: [number, number]) => void;
   disabled?: boolean;
+  enabled?: boolean;
+  onEnabledChange?: (enabled: boolean) => void;
 }
 
 const LEVEL_MIN = 1;
 const LEVEL_MAX = 100;
 
-function LevelRangeInput({ value, onChange, disabled }: LevelRangeInputProps): ReactElement {
-  const [minText, setMinText] = useState(value ? String(value[0]) : '');
-  const [maxText, setMaxText] = useState(value ? String(value[1]) : '');
+function LevelRangeInput({
+  value,
+  onChange,
+  disabled,
+  enabled = value !== undefined,
+  onEnabledChange,
+}: LevelRangeInputProps): ReactElement {
+  const { t } = useLingui();
+  const id = useId();
+  const [minText, setMinText] = useState(String(value?.[0] ?? LEVEL_MIN));
+  const [maxText, setMaxText] = useState(String(value?.[1] ?? LEVEL_MAX));
 
   // 外部 prop 変更時 (リセット等) に内部テキストを同期 (レンダー中の state 調整)
   const [prevValue, setPrevValue] = useState(value);
   if (prevValue?.[0] !== value?.[0] || prevValue?.[1] !== value?.[1]) {
     setPrevValue(value);
-    setMinText(value ? String(value[0]) : '');
-    setMaxText(value ? String(value[1]) : '');
+    setMinText(String(value?.[0] ?? LEVEL_MIN));
+    setMaxText(String(value?.[1] ?? LEVEL_MAX));
   }
 
   const emit = useCallback(
     (nextMin: string, nextMax: string) => {
-      if (nextMin.trim() === '' && nextMax.trim() === '') {
-        onChange();
-        return;
-      }
       const min = clampOrDefault(nextMin, {
         defaultValue: LEVEL_MIN,
         min: LEVEL_MIN,
@@ -79,11 +86,23 @@ function LevelRangeInput({ value, onChange, disabled }: LevelRangeInputProps): R
 
   return (
     <>
+      {onEnabledChange && (
+        <label className="col-span-2 flex items-center gap-2 text-xs">
+          <Checkbox
+            checked={enabled}
+            onCheckedChange={(checked) => onEnabledChange(checked === true)}
+            disabled={disabled}
+            aria-label={t`Enable level range`}
+          />
+          <Trans>Level range</Trans>
+        </label>
+      )}
       <div className="flex flex-col gap-1">
-        <Label className="text-xs">
+        <Label htmlFor={`${id}-min`} className="text-xs">
           <Trans>Level min</Trans>
         </Label>
         <Input
+          id={`${id}-min`}
           type="number"
           inputMode="numeric"
           className="h-8 text-xs"
@@ -94,15 +113,16 @@ function LevelRangeInput({ value, onChange, disabled }: LevelRangeInputProps): R
           onFocus={handleFocusSelectAll}
           min={LEVEL_MIN}
           max={LEVEL_MAX}
-          disabled={disabled}
+          disabled={disabled || !enabled}
           aria-label="level-min"
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-xs">
+        <Label htmlFor={`${id}-max`} className="text-xs">
           <Trans>Level max</Trans>
         </Label>
         <Input
+          id={`${id}-max`}
           type="number"
           inputMode="numeric"
           className="h-8 text-xs"
@@ -113,7 +133,7 @@ function LevelRangeInput({ value, onChange, disabled }: LevelRangeInputProps): R
           onFocus={handleFocusSelectAll}
           min={LEVEL_MIN}
           max={LEVEL_MAX}
-          disabled={disabled}
+          disabled={disabled || !enabled}
           aria-label="level-max"
         />
       </div>

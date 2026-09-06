@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { normalizePokemonFilter, type PokemonFilterInput } from '@/lib/search-filter-context';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -41,9 +43,27 @@ function renderFilterForm(props: Partial<Parameters<typeof PokemonFilterForm>[0]
     encounterType: 'Normal' as EncounterType,
     ...props,
   };
+  function Harness({ options }: { options: typeof resolvedProps }) {
+    const [value, setValue] = useState<PokemonFilterInput | undefined>(options.value);
+    const [previous, setPrevious] = useState(options.value);
+    if (previous !== options.value) {
+      setPrevious(options.value);
+      setValue(options.value);
+    }
+    return (
+      <PokemonFilterForm
+        {...options}
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          onChange(next);
+        }}
+      />
+    );
+  }
   const result = render(
     <I18nTestWrapper>
-      <PokemonFilterForm {...resolvedProps} />
+      <Harness options={resolvedProps} />
     </I18nTestWrapper>
   );
   return {
@@ -55,7 +75,7 @@ function renderFilterForm(props: Partial<Parameters<typeof PokemonFilterForm>[0]
       const nextProps = { ...resolvedProps, ...overrides, onChange, onStatsFilterChange };
       result.rerender(
         <I18nTestWrapper>
-          <PokemonFilterForm {...nextProps} />
+          <Harness options={nextProps} />
         </I18nTestWrapper>
       );
     },
@@ -89,6 +109,7 @@ describe('PokemonFilterForm', () => {
     renderFilterForm({ onChange });
     await openFilter(user);
 
+    await user.click(screen.getByRole('checkbox', { name: 'Enable level range' }));
     const minInput = screen.getByLabelText('level-min');
     await user.clear(minInput);
     await user.type(minInput, '10');
@@ -101,11 +122,11 @@ describe('PokemonFilterForm', () => {
     expect(filter?.level_range).toBeDefined();
   });
 
-  it('encounterType=Surfing で持ち物フィルタが表示される', async () => {
+  it('encounterType=Surfing でも持ち物フィルタが非表示', async () => {
     const user = userEvent.setup();
     renderFilterForm({ encounterType: 'Surfing' });
     await openFilter(user);
-    expect(screen.getByLabelText('held-item-slot-select-trigger')).toBeInTheDocument();
+    expect(screen.queryByLabelText('held-item-slot-select-trigger')).not.toBeInTheDocument();
   });
 
   it('encounterType=Normal で持ち物フィルタが非表示', async () => {
@@ -172,7 +193,7 @@ describe('PokemonFilterForm', () => {
     expect(disabledFilter?.special_encounter_triggered).toBeUndefined();
   });
 
-  it('encounterType 変更で非表示になったフィルタが undefined で伝播される', async () => {
+  it('経路変更は保持した持ち物条件を変更せず、要求時に除外する', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     // 持ち物フィルタが有効な Surfing で描画し、持ち物を選択する
@@ -186,7 +207,7 @@ describe('PokemonFilterForm', () => {
       onChange,
     });
     await openFilter(user);
-    expect(screen.getByLabelText('held-item-slot-select-trigger')).toBeInTheDocument();
+    expect(screen.queryByLabelText('held-item-slot-select-trigger')).not.toBeInTheDocument();
 
     // encounterType を Normal に切り替え (持ち物フィルタが非表示になる)
     onChange.mockClear();
@@ -194,11 +215,15 @@ describe('PokemonFilterForm', () => {
       rerenderWith({ encounterType: 'Normal', value: initialFilter });
     });
 
-    // onChange が呼ばれ、held_item_slots が undefined になっている
-    const calls = onChange.mock.calls;
-    expect(calls.length).toBeGreaterThan(0);
-    const lastFilter = calls.at(-1)![0] as PokemonFilter | undefined;
-    expect(lastFilter?.held_item_slots).toBeUndefined();
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      normalizePokemonFilter(
+        initialFilter,
+        undefined,
+        { encounterType: 'Normal', slots: [] },
+        'ivs'
+      )
+    ).toBeUndefined();
   });
 
   it('特殊エンカウント以外への変更で発生のみ条件を除外する', async () => {
@@ -221,8 +246,15 @@ describe('PokemonFilterForm', () => {
       rerenderWith({ encounterType: 'Normal', value: initialFilter });
     });
 
-    const lastFilter = onChange.mock.calls.at(-1)?.[0] as PokemonFilter | undefined;
-    expect(lastFilter?.special_encounter_triggered).toBeUndefined();
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      normalizePokemonFilter(
+        initialFilter,
+        undefined,
+        { encounterType: 'Normal', slots: [] },
+        'ivs'
+      )
+    ).toBeUndefined();
   });
 
   it('syncKey 変更時は内部フィルタを外部値に同期する', async () => {
@@ -241,6 +273,6 @@ describe('PokemonFilterForm', () => {
 
     rerenderWith({ value: undefined, syncKey: 1 });
 
-    expect((screen.getByLabelText('level-min') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('level-min') as HTMLInputElement).value).toBe('1');
   });
 });

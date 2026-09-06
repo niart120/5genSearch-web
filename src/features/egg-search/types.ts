@@ -1,3 +1,4 @@
+import type { EggFilterInput as EggFilter } from '@/lib/search-filter-context';
 /**
  * 孵化起動時刻検索 — 型定義 + バリデーション
  */
@@ -8,7 +9,6 @@ import type {
   KeySpec,
   EggGenerationParams,
   GenerationConfig,
-  EggFilter,
 } from '../../wasm/wasm_pkg.js';
 import { validateGenConfig, isIvValid } from '@/lib/validation';
 

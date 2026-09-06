@@ -7,6 +7,9 @@ import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { useUiStore } from '@/stores/settings/ui';
 import { isLocationBasedEncounter, listLocations, listSpecies } from '@/data/encounters/helpers';
 import { getEncounterSlots } from '@/data/encounters/loader';
+import { useState } from 'react';
+import { hasCurrentEncounterSlots } from '@/lib/encounter-slot-context';
+import type { EncounterParamsOutput } from '@/features/pokemon-list/types';
 
 vi.mock('@/wasm/wasm_pkg.js', () => ({
   get_species_name: vi.fn(() => 'Bulbasaur'),
@@ -88,5 +91,41 @@ describe('PokemonParamsForm', () => {
     });
 
     await waitFor(() => expect(getEncounterSlots).toHaveBeenCalledWith('B', 'route-1', 'Normal'));
+  });
+
+  it('対象Aの取得がBより後に完了してもBを上書きせず、取得中は開始不可', async () => {
+    vi.mocked(isLocationBasedEncounter).mockReturnValue(true);
+    let finishA: ((slots: Awaited<ReturnType<typeof getEncounterSlots>>) => void) | undefined;
+    vi.mocked(getEncounterSlots).mockImplementation((_version, location) =>
+      location === 'a'
+        ? new Promise((resolve) => {
+            finishA = resolve;
+          })
+        : Promise.resolve([])
+    );
+    let latest: EncounterParamsOutput = { ...DEFAULT_ENCOUNTER_PARAMS, locationKey: 'a' };
+    function Harness() {
+      const [value, setValue] = useState(latest);
+      latest = value;
+      return (
+        <>
+          <button onClick={() => setValue((prev) => ({ ...prev, locationKey: 'b' }))}>B</button>
+          <PokemonParamsForm value={value} onChange={setValue} version="Black" />
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(
+      <I18nTestWrapper>
+        <Harness />
+      </I18nTestWrapper>
+    );
+    await waitFor(() => expect(finishA).toBeDefined());
+    expect(hasCurrentEncounterSlots(latest, 'Black')).toBe(false);
+    await user.click(screen.getByRole('button', { name: 'B' }));
+    await waitFor(() => expect(latest.slotsContextKey).toContain('"b"'));
+    const resolvedB = latest;
+    await act(async () => finishA?.([]));
+    expect(latest).toBe(resolvedB);
   });
 });

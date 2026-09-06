@@ -20,11 +20,17 @@ interface AbilitySlotSelectProps {
   value: AbilitySlot | undefined;
   onChange: (value: AbilitySlot | undefined) => void;
   disabled?: boolean;
+  showHidden?: boolean;
 }
 
 const SENTINEL = '__none__';
 
-function AbilitySlotSelect({ value, onChange, disabled }: AbilitySlotSelectProps) {
+function AbilitySlotSelect({
+  value,
+  onChange,
+  disabled,
+  showHidden = true,
+}: AbilitySlotSelectProps) {
   const { t } = useLingui();
 
   const handleChange = (v: string) => {
@@ -36,7 +42,11 @@ function AbilitySlotSelect({ value, onChange, disabled }: AbilitySlotSelectProps
       <Label className="text-xs">
         <Trans>Ability slot</Trans>
       </Label>
-      <Select value={value ?? SENTINEL} onValueChange={handleChange} disabled={disabled}>
+      <Select
+        value={(value === 'Hidden' && !showHidden ? undefined : value) ?? SENTINEL}
+        onValueChange={handleChange}
+        disabled={disabled}
+      >
         <SelectTrigger className="h-8 text-xs">
           <SelectValue />
         </SelectTrigger>
@@ -44,7 +54,7 @@ function AbilitySlotSelect({ value, onChange, disabled }: AbilitySlotSelectProps
           <SelectItem value={SENTINEL}>{t`Not specified`}</SelectItem>
           <SelectItem value="First">{t`Ability 1`}</SelectItem>
           <SelectItem value="Second">{t`Ability 2`}</SelectItem>
-          <SelectItem value="Hidden">{t`Hidden Ability`}</SelectItem>
+          {showHidden && <SelectItem value="Hidden">{t`Hidden Ability`}</SelectItem>}
         </SelectContent>
       </Select>
     </div>

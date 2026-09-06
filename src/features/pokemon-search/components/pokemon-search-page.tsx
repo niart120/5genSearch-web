@@ -1,3 +1,5 @@
+import { normalizePokemonSearchFilter } from '@/lib/search-filter-context';
+import { hasCurrentEncounterSlots } from '@/lib/encounter-slot-context';
 import { useState, useMemo, useCallback } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
@@ -111,6 +113,7 @@ export function PokemonSearchPage() {
     const trainer = useTrainerStore.getState();
     if (validatePokemonSearchForm(state, trainer, ds.ranges).length > 0) return;
     const encounter = state.encounterParams;
+    if (!hasCurrentEncounterSlots(encounter, ds.config.version)) return;
     const request: PokemonSearchRequest = structuredClone({
       context: {
         ds: ds.config,
@@ -127,7 +130,7 @@ export function PokemonSearchPage() {
         slots: encounter.slots,
       },
       genConfig: { version: ds.config.version, game_start: ds.gameStart, ...encounter.genConfig },
-      filter: state.filter,
+      filter: normalizePokemonSearchFilter(state.filter, encounter),
       encounterParams: encounter,
     });
     const estimate = estimatePokemonDatetimeSearchResults(
@@ -142,7 +145,7 @@ export function PokemonSearchPage() {
   const controlProps = {
     isLoading,
     isInitialized,
-    isValid: validation.length === 0,
+    isValid: validation.length === 0 && hasCurrentEncounterSlots(encounterParams, dsConfig.version),
     progress,
     error: requestError ?? error,
     onSearch: handleSearch,
@@ -172,6 +175,12 @@ export function PokemonSearchPage() {
               disabled={isLoading}
             />
             <PokemonSearchFilterForm
+              context={{
+                ...encounterParams,
+                slots: hasCurrentEncounterSlots(encounterParams, dsConfig.version)
+                  ? encounterParams.slots
+                  : [],
+              }}
               value={filter}
               onChange={setFilter}
               availableSpecies={encounterParams.availableSpecies}

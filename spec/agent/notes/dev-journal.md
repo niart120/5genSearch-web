@@ -17,22 +17,6 @@
 
 当面の方針: 今回は手動で 12 件を追加し、不要な `celestial_tower` を削除して整合をとった。将来的にはスクレイピング後にキーの過不足を自動検出するスクリプト（または CI チェック）の導入を検討する。
 
-## 2026-02-13: pokemon-filter-form 内部状態同期の複雑性
-
-現状: `pokemon-filter-form.tsx` はフィルタの有効/無効トグルを持ち、無効時でもフォーム入力値を保持するために3つの内部状態を管理している。
-
-1. `filterEnabled`: トグル有効/無効
-2. `internalFilter`: `PokemonFilter` の内容 (トグル OFF でも保持)
-3. `internalStats`: `StatsFilter` の内容 (同上)
-
-これらを `propagate` ヘルパーで親に伝搬し、有効時は `internalFilter` / `internalStats` を、無効時は `undefined` を返す。
-
-問題: 親 (`value`/`statsFilter`) ↔ 子 (`internalFilter`/`internalStats`) の双方向同期が useEffect (`syncFromExternal`) で行われており、制御フローの把握が難しい。特に `filterEnabled` 切替時のタイミング依存は、将来的なバグの温床になりうる。
-
-許容理由: フィルタ無効時に入力値を破棄しない UX 要件を満たすには、何らかの内部保持が必要。現状の実装はこの要件を最小コストで実現しており、実際に動作上の問題は確認されていない。
-
-フォローアップ: Feature Store 導入 (`spec/agent/wip/local_088/STATE_PERSISTENCE.md`) により、親側の `filter` / `statsFilter` が `useState` → Feature Store に移行する。pokemon-filter-form は controlled component のため直接の影響は小さいが、Feature Store で入力値が永続化されるため「フィルタ無効時でも値を保持したい」要件の一部が Store 側で自然に解決される可能性がある。local_088 の Phase 3 (Page コンポーネント改修) 実施時にこの箇所の整理を検討する。関連ファイル: `src/features/pokemon-list/components/pokemon-filter-form.tsx`。
-
 ## 2026-02-14: WASM Searcher API の共通化
 
 現状: 4つの Searcher (`MtseedDatetimeSearcher`, `MtseedSearcher`, `EggDatetimeSearcher`, `TrainerInfoSearcher`) の `next_batch()` 返却型でプロパティ名が不統一。`MtseedSearcher` のみ `candidates` / `processed` / `total`、他3つは `results` / `processed_count` / `total_count`。
@@ -133,14 +117,6 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 
 当面の方針: 現時点で具体的なユーザ要求はないため対応しない。需要が確認された場合に別途仕様化する。
 
-## 2026-09-06: 対象変更直後のスロット取得と検索開始
-
-現状: `src/features/pokemon-list/components/pokemon-params-form.tsx` は場所・固定対象の選択を更新した後、非同期でスロットを取得する。
-
-観察: 取得完了前に検索・生成を開始すると、新しい対象選択と以前のスロットを組み合わせる可能性がある。ソース上の懸念であり、画面での再現は未確認。
-
-当面の方針: `spec/agent/complete/local_118/POKEMON_SEARCH.md` の新検索では既存フォームの扱いを維持し、今回の必須改修に含めない。対応時は既存生成画面での再現を確認し、取得中の開始操作と古い取得結果の扱いを検討する。
-
 ## 2026-09-06: 共通検索進捗の整数精度と集計対象
 
 現状: `src/workers/search.worker.ts` の `calculateProgress` は bigint を number に変換し、`src/services/progress.ts` の `ProgressAggregator` は報告済みタスクだけを集計する。
@@ -149,10 +125,10 @@ WASM API の破壊的変更を伴うため、前エントリの `SearchBatch<T>`
 
 当面の方針: `spec/agent/complete/local_119/POKEMON_SEARCH_ENGINE.md` の新検索は既存進捗基盤へ接続する。共通基盤の拡張は今回行わず、必要になった時点で既存 CPU / GPU 検索への影響を含めて別途設計する。
 
-## 2026-09-06: ポケモン検索の対象別フィルター表示と範囲条件の切り替え
+## 2026-09-06: 持ち物判定の対象経路と VeryRare の成立条件
 
-現状: `src/features/pokemon-search/components/pokemon-search-filter-form.tsx` は対象によらず種族・レベルの条件を表示し、レベル範囲に独立した有効／無効の切り替えを持たない。
+現状: `wasm-pkg/src/generation/algorithm/encounter.rs` の持ち物判定対象は5経路に限られ、`Normal` が外れる。
 
-観察: 固定エンカウントで種族やレベルが確定している場合、その値を絞り込む入力は不要になる。伝説・準伝説という分類だけでなく、実際の対象とスロットの確定値に基づいて判断する必要がある。
+観察: 移行仕様を追加したコミット `3437bf5` に既にこの分類があるが、通常草むらを除外する根拠は記載されていない。同仕様の `VeryRare` は「濃い草むら」と `ShakingGrass`（揺れる草むら）の記述が食い違い、`ff11390` では水泡釣りも対象に加わっている。現在の分類をゲーム仕様として扱う根拠が不足している。
 
-当面の方針: フィルター挙動の改修は保留する。対応時は対象に対して意味を持たない種族・レベル等の条件を非表示にし、範囲系のフィルターは個別に有効／無効を切り替える。対象変更で非表示になった条件の検索への適用と、無効時の入力値保持を含めて設計する。
+当面の方針: 持ち物の乱数消費・判定対象経路・`VeryRare` の成立条件は別途調査する。UIでの扱いは `spec/agent/complete/local_122/CONTEXTUAL_SEARCH_FILTERS.md` §4.2 に従う。

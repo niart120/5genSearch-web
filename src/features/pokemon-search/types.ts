@@ -1,8 +1,9 @@
+import { normalizePokemonSearchFilter } from '@/lib/search-filter-context';
+import type { PokemonSearchFilterInput as PokemonDatetimeSearchFilter } from '@/lib/search-filter-context';
 import type {
   DateRangeParams,
   TimeRangeParams,
   KeySpec,
-  PokemonDatetimeSearchFilter,
   DatetimeSearchContext,
   PokemonGenerationParams,
   GenerationConfig,
@@ -107,7 +108,8 @@ export function validatePokemonSearchForm(
     form.encounterParams.encounterType === 'Egg'
   )
     errors.push('ENCOUNTER_UNSUPPORTED');
-  const level = form.filter.level_range;
+  const appliedFilter = normalizePokemonSearchFilter(form.filter, form.encounterParams);
+  const level = appliedFilter.level_range;
   if (
     level &&
     (!level.every((value) => Number.isInteger(value)) ||
@@ -116,7 +118,7 @@ export function validatePokemonSearchForm(
       level[0] > level[1])
   )
     errors.push('LEVEL_RANGE_INVALID');
-  if (form.filter.shiny !== undefined) {
+  if (appliedFilter.shiny !== undefined) {
     if (trainer.tid === undefined) errors.push('TID_REQUIRED');
     if (trainer.sid === undefined) errors.push('SID_REQUIRED');
   }

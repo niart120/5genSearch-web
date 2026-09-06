@@ -10,6 +10,7 @@ import { runSearchInWorker } from './helpers/worker-test-utils';
 import type { PokemonListTask } from '../../workers/types';
 import { generate_pokemon_list } from '../../wasm/wasm_pkg.js';
 import type { SeedOrigin, PokemonGenerationParams, GenerationConfig } from '../../wasm/wasm_pkg.js';
+import { normalizePokemonFilter } from '@/lib/search-filter-context';
 
 const TEST_ORIGIN: SeedOrigin = {
   Seed: {
@@ -65,6 +66,43 @@ describe('PokemonList Direct WASM', () => {
 });
 
 describe('PokemonList Worker Integration', () => {
+  it('非表示の固定対象属性・持ち物・個体値を除外した要求が未指定の要求と一致する', async () => {
+    const params = {
+      ...TEST_PARAMS,
+      slots: TEST_PARAMS.slots.map((slot) => ({ ...slot, shiny_locked: true })),
+    };
+    const filter = normalizePokemonFilter(
+      {
+        species_ids: [1],
+        level_range: [90, 100],
+        gender: 'Male',
+        shiny: 'Shiny',
+        ability_slot: 'Hidden',
+        held_item_slots: ['VeryRare'],
+        iv: {
+          hp: [31, 31],
+          atk: [31, 31],
+          def: [31, 31],
+          spa: [31, 31],
+          spd: [31, 31],
+          spe: [31, 31],
+        },
+      },
+      undefined,
+      { encounterType: params.encounter_type, slots: params.slots },
+      'stats'
+    );
+    const results = await runSearchInWorker({
+      kind: 'pokemon-list',
+      origins: [TEST_ORIGIN],
+      params,
+      config: TEST_CONFIG,
+      filter,
+    });
+    const expected = generate_pokemon_list([TEST_ORIGIN], params, TEST_CONFIG);
+    expect(expected.length).toBeGreaterThan(0);
+    expect(results).toEqual(expected);
+  });
   it('Worker 経由で pokemon-list タスクを実行し結果が返る', async () => {
     const task: PokemonListTask = {
       kind: 'pokemon-list',

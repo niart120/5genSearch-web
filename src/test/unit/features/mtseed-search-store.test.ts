@@ -18,8 +18,8 @@ describe('mtseed-search store', () => {
 
   it('should initialize with default values', () => {
     const state = useMtseedSearchStore.getState();
-    expect(state.ivFilter.hp).toEqual([31, 31]);
-    expect(state.ivFilter.atk).toEqual([31, 31]);
+    expect(state.ivFilter.hp).toEqual([0, 31]);
+    expect(state.ivFilter.atk).toEqual([0, 31]);
     expect(state.mtOffset).toBe(0);
     expect(state.isRoamer).toBe(false);
     expect(state.useGpu).toBe(true);
@@ -32,7 +32,7 @@ describe('mtseed-search store', () => {
       hp: [0, 31],
     });
     expect(useMtseedSearchStore.getState().ivFilter.hp).toEqual([0, 31]);
-    expect(useMtseedSearchStore.getState().ivFilter.atk).toEqual([31, 31]);
+    expect(useMtseedSearchStore.getState().ivFilter.atk).toEqual([0, 31]);
   });
 
   it('should update mtOffset', () => {

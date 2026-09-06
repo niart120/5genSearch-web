@@ -1,3 +1,9 @@
+import { IvFilterFields } from './iv-filter-fields';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  getEggFilterVisibility,
+  type EggFilterInput as EggFilter,
+} from '@/lib/search-filter-context';
 /**
  * 孵化フィルター入力フォーム
  *
@@ -6,33 +12,22 @@
  * showReset: リセットボタン (全フィルターをデフォルトに戻す)
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { IvRangeInput } from '@/components/forms/iv-range-input';
 import { StatsFixedInput } from '@/components/forms/stats-fixed-input';
 import { NatureSelect } from '@/components/forms/nature-select';
-import { HiddenPowerSelect } from '@/components/forms/hidden-power-select';
 import { AbilitySlotSelect } from '@/components/forms/ability-slot-select';
 import { GenderSelect } from '@/components/forms/gender-select';
 import { ShinySelect } from '@/components/forms/shiny-select';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import { cn } from '@/lib/utils';
 import type { StatDisplayMode } from '@/lib/game-data-names';
-import type {
-  EggFilter,
-  IvFilter,
-  Nature,
-  Gender,
-  AbilitySlot,
-  ShinyFilter,
-  HiddenPowerType,
-  StatsFilter,
-} from '@/wasm/wasm_pkg.js';
+import type { IvFilter, StatsFilter, EggGenerationParams } from '@/wasm/wasm_pkg.js';
 
 const DEFAULT_STATS_FILTER: StatsFilter = {
   hp: undefined,
@@ -44,6 +39,7 @@ const DEFAULT_STATS_FILTER: StatsFilter = {
 };
 
 interface EggFilterFormProps {
+  eggParams: EggGenerationParams;
   value: EggFilter | undefined;
   onChange: (filter?: EggFilter) => void;
   /** Stats 表示モード。指定時に IV / Stats フィルタを切替表示する */
@@ -79,6 +75,7 @@ const DEFAULT_FILTER: EggFilter = {
 
 function EggFilterForm({
   value,
+  eggParams,
   onChange,
   statMode,
   statsFilter,
@@ -92,231 +89,29 @@ function EggFilterForm({
   const [isOpen, setIsOpen] = useState(false);
   const [localMarginFrames, setLocalMarginFrames] = useState('');
 
-  // --- Toggle mode: internal state management ---
-  const [filterEnabled, setFilterEnabled] = useState(true);
-  const [internalFilter, setInternalFilter] = useState<EggFilter>(value ?? DEFAULT_FILTER);
-  const [internalStats, setInternalStats] = useState<StatsFilter | undefined>(statsFilter);
-  const skipNextPropSyncRef = useRef(false);
-  const lastSyncKeyRef = useRef(syncKey);
-
+  const filter = value ?? DEFAULT_FILTER;
+  const effectiveStats = statsFilter;
+  const filterEnabled = filter.enabled !== false;
+  const visible = getEggFilterVisibility(eggParams, statMode);
   useEffect(() => {
-    const syncKeyChanged = lastSyncKeyRef.current !== syncKey;
-    lastSyncKeyRef.current = syncKey;
-    if (!showToggle) {
-      skipNextPropSyncRef.current = false;
-      return;
-    }
-    if (!syncKeyChanged && skipNextPropSyncRef.current) {
-      skipNextPropSyncRef.current = false;
-      return;
-    }
-    skipNextPropSyncRef.current = false;
-    setInternalFilter(value ?? DEFAULT_FILTER);
-    setInternalStats(statsFilter);
-    if (syncKeyChanged) {
-      setFilterEnabled(true);
-    }
-  }, [showToggle, value, statsFilter, syncKey]);
-
-  // Toggle mode uses internal state; otherwise props directly
-  const filter = showToggle ? internalFilter : (value ?? DEFAULT_FILTER);
-  const effectiveStats = showToggle ? internalStats : statsFilter;
-
-  useEffect(() => {
-    setLocalMarginFrames(
-      filter.min_margin_frames === undefined ? '' : String(filter.min_margin_frames)
-    );
+    setLocalMarginFrames(String(filter.min_margin_frames ?? 0));
   }, [filter.min_margin_frames, syncKey]);
-
-  // --- Propagation helpers ---
-
-  const hasAnyFilter = useCallback((f: EggFilter): boolean => {
-    return (
-      f.iv !== undefined ||
-      (f.natures !== undefined && f.natures.length > 0) ||
-      f.gender !== undefined ||
-      f.ability_slot !== undefined ||
-      f.shiny !== undefined ||
-      f.min_margin_frames !== undefined
-    );
-  }, []);
-
-  /** Toggle mode: propagate or suppress based on enabled state */
-  const propagateToggle = useCallback(
-    (f: EggFilter, stats: StatsFilter | undefined, enabled: boolean) => {
-      if (!enabled) {
-        onChange();
-        onStatsFilterChange?.();
-        return;
-      }
-      onChange(hasAnyFilter(f) ? f : undefined);
-      if (onStatsFilterChange) {
-        const hasStats = stats !== undefined && Object.values(stats).some((v) => v !== undefined);
-        onStatsFilterChange(hasStats ? stats : undefined);
-      }
-    },
-    [onChange, onStatsFilterChange, hasAnyFilter]
-  );
-
-  // --- Update helpers ---
-
   const update = useCallback(
-    (partial: Partial<EggFilter>) => {
-      const updated = { ...filter, ...partial };
-      if (showToggle) {
-        setInternalFilter(updated);
-        propagateToggle(updated, internalStats, filterEnabled);
-      } else {
-        onChange(hasAnyFilter(updated) ? updated : undefined);
-      }
-    },
-    [filter, showToggle, internalStats, filterEnabled, propagateToggle, hasAnyFilter, onChange]
+    (partial: Partial<EggFilter>) => onChange({ ...filter, ...partial }),
+    [filter, onChange]
   );
-
-  // --- Toggle / Reset handlers ---
-
-  const handleToggleEnabled = useCallback(
-    (checked: boolean) => {
-      setFilterEnabled(checked);
-      if (!checked) {
-        skipNextPropSyncRef.current = true;
-      }
-      propagateToggle(internalFilter, internalStats, checked);
-    },
-    [internalFilter, internalStats, propagateToggle]
-  );
-
-  const handleReset = useCallback(() => {
-    setLocalMarginFrames('');
-    if (showToggle) {
-      setInternalFilter(DEFAULT_FILTER);
-      setInternalStats(undefined);
-    }
+  const handleToggleEnabled = (enabled: boolean) => update({ enabled });
+  const handleReset = () => {
+    setLocalMarginFrames('0');
     onChange();
     onStatsFilterChange?.();
-  }, [showToggle, onChange, onStatsFilterChange]);
-
-  // --- Stats handler ---
-
-  const handleStatsChange = useCallback(
-    (v: StatsFilter) => {
-      const hasAny = Object.values(v).some((val) => val !== undefined);
-      const next = hasAny ? v : undefined;
-      if (showToggle) {
-        setInternalStats(next);
-        if (filterEnabled) {
-          onStatsFilterChange?.(next);
-        }
-      } else {
-        onStatsFilterChange?.(next);
-      }
-    },
-    [showToggle, filterEnabled, onStatsFilterChange]
-  );
-
-  // --- Field handlers ---
-
-  const handleIvChange = useCallback(
-    (ivs: Pick<IvFilter, 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'>) => {
-      const allDefault =
-        ivs.hp[0] === 0 &&
-        ivs.hp[1] === 31 &&
-        ivs.atk[0] === 0 &&
-        ivs.atk[1] === 31 &&
-        ivs.def[0] === 0 &&
-        ivs.def[1] === 31 &&
-        ivs.spa[0] === 0 &&
-        ivs.spa[1] === 31 &&
-        ivs.spd[0] === 0 &&
-        ivs.spd[1] === 31 &&
-        ivs.spe[0] === 0 &&
-        ivs.spe[1] === 31;
-      // 既存の hidden_power 設定を保持
-      const existingIv = filter.iv;
-      const nextIv =
-        allDefault &&
-        !existingIv?.hidden_power_types &&
-        existingIv?.hidden_power_min_power === undefined
-          ? undefined
-          : {
-              ...DEFAULT_IV_FILTER,
-              ...ivs,
-              hidden_power_types: existingIv?.hidden_power_types,
-              hidden_power_min_power: existingIv?.hidden_power_min_power,
-            };
-      update({ iv: nextIv });
-    },
-    [filter.iv, update]
-  );
-
-  const handleNaturesChange = useCallback(
-    (natures: Nature[]) => {
-      update({ natures: natures.length > 0 ? natures : undefined });
-    },
-    [update]
-  );
-
-  const handleGenderChange = useCallback(
-    (gender: Gender | undefined) => {
-      update({ gender });
-    },
-    [update]
-  );
-
-  const handleAbilitySlotChange = useCallback(
-    (slot: AbilitySlot | undefined) => {
-      update({ ability_slot: slot });
-    },
-    [update]
-  );
-
-  const handleShinyChange = useCallback(
-    (shiny: ShinyFilter | undefined) => {
-      update({ shiny });
-    },
-    [update]
-  );
-
-  const handleHiddenPowerTypesChange = useCallback(
-    (types: HiddenPowerType[]) => {
-      const existing = filter.iv ?? DEFAULT_IV_FILTER;
-      update({
-        iv: {
-          ...existing,
-          hidden_power_types: types.length > 0 ? types : undefined,
-        },
-      });
-    },
-    [filter.iv, update]
-  );
-
-  const handleHiddenPowerMinPowerChange = useCallback(
-    (minPower?: number) => {
-      const existing = filter.iv ?? DEFAULT_IV_FILTER;
-      update({
-        iv: {
-          ...existing,
-          hidden_power_min_power: minPower,
-        },
-      });
-    },
-    [filter.iv, update]
-  );
-
-  const handleMarginFramesBlur = useCallback(() => {
-    if (localMarginFrames.trim() === '') {
-      update({ min_margin_frames: undefined });
-      return;
-    }
-    const clamped = clampOrDefault(localMarginFrames, {
-      defaultValue: 0,
-      min: 0,
-      max: 999_999,
-    });
+  };
+  const handleStatsChange = (stats: StatsFilter) => onStatsFilterChange?.(stats);
+  const handleMarginFramesBlur = () => {
+    const clamped = clampOrDefault(localMarginFrames, { defaultValue: 0, min: 0, max: 999_999 });
     setLocalMarginFrames(String(clamped));
     update({ min_margin_frames: clamped });
-  }, [localMarginFrames, update]);
-
+  };
   const ivValue = filter.iv ?? DEFAULT_IV_FILTER;
   const filterDisabled = disabled || (showToggle && !filterEnabled);
 
@@ -358,7 +153,7 @@ function EggFilterForm({
       {isOpen && (
         <div className={cn('flex flex-col gap-3 pl-1', filterDisabled && 'opacity-50')}>
           {/* 実ステータスフィルター (Stats モード時) */}
-          {statMode === 'stats' && onStatsFilterChange && (
+          {visible.stats && onStatsFilterChange && (
             <div className="flex flex-col gap-1">
               <Label className="text-xs">
                 <Trans>Stats filter</Trans>
@@ -372,73 +167,78 @@ function EggFilterForm({
           )}
 
           {/* IV フィルター (IV モード時 or statMode 未指定時) */}
-          {statMode !== 'stats' && (
-            <>
-              <IvRangeInput
-                value={ivValue}
-                onChange={handleIvChange}
-                allowUnknown
-                disabled={filterDisabled}
-              />
-
-              {/* めざパタイプ + 威力下限 */}
-              <HiddenPowerSelect
-                value={filter.iv?.hidden_power_types ?? []}
-                onChange={handleHiddenPowerTypesChange}
-                minPower={filter.iv?.hidden_power_min_power}
-                onMinPowerChange={handleHiddenPowerMinPowerChange}
-                disabled={filterDisabled}
-              />
-            </>
+          {visible.iv && (
+            <IvFilterFields
+              value={ivValue}
+              onChange={(iv) => update({ iv })}
+              disabled={filterDisabled}
+            />
           )}
 
           {/* 特性スロット / 性別 / 性格 / 色違い (2列) */}
           <div className="grid grid-cols-2 gap-2">
             <AbilitySlotSelect
+              showHidden={visible.hiddenAbility}
               value={filter.ability_slot}
-              onChange={handleAbilitySlotChange}
+              onChange={(ability_slot) => update({ ability_slot })}
               disabled={filterDisabled}
             />
 
             <GenderSelect
               value={filter.gender}
-              onChange={handleGenderChange}
+              onChange={(gender) => update({ gender })}
               showGenderless={false}
               disabled={filterDisabled}
             />
 
             <NatureSelect
               value={filter.natures ?? []}
-              onChange={handleNaturesChange}
+              onChange={(natures) => update({ natures })}
               disabled={filterDisabled}
             />
 
             <ShinySelect
               value={filter.shiny}
-              onChange={handleShinyChange}
+              onChange={(shiny) => update({ shiny })}
               disabled={filterDisabled}
             />
           </div>
 
-          {/* 猶予フレーム下限 */}
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="egg-min-margin" className="text-xs">
-              <Trans>Min margin frames</Trans>
-            </Label>
-            <Input
-              id="egg-min-margin"
-              type="number"
-              inputMode="numeric"
-              className="h-7 text-xs tabular-nums"
-              placeholder={t`Not specified`}
-              value={localMarginFrames}
-              onChange={(e) => setLocalMarginFrames(e.target.value)}
-              onBlur={handleMarginFramesBlur}
-              onFocus={handleFocusSelectAll}
-              min={0}
-              disabled={filterDisabled}
-            />
-          </div>
+          {visible.margin && (
+            <div className="flex flex-col gap-1">
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox
+                  checked={filter.marginEnabled ?? filter.min_margin_frames !== undefined}
+                  onCheckedChange={(checked) =>
+                    update({
+                      marginEnabled: checked === true,
+                      min_margin_frames: filter.min_margin_frames ?? 0,
+                    })
+                  }
+                  disabled={filterDisabled}
+                  aria-label={t`Enable minimum margin frames`}
+                />
+                <Trans>Min margin frames</Trans>
+              </label>
+              <Input
+                id="egg-min-margin"
+                aria-label={t`Min margin frames`}
+                type="number"
+                inputMode="numeric"
+                className="h-7 text-xs tabular-nums"
+                placeholder={t`Not specified`}
+                value={localMarginFrames}
+                onChange={(e) => setLocalMarginFrames(e.target.value)}
+                onBlur={handleMarginFramesBlur}
+                onFocus={handleFocusSelectAll}
+                min={0}
+                disabled={
+                  filterDisabled ||
+                  !(filter.marginEnabled ?? filter.min_margin_frames !== undefined)
+                }
+              />
+            </div>
+          )}
         </div>
       )}
     </section>

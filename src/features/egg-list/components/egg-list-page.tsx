@@ -1,3 +1,4 @@
+import { normalizeEggFilter } from '@/lib/search-filter-context';
 /**
  * タマゴ個体生成ページコンポーネント
  *
@@ -44,22 +45,6 @@ interface EggListRequest {
   filter: EggFilter | undefined;
 }
 
-function mergeEggFilter(
-  filter: EggFilter | undefined,
-  statsFilter: EggFilter['stats']
-): EggFilter | undefined {
-  if (!filter && !statsFilter) return;
-  return {
-    iv: filter?.iv,
-    natures: filter?.natures,
-    gender: filter?.gender,
-    ability_slot: filter?.ability_slot,
-    shiny: filter?.shiny,
-    min_margin_frames: filter?.min_margin_frames,
-    stats: statsFilter,
-  };
-}
-
 function EggListPage(): ReactElement {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
@@ -96,19 +81,23 @@ function EggListPage(): ReactElement {
     useEggList(language);
 
   // バリデーション
-  const validation = useMemo(
-    () =>
-      validateEggListForm({
-        seedInputMode,
-        seedOrigins,
-        eggParams,
-        genConfig,
-        filter,
-        statsFilter,
-        speciesId,
-      }),
-    [seedInputMode, seedOrigins, eggParams, genConfig, filter, statsFilter, speciesId]
-  );
+  const validation = useMemo(() => {
+    const appliedFilter = normalizeEggFilter(
+      filter,
+      statsFilter,
+      { ...eggParams, species_id: speciesId },
+      statMode
+    );
+    return validateEggListForm({
+      seedInputMode,
+      seedOrigins,
+      eggParams,
+      genConfig,
+      filter: appliedFilter,
+      statsFilter: appliedFilter?.stats,
+      speciesId,
+    });
+  }, [seedInputMode, seedOrigins, eggParams, genConfig, filter, statsFilter, speciesId, statMode]);
 
   const [selectedRawResult, setSelectedRawResult] = useState<GeneratedEggData | undefined>();
   const [detailOpen, setDetailOpen] = useState(false);
@@ -139,15 +128,22 @@ function EggListPage(): ReactElement {
       speciesId: state.speciesId,
       filter: state.filter,
       statsFilter: state.statsFilter,
+      statMode: state.statMode,
     });
     const origins = structuredClone(form.seedOrigins);
+    const appliedFilter = normalizeEggFilter(
+      form.filter,
+      form.statsFilter,
+      { ...form.eggParams, species_id: form.speciesId },
+      form.statMode
+    );
     const currentValidation = validateEggListForm({
       seedInputMode: form.seedInputMode,
       seedOrigins: origins,
       eggParams: form.eggParams,
       genConfig: form.genConfig,
-      filter: form.filter,
-      statsFilter: form.statsFilter,
+      filter: appliedFilter,
+      statsFilter: appliedFilter?.stats,
       speciesId: form.speciesId,
     });
     if (!currentValidation.isValid) return;
@@ -175,7 +171,7 @@ function EggListPage(): ReactElement {
       origins,
       params: paramsWithTrainer,
       genConfig: fullGenConfig,
-      filter: mergeEggFilter(form.filter, form.statsFilter),
+      filter: appliedFilter,
     };
   }, []);
 
@@ -269,6 +265,7 @@ function EggListPage(): ReactElement {
           />
 
           <EggFilterForm
+            eggParams={{ ...eggParams, species_id: speciesId }}
             value={filter}
             onChange={setFilter}
             statMode={statMode}

@@ -7,6 +7,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { WorkerPool } from '@/services/worker-pool';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
+import { normalizeEggFilter, DEFAULT_IV_RANGES } from '@/lib/search-filter-context';
 import type { EggListTask } from '@/workers/types';
 import type {
   SeedOrigin,
@@ -73,6 +74,32 @@ describe('Egg List Worker Integration', () => {
   afterEach(() => {
     pool?.dispose();
     pool = undefined;
+  });
+
+  it('NPCなしの猶予0・夢特性・不明個体値の任意条件を除外した要求が未指定と一致する', async () => {
+    pool = new WorkerPool({ useGpu: false, workerCount: 1 });
+    await pool.initialize();
+    const params = {
+      ...TEST_PARAMS,
+      parent_male: { ...TEST_PARAMS.parent_male, hp: 32 },
+      parent_female: { ...TEST_PARAMS.parent_female, hp: 32 },
+    };
+    const task: EggListTask = {
+      kind: 'egg-list',
+      origins: TEST_ORIGINS,
+      params,
+      config: TEST_CONFIG,
+      filter: undefined,
+    };
+    const expected = structuredClone(await executeTask(pool, task));
+    task.filter = normalizeEggFilter(
+      { ability_slot: 'Hidden', min_margin_frames: 0, iv: { ...DEFAULT_IV_RANGES, hp: [0, 32] } },
+      undefined,
+      params,
+      'ivs'
+    );
+    expect(expected.length).toBeGreaterThan(0);
+    expect(await executeTask(pool, task)).toEqual(expected);
   });
 
   it('should generate eggs via worker with correct structure', async () => {

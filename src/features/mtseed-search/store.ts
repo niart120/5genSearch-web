@@ -1,3 +1,4 @@
+import type { IvFilterInput as IvFilter } from '@/lib/search-filter-context';
 /**
  * MT Seed 検索 Feature Store
  *
@@ -6,7 +7,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { IvFilter, MtseedResult } from '@/wasm/wasm_pkg.js';
+import type { MtseedResult } from '@/wasm/wasm_pkg.js';
 
 /* ------------------------------------------------------------------ */
 /*  State                                                              */
@@ -49,12 +50,12 @@ interface MtseedSearchActions {
 /* ------------------------------------------------------------------ */
 
 const DEFAULT_IV_FILTER: IvFilter = {
-  hp: [31, 31],
-  atk: [31, 31],
-  def: [31, 31],
-  spa: [31, 31],
-  spd: [31, 31],
-  spe: [31, 31],
+  hp: [0, 31],
+  atk: [0, 31],
+  def: [0, 31],
+  spa: [0, 31],
+  spd: [0, 31],
+  spe: [0, 31],
 };
 
 const DEFAULT_FORM_STATE: MtseedSearchFormState = {
@@ -91,7 +92,8 @@ export const useMtseedSearchStore = create<MtseedSearchState & MtseedSearchActio
     }),
     {
       name: 'feature:mtseed-search',
-      version: 1,
+      version: 2,
+      migrate: (state) => state as ReturnType<typeof getMtseedSearchInitialState>,
       partialize: (state) => ({
         ivFilter: state.ivFilter,
         mtOffset: state.mtOffset,

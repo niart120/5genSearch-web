@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import type { IvFilterInput } from '@/lib/search-filter-context';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -16,11 +18,29 @@ const DEFAULT_VALUE = {
 
 function renderIvRange(props: Partial<Parameters<typeof IvRangeInput>[0]> = {}) {
   const onChange = props.onChange ?? vi.fn();
+  function Harness() {
+    const [value, setValue] = useState<IvFilterInput>(
+      props.value ?? {
+        ...DEFAULT_VALUE,
+        enabledStats: { hp: true, atk: true, def: true, spa: true, spd: true, spe: true },
+      }
+    );
+    return (
+      <IvRangeInput
+        {...props}
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          onChange(next);
+        }}
+      />
+    );
+  }
   return {
     onChange,
     ...render(
       <I18nTestWrapper>
-        <IvRangeInput value={DEFAULT_VALUE} onChange={onChange} {...props} />
+        <Harness />
       </I18nTestWrapper>
     ),
   };
@@ -150,22 +170,22 @@ describe('IvRangeInput', () => {
     for (const input of allInputs) expect(input).toBeDisabled();
   });
 
-  it('allowUnknown 未指定時に不明チェックボックスが表示されない', () => {
+  it('全画面で任意チェックボックスを表示する', () => {
     renderIvRange();
     const checkboxes = screen.queryAllByRole('checkbox');
-    expect(checkboxes).toHaveLength(0);
+    expect(checkboxes).toHaveLength(6);
   });
 
   it('allowUnknown={true} で不明チェックボックスが表示される', () => {
-    renderIvRange({ allowUnknown: true });
+    renderIvRange({});
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(6);
   });
 
-  it('不明 ON で onChange に [0, 32] が渡る', async () => {
+  it('任意 ON は範囲を保持して有効フラグを下げる', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    renderIvRange({ allowUnknown: true, onChange });
+    renderIvRange({ onChange });
 
     const checkboxes = screen.getAllByRole('checkbox');
     await user.click(checkboxes[0]); // HP の不明チェック
@@ -175,7 +195,8 @@ describe('IvRangeInput', () => {
     expect(lastArgs).toBeDefined();
     if (!lastArgs) return;
     const lastCall = lastArgs[0];
-    expect(lastCall.hp).toEqual([0, 32]);
+    expect(lastCall.hp).toEqual([0, 31]);
+    expect(lastCall.enabledStats.hp).toBe(false);
   });
 
   it('不明 ON で min/max フィールドが disabled になる', () => {
@@ -183,7 +204,7 @@ describe('IvRangeInput', () => {
       ...DEFAULT_VALUE,
       hp: [0, 32] as [number, number],
     };
-    renderIvRange({ allowUnknown: true, value: unknownValue });
+    renderIvRange({ value: unknownValue });
 
     const hpMin = screen.getByRole('textbox', { name: 'H min' });
     const hpMax = screen.getByRole('textbox', { name: 'H max' });
@@ -198,7 +219,7 @@ describe('IvRangeInput', () => {
       hp: [0, 32] as [number, number],
     };
     const onChange = vi.fn();
-    renderIvRange({ allowUnknown: true, value: unknownValue, onChange });
+    renderIvRange({ value: unknownValue, onChange });
 
     const checkboxes = screen.getAllByRole('checkbox');
     await user.click(checkboxes[0]); // HP の不明チェック OFF

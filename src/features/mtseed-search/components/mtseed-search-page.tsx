@@ -1,3 +1,4 @@
+import { normalizeIvFilter, DEFAULT_IV_RANGES } from '@/lib/search-filter-context';
 /**
  * MT Seed 検索ページコンポーネント
  *
@@ -74,7 +75,12 @@ function MtseedSearchPage(): ReactElement {
 
   // バリデーション
   const validation = useMemo(
-    () => validateMtseedIvSearchForm({ ivFilter, mtOffset, isRoamer }),
+    () =>
+      validateMtseedIvSearchForm({
+        ivFilter: normalizeIvFilter(ivFilter) ?? DEFAULT_IV_RANGES,
+        mtOffset,
+        isRoamer,
+      }),
     [ivFilter, mtOffset, isRoamer]
   );
 
@@ -109,7 +115,7 @@ function MtseedSearchPage(): ReactElement {
   const handleSearch = useCallback(() => {
     const state = useMtseedSearchStore.getState();
     const form = structuredClone({
-      ivFilter: state.ivFilter,
+      ivFilter: normalizeIvFilter(state.ivFilter) ?? DEFAULT_IV_RANGES,
       mtOffset: state.mtOffset,
       isRoamer: state.isRoamer,
     });

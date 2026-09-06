@@ -5,7 +5,6 @@ import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { clampOrDefault, handleFocusSelectAll } from './input-helpers';
 import { HIDDEN_POWER_ORDER, getHiddenPowerName } from '@/lib/game-data-names';
@@ -23,6 +22,8 @@ interface HiddenPowerSelectProps {
   onMinPowerChange?: (minPower?: number) => void;
   /** 無効化 */
   disabled?: boolean;
+  powerEnabled?: boolean;
+  onPowerEnabledChange?: (enabled: boolean) => void;
 }
 
 function HiddenPowerSelect({
@@ -31,6 +32,8 @@ function HiddenPowerSelect({
   minPower,
   onMinPowerChange,
   disabled,
+  powerEnabled = minPower !== undefined,
+  onPowerEnabledChange,
 }: HiddenPowerSelectProps) {
   const { t } = useLingui();
   const language = useUiStore((s) => s.language);
@@ -51,12 +54,10 @@ function HiddenPowerSelect({
     value.length === 0 ? <Trans>Not specified</Trans> : <Trans>{value.length} selected</Trans>;
 
   // めざパ威力ローカル state
-  const [localMinPower, setLocalMinPower] = React.useState(
-    minPower === undefined ? '' : String(minPower)
-  );
+  const [localMinPower, setLocalMinPower] = React.useState(String(minPower ?? 30));
   // 外部 prop 変更に追従
   React.useEffect(() => {
-    setLocalMinPower(minPower === undefined ? '' : String(minPower));
+    setLocalMinPower(String(minPower ?? 30));
   }, [minPower]);
 
   return (
@@ -119,7 +120,17 @@ function HiddenPowerSelect({
       {/* 威力下限 (onMinPowerChange が渡された場合のみ表示) */}
       {onMinPowerChange && (
         <div className="flex shrink-0 items-center gap-1">
-          <Label className="shrink-0 text-xs">{t`Min power`}</Label>
+          <label className="flex shrink-0 items-center gap-1 text-xs">
+            {onPowerEnabledChange && (
+              <Checkbox
+                checked={powerEnabled}
+                onCheckedChange={(checked) => onPowerEnabledChange(checked === true)}
+                disabled={disabled}
+                aria-label={t`Enable minimum Hidden Power power`}
+              />
+            )}
+            {t`Min power`}
+          </label>
           <Input
             className="h-7 w-16 text-xs tabular-nums"
             inputMode="numeric"
@@ -127,11 +138,6 @@ function HiddenPowerSelect({
             onChange={(e) => setLocalMinPower(e.target.value)}
             onFocus={handleFocusSelectAll}
             onBlur={() => {
-              if (localMinPower === '' || localMinPower === '0') {
-                setLocalMinPower('');
-                onMinPowerChange();
-                return;
-              }
               const v = clampOrDefault(localMinPower, {
                 defaultValue: 30,
                 min: 30,
@@ -140,7 +146,8 @@ function HiddenPowerSelect({
               setLocalMinPower(String(v));
               onMinPowerChange(v);
             }}
-            disabled={disabled}
+            disabled={disabled || !powerEnabled}
+            aria-label={t`Min power`}
             placeholder="30"
           />
         </div>

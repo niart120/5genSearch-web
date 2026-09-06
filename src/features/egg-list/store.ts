@@ -1,3 +1,4 @@
+import type { EggFilterInput as EggFilter } from '@/lib/search-filter-context';
 /**
  * タマゴリスト Feature Store
  *
@@ -9,7 +10,6 @@ import { persist } from 'zustand/middleware';
 import type {
   EggGenerationParams,
   GenerationConfig,
-  EggFilter,
   StatsFilter,
   GeneratedEggData,
   Ivs,
@@ -164,7 +164,8 @@ export const useEggListStore = create<EggListState & EggListActions>()(
     }),
     {
       name: 'feature:egg-list',
-      version: 1,
+      version: 2,
+      migrate: (state) => state as ReturnType<typeof getEggListInitialState>,
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,
         seedInput: state.seedInput,
