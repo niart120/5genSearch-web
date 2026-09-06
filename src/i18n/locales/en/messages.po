@@ -814,6 +814,7 @@ msgstr "MT Advances"
 msgid "MT Advances must be 0 or greater"
 msgstr "MT Advances must be 0 or greater"
 
+#: src/features/datetime-search/components/datetime-search-page.tsx:245
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:17
 msgid "MT Seed"
 msgstr "MT Seed"
@@ -1414,8 +1415,8 @@ msgstr "Synchronize nature"
 #~ msgstr "Tap the menu icon at the top left to configure search settings."
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:245
-msgid "Target MT Seeds"
-msgstr "Target MT Seeds"
+#~ msgid "Target MT Seeds"
+#~ msgstr "Target MT Seeds"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:253
 msgid "Template"

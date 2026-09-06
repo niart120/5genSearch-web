@@ -77,7 +77,7 @@ describe('PokemonSearchPage', () => {
 
   it('searches without MT Seed or trainer IDs and commits edited dates before snapshotting', () => {
     renderPage();
-    expect(screen.queryByLabelText('Target MT Seeds')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('MT Seed')).not.toBeInTheDocument();
     expect(screen.queryByText(/GPU/)).not.toBeInTheDocument();
     const year = screen.getByLabelText('date-start year');
     year.focus();

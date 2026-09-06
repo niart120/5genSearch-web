@@ -810,6 +810,7 @@ msgstr "MT 消費数"
 msgid "MT Advances must be 0 or greater"
 msgstr "MT 消費数は 0 以上にしてください"
 
+#: src/features/datetime-search/components/datetime-search-page.tsx:245
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:17
 msgid "MT Seed"
 msgstr "MT Seed"
@@ -1410,8 +1411,8 @@ msgstr "シンクロ性格"
 #~ msgstr "左上のメニューアイコンから検索設定を行えます。"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:245
-msgid "Target MT Seeds"
-msgstr "検索対象のMT Seed"
+#~ msgid "Target MT Seeds"
+#~ msgstr "検索対象のMT Seed"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:253
 msgid "Template"

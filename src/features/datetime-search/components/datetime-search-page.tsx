@@ -242,7 +242,7 @@ function IvDatetimeSearchPage(): ReactElement {
             <section className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 id="mt-seed-heading" className="text-sm font-medium">
-                  <Trans>Target MT Seeds</Trans>
+                  <Trans>MT Seed</Trans>
                 </h3>
                 <Button
                   variant="outline"
