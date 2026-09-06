@@ -7,10 +7,10 @@ use std::time::Duration;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wasm_pkg::datetime_search::{EggDatetimeSearcher, MtseedDatetimeSearcher};
 use wasm_pkg::types::{
-    AbilitySlot, DsConfig, EggGenerationParams, EverstonePlan, GameStartConfig, GenderRatio,
-    GenerationConfig, Hardware, Ivs, KeyMask, MemoryLinkState, MtSeed, RomRegion, RomVersion,
-    SavePresence, SearchRangeParams, ShinyCharmState, StartMode, StartupCondition, TimeRangeParams,
-    TrainerInfo,
+    AbilitySlot, DatetimeSearchSpaceParams, DsConfig, EggGenerationParams, EverstonePlan,
+    GameStartConfig, GenderRatio, GenerationConfig, Hardware, Ivs, KeyMask, MemoryLinkState,
+    MtSeed, RomRegion, RomVersion, SavePresence, ShinyCharmState, StartMode, StartupCondition,
+    TimeRangeParams, TrainerInfo,
 };
 use wasm_pkg::{EggDatetimeSearchParams, MtseedDatetimeSearchParams};
 
@@ -36,24 +36,20 @@ fn create_time_range() -> TimeRangeParams {
     }
 }
 
-fn create_search_range() -> SearchRangeParams {
-    SearchRangeParams {
-        start_year: 2011,
-        start_month: 1,
-        start_day: 1,
-        start_second_offset: 0,
-        range_seconds: 86400 * 7, // 1週間
-    }
-}
-
-fn create_search_range_year(start_year: u16) -> SearchRangeParams {
-    SearchRangeParams {
-        start_year,
-        start_month: 1,
-        start_day: 1,
-        start_second_offset: 0,
-        range_seconds: 86400 * 7, // 1週間
-    }
+fn create_search_space(start_year: u16) -> DatetimeSearchSpaceParams {
+    wasm_pkg::core::datetime::DatetimeSearchSpace::from_date_range(
+        &wasm_pkg::DateRangeParams {
+            start_year,
+            start_month: 1,
+            start_day: 1,
+            end_year: start_year,
+            end_month: 1,
+            end_day: 7,
+        },
+        &create_time_range(),
+    )
+    .unwrap()
+    .into_params()
 }
 
 fn create_condition() -> StartupCondition {
@@ -68,8 +64,7 @@ fn create_mtseed_searcher() -> MtseedDatetimeSearcher {
             MtSeed::new(0xABCDEF01),
         ],
         ds: create_ds_config(),
-        time_range: create_time_range(),
-        search_range: create_search_range(),
+        search_space: create_search_space(2011),
         condition: create_condition(),
     };
     MtseedDatetimeSearcher::new(params).expect("Failed to create MtseedDatetimeSearcher")
@@ -78,8 +73,7 @@ fn create_mtseed_searcher() -> MtseedDatetimeSearcher {
 fn create_egg_searcher() -> EggDatetimeSearcher {
     let params = EggDatetimeSearchParams {
         ds: create_ds_config(),
-        time_range: create_time_range(),
-        search_range: create_search_range(),
+        search_space: create_search_space(2011),
         condition: create_condition(),
         egg_params: EggGenerationParams {
             trainer: TrainerInfo {
@@ -144,8 +138,7 @@ fn bench_mtseed_datetime_search(c: &mut Criterion) {
                             MtSeed::new(0xABCDEF01),
                         ],
                         ds: create_ds_config(),
-                        time_range: create_time_range(),
-                        search_range: create_search_range_year(year),
+                        search_space: create_search_space(year),
                         condition: create_condition(),
                     };
                     MtseedDatetimeSearcher::new(params)

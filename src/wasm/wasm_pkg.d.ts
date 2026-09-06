@@ -265,13 +265,9 @@ export interface MtseedDatetimeSearchParams {
      */
     ds: DsConfig;
     /**
-     * 1日内の時刻範囲
+     * 日時探索空間 (転送用入力)
      */
-    time_range: TimeRangeParams;
-    /**
-     * 検索範囲 (秒単位)
-     */
-    search_range: SearchRangeParams;
+    search_space: DatetimeSearchSpaceParams;
     /**
      * 起動条件 (単一)
      */
@@ -309,6 +305,15 @@ export type RomRegion = "Jpn" | "Kor" | "Usa" | "Ger" | "Fra" | "Spa" | "Ita";
  * `KeySpec` と同様に、仕様から `SeedOrigin` リストに展開される。
  */
 export type SeedSpec = { type: "Seeds"; seeds: LcgSeed[] } | { type: "Startup"; ds: DsConfig; datetime: Datetime; ranges: Timer0VCountRange[]; key_input: KeyInput };
+
+/**
+ * WASM 間で転送する未検証の日時探索入力。
+ */
+export interface DatetimeSearchSpaceParams {
+    start_seconds: number;
+    end_seconds: number;
+    time_range: TimeRangeParams;
+}
 
 /**
  * `Timer0` / `VCount` 範囲
@@ -354,13 +359,9 @@ export interface TrainerInfoSearchParams {
      */
     ds: DsConfig;
     /**
-     * 1日内の時刻範囲
+     * 日時探索空間 (転送用入力)
      */
-    time_range: TimeRangeParams;
-    /**
-     * 検索範囲 (秒単位)
-     */
-    search_range: SearchRangeParams;
+    search_space: DatetimeSearchSpaceParams;
     /**
      * 起動条件 (単一: Timer0/VCount/KeyCode)
      */
@@ -622,8 +623,7 @@ export interface PokemonFilter extends CoreDataFilter {
  */
 export interface PokemonDatetimeSearchParams {
     ds: DsConfig;
-    time_range: TimeRangeParams;
-    search_range: SearchRangeParams;
+    search_space: DatetimeSearchSpaceParams;
     condition: StartupCondition;
     pokemon_params: PokemonGenerationParams;
     gen_config: GenerationConfig;
@@ -852,13 +852,9 @@ export interface EggDatetimeSearchParams {
      */
     ds: DsConfig;
     /**
-     * 1日内の時刻範囲
+     * 日時探索空間 (転送用入力)
      */
-    time_range: TimeRangeParams;
-    /**
-     * 検索範囲 (秒単位)
-     */
-    search_range: SearchRangeParams;
+    search_space: DatetimeSearchSpaceParams;
     /**
      * 起動条件 (単一)
      */
@@ -974,8 +970,7 @@ export type HeldItemSlot = "Common" | "Rare" | "VeryRare" | "None";
 /**
  * 日付範囲パラメータ (UI 入力用)
  *
- * 開始日〜終了日を表す。`SearchRangeParams` と異なり、
- * UI からの入力に適した形式。`to_search_range()` で変換可能。
+ * 開始日と終了日の両端を含む UI 入力。検証と変換は共通探索空間が担う。
  */
 export interface DateRangeParams {
     /**
@@ -1002,23 +997,6 @@ export interface DateRangeParams {
      * 終了日 (1-31)
      */
     end_day: number;
-}
-
-/**
- * 検索範囲
- */
-export interface SearchRangeParams {
-    start_year: number;
-    start_month: number;
-    start_day: number;
-    /**
-     * 開始日内のオフセット秒 (0-86399)
-     */
-    start_second_offset: number;
-    /**
-     * 検索範囲秒数
-     */
-    range_seconds: number;
 }
 
 /**
@@ -1444,6 +1422,8 @@ export class GpuDatetimeSearchIterator {
      *
      * 検索完了時は `None` を返す。
      * 組み合わせ切り替えは内部で自動的に行われる。
+     * # Errors
+     * dispatch 範囲外、結果番号不正、GPU 読み取り失敗の場合。
      */
     next(): Promise<GpuSearchBatch | undefined>;
     /**
@@ -1627,6 +1607,8 @@ export function generate_egg_list(origins: SeedOrigin[], params: EggGenerationPa
  * - `gen_config`: 生成共通設定
  * - `filter`: フィルター (None の場合は全件返却)
  * - `worker_count`: Worker 数
+ * # Errors
+ * 日時入力または Worker 数が不正な場合。
  */
 export function generate_egg_search_tasks(context: DatetimeSearchContext, egg_params: EggGenerationParams, gen_config: GenerationConfig, filter: EggFilter | null | undefined, worker_count: number): EggDatetimeSearchParams[];
 
@@ -1655,6 +1637,8 @@ export function generate_mtseed_iv_search_tasks(context: MtseedSearchContext, wo
  * - `context`: 検索コンテキスト (日付範囲、時刻範囲、Timer0/VCount/KeyMask 範囲)
  * - `target_seeds`: 検索対象の MT Seed
  * - `worker_count`: Worker 数
+ * # Errors
+ * 日時入力または Worker 数が不正な場合。
  */
 export function generate_mtseed_search_tasks(context: DatetimeSearchContext, target_seeds: MtSeed[], worker_count: number): MtseedDatetimeSearchParams[];
 
@@ -1697,6 +1681,8 @@ export function generate_pokemon_search_tasks(context: DatetimeSearchContext, po
  * - `filter`: 検索フィルタ
  * - `game_start`: 起動設定
  * - `worker_count`: Worker 数
+ * # Errors
+ * 日時入力または Worker 数が不正な場合。
  */
 export function generate_trainer_info_search_tasks(context: DatetimeSearchContext, filter: TrainerInfoFilter, game_start: GameStartConfig, worker_count: number): TrainerInfoSearchParams[];
 
@@ -1799,18 +1785,3 @@ export function resolve_seeds(input: SeedSpec): SeedOrigin[];
  * - 起動設定が無効な場合
  */
 export function search_needle_pattern(origins: SeedOrigin[], pattern: NeedlePattern, config: GenerationConfig): NeedleSearchResult[];
-
-/**
- * 日時範囲分割 (共通関数)
- *
- * 検索範囲を `n` 分割して、各 Worker に渡すための `SearchRangeParams` リストを生成する。
- * 境界値での連続性を保証するため、各チャンクの終了秒 + 1 = 次チャンクの開始秒 となる。
- *
- * # Arguments
- * - `range`: 分割対象の検索範囲
- * - `n`: 分割数 (0 の場合は 1 として扱う)
- *
- * # Returns
- * 分割された `SearchRangeParams` のリスト (最大 `n` 要素)
- */
-export function split_search_range(range: SearchRangeParams, n: number): SearchRangeParams[];

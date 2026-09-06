@@ -171,20 +171,17 @@ describe('Worker Types', () => {
             version: 'Black',
             region: 'Jpn',
           },
-          time_range: {
-            hour_start: 0,
-            hour_end: 23,
-            minute_start: 0,
-            minute_end: 59,
-            second_start: 0,
-            second_end: 59,
-          },
-          search_range: {
-            start_year: 2010,
-            start_month: 9,
-            start_day: 18,
-            start_second_offset: 0,
-            range_seconds: 86_400,
+          search_space: {
+            start_seconds: 338_083_200,
+            end_seconds: 338_169_600,
+            time_range: {
+              hour_start: 0,
+              hour_end: 23,
+              minute_start: 0,
+              minute_end: 59,
+              second_start: 0,
+              second_end: 59,
+            },
           },
           condition: {
             timer0: 0x0c_79,

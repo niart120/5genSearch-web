@@ -1,0 +1,278 @@
+[
+  {
+    "name": "dense",
+    "mt": {
+      "ds": {
+        "mac": [0, 9, 191, 18, 52, 86],
+        "hardware": "DsLite",
+        "version": "Black",
+        "region": "Jpn"
+      },
+      "condition": {
+        "timer0": 3193,
+        "vcount": 90,
+        "key_mask": 0
+      },
+      "search_space": {
+        "start_seconds": 762480000,
+        "end_seconds": 763084800,
+        "time_range": {
+          "hour_start": 0,
+          "hour_end": 23,
+          "minute_start": 0,
+          "minute_end": 59,
+          "second_start": 0,
+          "second_end": 59
+        }
+      },
+      "target_seeds": [1]
+    },
+    "pokemon": {
+      "ds": {
+        "mac": [0, 9, 191, 18, 52, 86],
+        "hardware": "DsLite",
+        "version": "Black",
+        "region": "Jpn"
+      },
+      "condition": {
+        "timer0": 3193,
+        "vcount": 90,
+        "key_mask": 0
+      },
+      "search_space": {
+        "start_seconds": 762480000,
+        "end_seconds": 763084800,
+        "time_range": {
+          "hour_start": 0,
+          "hour_end": 23,
+          "minute_start": 0,
+          "minute_end": 59,
+          "second_start": 0,
+          "second_end": 59
+        }
+      },
+      "pokemon_params": {
+        "trainer": {
+          "tid": 12345,
+          "sid": 54321
+        },
+        "encounter_type": "StaticSymbol",
+        "encounter_method": "Stationary",
+        "lead_ability": "None",
+        "slots": [
+          {
+            "species_id": 25,
+            "level_min": 5,
+            "level_max": 10,
+            "gender_ratio": "F1M1",
+            "has_held_item": true,
+            "shiny_locked": false
+          }
+        ]
+      },
+      "gen_config": {
+        "version": "Black",
+        "game_start": {
+          "start_mode": "Continue",
+          "save": "WithSave",
+          "memory_link": "Disabled",
+          "shiny_charm": "NotObtained"
+        },
+        "user_offset": 0,
+        "max_advance": 30
+      },
+      "filter": {
+        "species_ids": [1],
+        "natures": null,
+        "gender": null,
+        "ability_slot": null,
+        "shiny": null,
+        "level_range": null
+      }
+    }
+  },
+  {
+    "name": "minute",
+    "mt": {
+      "ds": {
+        "mac": [0, 9, 191, 18, 52, 86],
+        "hardware": "DsLite",
+        "version": "Black",
+        "region": "Jpn"
+      },
+      "condition": {
+        "timer0": 3193,
+        "vcount": 90,
+        "key_mask": 0
+      },
+      "search_space": {
+        "start_seconds": 762480000,
+        "end_seconds": 763084800,
+        "time_range": {
+          "hour_start": 0,
+          "hour_end": 23,
+          "minute_start": 0,
+          "minute_end": 59,
+          "second_start": 0,
+          "second_end": 0
+        }
+      },
+      "target_seeds": [1]
+    },
+    "pokemon": {
+      "ds": {
+        "mac": [0, 9, 191, 18, 52, 86],
+        "hardware": "DsLite",
+        "version": "Black",
+        "region": "Jpn"
+      },
+      "condition": {
+        "timer0": 3193,
+        "vcount": 90,
+        "key_mask": 0
+      },
+      "search_space": {
+        "start_seconds": 762480000,
+        "end_seconds": 763084800,
+        "time_range": {
+          "hour_start": 0,
+          "hour_end": 23,
+          "minute_start": 0,
+          "minute_end": 59,
+          "second_start": 0,
+          "second_end": 0
+        }
+      },
+      "pokemon_params": {
+        "trainer": {
+          "tid": 12345,
+          "sid": 54321
+        },
+        "encounter_type": "StaticSymbol",
+        "encounter_method": "Stationary",
+        "lead_ability": "None",
+        "slots": [
+          {
+            "species_id": 25,
+            "level_min": 5,
+            "level_max": 10,
+            "gender_ratio": "F1M1",
+            "has_held_item": true,
+            "shiny_locked": false
+          }
+        ]
+      },
+      "gen_config": {
+        "version": "Black",
+        "game_start": {
+          "start_mode": "Continue",
+          "save": "WithSave",
+          "memory_link": "Disabled",
+          "shiny_charm": "NotObtained"
+        },
+        "user_offset": 0,
+        "max_advance": 30
+      },
+      "filter": {
+        "species_ids": [1],
+        "natures": null,
+        "gender": null,
+        "ability_slot": null,
+        "shiny": null,
+        "level_range": null
+      }
+    }
+  },
+  {
+    "name": "daily",
+    "mt": {
+      "ds": {
+        "mac": [0, 9, 191, 18, 52, 86],
+        "hardware": "DsLite",
+        "version": "Black",
+        "region": "Jpn"
+      },
+      "condition": {
+        "timer0": 3193,
+        "vcount": 90,
+        "key_mask": 0
+      },
+      "search_space": {
+        "start_seconds": 762480000,
+        "end_seconds": 763084800,
+        "time_range": {
+          "hour_start": 0,
+          "hour_end": 0,
+          "minute_start": 0,
+          "minute_end": 0,
+          "second_start": 0,
+          "second_end": 0
+        }
+      },
+      "target_seeds": [1]
+    },
+    "pokemon": {
+      "ds": {
+        "mac": [0, 9, 191, 18, 52, 86],
+        "hardware": "DsLite",
+        "version": "Black",
+        "region": "Jpn"
+      },
+      "condition": {
+        "timer0": 3193,
+        "vcount": 90,
+        "key_mask": 0
+      },
+      "search_space": {
+        "start_seconds": 762480000,
+        "end_seconds": 763084800,
+        "time_range": {
+          "hour_start": 0,
+          "hour_end": 0,
+          "minute_start": 0,
+          "minute_end": 0,
+          "second_start": 0,
+          "second_end": 0
+        }
+      },
+      "pokemon_params": {
+        "trainer": {
+          "tid": 12345,
+          "sid": 54321
+        },
+        "encounter_type": "StaticSymbol",
+        "encounter_method": "Stationary",
+        "lead_ability": "None",
+        "slots": [
+          {
+            "species_id": 25,
+            "level_min": 5,
+            "level_max": 10,
+            "gender_ratio": "F1M1",
+            "has_held_item": true,
+            "shiny_locked": false
+          }
+        ]
+      },
+      "gen_config": {
+        "version": "Black",
+        "game_start": {
+          "start_mode": "Continue",
+          "save": "WithSave",
+          "memory_link": "Disabled",
+          "shiny_charm": "NotObtained"
+        },
+        "user_offset": 0,
+        "max_advance": 30
+      },
+      "filter": {
+        "species_ids": [1],
+        "natures": null,
+        "gender": null,
+        "ability_slot": null,
+        "shiny": null,
+        "level_range": null
+      }
+    }
+  }
+]

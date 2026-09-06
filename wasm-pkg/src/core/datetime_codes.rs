@@ -68,28 +68,9 @@ pub fn get_time_code_for_hardware(seconds_of_day: u32, is_ds_or_lite: bool) -> u
 // date_code テーブル (36,525 エントリ = 100年分)
 // =============================================================================
 
-/// うるう年判定
-#[allow(clippy::manual_is_multiple_of)]
-pub const fn is_leap_year(year: u32) -> bool {
-    // const fn では is_multiple_of() が使えないため % を使用
-    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
-}
-
-/// 月の日数
-pub const fn days_in_month(year: u32, month: u32) -> u32 {
-    match month {
-        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
-        4 | 6 | 9 | 11 => 30,
-        2 => {
-            if is_leap_year(year) {
-                29
-            } else {
-                28
-            }
-        }
-        _ => 0,
-    }
-}
+use super::datetime::days_in_month;
+#[cfg(test)]
+use super::datetime::is_leap_year;
 
 /// 曜日計算 (Zeller の公式)
 ///

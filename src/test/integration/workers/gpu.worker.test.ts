@@ -404,20 +404,17 @@ describe.skipIf(!hasWebGpuApi)('GPU Worker', () => {
           params: {
             target_seeds: TARGET_SEEDS_6V,
             ds: createTestDsConfig(),
-            time_range: {
-              hour_start: 0,
-              hour_end: 23,
-              minute_start: 0,
-              minute_end: 59,
-              second_start: 0,
-              second_end: 59,
-            },
-            search_range: {
-              start_year: 2000,
-              start_month: 1,
-              start_day: 1,
-              start_second_offset: 0,
-              range_seconds: 86_400 * 365 * 100, // 100年分
+            search_space: {
+              start_seconds: 0,
+              end_seconds: 3_153_600_000,
+              time_range: {
+                hour_start: 0,
+                hour_end: 23,
+                minute_start: 0,
+                minute_end: 59,
+                second_start: 0,
+                second_end: 59,
+              },
             },
             condition: createTestStartupCondition(),
           },

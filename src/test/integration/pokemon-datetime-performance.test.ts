@@ -9,7 +9,7 @@ import { memory } from '@/wasm/wasm_pkg_bg.wasm';
 import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import {
   runSearchInWorker,
-  createTestSearchRange,
+  createTestSearchSpace,
   createTestTimeRange,
   createTestStartupCondition,
 } from './helpers/worker-test-utils';
@@ -34,8 +34,7 @@ it.skipIf(import.meta.env.VITE_POKEMON_BENCH !== '1')(
       for (const [condition, filter] of conditions) {
         const params: PokemonDatetimeSearchParams = {
           ds: request.context.ds,
-          time_range: createTestTimeRange(),
-          search_range: createTestSearchRange(2024, 2, 29, 1000),
+          search_space: createTestSearchSpace(2024, 2, 29, 1000, createTestTimeRange()),
           condition: createTestStartupCondition(),
           pokemon_params: {
             ...request.pokemonParams,

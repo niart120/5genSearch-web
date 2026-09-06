@@ -12,15 +12,14 @@ import {
   runSearchInWorker,
   createTestDsConfig,
   createTestTimeRange,
-  createTestSearchRange,
+  createTestSearchSpace,
   createTestStartupCondition,
 } from './helpers/worker-test-utils';
 
 export function pokemonSearchParams(): PokemonDatetimeSearchParams {
   return {
     ds: createTestDsConfig(),
-    time_range: createTestTimeRange(),
-    search_range: createTestSearchRange(2010, 9, 18, 7),
+    search_space: createTestSearchSpace(2010, 9, 18, 7, createTestTimeRange()),
     condition: createTestStartupCondition(),
     pokemon_params: {
       trainer: { tid: 0, sid: 0 },
@@ -114,7 +113,12 @@ describe('Pokemon datetime search', () => {
           end_month: 9,
           end_day: 18,
         },
-        time_range: { ...params.time_range, hour_end: 0, minute_end: 0, second_end: 6 },
+        time_range: {
+          ...params.search_space.time_range,
+          hour_end: 0,
+          minute_end: 0,
+          second_end: 6,
+        },
         ranges: [{ timer0_min: 0x0c_79, timer0_max: 0x0c_7a, vcount_min: 0x60, vcount_max: 0x60 }],
         key_spec: { available_buttons: ['A'] },
       },

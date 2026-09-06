@@ -27,6 +27,7 @@ wasm-pkg/
 │   ├── core/                       # 計算コア (PRNG, Hash, ユーティリティ)
 │   │   ├── mod.rs
 │   │   ├── bcd.rs                  # BCD (Binary-Coded Decimal) 変換
+│   │   ├── datetime.rs             # 検証済み日時探索空間、候補番号、列挙、分割、暦変換
 │   │   ├── datetime_codes.rs       # 日時 → ハッシュ入力コード変換
 │   │   ├── lcg.rs                  # Linear Congruential Generator
 │   │   ├── needle.rs               # レポート針パターン計算
@@ -78,9 +79,10 @@ wasm-pkg/
 │   │
 │   ├── datetime_search/            # 起動時刻検索 (CPU)
 │   │   ├── mod.rs                  # Searcher 公開、タスク生成関数
-│   │   ├── base.rs                 # 共通検索ロジック
+│   │   ├── base.rs                 # 共通日時イテレータ → SHA-1 SIMD 入力
 │   │   ├── egg.rs                  # EggDatetimeSearcher
-│   │   ├── mtseed.rs              # MtseedDatetimeSearcher
+│   │   ├── mtseed.rs               # MtseedDatetimeSearcher
+│   │   ├── pokemon.rs              # PokemonDatetimeSearcher
 │   │   └── trainer_info.rs         # TrainerInfoSearcher
 │   │
 │   ├── resolve/                    # 表示用データ解決
@@ -141,12 +143,15 @@ wasm-pkg/
 | `sha1/` | SHA-1 ハッシュ。scalar/simd 実装 + メッセージ構築 + ナゾ値計算 |
 | `lcg.rs` | Linear Congruential Generator |
 | `bcd.rs` | BCD (Binary-Coded Decimal) 変換 |
-| `datetime_codes.rs` | 日時情報 → SHA-1 ハッシュ入力コードへの変換 |
+| `datetime.rs` | `DatetimeSearchSpace` の入力検証、半開区間、候補数・候補番号対応、CPU 列挙と分割、暦変換 |
+| `datetime_codes.rs` | 日時情報 → SHA-1 ハッシュ入力コードへの変換。暦の月日数・閏年判定は `datetime.rs` を利用 |
 | `needle.rs` | レポート針パターン計算ロジック |
 | `offset.rs` | フレームオフセット計算 |
 | `seed_resolver.rs` | `SeedSpec` → `SeedOrigin[]` 解決 |
 
 `mt/` および `sha1/` は scalar/simd の2実装を持ち、共通インターフェースを `mod.rs` で提供する。
+
+日時探索では `types/search.rs` の `DatetimeSearchSpaceParams` を WASM 間の転送境界だけに使う。CPU 4 検索器は構築時に `DatetimeSearchSpace` へ変換し、件数と列挙をそこから取得する。GPU Iterator と Pipeline は検証済み探索空間を共有し、WGSL は同じ候補番号を直積分解する。GPU 結果の日時復元は `datetime_at()` を使い、Rust 側に別の復元式を持たない。
 
 ### `generation/` サブモジュール
 

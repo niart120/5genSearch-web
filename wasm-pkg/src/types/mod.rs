@@ -26,11 +26,12 @@ pub use keyinput::{DsButton, KeyInput, KeyMask, KeySpec};
 
 // search
 pub use search::{
-    DateRangeParams, DatetimeSearchContext, EggDatetimeSearchBatch, EggDatetimeSearchParams,
-    EggDatetimeSearchResult, MtseedDatetimeSearchBatch, MtseedDatetimeSearchParams, MtseedResult,
-    MtseedSearchBatch, MtseedSearchContext, MtseedSearchParams, PokemonDatetimeSearchBatch,
-    PokemonDatetimeSearchParams, PokemonSearchBatchLimits, SearchRangeParams, TimeRangeParams,
-    TrainerInfoSearchBatch, TrainerInfoSearchParams, TrainerInfoSearchResult,
+    DateRangeParams, DatetimeSearchContext, DatetimeSearchSpaceParams, EggDatetimeSearchBatch,
+    EggDatetimeSearchParams, EggDatetimeSearchResult, MtseedDatetimeSearchBatch,
+    MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchContext,
+    MtseedSearchParams, PokemonDatetimeSearchBatch, PokemonDatetimeSearchParams,
+    PokemonSearchBatchLimits, TimeRangeParams, TrainerInfoSearchBatch, TrainerInfoSearchParams,
+    TrainerInfoSearchResult,
 };
 
 // filter

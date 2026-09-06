@@ -10,7 +10,7 @@ import {
   runSearchInWorker,
   createTestDsConfig,
   createTestTimeRange,
-  createTestSearchRange,
+  createTestSearchSpace,
   createTestStartupCondition,
 } from '../helpers/worker-test-utils';
 import type {
@@ -32,15 +32,14 @@ describe('MtseedDatetimeSearcher', () => {
       params: {
         target_seeds: [expectedMtSeed],
         ds: createTestDsConfig(),
-        time_range: {
+        search_space: createTestSearchSpace(2010, 9, 18, 86_400, {
           hour_start: 18,
           hour_end: 18,
           minute_start: 0,
           minute_end: 30,
           second_start: 0,
           second_end: 59,
-        },
-        search_range: createTestSearchRange(2010, 9, 18, 86_400),
+        }),
         condition: createTestStartupCondition(),
       },
     };
@@ -195,15 +194,14 @@ describe('EggDatetimeSearcher', () => {
       kind: 'egg-datetime',
       params: {
         ds: createTestDsConfig(),
-        time_range: {
+        search_space: createTestSearchSpace(2010, 9, 18, 1, {
           hour_start: 0,
           hour_end: 0,
           minute_start: 0,
           minute_end: 0,
           second_start: 0,
           second_end: 0,
-        },
-        search_range: createTestSearchRange(2010, 9, 18, 1),
+        }),
         condition: createTestStartupCondition(),
         egg_params: {
           trainer: { tid: 1, sid: 2 },
@@ -267,8 +265,7 @@ describe('TrainerInfoSearcher', () => {
       params: {
         filter: { tid: undefined, sid: undefined, shiny_pid: undefined },
         ds: createTestDsConfig(),
-        time_range: createTestTimeRange(0, 0, 0, 0),
-        search_range: createTestSearchRange(2023, 1, 1, 60),
+        search_space: createTestSearchSpace(2023, 1, 1, 60, createTestTimeRange(0, 0, 0, 0)),
         condition: createTestStartupCondition(),
         game_start: {
           start_mode: 'Continue',
@@ -288,8 +285,7 @@ describe('TrainerInfoSearcher', () => {
       params: {
         filter: { tid: undefined, sid: undefined, shiny_pid: undefined },
         ds: createTestDsConfig(),
-        time_range: createTestTimeRange(0, 0, 0, 0),
-        search_range: createTestSearchRange(2023, 1, 1, 60),
+        search_space: createTestSearchSpace(2023, 1, 1, 60, createTestTimeRange(0, 0, 0, 0)),
         condition: createTestStartupCondition(),
         game_start: {
           start_mode: 'NewGame',

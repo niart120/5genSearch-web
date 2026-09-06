@@ -12,7 +12,8 @@ use crate::types::{
 };
 
 use super::base::DatetimeHashGenerator;
-use super::{calculate_time_chunks, expand_combinations, split_search_range};
+use super::{calculate_time_chunks, expand_combinations};
+use crate::core::datetime::DatetimeSearchSpace;
 
 // ===== TrainerInfoSearcher =====
 
@@ -51,16 +52,10 @@ impl TrainerInfoSearcher {
 
         params.game_start.validate(params.ds.version)?;
 
-        let generator = DatetimeHashGenerator::new(
-            &params.ds,
-            &params.time_range,
-            &params.search_range,
-            params.condition,
-        )?;
+        let space = DatetimeSearchSpace::try_from(params.search_space)?;
+        let generator = DatetimeHashGenerator::new(&params.ds, &space, params.condition);
 
-        let valid_seconds_per_day = params.time_range.count_valid_seconds();
-        let days = params.search_range.range_seconds.div_ceil(86400);
-        let total_count = u64::from(valid_seconds_per_day) * u64::from(days);
+        let total_count = space.count();
 
         Ok(Self {
             filter: params.filter,
@@ -154,45 +149,46 @@ impl TrainerInfoSearcher {
 #[wasm_bindgen]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::cast_possible_truncation)]
+/// # Errors
+/// 日時入力または Worker 数が不正な場合。
 pub fn generate_trainer_info_search_tasks(
     context: DatetimeSearchContext,
     filter: TrainerInfoFilter,
     game_start: GameStartConfig,
     worker_count: u32,
-) -> Vec<TrainerInfoSearchParams> {
-    let search_range = context.date_range.to_search_range();
+) -> Result<Vec<TrainerInfoSearchParams>, String> {
+    let space = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)?;
     let combinations = expand_combinations(&context);
     let combo_count = combinations.len() as u32;
 
     // 時間分割数を計算
-    let time_chunks = calculate_time_chunks(combo_count, worker_count);
-    let ranges = split_search_range(search_range, time_chunks);
+    let time_chunks = calculate_time_chunks(combo_count, worker_count)?;
+    let spaces = space.split(time_chunks);
 
     // 組み合わせ × 時間チャンク のクロス積でタスク生成
-    combinations
+    Ok(combinations
         .into_iter()
         .flat_map(|condition| {
             let filter = filter.clone();
             let ds = context.ds.clone();
-            let time_range = context.time_range.clone();
-            ranges.iter().map(move |range| TrainerInfoSearchParams {
+            spaces.iter().map(move |space| TrainerInfoSearchParams {
                 filter: filter.clone(),
                 ds: ds.clone(),
-                time_range: time_range.clone(),
-                search_range: range.clone(),
+                search_space: space.clone().into_params(),
                 condition,
                 game_start,
             })
         })
-        .collect()
+        .collect())
 }
 
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        DateRangeParams, DsConfig, GameStartConfig, Hardware, KeyMask, KeySpec, MemoryLinkState,
-        Pid, RomRegion, RomVersion, SavePresence, SearchRangeParams, ShinyCharmState, StartMode,
-        StartupCondition, TimeRangeParams, Timer0VCountRange, TrainerInfo, TrainerInfoSearchParams,
+        DateRangeParams, DatetimeSearchSpaceParams, DsConfig, GameStartConfig, Hardware, KeyMask,
+        KeySpec, MemoryLinkState, Pid, RomRegion, RomVersion, SavePresence, ShinyCharmState,
+        StartMode, StartupCondition, TimeRangeParams, Timer0VCountRange, TrainerInfo,
+        TrainerInfoSearchParams,
     };
 
     use super::*;
@@ -206,20 +202,17 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
-            time_range: TimeRangeParams {
-                hour_start: 0,
-                hour_end: 0,
-                minute_start: 0,
-                minute_end: 0,
-                second_start: 0,
-                second_end: 59,
-            },
-            search_range: SearchRangeParams {
-                start_year: 2023,
-                start_month: 1,
-                start_day: 1,
-                start_second_offset: 0,
-                range_seconds: 60,
+            search_space: DatetimeSearchSpaceParams {
+                start_seconds: 725_846_400,
+                end_seconds: 725_846_460,
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 0,
+                    minute_start: 0,
+                    minute_end: 0,
+                    second_start: 0,
+                    second_end: 59,
+                },
             },
             condition: StartupCondition::new(0x0C79, 0x5F, KeyMask::NONE),
             game_start: GameStartConfig {
@@ -378,7 +371,7 @@ mod tests {
             shiny_charm: ShinyCharmState::NotObtained,
         };
 
-        let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2);
+        let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2).unwrap();
 
         // Timer0: 2パターン × VCount: 1パターン × KeyMask: 1パターン × time_chunks: 1 = 2タスク
         // (worker_count = 2, combo_count = 2 → time_chunks = 1)

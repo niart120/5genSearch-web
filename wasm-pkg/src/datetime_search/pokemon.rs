@@ -3,14 +3,14 @@
 use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
 
-use super::base::{DatetimeHashGenerator, datetime_to_seconds};
-use super::{calculate_time_chunks, expand_combinations, split_search_range};
+use super::base::DatetimeHashGenerator;
+use super::{calculate_time_chunks, expand_combinations};
+use crate::core::datetime::DatetimeSearchSpace;
 use crate::generation::flows::generator::PokemonGenerator;
 use crate::types::{
     DatetimeSearchContext, EncounterType, GenerationConfig, PokemonDatetimeSearchBatch,
     PokemonDatetimeSearchFilter, PokemonDatetimeSearchParams, PokemonFilter,
-    PokemonGenerationParams, PokemonSearchBatchLimits, SearchRangeParams, SeedOrigin,
-    StartupCondition, TimeRangeParams,
+    PokemonGenerationParams, PokemonSearchBatchLimits, SeedOrigin, StartupCondition,
 };
 
 /// 日時の4件取得と消費位置の双方をバッチ間で保持する。
@@ -34,18 +34,14 @@ impl PokemonDatetimeSearcher {
     #[wasm_bindgen(constructor)]
     pub fn new(params: PokemonDatetimeSearchParams) -> Result<Self, String> {
         validate_params(&params)?;
-        let count = count_datetimes(&params.search_range, &params.time_range);
+        let space = DatetimeSearchSpace::try_from(params.search_space.clone())?;
+        let count = space.count();
         let total_count = count
             .checked_mul(u64::from(
                 params.gen_config.max_advance - params.gen_config.user_offset,
             ))
             .ok_or("Search count overflow")?;
-        let datetime = DatetimeHashGenerator::new(
-            &params.ds,
-            &params.time_range,
-            &params.search_range,
-            params.condition,
-        )?;
+        let datetime = DatetimeHashGenerator::new(&params.ds, &space, params.condition);
         let mut searcher = Self {
             datetime,
             pending: VecDeque::with_capacity(4),
@@ -65,7 +61,8 @@ impl PokemonDatetimeSearcher {
 
     #[wasm_bindgen(getter)]
     pub fn is_done(&self) -> bool {
-        self.processed_count == self.total_count
+        self.gen_config.user_offset == self.gen_config.max_advance
+            || (self.datetime.is_exhausted() && self.pending.is_empty() && self.current.is_none())
     }
 
     /// # Errors
@@ -84,7 +81,9 @@ impl PokemonDatetimeSearcher {
             && results.len() < limits.max_results as usize
         {
             self.prepare_current()?;
-            let generator = self.current.as_mut().ok_or("Datetime count mismatch")?;
+            let Some(generator) = self.current.as_mut() else {
+                break;
+            };
             if let Some(data) = generator.generate_next() {
                 results.push(data);
             }
@@ -114,7 +113,9 @@ impl PokemonDatetimeSearcher {
                     SeedOrigin::startup(hash.to_lcg_seed(), *date, self.condition)
                 }));
         }
-        let source = self.pending.pop_front().ok_or("Datetime count mismatch")?;
+        let Some(source) = self.pending.pop_front() else {
+            return Ok(());
+        };
         self.current = Some(PokemonGenerator::new(
             source,
             &self.pokemon_params,
@@ -125,40 +126,7 @@ impl PokemonDatetimeSearcher {
     }
 }
 
-fn validate_date(year: u16, month: u8, day: u8) -> Result<(), String> {
-    if !(2000..=2099).contains(&year) || !(1..=12).contains(&month) {
-        return Err("Invalid date".into());
-    }
-    let days = match month {
-        2 if year.is_multiple_of(4) => 29,
-        2 => 28,
-        4 | 6 | 9 | 11 => 30,
-        _ => 31,
-    };
-    if day == 0 || day > days {
-        return Err("Invalid date".into());
-    }
-    Ok(())
-}
-
 fn validate_params(params: &PokemonDatetimeSearchParams) -> Result<(), String> {
-    let range = &params.search_range;
-    validate_date(range.start_year, range.start_month, range.start_day)?;
-    if range.start_second_offset >= 86400 {
-        return Err("Invalid second offset".into());
-    }
-    let start = datetime_to_seconds(
-        range.start_year,
-        range.start_month,
-        range.start_day,
-        0,
-        0,
-        0,
-    ) + u64::from(range.start_second_offset);
-    if start + u64::from(range.range_seconds) > datetime_to_seconds(2100, 1, 1, 0, 0, 0) {
-        return Err("Search range exceeds 2099".into());
-    }
-    params.time_range.validate()?;
     params.filter.validate()?;
     if params.ds.version != params.gen_config.version {
         return Err("ROM version mismatch".into());
@@ -202,27 +170,6 @@ fn validate_params(params: &PokemonDatetimeSearchParams) -> Result<(), String> {
     Ok(())
 }
 
-/// 部分日は時刻条件との共通部分、完全な日は直積の件数で数える。
-fn count_datetimes(range: &SearchRangeParams, time: &TimeRangeParams) -> u64 {
-    let prefix = |seconds: u64| {
-        let days = seconds / 86400;
-        let tail = seconds % 86400;
-        let mut count = days * u64::from(time.count_valid_seconds());
-        for hour in time.hour_start..=time.hour_end {
-            for minute in time.minute_start..=time.minute_end {
-                let first =
-                    u64::from(hour) * 3600 + u64::from(minute) * 60 + u64::from(time.second_start);
-                count += tail
-                    .saturating_sub(first)
-                    .min(u64::from(time.second_end - time.second_start + 1));
-            }
-        }
-        count
-    };
-    let start = u64::from(range.start_second_offset);
-    prefix(start + u64::from(range.range_seconds)) - prefix(start)
-}
-
 /// 検証済み条件を既存の起動条件展開・日時分割でタスク化する。
 /// # Errors
 /// 日付・起動範囲・生成条件・Worker数が不正な場合。
@@ -246,17 +193,7 @@ fn build_tasks(
     filter: PokemonDatetimeSearchFilter,
     worker_count: u32,
 ) -> Result<Vec<PokemonDatetimeSearchParams>, String> {
-    context.date_range.validate()?;
-    validate_date(
-        context.date_range.start_year,
-        context.date_range.start_month,
-        context.date_range.start_day,
-    )?;
-    validate_date(
-        context.date_range.end_year,
-        context.date_range.end_month,
-        context.date_range.end_day,
-    )?;
+    let space = DatetimeSearchSpace::from_date_range(&context.date_range, &context.time_range)?;
     if worker_count == 0
         || context.ranges.is_empty()
         || context
@@ -269,14 +206,10 @@ fn build_tasks(
     let combinations = expand_combinations(&context);
     let combo_count =
         u32::try_from(combinations.len()).map_err(|_| "Too many startup conditions")?;
-    let ranges = split_search_range(
-        context.date_range.to_search_range(),
-        calculate_time_chunks(combo_count, worker_count),
-    );
+    let spaces = space.split(calculate_time_chunks(combo_count, worker_count)?);
     let template = PokemonDatetimeSearchParams {
         ds: context.ds,
-        time_range: context.time_range,
-        search_range: ranges[0].clone(),
+        search_space: spaces[0].clone().into_params(),
         condition: combinations[0],
         pokemon_params,
         gen_config,
@@ -286,11 +219,11 @@ fn build_tasks(
     Ok(combinations
         .into_iter()
         .flat_map(|condition| {
-            ranges
+            spaces
                 .iter()
-                .map(|range| PokemonDatetimeSearchParams {
+                .map(|space| PokemonDatetimeSearchParams {
                     condition,
-                    search_range: range.clone(),
+                    search_space: space.clone().into_params(),
                     ..template.clone()
                 })
                 .collect::<Vec<_>>()
@@ -313,20 +246,17 @@ mod tests {
                 version: RomVersion::Black,
                 region: RomRegion::Jpn,
             },
-            time_range: TimeRangeParams {
-                hour_start: 0,
-                hour_end: 23,
-                minute_start: 0,
-                minute_end: 59,
-                second_start: 0,
-                second_end: 59,
-            },
-            search_range: SearchRangeParams {
-                start_year: 2024,
-                start_month: 2,
-                start_day: 29,
-                start_second_offset: 86397,
-                range_seconds: 7,
+            search_space: DatetimeSearchSpaceParams {
+                start_seconds: 762_566_397,
+                end_seconds: 762_566_404,
+                time_range: TimeRangeParams {
+                    hour_start: 0,
+                    hour_end: 23,
+                    minute_start: 0,
+                    minute_end: 59,
+                    second_start: 0,
+                    second_end: 59,
+                },
             },
             condition: StartupCondition::new(0xC79, 0x5A, KeyMask::NONE),
             pokemon_params: PokemonGenerationParams {
@@ -524,14 +454,14 @@ mod tests {
     #[test]
     fn partial_days_and_zero_spaces_have_exact_totals() {
         let mut p = params();
-        p.time_range.second_start = 1;
-        p.time_range.second_end = 2;
+        p.search_space.time_range.second_start = 1;
+        p.search_space.time_range.second_end = 2;
         assert_eq!(
             PokemonDatetimeSearcher::new(p.clone()).unwrap().total_count,
             48
         );
-        p.time_range.hour_start = 12;
-        p.time_range.hour_end = 12;
+        p.search_space.time_range.hour_start = 12;
+        p.search_space.time_range.hour_end = 12;
         let searcher = PokemonDatetimeSearcher::new(p).unwrap();
         assert!(searcher.is_done());
         assert_eq!(searcher.total_count, 0);
@@ -539,7 +469,7 @@ mod tests {
         p.gen_config.max_advance = p.gen_config.user_offset;
         assert!(PokemonDatetimeSearcher::new(p).unwrap().is_done());
         let mut p = params();
-        p.search_range.range_seconds = 0;
+        p.search_space.end_seconds = p.search_space.start_seconds;
         assert!(PokemonDatetimeSearcher::new(p).unwrap().is_done());
     }
 
@@ -574,11 +504,11 @@ mod tests {
     fn rejects_invalid_input_instead_of_reporting_no_matches() {
         let modifications: Vec<fn(&mut PokemonDatetimeSearchParams)> = vec![
             |p| p.ds.version = RomVersion::White,
-            |p| p.search_range.start_day = 30,
-            |p| p.search_range.start_month = 0,
-            |p| p.search_range.start_second_offset = 86400,
-            |p| p.search_range.range_seconds = u32::MAX,
-            |p| p.time_range.second_end = 60,
+            |p| p.search_space.start_seconds = u32::MAX,
+            |p| p.search_space.end_seconds = 0,
+            |p| p.search_space.start_seconds = p.search_space.end_seconds + 1,
+            |p| p.search_space.end_seconds = u32::MAX,
+            |p| p.search_space.time_range.second_end = 60,
             |p| p.gen_config.max_advance = 5,
             |p| p.gen_config.max_advance = u32::MAX,
             |p| p.pokemon_params.slots.clear(),
@@ -625,7 +555,7 @@ mod tests {
         use std::time::{Duration, Instant};
         fn measure(p: PokemonDatetimeSearchParams, condition: &str) {
             let encounter = p.pokemon_params.encounter_type;
-            let n = p.search_range.range_seconds;
+            let n = p.search_space.end_seconds - p.search_space.start_seconds;
             let a = p.gen_config.max_advance;
             let start = Instant::now();
             let mut searcher = PokemonDatetimeSearcher::new(p).unwrap();
@@ -650,8 +580,8 @@ mod tests {
         }
         if let Ok(condition) = std::env::var("POKEMON_PERF_CONDITION") {
             let mut p = params();
-            p.search_range.start_second_offset = 0;
-            p.search_range.range_seconds = 10000;
+            p.search_space.start_seconds = 762_480_000;
+            p.search_space.end_seconds = p.search_space.start_seconds + 10000;
             p.gen_config.user_offset = 0;
             p.gen_config.max_advance = 1000;
             if condition == "none" {
@@ -669,8 +599,8 @@ mod tests {
             for n in [1000, 10000] {
                 for a in [30, 1000, 10000] {
                     let mut p = params();
-                    p.search_range.start_second_offset = 0;
-                    p.search_range.range_seconds = n;
+                    p.search_space.start_seconds = 762_480_000;
+                    p.search_space.end_seconds = p.search_space.start_seconds + n;
                     p.gen_config.user_offset = 0;
                     p.gen_config.max_advance = a;
                     p.pokemon_params.encounter_type = encounter;
@@ -682,8 +612,8 @@ mod tests {
                 "all", "none", "nature", "species", "gender", "ability", "level",
             ] {
                 let mut p = params();
-                p.search_range.start_second_offset = 0;
-                p.search_range.range_seconds = 1000;
+                p.search_space.start_seconds = 762_480_000;
+                p.search_space.end_seconds = p.search_space.start_seconds + 1000;
                 p.gen_config.user_offset = 0;
                 p.gen_config.max_advance = 30;
                 p.pokemon_params.encounter_type = encounter;

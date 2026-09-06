@@ -15,7 +15,7 @@ struct DispatchState {
     /// 処理するメッセージ数
     message_count: u32,
     /// 基準秒オフセット (開始時刻からの経過秒)
-    base_second_offset: u32,
+    base_candidate_index: u32,
     /// 候補バッファ容量
     candidate_capacity: u32,
     /// パディング
@@ -236,20 +236,20 @@ fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
 
     // 時刻範囲から日時を計算
-    let combos_per_day = max(constants.hour_range_count, 1u)
-                       * max(constants.minute_range_count, 1u)
-                       * max(constants.second_range_count, 1u);
-    let total_offset = state.base_second_offset + idx;
+    let combos_per_day = constants.hour_range_count
+                       * constants.minute_range_count
+                       * constants.second_range_count;
+    let total_offset = state.base_candidate_index + idx;
 
     let day_offset = total_offset / combos_per_day;
     let remainder = total_offset - day_offset * combos_per_day;
 
-    let entries_per_hour = max(constants.minute_range_count, 1u) 
-                         * max(constants.second_range_count, 1u);
+    let entries_per_hour = constants.minute_range_count
+                         * constants.second_range_count;
     let hour_index = remainder / entries_per_hour;
     let remainder2 = remainder - hour_index * entries_per_hour;
-    let minute_index = remainder2 / max(constants.second_range_count, 1u);
-    let second_index = remainder2 - minute_index * max(constants.second_range_count, 1u);
+    let minute_index = remainder2 / constants.second_range_count;
+    let second_index = remainder2 - minute_index * constants.second_range_count;
 
     let hour = constants.hour_range_start + hour_index;
     let minute = constants.minute_range_start + minute_index;

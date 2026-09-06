@@ -212,6 +212,13 @@ async function runGpuSearchLoop<
     const startTime = performance.now();
     let lastProgressTime = startTime;
     let lastBatch: TBatch | undefined;
+    if (iterator.is_done) {
+      postResponse({
+        type: 'progress',
+        taskId,
+        progress: buildProgressInfo(0, 0, 1, startTime, startTime),
+      });
+    }
 
     while (!cancelRequested && !iterator.is_done) {
       const batch = await iterator.next();

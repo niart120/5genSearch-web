@@ -46,6 +46,12 @@ wasm-bindgen 生成コードはモジュールスコープに Instance を保持
 **注意**: `initSync` は wasm-bindgen が生成する内部インポート (`__wbg_get_imports()`) を自動的に使用する。
 外部から `imports` を注入することはできない。
 
+### 日時検索タスクの転送境界
+
+UI の `DateRangeParams` と `TimeRangeParams` は入力・永続化用に保持する。Main の `generate_*_search_tasks()` は共通日時探索空間を構築して分割し、CPU Worker には `search_space: DatetimeSearchSpaceParams` (`start_seconds`・`end_seconds`・`time_range`) を転送する。Worker の検索器構築時に再検証し、不正入力は既存の `error` 通知へ伝播する。タスク生成時の例外はサービス層で空配列に置換しない。
+
+GPU Worker は従来の context 入力を同じ共通探索空間へ変換する。GPU `next()` の読み取り失敗・不正結果番号は Promise の reject として Worker の `error` 通知へ伝播する。空探索は CPU/GPU とも 0/0・100% の進捗を通知して完了する。検索器・Iterator の解放は `finally` で行う。
+
 ### 2.3 実行場所の使い分け
 
 | 関数 | 実行場所 | 理由 |
