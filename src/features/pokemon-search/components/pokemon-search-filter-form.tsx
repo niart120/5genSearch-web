@@ -42,7 +42,7 @@ export function PokemonSearchFilterForm({
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">
-          <Trans>Filters</Trans>
+          <Trans>Filter</Trans>
         </h3>
         <Button
           variant="ghost"

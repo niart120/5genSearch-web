@@ -465,7 +465,17 @@ export function createPokemonSearchExportColumns(
 ): ExportColumn<PokemonListResultView>[] {
   const columns = createPokemonListExportColumns(statMode);
   const startupKeys = new Set(['datetime', 'timer0', 'vcount', 'key_input']);
-  return columns.map((column) =>
-    startupKeys.has(column.key) ? { ...column, detailOnly: false } : column
-  );
+  return columns.map((column) => {
+    if (column.key === 'datetime') {
+      return {
+        ...column,
+        detailOnly: false,
+        accessor: (row: PokemonListResultView) => {
+          const startup = getStartup(row.raw.source);
+          return startup ? formatDatetime(startup.datetime) : '';
+        },
+      };
+    }
+    return startupKeys.has(column.key) ? { ...column, detailOnly: false } : column;
+  });
 }

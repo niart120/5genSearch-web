@@ -56,6 +56,7 @@ it.each(['ivs', 'stats'] as const)(
       'level',
       ...[0, 1, 2, 3, 4, 5].map((stat) => `${statMode}_${stat}`),
       'timer0',
+      'vcount',
       'key_input',
     ]);
   }

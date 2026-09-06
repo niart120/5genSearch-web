@@ -25,7 +25,7 @@ describe('SearchModeTabs', () => {
         <RemountingPages />
       </I18nTestWrapper>
     );
-    const iv = screen.getByRole('tab', { name: 'Search by IVs' });
+    const iv = screen.getByRole('tab', { name: 'Search by MT Seed (IVs)' });
     act(() => iv.focus());
     fireEvent.keyDown(iv, { key: 'ArrowRight' });
     const pokemon = await screen.findByRole('tab', {
@@ -34,6 +34,8 @@ describe('SearchModeTabs', () => {
     });
     expect(pokemon).toHaveFocus();
     fireEvent.keyDown(pokemon, { key: 'ArrowLeft' });
-    expect(await screen.findByRole('tab', { name: 'Search by IVs', selected: true })).toHaveFocus();
+    expect(
+      await screen.findByRole('tab', { name: 'Search by MT Seed (IVs)', selected: true })
+    ).toHaveFocus();
   });
 });
