@@ -1,5 +1,6 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { t } from '@lingui/core/macro';
+import { formatDatetime, toHex } from '@/lib/format';
 import type { PokemonListResultView } from '@/lib/result-view';
 import {
   createPokemonResultColumns,
@@ -29,7 +30,10 @@ export function createPokemonSearchColumns(options: PokemonResultColumnsOptions)
       id: 'datetime',
       header: () => t`Date/Time`,
       size: 160,
-      cell: (info) => info.row.original.ui.datetime_iso,
+      cell: (info) => {
+        const source = info.row.original.raw.source;
+        return 'Startup' in source ? formatDatetime(source.Startup.datetime) : '';
+      },
     }
   );
   return [
@@ -39,7 +43,23 @@ export function createPokemonSearchColumns(options: PokemonResultColumnsOptions)
     ...stats,
     helper.accessor(
       (row) => ('Startup' in row.raw.source ? row.raw.source.Startup.condition.timer0 : 0),
-      { id: 'timer0', header: 'Timer0', size: 64, cell: (info) => info.row.original.ui.timer0 }
+      {
+        id: 'timer0',
+        header: 'Timer0',
+        size: 70,
+        cell: (info) =>
+          'Startup' in info.row.original.raw.source ? toHex(info.getValue(), 4) : '',
+      }
+    ),
+    helper.accessor(
+      (row) => ('Startup' in row.raw.source ? row.raw.source.Startup.condition.vcount : 0),
+      {
+        id: 'vcount',
+        header: 'VCount',
+        size: 60,
+        cell: (info) =>
+          'Startup' in info.row.original.raw.source ? toHex(info.getValue(), 2) : '',
+      }
     ),
     helper.accessor((row) => row.ui.key_input ?? '', {
       id: 'key_input',

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { DetailRow } from '@/components/data-display/detail-row';
 import { getNeedleArrow, IV_STAT_KEYS, getStatLabel } from '@/lib/game-data-names';
+import { formatDatetime } from '@/lib/format';
 import { useUiStore } from '@/stores/settings/ui';
 import type { PokemonListResultView } from '@/lib/result-view';
 
@@ -52,8 +53,11 @@ function ResultDetailDialog({
           {/* Seed 情報 */}
           <DetailRow label={t`LCG Seed`} value={ui.base_seed} />
           <DetailRow label="MT Seed" value={ui.mt_seed} />
-          {ui.datetime_iso !== undefined && (
-            <DetailRow label={t`Date/Time`} value={ui.datetime_iso} />
+          {'Startup' in result.raw.source && (
+            <DetailRow
+              label={t`Date/Time`}
+              value={formatDatetime(result.raw.source.Startup.datetime)}
+            />
           )}
           {ui.timer0 !== undefined && <DetailRow label="Timer0" value={ui.timer0} />}
           {ui.vcount !== undefined && <DetailRow label="VCount" value={ui.vcount} />}

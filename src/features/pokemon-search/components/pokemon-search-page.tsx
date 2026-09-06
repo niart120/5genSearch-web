@@ -148,14 +148,6 @@ export function PokemonSearchPage() {
     onSearch: handleSearch,
     onCancel: cancel,
   };
-  const unconstrained =
-    !filter.shiny &&
-    !filter.natures?.length &&
-    !filter.species_ids?.length &&
-    !filter.gender &&
-    !filter.ability_slot &&
-    !filter.level_range;
-
   return (
     <>
       <FeaturePageLayout className="pb-32 lg:pb-4">
@@ -179,20 +171,12 @@ export function PokemonSearchPage() {
               version={dsConfig.version}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
-              <Trans>The start offset is included; the max advance is excluded.</Trans>
-            </p>
             <PokemonSearchFilterForm
               value={filter}
               onChange={setFilter}
               availableSpecies={encounterParams.availableSpecies}
               disabled={isLoading}
             />
-            {unconstrained ? (
-              <p className="text-xs text-muted-foreground">
-                <Trans>Without filters, all Pokémon in the specified range are returned.</Trans>
-              </p>
-            ) : undefined}
           </SearchModeTabs>
           {validation.length > 0 ? (
             <ul className="space-y-0.5 text-xs text-destructive">

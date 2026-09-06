@@ -35,7 +35,7 @@ export function SearchModeTabs({
         aria-label={t`Search method`}
       >
         <TabsTrigger className="h-full whitespace-normal text-xs" value="iv" disabled={disabled}>
-          <Trans>Search by IVs</Trans>
+          <Trans>Search by MT Seed (IVs)</Trans>
         </TabsTrigger>
         <TabsTrigger
           className="h-full whitespace-normal text-xs"
