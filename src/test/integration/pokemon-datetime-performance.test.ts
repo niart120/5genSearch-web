@@ -5,7 +5,8 @@ import type {
   PokemonDatetimeSearchFilter,
   PokemonDatetimeSearchParams,
 } from '@/wasm/wasm_pkg.js';
-import { memory } from '@/wasm/wasm_pkg_bg.wasm';
+// WASM の依存走査は Node の解決処理を使うため、tsconfig の別名を使わない。
+import { memory } from '../../wasm/wasm_pkg_bg.wasm';
 import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import {
   runSearchInWorker,
