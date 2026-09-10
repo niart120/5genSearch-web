@@ -6,6 +6,115 @@
 
 use wasm_bindgen::prelude::*;
 
+pub use types::{
+    GeneratedWonderCardData, UiWonderCardData, WonderCardBatchLimits,
+    WonderCardDatetimeSearchParams, WonderCardParams, WonderCardSearchBatch, WonderCardShinyPolicy,
+};
+
+/// 配達員の個体一覧。同期呼び出しごとに候補数・結果数を制限する。
+#[wasm_bindgen]
+pub struct WonderCardListGenerator(
+    generation::flows::generator::wondercard::WonderCardListGenerator,
+);
+
+#[wasm_bindgen]
+impl WonderCardListGenerator {
+    /// # Errors
+    /// カード条件、起動設定、消費範囲が不正な場合。
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        origins: Vec<SeedOrigin>,
+        params: WonderCardParams,
+        config: GenerationConfig,
+        filter: Option<CoreDataFilter>,
+    ) -> Result<Self, String> {
+        let count = origins.len() as u64;
+        generation::flows::generator::wondercard::WonderCardBatchGenerator::new(
+            origins.into_iter(),
+            count,
+            params,
+            config,
+            filter,
+        )
+        .map(Self)
+        .map_err(|e| e.to_string())
+    }
+
+    /// # Errors
+    /// 上限がゼロ、または次の Seed の初期化に失敗した場合。
+    pub fn next_batch(
+        &mut self,
+        limits: WonderCardBatchLimits,
+    ) -> Result<WonderCardSearchBatch, String> {
+        self.0.next_batch(limits).map_err(|e| e.to_string())
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn is_done(&self) -> bool {
+        self.0.is_done()
+    }
+}
+
+/// 配達員の CPU 日時検索。
+#[wasm_bindgen]
+pub struct WonderCardDatetimeSearcher(datetime_search::wondercard::WonderCardDatetimeSearcher);
+
+#[wasm_bindgen]
+impl WonderCardDatetimeSearcher {
+    /// # Errors
+    /// 日時・カード条件・起動設定・ROM の組み合わせが不正な場合。
+    #[wasm_bindgen(constructor)]
+    pub fn new(params: WonderCardDatetimeSearchParams) -> Result<Self, String> {
+        datetime_search::wondercard::create_searcher(params).map(Self)
+    }
+
+    /// # Errors
+    /// 上限がゼロ、または次の Seed の初期化に失敗した場合。
+    pub fn next_batch(
+        &mut self,
+        limits: WonderCardBatchLimits,
+    ) -> Result<WonderCardSearchBatch, String> {
+        self.0.next_batch(limits).map_err(|e| e.to_string())
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn is_done(&self) -> bool {
+        self.0.is_done()
+    }
+}
+
+/// # Errors
+/// 日時範囲・起動条件・Worker 数が不正な場合。
+#[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)] // WASM 公開境界では転送型を所有する。
+pub fn generate_wondercard_search_tasks(
+    context: DatetimeSearchContext,
+    wondercard_params: WonderCardParams,
+    gen_config: GenerationConfig,
+    filter: Option<CoreDataFilter>,
+    worker_count: u32,
+) -> Result<Vec<WonderCardDatetimeSearchParams>, JsValue> {
+    datetime_search::wondercard::build_tasks(
+        &context,
+        &wondercard_params,
+        &gen_config,
+        filter.as_ref(),
+        worker_count,
+    )
+    .map_err(|e| JsValue::from_str(&e))
+}
+
+/// 一覧・日時検索共通の表示変換。入力順を維持する。
+#[wasm_bindgen]
+pub fn resolve_wondercard_data_batch(
+    data: Vec<GeneratedWonderCardData>,
+    locale: &str,
+) -> Vec<UiWonderCardData> {
+    data.into_iter()
+        .map(|d| resolve::wondercard::resolve_wondercard_data(&d, locale))
+        .collect()
+}
+
 pub mod core;
 pub mod data;
 pub mod datetime_search;

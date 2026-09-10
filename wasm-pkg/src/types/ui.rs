@@ -6,6 +6,30 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
+/// 配達員の表示データ。MT Seed とエンカウント固有情報は含めない。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct UiWonderCardData {
+    pub advance: u32,
+    pub needle_direction: u8,
+    pub base_seed: String,
+    pub datetime_iso: Option<String>,
+    pub timer0: Option<String>,
+    pub vcount: Option<String>,
+    pub key_input: Option<String>,
+    pub species_name: String,
+    pub nature_name: String,
+    pub ability_name: String,
+    pub gender_symbol: String,
+    pub shiny_symbol: String,
+    pub level: u8,
+    pub ivs: [String; 6],
+    pub stats: [String; 6],
+    pub hidden_power_type: String,
+    pub hidden_power_power: String,
+    pub pid: String,
+}
+
 /// 表示用ポケモンデータ (解決済み)
 #[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

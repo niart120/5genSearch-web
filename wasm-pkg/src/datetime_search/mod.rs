@@ -6,6 +6,7 @@ pub mod mtseed;
 pub mod pokemon;
 pub use pokemon::{PokemonDatetimeSearcher, generate_pokemon_search_tasks};
 pub mod trainer_info;
+pub(crate) mod wondercard;
 
 use std::num::NonZeroU32;
 

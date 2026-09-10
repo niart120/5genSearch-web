@@ -14,6 +14,39 @@ use super::pokemon::{
 use super::seeds::SeedOrigin;
 use crate::data::Stats;
 
+/// 配布条件による色違いの扱い。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum WonderCardShinyPolicy {
+    Never,
+    Random,
+    Always,
+}
+
+/// 配達員の公開入力。固定個体値は H・A・B・C・D・S 順。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct WonderCardParams {
+    pub trainer: TrainerInfo,
+    pub species_id: u16,
+    pub level: u8,
+    pub fixed_ivs: [Option<u8>; 6],
+    pub fixed_nature: Option<Nature>,
+    pub fixed_gender: Option<Gender>,
+    pub fixed_ability_slot: Option<AbilitySlot>,
+    pub shiny_policy: WonderCardShinyPolicy,
+}
+
+/// 一覧・日時検索で共有する配達員の個体。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
+pub struct GeneratedWonderCardData {
+    pub advance: u32,
+    pub needle_direction: NeedleDirection,
+    pub source: SeedOrigin,
+    pub core: CorePokemonData,
+}
+
 // ===== エンカウント結果 =====
 
 /// エンカウント結果 (`DustCloud` / `PokemonShadow` / `Fishing` 用)

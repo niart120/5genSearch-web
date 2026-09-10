@@ -22,6 +22,17 @@ pub enum GenerationError {
     UnsupportedEncounterType,
 }
 
+impl std::fmt::Display for GenerationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidConfig(message) => f.write_str(message),
+            Self::UnsupportedEncounterType => f.write_str("Unsupported encounter type"),
+        }
+    }
+}
+
+impl std::error::Error for GenerationError {}
+
 // ===== 中間データ =====
 
 /// 生の個体データ (IV なし)

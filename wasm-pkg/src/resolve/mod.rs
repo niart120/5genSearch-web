@@ -4,6 +4,7 @@
 
 pub mod egg;
 pub mod pokemon;
+pub(crate) mod wondercard;
 
 pub use egg::resolve_egg_data;
 pub use pokemon::resolve_pokemon_data;

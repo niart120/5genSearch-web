@@ -223,6 +223,35 @@ pub struct PokemonDatetimeSearchBatch {
     pub total_count: u64,
 }
 
+/// 配達員の日時検索の単一タスク。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct WonderCardDatetimeSearchParams {
+    pub ds: DsConfig,
+    pub search_space: DatetimeSearchSpaceParams,
+    pub condition: StartupCondition,
+    pub wondercard_params: super::generation::WonderCardParams,
+    pub gen_config: GenerationConfig,
+    pub filter: Option<super::filter::CoreDataFilter>,
+}
+
+/// 一回の呼び出しで試行・返却する正数の上限。
+#[derive(Tsify, Serialize, Deserialize, Clone, Copy, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct WonderCardBatchLimits {
+    pub max_candidates: u32,
+    pub max_results: u32,
+}
+
+/// 一覧・日時検索で共有するバッチ結果。進捗は不一致を含む累積試行数。
+#[derive(Tsify, Serialize, Deserialize, Clone, Debug)]
+#[tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)]
+pub struct WonderCardSearchBatch {
+    pub results: Vec<super::generation::GeneratedWonderCardData>,
+    pub processed_count: u64,
+    pub total_count: u64,
+}
+
 // ===== MT Seed 検索 (misc) =====
 
 /// MT Seed 検索コンテキスト (ユーザー入力用)
