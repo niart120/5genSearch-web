@@ -65,7 +65,9 @@ impl WonderCardDatetimeSearcher {
     /// 日時・カード条件・起動設定・ROM の組み合わせが不正な場合。
     #[wasm_bindgen(constructor)]
     pub fn new(params: WonderCardDatetimeSearchParams) -> Result<Self, String> {
-        datetime_search::wondercard::create_searcher(params).map(Self)
+        datetime_search::wondercard::create_searcher(params)
+            .map(Self)
+            .map_err(|e| e.to_string())
     }
 
     /// # Errors

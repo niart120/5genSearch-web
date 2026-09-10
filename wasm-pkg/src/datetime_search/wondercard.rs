@@ -6,6 +6,7 @@ use super::base::DatetimeHashGenerator;
 use super::{calculate_time_chunks, expand_combinations};
 use crate::core::datetime::DatetimeSearchSpace;
 use crate::generation::flows::generator::wondercard::WonderCardBatchGenerator;
+use crate::generation::flows::types::GenerationError;
 use crate::types::{
     CoreDataFilter, DatetimeSearchContext, GenerationConfig, SeedOrigin, StartupCondition,
     WonderCardDatetimeSearchParams, WonderCardParams,
@@ -41,12 +42,13 @@ pub(crate) type WonderCardDatetimeSearcher = WonderCardBatchGenerator<WonderCard
 
 pub(crate) fn create_searcher(
     params: WonderCardDatetimeSearchParams,
-) -> Result<WonderCardDatetimeSearcher, String> {
-    validate_config(&params.ds, &params.gen_config)?;
+) -> Result<WonderCardDatetimeSearcher, GenerationError> {
+    validate_config(&params.ds, &params.gen_config).map_err(GenerationError::InvalidConfig)?;
     if params.condition.key_mask.0 > 0xFFF {
-        return Err("Invalid key mask".into());
+        return Err(GenerationError::InvalidConfig("Invalid key mask".into()));
     }
-    let space = DatetimeSearchSpace::try_from(params.search_space)?;
+    let space = DatetimeSearchSpace::try_from(params.search_space)
+        .map_err(GenerationError::InvalidConfig)?;
     let origins = WonderCardOrigins {
         datetime: DatetimeHashGenerator::new(&params.ds, &space, params.condition),
         pending: VecDeque::with_capacity(4),
@@ -59,7 +61,6 @@ pub(crate) fn create_searcher(
         params.gen_config,
         params.filter,
     )
-    .map_err(|e| e.to_string())
 }
 
 fn validate_config(ds: &crate::types::DsConfig, config: &GenerationConfig) -> Result<(), String> {
