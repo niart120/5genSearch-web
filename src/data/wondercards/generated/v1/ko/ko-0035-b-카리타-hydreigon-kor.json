@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0035-b-카리타-hydreigon-kor",
+      "cardTitle": "카리타의 삼삼드래 선물",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 11031,
+        "sid": 0
+      },
+      "speciesId": 635,
+      "level": 70,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

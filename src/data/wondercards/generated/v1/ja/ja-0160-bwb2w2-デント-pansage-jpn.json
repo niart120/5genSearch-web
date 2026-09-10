@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ja-0160-bwb2w2-デント-pansage-jpn",
+      "cardTitle": "「みんなのベストフレンズ」　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8103,
+        "sid": 0
+      },
+      "speciesId": 511,
+      "level": 30,
+      "fixedIvs": {},
+      "fixedNature": "Serious",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

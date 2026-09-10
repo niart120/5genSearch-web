@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0099-b2w2-プラズマ-genesect-jpn",
+      "cardTitle": "ゲノセクト　プレゼント",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8112,
+        "sid": 0
+      },
+      "speciesId": 649,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

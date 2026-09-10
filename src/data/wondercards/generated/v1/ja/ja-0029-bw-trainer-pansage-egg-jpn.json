@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0029-bw-trainer-pansage-egg-jpn",
+      "cardTitle": "なぞのタマゴ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 511,
+      "level": 1,
+      "fixedIvs": {
+        "spa": 31
+      },
+      "fixedNature": "Brave",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

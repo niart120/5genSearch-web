@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ko-0162-bwb2w2-권도훈-hitmontop-kor",
+      "cardTitle": "2013년 주니어 한국 챔피언의 카포에라",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8173,
+        "sid": 0
+      },
+      "speciesId": 237,
+      "level": 55,
+      "fixedIvs": {},
+      "fixedNature": "Adamant",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

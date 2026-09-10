@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "it-0069-bw-est2012-keldeo-ita",
+      "cardTitle": "Keldeo, il Pokémon misterioso!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8272,
+        "sid": 0
+      },
+      "speciesId": 647,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

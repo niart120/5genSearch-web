@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "it-0100-bw-world12-pikachu-ita",
+      "cardTitle": "Vola verso la vittoria!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8122,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Timid",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Hidden",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

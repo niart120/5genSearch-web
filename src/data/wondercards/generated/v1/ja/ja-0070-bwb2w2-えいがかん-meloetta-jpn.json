@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ja-0070-bwb2w2-えいがかん-meloetta-jpn",
+      "cardTitle": "メロエッタ　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7142,
+        "sid": 0
+      },
+      "speciesId": 648,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

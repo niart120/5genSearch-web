@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ja-0033-b-サトシ-zekrom-jpn",
+      "cardTitle": "ゼクロム　プレゼント",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7161,
+        "sid": 0
+      },
+      "speciesId": 644,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

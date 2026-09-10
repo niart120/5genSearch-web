@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ja-0159-bwb2w2-アイリス-axew-jpn",
+      "cardTitle": "「みんなのベストフレンズ」　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8103,
+        "sid": 0
+      },
+      "speciesId": 610,
+      "level": 30,
+      "fixedIvs": {},
+      "fixedNature": "Naive",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

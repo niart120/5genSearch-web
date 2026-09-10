@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ja-0103-bw-pc-whimsicott-jpn",
+      "cardTitle": "きょうりょくタッグ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6012,
+        "sid": 0
+      },
+      "speciesId": 547,
+      "level": 50,
+      "fixedIvs": {
+        "spe": 31
+      },
+      "fixedNature": "Timid",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

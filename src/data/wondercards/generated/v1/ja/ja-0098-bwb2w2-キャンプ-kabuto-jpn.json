@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "ja-0098-bwb2w2-キャンプ-kabuto-jpn",
+      "cardTitle": "カセキのポケモン　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7192,
+        "sid": 0
+      },
+      "speciesId": 140,
+      "level": 15,
+      "fixedIvs": {},
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ja-0102-bw-pc-chandelure-jpn",
+      "cardTitle": "きょうりょくタッグ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5072,
+        "sid": 0
+      },
+      "speciesId": 609,
+      "level": 50,
+      "fixedIvs": {
+        "spa": 31
+      },
+      "fixedNature": "Modest",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "entries": [
+    {
+      "id": "ko-0123-b2w2-trainer-bulbasaur-egg-kor",
+      "cardTitle": "포켓몬 도감 완성을 시작해 보자!",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "egg",
+      "speciesId": 1,
+      "level": 1,
+      "fixedIvs": {
+        "def": 31
+      },
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

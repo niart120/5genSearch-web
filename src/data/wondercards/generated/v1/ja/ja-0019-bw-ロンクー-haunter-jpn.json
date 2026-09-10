@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ja-0019-bw-ロンクー-haunter-jpn",
+      "cardTitle": "がくえんさい×ポケモンプレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 10100,
+        "sid": 0
+      },
+      "speciesId": 93,
+      "level": 30,
+      "fixedIvs": {},
+      "shinyPolicy": "Never"
+    }
+  ]
+}

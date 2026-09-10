@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "ja-0071-bw-トウホク-pikachu-jpn",
+      "cardTitle": "さいきょうクラスのピカチュウ",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 3232,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Random"
+    }
+  ]
+}

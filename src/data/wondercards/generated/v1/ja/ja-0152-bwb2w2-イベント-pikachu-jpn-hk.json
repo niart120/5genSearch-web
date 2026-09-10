@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "ja-0152-bwb2w2-イベント-pikachu-jpn-hk",
+      "cardTitle": "さいきょうクラスの　ピカチュウ",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7263,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

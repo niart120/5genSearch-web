@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0034-bw-サーチャー-axew-jpn",
+      "cardTitle": "キバゴ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 3191,
+        "sid": 0
+      },
+      "speciesId": 610,
+      "level": 10,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

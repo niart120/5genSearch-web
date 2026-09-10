@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0036-bw-ａｎａ-pikachu-jpn",
+      "cardTitle": "ＡＮＡ　ピカチュウ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7181,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

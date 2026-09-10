@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0035-b-サーチャー-hydreigon-jpn",
+      "cardTitle": "「カリータのサザンドラ」プレゼント",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6171,
+        "sid": 0
+      },
+      "speciesId": 635,
+      "level": 70,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

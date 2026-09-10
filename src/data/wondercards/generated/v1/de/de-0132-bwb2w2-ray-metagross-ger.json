@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "de-0132-bwb2w2-ray-metagross-ger",
+      "cardTitle": "Auf dem Weg zum Sieg!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5113,
+        "sid": 0
+      },
+      "speciesId": 376,
+      "level": 45,
+      "fixedIvs": {},
+      "fixedNature": "Adamant",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

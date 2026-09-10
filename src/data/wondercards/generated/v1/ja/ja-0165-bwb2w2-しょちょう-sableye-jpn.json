@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "ja-0165-bwb2w2-しょちょう-sableye-jpn",
+      "cardTitle": "しょちょうのヤミラミ　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9153,
+        "sid": 0
+      },
+      "speciesId": 302,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Hidden",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

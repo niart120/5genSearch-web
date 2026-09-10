@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "de-0133-b2w2-plasma-deoxys-ger",
+      "cardTitle": "Hier kommt Deoxys!",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6013,
+        "sid": 0
+      },
+      "speciesId": 386,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

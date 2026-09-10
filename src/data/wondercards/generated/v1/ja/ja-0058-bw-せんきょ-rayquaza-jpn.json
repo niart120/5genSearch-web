@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0058-bw-せんきょ-rayquaza-jpn",
+      "cardTitle": "れきだいゲーム　ポケモンそうせんきょ",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 2102,
+        "sid": 0
+      },
+      "speciesId": 384,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

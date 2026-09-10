@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ko-0150-bwb2w2-10-12-shiny-giratina-kor",
+      "cardTitle": "색이 다른 기라티나 선물",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9143,
+        "sid": 0
+      },
+      "speciesId": 487,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

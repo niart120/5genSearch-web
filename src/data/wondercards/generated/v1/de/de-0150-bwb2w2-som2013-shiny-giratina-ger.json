@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "de-0150-bwb2w2-som2013-shiny-giratina-ger",
+      "cardTitle": "Ein Schillerndes Giratina für dich!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9273,
+        "sid": 0
+      },
+      "speciesId": 487,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

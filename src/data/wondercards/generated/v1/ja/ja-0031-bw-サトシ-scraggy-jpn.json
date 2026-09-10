@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ja-0031-bw-サトシ-scraggy-jpn",
+      "cardTitle": "サトシのズルッグ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 1281,
+        "sid": 0
+      },
+      "speciesId": 559,
+      "level": 1,
+      "fixedIvs": {},
+      "fixedNature": "Adamant",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

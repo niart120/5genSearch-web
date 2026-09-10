@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "it-0030-bw-est2011-zoroark-ita",
+      "cardTitle": "Uno Zoroark speciale!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 571,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Quirky",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

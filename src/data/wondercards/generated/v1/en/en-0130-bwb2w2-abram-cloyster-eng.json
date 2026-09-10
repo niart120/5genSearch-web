@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "en-0130-bwb2w2-abram-cloyster-eng",
+      "cardTitle": "Blast Away the Competition!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 1203,
+        "sid": 0
+      },
+      "speciesId": 91,
+      "level": 30,
+      "fixedIvs": {},
+      "fixedNature": "Naughty",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "es-0033-b-pri2012-zekrom-spa",
+      "cardTitle": "¡Zekrom!",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 3102,
+        "sid": 0
+      },
+      "speciesId": 644,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

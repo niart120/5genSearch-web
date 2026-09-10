@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "id": "ko-0136-bwb2w2-영화관-shiny-genesect-kor",
+      "cardTitle": "붉은 게노세크트 선물!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 1014,
+        "sid": 0
+      },
+      "speciesId": 649,
+      "level": 100,
+      "fixedIvs": {
+        "atk": 31,
+        "spe": 31
+      },
+      "fixedNature": "Hasty",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

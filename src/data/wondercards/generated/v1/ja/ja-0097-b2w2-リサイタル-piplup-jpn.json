@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0097-b2w2-リサイタル-piplup-jpn",
+      "cardTitle": "うたうポッチャマ　プレゼント",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7202,
+        "sid": 0
+      },
+      "speciesId": 393,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

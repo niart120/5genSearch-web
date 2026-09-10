@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "en-0029-bw-trainer-axew-egg-eng",
+      "cardTitle": "A Secret Egg!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 610,
+      "level": 1,
+      "fixedIvs": {
+        "spe": 31
+      },
+      "fixedNature": "Naive",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

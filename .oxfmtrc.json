@@ -15,6 +15,7 @@
     "*.wasm",
     "wasm-pkg/pkg",
     "src/wasm",
+    "src/data/wondercards/generated",
     "*.md",
     "spec/**/*.json"
   ]

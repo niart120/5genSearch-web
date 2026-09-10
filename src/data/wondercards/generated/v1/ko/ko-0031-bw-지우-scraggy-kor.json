@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ko-0031-bw-지우-scraggy-kor",
+      "cardTitle": "지우의 곤율랭 선물",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6281,
+        "sid": 0
+      },
+      "speciesId": 559,
+      "level": 1,
+      "fixedIvs": {},
+      "fixedNature": "Adamant",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

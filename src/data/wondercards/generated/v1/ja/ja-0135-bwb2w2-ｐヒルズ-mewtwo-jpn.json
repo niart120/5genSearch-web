@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "id": "ja-0135-bwb2w2-ｐヒルズ-mewtwo-jpn",
+      "cardTitle": "ミュウツー　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6153,
+        "sid": 0
+      },
+      "speciesId": 150,
+      "level": 100,
+      "fixedIvs": {
+        "spa": 31,
+        "spe": 31
+      },
+      "fixedNature": "Timid",
+      "fixedAbilitySlot": "Hidden",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

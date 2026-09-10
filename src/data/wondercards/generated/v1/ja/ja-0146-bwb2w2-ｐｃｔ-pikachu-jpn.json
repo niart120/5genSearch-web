@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "ja-0146-bwb2w2-ｐｃｔ-pikachu-jpn",
+      "cardTitle": "ポケモンセンター15しゅうねんきねん",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5293,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Hidden",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

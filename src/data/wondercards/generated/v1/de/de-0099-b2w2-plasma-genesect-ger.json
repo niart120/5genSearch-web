@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "de-0099-b2w2-plasma-genesect-ger",
+      "cardTitle": "Das Mysteriöse Pokémon Genesect!",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 10072,
+        "sid": 0
+      },
+      "speciesId": 649,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

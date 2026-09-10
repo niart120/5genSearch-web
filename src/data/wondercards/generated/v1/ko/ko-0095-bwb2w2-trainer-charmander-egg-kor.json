@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0095-bwb2w2-trainer-charmander-egg-kor",
+      "cardTitle": "포켓몬 도감 완성을 시작해 보자!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "egg",
+      "speciesId": 4,
+      "level": 1,
+      "fixedIvs": {
+        "spe": 31
+      },
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

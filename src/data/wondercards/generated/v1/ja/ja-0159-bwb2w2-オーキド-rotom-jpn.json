@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "ja-0159-bwb2w2-オーキド-rotom-jpn",
+      "cardTitle": "「みんなのベストフレンズ」　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8103,
+        "sid": 0
+      },
+      "speciesId": 479,
+      "level": 10,
+      "fixedIvs": {},
+      "fixedNature": "Naughty",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

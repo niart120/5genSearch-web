@@ -1,0 +1,18 @@
+{
+  "entries": [
+    {
+      "id": "ja-0055-bw-trainer-bagon-egg-jpn",
+      "cardTitle": "ことしはたつどし！タマゴ プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 371,
+      "level": 1,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

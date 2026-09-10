@@ -1,0 +1,33 @@
+{
+  "entries": [
+    {
+      "id": "ja-0156-bwb2w2-アデク-volcarona-jpn",
+      "cardTitle": "アデクのウルガモス　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9180,
+        "sid": 0
+      },
+      "speciesId": 637,
+      "level": 77,
+      "fixedIvs": {
+        "hp": 30,
+        "atk": 30,
+        "def": 30,
+        "spa": 30,
+        "spd": 30,
+        "spe": 30
+      },
+      "fixedNature": "Calm",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

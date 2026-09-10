@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0028-bw-홈플러스-darkrai-kor",
+      "cardTitle": "올 겨울 신작 영화 개봉 기념!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9031,
+        "sid": 0
+      },
+      "speciesId": 491,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

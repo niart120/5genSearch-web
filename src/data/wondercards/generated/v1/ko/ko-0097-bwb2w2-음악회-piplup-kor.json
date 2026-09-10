@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ko-0097-bwb2w2-음악회-piplup-kor",
+      "cardTitle": "노래하는 팽도리를 선물 받자!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12152,
+        "sid": 0
+      },
+      "speciesId": 393,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "entries": [
+    {
+      "id": "ja-0156-bwb2w2-ワタル-dragonite-jpn",
+      "cardTitle": "ワタルのカイリュー　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 11219,
+        "sid": 0
+      },
+      "speciesId": 149,
+      "level": 50,
+      "fixedIvs": {
+        "hp": 30,
+        "atk": 30,
+        "def": 30,
+        "spa": 30,
+        "spd": 30,
+        "spe": 30
+      },
+      "fixedNature": "Brave",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

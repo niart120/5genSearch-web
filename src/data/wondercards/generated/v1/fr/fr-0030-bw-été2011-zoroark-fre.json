@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "fr-0030-bw-été2011-zoroark-fre",
+      "cardTitle": "Un Zoroark spécial!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 571,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Quirky",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}
