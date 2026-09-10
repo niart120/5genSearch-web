@@ -23,17 +23,27 @@ describe('FeatureTabs', () => {
     useUiStore.setState(getUiInitialState());
   });
 
-  it('search カテゴリで 2 つのタブが表示される', () => {
+  it('search カテゴリでポケモン・タマゴ・配達員のタブが順に表示される', () => {
     renderFeatureTabs();
     expect(screen.getByRole('tab', { name: 'Pokemon' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Egg' })).toBeInTheDocument();
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Pokemon',
+      'Egg',
+      'Deliveryman',
+    ]);
   });
 
-  it('generation カテゴリで 2 つのタブが表示される', () => {
+  it('generation カテゴリでポケモン・タマゴ・配達員のタブが順に表示される', () => {
     useUiStore.setState({ activeCategory: 'generation' });
     renderFeatureTabs();
     expect(screen.getByRole('tab', { name: 'Pokemon' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Egg' })).toBeInTheDocument();
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Pokemon',
+      'Egg',
+      'Deliveryman',
+    ]);
   });
 
   it('tools カテゴリで 3 つのタブが表示される', () => {

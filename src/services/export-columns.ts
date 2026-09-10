@@ -12,6 +12,7 @@ import type {
   EggListResultView,
   EggSearchResultView,
   PokemonListResultView,
+  WonderCardResultView,
 } from '@/lib/result-view';
 import type { ExportColumn } from './export';
 import type { MtseedResult, SeedOrigin, TrainerInfoSearchResult } from '@/wasm/wasm_pkg';
@@ -477,5 +478,124 @@ export function createPokemonSearchExportColumns(
       };
     }
     return startupKeys.has(column.key) ? { ...column, detailOnly: false } : column;
+  });
+}
+
+export function createWonderCardListExportColumns(
+  statMode: StatDisplayMode
+): ExportColumn<WonderCardResultView>[] {
+  const isStatsMode = statMode === 'stats';
+  const statLabels = ['H', 'A', 'B', 'C', 'D', 'S'] as const;
+  const ivKeys = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
+
+  const baseColumns: ExportColumn<WonderCardResultView>[] = [
+    { key: 'advance', header: 'Advance', accessor: (r) => String(r.ui.advance) },
+    {
+      key: 'needle',
+      header: 'Needle',
+      accessor: (r) => getNeedleArrow(r.ui.needle_direction),
+    },
+    { key: 'species', header: 'Species', accessor: (r) => r.ui.species_name },
+    { key: 'nature', header: 'Nature', accessor: (r) => r.ui.nature_name },
+    { key: 'ability', header: 'Ability', accessor: (r) => r.ui.ability_name },
+    { key: 'gender', header: 'Gender', accessor: (r) => r.ui.gender_symbol },
+    { key: 'shiny', header: 'Shiny', accessor: (r) => r.ui.shiny_symbol },
+  ];
+
+  // Primary stat columns (based on current statMode)
+  const primaryStatColumns: ExportColumn<WonderCardResultView>[] = statLabels.map((label, i) => ({
+    key: ivKeys[i],
+    header: label,
+    accessor: (r: WonderCardResultView) => (isStatsMode ? r.ui.stats[i] : r.ui.ivs[i]),
+  }));
+
+  const trailingColumns: ExportColumn<WonderCardResultView>[] = [
+    { key: 'hidden_power', header: 'Hidden Power', accessor: (r) => r.ui.hidden_power_type },
+    { key: 'level', header: 'Lv', accessor: (r) => String(r.ui.level) },
+    { key: 'pid', header: 'PID', accessor: (r) => r.ui.pid },
+  ];
+
+  // Detail-only columns
+  const detailColumns: ExportColumn<WonderCardResultView>[] = [
+    { key: 'base_seed', header: 'LCG Seed', accessor: (r) => r.ui.base_seed, detailOnly: true },
+    {
+      key: 'datetime',
+      header: 'Date/Time',
+      accessor: (r) => r.ui.datetime_iso ?? '',
+      detailOnly: true,
+    },
+    { key: 'timer0', header: 'Timer0', accessor: (r) => r.ui.timer0 ?? '', detailOnly: true },
+    { key: 'vcount', header: 'VCount', accessor: (r) => r.ui.vcount ?? '', detailOnly: true },
+    {
+      key: 'key_input',
+      header: 'Key input',
+      accessor: (r) => r.ui.key_input ?? '',
+      detailOnly: true,
+    },
+  ];
+
+  // Alternate stat columns (opposite of current statMode)
+  const altStatColumns: ExportColumn<WonderCardResultView>[] = statLabels.map((label, i) => ({
+    key: `${ivKeys[i]}_alt`,
+    header: `${label}(${isStatsMode ? 'IV' : 'Stats'})`,
+    accessor: (r: WonderCardResultView) => (isStatsMode ? r.ui.ivs[i] : r.ui.stats[i]),
+    detailOnly: true,
+  }));
+
+  const moreDetailColumns: ExportColumn<WonderCardResultView>[] = [
+    {
+      key: 'hidden_power_power',
+      header: 'Hidden Power (Power)',
+      accessor: (r) => r.ui.hidden_power_power,
+      detailOnly: true,
+    },
+  ];
+
+  return [
+    ...baseColumns,
+    ...primaryStatColumns,
+    ...trailingColumns,
+    ...detailColumns,
+    ...altStatColumns,
+    ...moreDetailColumns,
+  ];
+}
+
+export function createWonderCardSearchExportColumns(
+  statMode: StatDisplayMode
+): ExportColumn<WonderCardResultView>[] {
+  const columns = createWonderCardListExportColumns(statMode);
+  const keys = [
+    'datetime',
+    'advance',
+    'species',
+    'nature',
+    'shiny',
+    'gender',
+    'ability',
+    'level',
+    'hp',
+    'atk',
+    'def',
+    'spa',
+    'spd',
+    'spe',
+    'timer0',
+    'vcount',
+    'key_input',
+  ];
+  const ordered = keys.flatMap((key) => columns.filter((column) => column.key === key));
+  return [...ordered, ...columns.filter((column) => !keys.includes(column.key))].map((column) => {
+    if (column.key === 'datetime') {
+      return {
+        ...column,
+        detailOnly: false,
+        accessor: (row: WonderCardResultView) => {
+          const startup = getStartup(row.raw.source);
+          return startup ? formatDatetime(startup.datetime) : '';
+        },
+      };
+    }
+    return { ...column, detailOnly: !keys.includes(column.key) };
   });
 }

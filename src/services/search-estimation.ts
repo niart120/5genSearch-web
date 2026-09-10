@@ -475,3 +475,30 @@ export function estimatePokemonDatetimeSearchResults(
     threshold
   );
 }
+
+/** 固定条件が Filter に一致するカードも含め、全候補数を結果件数の上限にする。 */
+export function estimateWonderCardListResults(
+  seedCount: number,
+  config: Pick<GenerationConfig, 'user_offset' | 'max_advance'>,
+  threshold = DEFAULT_RESULT_WARNING_THRESHOLD
+): EstimationResult {
+  return buildEstimation(
+    seedCount * Math.max(0, config.max_advance - config.user_offset + 1),
+    1,
+    threshold
+  );
+}
+
+export function estimateWonderCardDatetimeSearchResults(
+  context: DatetimeSearchContext,
+  config: GenerationConfig,
+  threshold = DEFAULT_RESULT_WARNING_THRESHOLD
+): EstimationResult {
+  const origins = calculateDatetimeSearchSpace(
+    context.date_range,
+    context.time_range,
+    context.ranges,
+    countKeyCombinations(context.key_spec)
+  );
+  return estimateWonderCardListResults(origins, config, threshold);
+}

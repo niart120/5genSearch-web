@@ -50,6 +50,8 @@ msgstr "5genSearch-web is a tool for RNG manipulation in Pokemon Black / White /
 #: src/features/egg-search/components/result-detail-dialog.tsx:78
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:117
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:75
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:74
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:97
 msgid "Ability"
 msgstr "Ability"
 
@@ -66,7 +68,7 @@ msgid "Ability slot"
 msgstr "Ability slot"
 
 #: src/components/layout/navigation-labels.tsx:9
-#: src/components/layout/navigation-labels.tsx:20
+#: src/components/layout/navigation-labels.tsx:22
 msgid "About"
 msgstr "About"
 
@@ -110,6 +112,8 @@ msgstr "About this app"
 #: src/features/needle/components/needle-result-columns.tsx:25
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:88
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:102
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:95
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:69
 msgid "Advance"
 msgstr "Advance"
 
@@ -207,6 +211,10 @@ msgstr "Cancel"
 msgid "Category"
 msgstr "Category"
 
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:208
+msgid "Check in Deliveryman list"
+msgstr "Check in Deliveryman list"
+
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:237
 msgid "Check in Pokémon list"
 msgstr "Check in Pokémon list"
@@ -303,6 +311,8 @@ msgstr "Date range"
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:59
 #: src/features/pokemon-search/components/pokemon-search-columns.tsx:31
 #: src/features/tid-adjust/components/trainer-info-columns.tsx:30
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:58
+#: src/features/wondercard-search/components/wondercard-search-columns.tsx:31
 msgid "Date/Time"
 msgstr "Date/Time"
 
@@ -334,6 +344,15 @@ msgstr "Delete profile"
 msgid "Delete row {0}"
 msgstr "Delete row {0}"
 
+#: src/components/layout/navigation-labels.tsx:17
+#: src/components/layout/navigation-labels.tsx:18
+msgid "Deliveryman"
+msgstr "Deliveryman"
+
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:50
+msgid "Deliveryman generation result details"
+msgstr "Deliveryman generation result details"
+
 #: src/components/forms/hidden-power-select.tsx:98
 #: src/components/forms/key-input-selector.tsx:98
 #: src/components/forms/key-spec-selector.tsx:98
@@ -345,6 +364,7 @@ msgstr "Deselect all"
 #: src/features/egg-list/components/egg-result-columns.tsx:50
 #: src/features/egg-search/components/egg-result-columns.tsx:44
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:78
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:59
 msgid "Details"
 msgstr "Details"
 
@@ -418,6 +438,7 @@ msgstr "Elapsed"
 
 #: src/components/forms/egg-filter-form.tsx:137
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:172
+#: src/features/wondercard-list/components/wondercard-filter-form.tsx:77
 msgid "Enable filter"
 msgstr "Enable filter"
 
@@ -467,12 +488,17 @@ msgid "Enter a profile name."
 msgstr "Enter a profile name."
 
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:61
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:59
 msgid "Enter a valid date range within 2000–2099"
 msgstr "Enter a valid date range within 2000–2099"
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:94
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
+
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:32
+msgid "Enter recipient TID and SID as integers from 0 to 65535"
+msgstr "Enter recipient TID and SID as integers from 0 to 65535"
 
 #: src/components/data-display/rng-tooltips.tsx:40
 #~ msgid "Enter the initial needle direction for each save in the order observed. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
@@ -481,6 +507,10 @@ msgstr "Enter at least one MT Seed"
 #: src/components/data-display/rng-tooltips.tsx:40
 msgid "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
 msgstr "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
+
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:27
+msgid "Enter valid filter values"
+msgstr "Enter valid filter values"
 
 #. placeholder {0}: estimatedCount.toLocaleString()
 #: src/components/forms/search-confirmation-dialog.tsx:45
@@ -503,6 +533,10 @@ msgstr "Export"
 msgid "Export failed"
 msgstr "Export failed"
 
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:115
+msgid "Failed to load Wonder Cards"
+msgstr "Failed to load Wonder Cards"
+
 #: src/components/forms/seed-input-section.tsx:213
 #~ msgid "Failed to read file"
 #~ msgstr "Failed to read file"
@@ -514,6 +548,7 @@ msgstr "Export failed"
 #: src/components/forms/egg-filter-form.tsx:129
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:165
 #: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:52
+#: src/features/wondercard-list/components/wondercard-filter-form.tsx:71
 msgid "Filter"
 msgstr "Filter"
 
@@ -529,6 +564,8 @@ msgstr "Filter"
 #: src/features/egg-search/components/result-detail-dialog.tsx:79
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:122
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:76
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:75
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:102
 msgid "Gender"
 msgstr "Gender"
 
@@ -577,6 +614,8 @@ msgstr "Hidden Ability"
 #: src/features/egg-list/components/result-detail-dialog.tsx:86
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:143
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:91
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:90
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:123
 msgid "Hidden Power"
 msgstr "Hidden Power"
 
@@ -642,6 +681,8 @@ msgstr "Key"
 #: src/features/egg-search/components/result-detail-dialog.tsx:68
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:65
 #: src/features/pokemon-search/components/pokemon-search-columns.tsx:66
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:64
+#: src/features/wondercard-search/components/wondercard-search-columns.tsx:66
 msgid "Key input"
 msgstr "Key input"
 
@@ -663,6 +704,7 @@ msgstr "Large number of results expected"
 #: src/features/needle/components/seed-input.tsx:64
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:55
 #: src/features/tid-adjust/components/trainer-info-columns.tsx:91
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:55
 msgid "LCG Seed"
 msgstr "LCG Seed"
 
@@ -712,6 +754,10 @@ msgstr "Line {0}: \"{1}\" — {2}"
 #: src/components/forms/seed-input-section.tsx:309
 #~ msgid "Load search results"
 #~ msgstr "Load search results"
+
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:73
+msgid "Loading Wonder Cards..."
+msgstr "Loading Wonder Cards..."
 
 #: src/features/pokemon-list/components/pokemon-params-form.tsx:339
 msgid "Location"
@@ -774,12 +820,14 @@ msgstr "Min advance"
 #: src/features/needle/components/needle-page.tsx:112
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:119
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:64
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:25
 msgid "Min advance must be ≤ max advance"
 msgstr "Min advance must be ≤ max advance"
 
 #: src/features/egg-search/components/egg-search-page.tsx:94
 #: src/features/needle/components/needle-page.tsx:111
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:120
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:26
 msgid "Min advance must be ≥ 0"
 msgstr "Min advance must be ≥ 0"
 
@@ -827,7 +875,7 @@ msgstr "MT Seed"
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 
-#: src/components/layout/navigation-labels.tsx:17
+#: src/components/layout/navigation-labels.tsx:19
 msgid "MT Seed Search"
 msgstr "MT Seed Search"
 
@@ -838,14 +886,18 @@ msgstr "MT Seed Search"
 #: src/features/egg-search/components/result-detail-dialog.tsx:77
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:112
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:74
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:73
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:92
 msgid "Nature"
 msgstr "Nature"
 
-#: src/components/layout/navigation-labels.tsx:19
+#: src/components/layout/navigation-labels.tsx:21
 #: src/features/egg-list/components/egg-result-columns.tsx:70
 #: src/features/egg-list/components/result-detail-dialog.tsx:65
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:98
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:70
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:69
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:79
 msgid "Needle"
 msgstr "Needle"
 
@@ -891,12 +943,14 @@ msgstr "No results"
 
 #: src/features/egg-list/components/egg-list-page.tsx:314
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:332
+#: src/features/wondercard-list/components/wondercard-list-page.tsx:179
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
 #: src/features/datetime-search/components/datetime-search-page.tsx:297
 #: src/features/egg-search/components/egg-search-page.tsx:277
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:222
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:196
 msgid "No results found. Configure parameters and start searching."
 msgstr "No results found. Configure parameters and start searching."
 
@@ -927,6 +981,10 @@ msgstr "No species found"
 #: src/features/datetime-search/components/template-selection-dialog.tsx:172
 msgid "No templates match the current filter."
 msgstr "No templates match the current filter."
+
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:82
+msgid "No Wonder Cards found"
+msgstr "No Wonder Cards found"
 
 #: src/components/forms/held-item-slot-select.tsx:36
 #: src/components/forms/key-input-selector.tsx:77
@@ -1037,6 +1095,10 @@ msgstr "Profiles will be kept and the active profile selection will be cleared. 
 msgid "Rare (5%)"
 msgstr "Rare (5%)"
 
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:129
+msgid "Recipient"
+msgstr "Recipient"
+
 #: src/features/ds-config/components/ds-config-form.tsx:80
 #: src/features/ds-config/components/ds-config-form.tsx:83
 msgid "Region"
@@ -1072,6 +1134,7 @@ msgstr "Reset all saved data?"
 #: src/components/forms/egg-filter-form.tsx:147
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:180
 #: src/features/pokemon-search/components/pokemon-search-filter-form.tsx:60
+#: src/features/wondercard-list/components/wondercard-filter-form.tsx:85
 msgid "Reset filter"
 msgstr "Reset filter"
 
@@ -1102,6 +1165,7 @@ msgstr "Reset settings and inputs?"
 #: src/features/egg-list/components/result-detail-dialog.tsx:45
 #: src/features/egg-search/components/result-detail-dialog.tsx:55
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:47
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:47
 msgid "Result details"
 msgstr "Result details"
 
@@ -1113,6 +1177,8 @@ msgstr "Result details"
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:311
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:201
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:265
+#: src/features/wondercard-list/components/wondercard-list-page.tsx:157
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:174
 msgid "Results"
 msgstr "Results"
 
@@ -1175,6 +1241,10 @@ msgstr "Search method"
 msgid "Search species..."
 msgstr "Search species..."
 
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:80
+msgid "Search Wonder Cards..."
+msgstr "Search Wonder Cards..."
+
 #: src/components/forms/time-range-picker.tsx:125
 msgid "Second"
 msgstr "Second"
@@ -1213,6 +1283,11 @@ msgstr "Seeds"
 msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:53
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:30
+msgid "Select a Wonder Card"
+msgstr "Select a Wonder Card"
+
 #: src/components/forms/hidden-power-select.tsx:95
 #: src/components/forms/key-input-selector.tsx:95
 #: src/components/forms/key-spec-selector.tsx:95
@@ -1229,6 +1304,7 @@ msgid "Select MT Seed templates to apply."
 msgstr "Select MT Seed templates to apply."
 
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:116
+#: src/features/wondercard-list/components/wondercard-list-page.tsx:48
 msgid "Select or enter at least one seed"
 msgstr "Select or enter at least one seed"
 
@@ -1241,6 +1317,7 @@ msgstr "Select Pokémon"
 #~ msgstr "Selected buttons"
 
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:63
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:61
 msgid "Set a valid Timer0 / VCount range"
 msgstr "Set a valid Timer0 / VCount range"
 
@@ -1269,6 +1346,8 @@ msgstr "Settings"
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:127
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:77
 #: src/features/tid-adjust/components/trainer-info-columns.tsx:81
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:76
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:107
 msgid "Shiny"
 msgstr "Shiny"
 
@@ -1326,6 +1405,8 @@ msgstr "Special encounter only"
 #: src/features/egg-list/components/result-detail-dialog.tsx:68
 #: src/features/pokemon-list/components/pokemon-result-columns.tsx:107
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:73
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:72
+#: src/features/wondercard-list/components/wondercard-result-columns.tsx:87
 msgid "Species"
 msgstr "Species"
 
@@ -1385,11 +1466,15 @@ msgstr "Startup condition details"
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:323
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:85
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:213
+#: src/features/wondercard-list/components/result-detail-dialog.tsx:84
+#: src/features/wondercard-list/components/wondercard-list-page.tsx:170
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:187
 msgid "Stats"
 msgstr "Stats"
 
 #: src/components/forms/egg-filter-form.tsx:160
 #: src/features/pokemon-list/components/pokemon-filter-form.tsx:192
+#: src/features/wondercard-list/components/wondercard-filter-form.tsx:95
 msgid "Stats filter"
 msgstr "Stats filter"
 
@@ -1454,7 +1539,7 @@ msgstr "The number of RNG advances excluding the startup offset."
 msgid "This encounter type is not supported by Pokémon search"
 msgstr "This encounter type is not supported by Pokémon search"
 
-#: src/components/layout/feature-content.tsx:67
+#: src/components/layout/feature-content.tsx:75
 msgid "This feature is only available in BW (Black/White)."
 msgstr "This feature is only available in BW (Black/White)."
 
@@ -1474,11 +1559,15 @@ msgstr "This project is open source."
 #~ msgid "This setting is independent of the sidebar."
 #~ msgstr "This setting is independent of the sidebar."
 
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:120
+msgid "This Wonder Card is unavailable for the selected ROM. Select another card."
+msgstr "This Wonder Card is unavailable for the selected ROM. Select another card."
+
 #: src/features/ds-config/components/trainer-config-form.tsx:28
 msgid "TID"
 msgstr "TID"
 
-#: src/components/layout/navigation-labels.tsx:18
+#: src/components/layout/navigation-labels.tsx:20
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
@@ -1498,6 +1587,7 @@ msgstr "Time range"
 #: src/features/egg-search/components/egg-search-page.tsx:92
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:62
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:97
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:60
 msgid "Time range is invalid"
 msgstr "Time range is invalid"
 
@@ -1574,3 +1664,7 @@ msgstr "Very rare (1%)"
 #: src/features/tid-adjust/components/tid-adjust-page.tsx:232
 msgid "With save"
 msgstr "With save"
+
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:59
+msgid "Wonder Card"
+msgstr "Wonder Card"

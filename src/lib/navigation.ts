@@ -7,6 +7,8 @@ export type FeatureId =
   | 'egg-search'
   | 'pokemon-list'
   | 'egg-list'
+  | 'wondercard-list'
+  | 'wondercard-search'
   | 'mtseed-search'
   | 'tid-adjust'
   | 'needle'
@@ -21,12 +23,12 @@ export interface CategoryDef {
 export const CATEGORIES: readonly CategoryDef[] = [
   {
     id: 'search',
-    features: ['datetime-search', 'egg-search'],
+    features: ['datetime-search', 'egg-search', 'wondercard-search'],
     defaultFeature: 'datetime-search',
   },
   {
     id: 'generation',
-    features: ['pokemon-list', 'egg-list'],
+    features: ['pokemon-list', 'egg-list', 'wondercard-list'],
     defaultFeature: 'pokemon-list',
   },
   {

@@ -9,6 +9,8 @@ import { MtseedSearchPage } from '@/features/mtseed-search';
 import { TidAdjustPage } from '@/features/tid-adjust';
 import { PokemonListPage } from '@/features/pokemon-list';
 import { EggListPage } from '@/features/egg-list';
+import { WonderCardListPage } from '@/features/wondercard-list';
+import { WonderCardSearchPage } from '@/features/wondercard-search';
 import { AboutPage } from '@/features/about';
 import { NeedlePage } from '@/features/needle';
 import { useDsConfigStore } from '@/stores/settings/ds-config';
@@ -17,6 +19,12 @@ const EGG_FEATURE_IDS = new Set<FeatureId>(['egg-search', 'egg-list']);
 
 function renderFeature(featureId: FeatureId) {
   switch (featureId) {
+    case 'wondercard-list': {
+      return <WonderCardListPage />;
+    }
+    case 'wondercard-search': {
+      return <WonderCardSearchPage />;
+    }
     case 'datetime-search': {
       return <DatetimeSearchPage />;
     }
