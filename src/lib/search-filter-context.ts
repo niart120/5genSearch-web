@@ -7,7 +7,10 @@ import type {
   PokemonFilter,
   PokemonDatetimeSearchFilter,
   StatsFilter,
+  CoreDataFilter,
+  GenderRatio,
 } from '@/wasm/wasm_pkg.js';
+import type { WonderCardEntry } from '@/data/wondercards/schema';
 import { IV_STAT_KEYS, type StatDisplayMode } from './game-data-names';
 
 export type IvStatKey = (typeof IV_STAT_KEYS)[number];
@@ -27,6 +30,51 @@ export interface EggFilterInput extends EggFilter {
   iv: IvFilterInput | undefined;
   enabled?: boolean;
   marginEnabled?: boolean;
+}
+
+export interface WonderCardFilterInput extends CoreDataFilter {
+  iv: IvFilterInput | undefined;
+  enabled?: boolean;
+}
+
+export interface WonderCardFilterContext {
+  card: WonderCardEntry;
+  genderRatio: GenderRatio;
+}
+
+export function getWonderCardFilterVisibility(context?: WonderCardFilterContext) {
+  const card = context?.card;
+  return {
+    nature: !!card && card.fixedNature === undefined,
+    gender:
+      !!card &&
+      card.fixedGender === undefined &&
+      !['Genderless', 'MaleOnly', 'FemaleOnly'].includes(context.genderRatio),
+    ability: !!card && card.fixedAbilitySlot === undefined,
+    shiny: card?.shinyPolicy === 'Random',
+  };
+}
+
+export function normalizeWonderCardFilter(
+  input: WonderCardFilterInput | undefined,
+  stats: StatsFilter | undefined,
+  context: WonderCardFilterContext,
+  mode: StatDisplayMode
+): CoreDataFilter | undefined {
+  if (input?.enabled === false) return;
+  const visible = getWonderCardFilterVisibility(context);
+  const result: CoreDataFilter = {
+    iv: mode === 'ivs' ? normalizeIvFilter(input?.iv) : undefined,
+    stats:
+      mode === 'stats' && stats && Object.values(stats).some((v) => v !== undefined)
+        ? stats
+        : undefined,
+    natures: visible.nature && input?.natures?.length ? input.natures : undefined,
+    gender: visible.gender ? input?.gender : undefined,
+    ability_slot: visible.ability ? input?.ability_slot : undefined,
+    shiny: visible.shiny ? input?.shiny : undefined,
+  };
+  return Object.values(result).some((v) => v !== undefined) ? result : undefined;
 }
 
 export const DEFAULT_IV_RANGES: IvFilter = {
