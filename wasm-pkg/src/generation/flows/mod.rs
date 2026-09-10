@@ -4,6 +4,7 @@ pub mod egg;
 pub mod generator;
 pub mod pokemon;
 pub mod types;
+pub mod wondercard;
 
 pub use egg::generate_egg;
 pub use generator::{EggGenerator, PokemonGenerator, generate_egg_list, generate_pokemon_list};
