@@ -4,7 +4,7 @@
 
 ### 1.1 目的
 
-[local_123 の一個体生成仕様](../local_123/WONDER_CARD_GENERATION.md) を、カード選択、TypeScript / WASM 境界、個体一覧、起動日時検索へ接続する。カード情報から生成条件への変換と、二つの実行経路の責務を定義する。
+[local_123 の一個体生成仕様](../../complete/local_123/WONDER_CARD_GENERATION.md) を、カード選択、TypeScript / WASM 境界、個体一覧、起動日時検索へ接続する。カード情報から生成条件への変換と、二つの実行経路の責務を定義する。
 
 本書は実装に向けた設計仕様とする。今回の変更は仕様書の作成のみであり、Rust / TS の実装、WASM の生成、カードデータの収集は行わない。
 
@@ -479,7 +479,7 @@ Rust の関連テスト、CPU Worker を使うブラウザ統合テスト、WASM
 
 ## 7. 関連資料
 
-- [配達員の一個体生成仕様](../local_123/WONDER_CARD_GENERATION.md)
+- [配達員の一個体生成仕様](../../complete/local_123/WONDER_CARD_GENERATION.md)
 - [既存の個体条件による日時検索](../../complete/local_119/POKEMON_SEARCH_ENGINE.md)
 - [既存の個体生成パイプライン](../../complete/local_120/POKEMON_GENERATION_PIPELINE.md)
 - [Rust / WASM の構成](../../architecture/rust-structure.md)
