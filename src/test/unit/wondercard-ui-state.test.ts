@@ -1,7 +1,7 @@
+import { buildWonderCardRunSettings } from '@/features/wondercard-list/request';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/wasm/wasm_pkg.js', () => ({ get_species_gender_ratio: () => 'F1M1' }));
 import {
-  buildWonderCardRunSettings,
   getWonderCardInitialFormState,
   isValidRecipient,
   resolveWonderCardSelection,

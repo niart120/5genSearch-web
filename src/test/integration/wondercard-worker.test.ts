@@ -26,6 +26,21 @@ import { loadWonderCards } from '@/data/wondercards/loader';
 import { toWonderCardParams } from '@/data/wondercards/converter';
 import { getWonderCardDisplays } from '@/data/wondercards/display';
 import { WONDER_CARD_LANGUAGES } from '@/data/wondercards/schema';
+import { buildWonderCardRunSettings } from '@/features/wondercard-list/request';
+import {
+  getWonderCardInitialFormState,
+  resolveWonderCardSelection,
+} from '@/features/wondercard-list/types';
+import {
+  getWonderCardSearchContext,
+  type WonderCardSearchRequest,
+} from '@/features/wondercard-search/types';
+import { useWonderCardListStore } from '@/features/wondercard-list/store';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
+import { useTrainerStore } from '@/stores/settings/trainer';
+import { navigateToWonderCardListFromSearch } from '@/lib/navigate';
+import { serializeSeedOrigin } from '@/services/seed-origin-serde';
+import { DEFAULT_IV_RANGES } from '@/lib/search-filter-context';
 import { POKEFINDER_CARDS } from '../fixtures/wondercards/pokefinder';
 import pokefinderResults from '../fixtures/wondercards/pokefinder-results.json';
 import {
@@ -195,6 +210,128 @@ function sortRows(rows: GeneratedWonderCardData[]) {
 }
 
 describe('wondercard WASM and CPU Worker', () => {
+  it.each(['pokemon', 'egg'] as const)(
+    '%s の画面用要求を検索し、設定変更後の転記から同じ個体を再現する',
+    async (kind) => {
+      const cards = await loadWonderCards('ja', 'Black');
+      const card = cards.find((entry) => entry.kind === kind)!;
+      const ctx = context();
+      ctx.time_range = {
+        hour_start: 0,
+        hour_end: 0,
+        minute_start: 0,
+        minute_end: 0,
+        second_start: 0,
+        second_end: 1,
+      };
+      const ds = {
+        config: ctx.ds,
+        ranges: ctx.ranges,
+        timer0Auto: false,
+        gameStart: config().game_start,
+      };
+      const recipient = { tid: 0, sid: 65_535 };
+      const selection = resolveWonderCardSelection(card, ds.config, recipient)!;
+      const inputs = {
+        ...getWonderCardInitialFormState(),
+        cardId: card.id,
+        statMode: 'ivs' as const,
+        genConfig: { user_offset: 2, max_advance: 7 },
+      };
+      const settings = buildWonderCardRunSettings(inputs, selection, ds, recipient)!;
+      const request: WonderCardSearchRequest = {
+        settings,
+        dateRange: ctx.date_range,
+        timeRange: ctx.time_range,
+        keySpec: ctx.key_spec,
+      };
+      const baseTasks = createWonderCardDatetimeSearchTasks(
+        ctx,
+        settings.params,
+        settings.genConfig,
+        settings.filter,
+        2
+      );
+      const baseline = collect(new WonderCardDatetimeSearcher(baseTasks[0].params))[0];
+      const filteredInputs = {
+        ...inputs,
+        filter: {
+          iv: {
+            ...DEFAULT_IV_RANGES,
+            hp: [baseline.core.ivs.hp, baseline.core.ivs.hp] as [number, number],
+          },
+          stats: undefined,
+          natures: [baseline.core.nature],
+          gender: baseline.core.gender,
+          ability_slot: baseline.core.ability_slot,
+          shiny: undefined,
+        },
+      };
+      request.settings = buildWonderCardRunSettings(filteredInputs, selection, ds, recipient)!;
+      const worker = await readyWorker();
+      const searched: GeneratedWonderCardData[] = [];
+      for (const task of createWonderCardDatetimeSearchTasks(
+        getWonderCardSearchContext(request),
+        request.settings.params,
+        request.settings.genConfig,
+        request.settings.filter,
+        2
+      )) {
+        const batch = await execute(worker, task);
+        searched.push(...batch.rows);
+      }
+      expect(searched.length).toBeGreaterThan(0);
+      useDsConfigStore.getState().setConfig({ version: 'White2', region: 'Usa' });
+      useTrainerStore.getState().setTrainer(111, 222);
+      navigateToWonderCardListFromSearch(searched[0].source, request);
+      const list = useWonderCardListStore.getState();
+      const restored = buildWonderCardRunSettings(
+        list.inputs,
+        list.selection,
+        useDsConfigStore.getState(),
+        useTrainerStore.getState()
+      )!;
+      expect(restored).toEqual(request.settings);
+      const generated = await execute(
+        worker,
+        createWonderCardListTasks(
+          list.seedOrigins,
+          restored.params,
+          restored.genConfig,
+          restored.filter,
+          2
+        )[0]
+      );
+      const originKey = JSON.stringify(serializeSeedOrigin(searched[0].source));
+      expect(generated.rows).toEqual(
+        searched.filter((row) => JSON.stringify(serializeSeedOrigin(row.source)) === originKey)
+      );
+    }
+  );
+
+  it('同じ Seed の別日時・起動条件を個別の生成元として保持する', () => {
+    const first = resolve_seeds({
+      type: 'Startup',
+      ds: createTestDsConfig(),
+      ranges: context().ranges,
+      datetime: { year: 2010, month: 9, day: 18, hour: 0, minute: 0, second: 0 },
+      key_input: { buttons: [] },
+    })[0];
+    if (!('Startup' in first)) throw new Error('Expected startup origin');
+    const second: SeedOrigin = {
+      Startup: { ...first.Startup, datetime: { ...first.Startup.datetime, second: 1 } },
+    };
+    const rows = collect(
+      new WonderCardListGenerator([first, second], params(), {
+        ...config(),
+        user_offset: 0,
+        max_advance: 0,
+      })
+    );
+    expect(rows.map((row) => row.source)).toEqual([first, second]);
+    expect(rows[0].core).toEqual(rows[1].core);
+  });
+
   it('六要素・undefined・固定値 0・列挙型・bigint が実際の WASM 境界を往復する', () => {
     const p = params();
     const before = structuredClone(p);

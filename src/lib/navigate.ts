@@ -12,6 +12,11 @@ import type { MtSeed, SeedOrigin } from '@/wasm/wasm_pkg.js';
 import type { SeedOriginTransferTarget } from '@/stores/search/results';
 import { useSearchResultsStore } from '@/stores/search/results';
 import { useUiStore } from '@/stores/settings/ui';
+import { useWonderCardListStore } from '@/features/wondercard-list/store';
+import type { WonderCardSearchRequest } from '@/features/wondercard-search/types';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
+import { useTrainerStore } from '@/stores/settings/trainer';
+import { serializeSeedOrigin } from '@/services/seed-origin-serde';
 
 /**
  * MT Seed 検索結果を起動時刻検索へ引き渡してページ遷移する
@@ -46,4 +51,39 @@ export function navigateToPokemonListFromSearch(
     pendingDetailOrigins: { ...state.pendingDetailOrigins, 'pokemon-list': origin },
   }));
   useUiStore.getState().navigateToFeature('pokemon-list');
+}
+
+/** 選択した生成元と検索開始時の設定を、一組の再現条件として転記する。 */
+export function navigateToWonderCardListFromSearch(
+  origin: SeedOrigin,
+  request: WonderCardSearchRequest
+): void {
+  const { settings, origins } = structuredClone({ settings: request.settings, origins: [origin] });
+  useDsConfigStore.setState({
+    config: settings.ds,
+    ranges: settings.ranges,
+    gameStart: settings.genConfig.game_start,
+    timer0Auto: settings.timer0Auto,
+  });
+  if (settings.card.kind === 'egg')
+    useTrainerStore.getState().setTrainer(settings.params.trainer.tid, settings.params.trainer.sid);
+  useWonderCardListStore.setState((state) => ({
+    inputs: settings.inputs,
+    selection: {
+      card: settings.card,
+      params: settings.params,
+      language: settings.card.language,
+      version: settings.ds.version,
+    },
+    seedInputMode: 'import',
+    seedInput: {
+      ...state.seedInput,
+      importText: JSON.stringify(origins.map((item) => serializeSeedOrigin(item))),
+    },
+    seedOrigins: origins,
+    formRevision: state.formRevision + 1,
+  }));
+  useSearchResultsStore.getState().clearPendingDetailOrigin('wondercard-list');
+  useSearchResultsStore.getState().setPendingSeedOrigins(origins, 'wondercard-list');
+  useUiStore.getState().navigateToFeature('wondercard-list');
 }

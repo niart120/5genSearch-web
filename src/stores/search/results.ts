@@ -16,7 +16,7 @@ export type SearchResult =
   | GeneratedPokemonData[];
 
 /** pendingDetailOrigin の消費先 feature */
-export type DetailOriginConsumer = 'pokemon-list' | 'egg-list' | 'needle';
+export type DetailOriginConsumer = 'pokemon-list' | 'egg-list' | 'needle' | 'wondercard-list';
 export type SeedOriginTransferTarget = DetailOriginConsumer;
 
 const DETAIL_ORIGIN_CONSUMERS: readonly DetailOriginConsumer[] = [

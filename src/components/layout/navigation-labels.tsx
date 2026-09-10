@@ -14,6 +14,8 @@ export const FEATURE_LABELS: Record<FeatureId, () => ReactElement> = {
   'egg-search': () => <Trans>Egg</Trans>,
   'pokemon-list': () => <Trans>Pokemon</Trans>,
   'egg-list': () => <Trans>Egg</Trans>,
+  'wondercard-list': () => <Trans>Deliveryman</Trans>,
+  'wondercard-search': () => <Trans>Deliveryman</Trans>,
   'mtseed-search': () => <Trans>MT Seed Search</Trans>,
   'tid-adjust': () => <Trans>TID Adjust</Trans>,
   needle: () => <Trans>Needle</Trans>,
