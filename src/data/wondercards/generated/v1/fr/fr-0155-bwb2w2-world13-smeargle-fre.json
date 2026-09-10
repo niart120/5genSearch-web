@@ -1,0 +1,29 @@
+{
+  "entries": [
+    {
+      "id": "fr-0155-bwb2w2-world13-smeargle-fre",
+      "cardTitle": "Combats à Vancouver!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8113,
+        "sid": 0
+      },
+      "speciesId": 235,
+      "level": 50,
+      "fixedIvs": {
+        "atk": 31,
+        "spe": 31
+      },
+      "fixedNature": "Jolly",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

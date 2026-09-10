@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "it-0002-bw-est2011-karrablast-ita",
+      "cardTitle": "È un Karrablast!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 588,
+      "level": 50,
+      "fixedIvs": {},
+      "shinyPolicy": "Never"
+    }
+  ]
+}

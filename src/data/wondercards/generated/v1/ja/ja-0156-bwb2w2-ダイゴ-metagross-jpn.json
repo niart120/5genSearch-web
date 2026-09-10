@@ -1,0 +1,32 @@
+{
+  "entries": [
+    {
+      "id": "ja-0156-bwb2w2-ダイゴ-metagross-jpn",
+      "cardTitle": "ダイゴのメタグロス　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 11212,
+        "sid": 0
+      },
+      "speciesId": 376,
+      "level": 58,
+      "fixedIvs": {
+        "hp": 30,
+        "atk": 30,
+        "def": 30,
+        "spa": 30,
+        "spd": 30,
+        "spe": 30
+      },
+      "fixedNature": "Serious",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

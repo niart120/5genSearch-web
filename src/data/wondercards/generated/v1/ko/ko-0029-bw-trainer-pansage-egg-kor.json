@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0029-bw-trainer-pansage-egg-kor",
+      "cardTitle": "수수께끼의 알 선물",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 511,
+      "level": 1,
+      "fixedIvs": {
+        "spa": 31
+      },
+      "fixedNature": "Brave",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

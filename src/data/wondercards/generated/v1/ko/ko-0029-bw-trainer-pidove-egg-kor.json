@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0029-bw-trainer-pidove-egg-kor",
+      "cardTitle": "수수께끼의 알 선물",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 519,
+      "level": 1,
+      "fixedIvs": {
+        "atk": 31
+      },
+      "fixedNature": "Hardy",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

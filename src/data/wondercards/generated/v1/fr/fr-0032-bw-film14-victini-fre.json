@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "fr-0032-bw-film14-victini-fre",
+      "cardTitle": "Victini le virtuose!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6012,
+        "sid": 0
+      },
+      "speciesId": 494,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0051-b-삼로스섬-thundurus-kor",
+      "cardTitle": "삼로스섬의 볼트로스 선물",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5142,
+        "sid": 0
+      },
+      "speciesId": 642,
+      "level": 70,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

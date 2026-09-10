@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "en-0149-bwb2w2-09093-sum2013-shiny-palkia-eng",
+      "cardTitle": "A Shiny Palkia for You!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9093,
+        "sid": 0
+      },
+      "speciesId": 484,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

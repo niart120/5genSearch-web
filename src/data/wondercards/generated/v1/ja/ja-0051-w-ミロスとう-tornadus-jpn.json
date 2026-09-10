@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0051-w-ミロスとう-tornadus-jpn",
+      "cardTitle": "ミロスとうのトルネロス　プレゼント",
+      "versions": [
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12161,
+        "sid": 0
+      },
+      "speciesId": 641,
+      "level": 70,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

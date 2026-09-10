@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0032-bw-아인트-victini-kor",
+      "cardTitle": "비크티니 선물",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12221,
+        "sid": 0
+      },
+      "speciesId": 494,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

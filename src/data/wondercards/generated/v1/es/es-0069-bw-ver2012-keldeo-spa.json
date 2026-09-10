@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "es-0069-bw-ver2012-keldeo-spa",
+      "cardTitle": "¡El Pokémon singular Keldeo!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8272,
+        "sid": 0
+      },
+      "speciesId": 647,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

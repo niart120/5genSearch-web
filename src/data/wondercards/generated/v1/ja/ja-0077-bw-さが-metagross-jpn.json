@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0077-bw-さが-metagross-jpn",
+      "cardTitle": "ちょうきょうりょくポケモン　プレゼント！",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 3172,
+        "sid": 0
+      },
+      "speciesId": 376,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Random"
+    }
+  ]
+}

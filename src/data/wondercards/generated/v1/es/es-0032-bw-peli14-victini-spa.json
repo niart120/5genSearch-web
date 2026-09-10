@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "es-0032-bw-peli14-victini-spa",
+      "cardTitle": "¡Un Victini muy virtuoso!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12031,
+        "sid": 0
+      },
+      "speciesId": 494,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

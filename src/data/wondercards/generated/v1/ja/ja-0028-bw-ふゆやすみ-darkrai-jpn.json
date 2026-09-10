@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0028-bw-ふゆやすみ-darkrai-jpn",
+      "cardTitle": "ダークライ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12270,
+        "sid": 0
+      },
+      "speciesId": 491,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

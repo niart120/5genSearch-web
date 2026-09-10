@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ja-0118-b2-ルビー-groudon-jpn",
+      "cardTitle": "グラードンプレゼント",
+      "versions": [
+        "Black2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 11212,
+        "sid": 0
+      },
+      "speciesId": 383,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

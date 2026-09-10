@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "es-0037-bw-world11-scrafty-spa",
+      "cardTitle": "Torneo de San Diego",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8141,
+        "sid": 0
+      },
+      "speciesId": 560,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Brave",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

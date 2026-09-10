@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "id": "ja-0054-bw-trainer-trapinch-egg-jpn",
+      "cardTitle": "ことしはたつどし！タマゴ プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 328,
+      "level": 1,
+      "fixedIvs": {},
+      "shinyPolicy": "Always"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "en-0071-bw-smr2012-pikachu-eng",
+      "cardTitle": "Get Pikachu!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7012,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Random"
+    }
+  ]
+}

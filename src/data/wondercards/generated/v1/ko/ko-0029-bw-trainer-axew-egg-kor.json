@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0029-bw-trainer-axew-egg-kor",
+      "cardTitle": "수수께끼의 알 선물",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 610,
+      "level": 1,
+      "fixedIvs": {
+        "spe": 31
+      },
+      "fixedNature": "Naive",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

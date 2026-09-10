@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "fr-0149-bwb2w2-été2013-shiny-palkia-fre",
+      "cardTitle": "Un Palkia chromatique pour vous!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9133,
+        "sid": 0
+      },
+      "speciesId": 484,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

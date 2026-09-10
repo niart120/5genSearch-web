@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "fr-0148-bwb2w2-été2013-shiny-dialga-fre",
+      "cardTitle": "Un Dialga chromatique pour vous!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8303,
+        "sid": 0
+      },
+      "speciesId": 483,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "es-0030-bw-ver2011-zoroark-spa",
+      "cardTitle": "¡Un Zoroark especial!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 571,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Quirky",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

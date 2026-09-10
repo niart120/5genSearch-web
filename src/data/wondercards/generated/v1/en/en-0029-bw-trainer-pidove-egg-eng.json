@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "en-0029-bw-trainer-pidove-egg-eng",
+      "cardTitle": "A Secret Egg!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 519,
+      "level": 1,
+      "fixedIvs": {
+        "atk": 31
+      },
+      "fixedNature": "Hardy",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

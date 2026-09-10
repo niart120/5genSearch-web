@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "ko-0094-bw-선발전12-volcarona-kor",
+      "cardTitle": "색이 다른 불카모스",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6092,
+        "sid": 0
+      },
+      "speciesId": 637,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

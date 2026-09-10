@@ -23,6 +23,8 @@
     "test:coverage": "vitest run --coverage",
     "test:wasm": "cargo test -p wasm-pkg",
     "scrape:encounters": "node scripts/scrape-encounters.js",
+    "collect:wondercards": "node scripts/collect-wondercards.js",
+    "test:wondercards": "node --test scripts/wondercards/*.test.js",
     "lingui:extract": "lingui extract",
     "lingui:compile": "lingui compile --typescript"
   },

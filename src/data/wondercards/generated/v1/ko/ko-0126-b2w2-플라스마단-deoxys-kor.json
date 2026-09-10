@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0126-b2w2-플라스마단-deoxys-kor",
+      "cardTitle": "환상의 포켓몬 테오키스 선물!",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5043,
+        "sid": 0
+      },
+      "speciesId": 386,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

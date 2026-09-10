@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ko-0033-b-지우-zekrom-kor",
+      "cardTitle": "제크로무 선물",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12221,
+        "sid": 0
+      },
+      "speciesId": 644,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

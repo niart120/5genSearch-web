@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ja-0049-bw-トウホク-snivy-jpn",
+      "cardTitle": "ポケモンセンタートウホク　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12041,
+        "sid": 0
+      },
+      "speciesId": 495,
+      "level": 5,
+      "fixedIvs": {},
+      "fixedNature": "Hardy",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

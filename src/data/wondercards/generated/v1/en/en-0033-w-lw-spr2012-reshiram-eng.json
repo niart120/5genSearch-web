@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "en-0033-w-lw-spr2012-reshiram-eng",
+      "cardTitle": "Reshiram!",
+      "versions": [
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 3102,
+        "sid": 0
+      },
+      "speciesId": 643,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

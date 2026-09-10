@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ko-0035-w-잔타-golurk-kor",
+      "cardTitle": "잔타의 골루그 선물",
+      "versions": [
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 11031,
+        "sid": 0
+      },
+      "speciesId": 623,
+      "level": 70,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

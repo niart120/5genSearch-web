@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ko-0099-b2w2-플라스마단-genesect-kor",
+      "cardTitle": "환상의 포켓몬 게노세크트 선물",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 1193,
+        "sid": 0
+      },
+      "speciesId": 649,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0051-b-ミロスとう-thundurus-jpn",
+      "cardTitle": "ミロスとうのボルトロス　プレゼント",
+      "versions": [
+        "Black"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12161,
+        "sid": 0
+      },
+      "speciesId": 642,
+      "level": 70,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

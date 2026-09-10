@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "es-0003-bw-ver2011-shelmet-spa",
+      "cardTitle": "¡Es un Shelmet!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 616,
+      "level": 50,
+      "fixedIvs": {},
+      "shinyPolicy": "Never"
+    }
+  ]
+}

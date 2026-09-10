@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "id": "ja-0057-bw-trainer-horsea-egg-jpn",
+      "cardTitle": "ことしはたつどし！タマゴ プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "egg",
+      "speciesId": 116,
+      "level": 1,
+      "fixedIvs": {},
+      "shinyPolicy": "Always"
+    }
+  ]
+}

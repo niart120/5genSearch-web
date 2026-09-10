@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ko-0105-bw-용의해-druddigon-kor",
+      "cardTitle": "드래곤타입 포켓몬 완전정복 대작전!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8232,
+        "sid": 0
+      },
+      "speciesId": 621,
+      "level": 1,
+      "fixedIvs": {},
+      "shinyPolicy": "Always"
+    }
+  ]
+}

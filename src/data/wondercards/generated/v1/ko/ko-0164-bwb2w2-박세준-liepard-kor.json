@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ko-0164-bwb2w2-박세준-liepard-kor",
+      "cardTitle": "2013년 마스터 한국 챔피언의 레파르다스",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8313,
+        "sid": 0
+      },
+      "speciesId": 510,
+      "level": 20,
+      "fixedIvs": {},
+      "fixedNature": "Jolly",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Hidden",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

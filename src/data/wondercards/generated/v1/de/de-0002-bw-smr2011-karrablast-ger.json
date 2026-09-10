@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "de-0002-bw-smr2011-karrablast-ger",
+      "cardTitle": "Ein Laukaps!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 588,
+      "level": 50,
+      "fixedIvs": {},
+      "shinyPolicy": "Never"
+    }
+  ]
+}

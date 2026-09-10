@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "ja-0120-b2w2-ｒだん-meowth-jpn",
+      "cardTitle": "ロケットだんのニャース　プレゼント！",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12072,
+        "sid": 0
+      },
+      "speciesId": 52,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

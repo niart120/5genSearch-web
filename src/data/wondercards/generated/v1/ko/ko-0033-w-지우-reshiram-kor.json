@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "ko-0033-w-지우-reshiram-kor",
+      "cardTitle": "레시라무 선물",
+      "versions": [
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 12221,
+        "sid": 0
+      },
+      "speciesId": 643,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

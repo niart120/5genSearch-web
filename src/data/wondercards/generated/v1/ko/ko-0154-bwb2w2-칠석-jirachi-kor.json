@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ko-0154-bwb2w2-칠석-jirachi-kor",
+      "cardTitle": "칠월칠석 지라치 선물",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 8013,
+        "sid": 0
+      },
+      "speciesId": 385,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

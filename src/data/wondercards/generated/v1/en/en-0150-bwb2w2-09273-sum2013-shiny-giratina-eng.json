@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "en-0150-bwb2w2-09273-sum2013-shiny-giratina-eng",
+      "cardTitle": "A Shiny Giratina for You!",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 9273,
+        "sid": 0
+      },
+      "speciesId": 487,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Always"
+    }
+  ]
+}

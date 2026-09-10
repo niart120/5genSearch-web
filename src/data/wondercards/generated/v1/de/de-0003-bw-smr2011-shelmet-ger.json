@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "de-0003-bw-smr2011-shelmet-ger",
+      "cardTitle": "Ein Schnuthelm!",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6011,
+        "sid": 0
+      },
+      "speciesId": 616,
+      "level": 50,
+      "fixedIvs": {},
+      "shinyPolicy": "Never"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "ja-0147-bwb2w2-キヨ-eevee-jpn",
+      "cardTitle": "うたうイーブイ　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 37379,
+        "sid": 0
+      },
+      "speciesId": 133,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Hardy",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

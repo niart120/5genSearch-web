@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0001-bw-ポケスマ-cubchoo-jpn",
+      "cardTitle": "おたすけクマシュン　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 10220,
+        "sid": 0
+      },
+      "speciesId": 613,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

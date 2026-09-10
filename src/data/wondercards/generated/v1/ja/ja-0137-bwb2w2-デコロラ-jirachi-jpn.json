@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ja-0137-bwb2w2-デコロラ-jirachi-jpn",
+      "cardTitle": "ジラーチ　プレゼント",
+      "versions": [
+        "Black",
+        "White",
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 7013,
+        "sid": 0
+      },
+      "speciesId": 385,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

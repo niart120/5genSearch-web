@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "id": "ko-0030-bw-방송국-zoroark-kor",
+      "cardTitle": "조로아크 선물",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 6261,
+        "sid": 0
+      },
+      "speciesId": 571,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Quirky",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

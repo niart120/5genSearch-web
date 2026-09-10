@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "fr-0128-b2w2-hvr2013-keldeo-fre",
+      "cardTitle": "Le Pokémon fabuleux Keldeo!",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 1163,
+        "sid": 0
+      },
+      "speciesId": 647,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

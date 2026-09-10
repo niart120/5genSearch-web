@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "ja-0093-bw-サーチャー-piplup-jpn",
+      "cardTitle": "ポッチャマ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 4282,
+        "sid": 0
+      },
+      "speciesId": 393,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Random"
+    }
+  ]
+}

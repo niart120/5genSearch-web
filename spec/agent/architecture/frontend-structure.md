@@ -40,10 +40,11 @@ src/
 │   │   └── generated/      # スクレイピング生成 JSON (v1/)
 │   ├── wondercards/         # 配達員の同梱カード定義と公開入力への変換
 │   │   ├── schema.ts       # JSON 境界・正規化後のカード型
-│   │   ├── loader.ts       # 遅延読み込み、メタデータ検証、ID・ROM での選択
+│   │   ├── loader.ts       # 言語別遅延読み込み、メタデータ検証、ID・言語・ROM での選択
 │   │   ├── converter.ts    # カードと受取人 → WonderCardParams
+│   │   ├── display.ts      # 種族名と原文タイトル、重複候補の補助情報
 │   │   ├── README.md       # 出典、値の対応、画面接続契約
-│   │   └── data/v1/        # 出典を確認したカード JSON
+│   │   └── generated/v1/   # 言語別の生成 JSON、1ファイル1定義
 │   └── timer0-vcount-defaults.ts  # Timer0/VCount デフォルト値
 │
 ├── services/               # 機能横断インフラサービス
@@ -198,7 +199,11 @@ WASM バイナリとバインディングは `wasm-pack --target bundler` で `s
 
 ## 配達員のデータ経路
 
-`data/wondercards/loader.ts` は `import.meta.glob` で同梱 JSON を必要時に読み込み、カード ID・表示名・対象 ROM・配布区分と ID 指定を検証する。JSON の未指定値はこの境界で `undefined` に統一する。`converter.ts` は通常配布の配布元 ID、配布タマゴの受取人 ID を選び、H/A/B/C/D/S 順の六要素の固定個体値とともに `WonderCardParams` へ変換する。
+`data/wondercards/generated/v1/<language>/<id>.json` は `scripts/collect-wondercards.js` が固定した上流コミットから生成する。1ファイル1定義とし、取得元はスクリプト側で管理する。製品カタログに PokeFinder のテスト定義は含めず、`test/fixtures/wondercards/` に分離する。
+
+`data/wondercards/loader.ts` は `import.meta.glob` で言語ごとに同梱 JSON を遅延読み込み・キャッシュし、複製を返す。カード ID・原文タイトル・単一エントリー・言語フォルダ・対象 ROM・配布区分と ID 指定を検証する。`getWonderCardLanguage()` は ROM リージョンを受取対象言語へ対応させ、表示言語でカタログを切り替えない。JSON の未指定値はこの境界で `undefined` に統一する。`converter.ts` は通常配布の配布元 ID、配布タマゴの受取人 ID を選び、H/A/B/C/D/S 順の六要素の固定個体値とともに `WonderCardParams` へ変換する。
+
+`display.ts` の `getWonderCardDisplays()` は選択候補と表示言語から「種族名（cardTitle）」を返す。通常配布の同名候補には5桁の TID、同じ TID でも区別できない候補と重複タマゴには内部 ID も返す。カード定義と受取人の状態を変更せず、補助情報の画面配置は画面実装時に決める。
 
 `createWonderCardListTasks()` と `createWonderCardDatetimeSearchTasks()` はそれぞれ `wondercard-list` / `wondercard-datetime` タスクを返す。CPU Worker が状態を持つ WASM オブジェクトを構築し、共通の `runSearchLoop` で実行・中断・解放する。両者のレスポンスは `resultType: 'wondercard-list'`、結果は `GeneratedWonderCardData[]`。配列のみを受け取る集約処理では配達員用型ガードで通常個体・育て屋タマゴを除外する。
 

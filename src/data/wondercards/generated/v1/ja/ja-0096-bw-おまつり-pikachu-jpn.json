@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "ja-0096-bw-おまつり-pikachu-jpn",
+      "cardTitle": "ピカチュウ　プレゼント",
+      "versions": [
+        "Black",
+        "White"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5112,
+        "sid": 0
+      },
+      "speciesId": 25,
+      "level": 100,
+      "fixedIvs": {},
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

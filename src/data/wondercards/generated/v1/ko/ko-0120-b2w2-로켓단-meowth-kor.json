@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "id": "ko-0120-b2w2-로켓단-meowth-kor",
+      "cardTitle": "로켓단의 나옹을 선물!",
+      "versions": [
+        "Black2",
+        "White2"
+      ],
+      "kind": "pokemon",
+      "trainer": {
+        "tid": 5103,
+        "sid": 0
+      },
+      "speciesId": 52,
+      "level": 15,
+      "fixedIvs": {},
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

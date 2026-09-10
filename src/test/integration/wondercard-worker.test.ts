@@ -24,6 +24,10 @@ import { WorkerPool } from '@/services/worker-pool';
 import { flattenBatchResults, isGeneratedWonderCardData } from '@/services/batch-utils';
 import { loadWonderCards } from '@/data/wondercards/loader';
 import { toWonderCardParams } from '@/data/wondercards/converter';
+import { getWonderCardDisplays } from '@/data/wondercards/display';
+import { WONDER_CARD_LANGUAGES } from '@/data/wondercards/schema';
+import { POKEFINDER_CARDS } from '../fixtures/wondercards/pokefinder';
+import pokefinderResults from '../fixtures/wondercards/pokefinder-results.json';
 import {
   createTestDsConfig,
   createTestSearchSpace,
@@ -237,27 +241,101 @@ describe('wondercard WASM and CPU Worker', () => {
   });
 
   it('同梱全カードを対象 ROM ごとに構築・生成する', async () => {
-    const cards = await loadWonderCards();
+    const languages = await Promise.all(
+      WONDER_CARD_LANGUAGES.map((language) => loadWonderCards(language))
+    );
+    const cards = languages.flat();
+    expect(cards).toHaveLength(700);
     for (const card of cards) {
       for (const version of card.versions) {
         const p = toWonderCardParams(card, { tid: 0, sid: 0 });
-        const rows = collect(new WonderCardListGenerator(origins(), p, { ...config(), version }));
-        expect(rows).toHaveLength(50);
+        const rows = collect(
+          new WonderCardListGenerator(origins(), p, {
+            ...config(),
+            version,
+            user_offset: 0,
+            max_advance: 1,
+          })
+        );
+        expect(rows, `${card.id}/${version}`).toHaveLength(4);
         expect(
           rows.every(
             (row) => row.core.species_id === card.speciesId && row.core.level === card.level
           )
         ).toBe(true);
+        for (const row of rows) {
+          for (const stat of ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const) {
+            if (card.fixedIvs[stat] !== undefined)
+              expect(row.core.ivs[stat], card.id).toBe(card.fixedIvs[stat]);
+          }
+          if (card.fixedNature) expect(row.core.nature, card.id).toBe(card.fixedNature);
+          if (card.fixedGender) expect(row.core.gender, card.id).toBe(card.fixedGender);
+          if (card.fixedAbilitySlot)
+            expect(row.core.ability_slot, card.id).toBe(card.fixedAbilitySlot);
+          if (card.shinyPolicy === 'Never') expect(row.core.shiny_type, card.id).toBe('None');
+          if (card.shinyPolicy === 'Always') expect(row.core.shiny_type, card.id).not.toBe('None');
+        }
       }
     }
   });
 
-  it('カードの不正な値と六要素でない fixed_ivs を構築時に拒否する', async () => {
-    const cards = await loadWonderCards();
-    cards[0].fixedIvs.hp = 32;
+  it.each(POKEFINDER_CARDS)('$id の独立したPokeFinder期待値が変換後も一致する', (card) => {
+    const fixture = pokefinderResults.generate.find((value) => value.specie === card.speciesId);
+    if (!fixture) throw new Error(`Missing fixture: ${card.id}`);
+    // seed=0 の BW 続きからは43消費。BWでも受取可能な3定義を同じ絶対位置で照合する。
+    const expected = fixture.results.filter((value) => value.advances >= 43);
+    const last = expected.at(-1);
+    if (!last) throw new Error(`No comparable expected values: ${card.id}`);
+    const rows = collect(
+      new WonderCardListGenerator(
+        resolve_seeds({ type: 'Seeds', seeds: [0n] }),
+        toWonderCardParams(card, { tid: fixture.tid, sid: fixture.sid }),
+        {
+          ...config(),
+          version: 'Black',
+          user_offset: expected[0].advances - 43,
+          max_advance: last.advances - 43,
+        }
+      )
+    );
     expect(
-      () =>
-        new WonderCardListGenerator([], toWonderCardParams(cards[0], { tid: 0, sid: 0 }), config())
+      rows.map((row) => ({
+        advances: row.advance + 43,
+        pid: row.core.pid,
+        ivs: Object.values(row.core.ivs),
+        stats: [
+          row.core.stats.hp,
+          row.core.stats.attack,
+          row.core.stats.defense,
+          row.core.stats.special_attack,
+          row.core.stats.special_defense,
+          row.core.stats.speed,
+        ],
+      }))
+    ).toEqual(
+      expected.map((value) => ({
+        advances: value.advances,
+        pid: value.pid,
+        ivs: value.ivs,
+        stats: value.stats,
+      }))
+    );
+  });
+
+  it('実際の種族名データで通常配布とタマゴの表示名を作る', () => {
+    expect(getWonderCardDisplays(POKEFINDER_CARDS, 'ja').map((value) => value.label)).toEqual([
+      'マメパト（A Secret Egg!）',
+      'メロエッタ（The Mythical Pokémon Meloetta!）',
+      'ゾロアーク（A special Zoroark!）',
+    ]);
+    expect(getWonderCardDisplays(POKEFINDER_CARDS, 'en')[0].label).toBe('Pidove（A Secret Egg!）');
+  });
+
+  it('カードの不正な値と六要素でない fixed_ivs を構築時に拒否する', () => {
+    const card = structuredClone(POKEFINDER_CARDS[0]);
+    card.fixedIvs.hp = 32;
+    expect(
+      () => new WonderCardListGenerator([], toWonderCardParams(card, { tid: 0, sid: 0 }), config())
     ).toThrow('Fixed IV');
     const p = params();
     p.fixed_ivs.pop();
