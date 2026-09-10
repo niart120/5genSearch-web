@@ -699,6 +699,33 @@ export interface PokemonSearchBatchLimits {
 }
 
 /**
+ * 一回の呼び出しで試行・返却する正数の上限。
+ */
+export interface WonderCardBatchLimits {
+    max_candidates: number;
+    max_results: number;
+}
+
+/**
+ * 一覧・日時検索で共有するバッチ結果。進捗は不一致を含む累積試行数。
+ */
+export interface WonderCardSearchBatch {
+    results: GeneratedWonderCardData[];
+    processed_count: bigint;
+    total_count: bigint;
+}
+
+/**
+ * 一覧・日時検索で共有する配達員の個体。
+ */
+export interface GeneratedWonderCardData {
+    advance: number;
+    needle_direction: NeedleDirection;
+    source: SeedOrigin;
+    core: CorePokemonData;
+}
+
+/**
  * 個体値に依存しない日時検索条件。空の配列は条件なしとして扱う。
  */
 export interface PokemonDatetimeSearchFilter {
@@ -1368,6 +1395,61 @@ export interface InheritanceSlot {
     parent: number;
 }
 
+/**
+ * 配布条件による色違いの扱い。
+ */
+export type WonderCardShinyPolicy = "Never" | "Random" | "Always";
+
+/**
+ * 配達員の公開入力。固定個体値は H・A・B・C・D・S 順。
+ */
+export interface WonderCardParams {
+    trainer: TrainerInfo;
+    species_id: number;
+    level: number;
+    fixed_ivs: [number | undefined, number | undefined, number | undefined, number | undefined, number | undefined, number | undefined];
+    fixed_nature: Nature | undefined;
+    fixed_gender: Gender | undefined;
+    fixed_ability_slot: AbilitySlot | undefined;
+    shiny_policy: WonderCardShinyPolicy;
+}
+
+/**
+ * 配達員の日時検索の単一タスク。
+ */
+export interface WonderCardDatetimeSearchParams {
+    ds: DsConfig;
+    search_space: DatetimeSearchSpaceParams;
+    condition: StartupCondition;
+    wondercard_params: WonderCardParams;
+    gen_config: GenerationConfig;
+    filter: CoreDataFilter | undefined;
+}
+
+/**
+ * 配達員の表示データ。MT Seed とエンカウント固有情報は含めない。
+ */
+export interface UiWonderCardData {
+    advance: number;
+    needle_direction: number;
+    base_seed: string;
+    datetime_iso: string | undefined;
+    timer0: string | undefined;
+    vcount: string | undefined;
+    key_input: string | undefined;
+    species_name: string;
+    nature_name: string;
+    ability_name: string;
+    gender_symbol: string;
+    shiny_symbol: string;
+    level: number;
+    ivs: [string, string, string, string, string, string];
+    stats: [string, string, string, string, string, string];
+    hidden_power_type: string;
+    hidden_power_power: string;
+    pid: string;
+}
+
 
 /**
  * 孵化起動時刻検索器
@@ -1553,6 +1635,44 @@ export class TrainerInfoSearcher {
 }
 
 /**
+ * 配達員の CPU 日時検索。
+ */
+export class WonderCardDatetimeSearcher {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * # Errors
+     * 日時・カード条件・起動設定・ROM の組み合わせが不正な場合。
+     */
+    constructor(params: WonderCardDatetimeSearchParams);
+    /**
+     * # Errors
+     * 上限がゼロ、または次の Seed の初期化に失敗した場合。
+     */
+    next_batch(limits: WonderCardBatchLimits): WonderCardSearchBatch;
+    readonly is_done: boolean;
+}
+
+/**
+ * 配達員の個体一覧。同期呼び出しごとに候補数・結果数を制限する。
+ */
+export class WonderCardListGenerator {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * # Errors
+     * カード条件、起動設定、消費範囲が不正な場合。
+     */
+    constructor(origins: SeedOrigin[], params: WonderCardParams, config: GenerationConfig, filter?: CoreDataFilter | null);
+    /**
+     * # Errors
+     * 上限がゼロ、または次の Seed の初期化に失敗した場合。
+     */
+    next_batch(limits: WonderCardBatchLimits): WonderCardSearchBatch;
+    readonly is_done: boolean;
+}
+
+/**
  * MT Seed と消費数から IV スプレッドを計算する。
  *
  * 既存内部関数 `generate_rng_ivs_with_offset` の wasm-bindgen エクスポート。
@@ -1689,6 +1809,12 @@ export function generate_pokemon_search_tasks(context: DatetimeSearchContext, po
 export function generate_trainer_info_search_tasks(context: DatetimeSearchContext, filter: TrainerInfoFilter, game_start: GameStartConfig, worker_count: number): TrainerInfoSearchParams[];
 
 /**
+ * # Errors
+ * 日時範囲・起動条件・Worker 数が不正な場合。
+ */
+export function generate_wondercard_search_tasks(context: DatetimeSearchContext, wondercard_params: WonderCardParams, gen_config: GenerationConfig, filter: CoreDataFilter | null | undefined, worker_count: number): WonderCardDatetimeSearchParams[];
+
+/**
  * 針パターンを取得 (ユーティリティ関数)
  *
  * 指定した Seed と advance から始まる針パターンを取得。
@@ -1768,6 +1894,11 @@ export function resolve_pokemon_data_batch(data: GeneratedPokemonData[], version
  * - `Startup` で `ranges` が空の場合
  */
 export function resolve_seeds(input: SeedSpec): SeedOrigin[];
+
+/**
+ * 一覧・日時検索共通の表示変換。入力順を維持する。
+ */
+export function resolve_wondercard_data_batch(data: GeneratedWonderCardData[], locale: string): UiWonderCardData[];
 
 /**
  * レポート針パターン検索 (公開 API)

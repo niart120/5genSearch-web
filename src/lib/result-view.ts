@@ -4,6 +4,8 @@ import type {
   GeneratedPokemonData,
   UiEggData,
   UiPokemonData,
+  GeneratedWonderCardData,
+  UiWonderCardData,
 } from '@/wasm/wasm_pkg.js';
 
 export interface ResultView<TRaw, TUi> {
@@ -16,3 +18,5 @@ export type PokemonListResultView = ResultView<GeneratedPokemonData, UiPokemonDa
 export type EggListResultView = ResultView<GeneratedEggData, UiEggData>;
 
 export type EggSearchResultView = ResultView<EggDatetimeSearchResult, UiEggData>;
+
+export type WonderCardResultView = ResultView<GeneratedWonderCardData, UiWonderCardData>;

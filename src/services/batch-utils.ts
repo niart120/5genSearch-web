@@ -1,3 +1,6 @@
+import type { GeneratedWonderCardData } from '@/wasm/wasm_pkg.js';
+import type { SearchResult } from './worker-pool';
+
 /**
  * バッチ結果処理ユーティリティ
  *
@@ -7,7 +10,7 @@
 /**
  * バッチ結果配列を flat 化する
  *
- * Worker から返却される `unknown[][]` を型ガードしつつ flat にする。
+ * Worker から返却される既知の結果 Union を型ガードしつつ flat にする。
  * 各バッチの最初の要素で型を判定し、該当する型の配列として push する。
  *
  * @param results - Worker から返却されたバッチ結果配列
@@ -15,15 +18,15 @@
  * @returns flat 化された結果配列
  */
 export function flattenBatchResults<T>(
-  results: unknown[][],
-  typeGuard: (value: unknown) => boolean
+  results: SearchResult[],
+  typeGuard: (value: SearchResult[number]) => boolean
 ): T[] {
   const flat: T[] = [];
   for (const batch of results) {
     if (Array.isArray(batch) && batch.length > 0) {
       const first = batch[0];
       if (typeGuard(first)) {
-        flat.push(...(batch as unknown as T[]));
+        flat.push(...(batch as T[]));
       }
     }
   }
@@ -34,7 +37,22 @@ export function flattenBatchResults<T>(
  * GeneratedPokemonData 型ガード
  */
 export function isGeneratedPokemonData(value: unknown): boolean {
-  return typeof value === 'object' && value !== null && 'core' in value && 'advance' in value;
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'core' in value &&
+    'advance' in value &&
+    'sync_applied' in value
+  );
+}
+
+/** 既知の結果 Union 内で、通常個体・育て屋のタマゴを除外する。 */
+export function isGeneratedWonderCardData(
+  value: SearchResult[number]
+): value is GeneratedWonderCardData {
+  return (
+    'core' in value && 'advance' in value && !('sync_applied' in value) && !('inheritance' in value)
+  );
 }
 
 /**

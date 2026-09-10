@@ -14,6 +14,8 @@ import {
   generate_pokemon_list,
   generate_egg_list,
   health_check,
+  WonderCardListGenerator,
+  WonderCardDatetimeSearcher,
 } from '../wasm/wasm_pkg.js';
 import type {
   EggDatetimeSearchParams,
@@ -150,6 +152,18 @@ async function runSearch(taskId: string, task: SearchTask): Promise<void> {
 
   try {
     switch (task.kind) {
+      case 'wondercard-list': {
+        await runWonderCardSearch(
+          taskId,
+          new WonderCardListGenerator(task.origins, task.params, task.config, task.filter),
+          startTime
+        );
+        break;
+      }
+      case 'wondercard-datetime': {
+        await runWonderCardSearch(taskId, new WonderCardDatetimeSearcher(task.params), startTime);
+        break;
+      }
       case 'pokemon-datetime': {
         await runPokemonDatetimeSearch(taskId, task.params, startTime);
         break;
@@ -272,6 +286,25 @@ async function runPokemonDatetimeSearch(
     const batch = s.next_batch({ max_candidates: 1024, max_results: 256 });
     if (batch.results.length > 0) {
       postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results: batch.results });
+    }
+    return { processed: batch.processed_count, total: batch.total_count };
+  });
+}
+
+async function runWonderCardSearch(
+  taskId: string,
+  searcher: WonderCardListGenerator | WonderCardDatetimeSearcher,
+  startTime: number
+): Promise<void> {
+  await runSearchLoop(taskId, searcher, startTime, (s) => {
+    const batch = s.next_batch({ max_candidates: 1024, max_results: 256 });
+    if (batch.results.length > 0) {
+      postResponse({
+        type: 'result',
+        taskId,
+        resultType: 'wondercard-list',
+        results: batch.results,
+      });
     }
     return { processed: batch.processed_count, total: batch.total_count };
   });

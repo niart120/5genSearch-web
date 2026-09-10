@@ -1,0 +1,48 @@
+{
+  "source": {
+    "name": "PokeFinder Gen 5 event fixtures (ecf9762)",
+    "url": "https://github.com/Admiral-Fish/PokeFinder/blob/ecf97624791aec147960c4f48b92ad492945b05c/Test/Gen5/event5.json",
+    "retrievedAt": "2026-09-10"
+  },
+  "entries": [
+    {
+      "id": "secret-egg-pidove",
+      "displayName": { "ja": "ひみつのタマゴ・マメパト (北米)", "en": "Secret Egg Pidove (US)" },
+      "versions": ["Black", "White"],
+      "kind": "egg",
+      "speciesId": 519,
+      "level": 1,
+      "fixedIvs": { "atk": 31 },
+      "fixedNature": "Hardy",
+      "fixedGender": "Female",
+      "fixedAbilitySlot": "Second",
+      "shinyPolicy": "Never"
+    },
+    {
+      "id": "spring-2013-meloetta",
+      "displayName": { "ja": "SPR2013 メロエッタ", "en": "SPR2013 Meloetta" },
+      "versions": ["Black", "White", "Black2", "White2"],
+      "kind": "pokemon",
+      "trainer": { "tid": 3013, "sid": 0 },
+      "speciesId": 648,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    },
+    {
+      "id": "event11-zoroark",
+      "displayName": { "ja": "EVENT11 ゾロアーク", "en": "EVENT11 Zoroark" },
+      "versions": ["Black", "White"],
+      "kind": "pokemon",
+      "trainer": { "tid": 9161, "sid": 0 },
+      "speciesId": 571,
+      "level": 50,
+      "fixedIvs": {},
+      "fixedNature": "Quirky",
+      "fixedGender": "Male",
+      "fixedAbilitySlot": "First",
+      "shinyPolicy": "Never"
+    }
+  ]
+}

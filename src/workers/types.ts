@@ -25,6 +25,10 @@ import type {
   EggGenerationParams,
   EggFilter,
   GeneratedEggData,
+  GeneratedWonderCardData,
+  WonderCardParams,
+  WonderCardDatetimeSearchParams,
+  CoreDataFilter,
 } from '../wasm/wasm_pkg.js';
 
 // =============================================================================
@@ -163,6 +167,7 @@ export interface EggListResultResponse {
 }
 
 export type WorkerResponse =
+  | WonderCardResultResponse
   | ReadyResponse
   | ProgressResponse
   | SeedOriginResultResponse
@@ -285,6 +290,8 @@ export interface EggListTask {
  * 検索タスク (Union)
  */
 export type SearchTask =
+  | WonderCardListTask
+  | WonderCardDatetimeSearchTask
   | PokemonDatetimeSearchTask
   | EggDatetimeSearchTask
   | MtseedDatetimeSearchTask
@@ -302,20 +309,44 @@ export type SearchTask =
 /**
  * 検索タスク種別から結果型へのマッピング
  */
-export type SearchResultType<T extends SearchTask['kind']> = T extends 'egg-datetime'
-  ? EggDatetimeSearchResult[]
-  : T extends 'mtseed-datetime'
-    ? SeedOrigin[]
-    : T extends 'gpu-mtseed'
+export type SearchResultType<T extends SearchTask['kind']> = T extends
+  | 'wondercard-list'
+  | 'wondercard-datetime'
+  ? GeneratedWonderCardData[]
+  : T extends 'egg-datetime'
+    ? EggDatetimeSearchResult[]
+    : T extends 'mtseed-datetime'
       ? SeedOrigin[]
-      : T extends 'gpu-mtseed-iv'
-        ? MtseedResult[]
-        : T extends 'mtseed'
+      : T extends 'gpu-mtseed'
+        ? SeedOrigin[]
+        : T extends 'gpu-mtseed-iv'
           ? MtseedResult[]
-          : T extends 'trainer-info'
-            ? TrainerInfoSearchResult[]
-            : T extends 'pokemon-list'
-              ? GeneratedPokemonData[]
-              : T extends 'egg-list'
-                ? GeneratedEggData[]
-                : never;
+          : T extends 'mtseed'
+            ? MtseedResult[]
+            : T extends 'trainer-info'
+              ? TrainerInfoSearchResult[]
+              : T extends 'pokemon-list' | 'pokemon-datetime'
+                ? GeneratedPokemonData[]
+                : T extends 'egg-list'
+                  ? GeneratedEggData[]
+                  : never;
+
+export interface WonderCardListTask {
+  kind: 'wondercard-list';
+  origins: SeedOrigin[];
+  params: WonderCardParams;
+  config: GenerationConfig;
+  filter: CoreDataFilter | undefined;
+}
+
+export interface WonderCardDatetimeSearchTask {
+  kind: 'wondercard-datetime';
+  params: WonderCardDatetimeSearchParams;
+}
+
+export interface WonderCardResultResponse {
+  type: 'result';
+  taskId: string;
+  resultType: 'wondercard-list';
+  results: GeneratedWonderCardData[];
+}

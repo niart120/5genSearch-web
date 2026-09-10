@@ -11,6 +11,7 @@ import {
   generate_egg_search_tasks,
   generate_pokemon_search_tasks,
   generate_trainer_info_search_tasks,
+  generate_wondercard_search_tasks,
 } from '../wasm/wasm_pkg.js';
 import type {
   MtseedSearchContext,
@@ -25,6 +26,8 @@ import type {
   PokemonGenerationParams,
   PokemonFilter,
   PokemonDatetimeSearchFilter,
+  WonderCardParams,
+  CoreDataFilter,
 } from '../wasm/wasm_pkg.js';
 import type {
   MtseedSearchTask,
@@ -34,6 +37,8 @@ import type {
   PokemonListTask,
   PokemonDatetimeSearchTask,
   EggListTask,
+  WonderCardListTask,
+  WonderCardDatetimeSearchTask,
 } from '../workers/types';
 
 /**
@@ -210,4 +215,42 @@ export function createPokemonDatetimeSearchTasks(
   return generate_pokemon_search_tasks(context, pokemonParams, genConfig, filter, workerCount).map(
     (params) => ({ kind: 'pokemon-datetime', params })
   );
+}
+
+/** 配達員の一覧は Origin 単位で分割する。各タスク内は候補単位で中断できる。 */
+export function createWonderCardListTasks(
+  origins: SeedOrigin[],
+  params: WonderCardParams,
+  config: GenerationConfig,
+  filter: CoreDataFilter | undefined,
+  workerCount: number
+): WonderCardListTask[] {
+  validateWonderCardWorkerCount(workerCount);
+  return splitOrigins(origins, workerCount).map((chunk) => ({
+    kind: 'wondercard-list',
+    origins: chunk,
+    params,
+    config,
+    filter,
+  }));
+}
+
+/** 配達員の日時検索は CPU Worker へ渡す。生成条件は Worker の構築時に検証する。 */
+export function createWonderCardDatetimeSearchTasks(
+  context: DatetimeSearchContext,
+  params: WonderCardParams,
+  config: GenerationConfig,
+  filter: CoreDataFilter | undefined,
+  workerCount: number
+): WonderCardDatetimeSearchTask[] {
+  validateWonderCardWorkerCount(workerCount);
+  return generate_wondercard_search_tasks(context, params, config, filter, workerCount).map(
+    (taskParams) => ({ kind: 'wondercard-datetime', params: taskParams })
+  );
+}
+
+function validateWonderCardWorkerCount(workerCount: number): void {
+  if (!Number.isInteger(workerCount) || workerCount <= 0 || workerCount > 0xff_ff_ff_ff) {
+    throw new Error('Worker count must be a positive u32 integer');
+  }
 }
