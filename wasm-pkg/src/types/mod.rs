@@ -31,7 +31,8 @@ pub use search::{
     MtseedDatetimeSearchParams, MtseedResult, MtseedSearchBatch, MtseedSearchContext,
     MtseedSearchParams, PokemonDatetimeSearchBatch, PokemonDatetimeSearchParams,
     PokemonSearchBatchLimits, TimeRangeParams, TrainerInfoSearchBatch, TrainerInfoSearchParams,
-    TrainerInfoSearchResult,
+    TrainerInfoSearchResult, WonderCardBatchLimits, WonderCardDatetimeSearchParams,
+    WonderCardSearchBatch,
 };
 
 // filter
@@ -44,9 +45,10 @@ pub use filter::{
 pub use generation::{
     CorePokemonData, EggGenerationParams, EncounterMethod, EncounterResult, EncounterSlotConfig,
     EncounterType, EverstonePlan, GameStartConfig, GeneratedEggData, GeneratedPokemonData,
-    GenerationConfig, ItemContent, MemoryLinkState, MovingEncounterInfo, MovingEncounterLikelihood,
-    PokemonGenerationParams, SavePresence, SeedSpec, ShinyCharmState, SpecialEncounterDirection,
-    SpecialEncounterInfo, StartMode,
+    GeneratedWonderCardData, GenerationConfig, ItemContent, MemoryLinkState, MovingEncounterInfo,
+    MovingEncounterLikelihood, PokemonGenerationParams, SavePresence, SeedSpec, ShinyCharmState,
+    SpecialEncounterDirection, SpecialEncounterInfo, StartMode, WonderCardParams,
+    WonderCardShinyPolicy,
 };
 
 // needle
@@ -62,7 +64,7 @@ pub use pokemon::{
 pub use seeds::{LcgSeed, MtSeed, SeedOrigin};
 
 // ui
-pub use ui::{UiEggData, UiPokemonData};
+pub use ui::{UiEggData, UiPokemonData, UiWonderCardData};
 
 // data (re-export for convenience)
 pub use crate::data::Stats;

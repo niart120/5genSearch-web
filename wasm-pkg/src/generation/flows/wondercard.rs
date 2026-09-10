@@ -6,15 +6,10 @@
 use crate::core::lcg::{Lcg64, roll_fraction};
 use crate::generation::algorithm::{apply_shiny_lock, extract_iv, nature_roll};
 use crate::generation::flows::types::GenerationError;
-use crate::types::{AbilitySlot, Gender, GenderRatio, Ivs, Nature, Pid, ShinyType, TrainerInfo};
-
-/// 配布条件による色違いの扱い。
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum WonderCardShinyPolicy {
-    Never,
-    Random,
-    Always,
-}
+use crate::types::{
+    AbilitySlot, Gender, GenderRatio, Ivs, Nature, Pid, ShinyType, TrainerInfo,
+    WonderCardShinyPolicy,
+};
 
 /// 構築時に検証済みの配達員生成条件。
 ///

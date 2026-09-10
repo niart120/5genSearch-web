@@ -9,6 +9,8 @@ import type { WorkerRequest, WorkerResponse, SearchTask } from '../workers/types
 import type {
   SeedOrigin,
   GeneratedPokemonData,
+  GeneratedEggData,
+  GeneratedWonderCardData,
   MtseedResult,
   EggDatetimeSearchResult,
   TrainerInfoSearchResult,
@@ -32,6 +34,8 @@ export interface WorkerPoolConfig {
  * 検索結果の型 (すべての結果型の Union)
  */
 export type SearchResult =
+  | GeneratedWonderCardData[]
+  | GeneratedEggData[]
   | GeneratedPokemonData[]
   | SeedOrigin[]
   | MtseedResult[]
@@ -188,7 +192,7 @@ export class WorkerPool {
       case 'result': {
         if (!this.currentTaskIds.has(response.taskId)) break;
         // 結果タイプに応じて適切なコールバックを呼び出す
-        for (const cb of this.resultCallbacks) cb(response.results as SearchResult);
+        for (const cb of this.resultCallbacks) cb(response.results);
         break;
       }
 

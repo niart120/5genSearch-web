@@ -38,12 +38,19 @@ src/
 │   │   ├── converter.ts    # JSON → WASM 型変換
 │   │   ├── helpers.ts      # UI 向けヘルパー (ロケーション一覧・種族集約)
 │   │   └── generated/      # スクレイピング生成 JSON (v1/)
+│   ├── wondercards/         # 配達員の同梱カード定義と公開入力への変換
+│   │   ├── schema.ts       # JSON 境界・正規化後のカード型
+│   │   ├── loader.ts       # 遅延読み込み、メタデータ検証、ID・ROM での選択
+│   │   ├── converter.ts    # カードと受取人 → WonderCardParams
+│   │   ├── README.md       # 出典、値の対応、画面接続契約
+│   │   └── data/v1/        # 出典を確認したカード JSON
 │   └── timer0-vcount-defaults.ts  # Timer0/VCount デフォルト値
 │
 ├── services/               # 機能横断インフラサービス
 │   ├── worker-pool.ts      # Worker プール管理
 │   ├── progress.ts         # 進捗管理
-│   └── search-tasks.ts     # 検索タスク生成 (WASM タスク分割関数のラッパー)
+│   ├── search-tasks.ts     # 検索タスク生成 (WASM タスク分割関数のラッパー)
+│   └── batch-utils.ts      # 既知の結果 Union の集約・型判別
 │
 ├── stores/                 # 状態管理
 │   ├── settings/
@@ -187,7 +194,15 @@ import type { DsConfig, IvFilter } from '../wasm/wasm_pkg.js';
 import type { DsConfig } from '../types';
 ```
 
-WASM バイナリ (`wasm_pkg_bg.wasm`) は `public/wasm/` から配信され、Worker 内で絶対パス `/wasm/wasm_pkg_bg.wasm` で参照する。
+WASM バイナリとバインディングは `wasm-pack --target bundler` で `src/wasm/` へ生成する。メインスレッド・Worker は `wasm_pkg.js` をインポートし、`vite-plugin-wasm` が配信パスと初期化を処理する。
+
+## 配達員のデータ経路
+
+`data/wondercards/loader.ts` は `import.meta.glob` で同梱 JSON を必要時に読み込み、カード ID・表示名・対象 ROM・配布区分と ID 指定を検証する。JSON の未指定値はこの境界で `undefined` に統一する。`converter.ts` は通常配布の配布元 ID、配布タマゴの受取人 ID を選び、H/A/B/C/D/S 順の六要素の固定個体値とともに `WonderCardParams` へ変換する。
+
+`createWonderCardListTasks()` と `createWonderCardDatetimeSearchTasks()` はそれぞれ `wondercard-list` / `wondercard-datetime` タスクを返す。CPU Worker が状態を持つ WASM オブジェクトを構築し、共通の `runSearchLoop` で実行・中断・解放する。両者のレスポンスは `resultType: 'wondercard-list'`、結果は `GeneratedWonderCardData[]`。配列のみを受け取る集約処理では配達員用型ガードで通常個体・育て屋タマゴを除外する。
+
+表示は `resolve_wondercard_data_batch()` と `WonderCardResultView` を使用し、`useResultViews` をそのまま利用できる。画面の追加・永続化は `local_124` の対象外。画面接続時は `useSearchConfig(false)` を使い、開始時のカード ID・表示名・変換済み条件・起動設定・範囲・フィルターを複製して結果と保持する。日時結果から一覧への転記でも実行時設定と結果の `source` を使う。
 
 ## 国際化 (i18n)
 

@@ -14,6 +14,7 @@
 
 mod egg;
 mod pokemon;
+pub(crate) mod wondercard;
 
 pub use egg::EggGenerator;
 pub use pokemon::PokemonGenerator;

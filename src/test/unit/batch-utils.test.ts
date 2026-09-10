@@ -54,8 +54,8 @@ describe('isMtseedResult', () => {
 });
 
 describe('isGeneratedPokemonData', () => {
-  it('core + advance を持つオブジェクトは true を返す', () => {
-    const value = { core: {}, advance: 0 };
+  it('core + advance + sync_applied を持つ通常個体は true を返す', () => {
+    const value = { core: {}, advance: 0, sync_applied: false };
     expect(isGeneratedPokemonData(value)).toBe(true);
   });
 });
