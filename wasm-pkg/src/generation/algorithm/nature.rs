@@ -1,13 +1,14 @@
 //! 性格決定・シンクロアルゴリズム
 
 use crate::core::lcg::Lcg64;
+use crate::core::roll_fraction;
 use crate::types::{EncounterType, EverstonePlan, LeadAbilityEffect, Nature};
 
 /// 乱数から性格 ID を決定 (0-24)
 #[inline]
 #[allow(clippy::cast_possible_truncation)]
 pub fn nature_roll(r: u32) -> u8 {
-    ((u64::from(r) * 25) >> 32) as u8
+    roll_fraction(r, 25) as u8
 }
 
 /// シンクロ成否判定
