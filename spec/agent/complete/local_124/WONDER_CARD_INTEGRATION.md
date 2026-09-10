@@ -6,7 +6,7 @@
 
 [local_123 の一個体生成仕様](../../complete/local_123/WONDER_CARD_GENERATION.md) を、カード選択、TypeScript / WASM 境界、個体一覧、起動日時検索へ接続する。カード情報から生成条件への変換と、二つの実行経路の責務を定義する。
 
-本書は実装に向けた設計仕様とする。今回の変更は仕様書の作成のみであり、Rust / TS の実装、WASM の生成、カードデータの収集は行わない。
+本書の対象を 2026-09-10 に実装・検証した。カード定義から TS / WASM 境界、CPU Worker による個体一覧・日時検索、共通結果型と表示変換までを扱う。
 
 コード例には型定義と関数のシグネチャを示し、関数本体は省略する。
 
@@ -48,7 +48,7 @@
 
 ## 2. 対象ファイル
 
-以下は実装時の配置。`local_123` の対象ファイルへの変更は、上位経路から接続するために必要なものに限る。
+以下は実装の配置。`local_123` の対象ファイルへの変更は、上位経路から接続するために必要なものに限る。
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
@@ -56,11 +56,13 @@
 | `src/data/wondercards/data/v1/*.json` | 新規 | 根拠を確認したカード定義 |
 | `src/data/wondercards/loader.ts` | 新規 | 同梱データの読み込み、対象 ROM とカード ID による選択 |
 | `src/data/wondercards/converter.ts` | 新規 | カード定義と受取人情報から `WonderCardParams` への変換 |
+| `src/data/wondercards/README.md` | 新規 | カード条件の出典、入力値の対応、将来の画面接続契約 |
 | `wasm-pkg/src/types/generation.rs` | 変更 | `WonderCardParams`、`GeneratedWonderCardData`、色違い条件の公開型 |
 | `wasm-pkg/src/types/search.rs` | 変更 | 配達員の日時検索入力、バッチ上限、バッチ結果 |
 | `wasm-pkg/src/types/ui.rs` | 変更 | `UiWonderCardData` |
 | `wasm-pkg/src/types/mod.rs` | 変更 | 新設する公開型の再エクスポート |
 | `wasm-pkg/src/generation/flows/wondercard.rs` | 変更 | 公開段階で移動する色違い条件型の参照先を更新 |
+| `wasm-pkg/src/generation/flows/types.rs` | 変更 | 内部生成エラーの `Display` / `Error` 実装 |
 | `wasm-pkg/src/generation/flows/generator/wondercard.rs` | 新規 | 公開入力の変換、単一 Seed の Generator、配達員専用のバッチ処理と一覧処理 |
 | `wasm-pkg/src/generation/flows/generator/mod.rs` | 変更 | 配達員モジュールの宣言と内部公開 |
 | `wasm-pkg/src/datetime_search/wondercard.rs` | 新規 | 日時からの Seed 供給、日時検索器、タスク分割 |
@@ -130,14 +132,14 @@ flowchart TD
 
 カード定義は `src/data/wondercards/data/v1/` に配置する。同じ生成条件を複数 ROM で使用できる場合は、一つの定義の `versions` に列挙する。`id` は全定義を通して一意のアプリ内識別子とする。
 
-以下は TS の型定義案。列挙型と `TrainerInfo` は生成済み WASM 型から参照する。
+以下は正規化済みカードの型定義。列挙型と `TrainerInfo` は生成済み WASM 型から参照する。実装の `WonderCardEntryJson` は、任意の固定条件に限って JSON の `null` も許容し、ローダーが `WonderCardEntry` へ正規化する。
 
 ```typescript
 type FixedIvsJson = Partial<
   Record<'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe', number>
 >;
 
-interface WonderCardCommonJson {
+interface WonderCardCommon {
   id: string;
   displayName: { ja: string; en: string };
   versions: RomVersion[];
@@ -150,7 +152,20 @@ interface WonderCardCommonJson {
   shinyPolicy: WonderCardShinyPolicy;
 }
 
-export type WonderCardEntryJson = WonderCardCommonJson & (
+export type WonderCardEntry = WonderCardCommon & (
+  | { kind: 'pokemon'; trainer: TrainerInfo }
+  | { kind: 'egg'; trainer?: never }
+);
+
+export type WonderCardEntryJson = Omit<
+  WonderCardCommon,
+  'fixedIvs' | 'fixedNature' | 'fixedGender' | 'fixedAbilitySlot'
+> & {
+  fixedIvs: Partial<Record<keyof FixedIvsJson, number | null>>;
+  fixedNature?: Nature | null;
+  fixedGender?: Exclude<Gender, 'Genderless'> | null;
+  fixedAbilitySlot?: AbilitySlot | null;
+} & (
   | { kind: 'pokemon'; trainer: TrainerInfo }
   | { kind: 'egg'; trainer?: never }
 );
@@ -161,8 +176,8 @@ export interface WonderCardCatalogJson {
 }
 
 export function toWonderCardParams(
-  card: WonderCardEntryJson,
-  recipient: TrainerInfo
+  card: WonderCardEntry,
+  recipient?: TrainerInfo
 ): WonderCardParams;
 ```
 
@@ -184,6 +199,10 @@ JSON の未指定値はプロパティの省略で表す。`fixedIvs` が空オ�
 JSON の同梱時検証では ID の重複、表示名、ROM 指定、`kind` と `trainer` の組み合わせを確認する。生成条件の値域・整合性は、カード全件を Rust の構築経路に通すテストで確認する。TS の変換関数に `local_123` の検証ロジックを複製しない。
 
 最初に収録するカードは、`source` で生成条件の根拠を確認できるものに限る。カードの収録件数は本書では定めない。
+
+初期収録は `secret-egg-pidove`、`spring-2013-meloetta`、`event11-zoroark` の 3 件。生成条件は PokeFinder の固定コミットにある入力データ、カード名・対象 ROM は配布アーカイブで確認した。詳細は `src/data/wondercards/README.md` に記録する。`versions` は ROM バージョンへの適合を示し、配布言語・リージョンの受信可否は表さない。
+
+`loadWonderCards(version?)` は初回に JSON を非同期で並列読み込みし、メタデータ検証・正規化後の結果をキャッシュする。戻り値は複製し、利用側の編集をキャッシュへ反映しない。`getWonderCard(id, version)` は欠落 ID・対象外 ROM をエラーにする。配布タマゴの受取人未入力もエラーにし、通常配布では受取人が未入力でもカードの ID を利用する。
 
 ### 4.2 WASM に公開する生成入力
 
@@ -380,6 +399,8 @@ TS には `createWonderCardListTasks()` と `createWonderCardDatetimeSearchTasks
 
 日時検索は `generate_wondercard_search_tasks()` で Timer0 / VCount / キー入力を展開し、既存の日時探索空間の分割を利用する。分割後の各タスクは単一の `StartupCondition` を持つ。空の日時探索空間には空のタスク配列を返し、先頭要素を仮定してアクセスしない。
 
+起動条件の範囲が重なる場合は、同じ Timer0 / VCount / キー入力の組を一度だけ展開する。分割後に候補がない時間区間はタスクにしない。公開の `DateRangeParams` は少なくとも一日を表すため、空区間の構築は下位の `WonderCardDatetimeSearchParams.search_space` で扱う。TS の両タスク生成関数は正の `u32` 整数の Worker 数を要求する。
+
 ```typescript
 interface WonderCardListTask {
   kind: 'wondercard-list';
@@ -463,19 +484,46 @@ pub fn resolve_wondercard_data_batch(
 
 ### 5.2 実装時の検証
 
-Rust の関連テスト、CPU Worker を使うブラウザ統合テスト、WASM ビルド、型チェック、フォーマット・Lint を実行する。検証コマンドはリポジトリの現行設定を使用する。GPU テストや GPU 性能測定は本作業に含めない。
+Rust の関連テスト、CPU Worker を使うブラウザ統合テスト、WASM ビルド、型チェック、フォーマット・Lint を実行する。検証コマンドはリポジトリの現行設定を使用する。配達員向けの GPU テストや GPU 性能測定は本作業に含めない。
 
-検証: 未実行（仕様書のみの変更）。
+2026-09-10 に以下を実行した。WASM の開発ビルド後に新規テストを通し、本番ビルドで生成し直した WASM でも関連するブラウザ統合テストを実行した。エラーの文字列変換を WASM 公開境界へ揃えた最終修正後にも、Rust の配達員統合 9 件と Clippy、本番ビルド、ブラウザの配達員統合 14 件を再確認した。
+
+| コマンド | 結果 |
+|----------|------|
+| `cargo test -p wasm-pkg` | 単体 342 件・統合 17 件が成功。既存の性能測定 2 件は `ignored` |
+| `pnpm exec vitest run --project unit` | 116 ファイル、1,453 件成功。カード・型ガードの最終修正後に対象 2 ファイル 19 件も再確認 |
+| `pnpm exec vitest run --project integration src/test/integration/wondercard-worker.test.ts src/test/integration/pokemon-list-worker.test.ts src/test/integration/egg-list-worker.test.ts src/test/integration/pokemon-datetime-search.test.ts src/test/integration/generation-parallel.test.ts src/test/integration/services/worker-pool.test.ts src/test/integration/services/search-tasks.test.ts src/test/integration/wasm-binding.test.ts` | 8 ファイル、66 件成功。配達員 14 件を含む。既存の `wasm-binding` に含まれる GPU 疎通テストも実行されたが、配達員の GPU 処理・性能測定は追加していない |
+| `pnpm build:wasm:dev` | 成功。生成済み型の六要素・未指定値を確認 |
+| `pnpm build` | 成功。WASM 最適化、TypeScript、Vite を含む。初回は wasm-bindgen の一時ディレクトリ権限で失敗し、同じコマンドを権限を整えて再実行 |
+| `pnpm lint` | oxlint と Rust Clippy が成功 |
+| `pnpm exec tsc -b --noEmit` | 成功 |
+| `pnpm format:check` | oxfmt と rustfmt が成功 |
+
+既存依存 `wgpu v28.0.0` の将来互換性警告、Vite のチャンクサイズ警告、既存 UI テストの `act` / Dialog 説明警告は残る。実機の配布個体との照合は未実施。
+
+### 5.3 要件と検証の対応
+
+| 契約 | 確認した根拠 |
+|------|----------------|
+| 条件検証の一回化 | `PreparedWonderCardParams::try_from()` の構築回数をテスト内で計測。3 Seed・複数バッチ・全候補不一致でも一回。タスク分割はカード条件を検証せず、各 WASM オブジェクトが検証するケースも確認 |
+| 独立した生成期待値 | `local_123` の開始状態へ 100 消費で到達する初期 Seed `0x5350281A0168543C`、起動時消費 43、追加消費 57 を使用し、PID `E9A92FBC` と個体値 `17/16/22/19/14/24` を Rust とブラウザで照合 |
+| 参照実装との接続 | PokeFinder の Pidove 固定期待値を絶対消費位置 43・44 で照合。参照実装の先頭位置は 39、この repo の既存起動計算の先頭位置は 43 のため、表示上の先頭行同士を比較しない。起動計算は本仕様どおり既存処理を再利用しており、この比較を実機検証の代用にはしない |
+| 位置・針・個体値 | 受取開始位置の低層生成・レポート針との照合、隣接候補で異なる個体値、`take()` の範囲末尾を確認 |
+| バッチ継続と入力境界 | 候補上限・結果上限・Seed 境界・四件取得の端数、空入力、一位置、逆転、`u32::MAX`、起動消費の加算、`u64` 総数オーバーフロー、ゼロ上限、次 Seed 初期化失敗の再通知を確認 |
+| 一覧・日時検索・条件判定 | BW / BW2 の四 ROM で一覧と日時検索が一致。個体値・めざパ・性格・性別・特性・色違い・実数値の後処理フィルターと比較。日時検索でも同じ個体値・実数値条件による部分集合を確認 |
+| タスク・Worker | 同じ日時・起動条件を一度ずつ処理し、同 Seed の異なる日時を保持。CPU WorkerPool の結果・進捗を単一実行と比較。二タスクとも空結果・完了・構築失敗・単一 Seed の途中キャンセル・同じ Worker での再実行を確認 |
+| カードと WASM 転送 | 同梱 3 カードを各対象 ROM の構築・生成へ通した。TID / SID の 0、固定個体値の 0・未指定・六要素、列挙型、Seed と進捗の `bigint`、入力を変更しないこと、不正カード値・配列長を検証 |
+| 共通結果と表示 | 通常個体・育て屋タマゴとの型判別、入力順、隠れ特性、色違い、個体値、種族・レベル・実数値、Startup 情報を確認。表示型に MT Seed やエンカウントのダミー項目を追加していない |
 
 ## 6. 実装チェックリスト
 
 - [x] カード定義・TS 境界・二つの実行経路を文書化する
 - [x] CPU 実行と配達員経路内の共通化範囲を定める
-- [ ] カードの読み込み・変換と公開入力から内部条件への構築を実装する
-- [ ] 単一 Seed の Generator と二経路共通のバッチ処理を実装する
-- [ ] WASM API・日時タスク分割・CPU Worker を接続する
-- [ ] 共通結果型・表示変換・結果型の判別を実装する
-- [ ] 契約の検証を実行し、結果と構成資料を更新する
+- [x] カードの読み込み・変換と公開入力から内部条件への構築を実装する
+- [x] 単一 Seed の Generator と二経路共通のバッチ処理を実装する
+- [x] WASM API・日時タスク分割・CPU Worker を接続する
+- [x] 共通結果型・表示変換・結果型の判別を実装する
+- [x] 契約の検証を実行し、結果と構成資料を更新する
 
 ## 7. 関連資料
 

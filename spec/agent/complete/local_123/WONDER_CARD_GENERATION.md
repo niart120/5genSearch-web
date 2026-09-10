@@ -53,7 +53,7 @@ BW / BW2 の配達員から受け取るポケモンについて、LCG の消費�
 | `wasm-pkg/src/generation/algorithm/nature.rs` | 変更 | `nature_roll()` の範囲変換を共通の `roll_fraction()` に集約 |
 | `spec/agent/architecture/rust-structure.md` | 変更 | 生成フローの配置と責務を追記 |
 | `spec/agent/complete/local_123/WONDER_CARD_GENERATION.md` | 移動・変更 | 検証結果と完了チェックを記録し、`wip` から移動 |
-| `spec/agent/wip/local_124/WONDER_CARD_INTEGRATION.md` | 変更 | 完了移動後の本仕様書へのリンクを更新 |
+| `spec/agent/complete/local_124/WONDER_CARD_INTEGRATION.md` | 変更 | 完了移動後の本仕様書へのリンクを更新 |
 
 ## 3. 設計方針
 
@@ -89,7 +89,7 @@ Rust 内部から呼び出せる関数として追加する。WASM 公開 API、
 
 カード情報はアプリに同梱する JSON で管理し、TS 側で選択したカードの情報と受取人情報から生成条件へ変換する。内部の一個体生成関数には、3.2 で定めた計算に必要な条件だけを渡す。
 
-上位経路の型・呼び出し・バッチ処理は [local_124 の接続仕様](../../wip/local_124/WONDER_CARD_INTEGRATION.md) で定義する。
+上位経路の型・呼び出し・バッチ処理は [local_124 の接続仕様](../local_124/WONDER_CARD_INTEGRATION.md) で定義する。
 
 ### 3.6 既存処理の再利用とファイル構成
 
@@ -109,7 +109,7 @@ Rust 内部から呼び出せる関数として追加する。WASM 公開 API、
 
 一個体生成関数は既存の `generate_static_pokemon()` などと同じ `generate_*_pokemon` 形式、内部の結果型は `RawPokemonData` / `RawEggData` と同じ `Raw*Data` 形式にする。生成条件型は `*GenerationParams` 形式、コンストラクターは `new()` に揃える。
 
-以下に型定義と関数のシグネチャを示す。関数本体は省略する。
+以下に型定義と関数のシグネチャを示す。関数本体は省略する。`local_124` の公開境界の実装時に、`WonderCardShinyPolicy` は `types/generation.rs` へ移し、`Tsify` / `Serialize` / `Deserialize` を付けた。内部生成条件の検証・消費順序は変わらない。
 
 ```rust
 use crate::core::lcg::Lcg64;

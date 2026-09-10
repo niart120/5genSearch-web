@@ -22,7 +22,7 @@ wasm-pkg/
 │   │   ├── pokemon.rs              # ポケモン基礎型 (IV, 性格, 性別等)
 │   │   ├── search.rs               # 検索パラメータ・結果型
 │   │   ├── seeds.rs                # Seed 型 (LcgSeed, MtSeed, SeedOrigin)
-│   │   └── ui.rs                   # UI 表示用データ型 (UiPokemonData, UiEggData)
+│   │   └── ui.rs                   # UI 表示用データ型 (UiPokemonData, UiEggData, UiWonderCardData)
 │   │
 │   ├── core/                       # 計算コア (PRNG, Hash, ユーティリティ)
 │   │   ├── mod.rs
@@ -69,7 +69,8 @@ wasm-pkg/
 │   │       ├── generator/          # ジェネレーター実装
 │   │       │   ├── mod.rs
 │   │       │   ├── egg.rs          # 卵ジェネレーター
-│   │       │   └── pokemon.rs      # ポケモンジェネレーター
+│   │       │   ├── pokemon.rs      # ポケモンジェネレーター
+│   │       │   └── wondercard.rs   # 配達員条件の準備、単一 Seed 列挙、共通バッチと一覧
 │   │       └── pokemon/            # エンカウント別ポケモン生成
 │   │           ├── mod.rs
 │   │           ├── normal.rs       # 通常エンカウント
@@ -84,12 +85,14 @@ wasm-pkg/
 │   │   ├── egg.rs                  # EggDatetimeSearcher
 │   │   ├── mtseed.rs               # MtseedDatetimeSearcher
 │   │   ├── pokemon.rs              # PokemonDatetimeSearcher
-│   │   └── trainer_info.rs         # TrainerInfoSearcher
+│   │   ├── trainer_info.rs         # TrainerInfoSearcher
+│   │   └── wondercard.rs           # 配達員の日時 Seed 供給、検索構築、タスク分割
 │   │
 │   ├── resolve/                    # 表示用データ解決
 │   │   ├── mod.rs                  # resolve_pokemon_data_batch, resolve_egg_data_batch
 │   │   ├── pokemon.rs             # GeneratedPokemonData → UiPokemonData
-│   │   └── egg.rs                  # GeneratedEggData → UiEggData
+│   │   ├── egg.rs                  # GeneratedEggData → UiEggData
+│   │   └── wondercard.rs           # GeneratedWonderCardData → UiWonderCardData
 │   │
 │   ├── misc/                       # その他検索
 │   │   ├── mod.rs
@@ -152,7 +155,7 @@ wasm-pkg/
 
 `mt/` および `sha1/` は scalar/simd の2実装を持ち、共通インターフェースを `mod.rs` で提供する。
 
-日時探索では `types/search.rs` の `DatetimeSearchSpaceParams` を WASM 間の転送境界だけに使う。CPU 4 検索器は構築時に `DatetimeSearchSpace` へ変換し、件数と列挙をそこから取得する。GPU Iterator と Pipeline は検証済み探索空間を共有し、WGSL は同じ候補番号を直積分解する。GPU 結果の日時復元は `datetime_at()` を使い、Rust 側に別の復元式を持たない。
+日時探索では `types/search.rs` の `DatetimeSearchSpaceParams` を WASM 間の転送境界だけに使う。CPU 5 検索器は構築時に `DatetimeSearchSpace` へ変換し、件数と列挙をそこから取得する。GPU Iterator と Pipeline は検証済み探索空間を共有し、WGSL は同じ候補番号を直積分解する。GPU 結果の日時復元は `datetime_at()` を使い、Rust 側に別の復元式を持たない。
 
 ### `generation/` サブモジュール
 
@@ -161,9 +164,12 @@ wasm-pkg/
 | `algorithm/` | 個体生成アルゴリズム部品 (IV, 性格, PID, エンカウントスロット, NPC 消費) |
 | `flows/` | エンカウント種別ごとの生成フロー (通常, 釣り, 波乗り, 揺れる草, 固定シンボル, 卵, 配達員) |
 | `flows/wondercard.rs` | 配達員の生成条件の構築時検証と、受取開始位置からの一個体生成。個体値・PID・性格を同じ LCG から取得し、終了位置まで消費する |
-| `flows/generator/` | ポケモン/卵ジェネレーター |
+| `flows/generator/` | ポケモン/卵/配達員ジェネレーター |
+| `flows/generator/wondercard.rs` | 公開カード条件から種族・レベル・内部条件を一回構築し、開始位置ごとの生成・フィルター・実数値計算・共通バッチを担当 |
 
-配達員の `WonderCardGenerationParams` は非公開フィールドを持ち、`new()` だけで入力を検証する。`generate_wondercard_pokemon()` は検証済み条件を参照し、個体値・PID・性格・性別・特性スロット・色違い種別を持つ `RawWonderCardData` を直接返す。新設型は Rust 内部用とし、WASM 公開・開始位置の列挙・検索・表示用情報の付与は上位経路の責務とする。
+配達員の `WonderCardGenerationParams` は非公開フィールドを持ち、`new()` だけで入力を検証する。`generate_wondercard_pokemon()` は検証済み条件を参照し、個体値・PID・性格・性別・特性スロット・色違い種別を持つ `RawWonderCardData` を直接返す。この二型は Rust 内部用とし、色違い条件の `WonderCardShinyPolicy` と公開入力 `WonderCardParams` は `types/generation.rs` に置く。
+
+`WonderCardBatchGenerator<S>` は配達員の一覧・日時検索だけで共有する。一覧は Origin 配列、日時検索は `datetime_search/wondercard.rs` の最大四件ずつの供給器を使い、候補数・結果数を制限して中断と再開を可能にする。WASM 用の `WonderCardListGenerator` / `WonderCardDatetimeSearcher`、日時タスク分割、共通表示変換のエクスポートは `lib.rs` に集約する。両経路の結果は `GeneratedWonderCardData` とし、MT 個体値キャッシュやエンカウント用のダミー項目は持たせない。
 
 個体値抽出・性格への範囲変換・色違い禁止処理は既存の `algorithm/` を使う。配達員固有の前処理と PID 補正順序は `flows/wondercard.rs` に置き、単体テストも同ファイル内の `#[cfg(test)] mod tests` に配置する。
 
