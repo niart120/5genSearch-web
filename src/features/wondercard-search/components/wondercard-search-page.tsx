@@ -113,7 +113,9 @@ export function WonderCardSearchPage() {
       });
       const estimation = estimateWonderCardDatetimeSearchResults(
         getWonderCardSearchContext(request),
-        settings.genConfig
+        settings.genConfig,
+        settings.filter,
+        settings.card.fixedIvs
       );
       if (estimation.exceedsThreshold)
         setConfirmation({ request, estimatedCount: estimation.estimatedCount });

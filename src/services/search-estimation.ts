@@ -5,6 +5,8 @@
  * WASM 側には制限ロジックを持たず、TS 側で完結する。
  */
 
+import type { FixedIvsJson } from '@/data/wondercards/schema';
+import { IV_STAT_KEYS } from '@/lib/game-data-names';
 import type {
   DateRangeParams,
   TimeRangeParams,
@@ -476,15 +478,29 @@ export function estimatePokemonDatetimeSearchResults(
   );
 }
 
-/** 固定条件が Filter に一致するカードも含め、全候補数を結果件数の上限にする。 */
+/** 正規化済み Filter に共通の通過率を適用し、固定 IV は一様分布から除外する。 */
 export function estimateWonderCardListResults(
   seedCount: number,
   config: Pick<GenerationConfig, 'user_offset' | 'max_advance'>,
+  filter?: CoreDataFilter,
+  fixedIvs: FixedIvsJson = {},
   threshold = DEFAULT_RESULT_WARNING_THRESHOLD
 ): EstimationResult {
+  const generated = seedCount * Math.max(0, config.max_advance - config.user_offset + 1);
+  const iv = filter?.iv ? { ...filter.iv } : undefined;
+  if (iv) {
+    for (const key of IV_STAT_KEYS) {
+      const fixed = fixedIvs[key];
+      if (fixed === undefined) continue;
+      const [min, max] = iv[key];
+      // 固定値が一致するときは必ず通過する。不一致なら全候補が落ちる。
+      if (fixed < min || fixed > max) return buildEstimation(generated, 0, threshold);
+      iv[key] = [0, 31];
+    }
+  }
   return buildEstimation(
-    seedCount * Math.max(0, config.max_advance - config.user_offset + 1),
-    1,
+    generated,
+    estimateCoreDataFilterHitRate(filter ? { ...filter, iv } : undefined),
     threshold
   );
 }
@@ -492,6 +508,8 @@ export function estimateWonderCardListResults(
 export function estimateWonderCardDatetimeSearchResults(
   context: DatetimeSearchContext,
   config: GenerationConfig,
+  filter?: CoreDataFilter,
+  fixedIvs: FixedIvsJson = {},
   threshold = DEFAULT_RESULT_WARNING_THRESHOLD
 ): EstimationResult {
   const origins = calculateDatetimeSearchSpace(
@@ -500,5 +518,5 @@ export function estimateWonderCardDatetimeSearchResults(
     context.ranges,
     countKeyCombinations(context.key_spec)
   );
-  return estimateWonderCardListResults(origins, config, threshold);
+  return estimateWonderCardListResults(origins, config, filter, fixedIvs, threshold);
 }

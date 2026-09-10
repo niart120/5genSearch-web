@@ -95,7 +95,12 @@ export function WonderCardListPage() {
         settings,
         origins: state.seedOrigins,
       });
-      const estimation = estimateWonderCardListResults(request.origins.length, settings.genConfig);
+      const estimation = estimateWonderCardListResults(
+        request.origins.length,
+        settings.genConfig,
+        settings.filter,
+        settings.card.fixedIvs
+      );
       if (estimation.exceedsThreshold)
         setConfirmation({ request, estimatedCount: estimation.estimatedCount });
       else execute(request);
