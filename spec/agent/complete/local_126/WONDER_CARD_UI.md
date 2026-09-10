@@ -45,11 +45,13 @@
 | `src/components/layout/navigation-labels.tsx` | 変更 | 配達員タブの表示名 |
 | `src/components/layout/feature-content.tsx` | 変更 | 配達員ページの描画 |
 | `src/features/wondercard-list/index.ts`、`types.ts`、`store.ts` | 新規 | 公開入口、共通入力・実行時設定、個体生成要求、入力保存・結果保持 |
+| `src/features/wondercard-list/request.ts` | 新規 | WASM の種族情報を使う Filter 正規化、検証後の実行要求の複製 |
 | `src/features/wondercard-list/components/wondercard-list-page.tsx` | 新規 | Seed 入力、生成操作、結果表示の接続 |
 | `src/features/wondercard-list/components/wondercard-params-form.tsx` | 新規 | カード選択、配布タマゴの受取人入力、消費範囲 |
 | `src/features/wondercard-list/components/wondercard-filter-form.tsx` | 新規 | 両画面で共用する Filter |
 | `src/features/wondercard-list/components/wondercard-result-columns.tsx`、`result-detail-dialog.tsx` | 新規 | 個体生成の列定義、共通の個体詳細 |
 | `src/features/wondercard-list/hooks/use-wondercard-selection.ts` | 新規 | カード読み込み、選択 ID・ROM と解決済みカードの対応管理 |
+| `src/features/wondercard-list/hooks/use-wondercard-form.ts`、`use-wondercard-execution.ts` | 新規 | 両画面で共用する入力検証・エラー文言、CPU Worker の実行・バッチ同期・表示解決 |
 | `src/features/wondercard-list/hooks/use-wondercard-list.ts` | 新規 | 個体生成タスク、結果蓄積、表示変換 |
 | `src/features/wondercard-search/index.ts`、`types.ts`、`store.ts` | 新規 | 検索の公開入口、日時検索要求、入力保存・結果保持 |
 | `src/features/wondercard-search/components/wondercard-search-page.tsx`、`wondercard-search-columns.tsx` | 新規 | 日時範囲、検索操作、検索結果の列と転記操作 |
@@ -149,7 +151,7 @@ Filter の開閉、有効切り替え、アイコンによるリセット、個�
 
 | 状態 | 個体生成 | 日時検索 | 永続化 |
 |------|----------|----------|--------|
-| 共通の編集入力 | `cardId`、消費範囲、Filter 入力、実数値 Filter、表示モード | 同左 | 各 feature Store |
+| 共通の編集入力 | `inputs` 内の `cardId`、消費範囲、Filter 入力、実数値 Filter、表示モード | 同左 | 各 feature Store |
 | 入力元 | `SeedInputMode`、`SeedInputState` | 日付範囲、時刻範囲、キー範囲 | 各 feature Store |
 | 解決済みカード・生成条件 | カード定義、変換済み条件、選択条件・受取人との対応 | 同左 | メモリ |
 | 解決済み Seed | `SeedOrigin[]` | 検索処理が生成 | メモリ |
@@ -309,20 +311,33 @@ PC・モバイル幅で、両カテゴリからカード選択・検索または
 
 ### 5.3 検証結果
 
-未実行（仕様書のみの変更）。
+2026-09-11 に実施。
 
-実装後に関連ユニット・コンポーネントテスト、配達員のブラウザ統合テスト、型チェック、lint、format、Lingui 抽出・コンパイル、ビルドの結果を記録する。
+| 検証 | 結果 |
+|------|------|
+| `pnpm exec vitest run --project unit` | 123 ファイル・1504 テスト成功。入力保存・要求複製・Filter・カード読み込み競合・画面操作・結果・転記・実行の検証を含む |
+| `pnpm exec vitest run --project integration src/test/integration/wondercard-worker.test.ts` | 21 テスト成功。通常配布と配布タマゴの画面用要求から実 Worker で検索し、ROM・受取人変更後の転記と再生成が一致。同梱700カード、バッチ・中断・再実行も検証 |
+| `pnpm exec tsc -b --noEmit` | 成功 |
+| `pnpm lint` | oxlint・Clippy 成功 |
+| `pnpm format:check` | oxfmt・rustfmt 成功 |
+| `pnpm lingui:extract` / `pnpm lingui:compile` | 成功。日本語カタログの未翻訳0件 |
+| `pnpm build` | WASM・TypeScript・Vite の本番ビルド成功 |
+| 本番ビルドの画面確認 | Chromium、1440×1000・390×1000。通常配布と配布タマゴの検索、詳細、転記、再生成、CSV・JSON ダウンロード、TSV コピー、日本語・英語切替、再読み込み後の復元が成功 |
+| 生成元と出力の再現 | 検索後に ROM・MAC・受取人を変更してから転記し、詳細が一致。JSON の ROM・MAC と再生成4個体を確認。重複した入力 ID・ページ全体の横はみ出し・ブラウザ例外なし |
+| BW2 の入力経路 | ブラック2の起動条件入力と LCG Seed 直接入力で生成成功。390×844 で個体値 Filter を表示し、再読み込み後の Seed 入力復元を確認 |
+
+初回のブラウザ統合テストは Vite の依存事前処理による再読み込みで失敗したが、再実行で成功した。ビルドはツールキャッシュ・一時ディレクトリへの権限制限を解消して同じコマンドを再実行した。ビルド時の `wgpu` の将来互換性と Vite の500 kB超チャンクの警告は残る。
 
 ## 6. 実装チェックリスト
 
-- [ ] 配達員の検索・個体生成タブを登録する
-- [ ] 共通入力型・実行要求と各画面の Store を実装する
-- [ ] カード選択、ROM 適合確認、配布タマゴの受取人入力を実装する
-- [ ] 消費範囲・Filter と正規化を実装する
-- [ ] 個体生成画面を CPU Worker に接続する
-- [ ] 日時検索画面を CPU Worker に接続する
-- [ ] 結果列・詳細・出力を実装する
-- [ ] 日時検索から個体生成への転記を実装する
-- [ ] 日本語・英語の翻訳カタログを更新する
-- [ ] 自動テスト・画面確認を実行し、検証結果を記録する
-- [ ] フロントエンド構成資料を更新し、仕様書を `complete` へ移動する
+- [x] 配達員の検索・個体生成タブを登録する
+- [x] 共通入力型・実行要求と各画面の Store を実装する
+- [x] カード選択、ROM 適合確認、配布タマゴの受取人入力を実装する
+- [x] 消費範囲・Filter と正規化を実装する
+- [x] 個体生成画面を CPU Worker に接続する
+- [x] 日時検索画面を CPU Worker に接続する
+- [x] 結果列・詳細・出力を実装する
+- [x] 日時検索から個体生成への転記を実装する
+- [x] 日本語・英語の翻訳カタログを更新する
+- [x] 自動テスト・画面確認を実行し、検証結果を記録する
+- [x] フロントエンド構成資料を更新し、仕様書を `complete` へ移動する

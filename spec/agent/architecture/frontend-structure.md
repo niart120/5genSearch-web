@@ -128,7 +128,7 @@ src/
 
 ## features/ 内部構成
 
-Phase 3 で `features/` を追加予定。追加時の構成は以下を基準とする：
+各 feature は以下の構成を基準とする：
 
 ```
 features/{feature-name}/
@@ -203,11 +203,22 @@ WASM バイナリとバインディングは `wasm-pack --target bundler` で `s
 
 `data/wondercards/loader.ts` は `import.meta.glob` で言語ごとに同梱 JSON を遅延読み込み・キャッシュし、複製を返す。カード ID・原文タイトル・単一エントリー・言語フォルダ・対象 ROM・配布区分と ID 指定を検証する。`getWonderCardLanguage()` は ROM リージョンを受取対象言語へ対応させ、表示言語でカタログを切り替えない。JSON の未指定値はこの境界で `undefined` に統一する。`converter.ts` は通常配布の配布元 ID、配布タマゴの受取人 ID を選び、H/A/B/C/D/S 順の六要素の固定個体値とともに `WonderCardParams` へ変換する。
 
-`display.ts` の `getWonderCardDisplays()` は選択候補と表示言語から「種族名（cardTitle）」を返す。通常配布の同名候補には5桁の TID、同じ TID でも区別できない候補と重複タマゴには内部 ID も返す。カード定義と受取人の状態を変更せず、補助情報の画面配置は画面実装時に決める。
+`display.ts` の `getWonderCardDisplays()` は選択候補と表示言語から「種族名（cardTitle）」を返す。通常配布の同名候補には5桁の TID、同じ TID でも区別できない候補と重複タマゴには内部 ID も返す。カード定義と受取人の状態を変更せず、画面の選択候補に補助情報を表示する。選択中の表示は一行で省略する。
 
 `createWonderCardListTasks()` と `createWonderCardDatetimeSearchTasks()` はそれぞれ `wondercard-list` / `wondercard-datetime` タスクを返す。CPU Worker が状態を持つ WASM オブジェクトを構築し、共通の `runSearchLoop` で実行・中断・解放する。両者のレスポンスは `resultType: 'wondercard-list'`、結果は `GeneratedWonderCardData[]`。配列のみを受け取る集約処理では配達員用型ガードで通常個体・育て屋タマゴを除外する。
 
-表示は `resolve_wondercard_data_batch()` と `WonderCardResultView` を使用し、`useResultViews` をそのまま利用できる。画面の追加・永続化は `local_124` の対象外。画面接続時は `useSearchConfig(false)` を使い、開始時のカード ID・表示名・変換済み条件・起動設定・範囲・フィルターを複製して結果と保持する。日時結果から一覧への転記でも実行時設定と結果の `source` を使う。
+配達員の画面は [local_126](../complete/local_126/WONDER_CARD_UI.md) で実装した。検索カテゴリの `wondercard-search` と個体生成カテゴリの `wondercard-list` を分け、どちらも三番目のタブに配置する。検索側は個体生成側のカード入力、Filter、個体詳細、共通型と実行処理を使用する。
+
+| 配置 | 責務 |
+|------|------|
+| `features/wondercard-list/types.ts`・`request.ts` | 編集入力・カード解決条件・実行時設定の型と検証。WASM の種族情報を参照する要求構築は `request.ts` に分離 |
+| `features/wondercard-list/store.ts`・`features/wondercard-search/store.ts` | 各画面の編集入力だけを `feature:wondercard-list`・`feature:wondercard-search` に保存。結果と実行要求はメモリに保持 |
+| `features/wondercard-list/hooks/use-wondercard-selection.ts`・`use-wondercard-form.ts` | ROM に対応するカタログと選択 ID の解決、旧応答の破棄、受取人と Filter の検証 |
+| `features/wondercard-list/hooks/use-wondercard-execution.ts` | `useSearch(useSearchConfig(false))`、バッチ追記、タスク構築エラー、`resolve_wondercard_data_batch()`・`useResultViews` による表示解決 |
+| 各 feature のページ・結果列・実行フック | Seed 入力または日時範囲、タスク生成、候補数の確認、数値ソート、詳細と出力の接続 |
+| `lib/navigate.ts` | 検索開始時の設定を複製し、DS 設定を一度で反映。選択した `source` 一件を個体生成のインポート入力へ転記 |
+
+表示は `WonderCardResultView` と現在の表示言語から導出する。開始時のカード・変換済み条件・DS 設定・起動設定・消費範囲・Filter を複製し、確認ダイアログ、Worker 要求、結果、出力、転記で同じ値を参照する。転記されたカードはカード ID・ROM・受取人との対応を検証し、受取人の編集時は保存された定義から変換し直す。
 
 ## 国際化 (i18n)
 
