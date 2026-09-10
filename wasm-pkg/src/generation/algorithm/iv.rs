@@ -3,10 +3,10 @@
 use crate::core::mt::{Mt19937, Mt19937x4};
 use crate::types::{InheritanceSlot, Ivs, MtSeed};
 
-/// MT19937 出力から IV を抽出 (0-31)
+/// 32 bit 乱数値の上位 5 bit から IV を抽出 (0-31)。MT / LCG 共通。
 #[inline]
-pub fn extract_iv(mt_output: u32) -> u8 {
-    (mt_output >> 27) as u8
+pub fn extract_iv(rand: u32) -> u8 {
+    (rand >> 27) as u8
 }
 
 /// 徘徊ポケモン用 IV 並び替え (HABDSC → HABCDS)

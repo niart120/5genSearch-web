@@ -46,8 +46,12 @@ BW / BW2 の配達員から受け取るポケモンについて、LCG の消費�
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
-| `wasm-pkg/src/generation/flows/wondercard.rs` | 新規 | 専用の入力型・結果型、一個体生成関数、単体テスト |
+| `wasm-pkg/src/generation/flows/wondercard.rs` | 新規 | 専用の入力型・結果型、一個体生成関数 |
+| `wasm-pkg/src/generation/flows/wondercard/tests.rs` | 新規 | 構築時検証・生成順序・PID 補正の単体テストと固定期待値 |
 | `wasm-pkg/src/generation/flows/mod.rs` | 変更 | `wondercard` モジュールの宣言 |
+| `wasm-pkg/src/generation/algorithm/iv.rs` | 変更 | 既存の `extract_iv()` が MT / LCG 共通の変換であることを明記 |
+| `wasm-pkg/src/generation/algorithm/mod.rs` | 変更 | `extract_iv()` を生成フローから再利用するため内部再エクスポート |
+| `wasm-pkg/src/generation/algorithm/nature.rs` | 変更 | `nature_roll()` の範囲変換を共通の `roll_fraction()` に集約 |
 | `spec/agent/architecture/rust-structure.md` | 変更 | 生成フローの配置と責務を追記 |
 | `spec/agent/complete/local_123/WONDER_CARD_GENERATION.md` | 移動・変更 | 検証結果と完了チェックを記録し、`wip` から移動 |
 | `spec/agent/wip/local_124/WONDER_CARD_INTEGRATION.md` | 変更 | 完了移動後の本仕様書へのリンクを更新 |
@@ -87,6 +91,18 @@ Rust 内部から呼び出せる関数として追加する。WASM 公開 API、
 カード情報はアプリに同梱する JSON で管理し、TS 側で選択したカードの情報と受取人情報から生成条件へ変換する。内部の一個体生成関数には、3.2 で定めた計算に必要な条件だけを渡す。
 
 上位経路の型・呼び出し・バッチ処理は [local_124 の接続仕様](../../wip/local_124/WONDER_CARD_INTEGRATION.md) で定義する。
+
+### 3.6 既存処理の再利用とファイル分割
+
+| 処理 | 再利用先・配置理由 |
+|------|--------------------|
+| 乱数の更新・範囲変換 | `Lcg64` / `roll_fraction()` を使用 |
+| 個体値・性格の抽出 | 既存の `extract_iv()` / `nature_roll()` を使用。乱数の取得元と取得位置は配達員フローが決める |
+| 色違い禁止・最終個体情報の判定 | `apply_shiny_lock()`、`Pid::gender()` / `ability_slot()` / `shiny_type()` を使用 |
+| 配達員固有の処理 | 前処理、性別値の補正、下位 8 bit からの色違い確定化、最後の特性補正を本フローに配置。既存の野生・イベント・孵化の PID 生成は補正内容や消費順序が異なる |
+| 型とテスト | 条件型・構築時検証・生成本体は約 160 行の `wondercard.rs` にまとめ、約 670 行のテストを `wondercard/tests.rs` に分離 |
+
+条件型は本生成処理だけがフィールドを読むため、同じモジュールに置いて非公開フィールドを維持する。型だけを別モジュールへ移すためのアクセサーや可視性拡大は行わない。`RawWonderCardData` も 3.3 の責務に合わせて専用型を維持する。テスト分割で生成関数の Rust パスや公開範囲は変えない。
 
 ## 4. 実装仕様
 
@@ -295,7 +311,7 @@ PID は `(pid & 0xFFFF_FF00) | g` に更新する。既に指定の性別を満�
 
 ### 5.1 実装との対応
 
-`wasm-pkg/src/generation/flows/wondercard.rs` に 16 件の単体テストを配置した。期待値は生成関数を使わず、4.3 の LCG 漸化式を整数演算で展開して固定した。テスト内に開始状態、乱数の採用位置、期待する個体情報と終了状態を記載している。
+`wasm-pkg/src/generation/flows/wondercard/tests.rs` に 16 件の単体テストを配置した。期待値は生成関数を使わず、4.3 の LCG 漸化式を整数演算で展開して固定した。テスト内に開始状態、乱数の採用位置、期待する個体情報と終了状態を記載している。
 
 | 要件 | 検証内容 |
 |------|----------|
@@ -310,7 +326,7 @@ PID は `(pid & 0xFFFF_FF00) | g` に更新する。既に指定の性別を満�
 
 ### 5.2 検証結果
 
-2026-09-10 に実行。
+2026-09-10 に実行。既存関数の再利用とテスト分割後にも、Rust 全体テスト・Clippy・フォーマット検査を再実行して成功した。
 
 | コマンド | 結果 |
 |----------|------|

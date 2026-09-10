@@ -65,6 +65,8 @@ wasm-pkg/
 │   │       ├── mod.rs
 │   │       ├── egg.rs              # 卵生成フロー
 │   │       ├── wondercard.rs       # 配達員の検証済み条件・一個体生成 (LCG)
+│   │       ├── wondercard/
+│   │       │   └── tests.rs        # 配達員生成の単体テスト・固定期待値
 │   │       ├── types.rs            # フロー共通型
 │   │       ├── generator/          # ジェネレーター実装
 │   │       │   ├── mod.rs
@@ -161,9 +163,12 @@ wasm-pkg/
 | `algorithm/` | 個体生成アルゴリズム部品 (IV, 性格, PID, エンカウントスロット, NPC 消費) |
 | `flows/` | エンカウント種別ごとの生成フロー (通常, 釣り, 波乗り, 揺れる草, 固定シンボル, 卵, 配達員) |
 | `flows/wondercard.rs` | 配達員の生成条件の構築時検証と、受取開始位置からの一個体生成。個体値・PID・性格を同じ LCG から取得し、終了位置まで消費する |
+| `flows/wondercard/tests.rs` | 配達員生成の単体テスト。構築時検証、消費順序、PID 補正を固定期待値で検証する |
 | `flows/generator/` | ポケモン/卵ジェネレーター |
 
 配達員の `WonderCardGenerationParams` は非公開フィールドを持ち、`new()` だけで入力を検証する。`generate_wondercard_pokemon()` は検証済み条件を参照し、個体値・PID・性格・性別・特性スロット・色違い種別を持つ `RawWonderCardData` を直接返す。新設型は Rust 内部用とし、WASM 公開・開始位置の列挙・検索・表示用情報の付与は上位経路の責務とする。
+
+個体値抽出・性格への範囲変換・色違い禁止処理は既存の `algorithm/` を使う。配達員固有の前処理と PID 補正順序は `flows/wondercard.rs` に置き、テストは `#[cfg(test)]` の子モジュールへ分離する。
 
 ### `gpu/` サブモジュール
 
