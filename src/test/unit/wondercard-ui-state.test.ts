@@ -127,7 +127,7 @@ describe('配達員の実行要求と入力保持', () => {
   });
 });
 
-describe('配達員 Filter と件数上限', () => {
+describe('配達員 Filter と結果件数見積もり', () => {
   const context = { card: UI_CARD, genderRatio: 'F1M1' as const };
   it('固定項目を無効にしても元の編集値を保持し、可変カードへ戻すと適用する', () => {
     const input = {
@@ -148,6 +148,14 @@ describe('配達員 Filter と件数上限', () => {
       },
     };
     expect(normalizeWonderCardFilter(input, undefined, fixed, 'ivs')).toBeUndefined();
+    expect(
+      estimateWonderCardListResults(
+        100,
+        { user_offset: 0, max_advance: 0 },
+        normalizeWonderCardFilter(input, undefined, fixed, 'ivs'),
+        fixed.card.fixedIvs
+      ).estimatedCount
+    ).toBe(100);
     expect(normalizeWonderCardFilter(input, undefined, context, 'ivs')).toEqual(input);
   });
   it.each(['Genderless', 'MaleOnly', 'FemaleOnly'] as const)(
@@ -177,7 +185,7 @@ describe('配達員 Filter と件数上限', () => {
       normalizeWonderCardFilter({ ...input, enabled: false }, stats, context, 'stats')
     ).toBeUndefined();
   });
-  it('上限を含む候補数を、固定カードでも確認用件数に使う', () => {
+  it('条件なしなら消費範囲の上限を含む全候補数になる', () => {
     expect(
       estimateWonderCardListResults(2, { user_offset: 10, max_advance: 10 }).estimatedCount
     ).toBe(2);
@@ -217,5 +225,54 @@ describe('配達員 Filter と件数上限', () => {
         []
       )
     ).toEqual(['DATE_RANGE_INVALID', 'STARTUP_RANGE_INVALID']);
+  });
+  it('個体値と色違いの通過率を掛け、警告判定にも反映する', () => {
+    const filter = {
+      ...EMPTY_CORE_FILTER,
+      iv: { ...DEFAULT_IV_RANGES, hp: [31, 31] as [number, number] },
+      shiny: 'Shiny' as const,
+    };
+    const result = estimateWonderCardListResults(
+      32 * 8192,
+      { user_offset: 10, max_advance: 10 },
+      filter
+    );
+    expect(result).toEqual({
+      searchSpaceSize: 32 * 8192,
+      hitRate: 1 / (32 * 8192),
+      estimatedCount: 1,
+      exceedsThreshold: false,
+    });
+    expect(filter.iv.hp).toEqual([31, 31]);
+  });
+  it('固定個体値は一致すれば全件通過し、不一致なら0件になる', () => {
+    const filter = {
+      ...EMPTY_CORE_FILTER,
+      iv: { ...DEFAULT_IV_RANGES, hp: [31, 31] as [number, number] },
+    };
+    const config = { user_offset: 0, max_advance: 50_000 };
+    const matching = estimateWonderCardListResults(1, config, filter, { hp: 31 });
+    expect(matching.estimatedCount).toBe(50_001);
+    expect(matching.exceedsThreshold).toBe(true);
+    expect(estimateWonderCardListResults(1, config, filter, { hp: 30 }).estimatedCount).toBe(0);
+    expect(filter.iv.hp).toEqual([31, 31]);
+  });
+  it('日時検索でも固定個体値と可変個体値を区別して見積もる', () => {
+    const request = { settings: settings(), ...getWonderCardSearchInitialState() };
+    const context = getWonderCardSearchContext(request);
+    const config = request.settings.genConfig;
+    const total = estimateWonderCardDatetimeSearchResults(context, config).searchSpaceSize;
+    const filter = {
+      ...EMPTY_CORE_FILTER,
+      iv: {
+        ...DEFAULT_IV_RANGES,
+        hp: [31, 31] as [number, number],
+        atk: [0, 0] as [number, number],
+      },
+      natures: ['Hardy' as const],
+    };
+    const result = estimateWonderCardDatetimeSearchResults(context, config, filter, { hp: 31 });
+    expect(result.hitRate).toBe(1 / (32 * 25));
+    expect(result.estimatedCount).toBe(Math.round(total / (32 * 25)));
   });
 });
