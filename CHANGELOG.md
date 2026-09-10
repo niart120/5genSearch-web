@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/niart120/5genSearch-web/compare/v1.7.0...v1.8.0) (2026-09-10)
+
+
+### Features
+
+* **wondercard:** 結果件数の見積もりにフィルター通過率を反映 ([#184](https://github.com/niart120/5genSearch-web/issues/184)) ([93ea15c](https://github.com/niart120/5genSearch-web/commit/93ea15c271a86e11283b9e44a0620df7d17d7ea9))
+
 ## [1.7.0](https://github.com/niart120/5genSearch-web/compare/v1.6.0...v1.7.0) (2026-09-10)
 
 
