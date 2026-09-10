@@ -8,6 +8,8 @@
 
 本書の対象を 2026-09-10 に実装・検証した。カード定義から TS / WASM 境界、CPU Worker による個体一覧・日時検索、共通結果型と表示変換までを扱う。
 
+同日の [local_125](../local_125/WONDER_CARD_COLLECTION.md) で、同梱カードの型・配置・ローダーAPI・選択候補の表示材料を更新した。本書の初期3件と旧 `source` / `displayName` の記述は実装当初の記録とし、現在のカタログ契約は後続仕様を参照する。WASM・Workerの生成条件契約は維持している。
+
 コード例には型定義と関数のシグネチャを示し、関数本体は省略する。
 
 ### 1.2 用語定義
@@ -527,7 +529,7 @@ Rust の関連テスト、CPU Worker を使うブラウザ統合テスト、WASM
 
 ## 7. 関連資料
 
-- [カード収集・JSON 生成の変更仕様（次段階・未実装）](../../wip/local_125/WONDER_CARD_COLLECTION.md)
+- [カード収集・JSON 生成の実装仕様](../local_125/WONDER_CARD_COLLECTION.md)
 - [配達員の一個体生成仕様](../../complete/local_123/WONDER_CARD_GENERATION.md)
 - [既存の個体条件による日時検索](../../complete/local_119/POKEMON_SEARCH_ENGINE.md)
 - [既存の個体生成パイプライン](../../complete/local_120/POKEMON_GENERATION_PIPELINE.md)
