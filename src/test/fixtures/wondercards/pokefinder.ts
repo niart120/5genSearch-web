@@ -1,0 +1,47 @@
+import type { WonderCardEntry } from '@/data/wondercards/schema';
+
+/** local_124 の3定義。製品カタログの収録・順番・IDから独立させる。 */
+export const POKEFINDER_CARDS: WonderCardEntry[] = [
+  {
+    id: 'secret-egg-pidove',
+    cardTitle: 'A Secret Egg!',
+    language: 'en',
+    versions: ['Black', 'White'],
+    kind: 'egg',
+    speciesId: 519,
+    level: 1,
+    fixedIvs: { atk: 31 },
+    fixedNature: 'Hardy',
+    fixedGender: 'Female',
+    fixedAbilitySlot: 'Second',
+    shinyPolicy: 'Never',
+  },
+  {
+    id: 'spring-2013-meloetta',
+    cardTitle: 'The Mythical Pokémon Meloetta!',
+    language: 'en',
+    versions: ['Black', 'White', 'Black2', 'White2'],
+    kind: 'pokemon',
+    trainer: { tid: 3013, sid: 0 },
+    speciesId: 648,
+    level: 50,
+    fixedIvs: {},
+    fixedAbilitySlot: 'First',
+    shinyPolicy: 'Never',
+  },
+  {
+    id: 'event11-zoroark',
+    cardTitle: 'A special Zoroark!',
+    language: 'en',
+    versions: ['Black', 'White'],
+    kind: 'pokemon',
+    trainer: { tid: 9161, sid: 0 },
+    speciesId: 571,
+    level: 50,
+    fixedIvs: {},
+    fixedNature: 'Quirky',
+    fixedGender: 'Male',
+    fixedAbilitySlot: 'First',
+    shinyPolicy: 'Never',
+  },
+];

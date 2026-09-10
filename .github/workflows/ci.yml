@@ -146,6 +146,9 @@ jobs:
       - name: Run tests
         run: pnpm test:run
 
+      - name: Test wondercard collection (offline)
+        run: pnpm test:wondercards
+
   test-rust:
     name: Test (Rust)
     runs-on: ubuntu-latest

@@ -9,9 +9,12 @@ import type {
 
 export type FixedIvsJson = Partial<Record<'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe', number>>;
 
+export const WONDER_CARD_LANGUAGES = ['ja', 'en', 'fr', 'de', 'it', 'es', 'ko'] as const;
+export type WonderCardLanguage = (typeof WONDER_CARD_LANGUAGES)[number];
+
 interface WonderCardCommon {
   id: string;
-  displayName: { ja: string; en: string };
+  cardTitle: string;
   versions: RomVersion[];
   speciesId: number;
   level: number;
@@ -23,8 +26,10 @@ interface WonderCardCommon {
 }
 
 /** 読み込み後のカード。未指定は undefined に統一する。 */
-export type WonderCardEntry = WonderCardCommon &
-  ({ kind: 'pokemon'; trainer: TrainerInfo } | { kind: 'egg'; trainer?: never });
+export type WonderCardEntry = WonderCardCommon & { language: WonderCardLanguage } & (
+    | { kind: 'pokemon'; trainer: TrainerInfo }
+    | { kind: 'egg'; trainer?: never }
+  );
 
 /** JSON 境界だけで null を受け付ける。 */
 export type WonderCardEntryJson = Omit<
@@ -38,6 +43,5 @@ export type WonderCardEntryJson = Omit<
 } & ({ kind: 'pokemon'; trainer: TrainerInfo } | { kind: 'egg'; trainer?: never });
 
 export interface WonderCardCatalogJson {
-  source: { name: string; url: string; retrievedAt: string };
-  entries: WonderCardEntryJson[];
+  entries: [WonderCardEntryJson];
 }

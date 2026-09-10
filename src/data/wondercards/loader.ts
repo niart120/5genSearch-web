@@ -1,85 +1,136 @@
-import type { RomVersion } from '@/wasm/wasm_pkg.js';
-import type { WonderCardCatalogJson, WonderCardEntry } from './schema';
+import type { RomRegion, RomVersion } from '@/wasm/wasm_pkg.js';
+import { WONDER_CARD_LANGUAGES } from './schema';
+import type { WonderCardCatalogJson, WonderCardEntry, WonderCardLanguage } from './schema';
 
-const modules = import.meta.glob<WonderCardCatalogJson>('./data/v1/*.json', { import: 'default' });
+const modules = import.meta.glob<WonderCardCatalogJson>('./generated/v1/**/*.json', {
+  import: 'default',
+});
 const versions = new Set<RomVersion>(['Black', 'White', 'Black2', 'White2']);
+const regionLanguages: Record<RomRegion, WonderCardLanguage> = {
+  Jpn: 'ja',
+  Usa: 'en',
+  Fra: 'fr',
+  Ger: 'de',
+  Ita: 'it',
+  Spa: 'es',
+  Kor: 'ko',
+};
+
+/** アプリの表示言語ではなく、受取側ROMのリージョンから選ぶ。 */
+export function getWonderCardLanguage(region: RomRegion): WonderCardLanguage {
+  return regionLanguages[region];
+}
+
+function catalogLanguage(path: string): WonderCardLanguage {
+  const match = /^\.\/generated\/v1\/([^/]+)\/[^/]+\.json$/.exec(path);
+  const language = WONDER_CARD_LANGUAGES.find((value) => value === match?.[1]);
+  if (!language) throw new Error(`Invalid wondercard language folder: ${path}`);
+  return language;
+}
 
 /** メタデータと配布区分を検証する。乱数条件の値域・整合性は Rust が検証する。 */
-export function normalizeWonderCardCatalogs(catalogs: WonderCardCatalogJson[]): WonderCardEntry[] {
+export function normalizeWonderCardCatalogs(
+  catalogs: { path: string; catalog: WonderCardCatalogJson }[]
+): WonderCardEntry[] {
   const ids = new Set<string>();
-  return catalogs.flatMap((catalog) => {
-    if (
-      !catalog.source?.name?.trim() ||
-      !URL.canParse(catalog.source.url) ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(catalog.source.retrievedAt)
-    ) {
-      throw new Error('Invalid wondercard source');
+  return catalogs.map(({ path, catalog }) => {
+    const language = catalogLanguage(path);
+    if (!Array.isArray(catalog.entries) || catalog.entries.length !== 1) {
+      throw new Error(`Expected one wondercard entry: ${path}`);
     }
-    return catalog.entries.map((card): WonderCardEntry => {
-      if (!card.id?.trim() || ids.has(card.id))
-        throw new Error(`Duplicate or missing wondercard ID: ${card.id}`);
-      ids.add(card.id);
-      if (!card.displayName?.ja?.trim() || !card.displayName.en?.trim())
-        throw new Error(`Missing wondercard display name: ${card.id}`);
-      if (
-        !card.versions?.length ||
-        card.versions.some((version) => !versions.has(version)) ||
-        new Set(card.versions).size !== card.versions.length
-      ) {
-        throw new Error(`Invalid wondercard versions: ${card.id}`);
-      }
-      if (
-        (card.kind !== 'pokemon' && card.kind !== 'egg') ||
-        (card.kind === 'pokemon' &&
-          (typeof card.trainer?.tid !== 'number' || typeof card.trainer?.sid !== 'number')) ||
-        (card.kind === 'egg' && 'trainer' in card)
-      ) {
-        throw new Error(`Invalid wondercard trainer: ${card.id}`);
-      }
-      const common = {
-        id: card.id,
-        displayName: { ...card.displayName },
-        versions: [...card.versions],
-        speciesId: card.speciesId,
-        level: card.level,
-        shinyPolicy: card.shinyPolicy,
-        fixedIvs: {
-          hp: card.fixedIvs.hp ?? undefined,
-          atk: card.fixedIvs.atk ?? undefined,
-          def: card.fixedIvs.def ?? undefined,
-          spa: card.fixedIvs.spa ?? undefined,
-          spd: card.fixedIvs.spd ?? undefined,
-          spe: card.fixedIvs.spe ?? undefined,
-        },
-        fixedNature: card.fixedNature ?? undefined,
-        fixedGender: card.fixedGender ?? undefined,
-        fixedAbilitySlot: card.fixedAbilitySlot ?? undefined,
-      };
-      return card.kind === 'pokemon'
-        ? { ...common, kind: 'pokemon', trainer: { ...card.trainer } }
-        : { ...common, kind: 'egg' };
-    });
+    const card = catalog.entries[0];
+    if (typeof card.id !== 'string' || !card.id.trim() || ids.has(card.id)) {
+      throw new Error(`Duplicate or missing wondercard ID: ${card.id}`);
+    }
+    ids.add(card.id);
+    if (typeof card.cardTitle !== 'string' || !card.cardTitle.trim()) {
+      throw new Error(`Missing wondercard card title: ${card.id}`);
+    }
+    if (
+      !Array.isArray(card.versions) ||
+      card.versions.length === 0 ||
+      card.versions.some((version) => !versions.has(version)) ||
+      new Set(card.versions).size !== card.versions.length
+    ) {
+      throw new Error(`Invalid wondercard versions: ${card.id}`);
+    }
+    if (
+      (card.kind !== 'pokemon' && card.kind !== 'egg') ||
+      (card.kind === 'pokemon' &&
+        (typeof card.trainer?.tid !== 'number' || typeof card.trainer?.sid !== 'number')) ||
+      (card.kind === 'egg' && 'trainer' in card)
+    ) {
+      throw new Error(`Invalid wondercard trainer: ${card.id}`);
+    }
+    if (!card.fixedIvs || typeof card.fixedIvs !== 'object' || Array.isArray(card.fixedIvs)) {
+      throw new Error(`Invalid wondercard fixed IVs: ${card.id}`);
+    }
+    const common = {
+      id: card.id,
+      language,
+      cardTitle: card.cardTitle,
+      versions: [...card.versions],
+      speciesId: card.speciesId,
+      level: card.level,
+      shinyPolicy: card.shinyPolicy,
+      fixedIvs: {
+        hp: card.fixedIvs.hp ?? undefined,
+        atk: card.fixedIvs.atk ?? undefined,
+        def: card.fixedIvs.def ?? undefined,
+        spa: card.fixedIvs.spa ?? undefined,
+        spd: card.fixedIvs.spd ?? undefined,
+        spe: card.fixedIvs.spe ?? undefined,
+      },
+      fixedNature: card.fixedNature ?? undefined,
+      fixedGender: card.fixedGender ?? undefined,
+      fixedAbilitySlot: card.fixedAbilitySlot ?? undefined,
+    };
+    return card.kind === 'pokemon'
+      ? { ...common, kind: 'pokemon', trainer: { ...card.trainer } }
+      : { ...common, kind: 'egg' };
   });
 }
 
-let catalogPromise: Promise<WonderCardEntry[]> | undefined;
+const sources = Object.entries(modules).map(([path, load]) => ({
+  path,
+  load,
+  language: catalogLanguage(path),
+}));
+const catalogs = new Map<WonderCardLanguage, Promise<WonderCardEntry[]>>();
 
-/** 初回だけ読み込み、呼び出し側の編集がカタログへ波及しないよう複製を返す。 */
-export async function loadWonderCards(version?: RomVersion): Promise<WonderCardEntry[]> {
-  catalogPromise ??= Promise.all(Object.values(modules).map((load) => load()))
-    .then(normalizeWonderCardCatalogs)
-    .catch((error: Error) => {
-      catalogPromise = undefined;
-      throw error;
-    });
-  const cards = await catalogPromise;
+/** 言語ごとに初回だけ読み込み、呼び出し側の編集がキャッシュへ波及しないよう複製する。 */
+export async function loadWonderCards(
+  language: WonderCardLanguage,
+  version?: RomVersion
+): Promise<WonderCardEntry[]> {
+  if (!WONDER_CARD_LANGUAGES.includes(language))
+    throw new Error(`Invalid wondercard language: ${language}`);
+  let promise = catalogs.get(language);
+  if (!promise) {
+    promise = Promise.all(
+      sources
+        .filter((source) => source.language === language)
+        .map(async ({ path, load }) => ({ path, catalog: await load() }))
+    )
+      .then(normalizeWonderCardCatalogs)
+      .catch((error: Error) => {
+        catalogs.delete(language);
+        throw error;
+      });
+    catalogs.set(language, promise);
+  }
+  const cards = await promise;
   return structuredClone(version ? cards.filter((card) => card.versions.includes(version)) : cards);
 }
 
-/** 消えたカードや対象外 ROM を別のカードへ置換しない。 */
-export async function getWonderCard(id: string, version: RomVersion): Promise<WonderCardEntry> {
-  const cards = await loadWonderCards(version);
+/** 消えたカード、言語不一致、対象外ROMを別のカードへ置換しない。 */
+export async function getWonderCard(
+  id: string,
+  language: WonderCardLanguage,
+  version: RomVersion
+): Promise<WonderCardEntry> {
+  const cards = await loadWonderCards(language, version);
   const card = cards.find((entry) => entry.id === id);
-  if (!card) throw new Error(`Wondercard unavailable for ${version}: ${id}`);
+  if (!card) throw new Error(`Wondercard unavailable for ${language}/${version}: ${id}`);
   return card;
 }
