@@ -527,6 +527,7 @@ Rust の関連テスト、CPU Worker を使うブラウザ統合テスト、WASM
 
 ## 7. 関連資料
 
+- [カード収集・JSON 生成の変更仕様（次段階・未実装）](../../wip/local_125/WONDER_CARD_COLLECTION.md)
 - [配達員の一個体生成仕様](../../complete/local_123/WONDER_CARD_GENERATION.md)
 - [既存の個体条件による日時検索](../../complete/local_119/POKEMON_SEARCH_ENGINE.md)
 - [既存の個体生成パイプライン](../../complete/local_120/POKEMON_GENERATION_PIPELINE.md)
