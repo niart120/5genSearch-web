@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.7.0](https://github.com/niart120/5genSearch-web/compare/v1.6.0...v1.7.0) (2026-09-10)
+
+
+### Features
+
+* **wondercards:** 配布カードの収集と言語別カタログを追加 ([#181](https://github.com/niart120/5genSearch-web/issues/181)) ([7126d86](https://github.com/niart120/5genSearch-web/commit/7126d8618afb7837731c6c2c0c3a05f6626804eb))
+* **wondercard:** 配達員のカード定義とCPU一覧・日時検索を接続 ([#180](https://github.com/niart120/5genSearch-web/issues/180)) ([3a44c45](https://github.com/niart120/5genSearch-web/commit/3a44c45e50164dfb3a8c13256d1ced2509166522))
+* **wondercard:** 配達員の一個体生成を実装 ([#178](https://github.com/niart120/5genSearch-web/issues/178)) ([e1cfc69](https://github.com/niart120/5genSearch-web/commit/e1cfc69129c9337c4003d0dd4bb0b3bec8ddcd5b))
+* **wondercard:** 配達員の日時検索と個体生成画面を追加 ([#182](https://github.com/niart120/5genSearch-web/issues/182)) ([e998316](https://github.com/niart120/5genSearch-web/commit/e998316c861a70b0f2bfacb28584cc20b5a51790))
+
+
+### Bug Fixes
+
+* **test:** 依存走査でWASMの別名解決が失敗する問題を修正 ([#183](https://github.com/niart120/5genSearch-web/issues/183)) ([1334a84](https://github.com/niart120/5genSearch-web/commit/1334a84751a9b92d8f85c0e3cce7966f98ebf9e1))
+
 ## [1.6.0](https://github.com/niart120/5genSearch-web/compare/v1.5.4...v1.6.0) (2026-09-06)
 
 
