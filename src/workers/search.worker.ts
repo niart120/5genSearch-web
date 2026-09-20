@@ -78,6 +78,12 @@ const BATCH_SIZE = {
   generation: 50,
 } as const;
 
+/** 候補数と返却結果数の双方で区切る検索のバッチ上限 */
+const BATCH_LIMITS = {
+  pokemonDatetime: { max_candidates: 262_144, max_results: 8192 },
+  wonderCard: { max_candidates: 262_144, max_results: 8192 },
+} as const;
+
 // =============================================================================
 // Message Handler
 // =============================================================================
@@ -283,7 +289,7 @@ async function runPokemonDatetimeSearch(
 ): Promise<void> {
   const searcher = new PokemonDatetimeSearcher(params);
   await runSearchLoop(taskId, searcher, startTime, (s) => {
-    const batch = s.next_batch({ max_candidates: 1024, max_results: 256 });
+    const batch = s.next_batch(BATCH_LIMITS.pokemonDatetime);
     if (batch.results.length > 0) {
       postResponse({ type: 'result', taskId, resultType: 'pokemon-list', results: batch.results });
     }
@@ -297,7 +303,7 @@ async function runWonderCardSearch(
   startTime: number
 ): Promise<void> {
   await runSearchLoop(taskId, searcher, startTime, (s) => {
-    const batch = s.next_batch({ max_candidates: 1024, max_results: 256 });
+    const batch = s.next_batch(BATCH_LIMITS.wonderCard);
     if (batch.results.length > 0) {
       postResponse({
         type: 'result',

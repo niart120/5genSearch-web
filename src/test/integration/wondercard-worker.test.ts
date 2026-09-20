@@ -183,7 +183,7 @@ function execute(
       if (response.type === 'result') {
         expect(response.resultType).toBe('wondercard-list');
         if (response.resultType === 'wondercard-list') {
-          expect(response.results.length).toBeLessThanOrEqual(256);
+          expect(response.results.length).toBeLessThanOrEqual(8192);
           rows.push(...response.results);
         }
         if (cancelOnResult) worker.postMessage({ type: 'cancel' });
