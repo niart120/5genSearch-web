@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/niart120/5genSearch-web/compare/v1.8.0...v1.8.1) (2026-09-20)
+
+
+### Performance Improvements
+
+* **worker:** 日時検索のバッチ上限を調整 ([cc0d7f1](https://github.com/niart120/5genSearch-web/commit/cc0d7f1569bf680226a5178031230ff1fa10ecbf))
+
 ## [1.8.0](https://github.com/niart120/5genSearch-web/compare/v1.7.0...v1.8.0) (2026-09-10)
 
 
