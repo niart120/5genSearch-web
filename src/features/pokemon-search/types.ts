@@ -1,4 +1,10 @@
 import { normalizePokemonSearchFilter } from '@/lib/search-filter-context';
+import {
+  isDateRangeValid,
+  isTimeRangeValid,
+  areTimer0VCountRangesValid,
+  isIntegerRangeValid,
+} from '@/lib/range-validation';
 import type { PokemonSearchFilterInput as PokemonDatetimeSearchFilter } from '@/lib/search-filter-context';
 import type {
   DateRangeParams,
@@ -48,51 +54,15 @@ export type PokemonSearchValidationCode =
   | 'TID_REQUIRED'
   | 'SID_REQUIRED';
 
-const validDate = (year: number, month: number, day: number) => {
-  const value = new Date(Date.UTC(year, month - 1, day));
-  return (
-    year >= 2000 &&
-    year <= 2099 &&
-    value.getUTCFullYear() === year &&
-    value.getUTCMonth() === month - 1 &&
-    value.getUTCDate() === day
-  );
-};
-
 export function validatePokemonSearchForm(
   form: PokemonSearchForm,
   trainer: { tid?: number; sid?: number },
   ranges: Timer0VCountRange[]
 ): PokemonSearchValidationCode[] {
   const errors: PokemonSearchValidationCode[] = [];
-  const date = form.dateRange;
-
-  if (
-    !validDate(date.start_year, date.start_month, date.start_day) ||
-    !validDate(date.end_year, date.end_month, date.end_day) ||
-    Date.UTC(date.start_year, date.start_month - 1, date.start_day) >
-      Date.UTC(date.end_year, date.end_month - 1, date.end_day)
-  )
-    errors.push('DATE_RANGE_INVALID');
-  const time = form.timeRange;
-  if (
-    [
-      [time.hour_start, time.hour_end, 23],
-      [time.minute_start, time.minute_end, 59],
-      [time.second_start, time.second_end, 59],
-    ].some(
-      ([min, max, limit]) =>
-        !Number.isInteger(min) || !Number.isInteger(max) || min < 0 || min > max || max > limit
-    )
-  )
-    errors.push('TIME_RANGE_INVALID');
-  if (
-    ranges.length === 0 ||
-    ranges.some(
-      (range) => range.timer0_min > range.timer0_max || range.vcount_min > range.vcount_max
-    )
-  )
-    errors.push('STARTUP_RANGE_INVALID');
+  if (!isDateRangeValid(form.dateRange)) errors.push('DATE_RANGE_INVALID');
+  if (!isTimeRangeValid(form.timeRange)) errors.push('TIME_RANGE_INVALID');
+  if (!areTimer0VCountRangesValid(ranges)) errors.push('STARTUP_RANGE_INVALID');
   const config = form.encounterParams.genConfig;
   if (
     !Number.isInteger(config.user_offset) ||
@@ -110,14 +80,7 @@ export function validatePokemonSearchForm(
     errors.push('ENCOUNTER_UNSUPPORTED');
   const appliedFilter = normalizePokemonSearchFilter(form.filter, form.encounterParams);
   const level = appliedFilter.level_range;
-  if (
-    level &&
-    (!level.every((value) => Number.isInteger(value)) ||
-      level[0] < 1 ||
-      level[1] > 100 ||
-      level[0] > level[1])
-  )
-    errors.push('LEVEL_RANGE_INVALID');
+  if (level && !isIntegerRangeValid(level[0], level[1], 1, 100)) errors.push('LEVEL_RANGE_INVALID');
   if (appliedFilter.shiny !== undefined) {
     if (trainer.tid === undefined) errors.push('TID_REQUIRED');
     if (trainer.sid === undefined) errors.push('SID_REQUIRED');

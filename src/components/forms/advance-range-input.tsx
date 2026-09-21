@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { AdvanceRangeTooltip } from '@/components/data-display/rng-tooltips';
 import { clampOrDefault, handleFocusSelectAll } from './input-helpers';
 import type { GenerationConfig } from '@/wasm/wasm_pkg';
+import { isIntegerRangeValid } from '@/lib/range-validation';
+import { RangeError } from './range-error';
 
 type AdvanceRange = Pick<GenerationConfig, 'user_offset' | 'max_advance'>;
 interface AdvanceRangeInputProps {
@@ -25,6 +27,8 @@ export function AdvanceRangeInput({
 }: AdvanceRangeInputProps) {
   const { t } = useLingui();
   const id = useId();
+  const invalid = !disabled && !isIntegerRangeValid(value.user_offset, value.max_advance, 0, limit);
+  const errorId = `${id}-error`;
   const [min, setMin] = useState(String(value.user_offset));
   const [max, setMax] = useState(String(value.max_advance));
   useEffect(() => {
@@ -46,6 +50,8 @@ export function AdvanceRangeInput({
           type="number"
           inputMode="numeric"
           aria-label={t`Min advance`}
+          aria-invalid={invalid}
+          aria-describedby={invalid ? errorId : undefined}
           min={0}
           max={limit}
           className="h-7 min-w-0 text-xs tabular-nums"
@@ -64,6 +70,8 @@ export function AdvanceRangeInput({
           type="number"
           inputMode="numeric"
           aria-label={t`Max advance`}
+          aria-invalid={invalid}
+          aria-describedby={invalid ? errorId : undefined}
           min={0}
           max={limit}
           className="h-7 min-w-0 text-xs tabular-nums"
@@ -78,6 +86,7 @@ export function AdvanceRangeInput({
           }}
         />
       </div>
+      <RangeError id={errorId} invalid={invalid} />
     </div>
   );
 }

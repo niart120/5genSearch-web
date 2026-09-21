@@ -48,15 +48,21 @@ function SearchControls({
   const gpuToggleId = layout === 'mobile' ? 'gpu-toggle-mobile' : 'gpu-toggle';
 
   const buttonRow = (
-    <div className={cn('flex min-h-9 items-center gap-3', layout === 'mobile' && 'mt-2')}>
+    <div
+      className={cn('flex min-h-9 items-center gap-3', layout === 'mobile' && 'mt-2')}
+      // 修正直後の入力を確定できるよう、disabled ボタン自身ではなく親で捕捉する。
+      onPointerDownCapture={commitActiveInput}
+    >
       {isLoading ? (
         <Button variant="outline" onClick={onCancel} className="flex-1" size={buttonSize}>
           <Trans>Cancel</Trans>
         </Button>
       ) : (
         <Button
-          onClick={onSearch}
-          onPointerDown={commitActiveInput}
+          onClick={() => {
+            commitActiveInput();
+            onSearch();
+          }}
           disabled={!isValid || !isInitialized}
           className="flex-1"
           size={buttonSize}

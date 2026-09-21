@@ -11,6 +11,7 @@ import { usePokemonSearchStore } from '@/features/pokemon-search/store';
 import { useState, useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
@@ -49,9 +50,11 @@ interface DatetimeSearchRequest {
 
 function IvDatetimeSearchPage(): ReactElement {
   const { t } = useLingui();
+  // 手動範囲はサイドバーの入力欄で説明する。空範囲・自動設定の不備は一覧に残す。
+  const showStartupRangeSummary = useDsConfigStore((s) => s.timer0Auto || s.ranges.length === 0);
 
   // DS 設定 (サイドバーで管理済み)
-  const { config: dsConfig } = useDsConfigReadonly();
+  const { config: dsConfig, ranges } = useDsConfigReadonly();
 
   // フォーム状態 (Feature Store)
   const dateRange = useDatetimeSearchStore((s) => s.dateRange);
@@ -82,19 +85,27 @@ function IvDatetimeSearchPage(): ReactElement {
   // パース + バリデーション
   const parsedSeeds = useMemo(() => parseTargetSeeds(targetSeedsRaw), [targetSeedsRaw]);
   const validation = useMemo(
-    () => validateMtseedSearchForm({ dateRange, timeRange, keySpec, targetSeedsRaw }, parsedSeeds),
-    [dateRange, timeRange, keySpec, targetSeedsRaw, parsedSeeds]
+    () =>
+      validateMtseedSearchForm(
+        { dateRange, timeRange, keySpec, targetSeedsRaw },
+        parsedSeeds,
+        ranges
+      ),
+    [dateRange, timeRange, keySpec, targetSeedsRaw, parsedSeeds, ranges]
   );
 
   // i18n: バリデーションエラーコード → 翻訳済みメッセージ
   const validationMessages = useMemo(
-    (): Record<ValidationErrorCode, string> => ({
-      DATE_RANGE_INVALID: t`Start date must be on or before end date`,
-      TIME_RANGE_INVALID: t`Time range is invalid`,
+    (): Record<ValidationErrorCode, string | undefined> => ({
+      DATE_RANGE_INVALID: undefined,
+      TIME_RANGE_INVALID: undefined,
+      STARTUP_RANGE_INVALID: showStartupRangeSummary
+        ? t`Set a valid Timer0 / VCount range`
+        : undefined,
       SEEDS_EMPTY: t`Enter at least one MT Seed`,
       SEEDS_INVALID: t`MT Seed must be in the range 0 to FFFFFFFF`,
     }),
-    [t]
+    [t, showStartupRangeSummary]
   );
 
   // i18n: パースエラーコード → 翻訳済みメッセージ
@@ -174,7 +185,8 @@ function IvDatetimeSearchPage(): ReactElement {
         keySpec: form.keySpec,
         targetSeedsRaw: form.targetSeedsRaw,
       },
-      parsed
+      parsed,
+      useDsConfigStore.getState().ranges
     );
     if (!currentValidation.isValid) return;
 
@@ -264,13 +276,7 @@ function IvDatetimeSearchPage(): ReactElement {
           </SearchModeTabs>
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="text-xs text-destructive space-y-0.5">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

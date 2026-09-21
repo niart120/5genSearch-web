@@ -9,6 +9,7 @@ import { normalizeIvFilter, DEFAULT_IV_RANGES } from '@/lib/search-filter-contex
 import { useState, useMemo, useCallback, useEffect, useRef, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable } from '@/components/data-display/data-table';
@@ -85,8 +86,8 @@ function MtseedSearchPage(): ReactElement {
   );
 
   const validationMessages = useMemo(
-    (): Record<MtseedIvValidationErrorCode, string> => ({
-      IV_RANGE_INVALID: t`Min IV must be less than or equal to max IV`,
+    (): Record<MtseedIvValidationErrorCode, string | undefined> => ({
+      IV_RANGE_INVALID: undefined,
       MT_OFFSET_NEGATIVE: t`MT Advances must be 0 or greater`,
     }),
     [t]
@@ -176,13 +177,7 @@ function MtseedSearchPage(): ReactElement {
           />
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

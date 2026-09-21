@@ -3,6 +3,12 @@
  */
 
 import type { DateRangeParams, TimeRangeParams, KeySpec, MtSeed } from '../../wasm/wasm_pkg.js';
+import {
+  isDateRangeValid,
+  isTimeRangeValid,
+  areTimer0VCountRangesValid,
+} from '@/lib/range-validation';
+import type { Timer0VCountRange } from '@/wasm/wasm_pkg';
 
 /** 16 進数パース用 — module-level にホイストして毎回の再生成を回避 */
 const HEX_PREFIX_RE = /^0[xX]/;
@@ -12,6 +18,7 @@ const HEX_DIGITS_RE = /^[\da-fA-F]+$/;
 export type ValidationErrorCode =
   | 'DATE_RANGE_INVALID'
   | 'TIME_RANGE_INVALID'
+  | 'STARTUP_RANGE_INVALID'
   | 'SEEDS_EMPTY'
   | 'SEEDS_INVALID';
 
@@ -91,42 +98,15 @@ export function parseTargetSeeds(input: string): ParsedTargetSeeds {
 }
 
 /**
- * 日付値の先後比較 (start ≤ end)
- */
-function isDateRangeValid(range: DateRangeParams): boolean {
-  const start = range.start_year * 10_000 + range.start_month * 100 + range.start_day;
-  const end = range.end_year * 10_000 + range.end_month * 100 + range.end_day;
-  return start <= end;
-}
-
-/**
- * 時刻範囲の各フィールドが範囲内か検証
- */
-function isTimeRangeValid(range: TimeRangeParams): boolean {
-  return (
-    range.hour_start >= 0 &&
-    range.hour_start <= 23 &&
-    range.hour_end >= 0 &&
-    range.hour_end <= 23 &&
-    range.minute_start >= 0 &&
-    range.minute_start <= 59 &&
-    range.minute_end >= 0 &&
-    range.minute_end <= 59 &&
-    range.second_start >= 0 &&
-    range.second_start <= 59 &&
-    range.second_end >= 0 &&
-    range.second_end <= 59
-  );
-}
-
-/**
  * MT Seed 検索フォームのバリデーション
  */
 export function validateMtseedSearchForm(
   form: MtseedSearchFormState,
-  parsedSeeds: ParsedTargetSeeds
+  parsedSeeds: ParsedTargetSeeds,
+  ranges?: Timer0VCountRange[]
 ): ValidationResult {
   const errors: ValidationErrorCode[] = [];
+  if (ranges && !areTimer0VCountRangesValid(ranges)) errors.push('STARTUP_RANGE_INVALID');
 
   if (!isDateRangeValid(form.dateRange)) {
     errors.push('DATE_RANGE_INVALID');

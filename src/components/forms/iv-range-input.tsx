@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Trans } from '@lingui/react/macro';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,7 +5,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { getStatLabel, IV_STAT_KEYS } from '@/lib/game-data-names';
 import type { IvStatKey } from '@/lib/game-data-names';
-import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
+import { handleFocusSelectAll } from '@/components/forms/input-helpers';
+import { useNumericInput } from '@/hooks/use-numeric-input';
+import { isIntegerRangeValid } from '@/lib/range-validation';
+import { RangeError } from './range-error';
 import { useUiStore } from '@/stores/settings/ui';
 import { isIvRangeEnabled, type IvFilterInput } from '@/lib/search-filter-context';
 
@@ -49,36 +51,18 @@ function IvStatRow({
   isUnknown,
   onUnknownChange,
 }: IvStatRowProps) {
-  const [localMin, setLocalMin] = React.useState(String(min));
-  const [localMax, setLocalMax] = React.useState(String(max));
-
-  React.useEffect(() => {
-    setLocalMin(String(min));
-  }, [min, isUnknown]);
-
-  React.useEffect(() => {
-    setLocalMax(String(Math.min(31, max)));
-  }, [max, isUnknown]);
-
-  const handleMinBlur = () => {
-    const clamped = clampOrDefault(localMin, {
-      defaultValue: IV_MIN,
-      min: IV_MIN,
-      max: IV_MAX,
-    });
-    setLocalMin(String(clamped));
-    onMinChange(clamped);
-  };
-
-  const handleMaxBlur = () => {
-    const clamped = clampOrDefault(localMax, {
-      defaultValue: IV_MAX,
-      min: IV_MIN,
-      max: IV_MAX,
-    });
-    setLocalMax(String(clamped));
-    onMaxChange(clamped);
-  };
+  const minInput = useNumericInput(
+    min,
+    { defaultValue: IV_MIN, min: IV_MIN, max: IV_MAX },
+    isUnknown
+  );
+  const maxInput = useNumericInput(
+    max,
+    { defaultValue: IV_MAX, min: IV_MIN, max: IV_MAX },
+    isUnknown
+  );
+  const invalid = !disabled && !isUnknown && !isIntegerRangeValid(min, max, IV_MIN, IV_MAX);
+  const errorId = `iv-${statKey}-error`;
 
   const minId = `iv-${statKey}-min`;
   const maxId = `iv-${statKey}-max`;
@@ -93,10 +77,12 @@ function IvStatRow({
         id={minId}
         className="w-14 px-1 text-center font-mono tabular-nums"
         inputMode="numeric"
-        value={localMin}
-        onChange={(e) => setLocalMin(e.target.value)}
+        value={minInput.text}
+        onChange={(e) => minInput.setText(e.target.value)}
         onFocus={handleFocusSelectAll}
-        onBlur={handleMinBlur}
+        onBlur={() => onMinChange(minInput.commit())}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? errorId : undefined}
         disabled={disabled || isUnknown}
         placeholder={isUnknown ? '?' : '0'}
         aria-label={`${label} min`}
@@ -105,10 +91,12 @@ function IvStatRow({
         id={maxId}
         className="w-14 px-1 text-center font-mono tabular-nums"
         inputMode="numeric"
-        value={localMax}
-        onChange={(e) => setLocalMax(e.target.value)}
+        value={maxInput.text}
+        onChange={(e) => maxInput.setText(e.target.value)}
         onFocus={handleFocusSelectAll}
-        onBlur={handleMaxBlur}
+        onBlur={() => onMaxChange(maxInput.commit())}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? errorId : undefined}
         disabled={disabled || isUnknown}
         placeholder={isUnknown ? '?' : '31'}
         aria-label={`${label} max`}
@@ -124,6 +112,7 @@ function IvStatRow({
           />
         </div>
       )}
+      <RangeError id={errorId} invalid={invalid} />
     </>
   );
 }
@@ -155,12 +144,10 @@ function IvRangeInput({ value, onChange, disabled }: IvRangeInputProps) {
               max={Math.min(31, value[key][1])}
               disabled={disabled}
               onMinChange={(min) => {
-                const clampedMin = Math.min(min, value[key][1]);
-                onChange({ ...value, [key]: [clampedMin, value[key][1]] });
+                onChange({ ...value, [key]: [min, value[key][1]] });
               }}
               onMaxChange={(max) => {
-                const clampedMax = Math.max(max, value[key][0]);
-                onChange({ ...value, [key]: [value[key][0], clampedMax] });
+                onChange({ ...value, [key]: [value[key][0], max] });
               }}
               showUnknown
               isUnknown={isUnknown}

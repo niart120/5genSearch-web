@@ -3,6 +3,7 @@ import { useSearch, useSearchConfig } from '@/hooks/use-search';
 import { useResultViews } from '@/hooks/use-result-views';
 import type { PokemonListResultView } from '@/lib/result-view';
 import { createPokemonListTasks } from '@/services/search-tasks';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
 import { usePokemonListStore } from '../store';
@@ -35,6 +36,7 @@ interface UsePokemonListReturn {
 
 export function usePokemonList(locale: SupportedLocale): UsePokemonListReturn {
   const config = useSearchConfig(false);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
   const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
     useSearch(config);
 
@@ -95,13 +97,16 @@ export function usePokemonList(locale: SupportedLocale): UsePokemonListReturn {
       genConfig: GenerationConfig,
       filter?: PokemonFilter
     ) => {
+      const tasks = buildTasks(() =>
+        createPokemonListTasks(origins, params, genConfig, filter, workerCount)
+      );
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       startStoreResults(params.encounter_type, genConfig.version);
-      const tasks = createPokemonListTasks(origins, params, genConfig, filter, workerCount);
       start(tasks);
     },
-    [start, startStoreResults, workerCount]
+    [start, startStoreResults, workerCount, buildTasks]
   );
 
   return {
@@ -111,7 +116,7 @@ export function usePokemonList(locale: SupportedLocale): UsePokemonListReturn {
     results: resolvedResults,
     resultEncounterType,
     resultVersion,
-    error,
+    error: requestError ?? error,
     generate,
     cancel,
   };

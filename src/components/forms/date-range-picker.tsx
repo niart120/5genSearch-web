@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import type { DateRangeParams } from '@/wasm/wasm_pkg';
+import { isDateRangeValid } from '@/lib/range-validation';
 
 interface DateRangePickerProps {
   /** 現在の日付範囲 */
@@ -27,6 +28,7 @@ interface DateFieldProps {
   dayDefault: number;
   disabled?: boolean;
   prefix: string;
+  errorId?: string;
 }
 
 function DateField({
@@ -41,6 +43,7 @@ function DateField({
   dayDefault,
   disabled,
   prefix,
+  errorId,
 }: DateFieldProps) {
   const [localYear, setLocalYear] = React.useState(String(yearValue));
   const [localMonth, setLocalMonth] = React.useState(String(monthValue));
@@ -66,6 +69,8 @@ function DateField({
         }}
         disabled={disabled}
         aria-label={`${prefix} year`}
+        aria-invalid={errorId !== undefined}
+        aria-describedby={errorId}
       />
       <span className="text-sm text-muted-foreground">/</span>
       <Input
@@ -82,6 +87,8 @@ function DateField({
         }}
         disabled={disabled}
         aria-label={`${prefix} month`}
+        aria-invalid={errorId !== undefined}
+        aria-describedby={errorId}
       />
       <span className="text-sm text-muted-foreground">/</span>
       <Input
@@ -98,12 +105,17 @@ function DateField({
         }}
         disabled={disabled}
         aria-label={`${prefix} day`}
+        aria-invalid={errorId !== undefined}
+        aria-describedby={errorId}
       />
     </div>
   );
 }
 
 function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
+  const id = React.useId();
+  const invalid = !disabled && !isDateRangeValid(value);
+  const errorId = invalid ? `${id}-error` : undefined;
   return (
     <div className={cn('flex flex-row flex-wrap items-end gap-x-2 gap-y-1')}>
       <div className="flex flex-col gap-1">
@@ -122,6 +134,7 @@ function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
           dayDefault={1}
           disabled={disabled}
           prefix="date-start"
+          errorId={errorId}
         />
       </div>
       <span className="inline-flex h-7 items-center self-end text-sm text-muted-foreground">
@@ -143,8 +156,14 @@ function DateRangePicker({ value, onChange, disabled }: DateRangePickerProps) {
           dayDefault={31}
           disabled={disabled}
           prefix="date-end"
+          errorId={errorId}
         />
       </div>
+      {invalid && (
+        <p id={errorId} role="alert" className="basis-full text-xs text-destructive">
+          <Trans>Enter a valid date range with the start on or before the end</Trans>
+        </p>
+      )}
     </div>
   );
 }

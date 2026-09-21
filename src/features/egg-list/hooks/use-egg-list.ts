@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
 import { useResultViews } from '@/hooks/use-result-views';
 import { createEggListTasks } from '@/services/search-tasks';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { flattenBatchResults, isGeneratedEggData } from '@/services/batch-utils';
 import { resolve_egg_data_batch } from '@/wasm/wasm_pkg.js';
 import { useEggListStore } from '../store';
@@ -40,6 +41,7 @@ interface UseEggListReturn {
 
 export function useEggList(locale: SupportedLocale): UseEggListReturn {
   const config = useSearchConfig(false);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
   const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
     useSearch(config);
 
@@ -91,13 +93,16 @@ export function useEggList(locale: SupportedLocale): UseEggListReturn {
       genConfig: GenerationConfig,
       filter: EggFilter | undefined
     ) => {
+      const tasks = buildTasks(() =>
+        createEggListTasks(origins, params, genConfig, filter, workerCount)
+      );
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearStoreResults();
-      const tasks = createEggListTasks(origins, params, genConfig, filter, workerCount);
       start(tasks);
     },
-    [start, clearStoreResults, workerCount]
+    [start, clearStoreResults, workerCount, buildTasks]
   );
 
   return {
@@ -105,7 +110,7 @@ export function useEggList(locale: SupportedLocale): UseEggListReturn {
     isInitialized,
     progress,
     results: resultViews,
-    error,
+    error: requestError ?? error,
     generate,
     cancel,
   };

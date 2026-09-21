@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { createTrainerInfoSearchTasks } from '@/services/search-tasks';
 import { flattenBatchResults, isTrainerInfoResult } from '@/services/batch-utils';
 import { useTidAdjustStore } from '../store';
@@ -38,6 +39,7 @@ interface UseTidAdjustReturn {
 export function useTidAdjust(): UseTidAdjustReturn {
   const config = useSearchConfig(false);
   const search = useSearch(config);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
 
   // Store actions
   const appendResults = useTidAdjustStore((s) => s.appendResults);
@@ -51,14 +53,17 @@ export function useTidAdjust(): UseTidAdjustReturn {
 
   const startSearch = useCallback(
     (context: DatetimeSearchContext, filter: TrainerInfoFilter, gameStart: GameStartConfig) => {
+      const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
+      const tasks = buildTasks(() =>
+        createTrainerInfoSearchTasks(context, filter, gameStart, workerCount)
+      );
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearResults();
-      const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
-      const tasks = createTrainerInfoSearchTasks(context, filter, gameStart, workerCount);
       search.start(tasks);
     },
-    [config.workerCount, search, clearResults]
+    [config.workerCount, search, clearResults, buildTasks]
   );
 
   // 結果差分同期 — 新しいバッチのみ処理して Store に追記
@@ -87,7 +92,7 @@ export function useTidAdjust(): UseTidAdjustReturn {
     isInitialized: search.isInitialized,
     progress: search.progress,
     results: storedResults,
-    error: search.error,
+    error: requestError ?? search.error,
     startSearch,
     cancel: search.cancel,
   };

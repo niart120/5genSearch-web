@@ -3,6 +3,7 @@ import { useSearch, useSearchConfig } from '@/hooks/use-search';
 import { useResultViews } from '@/hooks/use-result-views';
 import type { PokemonListResultView } from '@/lib/result-view';
 import { createPokemonDatetimeSearchTasks } from '@/services/search-tasks';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { flattenBatchResults, isGeneratedPokemonData } from '@/services/batch-utils';
 import { resolve_pokemon_data_batch } from '@/wasm/wasm_pkg.js';
 import { usePokemonSearchStore } from '../store';
@@ -29,6 +30,7 @@ interface UsePokemonSearchReturn {
 
 export function usePokemonSearch(locale: SupportedLocale): UsePokemonSearchReturn {
   const config = useSearchConfig(false);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
   const { results, isLoading, isInitialized, progress, error, workerCount, start, cancel } =
     useSearch(config);
 
@@ -85,19 +87,22 @@ export function usePokemonSearch(locale: SupportedLocale): UsePokemonSearchRetur
 
   const startSearch = useCallback(
     (request: PokemonSearchRequest) => {
-      const tasks = createPokemonDatetimeSearchTasks(
-        request.context,
-        request.pokemonParams,
-        request.genConfig,
-        request.filter,
-        workerCount
+      const tasks = buildTasks(() =>
+        createPokemonDatetimeSearchTasks(
+          request.context,
+          request.pokemonParams,
+          request.genConfig,
+          request.filter,
+          workerCount
+        )
       );
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       startStoreResults(request);
       start(tasks);
     },
-    [start, startStoreResults, workerCount]
+    [start, startStoreResults, workerCount, buildTasks]
   );
 
   return {
@@ -107,7 +112,7 @@ export function usePokemonSearch(locale: SupportedLocale): UsePokemonSearchRetur
     results: resolvedResults,
     resultEncounterType,
     resultVersion,
-    error,
+    error: requestError ?? error,
     startSearch,
     cancel,
   };

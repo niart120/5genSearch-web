@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { clampOrDefault, handleFocusSelectAll } from '@/components/forms/input-helpers';
 import type { TimeRangeParams } from '@/wasm/wasm_pkg';
+import { isIntegerRangeValid } from '@/lib/range-validation';
+import { RangeError } from './range-error';
 
 interface TimeRangePickerProps {
   /** 現在の時刻範囲 */
@@ -42,6 +44,8 @@ function TimeAxisField({
   disabled,
   prefix,
 }: TimeAxisFieldProps) {
+  const invalid = !disabled && !isIntegerRangeValid(startValue, endValue, min, max);
+  const errorId = `${prefix}-error`;
   const [localStart, setLocalStart] = React.useState(String(startValue));
   const [localEnd, setLocalEnd] = React.useState(String(endValue));
 
@@ -68,6 +72,8 @@ function TimeAxisField({
           }}
           disabled={disabled}
           aria-label={`${prefix} start`}
+          aria-invalid={invalid}
+          aria-describedby={invalid ? errorId : undefined}
         />
         <span className="text-sm text-muted-foreground">〜</span>
         <Input
@@ -84,8 +90,11 @@ function TimeAxisField({
           }}
           disabled={disabled}
           aria-label={`${prefix} end`}
+          aria-invalid={invalid}
+          aria-describedby={invalid ? errorId : undefined}
         />
       </div>
+      <RangeError id={errorId} invalid={invalid} />
     </div>
   );
 }

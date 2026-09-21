@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { createMtseedDatetimeSearchTasks } from '@/services/search-tasks';
 import { useDatetimeSearchStore } from '../store';
 import type { DatetimeSearchContext, MtSeed, SeedOrigin } from '@/wasm/wasm_pkg.js';
@@ -44,6 +45,7 @@ export function useDatetimeSearch(): UseDatetimeSearchReturn {
   const useGpu = useDatetimeSearchStore((s) => s.useGpu);
   const config = useSearchConfig(useGpu);
   const search = useSearch(config);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
 
   // Store actions
   const appendResults = useDatetimeSearchStore((s) => s.appendResults);
@@ -57,23 +59,21 @@ export function useDatetimeSearch(): UseDatetimeSearchReturn {
 
   const startSearch = useCallback(
     (context: DatetimeSearchContext, targetSeeds: MtSeed[]) => {
+      const tasks = buildTasks(() => {
+        if (useGpu) {
+          const gpuTask: GpuMtseedSearchTask = { kind: 'gpu-mtseed', context, targetSeeds };
+          return [gpuTask];
+        }
+        const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
+        return createMtseedDatetimeSearchTasks(context, targetSeeds, workerCount);
+      });
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearResults();
-      if (useGpu) {
-        const gpuTask: GpuMtseedSearchTask = {
-          kind: 'gpu-mtseed',
-          context,
-          targetSeeds,
-        };
-        search.start([gpuTask]);
-      } else {
-        const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
-        const tasks = createMtseedDatetimeSearchTasks(context, targetSeeds, workerCount);
-        search.start(tasks);
-      }
+      search.start(tasks);
     },
-    [useGpu, config.workerCount, search, clearResults]
+    [useGpu, config.workerCount, search, clearResults, buildTasks]
   );
 
   // 結果差分同期 — 新しいバッチのみ処理して Store に追記
@@ -102,7 +102,7 @@ export function useDatetimeSearch(): UseDatetimeSearchReturn {
     isInitialized: search.isInitialized,
     progress: search.progress,
     results: storedResults,
-    error: search.error,
+    error: requestError ?? search.error,
     startSearch,
     cancel: search.cancel,
   };

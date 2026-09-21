@@ -120,7 +120,8 @@ describe('NeedlePage 初期表示', () => {
     await user.clear(lower);
     await user.type(lower, '103');
     await user.tab();
-    expect(screen.getByText('Min advance must be ≤ max advance')).toBeInTheDocument();
+    expect(screen.getAllByText('Min must be less than or equal to max')).toHaveLength(1);
+    expect(screen.queryByText('Min advance must be ≤ max advance')).not.toBeInTheDocument();
     for (const button of screen.getAllByRole('button', { name: 'Search' }))
       expect(button).toBeDisabled();
   });

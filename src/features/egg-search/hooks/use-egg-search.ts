@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { useResultViews } from '@/hooks/use-result-views';
 import { createEggSearchTasks } from '@/services/search-tasks';
 import { useEggSearchStore } from '../store';
@@ -58,6 +59,7 @@ function flattenEggResults(batches: unknown[][]): EggDatetimeSearchResult[] {
 export function useEggSearch(locale: SupportedLocale): UseEggSearchReturn {
   const config = useSearchConfig(false);
   const search = useSearch(config);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
 
   // Store actions
   const appendResults = useEggSearchStore((s) => s.appendResults);
@@ -76,14 +78,17 @@ export function useEggSearch(locale: SupportedLocale): UseEggSearchReturn {
       genConfig: GenerationConfig,
       filter: EggFilter | undefined
     ) => {
+      const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
+      const tasks = buildTasks(() =>
+        createEggSearchTasks(context, eggParams, genConfig, filter, workerCount)
+      );
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearResults();
-      const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
-      const tasks = createEggSearchTasks(context, eggParams, genConfig, filter, workerCount);
       search.start(tasks);
     },
-    [config.workerCount, search, clearResults]
+    [config.workerCount, search, clearResults, buildTasks]
   );
 
   // 結果差分同期 — 新しいバッチのみ処理して Store に追記
@@ -126,7 +131,7 @@ export function useEggSearch(locale: SupportedLocale): UseEggSearchReturn {
     isInitialized: search.isInitialized,
     progress: search.progress,
     results: resultViews,
-    error: search.error,
+    error: requestError ?? search.error,
     startSearch,
     cancel: search.cancel,
   };

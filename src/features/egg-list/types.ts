@@ -11,6 +11,7 @@ import type {
 } from '../../wasm/wasm_pkg.js';
 import type { SeedInputMode } from '@/components/forms/seed-input-section';
 import { validateGenConfig, isIvValid } from '@/lib/validation';
+import { isIvFilterRangeValid } from '@/lib/range-validation';
 
 /** タマゴ生成フォーム状態 */
 export interface EggListFormState {
@@ -28,6 +29,7 @@ export type EggListValidationErrorCode =
   | 'SEEDS_EMPTY'
   | 'ADVANCE_RANGE_INVALID'
   | 'OFFSET_NEGATIVE'
+  | 'IV_RANGE_INVALID'
   | 'IV_OUT_OF_RANGE';
 
 /** バリデーション結果 */
@@ -43,6 +45,7 @@ export function validateEggListForm(form: EggListFormState): EggListValidationRe
     errors.push('SEEDS_EMPTY');
   }
   errors.push(...validateGenConfig(form.genConfig));
+  if (!isIvFilterRangeValid(form.filter?.iv)) errors.push('IV_RANGE_INVALID');
 
   // 親個体値の範囲チェック
   const maleIvs = Object.values(form.eggParams.parent_male);

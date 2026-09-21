@@ -11,6 +11,7 @@ import { useTrainerStore } from '@/stores/settings/trainer';
 import { createPokemonSearchRequest } from '@/test/helpers/pokemon-search';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { encounterSlotKey } from '@/lib/encounter-slot-context';
+import { Timer0VCountSection } from '@/features/ds-config/components/timer0-vcount-section';
 
 const state = vi.hoisted(() => ({
   loading: false,
@@ -73,6 +74,63 @@ describe('PokemonSearchPage', () => {
       gameStart: request.genConfig.game_start,
     });
     useTrainerStore.getState().reset();
+  });
+
+  it('レベル逆転は入力欄だけに表示し、検索停止と他のエラー表示を維持する', () => {
+    const store = usePokemonSearchStore.getState();
+    store.setEncounterParams((previous) => {
+      const next = { ...previous, encounterType: 'Normal' as const };
+      return { ...next, slotsContextKey: encounterSlotKey(next, 'Black') };
+    });
+    store.setFilter({ ...EMPTY_POKEMON_SEARCH_FILTER, level_range: [50, 10], shiny: 'Shiny' });
+    renderPage();
+    expect(screen.getAllByText('Min must be less than or equal to max')).toHaveLength(1);
+    expect(
+      screen.queryByText('Min level must be less than or equal to max level')
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Set TID to search for shiny Pokémon')).toBeInTheDocument();
+    expect(searchButton()).toBeDisabled();
+    fireEvent.click(searchButton());
+    expect(state.start).not.toHaveBeenCalled();
+    act(() => {
+      useTrainerStore.getState().setTrainer(0, 0);
+      store.setFilter({ ...EMPTY_POKEMON_SEARCH_FILTER, level_range: [10, 50] });
+    });
+    expect(screen.queryByText('Min must be less than or equal to max')).not.toBeInTheDocument();
+    expect(searchButton()).toBeEnabled();
+  });
+
+  it.each(['date', 'time'] as const)('%s の逆転は入力欄だけに表示する', (field) => {
+    const store = usePokemonSearchStore.getState();
+    if (field === 'date') store.setDateRange({ ...store.dateRange, start_year: 2025 });
+    else store.setTimeRange({ ...store.timeRange, hour_start: 1, hour_end: 0 });
+    renderPage();
+    const message =
+      field === 'date'
+        ? 'Enter a valid date range with the start on or before the end'
+        : 'Min must be less than or equal to max';
+    expect(screen.getAllByText(message)).toHaveLength(1);
+    expect(screen.queryByText('Time range is invalid')).not.toBeInTheDocument();
+    expect(searchButton()).toBeDisabled();
+  });
+
+  it('手動Timer0の逆転はサイドバーだけに表示し、空範囲のエラーは一覧に残す', () => {
+    useDsConfigStore.setState({
+      timer0Auto: false,
+      ranges: [{ timer0_min: 2, timer0_max: 1, vcount_min: 96, vcount_max: 96 }],
+    });
+    renderPage();
+    render(
+      <I18nTestWrapper>
+        <Timer0VCountSection />
+      </I18nTestWrapper>
+    );
+    expect(screen.getAllByText('Min must be less than or equal to max')).toHaveLength(1);
+    expect(screen.queryByText('Set a valid Timer0 / VCount range')).not.toBeInTheDocument();
+    expect(searchButton()).toBeDisabled();
+    act(() => useDsConfigStore.setState({ ranges: [] }));
+    expect(screen.getByText('Set a valid Timer0 / VCount range')).toBeInTheDocument();
+    expect(searchButton()).toBeDisabled();
   });
 
   it('searches without MT Seed or trainer IDs and commits edited dates before snapshotting', () => {

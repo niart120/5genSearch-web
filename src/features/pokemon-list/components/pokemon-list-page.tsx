@@ -10,6 +10,7 @@ import { hasCurrentEncounterSlots } from '@/lib/encounter-slot-context';
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
@@ -112,12 +113,14 @@ function PokemonListPage(): ReactElement {
 
   // バリデーションメッセージ
   const validationMessages = useMemo(
-    (): Record<PokemonListValidationErrorCode, string> => ({
+    (): Record<PokemonListValidationErrorCode, string | undefined> => ({
       SEEDS_EMPTY: t`Select or enter at least one seed`,
       SEEDS_INVALID: t`One or more seeds are invalid`,
       ENCOUNTER_SLOTS_EMPTY: t`Select a location or Pokémon`,
-      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
-      OFFSET_NEGATIVE: t`Min advance must be ≥ 0`,
+      ADVANCE_RANGE_INVALID: undefined,
+      OFFSET_NEGATIVE: undefined,
+      IV_RANGE_INVALID: undefined,
+      LEVEL_RANGE_INVALID: undefined,
     }),
     [t]
   );
@@ -296,13 +299,7 @@ function PokemonListPage(): ReactElement {
           />
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

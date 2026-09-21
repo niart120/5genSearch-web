@@ -21,6 +21,7 @@ import {
 } from '@/lib/search-filter-context';
 import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { useUiStore } from '@/stores/settings/ui';
+import { isIvFilterRangeValid } from '@/lib/range-validation';
 
 vi.mock('@/wasm/wasm_pkg.js', () => ({ get_species_name: String }));
 const iv = { ...DEFAULT_IV_RANGES, hp: [30, 31] as [number, number], hidden_power_min_power: 65 };
@@ -126,6 +127,41 @@ describe('範囲の入力保持と再適用', () => {
     });
     useMtseedSearchStore.setState({ ...getMtseedSearchInitialState(), ivFilter: iv });
     usePokemonSearchStore.setState(getPokemonSearchInitialState());
+  });
+
+  it.each(cases)('%s: 逆転した条件も任意切り替え・再読み込みで保持する', async (feature) => {
+    const user = userEvent.setup();
+    const mounted = render(
+      <I18nTestWrapper>
+        <Harness feature={feature} />
+      </I18nTestWrapper>
+    );
+    if (feature !== 'mtseed-search') await user.click(screen.getByText('Filter'));
+    const max = screen.getByRole('textbox', { name: 'HP max' });
+    await user.clear(max);
+    await user.type(max, '0');
+    await user.tab();
+    expect(readIv(feature)?.hp).toEqual([30, 0]);
+    expect(isIvFilterRangeValid(normalizeIvFilter(readIv(feature)))).toBe(false);
+    await user.click(screen.getByRole('checkbox', { name: 'HP unknown' }));
+    expect(isIvFilterRangeValid(normalizeIvFilter(readIv(feature)))).toBe(true);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    mounted.unmount();
+    await act(() => stores[feature].persist.rehydrate());
+    render(
+      <I18nTestWrapper>
+        <Harness feature={feature} />
+      </I18nTestWrapper>
+    );
+    if (feature !== 'mtseed-search') await user.click(screen.getByText('Filter'));
+    await user.click(screen.getByRole('checkbox', { name: 'HP unknown' }));
+    expect(screen.getByRole('textbox', { name: 'HP min' })).toHaveValue('30');
+    expect(screen.getByRole('textbox', { name: 'HP max' })).toHaveValue('0');
+    expect(screen.getByRole('alert')).toBeVisible();
+    if (feature !== 'mtseed-search') {
+      await user.click(screen.getByRole('button', { name: 'Reset filter' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    }
   });
 
   it.each(cases)(
