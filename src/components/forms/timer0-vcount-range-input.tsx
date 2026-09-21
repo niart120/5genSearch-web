@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { parseHexByte, parseHexWord, toHex } from '@/lib/hex';
 import { handleFocusSelectAll } from '@/components/forms/input-helpers';
 import type { Timer0VCountRange } from '@/wasm/wasm_pkg';
+import { isIntegerRangeValid } from '@/lib/range-validation';
+import { RangeError } from './range-error';
 
 const filterHex = (raw: string, maxLen: number): string => {
   return raw.replaceAll(/[^0-9a-fA-F]/g, '').slice(0, maxLen);
@@ -22,6 +24,11 @@ interface Timer0VCountRangeInputProps {
 
 function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRangeInputProps) {
   const { t } = useLingui();
+  const errorId = React.useId();
+  const timer0Invalid =
+    !disabled && !isIntegerRangeValid(value.timer0_min, value.timer0_max, 0, 0xff_ff);
+  const vcountInvalid =
+    !disabled && !isIntegerRangeValid(value.vcount_min, value.vcount_max, 0, 0xff);
 
   const [timer0Min, setTimer0Min] = React.useState(() => toHex(value.timer0_min, 4));
   const [timer0Max, setTimer0Max] = React.useState(() => toHex(value.timer0_max, 4));
@@ -81,6 +88,8 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               maxLength={4}
               disabled={disabled}
               aria-label={t`Timer0 min`}
+              aria-invalid={timer0Invalid}
+              aria-describedby={timer0Invalid ? errorId : undefined}
             />
           </div>
           <span className="text-sm text-muted-foreground">–</span>
@@ -98,6 +107,8 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               maxLength={4}
               disabled={disabled}
               aria-label={t`Timer0 max`}
+              aria-invalid={timer0Invalid}
+              aria-describedby={timer0Invalid ? errorId : undefined}
             />
           </div>
         </div>
@@ -121,6 +132,8 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               maxLength={2}
               disabled={disabled}
               aria-label={t`VCount min`}
+              aria-invalid={vcountInvalid}
+              aria-describedby={vcountInvalid ? errorId : undefined}
             />
           </div>
           <span className="text-sm text-muted-foreground">–</span>
@@ -138,10 +151,13 @@ function Timer0VCountRangeInput({ value, onChange, disabled }: Timer0VCountRange
               maxLength={2}
               disabled={disabled}
               aria-label={t`VCount max`}
+              aria-invalid={vcountInvalid}
+              aria-describedby={vcountInvalid ? errorId : undefined}
             />
           </div>
         </div>
       </div>
+      <RangeError id={errorId} invalid={timer0Invalid || vcountInvalid} />
     </div>
   );
 }

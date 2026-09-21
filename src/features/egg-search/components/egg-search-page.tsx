@@ -9,6 +9,7 @@ import { normalizeEggFilter } from '@/lib/search-filter-context';
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
@@ -50,7 +51,10 @@ interface EggSearchRequest {
 
 function EggSearchPage(): ReactElement {
   const { t } = useLingui();
+  // 手動範囲はサイドバーの入力欄で説明する。空範囲・自動設定の不備は一覧に残す。
+  const showStartupRangeSummary = useDsConfigStore((s) => s.timer0Auto || s.ranges.length === 0);
   const language = useUiStore((s) => s.language);
+  const ranges = useDsConfigStore((s) => s.ranges);
 
   // フォーム状態 (Feature Store)
   const dateRange = useEggSearchStore((s) => s.dateRange);
@@ -74,27 +78,34 @@ function EggSearchPage(): ReactElement {
   // バリデーション
   const validation = useMemo(
     () =>
-      validateEggSearchForm({
-        dateRange,
-        timeRange,
-        keySpec,
-        eggParams,
-        genConfig: genConfigPartial,
-        filter: normalizeEggFilter(filter, undefined, eggParams),
-      }),
-    [dateRange, timeRange, keySpec, eggParams, genConfigPartial, filter]
+      validateEggSearchForm(
+        {
+          dateRange,
+          timeRange,
+          keySpec,
+          eggParams,
+          genConfig: genConfigPartial,
+          filter: normalizeEggFilter(filter, undefined, eggParams),
+        },
+        ranges
+      ),
+    [dateRange, timeRange, keySpec, eggParams, genConfigPartial, filter, ranges]
   );
 
   // i18n: バリデーションエラーコード → 翻訳済みメッセージ
   const validationMessages = useMemo(
-    (): Record<EggValidationErrorCode, string> => ({
-      DATE_RANGE_INVALID: t`Start date must be on or before end date`,
-      TIME_RANGE_INVALID: t`Time range is invalid`,
-      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
-      OFFSET_NEGATIVE: t`Min advance must be ≥ 0`,
+    (): Record<EggValidationErrorCode, string | undefined> => ({
+      DATE_RANGE_INVALID: undefined,
+      TIME_RANGE_INVALID: undefined,
+      STARTUP_RANGE_INVALID: showStartupRangeSummary
+        ? t`Set a valid Timer0 / VCount range`
+        : undefined,
+      IV_RANGE_INVALID: undefined,
+      ADVANCE_RANGE_INVALID: undefined,
+      OFFSET_NEGATIVE: undefined,
       IV_OUT_OF_RANGE: t`IVs must be in the range 0 to 31`,
     }),
-    [t]
+    [t, showStartupRangeSummary]
   );
 
   // 詳細ダイアログ
@@ -141,14 +152,17 @@ function EggSearchPage(): ReactElement {
       filter: state.filter,
     });
     const appliedFilter = normalizeEggFilter(form.filter, undefined, form.eggParams);
-    const currentValidation = validateEggSearchForm({
-      dateRange: form.dateRange,
-      timeRange: form.timeRange,
-      keySpec: form.keySpec,
-      eggParams: form.eggParams,
-      genConfig: form.genConfig,
-      filter: appliedFilter,
-    });
+    const currentValidation = validateEggSearchForm(
+      {
+        dateRange: form.dateRange,
+        timeRange: form.timeRange,
+        keySpec: form.keySpec,
+        eggParams: form.eggParams,
+        genConfig: form.genConfig,
+        filter: appliedFilter,
+      },
+      useDsConfigStore.getState().ranges
+    );
     if (!currentValidation.isValid) return;
 
     const currentDsState = useDsConfigStore.getState();
@@ -254,13 +268,7 @@ function EggSearchPage(): ReactElement {
           />
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="text-xs text-destructive space-y-0.5">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

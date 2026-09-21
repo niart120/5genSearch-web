@@ -18,6 +18,8 @@ import { I18nTestWrapper, setupTestI18n } from '@/test/helpers/i18n';
 import { UI_CARD, UI_EGG_CARD, UI_ORIGIN } from '@/test/fixtures/wondercards/ui';
 import { serializeSeedOrigin } from '@/services/seed-origin-serde';
 import { loadWonderCards } from '@/data/wondercards/loader';
+import { DEFAULT_IV_RANGES } from '@/lib/search-filter-context';
+import { useUiStore } from '@/stores/settings/ui';
 
 const state = vi.hoisted(() => ({ execute: vi.fn(), loading: false, results: [] }));
 vi.mock('@/features/wondercard-list/hooks/use-wondercard-list', () => ({
@@ -59,6 +61,7 @@ function renderPage(search: boolean) {
 
 beforeEach(() => {
   setupTestI18n('en');
+  useUiStore.setState({ language: 'en' });
   state.execute.mockReset();
   state.loading = false;
   useSearchResultsStore.getState().clearResults();
@@ -102,6 +105,75 @@ beforeEach(() => {
 
 describe.each([false, true])('配達員画面 search=%s', (search) => {
   const store = search ? useWonderCardSearchStore : useWonderCardListStore;
+  it.each(['mouse', 'touch', 'keyboard'] as const)(
+    '%s: 逆転中は検索せず、修正欄から直接検索して最新の条件を渡す',
+    async (inputMethod) => {
+      store.getState().setInputs({
+        cardId: UI_CARD.id,
+        statMode: 'ivs',
+        filter: {
+          iv: { ...DEFAULT_IV_RANGES, spe: [0, 0], enabledStats: { spe: true } },
+          stats: undefined,
+          natures: undefined,
+          gender: undefined,
+          ability_slot: undefined,
+          shiny: undefined,
+        },
+      });
+      renderPage(search);
+      await waitFor(() => expect(searchButton()).toBeEnabled());
+      const user = userEvent.setup();
+      await user.click(screen.getByText('Filter'));
+      const min = screen.getByRole('textbox', { name: 'Spe min' });
+      const max = screen.getByRole('textbox', { name: 'Spe max' });
+      await user.clear(min);
+      await user.type(min, '31');
+      await user.tab();
+      expect(store.getState().inputs.filter?.iv?.spe).toEqual([31, 0]);
+      expect(searchButton()).toBeDisabled();
+      expect(state.execute).not.toHaveBeenCalled();
+      expect(screen.getAllByText('Min must be less than or equal to max')).toHaveLength(1);
+      expect(screen.queryByText('Enter valid filter values')).not.toBeInTheDocument();
+      await user.clear(max);
+      await user.type(max, '31');
+      if (inputMethod === 'mouse') await user.click(searchButton());
+      else if (inputMethod === 'touch') {
+        await user.pointer([{ keys: '[TouchA>]', target: searchButton() }, { keys: '[/TouchA]' }]);
+      } else {
+        await user.tab();
+        act(() => searchButton().focus());
+        await user.keyboard('{Enter}');
+      }
+      expect(min).toHaveValue('31');
+      expect(max).toHaveValue('31');
+      expect(store.getState().inputs.filter?.iv?.spe).toEqual([31, 31]);
+      expect(state.execute).toHaveBeenCalledOnce();
+      expect(state.execute.mock.lastCall?.[0].settings.filter.iv.spe).toEqual([31, 31]);
+    }
+  );
+  it('IV逆転以外のフィルターエラーは一覧に残す', async () => {
+    store.getState().setInputs({
+      cardId: UI_CARD.id,
+      statMode: 'ivs',
+      filter: {
+        iv: {
+          ...DEFAULT_IV_RANGES,
+          spe: [31, 0],
+          enabledStats: { spe: true },
+          hidden_power_min_power: 71,
+        },
+        stats: undefined,
+        natures: undefined,
+        gender: undefined,
+        ability_slot: undefined,
+        shiny: undefined,
+      },
+    });
+    renderPage(search);
+    await waitFor(() => expect(screen.getByText('Enter valid filter values')).toBeInTheDocument());
+    expect(searchButton()).toBeDisabled();
+  });
+
   it('未選択では実行を無効にし、検索可能な選択欄からカードを選ぶと有効にする', async () => {
     renderPage(search);
     expect(searchButton()).toBeDisabled();

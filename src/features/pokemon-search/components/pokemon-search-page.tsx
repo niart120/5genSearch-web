@@ -3,6 +3,7 @@ import { hasCurrentEncounterSlots } from '@/lib/encounter-slot-context';
 import { useState, useMemo, useCallback } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
@@ -36,6 +37,8 @@ import { createPokemonSearchColumns, POKEMON_SEARCH_SORTING } from './pokemon-se
 
 export function PokemonSearchPage() {
   const { t } = useLingui();
+  // 手動範囲はサイドバーの入力欄で説明する。空範囲・自動設定の不備は一覧に残す。
+  const showStartupRangeSummary = useDsConfigStore((s) => s.timer0Auto || s.ranges.length === 0);
   const language = useUiStore((state) => state.language);
   const { config: dsConfig, ranges } = useDsConfigReadonly();
   const tid = useTrainerStore((state) => state.tid);
@@ -57,14 +60,16 @@ export function PokemonSearchPage() {
     { tid, sid },
     ranges
   );
-  const messages: Record<PokemonSearchValidationCode, string> = {
-    DATE_RANGE_INVALID: t`Enter a valid date range within 2000–2099`,
-    TIME_RANGE_INVALID: t`Time range is invalid`,
-    STARTUP_RANGE_INVALID: t`Set a valid Timer0 / VCount range`,
-    ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
+  const messages: Record<PokemonSearchValidationCode, string | undefined> = {
+    DATE_RANGE_INVALID: undefined,
+    TIME_RANGE_INVALID: undefined,
+    STARTUP_RANGE_INVALID: showStartupRangeSummary
+      ? t`Set a valid Timer0 / VCount range`
+      : undefined,
+    ADVANCE_RANGE_INVALID: undefined,
     ENCOUNTER_SLOTS_EMPTY: t`Select a location or Pokémon`,
     ENCOUNTER_UNSUPPORTED: t`This encounter type is not supported by Pokémon search`,
-    LEVEL_RANGE_INVALID: t`Level range must be within 1–100`,
+    LEVEL_RANGE_INVALID: undefined,
     TID_REQUIRED: t`Set TID to search for shiny Pokémon`,
     SID_REQUIRED: t`Set SID to search for shiny Pokémon`,
   };
@@ -187,13 +192,7 @@ export function PokemonSearchPage() {
               disabled={isLoading}
             />
           </SearchModeTabs>
-          {validation.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.map((code) => (
-                <li key={code}>{messages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation} messages={messages} />
         </FeaturePageLayout.Controls>
         <FeaturePageLayout.Results>
           <div className="flex items-center justify-between gap-2">

@@ -8,6 +8,7 @@ import { normalizeEggFilter } from '@/lib/search-filter-context';
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
 import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
@@ -195,11 +196,12 @@ function EggListPage(): ReactElement {
   }, [createGenerateRequest, generate]);
 
   const validationMessages = useMemo(
-    (): Record<EggListValidationErrorCode, string> => ({
+    (): Record<EggListValidationErrorCode, string | undefined> => ({
       SEEDS_EMPTY: t`No seeds specified`,
-      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
-      OFFSET_NEGATIVE: t`Offset must be non-negative`,
+      ADVANCE_RANGE_INVALID: undefined,
+      OFFSET_NEGATIVE: undefined,
       IV_OUT_OF_RANGE: t`Parent IV out of range`,
+      IV_RANGE_INVALID: undefined,
     }),
     [t]
   );
@@ -278,13 +280,7 @@ function EggListPage(): ReactElement {
           />
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

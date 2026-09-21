@@ -13,6 +13,7 @@
 import { useState, useMemo, useCallback, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { SearchContextForm } from '@/components/forms/search-context-form';
 import { SearchControls } from '@/components/forms/search-controls';
 import { SearchConfirmationDialog } from '@/components/forms/search-confirmation-dialog';
@@ -52,7 +53,10 @@ function toGameStartConfig(mode: SaveMode): GameStartConfig {
 
 function TidAdjustPage(): ReactElement {
   const { t } = useLingui();
+  // 手動範囲はサイドバーの入力欄で説明する。空範囲・自動設定の不備は一覧に残す。
+  const showStartupRangeSummary = useDsConfigStore((s) => s.timer0Auto || s.ranges.length === 0);
   const dsConfig = useDsConfigStore((s) => s.config);
+  const ranges = useDsConfigStore((s) => s.ranges);
   const isBw2 = useDsConfigStore(
     (s) => s.config.version === 'Black2' || s.config.version === 'White2'
   );
@@ -87,19 +91,22 @@ function TidAdjustPage(): ReactElement {
 
   // バリデーション
   const validation = useMemo(
-    () => validateTidAdjustForm({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw }),
-    [dateRange, timeRange, keySpec, tid, sid, shinyPidRaw]
+    () => validateTidAdjustForm({ dateRange, timeRange, keySpec, tid, sid, shinyPidRaw }, ranges),
+    [dateRange, timeRange, keySpec, tid, sid, shinyPidRaw, ranges]
   );
 
   const validationMessages = useMemo(
-    (): Record<TidAdjustValidationErrorCode, string> => ({
-      DATE_RANGE_INVALID: t`Start date must be on or before end date`,
-      TIME_RANGE_INVALID: t`Time range is invalid`,
+    (): Record<TidAdjustValidationErrorCode, string | undefined> => ({
+      DATE_RANGE_INVALID: undefined,
+      TIME_RANGE_INVALID: undefined,
+      STARTUP_RANGE_INVALID: showStartupRangeSummary
+        ? t`Set a valid Timer0 / VCount range`
+        : undefined,
       TID_OUT_OF_RANGE: t`TID must be between 0 and 65535`,
       SID_OUT_OF_RANGE: t`SID must be between 0 and 65535`,
       SHINY_PID_INVALID: t`Shiny PID must be a hex value (0 to FFFFFFFF)`,
     }),
-    [t]
+    [t, showStartupRangeSummary]
   );
 
   // 列定義
@@ -135,14 +142,17 @@ function TidAdjustPage(): ReactElement {
       shinyPidRaw: state.shinyPidRaw,
       saveMode: state.saveMode,
     });
-    const currentValidation = validateTidAdjustForm({
-      dateRange: form.dateRange,
-      timeRange: form.timeRange,
-      keySpec: form.keySpec,
-      tid: form.tid,
-      sid: form.sid,
-      shinyPidRaw: form.shinyPidRaw,
-    });
+    const currentValidation = validateTidAdjustForm(
+      {
+        dateRange: form.dateRange,
+        timeRange: form.timeRange,
+        keySpec: form.keySpec,
+        tid: form.tid,
+        sid: form.sid,
+        shinyPidRaw: form.shinyPidRaw,
+      },
+      useDsConfigStore.getState().ranges
+    );
     if (!currentValidation.isValid) return;
 
     const currentDsState = useDsConfigStore.getState();
@@ -250,13 +260,7 @@ function TidAdjustPage(): ReactElement {
           />
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

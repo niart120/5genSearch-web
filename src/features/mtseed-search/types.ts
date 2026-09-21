@@ -3,6 +3,7 @@
  */
 
 import type { IvFilter, MtseedSearchContext } from '../../wasm/wasm_pkg.js';
+import { isIvFilterRangeValid } from '@/lib/range-validation';
 
 /** MT Seed IV 検索フォーム状態 */
 export interface MtseedIvSearchFormState {
@@ -30,14 +31,6 @@ export function toMtseedSearchContext(form: MtseedIvSearchFormState): MtseedSear
 }
 
 /**
- * IV 範囲の妥当性チェック (各ステータスの min ≤ max)
- */
-function isIvFilterValid(filter: IvFilter): boolean {
-  const stats = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
-  return stats.every((s) => filter[s][0] <= filter[s][1]);
-}
-
-/**
  * MT Seed IV 検索フォームのバリデーション
  */
 export function validateMtseedIvSearchForm(
@@ -45,7 +38,7 @@ export function validateMtseedIvSearchForm(
 ): MtseedIvValidationResult {
   const errors: MtseedIvValidationErrorCode[] = [];
 
-  if (!isIvFilterValid(form.ivFilter)) {
+  if (!isIvFilterRangeValid(form.ivFilter)) {
     errors.push('IV_RANGE_INVALID');
   }
 

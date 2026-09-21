@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useSearch, useSearchConfig } from '@/hooks/use-search';
+import { useSearchTaskBuilder } from '@/hooks/use-search-task-builder';
 import { createMtseedIvSearchTasks } from '@/services/search-tasks';
 import { flattenBatchResults, isMtseedResult } from '@/services/batch-utils';
 import { useMtseedSearchStore } from '../store';
@@ -31,6 +32,7 @@ export function useMtseedSearch(): UseMtseedSearchReturn {
   const useGpu = useMtseedSearchStore((s) => s.useGpu);
   const config = useSearchConfig(useGpu);
   const search = useSearch(config);
+  const { buildTasks, error: requestError } = useSearchTaskBuilder();
 
   // Store actions
   const appendResults = useMtseedSearchStore((s) => s.appendResults);
@@ -44,22 +46,21 @@ export function useMtseedSearch(): UseMtseedSearchReturn {
 
   const startSearch = useCallback(
     (context: MtseedSearchContext) => {
+      const tasks = buildTasks(() => {
+        if (useGpu) {
+          const gpuTask: GpuMtseedIvSearchTask = { kind: 'gpu-mtseed-iv', context };
+          return [gpuTask];
+        }
+        const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
+        return createMtseedIvSearchTasks(context, workerCount);
+      });
+      if (!tasks) return;
       searchActiveRef.current = true;
       prevLengthRef.current = 0;
       clearResults();
-      if (useGpu) {
-        const gpuTask: GpuMtseedIvSearchTask = {
-          kind: 'gpu-mtseed-iv',
-          context,
-        };
-        search.start([gpuTask]);
-      } else {
-        const workerCount = config.workerCount ?? navigator.hardwareConcurrency ?? 4;
-        const tasks = createMtseedIvSearchTasks(context, workerCount);
-        search.start(tasks);
-      }
+      search.start(tasks);
     },
-    [useGpu, config.workerCount, search, clearResults]
+    [useGpu, config.workerCount, search, clearResults, buildTasks]
   );
 
   // 結果差分同期 — 新しいバッチのみ処理して Store に追記
@@ -88,7 +89,7 @@ export function useMtseedSearch(): UseMtseedSearchReturn {
     isInitialized: search.isInitialized,
     progress: search.progress,
     results: storedResults,
-    error: search.error,
+    error: requestError ?? search.error,
     startSearch,
     cancel: search.cancel,
   };

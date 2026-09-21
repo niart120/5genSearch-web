@@ -8,6 +8,7 @@ import type {
   LeadAbilityEffect,
 } from '../../wasm/wasm_pkg.js';
 import { validateGenConfig } from '@/lib/validation';
+import { isIntegerRangeValid, isIvFilterRangeValid } from '@/lib/range-validation';
 import type { EncounterSpeciesOption } from '@/data/encounters/helpers';
 import type { SeedInputMode } from '@/components/forms/seed-input-section';
 
@@ -52,6 +53,8 @@ export type PokemonListValidationErrorCode =
   | 'ENCOUNTER_SLOTS_EMPTY'
   | 'ADVANCE_RANGE_INVALID'
   | 'OFFSET_NEGATIVE'
+  | 'IV_RANGE_INVALID'
+  | 'LEVEL_RANGE_INVALID'
   | 'SEEDS_INVALID';
 
 /** バリデーション結果 */
@@ -73,6 +76,9 @@ export function validatePokemonListForm(
     errors.push('ENCOUNTER_SLOTS_EMPTY');
   }
   errors.push(...validateGenConfig(form.genConfig));
+  if (!isIvFilterRangeValid(form.filter?.iv)) errors.push('IV_RANGE_INVALID');
+  const level = form.filter?.level_range;
+  if (level && !isIntegerRangeValid(level[0], level[1], 1, 100)) errors.push('LEVEL_RANGE_INVALID');
 
   return { errors, isValid: errors.length === 0 };
 }

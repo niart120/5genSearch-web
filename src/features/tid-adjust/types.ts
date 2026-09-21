@@ -3,6 +3,12 @@
  */
 
 import type { DateRangeParams, TimeRangeParams, KeySpec, Pid } from '../../wasm/wasm_pkg.js';
+import {
+  isDateRangeValid,
+  isTimeRangeValid,
+  areTimer0VCountRangesValid,
+} from '@/lib/range-validation';
+import type { Timer0VCountRange } from '@/wasm/wasm_pkg';
 
 /** 16 進数パース用正規表現 — module-level にホイストして毎回の再生成を回避 */
 const HEX_PREFIX_RE = /^0[xX]/;
@@ -12,6 +18,7 @@ const HEX_DIGITS_RE = /^[\da-fA-F]+$/;
 export type TidAdjustValidationErrorCode =
   | 'DATE_RANGE_INVALID'
   | 'TIME_RANGE_INVALID'
+  | 'STARTUP_RANGE_INVALID'
   | 'TID_OUT_OF_RANGE'
   | 'SID_OUT_OF_RANGE'
   | 'SHINY_PID_INVALID';
@@ -75,39 +82,14 @@ function parseIdField(raw: string): number | undefined {
 }
 
 /**
- * 日付範囲の妥当性チェック (start ≤ end)
- */
-function isDateRangeValid(range: DateRangeParams): boolean {
-  const start = range.start_year * 10_000 + range.start_month * 100 + range.start_day;
-  const end = range.end_year * 10_000 + range.end_month * 100 + range.end_day;
-  return start <= end;
-}
-
-/**
- * 時刻範囲の妥当性チェック
- */
-function isTimeRangeValid(range: TimeRangeParams): boolean {
-  return (
-    range.hour_start >= 0 &&
-    range.hour_start <= 23 &&
-    range.hour_end >= 0 &&
-    range.hour_end <= 23 &&
-    range.minute_start >= 0 &&
-    range.minute_start <= 59 &&
-    range.minute_end >= 0 &&
-    range.minute_end <= 59 &&
-    range.second_start >= 0 &&
-    range.second_start <= 59 &&
-    range.second_end >= 0 &&
-    range.second_end <= 59
-  );
-}
-
-/**
  * ID 調整フォームのバリデーション
  */
-export function validateTidAdjustForm(form: TidAdjustFormState): TidAdjustValidationResult {
+export function validateTidAdjustForm(
+  form: TidAdjustFormState,
+  ranges?: Timer0VCountRange[]
+): TidAdjustValidationResult {
   const errors: TidAdjustValidationErrorCode[] = [];
+  if (ranges && !areTimer0VCountRangesValid(ranges)) errors.push('STARTUP_RANGE_INVALID');
 
   if (!isDateRangeValid(form.dateRange)) {
     errors.push('DATE_RANGE_INVALID');

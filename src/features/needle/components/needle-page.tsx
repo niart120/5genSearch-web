@@ -9,6 +9,7 @@
 import { useMemo, useCallback, useEffect, type ReactElement } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { FeaturePageLayout } from '@/components/layout/feature-page-layout';
+import { ValidationSummary } from '@/components/forms/validation-summary';
 import { DataTable, ADVANCE_ASC_SORTING } from '@/components/data-display';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -104,12 +105,12 @@ function NeedlePage(): ReactElement {
   );
 
   const validationMessages = useMemo(
-    (): Record<NeedleValidationErrorCode, string> => ({
+    (): Record<NeedleValidationErrorCode, string | undefined> => ({
       SEED_EMPTY: t`Seed is not set`,
       PATTERN_EMPTY: t`Needle pattern is empty`,
       PATTERN_INVALID: t`Needle pattern must be digits 0-7`,
-      OFFSET_NEGATIVE: t`Min advance must be ≥ 0`,
-      ADVANCE_RANGE_INVALID: t`Min advance must be ≤ max advance`,
+      OFFSET_NEGATIVE: undefined,
+      ADVANCE_RANGE_INVALID: undefined,
     }),
     [t]
   );
@@ -210,13 +211,7 @@ function NeedlePage(): ReactElement {
           </section>
 
           {/* バリデーションエラー */}
-          {validation.errors.length > 0 ? (
-            <ul className="space-y-0.5 text-xs text-destructive">
-              {validation.errors.map((code) => (
-                <li key={code}>{validationMessages[code]}</li>
-              ))}
-            </ul>
-          ) : undefined}
+          <ValidationSummary errors={validation.errors} messages={validationMessages} />
         </FeaturePageLayout.Controls>
 
         <FeaturePageLayout.Results>

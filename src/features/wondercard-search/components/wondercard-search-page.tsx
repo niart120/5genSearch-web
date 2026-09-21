@@ -39,6 +39,8 @@ import {
 
 export function WonderCardSearchPage() {
   const { t } = useLingui();
+  // 手動範囲はサイドバーの入力欄で説明する。空範囲・自動設定の不備は一覧に残す。
+  const showStartupRangeSummary = useDsConfigStore((s) => s.timer0Auto || s.ranges.length === 0);
   const language = useUiStore((s) => s.language);
   const inputs = useWonderCardSearchStore((s) => s.inputs);
   const storedSelection = useWonderCardSearchStore((s) => s.selection);
@@ -55,12 +57,14 @@ export function WonderCardSearchPage() {
   const ranges = useDsConfigStore((s) => s.ranges);
   const { setDateRange, setTimeRange, setKeySpec } = useWonderCardSearchStore.getState();
   const rangeCodes = validateWonderCardSearchRange({ dateRange, timeRange, keySpec }, ranges);
-  const messages: Record<WonderCardSearchValidationCode, string> = {
-    DATE_RANGE_INVALID: t`Enter a valid date range within 2000–2099`,
-    TIME_RANGE_INVALID: t`Time range is invalid`,
-    STARTUP_RANGE_INVALID: t`Set a valid Timer0 / VCount range`,
+  const messages: Record<WonderCardSearchValidationCode, string | undefined> = {
+    DATE_RANGE_INVALID: undefined,
+    TIME_RANGE_INVALID: undefined,
+    STARTUP_RANGE_INVALID: showStartupRangeSummary
+      ? t`Set a valid Timer0 / VCount range`
+      : undefined,
   };
-  const errors = [...form.errors, ...rangeCodes.map((code) => messages[code])];
+  const errors = [...form.errors, ...rangeCodes.flatMap((code) => messages[code] ?? [])];
   const isValid = form.isValid && rangeCodes.length === 0;
   const [selectedRaw, setSelectedRaw] = useState<GeneratedWonderCardData>();
   const [detailOpen, setDetailOpen] = useState(false);

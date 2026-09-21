@@ -2,7 +2,8 @@ import type { WonderCardEntry, WonderCardLanguage } from '@/data/wondercards/sch
 import { getWonderCardLanguage } from '@/data/wondercards/loader';
 import { toWonderCardParams } from '@/data/wondercards/converter';
 import type { WonderCardFilterInput } from '@/lib/search-filter-context';
-import { IV_STAT_KEYS, type StatDisplayMode } from '@/lib/game-data-names';
+import type { StatDisplayMode } from '@/lib/game-data-names';
+import { isIvFilterRangeValid } from '@/lib/range-validation';
 import { validateGenConfig } from '@/lib/validation';
 import type {
   CoreDataFilter,
@@ -100,6 +101,7 @@ export interface WonderCardListRequest {
 export type WonderCardValidationCode =
   | 'ADVANCE_RANGE_INVALID'
   | 'OFFSET_NEGATIVE'
+  | 'IV_RANGE_INVALID'
   | 'FILTER_INVALID';
 
 export function validateWonderCardForm(
@@ -115,12 +117,8 @@ export function validateWonderCardForm(
   )
     errors.push('ADVANCE_RANGE_INVALID');
   const iv = filter?.iv;
+  if (!isIvFilterRangeValid(iv)) errors.push('IV_RANGE_INVALID');
   if (
-    (iv &&
-      IV_STAT_KEYS.some((key) => {
-        const [min, max] = iv[key];
-        return !Number.isInteger(min) || !Number.isInteger(max) || min < 0 || min > max || max > 31;
-      })) ||
     (iv?.hidden_power_min_power !== undefined &&
       (!Number.isInteger(iv.hidden_power_min_power) ||
         iv.hidden_power_min_power < 30 ||

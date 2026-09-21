@@ -44,6 +44,84 @@ describe('DateRangePicker', () => {
     expect(endYear).toHaveValue('2099');
   });
 
+  it.each(['start', 'end', 'both'] as const)(
+    '%s の不正な日付だけを示し、前後関係は表示しない',
+    (side) => {
+      renderDateRange({
+        value: {
+          start_year: 2025,
+          start_month: 2,
+          start_day: side === 'end' ? 28 : 29,
+          end_year: 2024,
+          end_month: 2,
+          end_day: side === 'start' ? 29 : 30,
+        },
+      });
+      expect(screen.getAllByText('Enter a valid date')).toHaveLength(side === 'both' ? 2 : 1);
+      expect(
+        screen.queryByText('Start date must be on or before end date')
+      ).not.toBeInTheDocument();
+      for (const endpoint of ['start', 'end'] as const) {
+        const invalid = side === endpoint || side === 'both';
+        const input = screen.getByRole('textbox', { name: `date-${endpoint} day` });
+        expect(input).toHaveAttribute('aria-invalid', String(invalid));
+        if (invalid) expect(input).toHaveAccessibleDescription('Enter a valid date');
+        else expect(input).not.toHaveAttribute('aria-describedby');
+      }
+    }
+  );
+
+  it('両端が有効な逆転では前後関係だけを表示する', () => {
+    renderDateRange({ value: { ...DEFAULT_VALUE, start_year: 2025, end_year: 2024 } });
+    expect(screen.getAllByText('Start date must be on or before end date')).toHaveLength(1);
+    expect(screen.queryByText('Enter a valid date')).not.toBeInTheDocument();
+    for (const side of ['start', 'end']) {
+      expect(screen.getByRole('textbox', { name: `date-${side} day` })).toHaveAccessibleDescription(
+        'Start date must be on or before end date'
+      );
+    }
+  });
+
+  it('日付の修正で不正日付→逆転→エラーなしへ切り替わる', () => {
+    const onChange = vi.fn();
+    const value = {
+      start_year: 2025,
+      start_month: 2,
+      start_day: 29,
+      end_year: 2025,
+      end_month: 1,
+      end_day: 1,
+    };
+    const { rerender } = renderDateRange({ value, onChange });
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter a valid date');
+    rerender(
+      <I18nTestWrapper>
+        <DateRangePicker value={{ ...value, start_day: 28 }} onChange={onChange} />
+      </I18nTestWrapper>
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Start date must be on or before end date');
+    rerender(
+      <I18nTestWrapper>
+        <DateRangePicker value={{ ...value, start_day: 28, end_month: 3 }} onChange={onChange} />
+      </I18nTestWrapper>
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it.each([true, false])('無効な入力欄はエラーを表示しない (不正日付=%s)', (invalidDate) => {
+    renderDateRange({
+      disabled: true,
+      value: {
+        ...DEFAULT_VALUE,
+        start_year: 2025,
+        start_month: 2,
+        start_day: invalidDate ? 29 : 28,
+        end_year: 2024,
+      },
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('年が範囲外のときクランプされる (1999 → 2000)', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
