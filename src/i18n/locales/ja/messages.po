@@ -53,6 +53,11 @@ msgstr "特性スロット"
 msgid "About"
 msgstr "アプリについて"
 
+#. placeholder {0}: estimatedCount.toLocaleString()
+#: src/components/forms/search-confirmation-dialog.tsx:45
+msgid "About {0} results are expected. Processing and displaying them may take time and make the browser less responsive. Run anyway?"
+msgstr "推定結果件数は約{0}件です。処理や結果の表示に時間がかかり、ブラウザの動作が重くなる場合があります。このまま実行しますか？"
+
 #: src/components/data-display/rng-tooltips.tsx:30
 msgid "About advances"
 msgstr "消費数の説明"
@@ -195,10 +200,6 @@ msgstr "ふくがん"
 #: src/components/forms/egg-params-form.tsx:387
 msgid "Consider NPC"
 msgstr "NPC消費考慮"
-
-#: src/components/forms/search-confirmation-dialog.tsx:61
-msgid "Continue search"
-msgstr "検索を続行"
 
 #: src/hooks/use-export.ts:131
 msgid "Copied to clipboard"
@@ -436,11 +437,6 @@ msgstr "レポートを書き始めたときの針の向きを入力します。
 msgid "Enter valid filter values"
 msgstr "有効なフィルター条件を入力してください"
 
-#. placeholder {0}: estimatedCount.toLocaleString()
-#: src/components/forms/search-confirmation-dialog.tsx:45
-msgid "Estimated results: {0}. This may cause high memory usage or slow rendering. Do you want to continue?"
-msgstr "推定結果件数: {0}。メモリ使用量の增大や描画が遅くなる可能性があります。続行しますか？"
-
 #: src/components/forms/egg-params-form.tsx:292
 msgid "Everstone"
 msgstr "かわらずのいし"
@@ -571,10 +567,6 @@ msgstr "キー"
 #: src/features/wondercard-search/components/wondercard-search-columns.tsx:66
 msgid "Key input"
 msgstr "キー入力"
-
-#: src/components/forms/search-confirmation-dialog.tsx:42
-msgid "Large number of results expected"
-msgstr "多数の結果が予想されます"
 
 #: src/components/forms/seed-origin-table.tsx:101
 #: src/features/datetime-search/components/result-detail-dialog.tsx:101
@@ -999,6 +991,10 @@ msgstr "検索結果"
 msgid "Roamer"
 msgstr "徘徊ポケモン"
 
+#: src/components/forms/search-confirmation-dialog.tsx:61
+msgid "Run"
+msgstr "実行"
+
 #: src/features/ds-config/components/profile-name-dialog.tsx:90
 #: src/features/ds-config/components/profile-selector.tsx:168
 #: src/features/ds-config/components/profile-selector.tsx:169
@@ -1383,6 +1379,10 @@ msgstr "バージョン"
 #: src/components/forms/held-item-slot-select.tsx:35
 msgid "Very rare (1%)"
 msgstr "ごくまれに (1%)"
+
+#: src/components/forms/search-confirmation-dialog.tsx:42
+msgid "Warning"
+msgstr "警告"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64

@@ -39,12 +39,12 @@ function SearchConfirmationDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            <Trans>Large number of results expected</Trans>
+            <Trans>Warning</Trans>
           </AlertDialogTitle>
           <AlertDialogDescription>
             <Trans>
-              Estimated results: {estimatedCount.toLocaleString()}. This may cause high memory usage
-              or slow rendering. Do you want to continue?
+              About {estimatedCount.toLocaleString()} results are expected. Processing and
+              displaying them may take time and make the browser less responsive. Run anyway?
             </Trans>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -58,7 +58,7 @@ function SearchConfirmationDialog({
               onConfirm();
             }}
           >
-            <Trans>Continue search</Trans>
+            <Trans>Run</Trans>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

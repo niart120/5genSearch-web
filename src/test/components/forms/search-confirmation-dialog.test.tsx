@@ -37,13 +37,18 @@ describe('SearchConfirmationDialog', () => {
     expect(screen.getByText(/100,000/)).toBeDefined();
   });
 
+  it('警告タイトルが表示される', () => {
+    renderDialog();
+    expect(screen.getByRole('heading', { name: 'Warning' })).toBeDefined();
+  });
+
   it('続行ボタンクリック時に onConfirm が呼ばれる', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
     renderDialog({ onConfirm });
 
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    await user.click(continueButton);
+    const runButton = screen.getByRole('button', { name: 'Run' });
+    await user.click(runButton);
 
     expect(onConfirm).toHaveBeenCalledOnce();
   });

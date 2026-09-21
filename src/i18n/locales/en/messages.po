@@ -53,6 +53,11 @@ msgstr "Ability slot"
 msgid "About"
 msgstr "About"
 
+#. placeholder {0}: estimatedCount.toLocaleString()
+#: src/components/forms/search-confirmation-dialog.tsx:45
+msgid "About {0} results are expected. Processing and displaying them may take time and make the browser less responsive. Run anyway?"
+msgstr "About {0} results are expected. Processing and displaying them may take time and make the browser less responsive. Run anyway?"
+
 #: src/components/data-display/rng-tooltips.tsx:30
 msgid "About advances"
 msgstr "About advances"
@@ -195,10 +200,6 @@ msgstr "Compound Eyes"
 #: src/components/forms/egg-params-form.tsx:387
 msgid "Consider NPC"
 msgstr "Consider NPC"
-
-#: src/components/forms/search-confirmation-dialog.tsx:61
-msgid "Continue search"
-msgstr "Continue search"
 
 #: src/hooks/use-export.ts:131
 msgid "Copied to clipboard"
@@ -436,11 +437,6 @@ msgstr "Enter the initial needle direction for each save. Directions are numbere
 msgid "Enter valid filter values"
 msgstr "Enter valid filter values"
 
-#. placeholder {0}: estimatedCount.toLocaleString()
-#: src/components/forms/search-confirmation-dialog.tsx:45
-msgid "Estimated results: {0}. This may cause high memory usage or slow rendering. Do you want to continue?"
-msgstr "Estimated results: {0}. This may cause high memory usage or slow rendering. Do you want to continue?"
-
 #: src/components/forms/egg-params-form.tsx:292
 msgid "Everstone"
 msgstr "Everstone"
@@ -571,10 +567,6 @@ msgstr "Key"
 #: src/features/wondercard-search/components/wondercard-search-columns.tsx:66
 msgid "Key input"
 msgstr "Key input"
-
-#: src/components/forms/search-confirmation-dialog.tsx:42
-msgid "Large number of results expected"
-msgstr "Large number of results expected"
 
 #: src/components/forms/seed-origin-table.tsx:101
 #: src/features/datetime-search/components/result-detail-dialog.tsx:101
@@ -999,6 +991,10 @@ msgstr "Results"
 msgid "Roamer"
 msgstr "Roamer"
 
+#: src/components/forms/search-confirmation-dialog.tsx:61
+msgid "Run"
+msgstr "Run"
+
 #: src/features/ds-config/components/profile-name-dialog.tsx:90
 #: src/features/ds-config/components/profile-selector.tsx:168
 #: src/features/ds-config/components/profile-selector.tsx:169
@@ -1383,6 +1379,10 @@ msgstr "Version"
 #: src/components/forms/held-item-slot-select.tsx:35
 msgid "Very rare (1%)"
 msgstr "Very rare (1%)"
+
+#: src/components/forms/search-confirmation-dialog.tsx:42
+msgid "Warning"
+msgstr "Warning"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
