@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getDateRangeErrors,
   isDateRangeValid,
   isIntegerRangeValid,
   isIvFilterRangeValid,
@@ -74,6 +75,47 @@ function validateEveryDatetimeScreen(
 }
 
 describe('共通範囲検証', () => {
+  it.each([
+    {
+      startDay: 29,
+      endDay: 28,
+      expected: { startInvalid: true, endInvalid: false, reversed: false },
+    },
+    {
+      startDay: 28,
+      endDay: 29,
+      expected: { startInvalid: false, endInvalid: true, reversed: false },
+    },
+    {
+      startDay: 30,
+      endDay: 29,
+      expected: { startInvalid: true, endInvalid: true, reversed: false },
+    },
+    {
+      startDay: 28,
+      endDay: 27,
+      expected: { startInvalid: false, endInvalid: false, reversed: true },
+    },
+    {
+      startDay: 28,
+      endDay: 28,
+      expected: { startInvalid: false, endInvalid: false, reversed: false },
+    },
+  ])(
+    '2月 $startDay 日～$endDay 日の理由と全画面の検索可否が一致する',
+    ({ startDay, endDay, expected }) => {
+      const range = searchRange();
+      range.dateRange.start_day = startDay;
+      range.dateRange.end_day = endDay;
+      expect(getDateRangeErrors(range.dateRange)).toEqual(expected);
+      const invalid = expected.startInvalid || expected.endInvalid || expected.reversed;
+      expect(isDateRangeValid(range.dateRange)).toBe(!invalid);
+      expect(
+        validateEveryDatetimeScreen(range).map((errors) => errors.includes('DATE_RANGE_INVALID'))
+      ).toEqual(Array.from({ length: 5 }, () => invalid));
+    }
+  );
+
   it.each(['date', 'hour', 'minute', 'second'] as const)(
     '%s: 全日時検索画面で不正な範囲を拒否する',
     (field) => {

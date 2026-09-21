@@ -211,11 +211,11 @@ msgstr "Cancel"
 msgid "Category"
 msgstr "Category"
 
-#: src/features/wondercard-search/components/wondercard-search-page.tsx:212
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:214
 msgid "Check in Deliveryman list"
 msgstr "Check in Deliveryman list"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:234
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:236
 msgid "Check in Pokémon list"
 msgstr "Check in Pokémon list"
 
@@ -475,11 +475,11 @@ msgstr "Encounter settings"
 msgid "Encounter type"
 msgstr "Encounter type"
 
-#: src/components/forms/date-range-picker.tsx:145
+#: src/components/forms/date-range-picker.tsx:155
 msgid "End date"
 msgstr "End date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:112
+#: src/features/datetime-search/components/datetime-search-page.tsx:114
 msgid "Enter a hex value in the range 0 to FFFFFFFF"
 msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 
@@ -487,16 +487,21 @@ msgstr "Enter a hex value in the range 0 to FFFFFFFF"
 msgid "Enter a profile name."
 msgstr "Enter a profile name."
 
+#: src/components/forms/date-range-picker.tsx:146
+#: src/components/forms/date-range-picker.tsx:173
+msgid "Enter a valid date"
+msgstr "Enter a valid date"
+
 #: src/components/forms/date-range-picker.tsx:164
-msgid "Enter a valid date range with the start on or before the end"
-msgstr "Enter a valid date range with the start on or before the end"
+#~ msgid "Enter a valid date range with the start on or before the end"
+#~ msgstr "Enter a valid date range with the start on or before the end"
 
 #: src/features/pokemon-search/components/pokemon-search-page.tsx:61
 #: src/features/wondercard-search/components/wondercard-search-page.tsx:59
 #~ msgid "Enter a valid date range within 2000–2099"
 #~ msgstr "Enter a valid date range within 2000–2099"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:103
+#: src/features/datetime-search/components/datetime-search-page.tsx:105
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
@@ -666,7 +671,7 @@ msgstr "Item only"
 #~ msgid "IV Range"
 #~ msgstr "IV Range"
 
-#: src/features/egg-search/components/egg-search-page.tsx:104
+#: src/features/egg-search/components/egg-search-page.tsx:106
 msgid "IVs must be in the range 0 to 31"
 msgstr "IVs must be in the range 0 to 31"
 
@@ -806,7 +811,7 @@ msgstr "Max advance"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:71
 #: src/features/ds-config/components/game-start-config-form.tsx:82
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:244
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:246
 msgid "Memory Link"
 msgstr "Memory Link"
 
@@ -882,12 +887,12 @@ msgstr "MT Advances"
 msgid "MT Advances must be 0 or greater"
 msgstr "MT Advances must be 0 or greater"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:255
+#: src/features/datetime-search/components/datetime-search-page.tsx:257
 #: src/features/mtseed-search/components/mtseed-result-columns.tsx:17
 msgid "MT Seed"
 msgstr "MT Seed"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:104
+#: src/features/datetime-search/components/datetime-search-page.tsx:106
 msgid "MT Seed must be in the range 0 to FFFFFFFF"
 msgstr "MT Seed must be in the range 0 to FFFFFFFF"
 
@@ -953,7 +958,7 @@ msgstr "No profile"
 #: src/components/data-display/empty-state.tsx:11
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:202
 #: src/features/needle/components/needle-page.tsx:226
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:275
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:277
 msgid "No results"
 msgstr "No results"
 
@@ -963,10 +968,10 @@ msgstr "No results"
 msgid "No results found. Configure parameters and start generating."
 msgstr "No results found. Configure parameters and start generating."
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:301
-#: src/features/egg-search/components/egg-search-page.tsx:283
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:219
-#: src/features/wondercard-search/components/wondercard-search-page.tsx:200
+#: src/features/datetime-search/components/datetime-search-page.tsx:303
+#: src/features/egg-search/components/egg-search-page.tsx:285
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:221
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:202
 msgid "No results found. Configure parameters and start searching."
 msgstr "No results found. Configure parameters and start searching."
 
@@ -978,7 +983,7 @@ msgstr "No results found. Configure parameters and start searching."
 #~ msgid "No results found. Set Pokémon conditions and start searching."
 #~ msgstr "No results found. Set Pokémon conditions and start searching."
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:237
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:239
 msgid "No save"
 msgstr "No save"
 
@@ -1185,16 +1190,16 @@ msgstr "Reset settings and inputs?"
 msgid "Result details"
 msgstr "Result details"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:283
+#: src/features/datetime-search/components/datetime-search-page.tsx:285
 #: src/features/egg-list/components/egg-list-page.tsx:289
-#: src/features/egg-search/components/egg-search-page.tsx:275
+#: src/features/egg-search/components/egg-search-page.tsx:277
 #: src/features/mtseed-search/components/mtseed-search-page.tsx:186
 #: src/features/needle/components/needle-page.tsx:219
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:308
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:198
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:267
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:200
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:269
 #: src/features/wondercard-list/components/wondercard-list-page.tsx:162
-#: src/features/wondercard-search/components/wondercard-search-page.tsx:178
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:180
 msgid "Results"
 msgstr "Results"
 
@@ -1218,7 +1223,7 @@ msgstr "Save and switch"
 msgid "Save as new"
 msgstr "Save as new"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:232
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:234
 msgid "Save state"
 msgstr "Save state"
 
@@ -1295,7 +1300,7 @@ msgstr "Seeds"
 #~ msgstr "Seeds from search results"
 
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:119
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:68
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:70
 msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
@@ -1332,19 +1337,19 @@ msgstr "Select Pokémon"
 #~ msgid "Selected buttons"
 #~ msgstr "Selected buttons"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:102
-#: src/features/egg-search/components/egg-search-page.tsx:100
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:66
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:102
-#: src/features/wondercard-search/components/wondercard-search-page.tsx:63
+#: src/features/datetime-search/components/datetime-search-page.tsx:103
+#: src/features/egg-search/components/egg-search-page.tsx:101
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:67
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:64
 msgid "Set a valid Timer0 / VCount range"
 msgstr "Set a valid Timer0 / VCount range"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:72
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:74
 msgid "Set SID to search for shiny Pokémon"
 msgstr "Set SID to search for shiny Pokémon"
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:71
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:73
 msgid "Set TID to search for shiny Pokémon"
 msgstr "Set TID to search for shiny Pokémon"
 
@@ -1384,7 +1389,7 @@ msgstr "Shiny Charm"
 msgid "Shiny PID"
 msgstr "Shiny PID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:107
 msgid "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 
@@ -1392,7 +1397,7 @@ msgstr "Shiny PID must be a hex value (0 to FFFFFFFF)"
 msgid "SID"
 msgstr "SID"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:104
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:106
 msgid "SID must be between 0 and 65535"
 msgstr "SID must be between 0 and 65535"
 
@@ -1441,15 +1446,13 @@ msgstr "Species (optional)"
 #~ msgid "Species ID (optional)"
 #~ msgstr "Species ID (optional)"
 
-#: src/components/forms/date-range-picker.tsx:123
+#: src/components/forms/date-range-picker.tsx:128
 msgid "Start date"
 msgstr "Start date"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:92
-#: src/features/egg-search/components/egg-search-page.tsx:91
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:96
-#~ msgid "Start date must be on or before end date"
-#~ msgstr "Start date must be on or before end date"
+#: src/components/forms/date-range-picker.tsx:179
+msgid "Start date must be on or before end date"
+msgstr "Start date must be on or before end date"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:30
 #: src/features/ds-config/components/game-start-config-form.tsx:36
@@ -1484,10 +1487,10 @@ msgstr "Startup condition details"
 #: src/features/egg-list/components/result-detail-dialog.tsx:80
 #: src/features/pokemon-list/components/pokemon-list-page.tsx:320
 #: src/features/pokemon-list/components/result-detail-dialog.tsx:85
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:210
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:212
 #: src/features/wondercard-list/components/result-detail-dialog.tsx:84
 #: src/features/wondercard-list/components/wondercard-list-page.tsx:175
-#: src/features/wondercard-search/components/wondercard-search-page.tsx:191
+#: src/features/wondercard-search/components/wondercard-search-page.tsx:193
 msgid "Stats"
 msgstr "Stats"
 
@@ -1526,7 +1529,7 @@ msgstr "Synchronize nature"
 #~ msgid "Target MT Seeds"
 #~ msgstr "Target MT Seeds"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:263
+#: src/features/datetime-search/components/datetime-search-page.tsx:265
 msgid "Template"
 msgstr "Template"
 
@@ -1554,7 +1557,7 @@ msgstr "The number of frames you can delay and still receive the same Egg. This 
 msgid "The number of RNG advances excluding the startup offset."
 msgstr "The number of RNG advances excluding the startup offset."
 
-#: src/features/pokemon-search/components/pokemon-search-page.tsx:69
+#: src/features/pokemon-search/components/pokemon-search-page.tsx:71
 msgid "This encounter type is not supported by Pokémon search"
 msgstr "This encounter type is not supported by Pokémon search"
 
@@ -1590,7 +1593,7 @@ msgstr "TID"
 msgid "TID Adjust"
 msgstr "TID Adjust"
 
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:103
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:105
 msgid "TID must be between 0 and 65535"
 msgstr "TID must be between 0 and 65535"
 
@@ -1636,12 +1639,12 @@ msgstr "Trainer ID"
 #~ msgid "Transfer to Needle search"
 #~ msgstr "Transfer to Needle search"
 
-#: src/features/datetime-search/components/datetime-search-page.tsx:292
+#: src/features/datetime-search/components/datetime-search-page.tsx:294
 msgid "Transfer to Pokemon list"
 msgstr "Transfer to Pokemon list"
 
 #. placeholder {0}: results.length
-#: src/features/datetime-search/components/datetime-search-page.tsx:166
+#: src/features/datetime-search/components/datetime-search-page.tsx:168
 msgid "Transferred {0} seeds"
 msgstr "Transferred {0} seeds"
 
@@ -1680,7 +1683,7 @@ msgstr "Very rare (1%)"
 
 #: src/features/ds-config/components/game-start-config-form.tsx:52
 #: src/features/ds-config/components/game-start-config-form.tsx:64
-#: src/features/tid-adjust/components/tid-adjust-page.tsx:240
+#: src/features/tid-adjust/components/tid-adjust-page.tsx:242
 msgid "With save"
 msgstr "With save"
 

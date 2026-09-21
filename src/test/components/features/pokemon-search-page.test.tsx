@@ -107,7 +107,7 @@ describe('PokemonSearchPage', () => {
     renderPage();
     const message =
       field === 'date'
-        ? 'Enter a valid date range with the start on or before the end'
+        ? 'Start date must be on or before end date'
         : 'Min must be less than or equal to max';
     expect(screen.getAllByText(message)).toHaveLength(1);
     expect(screen.queryByText('Time range is invalid')).not.toBeInTheDocument();

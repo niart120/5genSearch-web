@@ -32,13 +32,21 @@ function isDateValid(year: number, month: number, day: number): boolean {
   );
 }
 
+export function getDateRangeErrors(range: DateRangeParams) {
+  const startInvalid = !isDateValid(range.start_year, range.start_month, range.start_day);
+  const endInvalid = !isDateValid(range.end_year, range.end_month, range.end_day);
+  // Date.UTC は存在しない日付を繰り上げるため、両端が有効な場合だけ比較する。
+  const reversed =
+    !startInvalid &&
+    !endInvalid &&
+    Date.UTC(range.start_year, range.start_month - 1, range.start_day) >
+      Date.UTC(range.end_year, range.end_month - 1, range.end_day);
+  return { startInvalid, endInvalid, reversed };
+}
+
 export function isDateRangeValid(range: DateRangeParams): boolean {
-  return (
-    isDateValid(range.start_year, range.start_month, range.start_day) &&
-    isDateValid(range.end_year, range.end_month, range.end_day) &&
-    Date.UTC(range.start_year, range.start_month - 1, range.start_day) <=
-      Date.UTC(range.end_year, range.end_month - 1, range.end_day)
-  );
+  const { startInvalid, endInvalid, reversed } = getDateRangeErrors(range);
+  return !startInvalid && !endInvalid && !reversed;
 }
 
 export function isTimeRangeValid(range: TimeRangeParams): boolean {
