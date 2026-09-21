@@ -183,6 +183,22 @@ describe('PokemonSearchPage', () => {
     expect(state.start).not.toHaveBeenCalled();
   });
 
+  it('整合処理前の入力でも、見積もりと実行から候補外種族を除外する', () => {
+    const previous = usePokemonSearchStore.getState().encounterParams;
+    const encounterParams = { ...previous, encounterType: 'Normal' as const, locationKey: 'wild' };
+    usePokemonSearchStore.setState({
+      encounterParams: {
+        ...encounterParams,
+        slotsContextKey: encounterSlotKey(encounterParams, 'Black'),
+      },
+      filter: { ...EMPTY_POKEMON_SEARCH_FILTER, species_ids: [299, 638] },
+    });
+    renderPage();
+    fireEvent.click(searchButton());
+    expect(state.start.mock.lastCall?.[0].filter.species_ids).toEqual([638]);
+    expect(state.estimate.mock.lastCall?.[2]).toEqual(state.start.mock.lastCall?.[0].filter);
+  });
+
   it('blocks a shiny search before confirmation for each missing ID but permits zero IDs', () => {
     usePokemonSearchStore.getState().setFilter({ ...EMPTY_POKEMON_SEARCH_FILTER, shiny: 'Shiny' });
     renderPage();
@@ -211,7 +227,7 @@ describe('PokemonSearchPage', () => {
         .setEncounterParams((previous) => ({ ...previous, staticEntryId: 'edited' }));
       useTrainerStore.getState().setTrainer(123, 456);
     });
-    fireEvent.click(screen.getByRole('button', { name: /Continue/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }));
     expect(state.start).toHaveBeenCalledWith(
       expect.objectContaining({
         pokemonParams: expect.objectContaining({ trainer: { tid: 0, sid: 0 } }),

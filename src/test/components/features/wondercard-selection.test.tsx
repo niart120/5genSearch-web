@@ -24,7 +24,8 @@ function useSelection() {
   return useWonderCardSelection(
     inputs.cardId,
     stored,
-    useWonderCardListStore.getState().setSelection
+    useWonderCardListStore.getState().setSelection,
+    useWonderCardListStore.getState().clearUnavailableCard
   );
 }
 
@@ -61,20 +62,65 @@ describe('配達員カードの解決', () => {
       ['en', 'White2'],
     ]);
   });
-  it('保存済み ID が不適合でも消さずに、再選択で解決する', async () => {
+  it('確定候補にない保存済み ID を解除し、再選択で解決する', async () => {
     load.mockResolvedValue([UI_CARD]);
     useWonderCardListStore.getState().setInputs({ cardId: 'missing' });
     const { result } = renderHook(useSelection);
-    await waitFor(() => expect(result.current.unavailable).toBe(true));
-    expect(useWonderCardListStore.getState().inputs.cardId).toBe('missing');
+    await waitFor(() => expect(useWonderCardListStore.getState().inputs.cardId).toBe(''));
+    expect(useWonderCardListStore.getState().selection).toBeUndefined();
     act(() => useWonderCardListStore.getState().setInputs({ cardId: UI_CARD.id }));
     expect(result.current.selection?.params.trainer).toEqual(UI_CARD.trainer);
   });
   it('読み込み失敗を返し、旧カードを有効な選択にしない', async () => {
     load.mockRejectedValue(new Error('offline'));
+    useWonderCardListStore.setState({
+      inputs: { ...getWonderCardListInitialState().inputs, cardId: UI_CARD.id },
+      selection: resolveWonderCardSelection(UI_CARD, getDsConfigInitialState().config, {
+        tid: undefined,
+        sid: undefined,
+      }),
+    });
     const { result } = renderHook(useSelection);
     await waitFor(() => expect(result.current.error?.message).toBe('offline'));
     expect(result.current.selection).toBeUndefined();
+    expect(useWonderCardListStore.getState().inputs.cardId).toBe(UI_CARD.id);
+  });
+  it('読込中は保持し、転記定義があっても確定候補になければ解除する', async () => {
+    let complete: ((cards: WonderCardEntry[]) => void) | undefined;
+    load.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        })
+    );
+    useWonderCardListStore.setState({
+      inputs: { ...getWonderCardListInitialState().inputs, cardId: UI_CARD.id },
+      selection: resolveWonderCardSelection(UI_CARD, getDsConfigInitialState().config, {
+        tid: undefined,
+        sid: undefined,
+      }),
+    });
+    const { result } = renderHook(useSelection);
+    expect(useWonderCardListStore.getState().inputs.cardId).toBe(UI_CARD.id);
+    expect(result.current.selection).toBeUndefined();
+    await act(async () => complete?.([]));
+    expect(useWonderCardListStore.getState().inputs.cardId).toBe('');
+    expect(useWonderCardListStore.getState().selection).toBeUndefined();
+  });
+  it('読込中の最新選択を照合し、古い ID に対する解除で上書きしない', async () => {
+    let complete: ((cards: WonderCardEntry[]) => void) | undefined;
+    load.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        })
+    );
+    useWonderCardListStore.getState().setInputs({ cardId: 'missing' });
+    renderHook(useSelection);
+    act(() => useWonderCardListStore.getState().setInputs({ cardId: UI_CARD.id }));
+    await act(async () => complete?.([UI_CARD]));
+    act(() => useWonderCardListStore.getState().clearUnavailableCard('missing'));
+    expect(useWonderCardListStore.getState().selection?.card.id).toBe(UI_CARD.id);
   });
   it('転記カードを消費範囲の編集と受取人の空欄を挟んでも保持する', async () => {
     // 転記時と現在のカタログの定義が異なっても、同じカードの再現条件を優先する。

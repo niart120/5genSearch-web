@@ -1,4 +1,7 @@
 import type { PokemonFilterInput as PokemonFilter } from '@/lib/search-filter-context';
+import { reconcilePokemonSpeciesFilter } from '@/lib/search-filter-context';
+import { hasCurrentSpeciesCandidates } from '@/lib/encounter-slot-context';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 /**
  * ポケモンリスト Feature Store
  *
@@ -7,7 +10,11 @@ import type { PokemonFilterInput as PokemonFilter } from '@/lib/search-filter-co
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DEFAULT_ENCOUNTER_PARAMS, type EncounterParamsOutput } from './types';
+import {
+  DEFAULT_ENCOUNTER_PARAMS,
+  clearEncounterCandidates,
+  type EncounterParamsOutput,
+} from './types';
 import type {
   StatsFilter,
   GeneratedPokemonData,
@@ -108,10 +115,36 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
         })),
       setSeedOrigins: (seedOrigins) => set({ seedOrigins }),
       setEncounterParams: (action) =>
+        set((state) => {
+          const encounterParams =
+            typeof action === 'function' ? action(state.encounterParams) : action;
+          const filter =
+            state.filter &&
+            reconcilePokemonSpeciesFilter(
+              state.filter,
+              encounterParams,
+              hasCurrentSpeciesCandidates(
+                encounterParams,
+                useDsConfigStore.getState().config.version
+              )
+            );
+          return encounterParams === state.encounterParams && filter === state.filter
+            ? state
+            : { encounterParams, filter };
+        }),
+      setFilter: (filter) =>
         set((state) => ({
-          encounterParams: typeof action === 'function' ? action(state.encounterParams) : action,
+          filter:
+            filter &&
+            reconcilePokemonSpeciesFilter(
+              filter,
+              state.encounterParams,
+              hasCurrentSpeciesCandidates(
+                state.encounterParams,
+                useDsConfigStore.getState().config.version
+              )
+            ),
         })),
-      setFilter: (filter) => set({ filter }),
       setStatsFilter: (statsFilter) => set({ statsFilter }),
       setStatMode: (statMode) => set({ statMode }),
 
@@ -141,10 +174,20 @@ export const usePokemonListStore = create<PokemonListState & PokemonListActions>
       name: 'feature:pokemon-list',
       version: 3,
       migrate: (state) => state as ReturnType<typeof getPokemonListInitialState>,
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<PokemonListState>;
+        return {
+          ...current,
+          ...saved,
+          encounterParams: clearEncounterCandidates(
+            saved.encounterParams ?? current.encounterParams
+          ),
+        };
+      },
       partialize: (state) => ({
         seedInputMode: state.seedInputMode,
         seedInput: state.seedInput,
-        encounterParams: state.encounterParams,
+        encounterParams: clearEncounterCandidates(state.encounterParams),
         filter: state.filter,
         statsFilter: state.statsFilter,
         statMode: state.statMode,

@@ -387,7 +387,7 @@ msgstr "Enable minimum Hidden Power power"
 msgid "Enable minimum margin frames"
 msgstr "Enable minimum margin frames"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:360
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:378
 msgid "Encounter method"
 msgstr "Encounter method"
 
@@ -396,11 +396,11 @@ msgstr "Encounter method"
 msgid "Encounter result"
 msgstr "Encounter result"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:292
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:310
 msgid "Encounter settings"
 msgstr "Encounter settings"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:298
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:316
 msgid "Encounter type"
 msgstr "Encounter type"
 
@@ -425,7 +425,7 @@ msgstr "Enter a valid date"
 msgid "Enter at least one MT Seed"
 msgstr "Enter at least one MT Seed"
 
-#: src/features/wondercard-list/hooks/use-wondercard-form.ts:33
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:34
 msgid "Enter recipient TID and SID as integers from 0 to 65535"
 msgstr "Enter recipient TID and SID as integers from 0 to 65535"
 
@@ -433,7 +433,7 @@ msgstr "Enter recipient TID and SID as integers from 0 to 65535"
 msgid "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
 msgstr "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
 
-#: src/features/wondercard-list/hooks/use-wondercard-form.ts:28
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:29
 msgid "Enter valid filter values"
 msgstr "Enter valid filter values"
 
@@ -620,7 +620,7 @@ msgstr "Line {0}: \"{1}\" — {2}"
 msgid "Loading Wonder Cards..."
 msgstr "Loading Wonder Cards..."
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:339
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:357
 msgid "Location"
 msgstr "Location"
 
@@ -684,7 +684,7 @@ msgstr "Min power"
 msgid "Minute"
 msgstr "Minute"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:374
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:392
 msgid "Moving"
 msgstr "Moving"
 
@@ -859,7 +859,7 @@ msgstr "Parent IV out of range"
 msgid "Pokemon"
 msgstr "Pokemon"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:385
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:403
 msgid "Pokémon"
 msgstr "Pokémon"
 
@@ -906,7 +906,7 @@ msgstr "Profiles will be kept and the active profile selection will be cleared. 
 msgid "Rare (5%)"
 msgstr "Rare (5%)"
 
-#: src/features/wondercard-list/components/wondercard-params-form.tsx:129
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:122
 msgid "Recipient"
 msgstr "Recipient"
 
@@ -1081,7 +1081,7 @@ msgid "Select a location or Pokémon"
 msgstr "Select a location or Pokémon"
 
 #: src/features/wondercard-list/components/wondercard-params-form.tsx:53
-#: src/features/wondercard-list/hooks/use-wondercard-form.ts:31
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:32
 msgid "Select a Wonder Card"
 msgstr "Select a Wonder Card"
 
@@ -1092,7 +1092,7 @@ msgstr "Select a Wonder Card"
 msgid "Select all"
 msgstr "Select all"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:347
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:365
 msgid "Select location"
 msgstr "Select location"
 
@@ -1105,7 +1105,7 @@ msgstr "Select MT Seed templates to apply."
 msgid "Select or enter at least one seed"
 msgstr "Select or enter at least one seed"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:393
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:411
 msgid "Select Pokémon"
 msgstr "Select Pokémon"
 
@@ -1244,7 +1244,7 @@ msgstr "Stats"
 msgid "Stats filter"
 msgstr "Stats filter"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:373
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:391
 msgid "Sweet Scent"
 msgstr "Sweet Scent"
 
@@ -1304,10 +1304,6 @@ msgstr "This is an unofficial tool and is not affiliated with or endorsed by Nin
 #: src/features/about/components/about-page.tsx:45
 msgid "This project is open source."
 msgstr "This project is open source."
-
-#: src/features/wondercard-list/components/wondercard-params-form.tsx:120
-msgid "This Wonder Card is unavailable for the selected ROM. Select another card."
-msgstr "This Wonder Card is unavailable for the selected ROM. Select another card."
 
 #: src/features/ds-config/components/trainer-config-form.tsx:28
 msgid "TID"

@@ -105,6 +105,20 @@ beforeEach(() => {
 
 describe.each([false, true])('配達員画面 search=%s', (search) => {
   const store = search ? useWonderCardSearchStore : useWonderCardListStore;
+  it.each([{ version: 'White2' as const }, { region: 'Usa' as const }])(
+    'ROM 変更 %o で候補外カードを解除し、不一致表示を出さない',
+    async (config) => {
+      store.getState().setInputs({ cardId: UI_CARD.id });
+      renderPage(search);
+      await waitFor(() => expect(searchButton()).toBeEnabled());
+      vi.mocked(loadWonderCards).mockResolvedValue([]);
+      act(() => useDsConfigStore.getState().setConfig(config));
+      await waitFor(() => expect(store.getState().inputs.cardId).toBe(''));
+      expect(store.getState().selection).toBeUndefined();
+      expect(searchButton()).toBeDisabled();
+      expect(screen.queryByText(/unavailable for the selected ROM/)).not.toBeInTheDocument();
+    }
+  );
   it.each(['mouse', 'touch', 'keyboard'] as const)(
     '%s: 逆転中は検索せず、修正欄から直接検索して最新の条件を渡す',
     async (inputMethod) => {
@@ -232,7 +246,7 @@ describe.each([false, true])('配達員画面 search=%s', (search) => {
       useDsConfigStore.getState().setConfig({ version: 'White2' });
       await Promise.resolve();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Continue/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }));
     expect(state.execute.mock.lastCall?.[0].settings).toMatchObject({
       card: { id: UI_EGG_CARD.id },
       params: { trainer: { tid: 0, sid: 0 } },

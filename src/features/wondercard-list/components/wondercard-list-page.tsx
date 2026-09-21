@@ -35,7 +35,12 @@ export function WonderCardListPage() {
   const resultRequest = useWonderCardListStore((s) => s.resultRequest);
   const formRevision = useWonderCardListStore((s) => s.formRevision);
   const { setInputs, setSelection } = useWonderCardListStore.getState();
-  const form = useWonderCardForm(inputs, storedSelection, setSelection);
+  const form = useWonderCardForm(
+    inputs,
+    storedSelection,
+    setSelection,
+    useWonderCardListStore.getState().clearUnavailableCard
+  );
   const { isLoading, isInitialized, progress, results, error, execute, cancel } =
     useWonderCardList(language);
   const statMode = inputs.statMode;

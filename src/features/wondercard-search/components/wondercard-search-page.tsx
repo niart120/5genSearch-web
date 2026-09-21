@@ -47,7 +47,12 @@ export function WonderCardSearchPage() {
   const resultRequest = useWonderCardSearchStore((s) => s.resultRequest);
   const formRevision = useWonderCardSearchStore((s) => s.formRevision);
   const { setInputs, setSelection } = useWonderCardSearchStore.getState();
-  const form = useWonderCardForm(inputs, storedSelection, setSelection);
+  const form = useWonderCardForm(
+    inputs,
+    storedSelection,
+    setSelection,
+    useWonderCardSearchStore.getState().clearUnavailableCard
+  );
   const { isLoading, isInitialized, progress, results, error, execute, cancel } =
     useWonderCardSearch(language);
   const statMode = inputs.statMode;

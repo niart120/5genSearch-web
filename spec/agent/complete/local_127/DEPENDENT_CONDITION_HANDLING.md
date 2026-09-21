@@ -29,7 +29,7 @@
 
 配達員では ROM 条件に合わないカード ID を保持し、選び直しを要求する表示が存在する。こちらも候補から消えた選択として同じ規則に合わせる。
 
-以上はコード・遭遇データの調査結果であり、この仕様作成時点でブラウザによる再現確認は未実施。
+以上をコード・遭遇データの調査で確認し、実装後に Chromium 上の実データを使用した回帰テストで検証した。
 
 ### 1.4 期待効果
 
@@ -42,25 +42,26 @@
 
 ### 1.5 着手条件
 
-本仕様のレビュー後に実装する。現時点では仕様書作成のみとし、アプリケーションコード、翻訳、永続化形式は変更しない。
+仕様書作成後、利用者の実装指示を受けて着手した。作業ブランチは `codex/dependent-condition-handling`、仕様書の先行コミットは `09b908b`。
 
 関連仕様は `spec/agent/complete/local_122/CONTEXTUAL_SEARCH_FILTERS.md`。同仕様の「適用できない入力は保持する」方針は継承する。ただし、候補依存の選択を入力状態に残したまま適用条件だけで除外する方針は、本仕様の「確定候補から消えた選択は入力状態から解除する」に置き換える。
 
 ## 2. 対象ファイル
 
-以下は変更対象と確認対象の予定。既存の責務を維持し、必要な箇所に限定して変更する。
+以下は変更対象と確認対象。既存の責務を維持し、必要な箇所に限定して変更した。ページの既存の正規化呼び出し・スロット照合はそのまま利用する。
 
 | ファイル | 変更種別 | 変更内容 |
 |----------|----------|----------|
 | `src/features/pokemon-list/components/pokemon-params-form.tsx` | 変更 | 場所・固定個体・種族候補の確定と選択整合処理 |
 | `src/lib/encounter-slot-context.ts` | 確認・必要時変更 | 現在の上位条件と候補・スロットの一致判定 |
 | `src/lib/search-filter-context.ts` | 変更 | 適用不可の除外と種族候補照合の責務整理 |
-| `src/lib/dependent-selection.ts` | 新規候補 | 単一選択の有効性判定、複数選択の積集合を求める純粋関数 |
+| `src/lib/dependent-selection.ts` | 新規 | 複数選択の積集合を求める純粋関数。単一選択の照合は各候補取得箇所で行う |
 | `src/features/pokemon-search/components/pokemon-search-page.tsx` | 変更 | 検索フォームの入力状態更新と実行条件の整合 |
 | `src/features/pokemon-list/components/pokemon-list-page.tsx` | 変更 | 一覧生成フォームにも同じ整合処理を適用 |
 | `src/features/pokemon-search/components/pokemon-search-filter-form.tsx` | 確認・必要時変更 | 表示候補と選択状態の一致 |
 | `src/features/pokemon-list/components/pokemon-filter-form.tsx` | 確認・必要時変更 | 表示候補と選択状態の一致 |
 | `src/features/pokemon-search/store.ts`、`src/features/pokemon-list/store.ts` | 変更 | 最新入力に対する部分更新、復元状態の整合 |
+| `src/features/pokemon-list/types.ts` | 変更 | 保存・復元時に取得済み候補を破棄する共通処理 |
 | `src/features/wondercard-list/hooks/use-wondercard-selection.ts` | 変更 | 確定したカード候補に存在しない ID と解決済み選択の解除 |
 | `src/features/wondercard-list/hooks/use-wondercard-form.ts` | 変更 | カード解除後のフォーム・検証の整合 |
 | `src/features/wondercard-list/components/wondercard-params-form.tsx` | 変更 | 候補外 ID の保持を前提とした表示を通常の未選択表示に統一 |
@@ -68,6 +69,8 @@
 | `src/features/wondercard-list/request.ts` | 確認・必要時変更 | 未選択・古い ROM 条件のカードを実行しない境界の維持 |
 | `src/components/forms/species-select.tsx` | 確認 | 候補外 ID に依存しない表示になることを確認 |
 | `src/test/unit/`、`src/test/components/` | 追加・変更 | 純粋関数、候補取得、フォーム・ストア連携の回帰テスト |
+| `src/test/integration/dependent-condition-pages.test.ts` | 新規 | Chromium 上で実データを使った4画面の候補変更テスト |
+| `src/i18n/locales/{en,ja}/messages.po`、`messages.ts` | 更新・生成 | 削除したカード不一致表示の翻訳を除去 |
 
 ## 3. 設計方針
 
@@ -186,16 +189,32 @@
 
 実装後は関連する単体・コンポーネントテスト、型チェック、Lint を実行する。ブラウザでは Pokémon 検索・一覧生成、配達員検索・一覧生成の各画面で、バージョン・場所・リージョン変更を確認する。
 
-検証結果: 未実行（仕様書のみの変更）。
+### 5.1 実装と検証結果（2026-09-22）
+
+種族候補は野生スロットから導出する。`listSpecies` の野生候補も同じスロットから集約されるため、入力状態の照合と実行時の正規化ではスロットの種族 ID を共通の判定元にした。候補取得の成功キーが現在の選択・バージョンと一致するときだけ入力を照合し、空のスロットが正常取得された場合も判定できるよう、実行可能性とは分けている。
+
+候補取得と種族入力の更新は各ストアの `setEncounterParams` でまとめて行う。固定個体と場所の切替では適用しない側の入力を保持し、再び適用可能になったときに候補を照合する。保存形式のフィールドとバージョンは変更せず、取得済みスロット・候補を保存時と復元時に破棄する。
+
+| 検証 | 結果 |
+|------|------|
+| `pnpm exec vitest run --project unit --reporter=dot` | 129 ファイル、1,624 テスト成功 |
+| `pnpm exec vitest run --project integration src/test/integration/dependent-condition-pages.test.ts src/test/integration/wondercard-range-input.test.ts` | Chromium で2ファイル、6テスト成功。4画面の候補変更と配達員の実 Worker 連携を確認 |
+| `pnpm exec tsc -b --noEmit` | 成功 |
+| `pnpm lint` | oxlint・cargo clippy とも成功 |
+| `pnpm exec oxfmt` | 成功 |
+| `pnpm lingui:extract --clean`、`pnpm lingui:compile` | 成功。両言語284件、日本語の翻訳欠落なし |
+| `pnpm exec vite build` | 既存 WASM を使用したフロントエンド本番ビルド成功 |
+
+全体テストで、先行した警告ダイアログの変更に対して3ファイルのテストが旧ボタン名を参照していたため、現在の `Run` に更新した。Vitest とフォーマッターは制限環境での子プロセス起動が `EPERM` になったため、許可された制限外実行で検証した。テストでは既存の `act`・ダイアログ説明警告、本番ビルドではチャンクサイズ警告が出るが、失敗はない。全統合テスト・全 Rust テスト・手操作によるブラウザ確認は未実施。
 
 ## 6. 実装チェックリスト
 
 - [x] 現行コードと既存仕様の保持・除外処理を調査する
 - [x] 候補消失、適用不可、結果なし、候補未確定の規則を記述する
-- [ ] 仕様書の対象範囲をレビューする
-- [ ] 共通の選択照合処理とテストを追加する
-- [ ] 場所・固定個体・種族の依存関係を検索と一覧生成に反映する
-- [ ] 配達カードの依存関係を検索と一覧生成に反映する
-- [ ] 非同期取得、復元、実行境界の整合性を確認する
-- [ ] 回帰テスト、型チェック、Lint、ブラウザ確認を実施する
-- [ ] 検証結果を記録し、完了後に `spec/agent/complete/local_127/` へ移動する
+- [x] 仕様書の対象範囲をレビューする
+- [x] 共通の選択照合処理とテストを追加する
+- [x] 場所・固定個体・種族の依存関係を検索と一覧生成に反映する
+- [x] 配達カードの依存関係を検索と一覧生成に反映する
+- [x] 非同期取得、復元、実行境界の整合性を確認する
+- [x] 回帰テスト、型チェック、Lint、Chromium の自動ブラウザ確認を実施する
+- [x] 検証結果を記録し、`spec/agent/complete/local_127/` へ移動する

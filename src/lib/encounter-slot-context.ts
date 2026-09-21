@@ -23,3 +23,12 @@ export function hasCurrentEncounterSlots(
     selection.slots.length > 0 && selection.slotsContextKey === encounterSlotKey(selection, version)
   );
 }
+
+export function hasCurrentSpeciesCandidates(
+  selection: EncounterSelection & { slotsContextKey?: string },
+  version: RomVersion
+): boolean {
+  return (
+    !!selection.locationKey && selection.slotsContextKey === encounterSlotKey(selection, version)
+  );
+}

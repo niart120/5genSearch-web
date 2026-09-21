@@ -12,6 +12,7 @@ import type {
 } from '@/wasm/wasm_pkg.js';
 import type { WonderCardEntry } from '@/data/wondercards/schema';
 import { IV_STAT_KEYS, type StatDisplayMode } from './game-data-names';
+import { retainAvailableSelections } from './dependent-selection';
 
 export type IvStatKey = (typeof IV_STAT_KEYS)[number];
 export interface IvFilterInput extends IvFilter {
@@ -157,7 +158,12 @@ export function normalizePokemonSearchFilter(
 ): PokemonDatetimeSearchFilter {
   const visible = getPokemonFilterVisibility(context);
   return {
-    species_ids: visible.species ? input.species_ids : undefined,
+    species_ids: visible.species
+      ? retainAvailableSelections(
+          input.species_ids,
+          context.slots.map((slot) => slot.species_id)
+        )
+      : undefined,
     level_range:
       visible.level && (input.levelEnabled ?? input.level_range !== undefined)
         ? input.level_range
@@ -168,6 +174,24 @@ export function normalizePokemonSearchFilter(
     shiny: visible.shiny ? input.shiny : undefined,
     natures: input.natures,
   };
+}
+
+/** 項目の適用不可と、確定候補からの消失を区別して入力状態を更新する。 */
+export function reconcilePokemonSpeciesFilter<T extends Partial<PokemonFilter>>(
+  input: T,
+  context: PokemonFilterContext,
+  candidatesReady: boolean
+): T {
+  if (
+    !candidatesReady ||
+    !getPokemonFilterVisibility(context, input.encounter_result_filter).species
+  )
+    return input;
+  const species_ids = retainAvailableSelections(
+    input.species_ids,
+    context.slots.map((slot) => slot.species_id)
+  );
+  return species_ids === input.species_ids ? input : { ...input, species_ids };
 }
 
 export function normalizePokemonFilter(

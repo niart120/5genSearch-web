@@ -387,7 +387,7 @@ msgstr "めざパ威力の下限を有効化"
 msgid "Enable minimum margin frames"
 msgstr "猶予フレームの下限を有効化"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:360
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:378
 msgid "Encounter method"
 msgstr "エンカウント方法"
 
@@ -396,11 +396,11 @@ msgstr "エンカウント方法"
 msgid "Encounter result"
 msgstr "エンカウント"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:292
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:310
 msgid "Encounter settings"
 msgstr "エンカウント設定"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:298
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:316
 msgid "Encounter type"
 msgstr "エンカウント種別"
 
@@ -425,7 +425,7 @@ msgstr "有効な日付を指定してください"
 msgid "Enter at least one MT Seed"
 msgstr "MT Seedを最低1つ入力してください"
 
-#: src/features/wondercard-list/hooks/use-wondercard-form.ts:33
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:34
 msgid "Enter recipient TID and SID as integers from 0 to 65535"
 msgstr "受取人の TID・SID を0から65535の整数で入力してください"
 
@@ -433,7 +433,7 @@ msgstr "受取人の TID・SID を0から65535の整数で入力してくださ�
 msgid "Enter the initial needle direction for each save. Directions are numbered clockwise from 0 to 7, with 0 pointing up."
 msgstr "レポートを書き始めたときの針の向きを入力します。上を0として時計回りに0〜7で表します。"
 
-#: src/features/wondercard-list/hooks/use-wondercard-form.ts:28
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:29
 msgid "Enter valid filter values"
 msgstr "有効なフィルター条件を入力してください"
 
@@ -620,7 +620,7 @@ msgstr "{0}行目: \"{1}\" — {2}"
 msgid "Loading Wonder Cards..."
 msgstr "ふしぎなカードを読み込み中..."
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:339
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:357
 msgid "Location"
 msgstr "場所"
 
@@ -684,7 +684,7 @@ msgstr "最低威力"
 msgid "Minute"
 msgstr "分"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:374
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:392
 msgid "Moving"
 msgstr "移動"
 
@@ -859,7 +859,7 @@ msgstr "親の個体値が範囲外です"
 msgid "Pokemon"
 msgstr "ポケモン"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:385
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:403
 msgid "Pokémon"
 msgstr "ポケモン"
 
@@ -906,7 +906,7 @@ msgstr "プロファイル一覧は保持し、選択中のプロファイルは
 msgid "Rare (5%)"
 msgstr "まれに (5%)"
 
-#: src/features/wondercard-list/components/wondercard-params-form.tsx:129
+#: src/features/wondercard-list/components/wondercard-params-form.tsx:122
 msgid "Recipient"
 msgstr "受取人"
 
@@ -1081,7 +1081,7 @@ msgid "Select a location or Pokémon"
 msgstr "場所またはポケモンを選択してください"
 
 #: src/features/wondercard-list/components/wondercard-params-form.tsx:53
-#: src/features/wondercard-list/hooks/use-wondercard-form.ts:31
+#: src/features/wondercard-list/hooks/use-wondercard-form.ts:32
 msgid "Select a Wonder Card"
 msgstr "ふしぎなカードを選択してください"
 
@@ -1092,7 +1092,7 @@ msgstr "ふしぎなカードを選択してください"
 msgid "Select all"
 msgstr "全選択"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:347
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:365
 msgid "Select location"
 msgstr "場所を選択"
 
@@ -1105,7 +1105,7 @@ msgstr "適用する MT Seed テンプレートを選択してください。"
 msgid "Select or enter at least one seed"
 msgstr "Seedを1つ以上選択または入力してください"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:393
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:411
 msgid "Select Pokémon"
 msgstr "ポケモンを選択"
 
@@ -1244,7 +1244,7 @@ msgstr "ステータス"
 msgid "Stats filter"
 msgstr "ステータス指定"
 
-#: src/features/pokemon-list/components/pokemon-params-form.tsx:373
+#: src/features/pokemon-list/components/pokemon-params-form.tsx:391
 msgid "Sweet Scent"
 msgstr "あまいかおり"
 
@@ -1304,10 +1304,6 @@ msgstr "本アプリは非公式のツールであり、任天堂、ゲームフ
 #: src/features/about/components/about-page.tsx:45
 msgid "This project is open source."
 msgstr "このプロジェクトはオープンソースです。"
-
-#: src/features/wondercard-list/components/wondercard-params-form.tsx:120
-msgid "This Wonder Card is unavailable for the selected ROM. Select another card."
-msgstr "このふしぎなカードは選択中の ROM では受け取れません。別のカードを選択してください。"
 
 #: src/features/ds-config/components/trainer-config-form.tsx:28
 msgid "TID"

@@ -37,6 +37,11 @@ export const DEFAULT_ENCOUNTER_PARAMS: EncounterParamsOutput = {
   genConfig: { user_offset: 0, max_advance: 30 },
 };
 
+/** 候補は永続化せず、復元時も現在のデータから取得し直す。 */
+export function clearEncounterCandidates(params: EncounterParamsOutput): EncounterParamsOutput {
+  return { ...params, slots: [], slotsContextKey: undefined, availableSpecies: [] };
+}
+
 /** ポケモンリスト生成フォーム状態 */
 export interface PokemonListFormState {
   seedInputMode: SeedInputMode;
