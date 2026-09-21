@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/niart120/5genSearch-web/compare/v1.8.1...v1.8.2) (2026-09-21)
+
+
+### Bug Fixes
+
+* **forms:** 範囲入力と検索条件の不一致を修正 ([#190](https://github.com/niart120/5genSearch-web/issues/190)) ([3f77405](https://github.com/niart120/5genSearch-web/commit/3f7740521798ce19f14c3e4419edf55f8ab4821c))
+
 ## [1.8.1](https://github.com/niart120/5genSearch-web/compare/v1.8.0...v1.8.1) (2026-09-20)
 
 
