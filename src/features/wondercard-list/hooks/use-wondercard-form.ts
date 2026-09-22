@@ -12,10 +12,16 @@ import { get_species_gender_ratio } from '@/wasm/wasm_pkg.js';
 export function useWonderCardForm(
   inputs: WonderCardFormState,
   stored: WonderCardSelection | undefined,
-  setSelection: (selection: WonderCardSelection | undefined) => void
+  setSelection: (selection: WonderCardSelection | undefined) => void,
+  clearUnavailableCard: (expectedCardId: string) => void
 ) {
   const { t } = useLingui();
-  const selection = useWonderCardSelection(inputs.cardId, stored, setSelection);
+  const selection = useWonderCardSelection(
+    inputs.cardId,
+    stored,
+    setSelection,
+    clearUnavailableCard
+  );
   const context = selection.card
     ? { card: selection.card, genderRatio: get_species_gender_ratio(selection.card.speciesId) }
     : undefined;

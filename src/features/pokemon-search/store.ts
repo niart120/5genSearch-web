@@ -1,8 +1,12 @@
 import type { PokemonSearchFilterInput as PokemonDatetimeSearchFilter } from '@/lib/search-filter-context';
+import { reconcilePokemonSpeciesFilter } from '@/lib/search-filter-context';
+import { hasCurrentSpeciesCandidates } from '@/lib/encounter-slot-context';
+import { useDsConfigStore } from '@/stores/settings/ds-config';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
   DEFAULT_ENCOUNTER_PARAMS,
+  clearEncounterCandidates,
   type EncounterParamsOutput,
 } from '@/features/pokemon-list/types';
 import { getDatetimeSearchInitialState } from '@/features/datetime-search/store';
@@ -60,10 +64,29 @@ export const usePokemonSearchStore = create<PokemonSearchState>()(
       setTimeRange: (timeRange) => set({ timeRange }),
       setKeySpec: (keySpec) => set({ keySpec }),
       setEncounterParams: (action) =>
+        set((state) => {
+          const encounterParams =
+            typeof action === 'function' ? action(state.encounterParams) : action;
+          const filter = reconcilePokemonSpeciesFilter(
+            state.filter,
+            encounterParams,
+            hasCurrentSpeciesCandidates(encounterParams, useDsConfigStore.getState().config.version)
+          );
+          return encounterParams === state.encounterParams && filter === state.filter
+            ? state
+            : { encounterParams, filter };
+        }),
+      setFilter: (filter) =>
         set((state) => ({
-          encounterParams: typeof action === 'function' ? action(state.encounterParams) : action,
+          filter: reconcilePokemonSpeciesFilter(
+            filter,
+            state.encounterParams,
+            hasCurrentSpeciesCandidates(
+              state.encounterParams,
+              useDsConfigStore.getState().config.version
+            )
+          ),
         })),
-      setFilter: (filter) => set({ filter }),
       setStatMode: (statMode) => set({ statMode }),
       startResults: (resultRequest) =>
         set({ results: [], resultRequest: structuredClone(resultRequest) }),
@@ -73,13 +96,23 @@ export const usePokemonSearchStore = create<PokemonSearchState>()(
       name: 'feature:pokemon-search',
       version: 3,
       migrate: (state) => state as ReturnType<typeof getPokemonSearchInitialState>,
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<PokemonSearchState>;
+        return {
+          ...current,
+          ...saved,
+          encounterParams: clearEncounterCandidates(
+            saved.encounterParams ?? current.encounterParams
+          ),
+        };
+      },
       partialize: ({ mode, statMode, dateRange, timeRange, keySpec, encounterParams, filter }) => ({
         mode,
         statMode,
         dateRange,
         timeRange,
         keySpec,
-        encounterParams,
+        encounterParams: clearEncounterCandidates(encounterParams),
         filter,
       }),
     }

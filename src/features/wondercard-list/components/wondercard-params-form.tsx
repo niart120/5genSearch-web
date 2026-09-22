@@ -115,13 +115,6 @@ export function WonderCardParamsForm({
             <Trans>Failed to load Wonder Cards</Trans>
           </p>
         ) : undefined}
-        {selection.unavailable ? (
-          <p role="alert" className="text-xs text-destructive">
-            <Trans>
-              This Wonder Card is unavailable for the selected ROM. Select another card.
-            </Trans>
-          </p>
-        ) : undefined}
       </div>
       {selection.card?.kind === 'egg' ? (
         <fieldset className="grid grid-cols-2 gap-2" disabled={disabled}>

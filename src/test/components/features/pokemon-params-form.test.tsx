@@ -95,6 +95,10 @@ describe('PokemonParamsForm', () => {
 
   it('対象Aの取得がBより後に完了してもBを上書きせず、取得中は開始不可', async () => {
     vi.mocked(isLocationBasedEncounter).mockReturnValue(true);
+    vi.mocked(listLocations).mockResolvedValue([
+      { key: 'a', displayNameKey: 'A' },
+      { key: 'b', displayNameKey: 'B' },
+    ]);
     let finishA: ((slots: Awaited<ReturnType<typeof getEncounterSlots>>) => void) | undefined;
     vi.mocked(getEncounterSlots).mockImplementation((_version, location) =>
       location === 'a'

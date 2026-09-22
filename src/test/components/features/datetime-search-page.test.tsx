@@ -135,7 +135,7 @@ describe('DatetimeSearchPage', () => {
         start_year: 2025,
       });
     });
-    fireEvent.click(screen.getByRole('button', { name: /Continue|続行/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Run|実行/i }));
 
     expect(startSearchMock).toHaveBeenCalledWith(
       expect.objectContaining({

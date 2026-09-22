@@ -28,6 +28,7 @@ interface WonderCardListState {
   setSeedInput: (action: SeedInputStateAction) => void;
   setSeedOrigins: (seedOrigins: SeedOrigin[]) => void;
   setSelection: (selection: WonderCardSelection | undefined) => void;
+  clearUnavailableCard: (expectedCardId: string) => void;
   startResults: (request: WonderCardListRequest) => void;
   appendResults: (results: GeneratedWonderCardData[]) => void;
   resetForm: () => void;
@@ -56,6 +57,12 @@ export const useWonderCardListStore = create<WonderCardListState>()(
         set((s) => ({ seedInput: typeof action === 'function' ? action(s.seedInput) : action })),
       setSeedOrigins: (seedOrigins) => set({ seedOrigins }),
       setSelection: (selection) => set({ selection }),
+      clearUnavailableCard: (expectedCardId) =>
+        set((s) =>
+          s.inputs.cardId === expectedCardId
+            ? { inputs: { ...s.inputs, cardId: '' }, selection: undefined }
+            : s
+        ),
       startResults: (resultRequest) =>
         set({ results: [], resultRequest: structuredClone(resultRequest) }),
       appendResults: (results) => set((s) => ({ results: [...s.results, ...results] })),

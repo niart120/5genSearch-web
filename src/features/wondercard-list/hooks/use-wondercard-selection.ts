@@ -14,7 +14,8 @@ const EMPTY_CARDS: WonderCardEntry[] = [];
 export function useWonderCardSelection(
   cardId: string,
   stored: WonderCardSelection | undefined,
-  setSelection: (selection: WonderCardSelection | undefined) => void
+  setSelection: (selection: WonderCardSelection | undefined) => void,
+  clearUnavailableCard: (expectedCardId: string) => void
 ) {
   const ds = useDsConfigStore((s) => s.config);
   const tid = useTrainerStore((s) => s.tid);
@@ -49,15 +50,19 @@ export function useWonderCardSelection(
     stored?.card.id === cardId && stored.language === language && stored.version === version
       ? stored.card
       : undefined;
-  const card = storedCard ?? cards.find((entry) => entry.id === cardId);
+  const ready = catalog?.key === key && !catalog.error;
+  const catalogCard = ready ? cards.find((entry) => entry.id === cardId) : undefined;
+  const card = catalogCard ? (storedCard ?? catalogCard) : undefined;
   const selection = useMemo(() => {
+    if (!card) return;
     if (matchesWonderCardSelection(stored, cardId, ds, { tid, sid })) return stored;
-    return card ? resolveWonderCardSelection(card, ds, { tid, sid }) : undefined;
+    return resolveWonderCardSelection(card, ds, { tid, sid });
   }, [stored, cardId, ds, tid, sid, card]);
 
   useEffect(() => {
-    if (selection && stored !== selection) setSelection(selection);
-  }, [stored, selection, setSelection]);
+    if (ready && cardId && !card) clearUnavailableCard(cardId);
+    else if (selection && stored !== selection) setSelection(selection);
+  }, [ready, cardId, card, stored, selection, setSelection, clearUnavailableCard]);
 
   return {
     cards,
@@ -65,6 +70,5 @@ export function useWonderCardSelection(
     selection,
     loading: catalog?.key !== key,
     error: catalog?.key === key ? catalog.error : undefined,
-    unavailable: catalog?.key === key && !!cardId && !card,
   };
 }

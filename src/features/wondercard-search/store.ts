@@ -20,6 +20,7 @@ interface WonderCardSearchState extends WonderCardSearchRange {
   setTimeRange: (timeRange: WonderCardSearchRange['timeRange']) => void;
   setKeySpec: (keySpec: WonderCardSearchRange['keySpec']) => void;
   setSelection: (selection: WonderCardSelection | undefined) => void;
+  clearUnavailableCard: (expectedCardId: string) => void;
   startResults: (request: WonderCardSearchRequest) => void;
   appendResults: (results: GeneratedWonderCardData[]) => void;
   resetForm: () => void;
@@ -50,6 +51,12 @@ export const useWonderCardSearchStore = create<WonderCardSearchState>()(
       setTimeRange: (timeRange) => set({ timeRange }),
       setKeySpec: (keySpec) => set({ keySpec }),
       setSelection: (selection) => set({ selection }),
+      clearUnavailableCard: (expectedCardId) =>
+        set((s) =>
+          s.inputs.cardId === expectedCardId
+            ? { inputs: { ...s.inputs, cardId: '' }, selection: undefined }
+            : s
+        ),
       startResults: (resultRequest) =>
         set({ results: [], resultRequest: structuredClone(resultRequest) }),
       appendResults: (results) => set((s) => ({ results: [...s.results, ...results] })),

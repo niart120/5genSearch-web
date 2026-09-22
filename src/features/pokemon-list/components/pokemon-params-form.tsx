@@ -47,13 +47,16 @@ import { getEncounterSlots, getStaticEncounterEntry } from '@/data/encounters/lo
 import { get_species_name } from '@/wasm/wasm_pkg.js';
 import { ENCOUNTER_CATEGORIES, findCategoryForType } from './encounter-constants';
 import { LeadAbilitySection } from './lead-ability-section';
-import type { EncounterParamsOutput } from '../types';
+import { clearEncounterCandidates, type EncounterParamsOutput } from '../types';
 import type { EncounterMethodKey, StaticEncounterTypeKey } from '@/data/encounters/schema';
 import type { EncounterType, EncounterMethod, RomVersion } from '@/wasm/wasm_pkg.js';
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
+
+const EMPTY_SPECIES: EncounterSpeciesOption[] = [];
+const EMPTY_LOCATIONS: LocationOption[] = [];
 
 interface PokemonParamsFormProps {
   value: EncounterParamsOutput;
@@ -100,39 +103,84 @@ function PokemonParamsForm({
     encounterType as EncounterMethodKey | StaticEncounterTypeKey
   );
 
-  // ロケーション一覧 (非同期ロード)
-  const [locations, setLocations] = useState<LocationOption[]>([]);
+  const catalogKey = JSON.stringify([version, encounterType, syncKey]);
+  const [catalog, setCatalog] = useState<{
+    key: string;
+    locations: LocationOption[];
+    species: EncounterSpeciesOption[];
+    failed?: boolean;
+  }>();
+  const currentCatalog = catalog?.key === catalogKey ? catalog : undefined;
+  const locations = currentCatalog?.locations ?? EMPTY_LOCATIONS;
+  const speciesOptions = currentCatalog?.species ?? EMPTY_SPECIES;
   useEffect(() => {
     let cancelled = false;
     const load = async (): Promise<void> => {
-      const result = isLocationBased
-        ? await listLocations(gameVersion, encounterType as EncounterMethodKey)
-        : [];
-      if (!cancelled) setLocations(result);
+      try {
+        const locations = isLocationBased
+          ? await listLocations(gameVersion, encounterType as EncounterMethodKey)
+          : [];
+        const species = isLocationBased
+          ? []
+          : await listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
+        if (cancelled) return;
+        setCatalog({ key: catalogKey, locations, species });
+        onChange((prev) => {
+          if (prev.encounterType !== encounterType) return prev;
+          if (isLocationBased) {
+            return prev.locationKey && !locations.some((entry) => entry.key === prev.locationKey)
+              ? {
+                  ...prev,
+                  locationKey: '',
+                  slots: [],
+                  slotsContextKey: undefined,
+                  availableSpecies: [],
+                }
+              : prev;
+          }
+          return prev.staticEntryId &&
+            !species.some((entry) => entry.kind === 'static' && entry.id === prev.staticEntryId)
+            ? {
+                ...prev,
+                staticEntryId: '',
+                slots: [],
+                slotsContextKey: undefined,
+                availableSpecies: [],
+              }
+            : prev;
+        });
+      } catch {
+        if (!cancelled) setCatalog({ key: catalogKey, locations: [], species: [], failed: true });
+      }
     };
     void load();
     return () => {
       cancelled = true;
     };
-  }, [gameVersion, encounterType, isLocationBased]);
+  }, [catalogKey, gameVersion, encounterType, isLocationBased, onChange]);
 
-  const [speciesOptions, setSpeciesOptions] = useState<EncounterSpeciesOption[]>([]);
   useEffect(() => {
     let cancelled = false;
     const selection = { encounterType, locationKey, staticEntryId };
     const key = encounterSlotKey(selection, version);
-    setSpeciesOptions([]);
-    onChange((prev) => ({ ...prev, slots: [], slotsContextKey: undefined, availableSpecies: [] }));
+    onChange((prev) =>
+      prev.slotsContextKey === undefined &&
+      prev.slots.length === 0 &&
+      prev.availableSpecies.length === 0
+        ? prev
+        : clearEncounterCandidates(prev)
+    );
     const load = async () => {
       try {
+        if (!currentCatalog || currentCatalog.failed) return;
         if (isLocationBased) {
-          if (!locationKey) return;
+          if (!locationKey || !currentCatalog.locations.some((entry) => entry.key === locationKey))
+            return;
           const [slots, species] = await Promise.all([
             getEncounterSlots(gameVersion, locationKey, encounterType),
             listSpecies(gameVersion, encounterType as EncounterMethodKey, locationKey),
           ]);
           if (cancelled) return;
-          setSpeciesOptions(species);
           onChange((prev) =>
             encounterSlotKey(prev, version) === key
               ? {
@@ -144,14 +192,14 @@ function PokemonParamsForm({
               : prev
           );
         } else {
-          const species = await listSpecies(gameVersion, encounterType as StaticEncounterTypeKey);
-          if (cancelled) return;
-          const entryId = staticEntryId || species.find((s) => s.kind === 'static')?.id;
+          const species = currentCatalog.species;
+          const entryId = species
+            .filter((s) => s.kind === 'static')
+            .find((s) => s.id === staticEntryId)?.id;
           const entry = entryId
             ? await getStaticEncounterEntry(gameVersion, encounterType, entryId)
             : undefined;
           if (cancelled) return;
-          setSpeciesOptions(species);
           onChange((prev) => {
             if (encounterSlotKey(prev, version) !== key) return prev;
             const next = {
@@ -185,6 +233,7 @@ function PokemonParamsForm({
     staticEntryId,
     onChange,
     syncKey,
+    currentCatalog,
   ]);
 
   // 固定エンカウントの種族名解決 (WASM 経由)
@@ -225,9 +274,8 @@ function PokemonParamsForm({
           ...prev,
           encounterType: newType,
           encounterMethod: newMethod,
-          locationKey: '',
-          staticEntryId: '',
           slots: [],
+          slotsContextKey: undefined,
           availableSpecies: [],
         };
       });
@@ -249,9 +297,8 @@ function PokemonParamsForm({
           ...prev,
           encounterType: newType,
           encounterMethod: newMethod,
-          locationKey: '',
-          staticEntryId: '',
           slots: [],
+          slotsContextKey: undefined,
           availableSpecies: [],
         };
       });
@@ -267,7 +314,6 @@ function PokemonParamsForm({
         locationKey: nextLocationKey,
         slots: [],
         slotsContextKey: undefined,
-        staticEntryId: '',
       }));
     },
     [onChange]
@@ -277,7 +323,6 @@ function PokemonParamsForm({
     (entryId: string) => {
       onChange((prev) => ({
         ...prev,
-        locationKey: '',
         staticEntryId: entryId,
         slots: [],
         slotsContextKey: undefined,
