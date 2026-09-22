@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.3](https://github.com/niart120/5genSearch-web/compare/v1.8.2...v1.8.3) (2026-09-22)
+
+
+### Bug Fixes
+
+* 上位条件変更時の選択整合と警告文言を改善する ([#192](https://github.com/niart120/5genSearch-web/issues/192)) ([e4812cc](https://github.com/niart120/5genSearch-web/commit/e4812ccdd12b76174728fe28c409b6e2c0bbfceb))
+
 ## [1.8.2](https://github.com/niart120/5genSearch-web/compare/v1.8.1...v1.8.2) (2026-09-21)
 
 
