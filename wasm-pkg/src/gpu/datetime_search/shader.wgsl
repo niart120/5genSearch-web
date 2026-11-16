@@ -278,7 +278,7 @@ fn sha1_generate(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     (BCD_LOOKUP[day] << 8u) |
                     BCD_LOOKUP[day_of_week];
 
-    let is_pm = (constants.hardware_type <= 1u) && (hour >= 12u);
+    let is_pm = (constants.hardware_type != 3u) && (hour >= 12u);
     let pm_flag = select(0u, 1u, is_pm);
     let time_word = (pm_flag << 30u) |
                     (BCD_LOOKUP[hour] << 24u) |

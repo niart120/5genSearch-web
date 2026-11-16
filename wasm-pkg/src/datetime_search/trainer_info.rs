@@ -225,6 +225,65 @@ mod tests {
     }
 
     #[test]
+    fn test_dsi_pm_search_finds_reported_tid() {
+        let context = DatetimeSearchContext {
+            ds: DsConfig {
+                mac: [0x00, 0x22, 0xAA, 0x3A, 0xF9, 0xA0],
+                hardware: Hardware::Dsi,
+                version: RomVersion::Black,
+                region: RomRegion::Jpn,
+            },
+            date_range: DateRangeParams {
+                start_year: 2021,
+                start_month: 11,
+                start_day: 10,
+                end_year: 2021,
+                end_month: 11,
+                end_day: 10,
+            },
+            time_range: TimeRangeParams {
+                hour_start: 17,
+                hour_end: 17,
+                minute_start: 43,
+                minute_end: 43,
+                second_start: 0,
+                second_end: 59,
+            },
+            ranges: vec![Timer0VCountRange {
+                timer0_min: 0x1237,
+                timer0_max: 0x1238,
+                vcount_min: 0x8C,
+                vcount_max: 0x8C,
+            }],
+            key_spec: KeySpec::from_buttons(vec![]),
+        };
+        let filter = TrainerInfoFilter {
+            tid: Some(35405),
+            ..Default::default()
+        };
+        let game_start = create_test_params(filter.clone()).game_start;
+        let tasks = generate_trainer_info_search_tasks(context, filter, game_start, 2).unwrap();
+        let mut results = Vec::new();
+        for task in tasks {
+            let mut searcher = TrainerInfoSearcher::new(task).unwrap();
+            while !searcher.is_done() {
+                results.extend(searcher.next_batch(100).results);
+            }
+        }
+        assert_eq!(results.len(), 1);
+        assert_eq!(
+            (results[0].trainer.tid, results[0].trainer.sid),
+            (35405, 56043)
+        );
+        assert!(matches!(results[0].seed_origin, SeedOrigin::Startup {
+            base_seed, datetime, condition, ..
+        } if base_seed.value() == 0x530C_02A5_CFAA_60C3
+            && datetime == crate::types::Datetime::new(2021, 11, 10, 17, 43, 19)
+            && condition.timer0 == 0x1237 && condition.vcount == 0x8C
+            && condition.key_mask == KeyMask::NONE));
+    }
+
+    #[test]
     fn test_searcher_rejects_continue_mode() {
         let mut params = create_test_params(TrainerInfoFilter::default());
         params.game_start.start_mode = StartMode::Continue;

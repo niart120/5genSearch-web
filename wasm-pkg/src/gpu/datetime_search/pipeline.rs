@@ -616,7 +616,12 @@ mod tests {
         };
         let leap = date_to_days(2024, 2, 29) * 86400;
         let year = date_to_days(2023, 12, 31) * 86400;
-        for hardware in [Hardware::DsLite, Hardware::N3ds] {
+        for hardware in [
+            Hardware::Ds,
+            Hardware::DsLite,
+            Hardware::Dsi,
+            Hardware::N3ds,
+        ] {
             let ds = DsConfig {
                 mac: [0, 9, 191, 18, 52, 86],
                 hardware,
@@ -654,12 +659,7 @@ mod tests {
                             );
                             builder.set_datetime(
                                 build_date_code(date.year, date.month, date.day),
-                                build_time_code(
-                                    date.hour,
-                                    date.minute,
-                                    date.second,
-                                    matches!(hardware, Hardware::DsLite),
-                                ),
+                                build_time_code(date.hour, date.minute, date.second, hardware),
                             );
                             (
                                 date,

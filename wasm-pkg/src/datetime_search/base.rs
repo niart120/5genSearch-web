@@ -9,7 +9,7 @@ use crate::types::{Datetime, DsConfig, Hardware, StartupCondition};
 pub struct DatetimeHashGenerator {
     base_message: [u32; 16],
     datetimes: DatetimeSearchIter,
-    is_ds_or_lite: bool,
+    hardware: Hardware,
     cached_date: Option<((u16, u8, u8), u32)>,
 }
 
@@ -26,7 +26,7 @@ impl DatetimeHashGenerator {
         Self {
             base_message: builder.to_message(),
             datetimes: space.iter(),
-            is_ds_or_lite: matches!(ds.hardware, Hardware::Ds | Hardware::DsLite),
+            hardware: ds.hardware,
             cached_date: None,
         }
     }
@@ -55,7 +55,7 @@ impl DatetimeHashGenerator {
                 u32::from(datetime.hour) * 3600
                     + u32::from(datetime.minute) * 60
                     + u32::from(datetime.second),
-                self.is_ds_or_lite,
+                self.hardware,
             );
             len += 1;
         }
