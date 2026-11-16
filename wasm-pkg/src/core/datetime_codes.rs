@@ -2,6 +2,8 @@
 //!
 //! `date_code` / `time_code` のコンパイル時計算で BCD 変換のオーバーヘッドを排除する。
 
+use crate::types::Hardware;
+
 // =============================================================================
 // time_code テーブル (86,400 エントリ = 24×60×60 秒)
 // =============================================================================
@@ -53,11 +55,11 @@ pub fn get_time_code(seconds_of_day: u32) -> u32 {
 
 /// ハードウェア別 `time_code` を取得
 ///
-/// DS/DS Lite は午後 (12時以降) に PM フラグ (`0x4000_0000`) を付加
+/// DS/DS Lite/DSi は午後 (12時以降) に PM フラグ (`0x4000_0000`) を付加
 #[inline]
-pub fn get_time_code_for_hardware(seconds_of_day: u32, is_ds_or_lite: bool) -> u32 {
+pub fn get_time_code_for_hardware(seconds_of_day: u32, hardware: Hardware) -> u32 {
     let base = get_time_code(seconds_of_day);
-    if is_ds_or_lite && seconds_of_day >= 12 * 3600 {
+    if hardware != Hardware::N3ds && seconds_of_day >= 12 * 3600 {
         base | 0x4000_0000
     } else {
         base
@@ -200,17 +202,17 @@ mod tests {
         let base = get_time_code(noon);
 
         // 3DS: PM フラグなし
-        let code_for_3ds = get_time_code_for_hardware(noon, false);
+        let code_for_3ds = get_time_code_for_hardware(noon, Hardware::N3ds);
         assert_eq!(code_for_3ds, base);
 
         // DS/DS Lite: PM フラグあり
-        let code_for_ds = get_time_code_for_hardware(noon, true);
+        let code_for_ds = get_time_code_for_hardware(noon, Hardware::Ds);
         assert_eq!(code_for_ds, base | 0x4000_0000);
 
         // 午前は DS でも PM フラグなし
         let morning = 10 * 3600 + 15 * 60 + 30;
         let morning_base = get_time_code(morning);
-        let morning_ds = get_time_code_for_hardware(morning, true);
+        let morning_ds = get_time_code_for_hardware(morning, Hardware::Ds);
         assert_eq!(morning_ds, morning_base);
     }
 

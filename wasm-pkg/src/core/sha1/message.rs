@@ -35,7 +35,7 @@ pub fn build_date_code(year: u16, month: u8, day: u8) -> u32 {
 /// 時刻コードを生成
 ///
 /// フォーマット: 0xPHMMSS00
-/// - P: PM フラグ (DS/DS Lite のみ、12時以降は bit30 = 1)
+/// - P: PM フラグ (DS/DS Lite/DSi のみ、12時以降は bit30 = 1)
 /// - H: 時 (BCD)
 /// - MM: 分 (BCD)
 /// - SS: 秒 (BCD)
@@ -45,10 +45,10 @@ pub fn build_date_code(year: u16, month: u8, day: u8) -> u32 {
 /// * `hour` - 時 (0-23)
 /// * `minute` - 分 (0-59)
 /// * `second` - 秒 (0-59)
-/// * `is_ds_or_lite` - DS または DS Lite の場合 true (PM フラグを適用)
-pub fn build_time_code(hour: u8, minute: u8, second: u8, is_ds_or_lite: bool) -> u32 {
+/// * `hardware` - 本体種別 (3DS 以外に PM フラグを適用)
+pub fn build_time_code(hour: u8, minute: u8, second: u8, hardware: Hardware) -> u32 {
     let hour_bcd = to_bcd(hour);
-    let pm_flag: u32 = u32::from(is_ds_or_lite && hour >= 12);
+    let pm_flag: u32 = u32::from(hardware != Hardware::N3ds && hour >= 12);
 
     (pm_flag << 30)
         | (u32::from(hour_bcd) << 24)
@@ -194,6 +194,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_time_code_noon_boundary_for_all_hardware() {
+        for (hardware, pm) in [
+            (Hardware::Ds, 0x4000_0000),
+            (Hardware::DsLite, 0x4000_0000),
+            (Hardware::Dsi, 0x4000_0000),
+            (Hardware::N3ds, 0),
+        ] {
+            for (hour, minute, second, expected) in [
+                (0, 0, 0, 0),
+                (11, 59, 59, 0x1159_5900),
+                (12, 0, 0, 0x1200_0000 | pm),
+                (23, 59, 59, 0x2359_5900 | pm),
+            ] {
+                assert_eq!(build_time_code(hour, minute, second, hardware), expected);
+                let seconds = u32::from(hour) * 3600 + u32::from(minute) * 60 + u32::from(second);
+                assert_eq!(
+                    crate::core::datetime_codes::get_time_code_for_hardware(seconds, hardware),
+                    expected
+                );
+            }
+        }
+    }
+
+    #[test]
     fn test_date_code() {
         // 2023年12月25日(月)
         let code = build_date_code(2023, 12, 25);
@@ -206,7 +230,7 @@ mod tests {
         // PM flag at bit30 = 0x40000000
         // hour_bcd = 0x15, min_bcd = 0x30, sec_bcd = 0x45
         // Result: (1 << 30) | (0x15 << 24) | (0x30 << 16) | (0x45 << 8) = 0x5530_4500
-        let code = build_time_code(15, 30, 45, true);
+        let code = build_time_code(15, 30, 45, Hardware::Ds);
         assert_eq!(code, 0x5530_4500);
     }
 
@@ -214,15 +238,15 @@ mod tests {
     fn test_time_code_am_ds() {
         // 09:15:30, DS/DS Lite (AM, no PM flag)
         // Result: (0 << 30) | (0x09 << 24) | (0x15 << 16) | (0x30 << 8) = 0x0915_3000
-        let code = build_time_code(9, 15, 30, true);
+        let code = build_time_code(9, 15, 30, Hardware::Ds);
         assert_eq!(code, 0x0915_3000);
     }
 
     #[test]
-    fn test_time_code_pm_dsi() {
-        // 15:30:45, DSi (PM flag disabled, no PM flag even for afternoon)
+    fn test_time_code_pm_3ds() {
+        // 15:30:45, 3DS (PM flag disabled, no PM flag even for afternoon)
         // Result: (0 << 30) | (0x15 << 24) | (0x30 << 16) | (0x45 << 8) = 0x1530_4500
-        let code = build_time_code(15, 30, 45, false);
+        let code = build_time_code(15, 30, 45, Hardware::N3ds);
         assert_eq!(code, 0x1530_4500);
     }
 

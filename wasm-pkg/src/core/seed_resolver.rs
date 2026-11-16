@@ -59,15 +59,8 @@ pub fn resolve_single_seed(input: &SeedSpec) -> Result<(LcgSeed, SeedOrigin), St
                 BaseMessageBuilder::new(&nazo, ds.mac, vcount, timer0, condition.key_code(), frame);
 
             let date_code = build_date_code(datetime.year, datetime.month, datetime.day);
-            let time_code = build_time_code(
-                datetime.hour,
-                datetime.minute,
-                datetime.second,
-                matches!(
-                    ds.hardware,
-                    crate::types::Hardware::Ds | crate::types::Hardware::DsLite
-                ),
-            );
+            let time_code =
+                build_time_code(datetime.hour, datetime.minute, datetime.second, ds.hardware);
             builder.set_datetime(date_code, time_code);
 
             let hash = calculate_pokemon_sha1(builder.message());
@@ -113,17 +106,9 @@ pub fn resolve_all_seeds(input: &SeedSpec) -> Result<Vec<(LcgSeed, SeedOrigin)>,
             let key_mask = key_input.to_key_mask();
             let nazo = get_nazo_values(ds);
             let frame = get_frame(ds.hardware, ds.version);
-            let is_ds_or_lite = matches!(
-                ds.hardware,
-                crate::types::Hardware::Ds | crate::types::Hardware::DsLite
-            );
             let date_code = build_date_code(datetime.year, datetime.month, datetime.day);
-            let time_code = build_time_code(
-                datetime.hour,
-                datetime.minute,
-                datetime.second,
-                is_ds_or_lite,
-            );
+            let time_code =
+                build_time_code(datetime.hour, datetime.minute, datetime.second, ds.hardware);
 
             let mut results = Vec::new();
 
@@ -163,6 +148,25 @@ mod tests {
     use crate::types::{
         Datetime, DsConfig, Hardware, KeyInput, RomRegion, RomVersion, Timer0VCountRange,
     };
+
+    #[test]
+    fn test_dsi_pm_seed_matches_reported_boot() {
+        let input = SeedSpec::Startup {
+            ds: DsConfig {
+                mac: [0x00, 0x22, 0xAA, 0x3A, 0xF9, 0xA0],
+                hardware: Hardware::Dsi,
+                version: RomVersion::Black,
+                region: RomRegion::Jpn,
+            },
+            datetime: Datetime::new(2021, 11, 10, 17, 43, 19),
+            ranges: vec![Timer0VCountRange::fixed(0x1237, 0x8C)],
+            key_input: KeyInput::new(),
+        };
+        // 別ツールの C21663F7057C26B2 は、この SHA-1 由来値から LCG を1回進めた値。
+        let expected = LcgSeed::new(0x530C_02A5_CFAA_60C3);
+        assert_eq!(resolve_single_seed(&input).unwrap().0, expected);
+        assert_eq!(resolve_all_seeds(&input).unwrap()[0].0, expected);
+    }
 
     #[test]
     fn test_resolve_single_seed_from_seeds() {

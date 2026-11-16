@@ -98,8 +98,8 @@ mod tests {
 
         // 日時コード: 2006/03/11 18:53:27
         let date_code = build_date_code(2006, 3, 11);
-        // DS/DS Lite は is_ds_or_lite = true (PM フラグが bit30 に設定される)
-        let time_code = build_time_code(18, 53, 27, true);
+        // DS/DS Lite/DSi は PM フラグが bit30 に設定される
+        let time_code = build_time_code(18, 53, 27, Hardware::Ds);
         builder.set_datetime(date_code, time_code);
 
         // デバッグ: メッセージを出力
@@ -165,7 +165,7 @@ mod tests {
             BaseMessageBuilder::new(&nazo, ds.mac, 0x82, 0x10F8, KeyCode::NONE, frame);
         builder.set_datetime(
             build_date_code(2006, 3, 11),
-            build_time_code(18, 53, 27, true),
+            build_time_code(18, 53, 27, Hardware::Ds),
         );
 
         let hash1 = calculate_pokemon_sha1(builder.message());
@@ -190,7 +190,7 @@ mod tests {
             BaseMessageBuilder::new(&nazo, ds.mac, 0x82, 0x10F8, KeyCode::NONE, frame);
         builder.set_datetime(
             build_date_code(2006, 3, 11),
-            build_time_code(18, 53, 27, true),
+            build_time_code(18, 53, 27, Hardware::Ds),
         );
 
         let hash = calculate_pokemon_sha1(builder.message());
