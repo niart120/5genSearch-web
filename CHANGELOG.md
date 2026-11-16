@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.4](https://github.com/niart120/5genSearch-web/compare/v1.8.3...v1.8.4) (2026-11-16)
+
+
+### Bug Fixes
+
+* **seed:** 午後のDSi初期Seed生成を修正 ([#194](https://github.com/niart120/5genSearch-web/issues/194)) ([b053add](https://github.com/niart120/5genSearch-web/commit/b053add9f8a92276ac3600d33263bd7ec37c5ec5))
+
 ## [1.8.3](https://github.com/niart120/5genSearch-web/compare/v1.8.2...v1.8.3) (2026-09-22)
 
 
