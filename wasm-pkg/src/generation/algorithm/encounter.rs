@@ -118,7 +118,7 @@ pub fn rand_to_percent(version: RomVersion, rand_value: u32) -> u32 {
 
 // ===== レベル決定 =====
 
-/// レベル乱数値からレベルを決定
+/// レベル乱数を作品別の百分率に換算し、レベル範囲の幅で割った余りを最低レベルに足す。
 #[inline]
 #[allow(clippy::cast_possible_truncation)]
 pub fn calculate_level(version: RomVersion, rand_value: u32, min_level: u8, max_level: u8) -> u8 {
@@ -126,19 +126,9 @@ pub fn calculate_level(version: RomVersion, rand_value: u32, min_level: u8, max_
         return min_level;
     }
 
-    let range = u64::from(max_level - min_level + 1);
-
-    match version {
-        RomVersion::Black | RomVersion::White => {
-            let percent = rand_to_percent(version, rand_value);
-            let offset = (u64::from(percent) % range) as u8;
-            min_level + offset
-        }
-        RomVersion::Black2 | RomVersion::White2 => {
-            let offset = ((u64::from(rand_value) * range) >> 32) as u8;
-            min_level + offset
-        }
-    }
+    let range = u32::from(max_level) - u32::from(min_level) + 1;
+    let percent = rand_to_percent(version, rand_value);
+    min_level + (percent % range) as u8
 }
 
 /// 通常エンカウント・揺れる草むら: スロット決定 (12スロット)
@@ -382,22 +372,21 @@ mod tests {
 
     #[test]
     fn test_calculate_level_bw() {
-        // BW: percent % range
-        // rand = 0 → percent = 0 → offset = 0
         assert_eq!(calculate_level(RomVersion::Black, 0, 10, 15), 10);
-        // rand = 0x8000_0000 → percent ≈ 50 → offset = 50 % 6 = 2
-        let level = calculate_level(RomVersion::Black, 0x8000_0000, 10, 15);
-        assert!((10..=15).contains(&level));
+        // BW の百分率は 49。BW2 では同じ乱数を 50 に換算する。
+        assert_eq!(calculate_level(RomVersion::Black, 0x8000_0000, 10, 15), 11);
     }
 
     #[test]
     fn test_calculate_level_bw2() {
-        // BW2: (rand * range) >> 32
-        // rand = 0 → offset = 0
         assert_eq!(calculate_level(RomVersion::Black2, 0, 10, 15), 10);
-        // rand = 0xFFFF_FFFF → offset = 5
-        assert_eq!(calculate_level(RomVersion::Black2, 0xFFFF_FFFF, 10, 15), 15);
-        // rand = 0x8000_0000 → offset = 3 (half of 6)
-        assert_eq!(calculate_level(RomVersion::Black2, 0x8000_0000, 10, 15), 13);
+        assert_eq!(calculate_level(RomVersion::Black2, 0xFFFF_FFFF, 10, 15), 13);
+        assert_eq!(calculate_level(RomVersion::Black2, 0x8000_0000, 10, 15), 12);
+    }
+
+    #[test]
+    fn test_calculate_level_bw2_dragonspiral_tower_dragonite() {
+        assert_eq!(calculate_level(RomVersion::Black2, 0xE204_CB65, 50, 70), 54);
+        assert_eq!(calculate_level(RomVersion::White2, 0xE204_CB65, 50, 70), 54);
     }
 }
