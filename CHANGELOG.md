@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.5](https://github.com/niart120/5genSearch-web/compare/v1.8.4...v1.8.5) (2026-11-23)
+
+
+### Bug Fixes
+
+* **rng:** 野生ポケモンのレベル計算を剰余式に修正 ([#196](https://github.com/niart120/5genSearch-web/issues/196)) ([a577c54](https://github.com/niart120/5genSearch-web/commit/a577c54ac9b13e84a9a88833e241094c76699784))
+
 ## [1.8.4](https://github.com/niart120/5genSearch-web/compare/v1.8.3...v1.8.4) (2026-11-16)
 
 
